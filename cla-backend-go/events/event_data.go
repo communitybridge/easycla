@@ -1,9 +1,11 @@
+//nolint
 package events
 
 import (
 	"fmt"
 )
 
+// EventData returns event data string which is used for event logging and containsPII field
 type EventData interface {
 	GetEventString(args *LogEventArgs) (eventData string, containsPII bool)
 }

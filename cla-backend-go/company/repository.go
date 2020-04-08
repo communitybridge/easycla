@@ -33,7 +33,7 @@ var (
 )
 
 // CompanyRepository interface methods
-type CompanyRepository interface {
+type CompanyRepository interface { //nolint
 	GetMetrics() (*models.CompaniesMetrics, error)
 	GetCompanies() (*models.Companies, error)
 	GetCompany(companyID string) (*models.Company, error)

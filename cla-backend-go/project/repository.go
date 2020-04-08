@@ -32,7 +32,7 @@ var (
 )
 
 // ProjectRepository defines functions of Project repository
-type ProjectRepository interface {
+type ProjectRepository interface { //nolint
 	GetMetrics() (*models.ProjectMetrics, error)
 	CreateProject(project *models.Project) (*models.Project, error)
 	GetProjectByID(projectID string) (*models.Project, error)

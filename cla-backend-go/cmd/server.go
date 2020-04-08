@@ -97,7 +97,7 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
-type CombinedRepo struct {
+type combinedRepo struct {
 	users.UserRepository
 	company.CompanyRepository
 	project.ProjectRepository
@@ -197,7 +197,7 @@ func server(localMode bool) http.Handler {
 	githubOrganizationsRepo := github_organizations.NewRepository(awsSession, stage)
 
 	// Our service layer handlers
-	eventsService := events.NewService(eventsRepo, CombinedRepo{
+	eventsService := events.NewService(eventsRepo, combinedRepo{
 		UserRepository:    usersRepo,
 		CompanyRepository: companyRepo,
 		ProjectRepository: projectRepo,
@@ -228,8 +228,8 @@ func server(localMode bool) http.Handler {
 
 	// Setup our API handlers
 	users.Configure(api, usersService, eventsService)
-	project.Configure(api, projectService)
-	v2Project.Configure(v2API, projectService)
+	project.Configure(api, projectService, eventsService)
+	v2Project.Configure(v2API, projectService, eventsService)
 	health.Configure(api, healthService)
 	v2Health.Configure(v2API, healthService)
 	template.Configure(api, templateService, eventsService)

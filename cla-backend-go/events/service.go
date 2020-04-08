@@ -7,19 +7,19 @@ import (
 	"errors"
 	"fmt"
 
-	log "github.com/communitybridge/easycla/cla-backend-go/logging"
-
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	eventOps "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/events"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
 // Service interface defines methods of event service
 type Service interface {
-	LogEvent(args *LogEventArgs) error
+	LogEvent(args *LogEventArgs)
 	SearchEvents(params *eventOps.SearchEventsParams) (*models.EventList, error)
 	GetRecentEvents(paramPageSize *int64) (*models.EventList, error)
 }
 
+// CombinedRepo contains the various methods of other repositories
 type CombinedRepo interface {
 	GetProjectByID(projectID string) (*models.Project, error)
 	GetCompany(companyID string) (*models.Company, error)
@@ -41,11 +41,6 @@ func NewService(repo Repository, combinedRepo CombinedRepo) Service {
 }
 
 func (s *service) CreateEvent(event models.Event) error {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Error("panic occured in CreateEvent", fmt.Errorf("%v", r))
-		}
-	}()
 	return s.repo.CreateEvent(&event)
 }
 
@@ -69,6 +64,9 @@ func (s *service) GetRecentEvents(paramPageSize *int64) (*models.EventList, erro
 	return s.repo.GetRecentEvents(pageSize)
 }
 
+// LogEventArgs is argument to LogEvent function
+// EventType, EventData are compulsory.
+// One of LfUsername, UserID must be present
 type LogEventArgs struct {
 	EventType         string
 	ProjectID         string
@@ -149,8 +147,7 @@ func (s *service) loadUser(args *LogEventArgs) error {
 }
 
 func (s *service) loadDetails(args *LogEventArgs) error {
-	var err error
-	err = s.loadCompany(args)
+	err := s.loadCompany(args)
 	if err != nil {
 		return err
 	}
@@ -165,13 +162,21 @@ func (s *service) loadDetails(args *LogEventArgs) error {
 	return nil
 }
 
-func (s *service) LogEvent(args *LogEventArgs) error {
-	if args == nil {
-		errors.New("invalid arguments to LogEvent")
+// LogEvent logs the event in database
+func (s *service) LogEvent(args *LogEventArgs) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error("panic occured in CreateEvent", fmt.Errorf("%v", r))
+		}
+	}()
+	if args == nil || args.EventType == "" || args.EventData == nil || (args.UserID == "" && args.LfUsername == "") {
+		log.Warnf("invalid arguments to LogEvent: args %#v", args)
+		return
 	}
 	err := s.loadDetails(args)
 	if err != nil {
-		return err
+		log.Error("unable to load details for event", err)
+		return
 	}
 	eventData, containsPII := args.EventData.GetEventString(args)
 	event := models.Event{
@@ -186,5 +191,8 @@ func (s *service) LogEvent(args *LogEventArgs) error {
 		UserID:                 args.UserID,
 		UserName:               args.UserName,
 	}
-	return s.repo.CreateEvent(&event)
+	err = s.repo.CreateEvent(&event)
+	if err != nil {
+		log.Error(fmt.Sprintf("unable to create event for args %#v", args), err)
+	}
 }

@@ -104,11 +104,11 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			companyID = signatureModel.SignatureReferenceID
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType: events.WhitelistGithubOrganizationDeleted,
+			EventType: events.WhitelistGithubOrganizationAdded,
 			ProjectID: projectID,
 			CompanyID: companyID,
 			UserID:    claUser.UserID,
-			EventData: &events.WhitelistGithubOrganizationDeletedEventData{
+			EventData: &events.WhitelistGithubOrganizationAddedEventData{
 				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
@@ -152,11 +152,11 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType: events.WhitelistGithubOrganizationAdded,
+			EventType: events.WhitelistGithubOrganizationDeleted,
 			ProjectID: projectID,
 			CompanyID: companyID,
 			UserID:    claUser.UserID,
-			EventData: &events.WhitelistGithubOrganizationAddedEventData{
+			EventData: &events.WhitelistGithubOrganizationDeletedEventData{
 				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
