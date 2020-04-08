@@ -1,11 +1,11 @@
 <ion-header>
-  <ion-navbar>
-    <button ion-button menuToggle>
-      <ion-icon name="menu"></ion-icon>
+  <ion-toolbar>
+    <button ion-button class="back-btn" (click)="back()">
+        <ion-icon name="arrow-round-back"></ion-icon>
     </button>
     <ion-title>{{ company.company_name }} Project Signatures</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
-  </ion-navbar>
+  </ion-toolbar>
   <get-help></get-help>
 </ion-header>
 
@@ -13,7 +13,7 @@
   <div class="page-content">
 
 
-    <ion-grid>
+    <ion-grid *ngIf="canEdit">
       <ion-row justify-content-center>
         <ion-card>
           <ion-card-content>
@@ -21,7 +21,8 @@
               <ion-col col-12 col-md-3>
                 <h3>
                   Domain Whitelist
-                  <ion-icon *ngIf="!managersRestricted" class="clickable" name="md-create" item-right (click)="openWhitelistDomainModal()"></ion-icon>
+                  <ion-icon class="clickable" name="md-create" item-right
+                    (click)="openWhitelistDomainModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -34,7 +35,8 @@
               <ion-col col-12 col-md-3>
                 <h3>
                   Email Whitelist
-                  <ion-icon *ngIf="!managersRestricted" class="clickable" name="md-create" item-right (click)="openWhitelistEmailModal()"></ion-icon>
+                  <ion-icon class="clickable" name="md-create" item-right
+                    (click)="openWhitelistEmailModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -47,7 +49,8 @@
               <ion-col col-12 col-md-3>
                 <h3>
                   GitHub Whitelist
-                  <ion-icon *ngIf="!managersRestricted" class="clickable" name="md-create" item-right (click)="openWhitelistGithubModal()"></ion-icon>
+                  <ion-icon class="clickable" name="md-create" item-right
+                    (click)="openWhitelistGithubModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -60,7 +63,8 @@
               <ion-col col-12 col-md-3>
                 <h3>
                   GitHub Org Whitelist
-                  <ion-icon *ngIf="!managersRestricted" class="clickable" name="md-create" item-right (click)="openWhitelistGithubOrgModal()"></ion-icon>
+                  <ion-icon class="clickable" name="md-create" item-right
+                    (click)="openWhitelistGithubOrgModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -138,10 +142,10 @@
                       </td>
 
                       <td data-title="Actions">
-                        <button clear ion-button color="secondary" (click)="accept(request.requestId)">
+                        <button *ngIf="canEdit" clear ion-button color="secondary" (click)="accept(request.requestId)">
                           Accept
                         </button>
-                        <button clear ion-button color="danger" (click)="decline(request.requestId)">
+                        <button *ngIf="canEdit" clear ion-button color="danger" (click)="decline(request.requestId)">
                           Decline
                         </button>
                       </td>
@@ -165,17 +169,18 @@
               </ion-card-title>
               <loading-spinner [loading]="loading.managers"></loading-spinner>
               <ion-list>
-                <ion-item *ngIf="managersRestricted && !loading.managers">
+                <ion-item *ngIf="canEdit && !loading.managers">
                   <p>Only Company Admins can view and update this list.</p>
                 </ion-item>
-                
+
                 <ion-item *ngFor="let manager of managers">
                   <div class="manager">
                     <ion-icon name="person" item-left class="icon-md"></ion-icon>
                     <div class="manager-details" *ngIf="manager.email">
                       <div class="manager-name">
                         <span>{{ manager.name}}</span>
-                        <span *ngIf="managers.length > 1 && !managersRestricted" (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
+                        <span *ngIf="managers.length > 1 && canEdit"
+                          (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
                       </div>
                       <h4>{{ manager.email }}</h4>
                     </div>
@@ -190,7 +195,8 @@
                   </div>
                 </ion-item>
               </ion-list>
-              <button title="Add CLA Manager" bottom right ion-fab mini class="add-manager-btn" *ngIf="!managersRestricted" (click)="openManagerModal()">
+              <button title="Add CLA Manager" bottom right ion-fab mini class="add-manager-btn" *ngIf="canEdit"
+                (click)="openManagerModal()">
                 <ion-icon name="add"></ion-icon>
               </button>
             </ion-card-content>

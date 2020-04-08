@@ -234,8 +234,9 @@ export class ProjectClaPage {
   openClaOrganizationAppModal() {
     let modal = this.modalCtrl.create('ClaOrganizationAppModal', {});
     modal.onDidDismiss((data) => {
-      console.log('data', data)
-      this.getClaProjects();
+      // console.log('data', data)
+      // this.getClaProjects();
+      this.getGithubOrganisation();
     });
     modal.present();
   }

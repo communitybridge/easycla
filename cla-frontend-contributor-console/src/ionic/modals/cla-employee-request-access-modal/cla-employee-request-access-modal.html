@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>
-      Request Company Access to {{ company.company_name }}
+    <ion-title *ngIf="company.company_name">
+      Request Company Access to {{trimCharacter(company.company_name, 20)}}
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -15,15 +15,6 @@
   <loading-spinner [loading]="loading"></loading-spinner>
   <form [formGroup]="form" id="form" [ngClass]="{'submit-attempt': submitAttempt}">
     <ion-grid>
-      <ion-row *ngIf="submitAttempt && !form.valid">
-        <ion-col col-12>
-          <ion-item no-lines *ngFor="let error of formErrors">
-            <ion-label color="danger">
-              {{ error.message }}
-            </ion-label>
-          </ion-item>
-        </ion-col>
-      </ion-row>
       <ion-row>
         <ion-col col-12>
           <p>After you click send you will have to wait for {{ company.company_name }} CLA Manager to add you to their
@@ -47,8 +38,8 @@
               <ion-radio value="enter manager"></ion-radio>
             </ion-item>
             <ion-item lines="none"
-              *ngIf="!form.controls.manager.valid && (form.controls.manager.touched || submitAttempt)" no-lines>
-              <p>* Selecting an option is required.</p>
+              *ngIf="!form.controls.managerOptions.valid && (form.controls.managerOptions.touched || submitAttempt)" no-lines>
+              <p class="error-message">* Selecting an option is required.</p>
             </ion-item>
           </ion-list>
 
@@ -56,18 +47,12 @@
       </ion-row>
 
       <ion-row *ngIf="showManagerSelectOption && managers.length > 0">
-        <ion-list-header lines="none">
-          <b>Select CLA Manager for {{ company.company_name }}</b>
-        </ion-list-header>
+        <b>{{managers.length > 1 ? 'Select ': ''}}CLA Manager for {{ company.company_name }}</b>
         <ion-col col-12>
-          <ion-list>
-            <ion-item lines="none">
-              <ion-label stacked>Select one of the existing CLA Managers associated with {{ company.company_name }}.
-              </ion-label>
-              <ion-select formControlName="manager">
-                <ion-option *ngFor="let manager of managers" value="{{ manager.userID }}">{{ manager.username }} /
-                  {{ manager.lfEmail }}</ion-option>
-              </ion-select>
+          <ion-list radio-group formControlName="manager">
+            <ion-item *ngFor="let manager of managers">
+              <ion-label>{{ manager.username }} / {{ manager.lfEmail }}</ion-label>
+              <ion-radio value="{{ manager.userID }}"></ion-radio>
             </ion-item>
           </ion-list>
         </ion-col>
@@ -82,38 +67,43 @@
             <ion-label stacked>CLA Manager Name:</ion-label>
             <ion-textarea formControlName="recipient_name"></ion-textarea>
           </ion-item>
-          <p class="field-description">Type your CLA manager's name.</p>
+          <p class="field-description">
+            Type your CLA manager's name. 
+            <ng-container *ngIf="!form.controls.recipient_email.valid && (form.controls.recipient_email.touched || submitAttempt)">
+              <span class="error-message">* CLA manager's name is required.</span>
+            </ng-container>
+          </p>
 
           <ion-item lines="none">
             <ion-label stacked>CLA Manager E-Mail:</ion-label>
             <ion-textarea formControlName="recipient_email"></ion-textarea>
           </ion-item>
-          <p class="field-description">Type an E-Mail.</p>
-          <ion-item lines="none"
-            *ngIf="!form.controls.recipient_email.valid && (form.controls.recipient_email.touched || submitAttempt)"
-            no-lines>
-            <p>* A valid email address is required.</p>
-          </ion-item>
+          <p class="field-description">
+            Type an E-Mail. 
+            <ng-container *ngIf="!form.controls.recipient_email.valid && (form.controls.recipient_email.touched || submitAttempt)">
+              <span class="error-message">* A valid email address is required.</span>
+            </ng-container>
+          </p>
         </ion-col>
       </ion-row>
 
       <ion-row>
-        <ion-list-header no-lines>
-          <b>Enter Email to Authorize</b>
-        </ion-list-header>
+        <b>{{userEmails.length > 1 ? 'Select ': ''}}Your Email to Authorize</b>
         <ion-col col-12>
-          <ion-item lines="none">
-            <ion-label stacked>Select Your Email to Authorize</ion-label>
-            <ion-select formControlName="user_email">
-              <ion-option *ngFor="let email of userEmails" value="{{ email }}">{{ email }}</ion-option>
-            </ion-select>
-          </ion-item>
-          <p class="field-description">Select the email address attached to your account that you would like your
-            company's CLA Manager to whitelist.</p>
-          <ion-item lines="none"
-            *ngIf="!form.controls.user_email.valid && (form.controls.user_email.touched || submitAttempt)" no-lines>
-            <p>* A valid email address is required.</p>
-          </ion-item>
+          <ion-list radio-group formControlName="user_email">
+            <ion-item *ngFor="let email of userEmails">
+              <ion-label>{{ email }}</ion-label>
+              <ion-radio value="{{ email }}"></ion-radio>
+            </ion-item>
+          </ion-list>
+          <p class="field-description">
+            Select the email address attached to your account that you would like your
+            company's CLA Manager to whitelist.
+            <ng-container *ngIf="!form.controls.user_email.valid && (form.controls.user_email.touched || submitAttempt)">
+              <span class="error-message"> * A valid email address is required </span>
+            </ng-container>
+          </p>
+          
         </ion-col>
       </ion-row>
 
@@ -128,7 +118,11 @@
           </ion-item>
           <p class="field-description">Explain to your CLA Manager who you are and why you would like to contribute to
             {{project.project_name}} as an
-            employee of {{ company.company_name}}.</p>
+            employee of {{ company.company_name}}.
+            <ng-container *ngIf="!form.controls.message.valid && (form.controls.message.touched || submitAttempt)">
+              <span class="error-message"> * Message is required </span>
+            </ng-container>
+          </p>
         </ion-col>
       </ion-row>
     </ion-grid>

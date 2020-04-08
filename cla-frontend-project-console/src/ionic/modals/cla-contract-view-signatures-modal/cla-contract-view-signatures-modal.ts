@@ -44,7 +44,7 @@ export class ClaContractViewSignaturesModal {
 
 
   // Pagination next/previous options
-  limitPerPage: number = 10;
+  limitPerPage: number = 100;
   resultCount: number = 0;
   nextKey = null;
   previousKeys = [];

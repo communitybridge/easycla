@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AlertController, IonicPage, ModalController, NavController, NavParams, ViewController } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EmailValidator } from '../../validators/email';
@@ -41,7 +41,6 @@ export class ClaEmployeeRequestAccessModal {
     public modalCtrl: ModalController,
     public viewCtrl: ViewController,
     public alertCtrl: AlertController,
-    private changeDetectorRef: ChangeDetectorRef,
     private formBuilder: FormBuilder,
     private claService: ClaService
   ) {
@@ -55,9 +54,10 @@ export class ClaEmployeeRequestAccessModal {
     this.userId = navParams.get('userId');
     this.companyId = navParams.get('companyId');
     this.authenticated = navParams.get('authenticated');
+
     this.form = formBuilder.group({
       user_email: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      message: [''],
+      message: ['', Validators.compose([Validators.required])],
       recipient_name: [''],
       recipient_email: [''],
       manager: [''],
@@ -74,10 +74,18 @@ export class ClaEmployeeRequestAccessModal {
       this.showManagerEnterOption = false;
       this.resetFormValues('recipient_name');
       this.resetFormValues('recipient_email');
+      this.form.controls['recipient_name'].clearValidators();
+      this.form.controls['recipient_email'].clearValidators();
     } else if (option === 'enter manager') {
       this.showManagerSelectOption = false;
       this.showManagerEnterOption = true;
-      this.resetFormValues('manager');
+      if(this.managers.length > 1) {
+        this.resetFormValues('manager');
+      }
+      this.form.controls['recipient_name'].setValidators(Validators.compose([Validators.required]));
+      this.form.controls['recipient_email'].setValidators(Validators.compose([Validators.required, EmailValidator.isValid]));
+      this.form.controls['recipient_name'].updateValueAndValidity();
+      this.form.controls['recipient_email'].updateValueAndValidity();
     }
   }
 
@@ -92,13 +100,16 @@ export class ClaEmployeeRequestAccessModal {
     return manager;
   }
 
-  getDefaults() {
+   getDefaults() {
     this.userEmails = [];
   }
 
   ngOnInit() {
     this.getUser(this.userId, this.authenticated).subscribe((user) => {
       if (user) {
+        if(user.user_emails.length === 1) {
+          this.form.controls['user_email'].setValue(user.user_emails[0]);
+        }
         this.userEmails = user.user_emails || [];
         if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
           this.userEmails.push(user.lf_email);
@@ -145,18 +156,14 @@ export class ClaEmployeeRequestAccessModal {
     this.claService.getCompanyProjectSignatures(companyId, projectId).subscribe(
       (response) => {
         this.loading = false;
-        console.log('Signatures for project: ' + projectId + ' for company: ' + companyId);
-        console.log(response);
         if (response.signatures) {
           let cclaSignatures = response.signatures.filter((sig) => sig.signatureType === 'ccla');
-          console.log('CCLA Signatures for project: ' + cclaSignatures.length);
           if (cclaSignatures.length) {
-            console.log('CCLA Signatures for project id: ' + projectId + ' and company id: ' + companyId);
-            console.log(cclaSignatures);
             this.cclaSignature = cclaSignatures[0];
-            console.log(this.cclaSignature);
-            console.log(this.cclaSignature.signatureACL);
             if (this.cclaSignature.signatureACL != null) {
+              if(this.cclaSignature.signatureACL.length === 1) {
+                this.form.controls['manager'].setValue(this.cclaSignature.signatureACL[0].userID);
+              }
               for (let manager of this.cclaSignature.signatureACL) {
                 this.insertAndSortManagersList({
                   userID: manager.userID,
@@ -172,9 +179,9 @@ export class ClaEmployeeRequestAccessModal {
         this.loading = false;
         console.log(
           'Exception while calling: getCompanyProjectSignatures() for company ID: ' +
-            companyId +
-            ' and project ID: ' +
-            projectId
+          companyId +
+          ' and project ID: ' +
+          projectId
         );
         console.log(exception);
       }
@@ -192,6 +199,15 @@ export class ClaEmployeeRequestAccessModal {
     this.formErrors = [];
     console.log("Form");
     console.log(this.form);
+
+    if (!this.form.valid) {
+      this.getFormValidationErrors();
+      this.currentlySubmitting = false;
+      // prevent submit
+      console.log('invalid')
+      return;
+    }
+
     let data = {
       company_id: this.companyId,
       user_id: this.userId,
@@ -208,12 +224,7 @@ export class ClaEmployeeRequestAccessModal {
           : undefined
     };
 
-    if (!this.form.valid) {
-      this.getFormValidationErrors();
-      this.currentlySubmitting = false;
-      // prevent submit
-      return;
-    }
+    
     this.claService.postUserMessageToCompanyManager(this.userId, this.companyId, data).subscribe((response) => {
       this.loading = true;
       this.emailSent();
@@ -227,7 +238,7 @@ export class ClaEmployeeRequestAccessModal {
     }
     this.claService.postCCLAWhitelistRequest(this.companyId, this.projectId, user).subscribe(
       () => {
-        console.log(this.userId+ ' ccla whitelist request for project: ' + this.projectId + ' for company: ' + this.companyId);
+        console.log(this.userId + ' ccla whitelist request for project: ' + this.projectId + ' for company: ' + this.companyId);
       },
       (exception) => {
         console.log('Exception during ccla whitelist request for user ' + this.userId + ' on project: ' + this.projectId + ' and company: ' + this.companyId);
@@ -264,6 +275,13 @@ export class ClaEmployeeRequestAccessModal {
             case 'user_email':
               message = `*Email Authorize Field is ${keyError}`;
               break;
+            case 'recipient_email':
+              message = `*Receipent Email Field is ${keyError}`;
+              break;
+            case 'message':
+                  message = `*Message Field is ${keyError}`;
+              break;
+
             default:
               message = `Check Fields for errors`;
           }
@@ -273,5 +291,9 @@ export class ClaEmployeeRequestAccessModal {
         });
       }
     });
+  }
+
+  trimCharacter(text, length) {
+    return text.length > length ? text.substring(0, length) + '...' : text;
   }
 }
