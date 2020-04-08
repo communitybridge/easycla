@@ -33,5 +33,4 @@
   * [Add or Delete CLA Managers](ccla-managers-and-ccla-signatories/add-or-delete-ccla-managers.md)
   * [View Employee Acknowledgements](ccla-managers-and-ccla-signatories/view-employee-acknowledgements.md)
   * [Edit the Company Name and Manager Details](ccla-managers-and-ccla-signatories/edit-the-company-name-and-manager-details.md)
-* [Untitled](untitled.md)
 
