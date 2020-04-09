@@ -31,3 +31,9 @@ type DBManagersModel struct {
 	SignatureID  string   `json:"signature_id"`
 	SignatureACL []string `json:"signature_acl"`
 }
+
+// DBSignatureUsersModel is a database model for only the signature ID and signature_reference_id fields
+type DBSignatureUsersModel struct {
+	SignatureID string `json:"signature_id"`
+	UserID      string `json:"signature_reference_id"`
+}

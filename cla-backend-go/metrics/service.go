@@ -29,21 +29,21 @@ type Service interface {
 }
 
 type service struct {
-	userRepo         users.Repository
-	companyRepo      company.RepositoryService
+	userRepo         users.UserRepository
+	companyRepo      company.CompanyRepository
 	repositoriesRepo repositories.Repository
 	signatureRepo    signatures.SignatureRepository
-	projectRepo      project.Repository
+	projectRepo      project.ProjectRepository
 	metricsRepo      Repository
 }
 
 // NewService creates new instance of metrics service
 func NewService(
-	userRepo users.Repository,
-	companyRepo company.RepositoryService,
+	userRepo users.UserRepository,
+	companyRepo company.CompanyRepository,
 	repositoriesRepo repositories.Repository,
 	signatureRepo signatures.SignatureRepository,
-	projectRepo project.Repository,
+	projectRepo project.ProjectRepository,
 	metricsRepo Repository,
 ) Service {
 	return &service{

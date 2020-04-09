@@ -4,16 +4,14 @@
 package signatures
 
 import (
-	"fmt"
-
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
-	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/company"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/github"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/savaki/dynastore"
 )
@@ -66,10 +64,10 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		if err != nil {
 			log.Warnf("error fetching github organization whitelist entries v using signature_id: %s, error: %+v",
 				params.SignatureID, err)
-			return company.NewGetGithubOrganizationfromClaBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewGetGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return company.NewGetGithubOrganizationfromClaOK().WithPayload(ghWhiteList)
+		return signatures.NewGetGitHubOrgWhitelistOK().WithPayload(ghWhiteList)
 	})
 
 	// Add GitHub Whitelist Entries
@@ -90,14 +88,13 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		if err != nil {
 			log.Warnf("error adding github organization %s using signature_id: %s to the whitelist, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
-			return company.NewAddGithubOrganizationFromClaBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewAddGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
 		}
 
 		// Create an event
 		signatureModel, getSigErr := service.GetSignature(params.SignatureID)
 		var projectID = ""
 		var companyID = ""
-		var companyName = ""
 		if getSigErr != nil || signatureModel == nil {
 			log.Warnf("error looking up signature using signature_id: %s, error: %+v",
 				params.SignatureID, getSigErr)
@@ -105,20 +102,18 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		if signatureModel != nil {
 			projectID = signatureModel.ProjectID
 			companyID = signatureModel.SignatureReferenceID
-			companyName = signatureModel.CompanyName
 		}
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.WhitelistGithubOrganizationAdded,
+			ProjectID: projectID,
+			CompanyID: companyID,
+			UserID:    claUser.UserID,
+			EventData: &events.WhitelistGithubOrganizationAddedEventData{
+				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
+			},
+		})
 
-		eventsService.CreateAuditEvent(
-			events.AddGithubOrgToWL, // event type
-			claUser,
-			projectID,
-			companyID,
-			fmt.Sprintf("CLA Manager %s added GitHub Org %s to the whitelist for project %s company %s (%s).",
-				claUser.Name, *params.Body.OrganizationID, projectID, companyName, companyID),
-			true,
-		)
-
-		return company.NewAddGithubOrganizationFromClaOK().WithPayload(ghWhiteList)
+		return signatures.NewAddGitHubOrgWhitelistOK().WithPayload(ghWhiteList)
 	})
 
 	// Delete GitHub Whitelist Entries
@@ -140,14 +135,13 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		if err != nil {
 			log.Warnf("error deleting github organization %s using signature_id: %s from the whitelist, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
-			return company.NewDeleteGithubOrganizationFromClaBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewDeleteGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
 		}
 
 		// Create an event
 		signatureModel, getSigErr := service.GetSignature(params.SignatureID)
 		var projectID = ""
 		var companyID = ""
-		var companyName = ""
 		if getSigErr != nil || signatureModel == nil {
 			log.Warnf("error looking up signature using signature_id: %s, error: %+v",
 				params.SignatureID, getSigErr)
@@ -155,20 +149,19 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		if signatureModel != nil {
 			projectID = signatureModel.ProjectID
 			companyID = signatureModel.SignatureReferenceID
-			companyName = signatureModel.CompanyName
 		}
 
-		eventsService.CreateAuditEvent(
-			events.DeleteGithubOrgFromWL, // event type
-			claUser,
-			projectID,
-			companyID,
-			fmt.Sprintf("CLA Manager %s removed GitHub Org %s from the whitelist for project %s company %s (%s).",
-				claUser.Name, *params.Body.OrganizationID, projectID, companyName, companyID),
-			true,
-		)
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.WhitelistGithubOrganizationDeleted,
+			ProjectID: projectID,
+			CompanyID: companyID,
+			UserID:    claUser.UserID,
+			EventData: &events.WhitelistGithubOrganizationDeletedEventData{
+				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
+			},
+		})
 
-		return company.NewDeleteGithubOrganizationFromClaOK().WithPayload(ghWhiteList)
+		return signatures.NewDeleteGitHubOrgWhitelistNoContent().WithPayload(ghWhiteList)
 	})
 
 	// Get Project Signatures
