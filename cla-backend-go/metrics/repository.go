@@ -675,20 +675,6 @@ func (repo *repo) processGerritInstancesTable(metrics *Metrics) error {
 
 func (repo *repo) processProjectsTable(metrics *Metrics) error {
 	projectTableName := fmt.Sprintf("cla-%s-projects", repo.stage)
-	projectCount, err := repo.getItemCount(projectTableName)
-	if err != nil {
-		return err
-	}
-	metrics.TotalCountMetrics.ProjectsCount = projectCount
-	err = repo.fillProjectInfo(metrics)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (repo *repo) fillProjectInfo(metrics *Metrics) error {
-	projectTableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 	log.Println("processing project table to fill project info")
 	projection := expression.NamesList(
 		expression.Name("project_id"),
@@ -725,6 +711,7 @@ func (repo *repo) fillProjectInfo(metrics *Metrics) error {
 		}
 
 		for _, project := range projects {
+			metrics.TotalCountMetrics.ProjectsCount++
 			metrics.ProjectMetrics.processProjectItem(project, repo.apiGatewayURL)
 		}
 
