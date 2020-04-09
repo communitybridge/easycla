@@ -6,6 +6,8 @@ package project
 import (
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/events"
+
 	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -20,7 +22,7 @@ import (
 const defaultPageSize int64 = 50
 
 // Configure establishes the middleware handlers for the project service
-func Configure(api *operations.ClaAPI, service Service) {
+func Configure(api *operations.ClaAPI, service Service, eventsService events.Service) {
 	// Create CLA Group/Project Handler
 	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, claUser *user.CLAUser) middleware.Responder {
 		if params.Body.ProjectName == "" || params.Body.ProjectACL == nil {
@@ -58,6 +60,13 @@ func Configure(api *operations.ClaAPI, service Service) {
 			log.Warnf("Create Project Failed - %+v", err)
 			return project.NewCreateProjectBadRequest().WithPayload(errorResponse(err))
 		}
+
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.ProjectCreated,
+			ProjectModel: projectModel,
+			UserID:       claUser.UserID,
+			EventData:    &events.ProjectCreatedEventData{},
+		})
 
 		log.Infof("Create Project Succeeded, project name: %s, project external ID: %s",
 			params.Body.ProjectName, params.Body.ProjectExternalID)
@@ -134,13 +143,26 @@ func Configure(api *operations.ClaAPI, service Service) {
 	// Delete Project By ID
 	api.ProjectDeleteProjectByIDHandler = project.DeleteProjectByIDHandlerFunc(func(projectParams project.DeleteProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
 		log.Debugf("Processing delete request with project id: %s", projectParams.ProjectID)
-		err := service.DeleteProject(projectParams.ProjectID)
+		projectModel, err := service.GetProjectByID(projectParams.ProjectID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
 				return project.NewDeleteProjectByIDNotFound()
 			}
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
+		err = service.DeleteProject(projectParams.ProjectID)
+		if err != nil {
+			if err == ErrProjectDoesNotExist {
+				return project.NewDeleteProjectByIDNotFound()
+			}
+			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
+		}
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.ProjectDeleted,
+			ProjectModel: projectModel,
+			UserID:       claUser.UserID,
+			EventData:    &events.ProjectDeletedEventData{},
+		})
 
 		return project.NewDeleteProjectByIDNoContent()
 	})
@@ -154,6 +176,12 @@ func Configure(api *operations.ClaAPI, service Service) {
 			}
 			return project.NewUpdateProjectBadRequest().WithPayload(errorResponse(err))
 		}
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.ProjectUpdated,
+			ProjectModel: projectModel,
+			UserID:       claUser.UserID,
+			EventData:    &events.ProjectUpdatedEventData{},
+		})
 
 		return project.NewUpdateProjectOK().WithPayload(projectModel)
 	})

@@ -4,39 +4,28 @@
 package events
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	eventOps "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/events"
-	ini "github.com/communitybridge/easycla/cla-backend-go/init"
-	"github.com/communitybridge/easycla/cla-backend-go/user"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEventsService(t *testing.T) {
-	awsSession, err := ini.GetAWSSession()
-	if err != nil {
-		assert.Fail(t, fmt.Sprintf("Unable to load AWS session - Error: %v", err))
-	}
-	stage := "dev"
 
-	claUser := &user.CLAUser{
-		UserID:         "test",
-		Name:           "Test User",
-		Emails:         []string{"test@foo.com"},
-		LFEmail:        "test@foo.com",
-		LFUsername:     "testlf",
-		LfidProvider:   user.Provider{},
-		GithubProvider: user.Provider{},
-		ProjectIDs:     []string{"project-1234"},
-		ClaIDs:         []string{"1234"},
-		CompanyIDs:     []string{"company-1234"},
-	}
-	eventsMockRepo := NewMockRepository(awsSession, stage)
-	eventsService := NewService(eventsMockRepo)
+	mockRepo := NewMockRepository()
+	eventsMockRepo := mockRepo
+	combinedMockRepo := mockRepo
+	eventsService := NewService(eventsMockRepo, combinedMockRepo)
 
-	eventsService.CreateAuditEvent(CreateUser, claUser, "project-1234", "company-1234", "Audit event test", false)
+	eventsService.LogEvent(&LogEventArgs{
+		EventType: GithubOrganizationAdded,
+		ProjectID: "project-1234",
+		CompanyID: "company-1234",
+		UserID:    "testUserID",
+		EventData: &GithubOrganizationAddedEventData{GithubOrganizationName: "testorg"},
+	})
+
 	eventsSearch, err := eventsService.SearchEvents(&eventOps.SearchEventsParams{
 		ProjectID: aws.String("project-1234"),
 		CompanyID: aws.String("company-1234"),

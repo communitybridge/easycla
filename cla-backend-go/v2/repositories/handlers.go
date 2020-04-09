@@ -30,7 +30,15 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 			if err != nil {
 				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
-			addGithubRepositoryEvent(eventService, authUser, &params.GithubRepositoryInput)
+			eventService.LogEvent(&events.LogEventArgs{
+				EventType:         events.GithubRepositoryAdded,
+				ProjectID:         utils.StringValue(params.GithubRepositoryInput.RepositoryProjectID),
+				ExternalProjectID: params.ProjectSFID,
+				LfUsername:        authUser.UserName,
+				EventData: &events.GithubRepositoryAddedEventData{
+					RepositoryName: utils.StringValue(params.GithubRepositoryInput.RepositoryName),
+				},
+			})
 			return github_repositories.NewAddProjectGithubRepositoryOK().WithPayload(*result)
 		})
 
@@ -48,7 +56,15 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 			if err != nil {
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
-			deleteGithubRepositoryEvent(eventService, authUser, ghRepo.RepositoryName, ghRepo.RepositoryProjectID)
+			eventService.LogEvent(&events.LogEventArgs{
+				EventType:         events.GithubRepositoryDeleted,
+				ExternalProjectID: params.ProjectSFID,
+				ProjectID:         ghRepo.RepositoryProjectID,
+				LfUsername:        authUser.UserName,
+				EventData: &events.GithubRepositoryDeletedEventData{
+					RepositoryName: ghRepo.RepositoryName,
+				},
+			})
 			return github_repositories.NewDeleteProjectGithubRepositoryOK()
 		})
 }
