@@ -6,6 +6,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/github_repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -32,7 +33,15 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 			if err != nil {
 				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
-			addGithubRepositoryEvent(eventService, claUser, params.GithubRepositoryInput)
+			eventService.LogEvent(&events.LogEventArgs{
+				EventType:         events.GithubRepositoryAdded,
+				ProjectID:         utils.StringValue(params.GithubRepositoryInput.RepositoryProjectID),
+				ExternalProjectID: params.ProjectSFID,
+				UserID:            claUser.UserID,
+				EventData: &events.GithubRepositoryAddedEventData{
+					RepositoryName: utils.StringValue(params.GithubRepositoryInput.RepositoryName),
+				},
+			})
 			return github_repositories.NewAddProjectGithubRepositoryOK().WithPayload(result)
 		})
 
@@ -52,7 +61,15 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 			if err != nil {
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
-			deleteGithubRepositoryEvent(eventService, claUser, ghRepo.RepositoryName, ghRepo.RepositoryProjectID)
+			eventService.LogEvent(&events.LogEventArgs{
+				EventType:         events.GithubRepositoryDeleted,
+				ExternalProjectID: params.ProjectSFID,
+				ProjectID:         ghRepo.RepositoryProjectID,
+				UserID:            claUser.UserID,
+				EventData: &events.GithubRepositoryDeletedEventData{
+					RepositoryName: ghRepo.RepositoryName,
+				},
+			})
 			return github_repositories.NewDeleteProjectGithubRepositoryOK()
 		})
 }

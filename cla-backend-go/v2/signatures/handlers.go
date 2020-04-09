@@ -4,14 +4,12 @@
 package signatures
 
 import (
-	"fmt"
-
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
-	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/company"
 	v1Signatures "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/signatures"
@@ -89,7 +87,6 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 		signatureModel, getSigErr := service.GetSignature(params.SignatureID)
 		var projectID = ""
 		var companyID = ""
-		var companyName = ""
 		if getSigErr != nil || signatureModel == nil {
 			log.Warnf("error looking up signature using signature_id: %s, error: %+v",
 				params.SignatureID, getSigErr)
@@ -97,20 +94,18 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 		if signatureModel != nil {
 			projectID = signatureModel.ProjectID
 			companyID = signatureModel.SignatureReferenceID
-			companyName = signatureModel.CompanyName
 		}
 
-		eventsService.CreateAuditEventWithUserID(
-			events.AddGithubOrgToWL, // event type
-			authUser.UserName,
-			projectID,
-			companyID,
-			fmt.Sprintf("CLA Manager %s added GitHub Org %s to the whitelist for project %s company %s (%s).",
-				authUser.UserName, *params.Body.OrganizationID, projectID, companyName, companyID),
-			true,
-		)
-
-		return company.NewAddGithubOrganizationFromClaOK().WithPayload(ghWhiteList)
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:  events.WhitelistGithubOrganizationAdded,
+			ProjectID:  projectID,
+			CompanyID:  companyID,
+			LfUsername: authUser.UserName,
+			EventData: &events.WhitelistGithubOrganizationAddedEventData{
+				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
+			},
+		})
+		return signatures.NewAddGitHubOrgWhitelistOK().WithPayload(ghWhiteList)
 	})
 
 	// Delete GitHub Whitelist Entries
@@ -139,7 +134,6 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 		signatureModel, getSigErr := service.GetSignature(params.SignatureID)
 		var projectID = ""
 		var companyID = ""
-		var companyName = ""
 		if getSigErr != nil || signatureModel == nil {
 			log.Warnf("error looking up signature using signature_id: %s, error: %+v",
 				params.SignatureID, getSigErr)
@@ -147,20 +141,18 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 		if signatureModel != nil {
 			projectID = signatureModel.ProjectID
 			companyID = signatureModel.SignatureReferenceID
-			companyName = signatureModel.CompanyName
 		}
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:  events.WhitelistGithubOrganizationDeleted,
+			ProjectID:  projectID,
+			CompanyID:  companyID,
+			LfUsername: authUser.UserName,
+			EventData: &events.WhitelistGithubOrganizationDeletedEventData{
+				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
+			},
+		})
 
-		eventsService.CreateAuditEventWithUserID(
-			events.DeleteGithubOrgFromWL, // event type
-			authUser.UserName,
-			projectID,
-			companyID,
-			fmt.Sprintf("CLA Manager %s removed GitHub Org %s from the whitelist for project %s company %s (%s).",
-				authUser.UserName, *params.Body.OrganizationID, projectID, companyName, companyID),
-			true,
-		)
-
-		return company.NewDeleteGithubOrganizationFromClaOK().WithPayload(ghWhiteList)
+		return signatures.NewDeleteGitHubOrgWhitelistNoContent().WithPayload(ghWhiteList)
 	})
 
 	// Get Project Signatures

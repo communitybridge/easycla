@@ -32,11 +32,11 @@ var (
 	ErrCompanyDoesNotExist = errors.New("company does not exist")
 )
 
-// RepositoryService interface methods
-type RepositoryService interface {
+// CompanyRepository interface methods
+type CompanyRepository interface { //nolint
 	GetMetrics() (*models.CompaniesMetrics, error)
 	GetCompanies() (*models.Companies, error)
-	GetCompany(companyID string) (Company, error)
+	GetCompany(companyID string) (*models.Company, error)
 	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
 	GetCompaniesByUserManager(userID string, userModel user.User) (*models.Companies, error)
 	GetCompaniesByUserManagerWithInvites(userID string, userModel user.User) (*models.CompaniesWithInvites, error)
@@ -74,7 +74,7 @@ type Invite struct {
 }
 
 // NewRepository creates a new company repository instance
-func NewRepository(awsSession *session.Session, stage string) RepositoryService {
+func NewRepository(awsSession *session.Session, stage string) CompanyRepository {
 	return repository{
 		stage:          stage,
 		dynamoDBClient: dynamodb.New(awsSession),
@@ -158,7 +158,7 @@ func (repo repository) GetCompanies() (*models.Companies, error) {
 }
 
 // GetCompany returns a company based on the company ID
-func (repo repository) GetCompany(companyID string) (Company, error) {
+func (repo repository) GetCompany(companyID string) (*models.Company, error) {
 
 	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
 	queryStartTime := time.Now()
@@ -175,22 +175,42 @@ func (repo repository) GetCompany(companyID string) (Company, error) {
 	if err != nil {
 		log.Warnf(err.Error())
 		log.Warnf("error fetching company table data using company id: %s, error: %v", companyID, err)
-		return Company{}, err
+		return nil, err
 	}
 
 	if len(companyTableData.Item) == 0 {
-		return Company{}, ErrCompanyDoesNotExist
+		return nil, ErrCompanyDoesNotExist
 	}
 	log.Debugf("Get company query took: %v", utils.FmtDuration(time.Since(queryStartTime)))
 
-	company := Company{}
-	err = dynamodbattribute.UnmarshalMap(companyTableData.Item, &company)
+	dbCompanyModel := Company{}
+	err = dynamodbattribute.UnmarshalMap(companyTableData.Item, &dbCompanyModel)
 	if err != nil {
 		log.Warnf("error unmarshalling company table data, error: %v", err)
-		return Company{}, err
+		return nil, err
+	}
+	const timeFormat = "2006-01-02T15:04:05.999999+0000"
+	// Convert the "string" date time
+	createdDateTime, err := time.Parse(timeFormat, dbCompanyModel.Created)
+	if err != nil {
+		log.Warnf("Error converting created date time for company: %s, error: %v", companyID, err)
+		return nil, err
+	}
+	updateDateTime, err := time.Parse(timeFormat, dbCompanyModel.Updated)
+	if err != nil {
+		log.Warnf("Error converting updated date time for company: %s, error: %v", companyID, err)
+		return nil, err
 	}
 
-	return company, nil
+	// Convert the local DB model to a public swagger model
+	return &models.Company{
+		CompanyACL:  dbCompanyModel.CompanyACL,
+		CompanyID:   dbCompanyModel.CompanyID,
+		CompanyName: dbCompanyModel.CompanyName,
+		Created:     strfmt.DateTime(createdDateTime),
+		Updated:     strfmt.DateTime(updateDateTime),
+	}, nil
+
 }
 
 // SearchCompanyByName locates companies by the matching name and return any potential matches
@@ -460,20 +480,6 @@ func (repo repository) buildCompaniesByUserManagerWithInvites(companies *models.
 			continue
 		}
 
-		createdDateTime, err := utils.ParseDateTime(company.Created)
-		if err != nil {
-			log.Warnf("Unable to parse company created date time: %s, error: %v - using current time",
-				company.Created, err)
-			createdDateTime = time.Now()
-		}
-
-		modifiedDateTime, err := utils.ParseDateTime(company.Updated)
-		if err != nil {
-			log.Warnf("Unable to parse company modified date time: %s, error: %v - using current time",
-				company.Created, err)
-			modifiedDateTime = time.Now()
-		}
-
 		// Default status is pending if there's a record but no status
 		if invite.Status == "" {
 			invite.Status = StatusPending
@@ -483,8 +489,8 @@ func (repo repository) buildCompaniesByUserManagerWithInvites(companies *models.
 			CompanyName: company.CompanyName,
 			CompanyID:   company.CompanyID,
 			CompanyACL:  company.CompanyACL,
-			Created:     strfmt.DateTime(createdDateTime),
-			Updated:     strfmt.DateTime(modifiedDateTime),
+			Created:     company.Created,
+			Updated:     company.Updated,
 			Status:      invite.Status,
 		})
 	}
