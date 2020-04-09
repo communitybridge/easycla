@@ -18,13 +18,17 @@
     <ion-grid>
       <ion-row *ngIf="submitAttempt && !form.valid">
         <ion-col col-12>
-          <p class="form-message">Please check the fields below for errors.</p>
+          <p class="error">Please check the fields below for errors.</p>
         </ion-col>
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <p>Your company <span class="name">{{ company.company_name }}</span> has not signed a Corporate CLA yet. Would you like to send an
+          <p>Your company <span class="name">{{ company.company_name }}</span> has not signed a Corporate CLA yet. Would
+            you like to send an
             E-Mail Notification to the CLA Manager to sign the Corporate CLA?</p>
+        </ion-col>
+        <ion-col col-12 class="error" *ngIf="hasRequestError">
+          CCLA whiltelist request already exist
         </ion-col>
       </ion-row>
       <ion-row>
@@ -46,7 +50,7 @@
   </form>
 </ion-content>
 
-<ion-footer >
+<ion-footer>
   <ion-toolbar>
     <ion-buttons end>
       <button ion-button icon-right color="light" (click)="dismiss()">
