@@ -94,7 +94,7 @@ export class ClaEmployeeRequestAccessModal {
   }
 
   getCLAManagerDetails(managerId) {
-    const manager = this.managers.filter((manager) => {
+    const manager = this.managers.find((manager) => {
       return (manager.userID = managerId);
     });
     return manager;
@@ -207,6 +207,13 @@ export class ClaEmployeeRequestAccessModal {
       console.log('invalid')
       return;
     }
+ 
+    let selectedMangerEmail;
+    let selectedManagerUsername;
+    if (this.form.value.manager && this.form.value.managerOptions === 'select manager') {
+     selectedMangerEmail = this.getCLAManagerDetails(this.form.value.manager).lfEmail;
+     selectedManagerUsername = this.getCLAManagerDetails(this.form.value.manager).username;
+    }
 
     let data = {
       company_id: this.companyId,
@@ -214,17 +221,10 @@ export class ClaEmployeeRequestAccessModal {
       user_email: this.form.value.user_email,
       project_id: this.projectId,
       message: this.form.value.message,
-      recipient_name:
-        this.form.value.recipient_name || this.form.value.manager
-          ? this.getCLAManagerDetails(this.form.value.message)[0].username
-          : undefined,
-      recipient_email:
-        this.form.value.recipient_email || this.form.value.manager
-          ? this.getCLAManagerDetails(this.form.value.message)[0].lfEmail
-          : undefined
+      recipient_name: this.form.value.managerOptions === 'select manager' ? selectedManagerUsername : this.form.value.recipient_name,
+      recipient_email: this.form.value.managerOptions === 'select manager' ? selectedMangerEmail : this.form.value.recipient_email,
     };
 
-    
     this.claService.postUserMessageToCompanyManager(this.userId, this.companyId, data).subscribe((response) => {
       this.loading = true;
       this.emailSent();
