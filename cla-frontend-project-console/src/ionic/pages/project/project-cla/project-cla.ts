@@ -300,6 +300,91 @@ export class ProjectClaPage {
     alert.present();
   }
 
+
+  deleteClaGroup(name: string, id: string) {
+    let alert = this.alertCtrl.create({
+      subTitle: `Delete ${name}`,
+      message: `Are you sure you want to delete this ${name}?`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => { }
+        },
+        {
+          text: 'Delete',
+          handler: () => {
+            this.deleteClaProject(name, id);
+          }
+        }
+      ]
+    });
+
+    alert.present();
+  }
+
+  deleteClaGroupError(name: string, id: string) {
+    let alert = this.alertCtrl.create({
+      subTitle: `Delete ${name}`,
+      message: `Could not delete ${name}. Please try again or contact support`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => { }
+        },
+        {
+          text: 'Retry',
+          handler: () => {
+            this.deleteClaProject(name, id);
+          }
+        }
+      ]
+    });
+
+    alert.present();
+  }
+
+  deleteClaGroupSuccess(name: string) {
+    let alert = this.alertCtrl.create({
+      subTitle: `Delete ${name}`,
+      message: `${name} was deleted successfully`,
+      buttons: [
+        {
+          text: 'Close',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => { }
+        }
+      ]
+    });
+
+    alert.present();
+  }
+
+
+  deleteClaProject(name: string, id: string) {
+    console.log('deleting');
+    this.loading.claProject = true;
+    this.claService.deleteClaProject(id).subscribe((res : any)=>{
+      console.log('deleting complete');
+      if(res.status === 204) {
+        this.getClaProjects();
+        this.deleteClaGroupSuccess(name);
+      }
+      else{
+        this.deleteClaGroupError(name, id)
+        this.loading.claProject = false;
+      }
+    }, err => {
+      this.deleteClaGroupError(name, id)
+      this.loading.claProject = false;
+    })
+  }
+
+
   deleteClaGithubOrganization(organization) {
     this.claService.deleteGithubOrganization(this.sfdcProjectId , this.getOrganisationName(organization.organizationName)).subscribe((response) => {
       if(response.status === 200) {
