@@ -233,6 +233,10 @@ export class ClaService {
       .catch((error) => this.handleServiceError(error));
   }
 
+  deleteClaProject(projectId: string): Observable<Response> {
+    const url: URL = this.getV3Endpoint(`/v3/project/${projectId}`);
+    return this.http.delete(url);
+  }
 
   /**
    * GET /project/{project_id}/repositories_by_org
