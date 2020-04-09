@@ -18,11 +18,11 @@ type Service interface {
 }
 
 type service struct {
-	repo Repository
+	repo UserRepository
 }
 
 // NewService creates a new whitelist service
-func NewService(repo Repository) Service {
+func NewService(repo UserRepository) Service {
 	return service{
 		repo,
 	}

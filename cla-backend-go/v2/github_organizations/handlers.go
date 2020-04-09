@@ -35,7 +35,14 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 			if err != nil {
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
-			addGithubOrganizationEvent(eventService, authUser, params.Body.OrganizationName)
+			eventService.LogEvent(&events.LogEventArgs{
+				LfUsername:        authUser.UserName,
+				EventType:         events.GithubOrganizationAdded,
+				ExternalProjectID: params.ProjectSFID,
+				EventData: &events.GithubOrganizationAddedEventData{
+					GithubOrganizationName: params.Body.OrganizationName,
+				},
+			})
 			return github_organizations.NewAddProjectGithubOrganizationOK().WithPayload(*result)
 		})
 
@@ -46,7 +53,14 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 			if err != nil {
 				return github_organizations.NewDeleteProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
-			deleteGithubOrganizationEvent(eventService, authUser, params.OrgName)
+			eventService.LogEvent(&events.LogEventArgs{
+				LfUsername:        authUser.UserName,
+				EventType:         events.GithubOrganizationDeleted,
+				ExternalProjectID: params.ProjectSFID,
+				EventData: &events.GithubOrganizationDeletedEventData{
+					GithubOrganizationName: params.OrgName,
+				},
+			})
 			return github_organizations.NewDeleteProjectGithubOrganizationOK()
 		})
 }

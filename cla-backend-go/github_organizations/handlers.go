@@ -29,7 +29,14 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 			if err != nil {
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
-			addGithubOrganizationEvent(eventService, claUser, params.Body.OrganizationName)
+			eventService.LogEvent(&events.LogEventArgs{
+				UserID:            claUser.UserID,
+				EventType:         events.GithubOrganizationAdded,
+				ExternalProjectID: params.ProjectSFID,
+				EventData: &events.GithubOrganizationAddedEventData{
+					GithubOrganizationName: params.Body.OrganizationName,
+				},
+			})
 			return github_organizations.NewAddProjectGithubOrganizationOK().WithPayload(result)
 		})
 
@@ -39,7 +46,14 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 			if err != nil {
 				return github_organizations.NewDeleteProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
-			deleteGithubOrganizationEvent(eventService, claUser, params.OrgName)
+			eventService.LogEvent(&events.LogEventArgs{
+				UserID:            claUser.UserID,
+				EventType:         events.GithubOrganizationDeleted,
+				ExternalProjectID: params.ProjectSFID,
+				EventData: &events.GithubOrganizationDeletedEventData{
+					GithubOrganizationName: params.OrgName,
+				},
+			})
 			return github_organizations.NewDeleteProjectGithubOrganizationOK()
 		})
 }

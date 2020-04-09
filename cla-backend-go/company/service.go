@@ -6,11 +6,8 @@ package company
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
-
-	"github.com/go-openapi/strfmt"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -18,7 +15,7 @@ import (
 )
 
 type service struct {
-	repo                RepositoryService
+	repo                CompanyRepository
 	userDynamoRepo      user.RepositoryService
 	corporateConsoleURL string
 }
@@ -49,7 +46,7 @@ type Service interface { // nolint
 }
 
 // NewService creates a new company service object
-func NewService(repo RepositoryService, corporateConsoleURL string, userDynamoRepo user.RepositoryService) Service {
+func NewService(repo CompanyRepository, corporateConsoleURL string, userDynamoRepo user.RepositoryService) Service {
 	return service{
 		repo:                repo,
 		userDynamoRepo:      userDynamoRepo,
@@ -64,33 +61,7 @@ func (s service) GetCompanies() (*models.Companies, error) {
 
 // GetCompany returns the company associated with the company ID
 func (s service) GetCompany(companyID string) (*models.Company, error) {
-	dbCompanyModel, err := s.repo.GetCompany(companyID)
-	if err != nil {
-		log.Warnf("Error retrieving company by company ID: %s, error: %v", companyID, err)
-		return nil, err
-	}
-
-	const timeFormat = "2006-01-02T15:04:05.999999+0000"
-	// Convert the "string" date time
-	createdDateTime, err := time.Parse(timeFormat, dbCompanyModel.Created)
-	if err != nil {
-		log.Warnf("Error converting created date time for company: %s, error: %v", companyID, err)
-		return nil, err
-	}
-	updateDateTime, err := time.Parse(timeFormat, dbCompanyModel.Updated)
-	if err != nil {
-		log.Warnf("Error converting updated date time for company: %s, error: %v", companyID, err)
-		return nil, err
-	}
-
-	// Convert the local DB model to a public swagger model
-	return &models.Company{
-		CompanyACL:  dbCompanyModel.CompanyACL,
-		CompanyID:   dbCompanyModel.CompanyID,
-		CompanyName: dbCompanyModel.CompanyName,
-		Created:     strfmt.DateTime(createdDateTime),
-		Updated:     strfmt.DateTime(updateDateTime),
-	}, nil
+	return s.repo.GetCompany(companyID)
 }
 
 // SearchCompanyByName locates companies by the matching name and return any potential matches

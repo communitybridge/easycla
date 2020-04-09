@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 
 	"github.com/communitybridge/easycla/cla-backend-go/user"
@@ -39,6 +41,14 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 					Message: msg,
 				})
 			}
+			eventsService.LogEvent(&events.LogEventArgs{
+				EventType: events.ClaManagerAccessRequestAdded,
+				UserID:    claUser.UserID,
+				EventData: &events.ClaManagerAccessRequestAddedEventData{
+					ProjectName: utils.StringValue(params.Body.ProjectName),
+					CompanyName: utils.StringValue(params.Body.CompanyName),
+				},
+			})
 
 			return onboard.NewCreateCLAManagerRequestOK().WithPayload(responseModel)
 		})
@@ -81,6 +91,13 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 				})
 			}
 
+			eventsService.LogEvent(&events.LogEventArgs{
+				EventType: events.ClaManagerAccessRequestDeleted,
+				UserID:    claUser.UserID,
+				EventData: &events.ClaManagerAccessRequestDeletedEventData{
+					RequestID: params.RequestID,
+				},
+			})
 			return onboard.NewDeleteCLAManagerRequestsByRequestIDNoContent()
 		})
 

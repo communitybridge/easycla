@@ -28,13 +28,13 @@ type Service interface {
 
 // service
 type service struct {
-	repo             Repository
+	repo             ProjectRepository
 	repositoriesRepo repositories.Repository
 	gerritRepo       gerrits.Repository
 }
 
 // NewService returns an instance of the project service
-func NewService(projectRepo Repository, repositoriesRepo repositories.Repository, gerritRepo gerrits.Repository) Service {
+func NewService(projectRepo ProjectRepository, repositoriesRepo repositories.Repository, gerritRepo gerrits.Repository) Service {
 	return service{
 		repo:             projectRepo,
 		repositoriesRepo: repositoriesRepo,
