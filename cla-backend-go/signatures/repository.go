@@ -45,6 +45,7 @@ type SignatureRepository interface {
 	GetUserSignatures(params signatures.GetUserSignaturesParams, pageSize int64) (*models.Signatures, error)
 
 	getSignatureCount(tableName string, filter expression.ConditionBuilder) (int64, error)
+	getSignatureUserUniqueCount(tableName string, filter expression.ConditionBuilder) (int64, error)
 	getSignatureManagerCounts(tableName string, filter expression.ConditionBuilder) (int64, int64, error)
 }
 
@@ -75,26 +76,12 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 	var wg sync.WaitGroup
 	wg.Add(5)
 
-	var totalCount int64
 	var cclaCount int64
 	var employeeCount int64
 	var iclaCount int64
+	var employeeAndICLAUniqueCount int64
 	var claManagerCount int64
 	var claManagerUniqueCount int64
-
-	go func(tableName string) {
-		defer wg.Done()
-		// How many total records do we have - may not be up-to-date as this value is updated only periodically
-		describeTableInput := &dynamodb.DescribeTableInput{
-			TableName: &tableName,
-		}
-		describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
-		if err != nil {
-			log.Warnf("error retrieving total record count, error: %v", err)
-		}
-		// Meta-data for the response
-		totalCount = *describeTableResult.Table.ItemCount
-	}(tableName)
 
 	// Corporate Signatures Signed by CLA Managers
 	go func(tableName string) {
@@ -102,7 +89,9 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		count, err := repo.getSignatureCount(tableName,
 			expression.Name("signature_user_ccla_company_id").AttributeNotExists().And(
 				expression.Name("signature_reference_type").Equal(expression.Value("company"))).And(
-				expression.Name("signature_type").Equal(expression.Value("ccla"))))
+				expression.Name("signature_type").Equal(expression.Value("ccla"))).And(
+				expression.Name("signature_signed").Equal(expression.Value(true))).And(
+				expression.Name("signature_approved").Equal(expression.Value(true))))
 		if err != nil {
 			log.Warnf("error retrieving CCLA signature total record count, error: %v", err)
 			return
@@ -116,7 +105,9 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		count, err := repo.getSignatureCount(tableName,
 			expression.Name("signature_user_ccla_company_id").AttributeExists().And(
 				expression.Name("signature_reference_type").Equal(expression.Value("user"))).And(
-				expression.Name("signature_type").Equal(expression.Value("cla"))))
+				expression.Name("signature_type").Equal(expression.Value("cla"))).And(
+				expression.Name("signature_signed").Equal(expression.Value(true))).And(
+				expression.Name("signature_approved").Equal(expression.Value(true))))
 		if err != nil {
 			log.Warnf("error retrieving employee signature total record count, error: %v", err)
 			return
@@ -130,12 +121,30 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		count, err := repo.getSignatureCount(tableName,
 			expression.Name("signature_user_ccla_company_id").AttributeNotExists().And(
 				expression.Name("signature_reference_type").Equal(expression.Value("user"))).And(
-				expression.Name("signature_type").Equal(expression.Value("cla"))))
+				expression.Name("signature_type").Equal(expression.Value("cla"))).And(
+				expression.Name("signature_signed").Equal(expression.Value(true))).And(
+				expression.Name("signature_approved").Equal(expression.Value(true))))
 		if err != nil {
 			log.Warnf("error retrieving ICLA signature total record count, error: %v", err)
 			return
 		}
 		iclaCount = count
+	}(tableName)
+
+	// Unique Employee and Individual Signatures
+	go func(tableName string) {
+		defer wg.Done()
+		// ICLA and CCLA Employee filter
+		count, err := repo.getSignatureUserUniqueCount(tableName,
+			expression.Name("signature_reference_type").Equal(expression.Value("user")).And(
+				expression.Name("signature_type").Equal(expression.Value("cla"))).And(
+				expression.Name("signature_signed").Equal(expression.Value(true))).And(
+				expression.Name("signature_approved").Equal(expression.Value(true))))
+		if err != nil {
+			log.Warnf("error retrieving ICLA signature total record count, error: %v", err)
+			return
+		}
+		employeeAndICLAUniqueCount = count
 	}(tableName)
 
 	// Get Manager Counts
@@ -144,7 +153,9 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 		count, uniqueCount, err := repo.getSignatureManagerCounts(tableName,
 			expression.Name("signature_user_ccla_company_id").AttributeNotExists().And(
 				expression.Name("signature_reference_type").Equal(expression.Value("company"))).And(
-				expression.Name("signature_type").Equal(expression.Value("ccla"))))
+				expression.Name("signature_type").Equal(expression.Value("ccla"))).And(
+				expression.Name("signature_signed").Equal(expression.Value(true))).And(
+				expression.Name("signature_approved").Equal(expression.Value(true))))
 		if err != nil {
 			log.Warnf("error retrieving CLA Manager counts, error: %v", err)
 			return
@@ -158,17 +169,20 @@ func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
 
 	// Build the response model
 	metrics := models.SignatureMetrics{
-		Count:                 totalCount,
-		CclaCount:             cclaCount,
-		EmployeeCount:         employeeCount,
-		IclaCount:             iclaCount,
-		ClaManagerCount:       claManagerCount,
-		ClaManagerUniqueCount: claManagerUniqueCount,
+		TotalCount:                       cclaCount + employeeCount + iclaCount,
+		TotalUniqueCount:                 cclaCount + employeeAndICLAUniqueCount,
+		CclaCount:                        cclaCount,
+		EmployeeCount:                    employeeCount,
+		IclaCount:                        iclaCount,
+		EmployeeAndIndividualUnqiueCount: employeeAndICLAUniqueCount,
+		ClaManagerCount:                  claManagerCount,
+		ClaManagerUniqueCount:            claManagerUniqueCount,
 	}
 
 	return &metrics, nil
 }
 
+// getSignatureCount returns the signature counts based on the specified query filter
 func (repo repository) getSignatureCount(tableName string, filter expression.ConditionBuilder) (int64, error) {
 	var count int64
 
@@ -214,6 +228,62 @@ func (repo repository) getSignatureCount(tableName string, filter expression.Con
 	}
 
 	return count, nil
+}
+
+// getSignatureUserUniqueCount returns the number of unique user records based on the query expression
+func (repo repository) getSignatureUserUniqueCount(tableName string, filter expression.ConditionBuilder) (int64, error) {
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithFilter(filter).WithProjection(buildUserProjection()).Build()
+	if err != nil {
+		log.Warnf("error building expression for signature scan, error: %v", err)
+		return 0, err
+	}
+
+	userIDMap := make(map[string]bool)
+
+	// Assemble the query input parameters
+	scanInput := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+	}
+
+	var lastEvaluatedKey string
+
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		results, errQuery := repo.dynamoDBClient.Scan(scanInput)
+		if errQuery != nil {
+			log.Warnf("error retrieving signatures, error: %v", errQuery)
+			return 0, errQuery
+		}
+
+		var dbSignatureUsersModel []DBSignatureUsersModel
+		unmarshalErr := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbSignatureUsersModel)
+		if unmarshalErr != nil {
+			log.Warnf("error unmarshalling signatures from database, error: %v", unmarshalErr)
+			return 0, unmarshalErr
+		}
+
+		for _, userModel := range dbSignatureUsersModel {
+			userIDMap[userModel.UserID] = true
+		}
+
+		if results.LastEvaluatedKey["signature_id"] != nil {
+			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
+			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"signature_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
+	}
+
+	return int64(len(userIDMap)), nil
 }
 
 // getSignatureManagerCount returns the total number of CLA Managers and unique CLA Managers in the system
@@ -1364,5 +1434,14 @@ func buildManagerProjection() expression.ProjectionBuilder {
 	return expression.NamesList(
 		expression.Name("signature_id"),
 		expression.Name("signature_acl"),
+	)
+}
+
+// buildUserProjection is a helper function to build a projection with only the signature_reference_id (user_id for ICLA/Employees)
+func buildUserProjection() expression.ProjectionBuilder {
+	// These are the columns we want returned
+	return expression.NamesList(
+		expression.Name("signature_id"),
+		expression.Name("signature_reference_id"),
 	)
 }
