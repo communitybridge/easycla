@@ -9,6 +9,7 @@ import (
 
 	"github.com/LF-Engineering/lfx-kit/auth"
 
+	"github.com/communitybridge/easycla/cla-backend-go/events"
 	v1ProjectOps "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
@@ -25,7 +26,7 @@ var (
 )
 
 // Configure establishes the middleware handlers for the project service
-func Configure(api *operations.EasyclaAPI, service v1Project.Service) {
+func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsService events.Service) {
 	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, user *auth.User) middleware.Responder {
 		if params.Body.ProjectName == "" || params.Body.ProjectACL == nil {
 			msg := "Missing Project Name or Project ACL parameter."
@@ -83,6 +84,12 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service) {
 			log.Warnf("Create Project Failed - %+v", err)
 			return project.NewCreateProjectBadRequest().WithPayload(errorResponse(err))
 		}
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.ProjectCreated,
+			ProjectModel: projectModel,
+			LfUsername:   user.UserName,
+			EventData:    &events.ProjectCreatedEventData{},
+		})
 
 		log.Infof("Create Project Succeeded, project name: %s, project external ID: %s",
 			params.Body.ProjectName, params.Body.ProjectExternalID)
@@ -152,13 +159,26 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service) {
 	// Delete Project By ID
 	api.ProjectDeleteProjectByIDHandler = project.DeleteProjectByIDHandlerFunc(func(projectParams project.DeleteProjectByIDParams, user *auth.User) middleware.Responder {
 		log.Debugf("Processing delete request with project id: %s", projectParams.ProjectSfdcID)
-		err := service.DeleteProject(projectParams.ProjectSfdcID)
+		projectModel, err := service.GetProjectByID(projectParams.ProjectSfdcID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
 				return project.NewDeleteProjectByIDNotFound()
 			}
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
+		err = service.DeleteProject(projectParams.ProjectSfdcID)
+		if err != nil {
+			if err == ErrProjectDoesNotExist {
+				return project.NewDeleteProjectByIDNotFound()
+			}
+			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
+		}
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.ProjectDeleted,
+			ProjectModel: projectModel,
+			LfUsername:   user.UserName,
+			EventData:    &events.ProjectDeletedEventData{},
+		})
 
 		return project.NewDeleteProjectByIDNoContent()
 	})
@@ -172,6 +192,12 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service) {
 			}
 			return project.NewUpdateProjectBadRequest().WithPayload(errorResponse(err))
 		}
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.ProjectUpdated,
+			ProjectModel: projectModel,
+			LfUsername:   user.UserName,
+			EventData:    &events.ProjectUpdatedEventData{},
+		})
 
 		return project.NewUpdateProjectOK().WithPayload(projectModel)
 	})
