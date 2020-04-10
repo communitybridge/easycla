@@ -268,15 +268,6 @@ export class ClaService {
   }
 
   /**
-   * /user/{user_id}/request-company-ccla
-   */
-  postUserCCLARequestToManager(companyId, projectId, data) {
-    return this.http
-      .post(this.claApiUrl + '/v3/company/' + companyId + '/ccla_whitelist_requests/' + projectId, data)
-      .map((res) => res.json());
-  }
-
-  /**
    * /user/{user_id}/active-signature
    */
   getUserSignatureIntent(userId) {
