@@ -67,6 +67,11 @@ companies-page {
   font-size: 16px;
   font-weight: 500;
 
+  &.inactive {
+    background-color: gray;
+    color: white;
+  }
+
   a {
     color: #4c79b6;
   }
