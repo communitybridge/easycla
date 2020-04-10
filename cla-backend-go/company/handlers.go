@@ -144,26 +144,17 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 		if err != nil {
 			log.Warnf("error adding user to company access list using company id: %s, invite id: %s, and user LFID: %s, error: %v",
 				params.CompanyID, params.User.InviteID, params.User.UserLFID, err)
-			return company.NewAddGithubOrganizationFromClaBadRequest()
+			return company.NewAddUsertoCompanyAccessListBadRequest()
 		}
 
-		// Create an event
-		// Need the company name - lookup th company record
-		companyModel, companyErr := service.GetCompany(params.CompanyID)
-		if companyErr != nil {
-			log.Warnf("error looking up company using the company id: %s, error: %+v",
-				params.CompanyID, companyErr)
-		}
-
-		eventsService.CreateAuditEvent(
-			events.AddUserToCompanyACL,
-			claUser,
-			"", // no project context
-			params.CompanyID,
-			fmt.Sprintf("%s added user %s to the ACL for company: %s (%s)",
-				claUser.Name, params.User.UserLFID, companyModel.CompanyName, params.CompanyID),
-			true,
-		)
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.CompanyACLUserAdded,
+			CompanyID: params.CompanyID,
+			UserID:    claUser.UserID,
+			EventData: &events.CompanyACLUserAddedEventData{
+				UserLFID: params.User.UserLFID,
+			},
+		})
 
 		return company.NewAddUsertoCompanyAccessListOK()
 	})
@@ -209,6 +200,15 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 			return company.NewSendInviteRequestBadRequest().WithPayload(errorResponse(err))
 		}
 
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.CompanyACLRequestAdded,
+			CompanyID: params.CompanyID,
+			UserID:    claUser.UserID,
+			EventData: &events.CompanyACLRequestAddedEventData{
+				UserID: params.Body.UserID,
+			},
+		})
+
 		return company.NewSendInviteRequestOK()
 	})
 
@@ -219,23 +219,14 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 			return company.NewDeletePendingInviteBadRequest().WithPayload(errorResponse(err))
 		}
 
-		// Create an event
-		// need the company name - lookup th company record
-		companyModel, companyErr := service.GetCompany(params.CompanyID)
-		if companyErr != nil {
-			log.Warnf("error looking up company using the company id: %s, error: %+v",
-				params.CompanyID, companyErr)
-		}
-
-		eventsService.CreateAuditEvent(
-			events.DeletePendingInvite,
-			claUser,
-			"", // no project context
-			params.CompanyID,
-			fmt.Sprintf("%s deleted pending invite for user %s for company: %s (%s)",
-				claUser.Name, params.User.UserLFID, companyModel.CompanyName, params.CompanyID),
-			true,
-		)
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.CompanyACLRequestDeleted,
+			CompanyID: params.CompanyID,
+			UserID:    claUser.UserID,
+			EventData: &events.CompanyACLRequestDeletedEventData{
+				UserLFID: params.User.UserLFID,
+			},
+		})
 
 		return company.NewDeletePendingInviteOK()
 	})

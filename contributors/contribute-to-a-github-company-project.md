@@ -41,11 +41,11 @@ _If you are a project manager, make sure that you are logged out of the CLA Mana
 
 1. Read the Confirmation of Association statement and mark the agreement checkbox. Click **CONTINUE**.
 
-   ![Confirmation of Association](../.gitbook/assets/cla-github-confirmation-of-association-1.png)
+   ![Confirmation of Association](https://github.com/communitybridge/easycla/tree/725b7d86ec71a8f73ce7a3488e637b53b669bc41/.gitbook/assets/cla-github-confirmation-of-association-1.png)
 
    A dialog appears and informs you: You are done!
 
-   ![You are done](../.gitbook/assets/cla-github-you-are-done-1.png)
+   ![You are done](https://github.com/communitybridge/easycla/tree/725b7d86ec71a8f73ce7a3488e637b53b669bc41/.gitbook/assets/cla-github-you-are-done-1.png)
 
 2. Click **RETURN TO REPO**.
 
@@ -93,7 +93,7 @@ _If you are a project manager, make sure that you are logged out of the CLA Mana
 
    A tick appears next to your branch. A notification appears:
 
-   ![All Checks Have Passed](../.gitbook/assets/cla-github-all-checks-passed-1.png)
+   ![All Checks Have Passed](https://github.com/communitybridge/easycla/tree/725b7d86ec71a8f73ce7a3488e637b53b669bc41/.gitbook/assets/cla-github-all-checks-passed-1.png)
 
 6. Click **Merge pull request** and confirm the merge.
 

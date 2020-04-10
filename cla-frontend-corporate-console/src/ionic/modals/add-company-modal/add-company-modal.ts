@@ -37,8 +37,8 @@ export class AddCompanyModal {
   searching: boolean;
   actionButtonsEnabled: boolean;
   activateButtons: boolean;
-  join: boolean
-  add: boolean
+  join: boolean;
+  add: boolean;
 
   constructor(
     public navParams: NavParams,
@@ -160,7 +160,7 @@ export class AddCompanyModal {
           text: 'Cancel',
           role: 'cancel',
           handler: () => {
-            console.log('No clicked');
+            this.loading.submit = false;
           }
         }
       ]
@@ -233,15 +233,6 @@ export class AddCompanyModal {
       this.activateButtons = true;
     }
 
-    // console.log('Company Name:' + companyName);
-    // console.log('Filtered Companies Length:' + this.filteredCompanies.length);
-
-    /* Not working as desired
-    if (companyName.length >= 2 && this.filteredCompanies.length === 0) {
-      this.addNewCompany = true;
-      this.joinExistingCompany = false;
-    }
-     */
     if (companyName.length >= 2) {
       this.addNewCompany = false;
       this.joinExistingCompany = true;

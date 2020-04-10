@@ -4,8 +4,6 @@
 package template
 
 import (
-	"fmt"
-
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
@@ -34,19 +32,15 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
 		}
 
-		// Create an event - run as a go-routine
-		eventsService.CreateAuditEvent(
-			events.CreateTemplate,
-			claUser,
-			params.ClaGroupID,
-			"", // no company context for creating templates
-			fmt.Sprintf("%s created PDF templates for project id: %s", claUser.Name, params.ClaGroupID),
-			true,
-		)
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.CLATemplateCreated,
+			ProjectID: params.ClaGroupID,
+			UserID:    claUser.UserID,
+			EventData: &events.CLATemplateCreatedEventData{},
+		})
 
 		return template.NewCreateCLAGroupTemplateOK().WithPayload(&pdfUrls)
 	})
-
 }
 
 type codedResponse interface {

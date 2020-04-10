@@ -19,11 +19,6 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
-const (
-	// DeleteBeforeMinutes , any metrics created before this time will be deleted
-	DeleteBeforeMinutes = 50
-)
-
 // errors
 var (
 	ErrMetricNotFound = errors.New("metric not found")
@@ -90,6 +85,7 @@ const (
 
 // ItemSignature represent item of signature table
 type ItemSignature struct {
+	SignatureID            string   `json:"signature_id"`
 	SignatureReferenceID   string   `json:"signature_reference_id"`
 	SignatureReferenceName string   `json:"signature_reference_name"`
 	SignatureACL           []string `json:"signature_acl"`
@@ -102,6 +98,12 @@ type ItemSignature struct {
 // ItemRepository represent item of repositories table
 type ItemRepository struct {
 	RepositoryProjectID string `json:"repository_project_id"`
+}
+
+// ItemCompany represent item of companies table
+type ItemCompany struct {
+	CompanyID   string `json:"company_id"`
+	CompanyName string `json:"company_name"`
 }
 
 // ItemGerritInstance represent item of gerrit instance table
@@ -344,6 +346,13 @@ func (m *Metrics) processSignature(sig *ItemSignature) {
 	m.ProjectMetrics.processSignature(sig, sigType)
 }
 
+// calculate total count metrics fields as follows
+// number of ccla signed
+// ccla signed by lf members
+// ccla signed by non-lf members
+// corporate contributors
+// individual contributors
+// total contributors
 func (tcm *TotalCountMetrics) processSignature(sig *ItemSignature, sigType int) {
 	switch sigType {
 	case CclaSignature:
@@ -370,6 +379,9 @@ func (tcm *TotalCountMetrics) processSignature(sig *ItemSignature, sigType int) 
 	}
 }
 
+// calculate company metrics fields as follows
+// corporate contributors of the company
+// cla-managers of the company
 func (cm *CompanyMetrics) processSignature(sig *ItemSignature, sigType int) {
 	switch sigType {
 	case CclaSignature:
@@ -377,11 +389,9 @@ func (cm *CompanyMetrics) processSignature(sig *ItemSignature, sigType int) {
 		companyID := sig.SignatureReferenceID
 		m, ok := cm.CompanyMetrics[companyID]
 		if !ok {
-			m = newCompanyMetric()
-			cm.CompanyMetrics[companyID] = m
-		}
-		if m.CompanyName == "" {
-			m.CompanyName = companyName
+			log.Warnf("company id=[%s]:name=[%s] does not exist in companies table but ccla signature [%s] for it is present", companyID, companyName, sig.SignatureID)
+			// skipping processing signature as company is not present in database
+			return
 		}
 		m.ProjectCount++
 		for _, acl := range sig.SignatureACL {
@@ -391,20 +401,28 @@ func (cm *CompanyMetrics) processSignature(sig *ItemSignature, sigType int) {
 		companyID := sig.SignatureUserCompanyID
 		m, ok := cm.CompanyMetrics[companyID]
 		if !ok {
-			m = newCompanyMetric()
-			cm.CompanyMetrics[companyID] = m
+			log.Warnf("company id=[%s] does not exist in companies table but employee signature [%s] for it is present", companyID, sig.SignatureID)
+			// skipping processing signature as company is not present in database
+			return
 		}
 		userID := sig.SignatureReferenceID
 		increaseCountIfNotPresent(m.corporateContributors, &m.CorporateContributorsCount, userID)
 	}
 }
 
+// calculate project metrics fields as follows
+// companies count for project
+// cla-managers in project
+// corporate contributors in project
+// individual contributors in project
+// total contributors in project
 func (pm *ProjectMetrics) processSignature(sig *ItemSignature, sigType int) {
 	projectID := sig.SignatureProjectID
 	m, ok := pm.ProjectMetrics[projectID]
 	if !ok {
-		m = newProjectMetric()
-		pm.ProjectMetrics[projectID] = m
+		log.Warnf("project id=[%s] does not exist in projects table but signature [%s] for it is present", projectID, sig.SignatureID)
+		// skipping processing signature as project is not present in database
+		return
 	}
 	switch sigType {
 	case CclaSignature:
@@ -460,6 +478,15 @@ func (pm *ProjectMetrics) processProjectItem(project *ItemProject, apiGatewayURL
 			cacheProjectMembership(project.ProjectExternalID, apiGatewayURL)
 		}
 	}
+}
+
+func (cm *CompanyMetrics) processCompanyItem(company *ItemCompany) {
+	m, ok := cm.CompanyMetrics[company.CompanyID]
+	if !ok {
+		m = newCompanyMetric()
+		cm.CompanyMetrics[company.CompanyID] = m
+	}
+	m.CompanyName = company.CompanyName
 }
 
 func cacheProjectMembership(externalProjectID, apiGatewayURL string) {
@@ -521,8 +548,10 @@ func calculateClaManagerDistribution(cm *CompanyMetrics) *ClaManagersDistributio
 
 func (repo *repo) processSignaturesTable(metrics *Metrics) error {
 	log.Println("processing signatures table")
-	filter := expression.Name("signature_signed").Equal(expression.Value(true))
+	filter := expression.Name("signature_signed").Equal(expression.Value(true)).
+		And(expression.Name("signature_approved").Equal(expression.Value(true)))
 	projection := expression.NamesList(
+		expression.Name("signature_id"), // signature id
 		expression.Name("signature_reference_id"),
 		expression.Name("signature_reference_name"), // Added to support simplified UX queries
 		expression.Name("signature_acl"),
@@ -531,46 +560,14 @@ func (repo *repo) processSignaturesTable(metrics *Metrics) error {
 		expression.Name("signature_reference_type"),       // user or company
 		expression.Name("signature_project_id"),           // project id
 	)
-	expr, err := expression.NewBuilder().WithFilter(filter).WithProjection(projection).Build()
+	signatureTableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+	var sigs []*ItemSignature
+	err := repo.scanTable(signatureTableName, projection, &filter, &sigs)
 	if err != nil {
-		log.Warnf("error building expression for metric scan, error: %v", err)
 		return err
 	}
-
-	signatureTableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
-	// Assemble the query input parameters
-	scanInput := &dynamodb.ScanInput{
-		ExpressionAttributeNames:  expr.Names(),
-		ExpressionAttributeValues: expr.Values(),
-		FilterExpression:          expr.Filter(),
-		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(signatureTableName),
-	}
-
-	for {
-		results, err := repo.dynamoDBClient.Scan(scanInput)
-		if err != nil {
-			log.Warnf("error retrieving signatures, error: %v", err)
-			return err
-		}
-
-		var sigs []*ItemSignature
-
-		err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &sigs)
-		if err != nil {
-			log.Warnf("error unmarshalling signatures from database. error: %v", err)
-			return err
-		}
-
-		for _, sig := range sigs {
-			metrics.processSignature(sig)
-		}
-
-		if len(results.LastEvaluatedKey) != 0 {
-			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
-		} else {
-			break
-		}
+	for _, sig := range sigs {
+		metrics.processSignature(sig)
 	}
 	return nil
 }
@@ -580,46 +577,15 @@ func (repo *repo) processRepositoriesTable(metrics *Metrics) error {
 	projection := expression.NamesList(
 		expression.Name("repository_project_id"),
 	)
-	expr, err := expression.NewBuilder().WithProjection(projection).Build()
+	repositoriesTableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
+	var repos []*ItemRepository
+	err := repo.scanTable(repositoriesTableName, projection, nil, &repos)
 	if err != nil {
-		log.Warnf("error building expression for metric scan, error: %v", err)
 		return err
 	}
-
-	repositoriesTableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
-	// Assemble the query input parameters
-	scanInput := &dynamodb.ScanInput{
-		ExpressionAttributeNames:  expr.Names(),
-		ExpressionAttributeValues: expr.Values(),
-		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(repositoriesTableName),
-	}
-
-	for {
-		results, err := repo.dynamoDBClient.Scan(scanInput)
-		if err != nil {
-			log.Warnf("error retrieving repositories, error: %v", err)
-			return err
-		}
-
-		var repos []*ItemRepository
-
-		err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &repos)
-		if err != nil {
-			log.Warnf("error unmarshalling repositories from database. error: %v", err)
-			return err
-		}
-
-		for _, r := range repos {
-			metrics.TotalCountMetrics.GithubRepositoriesCount++
-			metrics.ProjectMetrics.processRepositories(r)
-		}
-
-		if len(results.LastEvaluatedKey) != 0 {
-			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
-		} else {
-			break
-		}
+	for _, r := range repos {
+		metrics.TotalCountMetrics.GithubRepositoriesCount++
+		metrics.ProjectMetrics.processRepositories(r)
 	}
 	return nil
 }
@@ -629,150 +595,136 @@ func (repo *repo) processGerritInstancesTable(metrics *Metrics) error {
 	projection := expression.NamesList(
 		expression.Name("project_id"),
 	)
-	expr, err := expression.NewBuilder().WithProjection(projection).Build()
+	var gerritInstances []*ItemGerritInstance
+	gerritInstancesTableName := fmt.Sprintf("cla-%s-gerrit-instances", repo.stage)
+	err := repo.scanTable(gerritInstancesTableName, projection, nil, &gerritInstances)
 	if err != nil {
-		log.Warnf("error building expression for metric scan, error: %v", err)
 		return err
 	}
-
-	gerritInstancesTableName := fmt.Sprintf("cla-%s-gerrit-instances", repo.stage)
-	// Assemble the query input parameters
-	scanInput := &dynamodb.ScanInput{
-		ExpressionAttributeNames:  expr.Names(),
-		ExpressionAttributeValues: expr.Values(),
-		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(gerritInstancesTableName),
-	}
-
-	for {
-		results, err := repo.dynamoDBClient.Scan(scanInput)
-		if err != nil {
-			log.Warnf("error retrieving repositories, error: %v", err)
-			return err
-		}
-
-		var gerritInstances []*ItemGerritInstance
-
-		err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &gerritInstances)
-		if err != nil {
-			log.Warnf("error unmarshalling repositories from database. error: %v", err)
-			return err
-		}
-
-		for _, gi := range gerritInstances {
-			metrics.TotalCountMetrics.GerritRepositoriesCount++
-			metrics.ProjectMetrics.processGerritInstance(gi)
-		}
-
-		if len(results.LastEvaluatedKey) != 0 {
-			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
-		} else {
-			break
-		}
+	for _, gi := range gerritInstances {
+		metrics.TotalCountMetrics.GerritRepositoriesCount++
+		metrics.ProjectMetrics.processGerritInstance(gi)
 	}
 	return nil
 }
 
 func (repo *repo) processProjectsTable(metrics *Metrics) error {
 	projectTableName := fmt.Sprintf("cla-%s-projects", repo.stage)
-	projectCount, err := repo.getItemCount(projectTableName)
-	if err != nil {
-		return err
-	}
-	metrics.TotalCountMetrics.ProjectsCount = projectCount
-	err = repo.fillProjectInfo(metrics)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (repo *repo) fillProjectInfo(metrics *Metrics) error {
-	projectTableName := fmt.Sprintf("cla-%s-projects", repo.stage)
-	log.Println("processing project table to fill project info")
+	log.Println("processing project table")
 	projection := expression.NamesList(
 		expression.Name("project_id"),
 		expression.Name("project_external_id"),
 		expression.Name("project_name"),
 	)
-	expr, err := expression.NewBuilder().WithProjection(projection).Build()
+	var projects []*ItemProject
+	err := repo.scanTable(projectTableName, projection, nil, &projects)
 	if err != nil {
-		log.Warnf("error building expression for metric scan, error: %v", err)
 		return err
 	}
-
-	// Assemble the scan input parameters
-	scanInput := &dynamodb.ScanInput{
-		ExpressionAttributeNames:  expr.Names(),
-		ExpressionAttributeValues: expr.Values(),
-		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(projectTableName),
-	}
-
-	for {
-		results, err := repo.dynamoDBClient.Scan(scanInput)
-		if err != nil {
-			log.Warnf("error retrieving projects, error: %v", err)
-			return err
-		}
-
-		var projects []*ItemProject
-
-		err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &projects)
-		if err != nil {
-			log.Warnf("error unmarshalling projects from database. error: %v", err)
-			return err
-		}
-
-		for _, project := range projects {
-			metrics.ProjectMetrics.processProjectItem(project, repo.apiGatewayURL)
-		}
-
-		if len(results.LastEvaluatedKey) != 0 {
-			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
-		} else {
-			break
-		}
+	for _, project := range projects {
+		metrics.TotalCountMetrics.ProjectsCount++
+		metrics.ProjectMetrics.processProjectItem(project, repo.apiGatewayURL)
 	}
 	return nil
 }
 
 func (repo *repo) processCompaniesTable(metrics *Metrics) error {
 	companiesTableName := fmt.Sprintf("cla-%s-companies", repo.stage)
-	companiesCount, err := repo.getItemCount(companiesTableName)
+	log.Println("processing companies table")
+	projection := expression.NamesList(
+		expression.Name("company_id"),
+		expression.Name("company_name"),
+	)
+	var companies []*ItemCompany
+	err := repo.scanTable(companiesTableName, projection, nil, &companies)
 	if err != nil {
 		return err
 	}
-	metrics.TotalCountMetrics.CompaniesCount = companiesCount
+	for _, company := range companies {
+		metrics.CompanyMetrics.processCompanyItem(company)
+		metrics.TotalCountMetrics.CompaniesCount++
+	}
+	return nil
+}
+
+func (repo *repo) scanTable(tableName string, projection expression.ProjectionBuilder, filter *expression.ConditionBuilder, output interface{}) error {
+	builder := expression.NewBuilder()
+	builder = builder.WithProjection(projection)
+	if filter != nil {
+		builder = builder.WithFilter(*filter)
+	}
+	expr, err := builder.Build()
+	if err != nil {
+		log.Warnf("error building expression for %s scan, error: %v", tableName, err)
+		return err
+	}
+	scanInput := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+	}
+	var resultList []map[string]*dynamodb.AttributeValue
+	for {
+		results, err := repo.dynamoDBClient.Scan(scanInput) //nolint
+		if err != nil {
+			log.Warnf("error retrieving %s, error: %v", tableName, err)
+			return err
+		}
+		resultList = append(resultList, results.Items...)
+		if len(results.LastEvaluatedKey) != 0 {
+			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			break
+		}
+	}
+	err = dynamodbattribute.UnmarshalListOfMaps(resultList, &output)
+	if err != nil {
+		log.Warnf("error unmarshalling %s from database. error: %v", tableName, err)
+		return err
+	}
 	return nil
 }
 
 func (repo *repo) calculateMetrics() (*Metrics, error) {
 	metrics := newMetrics()
 	t := time.Now()
+	// calculate project count
+	// create structure for projectMetric
+	// cache project membership info
 	err := repo.processProjectsTable(metrics)
 	if err != nil {
 		return nil, err
 	}
+	// calculate companies count
+	// create structure for companyMetric
+	err = repo.processCompaniesTable(metrics)
+	if err != nil {
+		return nil, err
+	}
+	// calculate project metrics
+	// calculate company metrics
+	// calculate total count metrics
 	err = repo.processSignaturesTable(metrics)
 	if err != nil {
 		return nil, err
 	}
+	// calculate github repositories count
+	// increment project repositories count
 	err = repo.processRepositoriesTable(metrics)
 	if err != nil {
 		return nil, err
 	}
+	// calculate gerrit repositories count
+	// increment project repositories count
 	err = repo.processGerritInstancesTable(metrics)
-	if err != nil {
-		return nil, err
-	}
-	err = repo.processCompaniesTable(metrics)
 	if err != nil {
 		return nil, err
 	}
 	metrics.ClaManagersDistribution = calculateClaManagerDistribution(metrics.CompanyMetrics)
 	_, metrics.CalculatedAt = utils.CurrentTime()
-	log.Println("GetMetrics took time", time.Since(t).String())
+	log.Println("calculate metrics took time", time.Since(t).String())
 	return metrics, nil
 }
 
@@ -798,9 +750,8 @@ func (repo *repo) saveMetrics(metrics *Metrics) error {
 	return nil
 }
 
-func (repo *repo) clearOldMetrics() error {
+func (repo *repo) clearOldMetrics(beforeTime time.Time) error {
 	t := time.Now()
-	beforeTime := t.Add(-(time.Minute * DeleteBeforeMinutes))
 	filter := expression.Name("created_at").LessThan(expression.Value(utils.TimeToString(beforeTime)))
 	type ItemMetric struct {
 		ID         string `json:"id"`
@@ -952,6 +903,7 @@ func (repo *repo) saveProjectMetrics(projectMetrics *ProjectMetrics) error {
 }
 
 func (repo *repo) CalculateAndSaveMetrics() error {
+	timeBeforeStartingMetricsCalculation := time.Now()
 	m, err := repo.calculateMetrics()
 	if err != nil {
 		return err
@@ -960,7 +912,7 @@ func (repo *repo) CalculateAndSaveMetrics() error {
 	if err != nil {
 		return err
 	}
-	err = repo.clearOldMetrics()
+	err = repo.clearOldMetrics(timeBeforeStartingMetricsCalculation)
 	if err != nil {
 		return err
 	}
@@ -1174,17 +1126,4 @@ func (repo *repo) getMetricBySalesforceID(salesforceID string, metricType string
 		return err
 	}
 	return nil
-}
-
-func (repo *repo) getItemCount(tableName string) (int64, error) {
-	// How many total records do we have - may not be up-to-date as this value is updated only periodically
-	describeTableInput := &dynamodb.DescribeTableInput{
-		TableName: &tableName,
-	}
-	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
-	if err != nil {
-		log.Warnf("error retrieving total record count of table %s, error: %v", tableName, err)
-		return 0, err
-	}
-	return *describeTableResult.Table.ItemCount, nil
 }

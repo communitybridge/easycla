@@ -5,6 +5,7 @@ package template
 
 import (
 	"github.com/LF-Engineering/lfx-kit/auth"
+	"github.com/communitybridge/easycla/cla-backend-go/events"
 	v1Events "github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
@@ -32,16 +33,12 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 			log.Warnf("Error generating PDFs from provided templates, error: %v", err)
 			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
 		}
-		/*
-			eventsService.CreateAuditEvent(
-				v1Events.CreateTemplate,
-				claUser,
-				params.ClaGroupID,
-				"", // no company context for creating templates
-				fmt.Sprintf("%s created PDF templates for project id: %s", claUser.Name, params.ClaGroupID),
-				true,
-			)
-		*/
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:  events.CLATemplateCreated,
+			ProjectID:  params.ClaGroupID,
+			LfUsername: user.UserName,
+			EventData:  &events.CLATemplateCreatedEventData{},
+		})
 
 		return template.NewCreateCLAGroupTemplateOK().WithPayload(pdfUrls)
 	})
