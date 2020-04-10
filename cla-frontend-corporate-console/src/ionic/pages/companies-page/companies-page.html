@@ -20,7 +20,7 @@
         </ion-card-header>
 
         <ion-row justify-content-center margin-top margin-bottom>
-          <button class="cta-button" ion-button text-bold (click)="openSelectCompany()">Get Started</button>
+          <button class="cta-button" [ngClass]="{'inactive':loading.companies}" ion-button text-bold (click)="openSelectCompany()">Get Started</button>
         </ion-row>
 
         <loading-spinner [loading]="loading.companies"></loading-spinner>
