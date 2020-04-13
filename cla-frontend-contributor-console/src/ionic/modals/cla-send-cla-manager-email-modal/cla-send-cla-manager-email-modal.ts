@@ -116,13 +116,12 @@ export class ClaSendClaManagerEmailModal {
       userId: this.userId
     };
 
-    this.claService.postUserCCLARequestToManager(this.companyId, this.projectId, data).subscribe(
-      (response) => {
+    this.claService.postCCLAWhitelistRequest(this.companyId, this.projectId, data).subscribe(
+      () => {
         this.emailSent();
       },
       (exception) => {
         this.hasRequestError = true;
-        console.log( this.hasRequestError)
       }
     );
   }
