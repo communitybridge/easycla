@@ -12,6 +12,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/template"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	v1Template "github.com/communitybridge/easycla/cla-backend-go/template"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -29,6 +30,7 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 
 	api.TemplateCreateCLAGroupTemplateHandler = template.CreateCLAGroupTemplateHandlerFunc(func(params template.CreateCLAGroupTemplateParams, user *auth.User) middleware.Responder {
 		pdfUrls, err := service.CreateCLAGroupTemplate(params.HTTPRequest.Context(), params.ClaGroupID, &params.Body)
+		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
 		if err != nil {
 			log.Warnf("Error generating PDFs from provided templates, error: %v", err)
 			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
