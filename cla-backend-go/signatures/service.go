@@ -27,6 +27,7 @@ type SignatureService interface {
 	GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error)
 	GetCompanySignatures(params signatures.GetCompanySignaturesParams) (*models.Signatures, error)
 	GetUserSignatures(params signatures.GetUserSignaturesParams) (*models.Signatures, error)
+	InvalidateProjectRecords(projectID string, projectName string) error
 
 	GetGithubOrganizationsFromWhitelist(signatureID string, githubAccessToken string) ([]models.GithubOrg, error)
 	AddGithubOrganizationToWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
@@ -332,4 +333,23 @@ func (s service) DeleteGithubOrganizationFromWhitelist(signatureID string, white
 	}
 
 	return gitHubWhiteList, nil
+}
+
+// Disassociate project signatures
+func (s service) InvalidateProjectRecords(projectID string, projectName string) error {
+	result, err := s.repo.ProjectSignatures(projectID)
+	if err != nil {
+		log.Warnf(fmt.Sprintf("Unable to get signatures for project : %s", projectID))
+		return err
+	}
+	if len(result.Signatures) > 0 {
+		log.Debugf(fmt.Sprintf("Invalidating signatures for project : %s ", projectID))
+		for _, signature := range result.Signatures {
+			updateErr := s.repo.InvalidateProjectRecord(signature.SignatureID, projectName)
+			if updateErr != nil {
+				log.Warnf("Unable to update signature :%s , error: %v", signature.SignatureID, updateErr)
+			}
+		}
+	}
+	return nil
 }
