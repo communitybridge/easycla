@@ -64,6 +64,7 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 
 	// Add GitHub Whitelist Entries
 	api.SignaturesAddGitHubOrgWhitelistHandler = signatures.AddGitHubOrgWhitelistHandlerFunc(func(params signatures.AddGitHubOrgWhitelistParams, authUser *auth.User) middleware.Responder {
+		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
 			log.Warnf("error retrieving session from the session store, error: %+v", err)
@@ -110,7 +111,7 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 
 	// Delete GitHub Whitelist Entries
 	api.SignaturesDeleteGitHubOrgWhitelistHandler = signatures.DeleteGitHubOrgWhitelistHandlerFunc(func(params signatures.DeleteGitHubOrgWhitelistParams, authUser *auth.User) middleware.Responder {
-
+		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
 			log.Warnf("error retrieving session from the session store, error: %+v", err)

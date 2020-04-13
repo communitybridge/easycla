@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
@@ -28,6 +30,7 @@ var (
 // Configure establishes the middleware handlers for the project service
 func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsService events.Service) {
 	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, user *auth.User) middleware.Responder {
+		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
 		if !user.IsUserAuthorized(auth.Project, params.Body.ProjectExternalID) {
 			return project.NewCreateProjectUnauthorized().WithPayload(&models.ErrorResponse{
 				Code:    "401",
@@ -161,6 +164,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 	// Delete Project By ID
 	api.ProjectDeleteProjectByIDHandler = project.DeleteProjectByIDHandlerFunc(func(projectParams project.DeleteProjectByIDParams, user *auth.User) middleware.Responder {
 		log.Debugf("Processing delete request with project id: %s", projectParams.ProjectSfdcID)
+		utils.SetAuthUserProperties(user, projectParams.XUSERNAME, projectParams.XEMAIL)
 		projectModel, err := service.GetProjectByID(projectParams.ProjectSfdcID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
@@ -193,6 +197,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 
 	// Update Project By ID
 	api.ProjectUpdateProjectHandler = project.UpdateProjectHandlerFunc(func(projectParams project.UpdateProjectParams, user *auth.User) middleware.Responder {
+		utils.SetAuthUserProperties(user, projectParams.XUSERNAME, projectParams.XEMAIL)
 		projectModel, err := service.GetProjectByID(projectParams.Body.ProjectID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
