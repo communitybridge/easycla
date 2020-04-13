@@ -89,6 +89,11 @@ paths:
       summary: Get EasyCLA Metrics
       description: Returns EasyCLA Metrics
       operationId: getMetrics
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '200':
           description: 'Success'
@@ -108,6 +113,11 @@ paths:
       summary: Get cla manager distribution for easycla
       description: Returns cla manager distribution
       operationId: getClaManagerDistribution
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '200':
           description: 'Success'
@@ -127,6 +137,11 @@ paths:
       summary: Get total count metrics
       description: Returns total count metrics
       operationId: getTotalCount
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '200':
           description: 'Success'
@@ -147,6 +162,10 @@ paths:
       description: Returns company metrics
       operationId: getCompanyMetric
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: companyID
           description: the company ID
           in: path
@@ -171,6 +190,11 @@ paths:
       summary: company metrics of top companies
       description: Returns list company metrics of top companies
       operationId: getTopCompanies
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '200':
           description: 'Success'
@@ -191,6 +215,10 @@ paths:
       description: Returns project metrics
       operationId: getProjectMetric
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: projectID
           description: the project ID
           in: path
@@ -220,10 +248,14 @@ paths:
     get:
       summary: list metrics of project
       description: Returns list of project metrics
+      operationId: listProjectMetrics
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/pageSize'
-      operationId: listProjectMetrics
       responses:
         '200':
           description: 'Success'
@@ -245,6 +277,10 @@ paths:
       description: Creates a new CLA Group within the EasyCLA system.
       operationId: createProject
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: body
           in: body
           schema:
@@ -268,6 +304,10 @@ paths:
       summary: Update Project by ID
       operationId: updateProject
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: body
           in: body
           schema:
@@ -291,6 +331,10 @@ paths:
       summary: Get Projects
       operationId: getProjects
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - $ref: '#/parameters/searchTerm'
         - $ref: '#/parameters/searchField'
         - $ref: '#/parameters/nextKey'
@@ -319,6 +363,11 @@ paths:
     get:
       summary: Get Project by ID
       operationId: getProjectById
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '200':
           description: 'Success'
@@ -337,6 +386,11 @@ paths:
     delete:
       summary: Delete Project by ID
       operationId: deleteProjectById
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '204':
           description: 'Success'
@@ -355,14 +409,18 @@ paths:
     get:
       summary: Get Projects By External ID
       description: Returns a list of CLA groups associated with the specified external ID
+      operationId: getProjectsByExternalID
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: externalID
           in: path
           type: string
           required: true
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/pageSize'
-      operationId: getProjectsByExternalID
       responses:
         '200':
           description: 'Success'
@@ -383,6 +441,11 @@ paths:
     get:
       summary: Get Project Metrics
       operationId: getProjectMetrics
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '200':
           description: 'Success'
@@ -403,12 +466,16 @@ paths:
     get:
       summary: Get Project By Name
       description: Returns the project object when provided the project name - exact match
+      operationId: getProjectByName
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: projectName
           in: path
           type: string
           required: true
-      operationId: getProjectByName
       responses:
         '200':
           description: 'Success'
@@ -431,6 +498,10 @@ paths:
       description: Returns list of events matching with search criteria
       operationId: getRecentEvents
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - $ref: '#/parameters/pageSize'
       produces:
         - application/json
@@ -454,6 +525,11 @@ paths:
     get:
       summary: Get Available Templates
       operationId: getTemplates
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '200':
           description: 'Success'
@@ -480,6 +556,10 @@ paths:
       summary: Create contract template for CLA Group
       operationId: createCLAGroupTemplate
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - in: body
           name: body
           schema:
@@ -677,6 +757,10 @@ paths:
       description: Returns the signature when provided the signature ID
       operationId: getSignature
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: signatureID
           description: the signature ID
           in: path
@@ -705,6 +789,10 @@ paths:
       description: Returns a list of project signature models when provided the project ID
       operationId: getProjectSignatures
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: projectID
           description: the project ID
           in: path
@@ -736,6 +824,10 @@ paths:
       description: Returns a list of project signature models when provided the project ID and company ID
       operationId: getProjectCompanySignatures
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: projectID
           description: the project ID
           in: path
@@ -768,6 +860,10 @@ paths:
       description: Returns a list of company signatures when provided the company ID
       operationId: getCompanySignatures
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: companyID
           description: the company ID
           in: path
@@ -796,6 +892,10 @@ paths:
       description: Returns a list of user signatures when provided the user ID
       operationId: getUserSignatures
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: userID
           description: the user ID
           in: path
@@ -824,6 +924,10 @@ paths:
       description: Returns a list of employee project signature models when provided the project ID and company ID
       operationId: getProjectCompanyEmployeeSignatures
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: projectID
           description: the project ID
           in: path
@@ -855,6 +959,10 @@ paths:
       summary: Signature Update
       operationId: getGitHubOrgWhitelist
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: signatureID
           in: path
           type: string
@@ -878,6 +986,10 @@ paths:
       summary: Signature Update
       operationId: deleteGitHubOrgWhitelist
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: signatureID
           in: path
           type: string
@@ -905,6 +1017,10 @@ paths:
       summary: Signature Update
       operationId: addGitHubOrgWhitelist
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: signatureID
           in: path
           type: string
