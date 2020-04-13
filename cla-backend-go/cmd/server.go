@@ -202,7 +202,6 @@ func server(localMode bool) http.Handler {
 		CompanyRepository: companyRepo,
 		ProjectRepository: projectRepo,
 	})
-	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
 	usersService := users.NewService(usersRepo)
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
@@ -214,6 +213,8 @@ func server(localMode bool) http.Handler {
 	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo, metricsRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
 	repositoriesService := repositories.NewService(repositoriesRepo)
+	gerritService := gerrits.NewService(gerritRepo)
+	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
@@ -228,7 +229,7 @@ func server(localMode bool) http.Handler {
 
 	// Setup our API handlers
 	users.Configure(api, usersService, eventsService)
-	project.Configure(api, projectService, eventsService)
+	project.Configure(api, projectService, eventsService, gerritService, repositoriesService, signaturesService)
 	v2Project.Configure(v2API, projectService, eventsService)
 	health.Configure(api, healthService)
 	v2Health.Configure(v2API, healthService)

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math"
 	"sort"
+	"strings"
 	"sync"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -229,6 +230,9 @@ func (s *service) GetTopCompanies() (*models.TopCompanies, error) {
 	go func() {
 		defer wg.Done()
 		sort.Slice(cmByProjectCount, func(i, j int) bool {
+			if cmByProjectCount[i].ProjectCount == cmByProjectCount[j].ProjectCount {
+				return strings.ToLower(cmByProjectCount[i].CompanyName) < strings.ToLower(cmByProjectCount[j].CompanyName)
+			}
 			return cmByProjectCount[i].ProjectCount > cmByProjectCount[j].ProjectCount
 		})
 	}()
@@ -236,6 +240,9 @@ func (s *service) GetTopCompanies() (*models.TopCompanies, error) {
 	go func() {
 		defer wg.Done()
 		sort.Slice(cmByCorporateContributors, func(i, j int) bool {
+			if cmByCorporateContributors[i].CorporateContributorsCount == cmByCorporateContributors[j].CorporateContributorsCount {
+				return strings.ToLower(cmByCorporateContributors[i].CompanyName) < strings.ToLower(cmByCorporateContributors[j].CompanyName)
+			}
 			return cmByCorporateContributors[i].CorporateContributorsCount > cmByCorporateContributors[j].CorporateContributorsCount
 		})
 	}()
@@ -243,6 +250,9 @@ func (s *service) GetTopCompanies() (*models.TopCompanies, error) {
 	go func() {
 		defer wg.Done()
 		sort.Slice(cmByClaManagers, func(i, j int) bool {
+			if cmByClaManagers[i].ClaManagersCount == cmByClaManagers[j].ClaManagersCount {
+				return strings.ToLower(cmByClaManagers[i].CompanyName) < strings.ToLower(cmByClaManagers[j].CompanyName)
+			}
 			return cmByClaManagers[i].ClaManagersCount > cmByClaManagers[j].ClaManagersCount
 		})
 	}()
