@@ -4,6 +4,7 @@
 import { Component } from '@angular/core';
 import { Events, IonicPage, NavParams, ViewController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
+import { PlatformLocation } from '@angular/common';
 
 @IonicPage({
   segment: 'cla-configure-github-repositories-modal'
@@ -23,10 +24,15 @@ export class ClaConfigureGithubRepositoriesModal {
     public navParams: NavParams,
     public viewCtrl: ViewController,
     public claService: ClaService,
-    public events: Events
+    public events: Events,
+    private location: PlatformLocation
   ) {
     this.claProjectId = this.navParams.get('claProjectId');
     this.getDefaults();
+
+    this.location.onPopState(() => {
+      this.viewCtrl.dismiss(false);
+    });
 
     events.subscribe('modal:close', () => {
       this.dismiss();
