@@ -39,6 +39,9 @@ const (
 	GithubRepositoryAdded   = "github_repository.added"
 	GithubRepositoryDeleted = "github_repository.deleted"
 
+	GerritRepositoryAdded   = "gerrit_repository.addded"
+	GerritRepositoryDeleted = "gerrit_repository.deleted"
+
 	GithubOrganizationAdded   = "github_organization.added"
 	GithubOrganizationDeleted = "github_organization.deleted"
 
@@ -58,4 +61,6 @@ const (
 	ProjectCreated = "project.created"
 	ProjectUpdated = "project.updated"
 	ProjectDeleted = "project.deleted"
+
+	InvalidatedSignature = "signature.invalidated"
 )

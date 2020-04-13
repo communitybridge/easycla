@@ -17,6 +17,12 @@ type GithubRepositoryDeletedEventData struct {
 	RepositoryName string
 }
 
+type GerritProjectDeletedEventData struct{}
+
+type GithubProjectDeletedEventData struct{}
+
+type SignatureProjectInvalidatedEventData struct{}
+
 type UserCreatedEventData struct{}
 type UserDeletedEventData struct {
 	DeletedUserID string
@@ -179,5 +185,23 @@ func (ed *ProjectUpdatedEventData) GetEventString(args *LogEventArgs) (string, b
 func (ed *ProjectDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user [%s] has deleted project [%s]",
 		args.userName, args.projectName)
+	return data, true
+}
+
+func (ed *GerritProjectDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("Gerrit Repository Deleted  due to CLA Group/Project: [%s] deletion",
+		args.projectName)
+	return data, true
+}
+
+func (ed *GithubProjectDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("Github Repository Deleted  due to CLA Group/Project: [%s] deletion",
+		args.projectName)
+	return data, true
+}
+
+func (ed *SignatureProjectInvalidatedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("Signature invalidated (approved set to false) due to CLA Group/Project: [%s] deletion",
+		args.projectName)
 	return data, true
 }
