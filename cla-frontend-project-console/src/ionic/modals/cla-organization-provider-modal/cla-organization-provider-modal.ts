@@ -6,7 +6,7 @@ import { NavController, NavParams, ViewController, IonicPage, Events } from 'ion
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClaService } from '../../services/cla.service';
 import { Http } from '@angular/http';
-import { EnvConfig } from '../../services/cla.env.utils';
+import { PlatformLocation } from '@angular/common';
 
 @IonicPage({
   segment: 'cla-organization-provider-modal'
@@ -31,14 +31,16 @@ export class ClaOrganizationProviderModal {
     private formBuilder: FormBuilder,
     public http: Http,
     public claService: ClaService,
-    public events: Events
+    public events: Events,
+    private location: PlatformLocation
   ) {
     this.claProjectId = this.navParams.get('claProjectId');
     this.form = formBuilder.group({
-      // provider: ['', Validators.required],
       orgName: ['', Validators.compose([Validators.required]) /*, this.urlCheck.bind(this)*/]
     });
-
+    this.location.onPopState(() => {
+      this.viewCtrl.dismiss(false);
+    });
     events.subscribe('modal:close', () => {
       this.dismiss();
     });
@@ -59,14 +61,14 @@ export class ClaOrganizationProviderModal {
     this.loading = true;
     this.showErrorMsg = false;
     let trimName = this.form.value.orgName.trim();
-    this.claService.testGitHubOrganization(trimName).subscribe((res: any)=> {
+    this.claService.testGitHubOrganization(trimName).subscribe((res: any) => {
       this.loading = false;
-      if(res.status ===  200) {
+      if (res.status === 200) {
         this.postClaGithubOrganization();
       }
-    }, (err: any) => { 
+    }, (err: any) => {
       this.loading = false;
-      if(!err.ok) {
+      if (!err.ok) {
         this.showErrorMsg = true;
       }
     })
