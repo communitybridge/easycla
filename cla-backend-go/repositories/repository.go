@@ -44,6 +44,7 @@ type Repository interface {
 	DeleteGithubRepository(externalProjectID string, repositoryID string) error
 	ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error)
 	GetGithubRepository(repositoryID string) (*models.GithubRepository, error)
+	DeleteProject(projectID string) error
 }
 
 // NewRepository create new Repository
@@ -378,4 +379,26 @@ func (repo *repo) GetGithubRepository(repositoryID string) (*models.GithubReposi
 		return nil, err
 	}
 	return out.toModel(), nil
+}
+
+// Unassign project from given repository
+func (repo *repo) DeleteProject(repositoryID string) error {
+	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
+
+	input := &dynamodb.DeleteItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"repository_id": {
+				S: aws.String(repositoryID),
+			},
+		},
+		TableName: aws.String(tableName),
+	}
+
+	_, err := repo.dynamoDBClient.DeleteItem(input)
+	if err != nil {
+		log.Warnf("error updating repository :%s for unassigning project", repositoryID)
+		return err
+	}
+
+	return nil
 }
