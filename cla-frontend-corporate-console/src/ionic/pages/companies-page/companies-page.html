@@ -20,7 +20,7 @@
         </ion-card-header>
 
         <ion-row justify-content-center margin-top margin-bottom>
-          <button class="cta-button" ion-button text-bold (click)="openSelectCompany()">Get Started</button>
+          <button class="cta-button" [ngClass]="{'inactive':loading.companies}" ion-button text-bold (click)="openSelectCompany()">Get Started</button>
         </ion-row>
 
         <loading-spinner [loading]="loading.companies"></loading-spinner>
@@ -44,8 +44,8 @@
             <ion-row justify-content-center>
               <ion-list>
                 <ion-item *ngFor="let company of rows">
-                  <ion-label class="clickable" (click)="viewCompany(company.CompanyID, company.Status)">
-                    <a href="javascript:void(0);"
+                  <ion-label (click)="viewCompany(company.CompanyID, company.Status)">
+                    <a href="javascript:void(0);" [ngClass]="{'default-pointer':company.Status === 'Pending Approval'}"
                       [title]="company.CompanyName">{{ trimCharacter(company.CompanyName,25) }}</a>
                     <span class="alert" *ngIf="company.Status === 'Pending Approval'">Request to Join Pending</span>
                   </ion-label>
