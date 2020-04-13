@@ -217,19 +217,18 @@ func (repo *repo) GetProjectByID(projectID string) (*models.Project, error) {
 		return nil, queryErr
 	}
 
-	if len(results.Items) > 0 {
-		var dbModel DBProjectModel
-		err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
-		if err != nil {
-			log.Warnf("error unmarshalling db project model, error: %+v", err)
-			return nil, err
-		}
-
-		// Convert the database model to an API response model
-		return repo.buildProjectModel(dbModel), nil
+	if len(results.Items) < 1 {
+		return nil, ErrProjectDoesNotExist
+	}
+	var dbModel DBProjectModel
+	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
+	if err != nil {
+		log.Warnf("error unmarshalling db project model, error: %+v", err)
+		return nil, err
 	}
 
-	return nil, nil
+	// Convert the database model to an API response model
+	return repo.buildProjectModel(dbModel), nil
 }
 
 // GetProjectsByExternalID queries the database and returns a list of the projects

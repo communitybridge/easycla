@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { NavController, NavParams, ViewController, IonicPage, Events } from 'ionic-angular';
+import { NavParams, ViewController, IonicPage, Events } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ExtraValidators } from '../../validators/requireSelfAnd';
 import { ClaService } from '../../services/cla.service';
-import { CincoService } from '../../services/cinco.service';
 import { Http } from '@angular/http';
+import { PlatformLocation } from '@angular/common';
 
 @IonicPage({
   segment: 'cla-gerrit-modal'
@@ -26,13 +26,16 @@ export class ClaGerritModal {
   constructor(
     public navParams: NavParams,
     public viewCtrl: ViewController,
-    private cincoService: CincoService,
     private formBuilder: FormBuilder,
     public http: Http,
     public claService: ClaService,
-    public events: Events
+    public events: Events,
+    private location: PlatformLocation
   ) {
     this.projectId = this.navParams.get('projectId');
+    this.location.onPopState(() => {
+      this.viewCtrl.dismiss(false);
+    });
     this.form = formBuilder.group({
       gerritName: ['', Validators.compose([Validators.required])],
       URL: ['', Validators.compose([Validators.required])],
@@ -55,9 +58,9 @@ export class ClaGerritModal {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
-  getDefaults() {}
+  getDefaults() { }
 
   dismiss(data?) {
     this.viewCtrl.dismiss(data);
@@ -107,7 +110,7 @@ export class ClaGerritModal {
           this.form.controls['URL'].setErrors({ invalidURL: 'Invalid URL specified.' });
         }
       },
-      (completion) => {}
+      (completion) => { }
     );
   }
 }

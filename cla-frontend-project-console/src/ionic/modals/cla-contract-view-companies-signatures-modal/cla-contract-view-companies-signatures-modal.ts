@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component, ViewChild } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, PlatformLocation } from '@angular/common';
 import {
   Events,
   IonicPage,
@@ -16,7 +16,6 @@ import { ClaService } from '../../services/cla.service';
 import { SortService } from '../../services/sort.service';
 import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { RolesService } from '../../services/roles.service';
-import { ColumnMode, SortType } from '@swimlane/ngx-datatable';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 
 @IonicPage({
@@ -28,29 +27,21 @@ import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms'
 })
 export class ClaContractViewCompaniesSignaturesModal {
   @ViewChild('companiesTable') table: any;
-
   selectedProject: any;
   claProjectId: string;
   claProjectName: string;
-
-
   loading: any;
-
   form: FormGroup;
   searchString: string = '';
-
   companies: any[];
   users: any[];
   data: any;
   page: any;
-
   // Pagination next/previous options
   limitPerPage: number = 100;
   resultCount: number = 0;
   nextKey = null;
   previousKeys = [];
-
-
   errorMsg = '';
 
   // Easy sort table variables
@@ -62,15 +53,13 @@ export class ClaContractViewCompaniesSignaturesModal {
     public navCtrl: NavController,
     public navParams: NavParams,
     private claService: ClaService,
-    private sortService: SortService,
     public viewCtrl: ViewController,
     public modalCtrl: ModalController,
     private popoverCtrl: PopoverController,
-    private keycloak: KeycloakService,
-    private datePipe: DatePipe,
     public rolesService: RolesService,
     public events: Events,
     private formBuilder: FormBuilder,
+    private location: PlatformLocation
   ) {
     this.claProjectId = this.navParams.get('claProjectId');
     this.claProjectName = this.navParams.get('claProjectName');
@@ -80,6 +69,10 @@ export class ClaContractViewCompaniesSignaturesModal {
       search: ['', Validators.compose([Validators.required, Validators.minLength(3)])],
       searchField: ['company'],
       fullMatch: [false],
+    });
+
+    this.location.onPopState(() => {
+      this.viewCtrl.dismiss(false);
     });
 
     events.subscribe('modal:close', () => {

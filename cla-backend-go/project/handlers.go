@@ -7,6 +7,9 @@ import (
 	"fmt"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
+	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
+	"github.com/communitybridge/easycla/cla-backend-go/repositories"
+	"github.com/communitybridge/easycla/cla-backend-go/signatures"
 
 	"github.com/aws/aws-sdk-go/aws"
 
@@ -22,7 +25,7 @@ import (
 const defaultPageSize int64 = 50
 
 // Configure establishes the middleware handlers for the project service
-func Configure(api *operations.ClaAPI, service Service, eventsService events.Service) {
+func Configure(api *operations.ClaAPI, service Service, eventsService events.Service, gerritService gerrits.Service, repositoryService repositories.Service, signatureService signatures.SignatureService) {
 	// Create CLA Group/Project Handler
 	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, claUser *user.CLAUser) middleware.Responder {
 		if params.Body.ProjectName == "" || params.Body.ProjectACL == nil {
@@ -150,6 +153,48 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			}
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
+
+		// Delete gerrit repositories
+		log.Debugf(" Processing gerrit delete with project id: %s", projectParams.ProjectID)
+		err = gerritService.DeleteProject(projectParams.ProjectID)
+		if err != nil {
+			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
+		}
+		// Log gerrit event
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.GerritRepositoryDeleted,
+			ProjectModel: projectModel,
+			UserID:       claUser.UserID,
+			EventData:    &events.GerritProjectDeletedEventData{},
+		})
+
+		// Delete github repositories
+		err = repositoryService.DeleteProject(projectParams.ProjectID)
+		if err != nil {
+			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
+		}
+
+		// Log github delete event
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.GithubRepositoryDeleted,
+			ProjectModel: projectModel,
+			UserID:       claUser.UserID,
+			EventData:    &events.GithubProjectDeletedEventData{},
+		})
+
+		// Invalidate project signatures
+		err = signatureService.InvalidateProjectRecords(projectParams.ProjectID, projectModel.ProjectName)
+		if err != nil {
+			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
+		}
+		// Log invalidate signatures
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.InvalidatedSignature,
+			ProjectModel: projectModel,
+			UserID:       claUser.UserID,
+			EventData:    &events.SignatureProjectInvalidatedEventData{},
+		})
+
 		err = service.DeleteProject(projectParams.ProjectID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
