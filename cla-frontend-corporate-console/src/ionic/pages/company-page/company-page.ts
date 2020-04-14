@@ -164,16 +164,6 @@ export class CompanyPage {
     modal.present();
   }
 
-  openCompanyModal() {
-    let modal = this.modalCtrl.create('EditCompanyModal', {
-      company: this.company
-    });
-    modal.onDidDismiss((data) => {
-      this.getCompany();
-    });
-    modal.present();
-  }
-
   openWhitelistEmailModal() {
     let modal = this.modalCtrl.create('WhitelistModal', {
       type: 'email',

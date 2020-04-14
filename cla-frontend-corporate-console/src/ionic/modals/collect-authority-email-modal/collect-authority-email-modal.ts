@@ -1,14 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, ChangeDetectorRef } from '@angular/core';
-import { NavController, NavParams, ModalController, ViewController, AlertController, IonicPage } from 'ionic-angular';
+import { Component } from '@angular/core';
+import { NavController, NavParams, ViewController, AlertController, IonicPage } from 'ionic-angular';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Validators } from '@angular/forms';
 import { EmailValidator } from '../../validators/email';
 import { ClaService } from '../../services/cla.service';
-import { EnvConfig } from '../../services/cla.env.utils';
-import { CompanyPage } from '../../pages/company-page/company-page';
 
 @IonicPage({
   segment: 'cla/project/:projectId/collect-authority-email'
@@ -20,27 +18,20 @@ import { CompanyPage } from '../../pages/company-page/company-page';
 export class CollectAuthorityEmailModal {
   projectId: string;
   companyId: string;
-
   signingType: string;
-
   projectName: string;
   companyName: string;
-
   form: FormGroup;
   submitAttempt: boolean = false;
-  currentlySubmitting: boolean = false;
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
-    public modalCtrl: ModalController,
     public viewCtrl: ViewController,
     public alertCtrl: AlertController,
-    private changeDetectorRef: ChangeDetectorRef,
     private formBuilder: FormBuilder,
     private claService: ClaService
   ) {
-    this.getDefaults();
     this.projectName = navParams.get('projectName');
     this.companyName = navParams.get('companyName');
     this.projectId = navParams.get('projectId');
@@ -51,10 +42,6 @@ export class CollectAuthorityEmailModal {
       authorityname: ['']
     });
   }
-
-  getDefaults() {}
-
-  ngOnInit() {}
 
   dismiss() {
     this.viewCtrl.dismiss();
@@ -79,9 +66,7 @@ export class CollectAuthorityEmailModal {
 
   submit() {
     this.submitAttempt = true;
-    this.currentlySubmitting = true;
     if (!this.form.valid) {
-      this.currentlySubmitting = false;
       return;
     }
     let emailRequest = {
@@ -93,10 +78,6 @@ export class CollectAuthorityEmailModal {
     };
 
     this.claService.postCorporateSignatureRequest(emailRequest).subscribe((response) => {
-      if (response.errors) {
-        //TODO: CREATE error message
-        console.log(response.errors);
-      }
       this.emailSent();
       this.dismiss();
     });
