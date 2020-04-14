@@ -209,6 +209,30 @@ paths:
       tags:
         - metrics
 
+  /metrics/top-projects:
+    get:
+      summary: project metrics of top projects
+      description: Returns list project metrics of top projects
+      operationId: getTopProjects
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/top-projects'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
   /metrics/project/{projectID}:
     get:
       summary: Get metrics of project
@@ -1278,6 +1302,13 @@ definitions:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1models"
       type: "TopCompanies"
+
+  top-projects:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "TopProjects"
 
   company-metric:
     x-go-type:
