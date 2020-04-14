@@ -444,7 +444,7 @@ class GitHub(repository_service_interface.RepositoryService):
         # User not found, create.
         cla.log.debug(f'Could not find GitHub user by email: {emails}')
         cla.log.debug(f'Creating new GitHub user {github_user["name"]} - '
-                      f'({github_user["id"]}/{github_user["login"]}), ',
+                      f'({github_user["id"]}/{github_user["login"]}), '
                       f'emails: {emails}')
         user = cla.utils.get_user_instance()
         user.set_user_id(str(uuid.uuid4()))
