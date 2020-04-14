@@ -45,7 +45,7 @@ export class ClaContractViewSignaturesModal {
   columnData: any[] = [];
   column: any[] = [
     { head: 'Type', dataKey: 'signatureReferenceType' },
-    { head: 'Name', dataKey: 'userName,' },
+    { head: 'Name', dataKey: 'userName' },
     { head: 'Company Name', dataKey: 'companyName' },
     { head: 'GitHubID', dataKey: 'userGHID' },
     { head: 'LFID', dataKey: 'userLFID' },
@@ -155,7 +155,8 @@ export class ClaContractViewSignaturesModal {
             ...e,
             signatureCreated: e.signatureCreated.split('T')[0],
             signatureReferenceType: this.getSignatureType(e),
-            companyName: e.companyName ? e.companyName : '',
+            companyName: e.companyName ? this.trimCharacter(e.companyName, 25) : '',
+            userName: e.userName ? this.trimCharacter(e.userName, 25) : '',
             icon: this.getSignatureType(e) === 'Company' ||
               this.getSignatureType(e) === 'Employee' ?
               { index: 0, iconName: 'briefcase' } :
@@ -267,5 +268,9 @@ export class ClaContractViewSignaturesModal {
     } else {
       return 'Unknown';
     }
+  }
+
+  trimCharacter(text, length) {
+    return text.length > length ? text.substring(0, length) + '...' : text;
   }
 }
