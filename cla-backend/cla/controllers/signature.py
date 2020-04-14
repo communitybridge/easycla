@@ -806,6 +806,75 @@ def get_cla_managers(username, signature_id):
 
     return get_managers_dict(signature_acl)
 
+def get_project(project_id):
+    try:
+        project = Project()
+        project.load(project_id)
+    except DoesNotExist as err:
+        raise DoesNotExist('errors: {project_id: %s}' % str(err))
+    return project
+
+def get_company(company_id):
+    try:
+        company = Company()
+        company.load(company_id)
+    except DoesNotExist as err:
+        raise DoesNotExist('errors: {company_id: %s}' % str(err))
+    return company
+
+
+def add_cla_manager_email_content(lfid, project, company, managers):
+    """ Helper function to send email to newly added CLA Manager """
+
+    # Get emails of newly added Manager
+    recipients = get_user_emails(lfid)
+
+    if not recipients:
+        raise Exception('Issue getting emails for lfid : %s', lfid)
+
+    subject = f'CLA: Access to Corporate CLA for Project {project.get_project_name()}'
+
+    manager_list = ['%s <%s>' %(mgr.get('name', ' '), mgr.get('email', ' ')) for mgr in managers]
+    manager_list_str = '-'.join(manager_list) + '\n'
+    body = f""" Hello {lfid}, \n
+                \n
+                You have been granted access to the project {project.get_project_name()} for the organization: {company.get_company_name()}.\n
+                \n
+                If you have further questions, please contact one of the existing CLA Managers: \n
+                {manager_list_str}
+
+                - Linux Foundation EasyCLA System
+            """
+    return subject, body, recipients
+
+def remove_cla_manager_email_content(lfid, project, company, managers):
+    """ Helper function to send email to newly added CLA Manager """
+    # Get emails of newly added Manager
+    recipients = get_user_emails(lfid)
+
+    if not recipients:
+        raise Exception('Issue getting emails for lfid : %s', lfid)
+
+    subject = f'CLA: Access to Corporate CLA for Project {project.get_project_name()}'
+
+    manager_list = manager_list = ['%s <%s>' %(mgr.get('name', ' '), mgr.get('email', ' ')) for mgr in managers]
+    manager_list_str = '-'.join(manager_list) + '\n'
+    body = f""" Hello {lfid}, \n
+                \n
+                You have been removed as a CLA Manager from the project: {project.get_project_name()} for the organization: {company.get_company_name()}\n
+                \n
+                If you have further questions, please contact one of the existing CLA Managers: \n
+                {manager_list_str}
+
+                - Linux Foundation EasyCLA System
+            """
+    return subject, body, recipients
+
+def get_user_emails(lfid):
+    """ Helper function that gets user emails of given lf_username """
+    user = User()
+    users = user.get_user_by_username(lfid)
+    return [user.get_user_email() for user in users]
 
 def add_cla_manager(auth_user, signature_id, lfid):
     """
@@ -832,10 +901,29 @@ def add_cla_manager(auth_user, signature_id, lfid):
         return {'errors': {'user_id': 'You are not authorized to see the managers.'}}
 
     company.add_permission(auth_user, lfid, signature.get_signature_reference_id(), ignore_auth_user=True)
+    # Get Company and Project instances
+    try:
+        project = get_project(signature.get_signature_project_id())
+    except DoesNotExist as err:
+        return err
+    try:
+        company_instance = get_company(signature.get_signature_reference_id())
+    except DoesNotExist as err:
+        return err
+
+    # get cla managers for email content
+    managers = get_cla_managers(auth_user.username, signature_id)
 
     # Add lfid to acl
     signature.add_signature_acl(lfid)
     signature.save()
+
+    # send email to newly added CLA manager
+    try:
+        subject, body, recipients = add_cla_manager_email_content(lfid, project, company_instance, managers)
+        get_email_service(subject, body, recipients)
+    except Exception as err:
+        return {'errors': {'Failed to send email for lfid: %s , %s ' % (lfid, err)}}
 
     event_data = f'{lfid} added as cla manager to Signature ACL for {signature.get_signature_id()}'
     Event.create_event(
@@ -873,10 +961,31 @@ def remove_cla_manager(username, signature_id, lfid):
     # Avoid to have an empty acl
     if len(signature_acl) == 1 and username == lfid:
         return {'errors': {'user': "You cannot remove this manager because a CCLA must have at least one CLA manager."}}
-
     # Remove LFID from the acl
     signature.remove_signature_acl(lfid)
     signature.save()
+
+
+    # get cla managers for email content
+    managers = get_cla_managers(username, signature_id)
+
+    # Get Company and Project instances
+    try:
+        project = get_project(signature.get_signature_project_id())
+    except DoesNotExist as err:
+        return err
+    try:
+        company_instance = get_company(signature.get_signature_reference_id())
+    except DoesNotExist as err:
+        return err
+
+    # Send email to removed CLA manager
+    # send email to newly added CLA manager
+    try:
+        subject, body, recipients = remove_cla_manager_email_content(lfid, project, company_instance, managers)
+        get_email_service(subject, body, recipients)
+    except Exception as err:
+        return {'errors': {'Failed to send email for lfid: %s , %s ' % (lfid, err)}}
 
     event_data = f'User with lfid {lfid} removed from project ACL with signature {signature.get_signature_id()}'
 
