@@ -87,6 +87,15 @@ export class ProjectClaPage {
     });
   }
 
+  sortGithubOrganisation(githubOrganizations) {
+    if (githubOrganizations == null || githubOrganizations.length == 0) {
+      return githubOrganizations;
+    }
+
+    return githubOrganizations.sort((a, b) => {
+      return this.getOrganisationName(a.organizationName).trim().localeCompare(this.getOrganisationName(b.organizationName).trim());
+    });
+  }
 
   getClaProjects() {
     this.loading.claProjects = true;
@@ -101,7 +110,7 @@ export class ProjectClaPage {
     this.loading.orgs = true;
     this.claService.getOrganizations(this.sfdcProjectId).subscribe((organizations) => {
       this.loading.orgs = false;
-      this.githubOrganizations = organizations.list;
+      this.githubOrganizations = this.sortGithubOrganisation(organizations.list);
     });
   }
 
@@ -406,4 +415,9 @@ export class ProjectClaPage {
       this[callback](popoverData.callbackData);
     }
   }
+
+  trimCharacter(text, length) {
+    return text.length > length ? text.substring(0, length) + '...' : text;
+  }
+  
 }

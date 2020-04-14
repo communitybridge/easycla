@@ -120,9 +120,7 @@ export class ProjectClaTemplatePage {
 
       const metaFields = this.selectedTemplate.metaFields;
       metaFields.forEach((metaField) => {
-        if (this.templateValues.hasOwnProperty(metaField.templateVariable)) {
-          metaField.value = this.templateValues[metaField.templateVariable];
-        }
+        metaField.value = this.form.value[this.getFieldName(metaField)];
       });
       let data = {
         templateID: this.selectedTemplate.ID,
