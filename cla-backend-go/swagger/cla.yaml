@@ -2798,6 +2798,22 @@ definitions:
         type: integer
         x-omitempty: false
 
+  top-projects:
+    type: object
+    properties:
+      topProjectsByIcla:
+        type: array
+        items:
+          $ref: '#/definitions/project-metric'
+      topProjectsByCcla:
+        type: array
+        items:
+          $ref: '#/definitions/project-metric'
+      topProjectsByIclaAndCcla:
+        type: array
+        items:
+          $ref: '#/definitions/project-metric'
+
   company-metric:
     type: object
     properties:

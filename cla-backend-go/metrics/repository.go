@@ -315,9 +315,17 @@ func (tcm *TotalCountMetrics) toModel() *models.TotalCountMetrics {
 }
 
 func companiesToModel(in []*CompanyMetric) []*models.CompanyMetric {
-	var out []*models.CompanyMetric
+	out := make([]*models.CompanyMetric, 0)
 	for _, cm := range in {
 		out = append(out, cm.toModel())
+	}
+	return out
+}
+
+func projectsToModel(in []*ProjectMetric) []*models.ProjectMetric {
+	out := make([]*models.ProjectMetric, 0)
+	for _, pm := range in {
+		out = append(out, pm.toModel())
 	}
 	return out
 }
