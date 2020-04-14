@@ -72,6 +72,12 @@ func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 
 	api.MetricsGetTopProjectsHandler = metrics.GetTopProjectsHandlerFunc(
 		func(params metrics.GetTopProjectsParams, user *auth.User) middleware.Responder {
+			if !user.Admin {
+				return metrics.NewGetTopProjectsUnauthorized().WithPayload(&models.ErrorResponse{
+					Code:    "401",
+					Message: "admin access required to for this request",
+				})
+			}
 			result, err := service.GetTopProjects()
 			if err != nil {
 				return metrics.NewGetTopProjectsBadRequest().WithPayload(errorResponse(err))
