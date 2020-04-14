@@ -157,7 +157,11 @@ export class ClaContractViewCompaniesSignaturesModal {
         }
 
         if (this.data && this.data.signatures) {
-          this.columnData = this.data.signatures.map(e => ({ ...e, signatureCreated: e.signatureCreated.split('T')[0] }))
+          this.columnData = this.data.signatures.map(e => ({ 
+            ...e, 
+            signatureCreated: e.signatureCreated.split('T')[0], 
+            companyName: this.trimCharacter(e.companyName, 30)
+          }))
         } else {
           this.columnData = []
         }
@@ -242,13 +246,6 @@ export class ClaContractViewCompaniesSignaturesModal {
     }
   }
 
-  signatureDetails(data) {
-    console.log('signature details');
-  }
-
-  signatureCla(data) {
-    console.log('signature cla');
-  }
 
   dismiss() {
     this.viewCtrl.dismiss();
@@ -276,5 +273,9 @@ export class ClaContractViewCompaniesSignaturesModal {
     } else {
       return 'unknown';
     }
+  }
+
+  trimCharacter(text, length) {
+    return text.length > length ? text.substring(0, length) + '...' : text;
   }
 }
