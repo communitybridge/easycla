@@ -1,4 +1,4 @@
-# Copyright The Linux Foundation and each contributor to CommunityBridge.
+ # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
 
 from unittest.mock import patch, Mock
@@ -95,6 +95,11 @@ def test_add_cla_manager(mock_event, auth_user, signature_instance, create_event
     Signature.save = Mock()
     signature_controller.get_managers_dict = Mock()
     lfid = 'foo_lfid'
+    subject = 'Add CLA Manager'
+    body = 'Added %s' % lfid
+    recipients = ['foo@gmail.com']
+    signature_controller.add_cla_manager_email_content = Mock(return_value=(subject, body, recipients))
+    signature_controller.get_email_service = Mock()
     signature_controller.add_cla_manager(
         auth_user,
         signature_instance.get_signature_id(),
@@ -118,6 +123,11 @@ def test_remove_cla_manager(mock_event, signature_instance, create_event_signatu
     signature_controller.get_managers_dict = Mock()
     event_type = EventType.RemoveCLAManager
     lfid = 'nachwera'
+    subject = 'Removed CLA Manager'
+    body = 'Removed %s' %lfid
+    recipients = ['foo@gmail.com']
+    signature_controller.remove_cla_manager_email_content = Mock(return_value=(subject, body, recipients))
+    signature_controller.get_email_service = Mock()
     signature_controller.remove_cla_manager(
         'harold', signature_instance.get_signature_id(), lfid
     )
