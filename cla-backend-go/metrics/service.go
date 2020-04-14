@@ -26,6 +26,7 @@ type Service interface {
 	GetCompanyMetric(companyID string) (*models.CompanyMetric, error)
 	GetProjectMetric(projectID string, idType string) (*models.SfProjectMetric, error)
 	GetTopCompanies() (*models.TopCompanies, error)
+	GetTopProjects() (*models.TopProjects, error)
 	ListProjectMetrics(paramPageSize *int64, paramNextKey *string) (*models.ListProjectMetric, error)
 }
 
@@ -266,6 +267,84 @@ func (s *service) GetTopCompanies() (*models.TopCompanies, error) {
 		TopCompaniesByProjectCount:          companiesToModel(cmByProjectCount[:returnCount]),
 	}, nil
 }
+
+func descSortCompare(left, right int64, leftName, rightName string) bool {
+	if left == right {
+		return leftName < rightName
+	}
+	return left > right
+}
+
+func (s *service) GetTopProjects() (*models.TopProjects, error) {
+	returnCount := 5
+	var pageSize int64 = 100000
+	var pmetrics []*ProjectMetric
+	var nextKey string
+	for ok := true; ok; ok = nextKey != "" {
+		var result []*ProjectMetric
+		var err error
+		result, nextKey, err = s.metricsRepo.GetProjectMetrics(pageSize, nextKey)
+		if err != nil {
+			return nil, err
+		}
+		pmetrics = append(pmetrics, result...)
+	}
+	if len(pmetrics) < returnCount {
+		returnCount = len(pmetrics)
+	}
+	pmIcla := make([]*ProjectMetric, len(pmetrics))
+	pmCcla := make([]*ProjectMetric, len(pmetrics))
+	pmIclaAndCcla := make([]*ProjectMetric, len(pmetrics))
+
+	copy(pmIcla, pmetrics)
+	copy(pmCcla, pmetrics)
+	copy(pmIclaAndCcla, pmetrics)
+
+	var wg sync.WaitGroup
+	wg.Add(3)
+	go func() {
+		defer wg.Done()
+		sort.Slice(pmIcla, func(i, j int) bool {
+			return descSortCompare(
+				pmIcla[i].IndividualContributorsCount,
+				pmIcla[j].IndividualContributorsCount,
+				pmIcla[i].ProjectName,
+				pmIcla[j].ProjectName,
+			)
+		})
+	}()
+
+	go func() {
+		defer wg.Done()
+		sort.Slice(pmCcla, func(i, j int) bool {
+			return descSortCompare(
+				pmCcla[i].CompaniesCount,
+				pmCcla[j].CompaniesCount,
+				pmCcla[i].ProjectName,
+				pmCcla[j].ProjectName,
+			)
+		})
+	}()
+
+	go func() {
+		defer wg.Done()
+		sort.Slice(pmIclaAndCcla, func(i, j int) bool {
+			return descSortCompare(
+				pmIclaAndCcla[i].IndividualContributorsCount+pmIclaAndCcla[i].CompaniesCount,
+				pmIclaAndCcla[j].IndividualContributorsCount+pmIclaAndCcla[j].CompaniesCount,
+				pmIclaAndCcla[i].ProjectName,
+				pmIclaAndCcla[j].ProjectName,
+			)
+		})
+	}()
+	wg.Wait()
+	return &models.TopProjects{
+		TopProjectsByIcla:        projectsToModel(pmIcla[:returnCount]),
+		TopProjectsByCcla:        projectsToModel(pmCcla[:returnCount]),
+		TopProjectsByIclaAndCcla: projectsToModel(pmIclaAndCcla[:returnCount]),
+	}, nil
+}
+
 func (s *service) ListProjectMetrics(paramPageSize *int64, paramNextKey *string) (*models.ListProjectMetric, error) {
 	var out models.ListProjectMetric
 	var pageSize int64 = 100
