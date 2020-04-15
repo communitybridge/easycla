@@ -22,7 +22,6 @@ export class CollectAuthorityEmailModal {
   projectName: string;
   companyName: string;
   form: FormGroup;
-  submitAttempt: boolean = false;
 
   constructor(
     public navCtrl: NavController,
@@ -37,9 +36,10 @@ export class CollectAuthorityEmailModal {
     this.projectId = navParams.get('projectId');
     this.companyId = navParams.get('companyId');
     this.signingType = navParams.get('signingType');
+
     this.form = formBuilder.group({
       authorityemail: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      authorityname: ['']
+      authorityname: ['', Validators.compose([Validators.required])]
     });
   }
 
@@ -65,21 +65,18 @@ export class CollectAuthorityEmailModal {
   }
 
   submit() {
-    this.submitAttempt = true;
-    if (!this.form.valid) {
-      return;
+    if (this.form.valid) {
+      let emailRequest = {
+        project_id: this.projectId,
+        company_id: this.companyId,
+        send_as_email: true,
+        authority_name: this.form.value.authorityname,
+        authority_email: this.form.value.authorityemail
+      };
+      this.claService.postCorporateSignatureRequest(emailRequest).subscribe((response) => {
+        this.emailSent();
+        this.dismiss();
+      });
     }
-    let emailRequest = {
-      project_id: this.projectId,
-      company_id: this.companyId,
-      send_as_email: true,
-      authority_name: this.form.value.authorityname,
-      authority_email: this.form.value.authorityemail
-    };
-
-    this.claService.postCorporateSignatureRequest(emailRequest).subscribe((response) => {
-      this.emailSent();
-      this.dismiss();
-    });
   }
 }
