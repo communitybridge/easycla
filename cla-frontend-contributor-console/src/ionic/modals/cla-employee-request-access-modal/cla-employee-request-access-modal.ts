@@ -197,14 +197,11 @@ export class ClaEmployeeRequestAccessModal {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
     this.formErrors = [];
-    console.log("Form");
-    console.log(this.form);
 
     if (!this.form.valid) {
       this.getFormValidationErrors();
       this.currentlySubmitting = false;
       // prevent submit
-      console.log('invalid')
       return;
     }
  

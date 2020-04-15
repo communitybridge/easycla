@@ -40,6 +40,20 @@ Please complete the following information:
 
 Add any other context about the problem here.
 
+## Assumptions
+
+If you are assuming certain facts or scenarios, list them so we have a baseline to understand your request.
+
+- [...] Assumption 1
+- [...] Assumption 2
+
+## Questions
+
+List any questions or clarifications that are needed to addressed to satisfy this request.
+
+1. [...] Question 1...
+1. [...] Question 2...
+
 ## Acceptance Criteria
 
 The "done" criteria when this feature or problem is resolved. Such as:
