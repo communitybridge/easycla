@@ -10,6 +10,7 @@ type DBProjectModel struct {
 	ProjectExternalID                string                   `dynamodbav:"project_external_id"`
 	ProjectID                        string                   `dynamodbav:"project_id"`
 	ProjectName                      string                   `dynamodbav:"project_name"`
+	ProjectNameLower                 string                   `dynamodbav:"project_name_lower"`
 	Version                          string                   `dynamodbav:"version"`
 	ProjectCclaEnabled               bool                     `dynamodbav:"project_ccla_enabled"`
 	ProjectCclaRequiresIclaSignature bool                     `dynamodbav:"project_ccla_requires_icla_signature"`
