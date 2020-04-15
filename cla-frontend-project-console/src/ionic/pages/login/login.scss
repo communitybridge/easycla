@@ -6,7 +6,7 @@ login {
     position: relative;
     padding: 4px 25px;
 
-    background: url('../assets/img/boat.jpeg') no-repeat center center fixed #000;
+    background: url("../assets/img/boat.jpeg") no-repeat center center fixed #000;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
@@ -15,7 +15,7 @@ login {
     &:before {
       background: linear-gradient(90deg, #003366 0%, rgba(255, 255, 255, 0.2) 100%);
       opacity: 0.8;
-      content: '';
+      content: "";
       display: block;
       position: absolute;
       top: 0;
@@ -30,12 +30,6 @@ login {
     }
   }
 
-  p {
-    font-size: 16px;
-    color: color($colors, white);
-    line-height: 23px;
-  }
-
   .login-content {
     z-index: 2;
 
@@ -43,17 +37,13 @@ login {
     .login-paragraph {
       color: color($colors, white);
       text-align: left;
+      font-size: 16px;
+      line-height: 23px;
     }
 
     h3 {
       font-size: 35px;
     }
-  }
-
-  .invert h3,
-  p {
-    text-align: center;
-    color: color($colors, dark);
   }
 
   .login-page-steps {
@@ -67,7 +57,7 @@ login {
     margin-right: auto;
     padding: 50px 20px;
     background-color: #ececec;
-    font-family: 'Work Sans', sans-serif;
+    font-family: "Work Sans", sans-serif;
     width: 100%;
     z-index: 2;
     opacity: 0.8;
@@ -123,8 +113,8 @@ login {
   }
 
   .cla-list::before {
-    font-family: 'IconsMind';
-    content: '\ee5e';
+    font-family: "IconsMind";
+    content: "\ee5e";
     margin: 0px 5px 0px -15px;
     color: #0099ee;
     list-style-type: none;
@@ -133,7 +123,7 @@ login {
   .cla-list {
     margin-bottom: 15px;
     list-style: none;
-    font-family: 'Work Sans', sans-serif;
+    font-family: "Work Sans", sans-serif;
     font-size: 16px;
     line-height: 1.5;
     color: #676767;
@@ -141,7 +131,7 @@ login {
 
   .cla-list-paragraph {
     color: #676767;
-    font-family: 'Work Sans', sans-serif;
+    font-family: "Work Sans", sans-serif;
 
     a {
       color: color($colors, light_blue);

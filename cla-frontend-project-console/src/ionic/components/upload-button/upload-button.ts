@@ -4,12 +4,6 @@
 import { Component, ElementRef, Input, Output, ViewChild, Renderer, EventEmitter } from '@angular/core';
 import { PopoverController, ToastController } from 'ionic-angular';
 
-/*
-  Generated class for the UploadButton component.
-
-  See https://angular.io/docs/ts/latest/api/core/index/ComponentMetadata-class.html
-  for more info on Angular 2 Components.
-*/
 @Component({
   selector: 'upload-button',
   templateUrl: 'upload-button.html'
@@ -19,22 +13,10 @@ export class UploadButtonComponent {
    * The fileList maintained as files are added and removed
    */
   fileList: Array<any>;
-
-  /**
-   * The text used for the upload label
-   */
   @Input()
   private files: Array<any>;
-
-  /**
-   * The text used for the upload label
-   */
   @Input()
   private uploadText: String;
-
-  /**
-   * Comma separated array of allowed file extensions
-   */
   @Input()
   private uploadTypes: String;
 
@@ -57,7 +39,11 @@ export class UploadButtonComponent {
    */
   @Output() notify: EventEmitter<Array<any>> = new EventEmitter<Array<any>>();
 
-  constructor(private renderer: Renderer, private popoverCtrl: PopoverController, public toastCtrl: ToastController) {}
+  constructor(
+    private renderer: Renderer,
+    private popoverCtrl: PopoverController,
+    public toastCtrl: ToastController
+  ) { }
 
   ngOnInit() {
     this.fileList = this.files;
@@ -185,8 +171,6 @@ export class UploadButtonComponent {
   }
 
   fileDownload(data) {
-    // File download:
-    // data.index
-    // this.fileList
+  // No implementation.
   }
 }

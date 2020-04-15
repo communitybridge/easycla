@@ -17,10 +17,7 @@ export class SortTableComponent {
   currentColumn: string;
   showIndex: any;
   
-
-
   constructor() {}
-
 
   ngOnInit(){
     this.sort(this.column[0].dataKey);
@@ -60,6 +57,4 @@ export class SortTableComponent {
   show(i) {
     return this.showIndex = this.showIndex === i ? '' : i
   }
-
-  
 }
