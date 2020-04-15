@@ -213,7 +213,7 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 	})
 
 	api.CompanyDeletePendingInviteHandler = company.DeletePendingInviteHandlerFunc(func(params company.DeletePendingInviteParams, claUser *user.CLAUser) middleware.Responder {
-		err := service.DeletePendingCompanyInviteRequest(params.User.InviteID)
+		err := service.DeletePendingCompanyInviteRequest(params.CompanyID, params.User.InviteID, params.User.UserLFID)
 		if err != nil {
 			log.Warnf("error deleting pending company invite using id: %s, error: %v", params.User.InviteID, err)
 			return company.NewDeletePendingInviteBadRequest().WithPayload(errorResponse(err))
