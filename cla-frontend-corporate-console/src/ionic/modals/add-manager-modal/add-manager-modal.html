@@ -21,17 +21,23 @@
       </ion-row>
       <ion-row>
         <ion-col col-12>
-          <ion-item>
-            <ion-label stacked>
-              <b>CLA Manager LFID:</b>
+          <ion-label stacked>
+            <b>CLA Manager LFID:</b>
+          </ion-label>
+          <ion-label>
             <span>
-              If they do not know their Linux Foundation identification username, or have not created one, please ask them to sign in (or sign up) at
-              <a href="https://identity.linuxfoundation.org" target="_blank">https://identity.linuxfoundation.org</a>. Their username will display after signing in.
+              If they do not know their Linux Foundation identification username, or have not created one, please ask
+              them to sign in (or sign up) at
+              <a [href]="linuxFoundationIdentityURL" target="_blank">{{linuxFoundationIdentityURL}}</a>. Their
+              username
+              will display after signing in.
             </span>
-            </ion-label>
+          </ion-label>
+          <ion-item>
             <ion-input name="managerLFID" formControlName="managerLFID"></ion-input>
           </ion-item>
-          <ion-item *ngIf="!form.controls.managerLFID.valid && (form.controls.managerLFID.touched || submitAttempt)" no-lines>
+          <ion-item *ngIf="!form.controls.managerLFID.valid && (form.controls.managerLFID.touched || submitAttempt)"
+            no-lines>
             <p>* A CLA Manager LFID is required.</p>
           </ion-item>
         </ion-col>
@@ -41,14 +47,14 @@
 </ion-content>
 
 <ion-footer class="footer-bordered">
-<ion-toolbar>
-  <ion-buttons end>
-    <button ion-button icon-right color="light" (click)="dismiss()">
-      Cancel
-    </button>
-    <button type="button" (click)="submit()" ion-button icon-right color="primary">
-      Save
-    </button>
-  </ion-buttons>
-</ion-toolbar>
+  <ion-toolbar>
+    <ion-buttons end>
+      <button ion-button icon-right color="light" (click)="dismiss()">
+        Cancel
+      </button>
+      <button type="button" (click)="submit()" ion-button icon-right color="primary">
+        Save
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
 </ion-footer>

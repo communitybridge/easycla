@@ -12,8 +12,6 @@ import { Component } from '@angular/core';
 })
 export class GetHelpComponent {
 
-  text: string;
-
   constructor() {
   }
 
