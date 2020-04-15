@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { IonicPage, ModalController, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
+import { generalConstants } from '../../constant/general';
 
 @IonicPage({
   segment: 'project/:projectId'
@@ -25,7 +26,6 @@ export class ClaCorporatePage {
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
-    private modalCtrl: ModalController,
     private claService: ClaService
   ) {
     this.getDefaults();
@@ -68,12 +68,6 @@ export class ClaCorporatePage {
 
     this.claService.postCorporateSignatureRequest(signatureRequest).subscribe((response) => {
       this.loading = false;
-      // returns {
-      //   user_id:
-      //   signature_id:
-      //   project_id:
-      //   sign_url: docusign.com/some-docusign-url
-      // }
       if (response.errors) {
         this.error = response;
       }
@@ -90,6 +84,6 @@ export class ClaCorporatePage {
   }
 
   createTicket() {
-    window.open('https://jira.linuxfoundation.org/servicedesk/customer/portal/4', '_blank');
+    window.open(generalConstants.createTicketURL, '_blank');
   }
 }

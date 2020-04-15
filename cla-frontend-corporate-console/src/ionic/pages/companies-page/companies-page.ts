@@ -56,7 +56,6 @@ export class CompaniesPage {
     this.loading.companies = true;
     this.claService.getUserByUserName(this.userId).subscribe(
       (response) => {
-        //console.log(response);
         // We need the user's unique ID - grab it from the first record
         this.getCompaniesByUserManagerWithInvites(response.userID);
       },

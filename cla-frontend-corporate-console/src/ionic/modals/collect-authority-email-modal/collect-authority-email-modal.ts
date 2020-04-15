@@ -1,14 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, ChangeDetectorRef } from '@angular/core';
-import { NavController, NavParams, ModalController, ViewController, AlertController, IonicPage } from 'ionic-angular';
+import { Component } from '@angular/core';
+import { NavController, NavParams, ViewController, AlertController, IonicPage } from 'ionic-angular';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Validators } from '@angular/forms';
 import { EmailValidator } from '../../validators/email';
 import { ClaService } from '../../services/cla.service';
-import { EnvConfig } from '../../services/cla.env.utils';
-import { CompanyPage } from '../../pages/company-page/company-page';
 
 @IonicPage({
   segment: 'cla/project/:projectId/collect-authority-email'
@@ -20,41 +18,31 @@ import { CompanyPage } from '../../pages/company-page/company-page';
 export class CollectAuthorityEmailModal {
   projectId: string;
   companyId: string;
-
   signingType: string;
-
   projectName: string;
   companyName: string;
-
   form: FormGroup;
-  submitAttempt: boolean = false;
-  currentlySubmitting: boolean = false;
+  serverError: string = '';
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
-    public modalCtrl: ModalController,
     public viewCtrl: ViewController,
     public alertCtrl: AlertController,
-    private changeDetectorRef: ChangeDetectorRef,
     private formBuilder: FormBuilder,
     private claService: ClaService
   ) {
-    this.getDefaults();
     this.projectName = navParams.get('projectName');
     this.companyName = navParams.get('companyName');
     this.projectId = navParams.get('projectId');
     this.companyId = navParams.get('companyId');
     this.signingType = navParams.get('signingType');
+
     this.form = formBuilder.group({
       authorityemail: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      authorityname: ['']
+      authorityname: ['', Validators.compose([Validators.required])]
     });
   }
-
-  getDefaults() {}
-
-  ngOnInit() {}
 
   dismiss() {
     this.viewCtrl.dismiss();
@@ -78,27 +66,23 @@ export class CollectAuthorityEmailModal {
   }
 
   submit() {
-    this.submitAttempt = true;
-    this.currentlySubmitting = true;
-    if (!this.form.valid) {
-      this.currentlySubmitting = false;
-      return;
+    this.serverError = '';
+    if (this.form.valid) {
+      let emailRequest = {
+        project_id: this.projectId,
+        company_id: this.companyId,
+        send_as_email: true,
+        authority_name: this.form.value.authorityname,
+        authority_email: this.form.value.authorityemail
+      };
+      this.claService.postCorporateSignatureRequest(emailRequest).subscribe((response) => {
+        if (response.errors !== undefined) {
+          this.serverError = response.errors.project_id;
+        } else {
+          this.emailSent();
+          this.dismiss();
+        }
+      });
     }
-    let emailRequest = {
-      project_id: this.projectId,
-      company_id: this.companyId,
-      send_as_email: true,
-      authority_name: this.form.value.authorityname,
-      authority_email: this.form.value.authorityemail
-    };
-
-    this.claService.postCorporateSignatureRequest(emailRequest).subscribe((response) => {
-      if (response.errors) {
-        //TODO: CREATE error message
-        console.log(response.errors);
-      }
-      this.emailSent();
-      this.dismiss();
-    });
   }
 }

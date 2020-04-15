@@ -101,6 +101,11 @@ build-metrics-lambda: deps
 	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o metrics-aws-lambda cmd/metrics_lambda/main.go
 	chmod +x metrics-aws-lambda
 
+build-metrics-lambda-mac: deps
+	@echo "Building a staticlly linked Mac OSX amd64 binary..."
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o metrics-aws-lambda-mac cmd/metrics_lambda/main.go
+	chmod +x metrics-aws-lambda-mac
+
 $(LINT_TOOL):
 	@echo "Downloading golangci-lint version $(LINT_VERSION)..."
 	# Latest releases: https://github.com/golangci/golangci-lint/releases
