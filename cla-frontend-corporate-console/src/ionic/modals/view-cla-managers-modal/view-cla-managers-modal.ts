@@ -19,13 +19,13 @@ export class ViewCLAManagerModal {
   ProjectName: string;
 
   constructor(
-    public viewCtrl: ViewController,
-    public navParams: NavParams,
-    public formBuilder: FormBuilder,
-    location: PlatformLocation,
+    private viewCtrl: ViewController,
+    private navParams: NavParams,
+    private formBuilder: FormBuilder,
+    private location: PlatformLocation
   ) {
     this.getDefaults();
-    location.onPopState(() => {
+    this.location.onPopState(() => {
       this.viewCtrl.dismiss(false);
     });
   }
@@ -37,7 +37,9 @@ export class ViewCLAManagerModal {
   }
 
   trimCharacter(text, length) {
-    return text.length > length ? text.substring(0, length) + '...' : text;
+    if (text !== undefined) {
+      return text.length > length ? text.substring(0, length) + '...' : text;
+    }
   }
 
   dismiss(data = false) {

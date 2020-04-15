@@ -47,7 +47,6 @@ export class AuthService {
   private setSession(authResult): void {
     // Set the time that the access token will expire at
     const expiresAt = JSON.stringify(authResult.expiresIn * 1000 + new Date().getTime());
-    // console.log(authResult);
     localStorage.setItem('access_token', authResult.accessToken);
     localStorage.setItem('id_token', authResult.idToken);
     localStorage.setItem('expires_at', expiresAt);
@@ -59,7 +58,6 @@ export class AuthService {
   private handleSessionTimeout(): void {
     const FIVE_MINUTES_MS = 60000 * 5;
     this.sessionTimer = setInterval(() => {
-      //this.debug('checking session...');
       if (!this.isAuthenticated()) {
         // Make a note
         const expiresAt = JSON.parse(localStorage.getItem('expires_at') || '{}');
@@ -71,9 +69,7 @@ export class AuthService {
         }
 
         // Logout the user and redirect to the login page
-        //this.debug('logging user out...');
         this.logout();
-        //this.debug('redirecting to login page...');
         this.app
           .getRootNav()
           .setRoot('LoginPage')
@@ -102,7 +98,6 @@ export class AuthService {
     if (localServicesMode) {
       redirectUri = 'http://localhost:8101';
     }
-    console.log('Redirecting to: ' + redirectUri + '/#/login');
     // This library seems to want the options to be `redirectUri`, but the API docs say to use: `returnTo`
     // `returnTo` works
     this.auth0.logout({

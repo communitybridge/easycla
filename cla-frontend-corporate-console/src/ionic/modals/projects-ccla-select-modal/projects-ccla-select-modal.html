@@ -14,7 +14,8 @@
 <ion-content>
   <form [formGroup]="form" (submit)="submit()">
     <ion-row>
-      <ion-searchbar formControlName="search" placeholder="Search Project" (ionInput)="onSearch($event)">
+      <ion-searchbar formControlName="search" placeholder="Search Project"
+        (ionInput)="onSearch($event)">
       </ion-searchbar>
     </ion-row>
   </form>

@@ -5,8 +5,7 @@ import { Component } from '@angular/core';
 import { ViewController, IonicPage, NavParams } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClaService } from '../../services/cla.service';
-import { AuthService } from '../../services/auth.service';
-import { ClaCompanyModel } from '../../models/cla-company';
+import { generalConstants } from '../../constant/general';
 
 @IonicPage({
   segment: 'add-manager-modal'
@@ -18,18 +17,17 @@ import { ClaCompanyModel } from '../../models/cla-company';
 export class AddManagerModal {
   form: FormGroup;
   submitAttempt: boolean = false;
-
   signatureId: string;
   managerLFID: string;
+  linuxFoundationIdentityURL: string = generalConstants.linuxFoundationIdentityURL;
 
   constructor(
-    public viewCtrl: ViewController,
-    public navParams: NavParams,
-    public formBuilder: FormBuilder,
+    private viewCtrl: ViewController,
+    private navParams: NavParams,
+    private formBuilder: FormBuilder,
     private claService: ClaService
   ) {
     this.signatureId = this.navParams.get('signatureId');
-
     this.form = this.formBuilder.group({
       managerLFID: [this.managerLFID, Validators.compose([Validators.required])]
     });

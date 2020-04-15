@@ -5,7 +5,6 @@ import { Component } from '@angular/core';
 import { IonicPage, NavParams, ViewController } from 'ionic-angular';
 import {
   AbstractControl,
-  AsyncValidatorFn,
   FormArray,
   FormBuilder,
   FormGroup,
@@ -14,7 +13,6 @@ import {
 } from '@angular/forms';
 import { ClaService } from '../../services/cla.service';
 import { ClaSignatureModel } from '../../models/cla-signature';
-import { Observable } from 'rxjs';
 
 @IonicPage({
   segment: 'whitelist-modal'
@@ -27,7 +25,6 @@ export class WhitelistModal {
   form: FormGroup;
   submitAttempt: boolean;
   currentlySubmitting: boolean;
-
   type: string;
   companyName: string;
   projectName: string;
@@ -138,31 +135,6 @@ export class WhitelistModal {
     };
   }
 
-  /**
-   * A GitHub organization entry validator. Returns a validation error if the
-   * specified GitHub organization does not exist, otherwise returns null.
-  githubOrgValidator(claService: ClaService): AsyncValidatorFn {
-    return (control: AbstractControl): Promise<ValidationErrors | null> | Observable<ValidationErrors | null> => {
-      return claService.doesGitHubOrgExist(control.value).map(res => {
-        // Response will be either:
-        // - a full JSON document (valid) { "login": "deal-test-org-2", "id": 56558033, "node_id": "MDEyOk9yZ2FuaXphdGlvbjU2NTU4MDMz", ...}
-        // or
-        // - a small JSON document (invalid) {"message": "Not Found", "documentation_url": "https://..."}
-        console.log('Validating: ' + control.value);
-        console.log('Response: ');
-        console.log(res);
-        if (res.message) {
-          this.message.error = 'Invalid Organization: ' + control.value;
-          return {invalidOrg: true};
-        } else {
-          this.message.error = null;
-          return null;
-        }
-      });
-    }
-  }
-   */
-
   addWhitelistItem(item) {
     let ctrl = <FormArray>this.form.controls.whitelist;
     ctrl.push(
@@ -207,11 +179,9 @@ export class WhitelistModal {
     this.currentlySubmitting = true;
     if (!this.form.valid) {
       this.currentlySubmitting = false;
-      // prevent submit
       return;
     }
 
-    //this.message.error = null;
     let signature = new ClaSignatureModel();
     signature.signature_project_id = this.projectId;
     signature.signature_reference_id = this.companyId; // CCLA, so signature_reference_id is the company id
@@ -243,7 +213,6 @@ export class WhitelistModal {
   }
 
   dismiss() {
-    //this.message.error = null;
     this.viewCtrl.dismiss();
   }
 
@@ -252,14 +221,6 @@ export class WhitelistModal {
       return 'gray';
     } else {
       return 'secondary';
-    }
-  }
-
-  cancelButton(): string {
-    if (this.currentlySubmitting) {
-      return 'gray';
-    } else {
-      return 'danger';
     }
   }
 
