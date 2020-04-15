@@ -21,6 +21,7 @@ export class AddManagerModal {
 
   signatureId: string;
   managerLFID: string;
+  showError: boolean;
 
   constructor(
     public viewCtrl: ViewController,
@@ -36,6 +37,10 @@ export class AddManagerModal {
   }
 
   submit() {
+    if(/[~`!@#$%\^&*()+=\-\[\]\\';,/{}|\\":<>\?]/g.test(this.form.value.managerLFID)) {
+      this.showError = true;
+      return;
+    }
     this.submitAttempt = true;
     this.addManager();
   }
@@ -46,5 +51,9 @@ export class AddManagerModal {
 
   dismiss(data = false) {
     this.viewCtrl.dismiss(data);
+  }
+
+  clearError(event) {
+    this.showError = false;
   }
 }

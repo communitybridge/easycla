@@ -84,9 +84,9 @@ export class ClaEmployeeRequestAccessModal {
       }
       this.form.controls['recipient_name'].setValidators(Validators.compose([Validators.required]));
       this.form.controls['recipient_email'].setValidators(Validators.compose([Validators.required, EmailValidator.isValid]));
-      this.form.controls['recipient_name'].updateValueAndValidity();
-      this.form.controls['recipient_email'].updateValueAndValidity();
     }
+    this.form.controls['recipient_name'].updateValueAndValidity();
+    this.form.controls['recipient_email'].updateValueAndValidity();
   }
 
   resetFormValues(value) {
