@@ -22,6 +22,7 @@ export class CollectAuthorityEmailModal {
   projectName: string;
   companyName: string;
   form: FormGroup;
+  serverError: string = '';
 
   constructor(
     public navCtrl: NavController,
@@ -65,6 +66,7 @@ export class CollectAuthorityEmailModal {
   }
 
   submit() {
+    this.serverError = '';
     if (this.form.valid) {
       let emailRequest = {
         project_id: this.projectId,
@@ -74,8 +76,12 @@ export class CollectAuthorityEmailModal {
         authority_email: this.form.value.authorityemail
       };
       this.claService.postCorporateSignatureRequest(emailRequest).subscribe((response) => {
-        this.emailSent();
-        this.dismiss();
+        if (response.errors !== undefined) {
+          this.serverError = response.errors.project_id;
+        } else {
+          this.emailSent();
+          this.dismiss();
+        }
       });
     }
   }

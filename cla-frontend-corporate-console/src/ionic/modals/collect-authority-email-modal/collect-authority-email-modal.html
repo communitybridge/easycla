@@ -15,6 +15,9 @@
   <form [formGroup]="form">
     <ion-grid>
       <ion-row>
+        <ion-label class="error" *ngIf="serverError!==''">
+          {{serverError}}
+        </ion-label>
         <ion-col col-12>
           <p>Please send an E-Mail to your company's Signatory to sign the CLA. </p>
         </ion-col>
