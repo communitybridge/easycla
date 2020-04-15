@@ -118,6 +118,11 @@ type ItemProject struct {
 	ProjectName       string `json:"project_name"`
 }
 
+// ItemUser represent item of users table
+type ItemUser struct {
+	LfUsername string `json:"lf_username"`
+}
+
 // Metrics contain all metrics related to easycla
 type Metrics struct {
 	TotalCountMetrics       *TotalCountMetrics       `json:"total_metrics"`
@@ -343,15 +348,15 @@ func signatureType(sig *ItemSignature) int {
 	return InvalidSignature
 }
 
-func (m *Metrics) processSignature(sig *ItemSignature) {
+func (m *Metrics) processSignature(sig *ItemSignature, usersCache map[string]*ItemUser) {
 	sigType := signatureType(sig)
 	if sigType == InvalidSignature {
 		log.Printf("Warn: invalid signature: %v\n", sig)
 		return
 	}
-	m.CompanyMetrics.processSignature(sig, sigType)
-	m.TotalCountMetrics.processSignature(sig, sigType)
-	m.ProjectMetrics.processSignature(sig, sigType)
+	m.CompanyMetrics.processSignature(sig, sigType, usersCache)
+	m.TotalCountMetrics.processSignature(sig, sigType, usersCache)
+	m.ProjectMetrics.processSignature(sig, sigType, usersCache)
 }
 
 // calculate total count metrics fields as follows
@@ -361,11 +366,14 @@ func (m *Metrics) processSignature(sig *ItemSignature) {
 // corporate contributors
 // individual contributors
 // total contributors
-func (tcm *TotalCountMetrics) processSignature(sig *ItemSignature, sigType int) {
+func (tcm *TotalCountMetrics) processSignature(sig *ItemSignature, sigType int, usersCache map[string]*ItemUser) {
 	switch sigType {
 	case CclaSignature:
-		for _, acl := range sig.SignatureACL {
-			increaseCountIfNotPresent(tcm.claManagers, &tcm.ClaManagersCount, acl)
+		for _, claManagerLfusername := range sig.SignatureACL {
+			if _, ok := usersCache[claManagerLfusername]; ok {
+				// only increase cla manager count if user is present in database
+				increaseCountIfNotPresent(tcm.claManagers, &tcm.ClaManagersCount, claManagerLfusername)
+			}
 		}
 		companyID := sig.SignatureReferenceID
 		companyName := sig.SignatureReferenceName
@@ -390,7 +398,7 @@ func (tcm *TotalCountMetrics) processSignature(sig *ItemSignature, sigType int) 
 // calculate company metrics fields as follows
 // corporate contributors of the company
 // cla-managers of the company
-func (cm *CompanyMetrics) processSignature(sig *ItemSignature, sigType int) {
+func (cm *CompanyMetrics) processSignature(sig *ItemSignature, sigType int, usersCache map[string]*ItemUser) {
 	switch sigType {
 	case CclaSignature:
 		companyName := sig.SignatureReferenceName
@@ -402,8 +410,11 @@ func (cm *CompanyMetrics) processSignature(sig *ItemSignature, sigType int) {
 			return
 		}
 		m.ProjectCount++
-		for _, acl := range sig.SignatureACL {
-			increaseCountIfNotPresent(m.claManagers, &m.ClaManagersCount, acl)
+		for _, claManagerLfusername := range sig.SignatureACL {
+			if _, ok := usersCache[claManagerLfusername]; ok {
+				// only increase cla manager count if user is present in database
+				increaseCountIfNotPresent(m.claManagers, &m.ClaManagersCount, claManagerLfusername)
+			}
 		}
 	case EmployeeSignature:
 		companyID := sig.SignatureUserCompanyID
@@ -424,7 +435,7 @@ func (cm *CompanyMetrics) processSignature(sig *ItemSignature, sigType int) {
 // corporate contributors in project
 // individual contributors in project
 // total contributors in project
-func (pm *ProjectMetrics) processSignature(sig *ItemSignature, sigType int) {
+func (pm *ProjectMetrics) processSignature(sig *ItemSignature, sigType int, usersCache map[string]*ItemUser) {
 	projectID := sig.SignatureProjectID
 	m, ok := pm.ProjectMetrics[projectID]
 	if !ok {
@@ -436,8 +447,11 @@ func (pm *ProjectMetrics) processSignature(sig *ItemSignature, sigType int) {
 	case CclaSignature:
 		companyID := sig.SignatureReferenceID
 		increaseCountIfNotPresent(m.companies, &m.CompaniesCount, companyID)
-		for _, acl := range sig.SignatureACL {
-			increaseCountIfNotPresent(m.claManagers, &m.ClaManagersCount, acl)
+		for _, claManagerLfusername := range sig.SignatureACL {
+			if _, ok := usersCache[claManagerLfusername]; ok {
+				// only increase cla manager count if user is present in database
+				increaseCountIfNotPresent(m.claManagers, &m.ClaManagersCount, claManagerLfusername)
+			}
 		}
 	case EmployeeSignature:
 		userID := sig.SignatureReferenceID
@@ -554,7 +568,7 @@ func calculateClaManagerDistribution(cm *CompanyMetrics) *ClaManagersDistributio
 	return &cmd
 }
 
-func (repo *repo) processSignaturesTable(metrics *Metrics) error {
+func (repo *repo) processSignaturesTable(metrics *Metrics, usersCache map[string]*ItemUser) error {
 	log.Println("processing signatures table")
 	filter := expression.Name("signature_signed").Equal(expression.Value(true)).
 		And(expression.Name("signature_approved").Equal(expression.Value(true)))
@@ -575,7 +589,7 @@ func (repo *repo) processSignaturesTable(metrics *Metrics) error {
 		return err
 	}
 	for _, sig := range sigs {
-		metrics.processSignature(sig)
+		metrics.processSignature(sig, usersCache)
 	}
 	return nil
 }
@@ -614,6 +628,26 @@ func (repo *repo) processGerritInstancesTable(metrics *Metrics) error {
 		metrics.ProjectMetrics.processGerritInstance(gi)
 	}
 	return nil
+}
+
+func (repo *repo) cacheUsersByLfUsername() (map[string]*ItemUser, error) {
+	usersCache := make(map[string]*ItemUser)
+	userTableName := fmt.Sprintf("cla-%s-users", repo.stage)
+	log.Println("processing users table")
+	projection := expression.NamesList(
+		expression.Name("lf_username"),
+	)
+	var users []*ItemUser
+	err := repo.scanTable(userTableName, projection, nil, &users)
+	if err != nil {
+		return nil, err
+	}
+	for _, user := range users {
+		if user.LfUsername != "" {
+			usersCache[user.LfUsername] = user
+		}
+	}
+	return usersCache, nil
 }
 
 func (repo *repo) processProjectsTable(metrics *Metrics) error {
@@ -698,10 +732,15 @@ func (repo *repo) scanTable(tableName string, projection expression.ProjectionBu
 func (repo *repo) calculateMetrics() (*Metrics, error) {
 	metrics := newMetrics()
 	t := time.Now()
+	// build users cache by lf-username
+	usersCache, err := repo.cacheUsersByLfUsername()
+	if err != nil {
+		return nil, err
+	}
 	// calculate project count
 	// create structure for projectMetric
 	// cache project membership info
-	err := repo.processProjectsTable(metrics)
+	err = repo.processProjectsTable(metrics)
 	if err != nil {
 		return nil, err
 	}
@@ -714,7 +753,7 @@ func (repo *repo) calculateMetrics() (*Metrics, error) {
 	// calculate project metrics
 	// calculate company metrics
 	// calculate total count metrics
-	err = repo.processSignaturesTable(metrics)
+	err = repo.processSignaturesTable(metrics, usersCache)
 	if err != nil {
 		return nil, err
 	}
