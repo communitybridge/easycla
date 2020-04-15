@@ -737,6 +737,8 @@ func (repo *repo) calculateMetrics() (*Metrics, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug("Calculating CLA Group metrics...")
 	// calculate project count
 	// create structure for projectMetric
 	// cache project membership info
@@ -744,12 +746,16 @@ func (repo *repo) calculateMetrics() (*Metrics, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug("Calculating Org/Company metrics...")
 	// calculate companies count
 	// create structure for companyMetric
 	err = repo.processCompaniesTable(metrics)
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug("Calculating Signature metrics...")
 	// calculate project metrics
 	// calculate company metrics
 	// calculate total count metrics
@@ -757,21 +763,29 @@ func (repo *repo) calculateMetrics() (*Metrics, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug("Calculating Repository metrics...")
 	// calculate github repositories count
 	// increment project repositories count
 	err = repo.processRepositoriesTable(metrics)
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug("Calculating Gerrit metrics...")
 	// calculate gerrit repositories count
 	// increment project repositories count
 	err = repo.processGerritInstancesTable(metrics)
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug("Calculating CLA Manager distribution metrics...")
 	metrics.ClaManagersDistribution = calculateClaManagerDistribution(metrics.CompanyMetrics)
 	_, metrics.CalculatedAt = utils.CurrentTime()
 	log.Println("calculate metrics took time", time.Since(t).String())
+
+	log.Debug("Completed metrics calculations")
 	return metrics, nil
 }
 

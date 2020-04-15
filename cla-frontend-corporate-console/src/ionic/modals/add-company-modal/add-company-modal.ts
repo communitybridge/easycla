@@ -38,12 +38,12 @@ export class AddCompanyModal {
   associatedCompanies: any[] = [];
 
   constructor(
-    public navParams: NavParams,
-    public viewCtrl: ViewController,
-    public formBuilder: FormBuilder,
+    private navParams: NavParams,
+    private viewCtrl: ViewController,
+    private formBuilder: FormBuilder,
     private claService: ClaService,
     private authService: AuthService,
-    public alertCtrl: AlertController
+    private alertCtrl: AlertController
   ) {
     this.associatedCompanies = this.navParams.get('associatedCompanies');
     this.getDefaults();
@@ -247,7 +247,7 @@ export class AddCompanyModal {
           }
         })
         .catch((error) => {
-          console.log(JSON.stringify(error));
+          console.warn(JSON.stringify(error));
           return;
         });
     }
