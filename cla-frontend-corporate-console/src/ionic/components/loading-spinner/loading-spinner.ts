@@ -8,9 +8,6 @@ import { Input, Component } from '@angular/core';
   templateUrl: 'loading-spinner.html'
 })
 export class LoadingSpinnerComponent {
-  /**
-   * The text used for the upload label
-   */
   @Input('loading')
   private loading: boolean;
 

@@ -50,7 +50,6 @@
     <ion-buttons end>
       <loading-spinner [loading]="currentlySubmitting"></loading-spinner>
       <button type="button" ion-button icon-left (click)="dismiss()" color="primary" [disabled]="currentlySubmitting">
-<!--        <button ion-button icon-left (click)="dismiss()" [color]="cancelButton()" [disabled]="currentlySubmitting">-->
         Cancel
       </button>
       <button form="form" type="submit" ion-button icon-right [color]="saveButton()" [disabled]="currentlySubmitting">

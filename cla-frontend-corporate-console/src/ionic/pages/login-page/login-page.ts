@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { NavController, IonicPage } from 'ionic-angular';
+import { IonicPage } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
 
 @IonicPage({
@@ -14,7 +14,9 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: 'login-page.html'
 })
 export class LoginPage {
-  constructor(public navCtrl: NavController, public authService: AuthService) {}
+  constructor(
+    private authService: AuthService
+  ) { }
 
   login() {
     this.authService.login();

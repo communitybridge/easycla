@@ -6,6 +6,7 @@ package project
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
@@ -157,6 +158,7 @@ func (repo *repo) CreateProject(projectModel *models.Project) (*models.Project, 
 	addStringAttribute(input.Item, "project_id", projectID.String())
 	addStringAttribute(input.Item, "project_external_id", projectModel.ProjectExternalID)
 	addStringAttribute(input.Item, "project_name", projectModel.ProjectName)
+	addStringAttribute(input.Item, "project_name_lower", strings.ToLower(projectModel.ProjectName))
 	addStringSliceAttribute(input.Item, "project_acl", projectModel.ProjectACL)
 	addBooleanAttribute(input.Item, "project_icla_enabled", projectModel.ProjectICLAEnabled)
 	addBooleanAttribute(input.Item, "project_ccla_enabled", projectModel.ProjectCCLAEnabled)
@@ -330,7 +332,7 @@ func (repo *repo) GetProjectByName(projectName string) (*models.Project, error) 
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
 	// This is the key we want to match
-	condition := expression.Key("project_name").Equal(expression.Value(projectName))
+	condition := expression.Key("project_name_lower").Equal(expression.Value(strings.ToLower(projectName)))
 
 	// Use the builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
@@ -580,6 +582,10 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 		expressionAttributeNames["#N"] = aws.String("project_name")
 		expressionAttributeValues[":n"] = &dynamodb.AttributeValue{S: aws.String(projectModel.ProjectName)}
 		updateExpression = updateExpression + " #N = :n, "
+		log.Debugf("UpdateProject- adding project name lower: %s", strings.ToLower(projectModel.ProjectName))
+		expressionAttributeNames["#LOW"] = aws.String("project_name")
+		expressionAttributeValues[":low"] = &dynamodb.AttributeValue{S: aws.String(strings.ToLower(projectModel.ProjectName))}
+		updateExpression = updateExpression + " #LOW = :low, "
 	}
 	if projectModel.ProjectACL != nil && len(projectModel.ProjectACL) > 0 {
 		log.Debugf("UpdateProject - adding project_acl: %s", projectModel.ProjectACL)
@@ -759,6 +765,7 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("project_id"),
 		expression.Name("project_external_id"),
 		expression.Name("project_name"),
+		expression.Name("project_name_lower"),
 		expression.Name("project_acl"),
 		expression.Name("project_ccla_enabled"),
 		expression.Name("project_icla_enabled"),
