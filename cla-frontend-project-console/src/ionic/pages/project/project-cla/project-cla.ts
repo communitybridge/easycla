@@ -256,12 +256,6 @@ export class ProjectClaPage {
     modal.present();
   }
 
-  openClaContractsContributorsPage(claProjectId) {
-    this.navCtrl.push('ClaContractsContributorsPage', {
-      claProjectId: claProjectId
-    });
-  }
-
   searchProjects(name: string, projects: any) {
     let found = false;
 
