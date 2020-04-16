@@ -12,6 +12,7 @@ import {
   ViewController
 } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
+import { PlatformLocation } from '@angular/common';
 
 @IonicPage({
   segment: 'cla-contract-version-modal'
@@ -34,8 +35,12 @@ export class ClaContractVersionModal {
     private popoverCtrl: PopoverController,
     public modalCtrl: ModalController,
     private claService: ClaService,
-    public events: Events
+    public events: Events,
+    private location: PlatformLocation,
   ) {
+    this.location.onPopState(() => {
+      this.viewCtrl.dismiss(false);
+    });
     this.claProjectId = this.navParams.get('claProjectId');
     this.documentType = this.navParams.get('documentType');
     this.documents = this.navParams.get('documents').reverse();
