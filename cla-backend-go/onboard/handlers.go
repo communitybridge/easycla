@@ -127,6 +127,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 				})
 			}
 			return onboard.NewSendNotificationOK().WithPayload(&models.OnboardNotificationResponse{
-				Message: aws.String(fmt.Sprintf("Message sent"))})
+				Message: aws.String("Message sent"),
+			})
 		})
 }

@@ -6,6 +6,7 @@ package company
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
@@ -37,10 +38,11 @@ type Service interface { // nolint
 	GetCompanyInviteRequests(companyID string) ([]models.CompanyInviteUser, error)
 	GetCompanyUserInviteRequests(companyID string, userID string) (*models.CompanyInviteUser, error)
 	RejectCompanyInviteRequest(companyID string, userID string) error
-	DeletePendingCompanyInviteRequest(InviteID string) error
+	DeletePendingCompanyInviteRequest(CompanyID string, InviteID string, lfID string) error
 
 	AddUserToCompanyAccessList(companyID string, inviteID string, lfid string) error
 	SendRequestAccessEmail(companyID string, user *user.CLAUser) error
+	//sendRejectionEmail(company *models.Company, recipientAddress string, rejectedUser *user.CLAUser) error
 
 	GetMetrics() (*models.CompaniesMetrics, error)
 }
@@ -184,12 +186,32 @@ func (s service) RejectCompanyInviteRequest(companyID string, userID string) err
 }
 
 // DeletePendingCompanyInviteRequest deletes the pending company invite request when provided the invite ID
-func (s service) DeletePendingCompanyInviteRequest(inviteID string) error {
+func (s service) DeletePendingCompanyInviteRequest(companyID string, inviteID string, lfID string) error {
 	// When a CLA Manager Declines a pending invite, remove the invite from the table
-	err := s.repo.DeletePendingCompanyInviteRequest(inviteID)
+	company, err := s.repo.GetCompany(companyID)
+	if err != nil {
+		log.Warnf("Error retrieving company by company ID: %s, error: %v", companyID, err)
+		return err
+	}
+	log.Debugf("Deleting Company Invite Request inviteID : %s", inviteID)
+
+	userProfile, err := s.userDynamoRepo.GetUserAndProfilesByLFID(lfID)
+	if err != nil {
+		log.Warnf("Error getting user profile by LFID: %s, error: %v", lfID, err)
+		return nil
+	}
+
+	recipientEmailAddress := userProfile.LFEmail
+
+	err = s.repo.DeletePendingCompanyInviteRequest(inviteID)
 	if err != nil {
 		log.Warnf("Error deleting the pending company invite with invite ID: %s, error: %v", inviteID, err)
 		return err
+	}
+
+	err = s.sendRejectionEmail(company, recipientEmailAddress, &userProfile)
+	if err != nil {
+		return errors.New("failed to send notification email")
 	}
 
 	return nil
@@ -273,6 +295,48 @@ You have now been granted access to the organization: %s
 	log.Debugf("Sent '%s' email to: %s", Subject, Recipient)
 
 	return nil
+}
+
+// sendRejectionEmail sends the rejection email
+func (s service) sendRejectionEmail(company *models.Company, recipientAddress string, rejectedUser *user.CLAUser) error {
+	// Get CLAUser admin list
+	log.Debugf("Processing rejection email for User: %s for Company: %s ", rejectedUser.LFUsername, company.CompanyName)
+	var admins []*user.CLAUser
+	for _, acl := range company.CompanyACL {
+		admin, err := s.userDynamoRepo.GetUserAndProfilesByLFID(acl)
+		if err != nil {
+			log.Warnf("Error fetching user profile using admin: %s, error: %v", admin, err)
+			continue
+		}
+		admins = append(admins, &admin)
+	}
+
+	// String builder to return 'Manager <email>' list
+	var sb strings.Builder
+	for _, admin := range admins {
+		sb.WriteString(fmt.Sprintf("- %s <%s>\n", admin.Name, admin.LFEmail))
+	}
+
+	var (
+		Recipient = recipientAddress
+		Subject   = "CLA: Denial of Access for Corporate CLA "
+		TextBody  = fmt.Sprintf(` Hello %s,
+		Your request to become a CLA Manager for the organization: %s was denied.
+		If you have further questions, contact one of the existing CLA Managers :
+		%s 
+		
+		- Linux Foundation CLA System`, rejectedUser.Name, company.CompanyName, sb.String())
+	)
+	log.Debugf("acls : %v", company.CompanyACL)
+	err := utils.SendEmail(Subject, TextBody, []string{Recipient})
+	if err != nil {
+		log.Warnf("Error sending mail, error: %v", err)
+		return err
+	}
+	log.Debugf("Send '%s' email to: %s", Subject, Recipient)
+
+	return nil
+
 }
 
 // SendRequestAccessEmail sends the request access e-mail when provided the company ID and user object

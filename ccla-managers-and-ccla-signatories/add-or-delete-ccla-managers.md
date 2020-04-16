@@ -3,7 +3,7 @@
 CCLA managers have the following responsibilities:
 
 * Add a company to a project.
-* Whitelist domain names and email addresses.
+* Approved List domain names and email addresses.
 * Change the settings to manage your company CLAs.
 
 You can add CCLA managers to your project or remove them.

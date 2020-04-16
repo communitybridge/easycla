@@ -67,6 +67,10 @@ func printBuildInfo() {
 func main() {
 	log.Info("Lambda server starting...")
 	printBuildInfo()
-	lambda.Start(handler)
+	if os.Getenv("LOCAL_MODE") == "true" {
+		handler(context.Background(), events.CloudWatchEvent{})
+	} else {
+		lambda.Start(handler)
+	}
 	log.Infof("Lambda shutting down...")
 }

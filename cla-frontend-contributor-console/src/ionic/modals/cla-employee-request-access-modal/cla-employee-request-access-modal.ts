@@ -235,10 +235,10 @@ export class ClaEmployeeRequestAccessModal {
     }
     this.claService.postCCLAWhitelistRequest(this.companyId, this.projectId, user).subscribe(
       () => {
-        console.log(this.userId + ' ccla whitelist request for project: ' + this.projectId + ' for company: ' + this.companyId);
+        console.log(this.userId + ' ccla approved list request for project: ' + this.projectId + ' for company: ' + this.companyId);
       },
       (exception) => {
-        console.log('Exception during ccla whitelist request for user ' + this.userId + ' on project: ' + this.projectId + ' and company: ' + this.companyId);
+        console.log('Exception during ccla approved list request for user ' + this.userId + ' on project: ' + this.projectId + ' and company: ' + this.companyId);
         console.log(exception);
       }
     );
