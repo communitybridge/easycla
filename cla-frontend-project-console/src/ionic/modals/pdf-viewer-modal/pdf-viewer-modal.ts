@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import {IonicPage, NavParams, ViewController, } from 'ionic-angular';
+import { IonicPage, NavParams, ViewController, } from 'ionic-angular';
+import { PlatformLocation } from '@angular/common';
 
 @IonicPage({
   segment: 'pdf-viewer-modal'
@@ -15,7 +16,13 @@ export class PdfViewerModal {
   doc: string;
   documentType: string;
 
-  constructor(private navParams: NavParams, private mdContorller: ViewController) {
+  constructor(private navParams: NavParams,
+    private mdContorller: ViewController,
+    private location: PlatformLocation
+  ) {
+    this.location.onPopState(() => {
+      this.mdContorller.dismiss(false);
+    });
     this.doc = this.navParams.get('doc');
     this.documentType = this.navParams.get('documentType');
   }
