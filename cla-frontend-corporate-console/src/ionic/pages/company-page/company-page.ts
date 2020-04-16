@@ -68,7 +68,7 @@ export class CompanyPage {
       { prop: 'ProjectManagers' },
       { prop: 'Status' },
       { prop: 'PendingRequets' },
-      { prop: 'WhiteList' }
+      { prop: 'Approved List' }
     ];
   }
 

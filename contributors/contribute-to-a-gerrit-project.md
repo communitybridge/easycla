@@ -106,7 +106,7 @@ This window appears if your comapny has not signed a Corporate CLA for the proje
 
 To send an email notification to your company's CLA manager to sign Corporate CLA:
 
-1. Select your email address from the **Email to Authorize** drop-down list. This is the email address that you want your company manager to whitelist while signing the Corporate CLA.
+1. Select your email address from the **Email to Authorize** drop-down list. This is the email address that you want your company manager to approved list while signing the Corporate CLA.
 
    ![](../.gitbook/assets/company-not-signed-ccla.png)
 
@@ -128,7 +128,7 @@ To send a request to your company's CLA manager to be whitelisted:
 
    A **Request Access** window appears.
 
-2. Select your email address from the **Email to Authorize** drop-down list. This is the email address that you want your company manager to whitelist while signing the Corporate CLA.
+2. Select your email address from the **Email to Authorize** drop-down list. This is the email address that you want your company manager to approved while signing the Corporate CLA.
 3. Click **SEND**
 
    A message shows that your email is successfully sent.
@@ -151,7 +151,7 @@ If you don't find your company's name in the list:
 
 3. Complete the form and click **SEND**.
 
-   The CCLA manager signs a Corporate CLA and adds you to the whitelist.
+   The CCLA manager signs a Corporate CLA and adds you to the approved list.
 
 You have finished signing your CLA for this Gerrit instance. You are able to submit your changes to any repository under this Gerrit instance.
 
