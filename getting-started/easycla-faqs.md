@@ -24,7 +24,7 @@ Probably not. If your company's CCLA signatory has signed a Corporate CLA, and i
 
 If you are the first one from your company who has contributed to the project, then your company's CCLA signatory will need to sign a Corporate CLA as part of the EasyCLA process. Depending on the company, you might be an authorized CCLA signatory, but you will need to review with your company's leadership or legal counsel if you are not certain.
 
-And if your company has already signed a Corporate CLA, but you are not yet on your company's approved list, then you will need to be whitelisted by your company's CCLA manager as part of the EasyCLA process.
+And if your company has already signed a Corporate CLA, but you are not yet on your company's approved list, then you will need to be approved by your company's CCLA manager as part of the EasyCLA process.
 
 **If my project community has elected to use CLAs as a required step for contributions to their code, do I need to be authorized under a CLA for each project to which I contribute?**
 
