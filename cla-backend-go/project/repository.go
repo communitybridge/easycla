@@ -349,7 +349,7 @@ func (repo *repo) GetProjectByName(projectName string) (*models.Project, error) 
 		ExpressionAttributeValues: expr.Values(),
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(tableName),
-		IndexName:                 aws.String("project-name-search-index"),
+		IndexName:                 aws.String("project-name-lower-search-index"),
 	}
 
 	// Make the DynamoDB Query API call
