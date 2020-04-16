@@ -29,7 +29,7 @@
   * [Add a Company to a Project](ccla-managers-and-ccla-signatories/add-a-company-to-a-project.md)
   * [Sign a Corporate CLA on Behalf of the Company](ccla-managers-and-ccla-signatories/sign-a-corporate-cla-on-behalf-of-the-company.md)
   * [Review and Sign a Corporate CLA by Request](ccla-managers-and-ccla-signatories/review-and-sign-a-corporate-cla-by-request.md)
-  * [Whitelist Contributors](ccla-managers-and-ccla-signatories/whitelist-contributors.md)
+  * [approved list Contributors](ccla-managers-and-ccla-signatories/whitelist-contributors.md)
   * [Add or Delete CLA Managers](ccla-managers-and-ccla-signatories/add-or-delete-ccla-managers.md)
   * [View Employee Acknowledgements](ccla-managers-and-ccla-signatories/view-employee-acknowledgements.md)
   * [Edit the Company Name and Manager Details](ccla-managers-and-ccla-signatories/edit-the-company-name-and-manager-details.md)

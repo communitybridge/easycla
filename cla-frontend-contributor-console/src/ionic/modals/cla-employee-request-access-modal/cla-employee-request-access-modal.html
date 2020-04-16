@@ -18,7 +18,7 @@
       <ion-row>
         <ion-col col-12>
           <p>After you click send you will have to wait for {{ company.company_name }} CLA Manager to add you to their
-            whitelist before you can complete your employee contributor CLA process.
+            approved list before you can complete your employee contributor CLA process.
           </p>
         </ion-col>
       </ion-row>
@@ -98,7 +98,7 @@
           </ion-list>
           <p class="field-description">
             Select the email address attached to your account that you would like your
-            company's CLA Manager to whitelist.
+            company's CLA Manager to approved.
             <ng-container *ngIf="!form.controls.user_email.valid && (form.controls.user_email.touched || submitAttempt)">
               <span class="error-message"> * A valid email address is required </span>
             </ng-container>
