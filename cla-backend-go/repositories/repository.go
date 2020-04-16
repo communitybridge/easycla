@@ -37,7 +37,6 @@ var (
 
 // Repository defines functions of Repositories
 type Repository interface {
-	GetMetrics() (*models.RepositoryMetrics, error)
 	GetProjectRepositoriesGroupByOrgs(projectID string) ([]*models.GithubRepositoriesGroupByOrgs, error)
 	DeleteRepositoriesOfGithubOrganization(externalProjectID, githubOrgName string) error
 	AddGithubRepository(externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
@@ -60,23 +59,6 @@ type repo struct {
 	stage               string
 	dynamoDBClient      *dynamodb.DynamoDB
 	repositoryTableName string
-}
-
-// GetMetrics returns the metrics for the github repository
-func (repo repo) GetMetrics() (*models.RepositoryMetrics, error) {
-	var out models.RepositoryMetrics
-	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
-	describeTableInput := &dynamodb.DescribeTableInput{
-		TableName: &tableName,
-	}
-	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
-	if err != nil {
-		log.Warnf("error retrieving total record count of repositories, error: %v", err)
-		return nil, err
-	}
-
-	out.TotalCount = *describeTableResult.Table.ItemCount
-	return &out, nil
 }
 
 // GetProjectRepositoriesGroupByOrgs returns a list of GH orgs by project id
