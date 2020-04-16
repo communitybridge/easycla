@@ -6,6 +6,7 @@ package project
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
@@ -33,7 +34,6 @@ var (
 
 // ProjectRepository defines functions of Project repository
 type ProjectRepository interface { //nolint
-	GetMetrics() (*models.ProjectMetrics, error)
 	CreateProject(project *models.Project) (*models.Project, error)
 	GetProjectByID(projectID string) (*models.Project, error)
 	GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error)
@@ -64,79 +64,6 @@ type repo struct {
 	gerritRepo     gerrits.Repository
 }
 
-// GetMetrics returns the metrics for the projects
-func (repo repo) GetMetrics() (*models.ProjectMetrics, error) {
-	var out models.ProjectMetrics
-	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
-	// Do these counts in parallel
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	var totalCount int64
-	var projects []models.ProjectSimpleModel
-
-	go func(tableName string) {
-		defer wg.Done()
-		// How many total records do we have - may not be up-to-date as this value is updated only periodically
-		describeTableInput := &dynamodb.DescribeTableInput{
-			TableName: &tableName,
-		}
-		describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
-		if err != nil {
-			log.Warnf("error retrieving total record count, error: %v", err)
-		}
-		// Meta-data for the response
-		totalCount = *describeTableResult.Table.ItemCount
-	}(tableName)
-
-	go func() {
-		defer wg.Done()
-
-		// Use the last evaluated key to determine if we have more to process
-		lastEvaluatedKey := ""
-
-		for ok := true; ok; ok = lastEvaluatedKey != "" {
-			projectModels, err := repo.GetProjects(&project.GetProjectsParams{
-				PageSize: aws.Int64(50),
-				NextKey:  aws.String(lastEvaluatedKey),
-			})
-			if err != nil {
-				log.Warnf("error retrieving projects for metrics, error: %v", err)
-			}
-			// Convert the full response model to a simple model for metrics
-			projects = append(projects, buildSimpleModel(projectModels)...)
-
-			// Save the last evaluated key - use it to determine if we have more to process
-			lastEvaluatedKey = projectModels.LastKeyScanned
-		}
-	}()
-
-	// Wait for the counts to finish
-	wg.Wait()
-
-	out.TotalCount = totalCount
-	out.Projects = projects
-	return &out, nil
-}
-
-// buildSimpleModel converts the DB model to a simple response model
-func buildSimpleModel(dbProjectsModel *models.Projects) []models.ProjectSimpleModel {
-	if dbProjectsModel == nil || dbProjectsModel.Projects == nil {
-		return []models.ProjectSimpleModel{}
-	}
-
-	var simpleModels []models.ProjectSimpleModel
-	for _, dbModel := range dbProjectsModel.Projects {
-		simpleModels = append(simpleModels, models.ProjectSimpleModel{
-			ProjectName:         dbModel.ProjectName,
-			ProjectManagerCount: int64(len(dbModel.ProjectACL)),
-			ProjectExternalID:   dbModel.ProjectExternalID,
-		})
-	}
-
-	return simpleModels
-}
-
 // CreateProject creates a new project
 func (repo *repo) CreateProject(projectModel *models.Project) (*models.Project, error) {
 	// Generate a new project ID
@@ -157,6 +84,7 @@ func (repo *repo) CreateProject(projectModel *models.Project) (*models.Project, 
 	addStringAttribute(input.Item, "project_id", projectID.String())
 	addStringAttribute(input.Item, "project_external_id", projectModel.ProjectExternalID)
 	addStringAttribute(input.Item, "project_name", projectModel.ProjectName)
+	addStringAttribute(input.Item, "project_name_lower", strings.ToLower(projectModel.ProjectName))
 	addStringSliceAttribute(input.Item, "project_acl", projectModel.ProjectACL)
 	addBooleanAttribute(input.Item, "project_icla_enabled", projectModel.ProjectICLAEnabled)
 	addBooleanAttribute(input.Item, "project_ccla_enabled", projectModel.ProjectCCLAEnabled)
@@ -217,19 +145,18 @@ func (repo *repo) GetProjectByID(projectID string) (*models.Project, error) {
 		return nil, queryErr
 	}
 
-	if len(results.Items) > 0 {
-		var dbModel DBProjectModel
-		err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
-		if err != nil {
-			log.Warnf("error unmarshalling db project model, error: %+v", err)
-			return nil, err
-		}
-
-		// Convert the database model to an API response model
-		return repo.buildProjectModel(dbModel), nil
+	if len(results.Items) < 1 {
+		return nil, ErrProjectDoesNotExist
+	}
+	var dbModel DBProjectModel
+	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
+	if err != nil {
+		log.Warnf("error unmarshalling db project model, error: %+v", err)
+		return nil, err
 	}
 
-	return nil, nil
+	// Convert the database model to an API response model
+	return repo.buildProjectModel(dbModel), nil
 }
 
 // GetProjectsByExternalID queries the database and returns a list of the projects
@@ -331,7 +258,7 @@ func (repo *repo) GetProjectByName(projectName string) (*models.Project, error) 
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
 	// This is the key we want to match
-	condition := expression.Key("project_name").Equal(expression.Value(projectName))
+	condition := expression.Key("project_name_lower").Equal(expression.Value(strings.ToLower(projectName)))
 
 	// Use the builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
@@ -348,7 +275,7 @@ func (repo *repo) GetProjectByName(projectName string) (*models.Project, error) 
 		ExpressionAttributeValues: expr.Values(),
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(tableName),
-		IndexName:                 aws.String("project-name-search-index"),
+		IndexName:                 aws.String("project-name-lower-search-index"),
 	}
 
 	// Make the DynamoDB Query API call
@@ -581,6 +508,10 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 		expressionAttributeNames["#N"] = aws.String("project_name")
 		expressionAttributeValues[":n"] = &dynamodb.AttributeValue{S: aws.String(projectModel.ProjectName)}
 		updateExpression = updateExpression + " #N = :n, "
+		log.Debugf("UpdateProject- adding project name lower: %s", strings.ToLower(projectModel.ProjectName))
+		expressionAttributeNames["#LOW"] = aws.String("project_name_lower")
+		expressionAttributeValues[":low"] = &dynamodb.AttributeValue{S: aws.String(strings.ToLower(projectModel.ProjectName))}
+		updateExpression = updateExpression + " #LOW = :low, "
 	}
 	if projectModel.ProjectACL != nil && len(projectModel.ProjectACL) > 0 {
 		log.Debugf("UpdateProject - adding project_acl: %s", projectModel.ProjectACL)
@@ -760,6 +691,7 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("project_id"),
 		expression.Name("project_external_id"),
 		expression.Name("project_name"),
+		expression.Name("project_name_lower"),
 		expression.Name("project_acl"),
 		expression.Name("project_ccla_enabled"),
 		expression.Name("project_icla_enabled"),
