@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/communitybridge/easycla/cla-backend-go/user"
@@ -34,7 +33,6 @@ var (
 
 // CompanyRepository interface methods
 type CompanyRepository interface { //nolint
-	GetMetrics() (*models.CompaniesMetrics, error)
 	GetCompanies() (*models.Companies, error)
 	GetCompany(companyID string) (*models.Company, error)
 	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
@@ -820,71 +818,4 @@ func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []st
 	}
 
 	return nil
-}
-func (repo repository) GetMetrics() (*models.CompaniesMetrics, error) {
-	var out models.CompaniesMetrics
-	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
-	// Do these counts in parallel
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	var totalCount int64
-	var companies []models.CompanySimpleModel
-
-	go func(tableName string) {
-		defer wg.Done()
-		// How many total records do we have - may not be up-to-date as this value is updated only periodically
-		describeTableInput := &dynamodb.DescribeTableInput{
-			TableName: &tableName,
-		}
-		describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
-		if err != nil {
-			log.Warnf("error retrieving total record count, error: %v", err)
-		}
-		// Meta-data for the response
-		totalCount = *describeTableResult.Table.ItemCount
-	}(tableName)
-
-	go func() {
-		defer wg.Done()
-
-		// Use the last evaluated key to determine if we have more to process
-		lastEvaluatedKey := ""
-
-		for ok := true; ok; ok = lastEvaluatedKey != "" {
-			companyModels, err := repo.GetCompanies()
-			if err != nil {
-				log.Warnf("error retrieving companies for metrics, error: %v", err)
-			}
-			// Convert the full response model to a simple model for metrics
-			companies = append(companies, buildSimpleModel(companyModels)...)
-
-			// Save the last evaluated key - use it to determine if we have more to process
-			lastEvaluatedKey = companyModels.LastKeyScanned
-		}
-	}()
-
-	// Wait for the counts to finish
-	wg.Wait()
-
-	out.TotalCount = totalCount
-	out.Companies = companies
-	return &out, nil
-}
-
-// buildSimpleModel converts the DB model to a simple response model
-func buildSimpleModel(dbCompaniesModel *models.Companies) []models.CompanySimpleModel {
-	if dbCompaniesModel == nil || dbCompaniesModel.Companies == nil {
-		return []models.CompanySimpleModel{}
-	}
-
-	var simpleModels []models.CompanySimpleModel
-	for _, dbModel := range dbCompaniesModel.Companies {
-		simpleModels = append(simpleModels, models.CompanySimpleModel{
-			CompanyName:         dbModel.CompanyName,
-			CompanyManagerCount: int64(len(dbModel.CompanyACL)),
-		})
-	}
-
-	return simpleModels
 }
