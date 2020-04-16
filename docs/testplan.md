@@ -16,8 +16,8 @@ This document list all the features of EasyCLA consoles and status of workingnes
   * [Corporate console](testplan.md#corporate-console)
     * [CLA Manager Signs CCLA](testplan.md#cla-manager-signs-ccla)
   * [Contributor console](testplan.md#contributor-console)
-    * [CCLA Contributor - company exists, contributor email is in whitelist](testplan.md#ccla-contributor---company-exists-contributor-email-is-in-whitelist)
-    * [CCLA Contributor - company exists, contributor email is not in whitelist](testplan.md#ccla-contributor---company-exists-contributor-email-is-not-in-whitelist)
+    * [CCLA Contributor - company exists, contributor email is in approved list](testplan.md#ccla-contributor---company-exists-contributor-email-is-in-whitelist)
+    * [CCLA Contributor - company exists, contributor email is not in approved list](testplan.md#ccla-contributor---company-exists-contributor-email-is-not-in-whitelist)
     * [CCLA Contributor - company does not exist](testplan.md#ccla-contributor---company-does-not-exist)
     * [ICLA Contributor](testplan.md#icla-contributor)
     * [Contributor Has Already Signed CLA](testplan.md#contributor-has-already-signed-cla)
@@ -67,7 +67,7 @@ This document list all the features of EasyCLA consoles and status of workingnes
 
 ### Contributor console
 
-#### CCLA Contributor - company exists, contributor email is in whitelist
+#### CCLA Contributor - company exists, contributor email is in approved list
 
 | Test name | Description | Status |
 | :--- | :--- | :---: |
@@ -84,7 +84,7 @@ This document list all the features of EasyCLA consoles and status of workingnes
 | Create PR - CLA check fails | Corporate contributor with no previous CLA sign should get CLA check fail on their PR. | ✅ |
 | CLA Link opens to contributor console. Contributor selects "Company" | CLA sign link from PR should open Contributor console,  after Github oauth flow, they should get option to select   _Individual_ or _Company_ | ✅ |
 | Contributor selects their company from the company list | Contributor should be able to select the Company from list of companies. | ✅ |
-| Contributor's email address fails whitelist check. Presented with "troubleshoot" screen. | Contributor is not whitelisted in corp console, they should get informational page to get whitelisted. | ✅ |
+| Contributor's email address fails approved list check. Presented with "troubleshoot" screen. | Contributor is not whitelisted in corp console, they should get informational page to get whitelisted. | ✅ |
 | Contributor selects the option to email their CLA Manager | Contact CLA manager form should send email to CLA manager. | ✅ |
 
 #### CCLA Contributor - company does not exist
@@ -103,7 +103,7 @@ This document list all the features of EasyCLA consoles and status of workingnes
 | Create PR - CLA check fails | Corporate contributor with no previous CLA sign should get CLA check fail on their PR. | ✅ |
 | CLA Link opens to contributor console.Contributor selects "Company" | CLA sign link from PR should open Contributor console,  after Github oauth flow, they should get option to select   _Individual_ or _Company_ | ✅ |
 | Contributor chooses their company | Contributors employer chooses company name from list they should get modal saying "You company has not signed CLA yet" | ✅ |
-| Contributor fills out CLA Manager info form | Form to send email to the CLA manager of the contributor company to sign a CCLA for the project and whitelist the contributor | ✅ |
+| Contributor fills out CLA Manager info form | Form to send email to the CLA manager of the contributor company to sign a CCLA for the project and approved list the contributor | ✅ |
 
 #### ICLA Contributor
 

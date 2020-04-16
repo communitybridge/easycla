@@ -52,9 +52,9 @@
                 <h1>Projects with Signed CLAs</h1>
               </ion-card-title>
               <ion-card-title>
-                <p>You can view currently signed corporate CLAs in the table below. To "whitelist" contributors who work
+                <p>You can view currently signed corporate CLAs in the table below. To "Approved" contributors who work
                   at your
-                  company click "Manage Whitelist" for the project interest</p>
+                  company click "Manage Approved List" for the project interest</p>
               </ion-card-title>
 
               <ion-card-title>
@@ -114,11 +114,11 @@
                               <td data-title="Whitelist">
                                 <button *ngIf="row.Status === 'CLA Manager'" clear ion-button color="secondary"
                                   (click)="onSelect(row.ProjectID)">
-                                  Manage Whitelist
+                                  Manage Approved List
                                 </button>
                                 <button *ngIf="row.Status !== 'CLA Manager'" clear ion-button color="secondary"
                                   (click)="onSelect(row.ProjectID)">
-                                  View Whitelist
+                                  View Approved List
                                 </button>
                               </td>
 
