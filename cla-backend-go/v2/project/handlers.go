@@ -228,18 +228,6 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 		return project.NewUpdateProjectOK().WithPayload(projectModel)
 	})
 
-	// Project metrics
-	api.ProjectGetProjectMetricsHandler = project.GetProjectMetricsHandlerFunc(func(projectParams project.GetProjectMetricsParams, user *auth.User) middleware.Responder {
-		projectMetrics, err := service.GetMetrics()
-		if err != nil {
-			if err == ErrProjectDoesNotExist {
-				return project.NewGetProjectMetricsNotFound()
-			}
-			return project.NewGetProjectMetricsBadRequest().WithPayload(errorResponse(err))
-		}
-
-		return project.NewGetProjectMetricsOK().WithPayload(projectMetrics)
-	})
 }
 
 // codedResponse interface

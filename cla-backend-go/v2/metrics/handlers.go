@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"github.com/LF-Engineering/lfx-kit/auth"
-	v1MetricsOps "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/metrics"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/metrics"
@@ -12,16 +11,6 @@ import (
 
 // Configure setups handlers on api with service
 func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
-	api.MetricsGetMetricsHandler = metrics.GetMetricsHandlerFunc(
-		func(params metrics.GetMetricsParams, user *auth.User) middleware.Responder {
-			// For now, any authenticated user can see the metrics
-			result, err := service.GetMetrics(v1MetricsOps.GetMetricsParams{HTTPRequest: params.HTTPRequest})
-			if err != nil {
-				return metrics.NewGetMetricsBadRequest().WithPayload(errorResponse(err))
-			}
-			return metrics.NewGetMetricsOK().WithPayload(result)
-		})
-
 	api.MetricsGetClaManagerDistributionHandler = metrics.GetClaManagerDistributionHandlerFunc(
 		func(params metrics.GetClaManagerDistributionParams, user *auth.User) middleware.Responder {
 			result, err := service.GetCLAManagerDistribution()
