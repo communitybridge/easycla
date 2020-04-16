@@ -171,6 +171,11 @@ function buildProjectsTable(importResources: boolean): aws.dynamodb.Table {
         },
         {
           name: 'project-name-search-index',
+          hashKey: 'project_name',
+          projectionType: 'ALL',
+        },
+        {
+          name: 'project-name-lower-search-index',
           hashKey: 'project_name_lower',
           projectionType: 'ALL',
         },
