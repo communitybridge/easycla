@@ -1,6 +1,6 @@
 # Approved List Contributors
 
-Whitelists are lists of domain names, email addresses of individuals, GitHub usernames, or GitHub organization names who are authorized to contribute under a signed Corporate CLA. As a CCLA manager, you allow contributions to projects on behalf of your company by using any Approved List:
+The Approved List are lists of domain names, email addresses of individuals, GitHub usernames, or GitHub organization names who are authorized to contribute under a signed Corporate CLA. As a CCLA manager, you allow contributions to projects on behalf of your company by using any Approved List:
 
 * Domain Approved List allows entities to contribute under any email address under that domain name.
 * Email Approved List allows entities to contribute under an individual email address.
@@ -9,7 +9,7 @@ Whitelists are lists of domain names, email addresses of individuals, GitHub use
 
 Each Approved List applies to the project for which the company has signed a Corporate CLA. The CLA application checks all the whitelists for allowing contributions to a company project. A contributor only needs to be on one Approved List. Contributors can use EasyCLA to send email requests to be associated \(whitelisted\) with the company.
 
-_Multiple CCLA managers cannot Approved List the same domain and sign a CCLA for the same company._
+_Multiple CCLA managers cannot add to the Approved List the same domain and sign a CCLA for the same company._
 
 **Do these steps:**
 
