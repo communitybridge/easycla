@@ -37,6 +37,11 @@ custom:
     port: 8001
     directory: /tmp
   allowed_origins: ${file(./env.json):cla-allowed-origins-${opt:stage}, ssm:/cla-allowed-origins-${opt:stage}}
+  # Config for serverless-prune-plugin - remove all but the 10 most recent
+  # versions to avoid the "Code storage limit exceeded" error
+  prune:
+    automatic: true
+    number: 10
 
 provider:
   name: aws
@@ -191,6 +196,9 @@ plugins:
   # Serverless Finch does s3 uploading. Called with 'sls client deploy'.
   # Also allows bucket removal with 'sls client remove'.
   - serverless-finch
+  # To avoid a Code Storage Limit after tons of deploys and revisions - we can prune old versions
+  # This plugin allows us to remove/prune the old versions either manually or automatically
+  - serverless-prune-plugin
 
 functions:
   authorizer:

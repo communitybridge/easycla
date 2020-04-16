@@ -16,6 +16,7 @@
     "serverless-finch": "^2.3.2",
     "serverless-layers": "^1.4.3",
     "serverless-plugin-tracing": "^2.0.0",
+    "serverless-prune-plugin": "^1.4.2",
     "serverless-pseudo-parameters": "^2.5.0"
   }
 }
