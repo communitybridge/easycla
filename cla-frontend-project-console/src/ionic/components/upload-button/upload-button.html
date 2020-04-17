@@ -1,9 +1,3 @@
-<!--
-  Generated template for the UploadButton component.
-
-  See https://angular.io/docs/ts/latest/api/core/index/ComponentMetadata-class.html
-  for more info on Angular 2 Components.
--->
 <div class="item item-md item-label-stacked item-input file_list">
   <div class="file_list-item_inner">
     <div class="file_list-input_wrapper">
@@ -15,7 +9,8 @@
               <ion-icon class="file_list-icon" name="document"></ion-icon>
               {{file.name}}
             </span>
-            <span icon-right class="file_list-more" (click)="presentPopover($event, index)" (popoverNotice)="popoverNotice(eventInfo)">
+            <span icon-right class="file_list-more" (click)="presentPopover($event, index)"
+              (popoverNotice)="popoverNotice(eventInfo)">
               <ion-icon name="more"></ion-icon>
             </span>
           </div>
@@ -25,4 +20,4 @@
     </div>
   </div>
 </div>
-<input type="file" (change)="filesAdded($event)" style="display: none" #input [multiple]="multiple"/>
+<input type="file" (change)="filesAdded($event)" style="display: none" #input [multiple]="multiple" />

@@ -114,9 +114,6 @@ export class ClaService {
     const url: URL = this.getV2Endpoint('/v2/user/' + userId);
     return this.http.get(url).map((res) => res.json());
   }
-
- 
-
   
   /**
    * GET /v3/signatures/project/{project_id}
@@ -177,20 +174,9 @@ export class ClaService {
     return this.http.get(url).map((res) => res.json());
   }
 
-
   /**
    * /company
    **/
-
-
-  /**
-   * GET /company/{company_id}
-   * @param companyId
-   */
-  getCompany(companyId) {
-    const url: URL = this.getV1Endpoint('/v2/company/' + companyId);
-    return this.http.get(url).map((res) => res.json());
-  }
 
   postProject(project) {
     /*
@@ -239,14 +225,6 @@ export class ClaService {
   }
 
   /**
-   * GET /project/{project_id}/repositories_by_org
-   **/
-  // getProjectRepositoriesByrOrg(projectId) {
-  //   const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/repositories_group_by_organization');
-  //   return this.http.get(url).map((res) => res.json());
-  // }
-
-  /**
    * POST /repository
    **/
   postProjectRepository(repository) {
@@ -278,35 +256,6 @@ export class ClaService {
     // const url: URL = this.getV1Endpoint('/v1/sfdc/' + sfid + '/github/organizations');
     const url: URL = this.getV3Endpoint(`/v3/project/${sfid}/github/organizations`);
     return this.http.get(url).map((res) => res.json());
-  }
-
-  /**
-   * GET /project/{project_id}/companies
-   */
-  getProjectCompanies(projectId) {
-    const url: URL = this.getV2Endpoint('/v2/project/' + projectId + '/companies');
-    return this.http.get(url).map((res) => res.json());
-  }
-
-  /**
-   * GET /project/{project_id}/document/{document_type}
-   */
-  getProjectDocument(projectId: String, documentType: String) {
-    const url: URL = this.getV2Endpoint('/v2/project/' + projectId + '/document/' + documentType);
-    return this.http.get(url).map((res) => res.json());
-  }
-
-  postProjectDocumentTemplate(projectId, documentType, document) {
-    /*
-      {
-        'document_name': 'project-name_ccla_2017-11-16',
-        'document_preamble': '<p>Some <strong>html</strong> content</p>',
-        'document_legal_entity_name': 'Some Project Inc.',
-        'new_major_version': true|false,
-      }
-     */
-    const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/document/template/' + documentType);
-    return this.http.post(url, document).map((res) => res.json());
   }
 
   /**
@@ -356,11 +305,6 @@ export class ClaService {
     };
     return { ...project, ...objLogoUrl };
   }
-
-  // getGerritInstance(projectId) {
-  //   const url: URL = this.getV1Endpoint('/v1/project/' + projectId + '/gerrits');
-  //   return this.http.get(url).map((res) => res.json());
-  // }
 
   deleteGerritInstance(gerritId) {
     const url: URL = this.getV1Endpoint('/v1/gerrit/' + gerritId);
