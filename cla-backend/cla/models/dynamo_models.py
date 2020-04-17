@@ -305,6 +305,7 @@ class ProjectSignatureIndex(GlobalSecondaryIndex):
     signature_project_id = UnicodeAttribute(hash_key=True)
 
 
+
 class ReferenceSignatureIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying signatures by reference.
@@ -801,6 +802,7 @@ class ProjectModel(BaseModel):
     project_id = UnicodeAttribute(hash_key=True)
     project_external_id = UnicodeAttribute()
     project_name = UnicodeAttribute()
+    project_name_lower = UnicodeAttribute(null=True)
     project_individual_documents = ListAttribute(of=DocumentModel, default=[])
     project_corporate_documents = ListAttribute(of=DocumentModel, default=[])
     project_member_documents = ListAttribute(of=DocumentModel, default=[])
@@ -821,6 +823,7 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
             project_id=None,
             project_external_id=None,
             project_name=None,
+            project_name_lower=None,
             project_icla_enabled=True,
             project_ccla_enabled=True,
             project_ccla_requires_icla_signature=False,
@@ -831,6 +834,7 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
         self.model.project_id = project_id
         self.model.project_external_id = project_external_id
         self.model.project_name = project_name
+        self.model.project_name_lower = project_name_lower
         self.model.project_icla_enabled = project_icla_enabled
         self.model.project_ccla_enabled = project_ccla_enabled
         self.model.project_ccla_requires_icla_signature = project_ccla_requires_icla_signature
@@ -838,10 +842,11 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def __str__(self):
         return (
-            "id: {}, name: {}, external id: {}, icla enabled: {}, " "ccla enabled: {}, requires icla: {}, acl: {}"
+            "id: {}, name: {}, project_name_lower: {},external id: {}, icla enabled: {}, " "ccla enabled: {}, requires icla: {}, acl: {}"
         ).format(
             self.model.project_id,
             self.model.project_name,
+            self.model.project_name_lower,
             self.model.project_external_id,
             self.model.project_icla_enabled,
             self.model.project_ccla_enabled,
@@ -895,6 +900,9 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def get_project_name(self):
         return self.model.project_name
+    
+    def get_project_name_lower(self):
+        return self.model.project_name_lower
 
     def get_project_icla_enabled(self):
         return self.model.project_icla_enabled
@@ -1008,6 +1016,9 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def set_project_name(self, project_name):
         self.model.project_name = project_name
+  
+    def set_project_name_lower(self, project_name_lower):
+        self.model.project_name_lower = project_name_lower
 
     def set_project_icla_enabled(self, project_icla_enabled):
         self.model.project_icla_enabled = project_icla_enabled
