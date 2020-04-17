@@ -214,6 +214,27 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 	// Update Project By ID
 	api.ProjectUpdateProjectHandler = project.UpdateProjectHandlerFunc(func(projectParams project.UpdateProjectParams, claUser *user.CLAUser) middleware.Responder {
+
+		exitingModel, getErr := service.GetProjectByName(projectParams.Body.ProjectName)
+		if getErr != nil {
+			msg := fmt.Sprintf("Error querying the project by name, error: %+v", getErr)
+			log.Warnf("Update Project Failed - %s", msg)
+			return project.NewCreateProjectBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "500",
+				Message: msg,
+			})
+		}
+
+		// If the project with the same name exists...
+		if exitingModel != nil {
+			msg := fmt.Sprintf("Project with same name exists: %s", projectParams.Body.ProjectName)
+			log.Warnf("Update Project Failed - %s", msg)
+			return project.NewCreateProjectConflict().WithPayload(&models.ErrorResponse{
+				Code:    "409",
+				Message: msg,
+			})
+		}
+
 		projectModel, err := service.UpdateProject(&projectParams.Body)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
