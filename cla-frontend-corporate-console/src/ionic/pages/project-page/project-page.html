@@ -3,7 +3,7 @@
     <button ion-button class="back-btn" (click)="back()">
       <ion-icon name="arrow-round-back"></ion-icon>
     </button>
-    <ion-title>{{ company.company_name }} Project Signatures</ion-title>
+    <ion-title>{{ trimCharacter(company.company_name, 25) }} Project Signatures</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-toolbar>
   <get-help></get-help>
