@@ -5,26 +5,25 @@ import { Component, ViewChild, Input } from '@angular/core';
 import { IonicPage, Nav, NavController, NavParams, Events } from 'ionic-angular';
 import { ClaService } from '../../../services/cla.service';
 import { Restricted } from '../../../decorators/restricted';
-import { DomSanitizer } from '@angular/platform-browser';
-import { RolesService } from '../../../services/roles.service';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
 })
+
 @IonicPage({
   segment: 'project/:projectId/cla/template/:projectTemplateId'
 })
+
 @Component({
   selector: 'project-cla-template',
   templateUrl: 'project-cla-template.html'
 })
+
 export class ProjectClaTemplatePage {
-  sfdcProjectId: string;
   projectId: string;
   templates: any[] = [];
   selectedTemplate: any;
-  templateValues = {};
   pdfPath = {
     corporatePDFURL: '',
     individualPDFURL: ''
@@ -36,23 +35,18 @@ export class ProjectClaTemplatePage {
   loading = {
     documents: false
   };
+  submitAttempt = false;
+
   @Input() form: FormGroup;
   @ViewChild(Nav) nav: Nav;
-  submitAttempt = false;
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     public claService: ClaService,
-    public sanitizer: DomSanitizer,
-    public rolesService: RolesService,
     public events: Events
   ) {
-    this.sfdcProjectId = navParams.get('sfdcProjectId');
     this.projectId = navParams.get('projectId');
-    this.getDefaults();
-  }
-
-  getDefaults() {
     this.getTemplates();
   }
 
@@ -63,17 +57,10 @@ export class ProjectClaTemplatePage {
   ngOnInit() {
     this.setLoadingSpinner(false);
   }
-
-  /**
-   * Get the PDF path based on which CLA the user has selected on the UI.
-   */
+  
   getPdfPath() {
-    // https://stackoverflow.com/questions/291813/recommended-way-to-embed-pdf-in-html#291823
-    //return this.sanitizer.bypassSecurityTrustResourceUrl('https://drive.google.com/viewerng/viewer?embedded=true&url=' + this.pdfPath[this.currentPDF]);
-    // Note: Google drive may not be accessible in certain countries - use default for now until we incorporate a
     // PDF renderer library - or we can simply use the default browser behavior
     return this.pdfPath[this.currentPDF];
-    // return this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfPath[this.currentPDF]);
   }
 
   showPDF(type) {
@@ -98,17 +85,6 @@ export class ProjectClaTemplatePage {
 
   getFieldName(template) {
     return template.name.split(' ').join('');
-  }
-
-  validateEmail(template: string) {
-    if (template.toLowerCase().indexOf('email') >= 0) {
-      if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(template)) {
-        return true
-      } else {
-        return false;
-      }
-    }
-    return null;
   }
 
   reviewSelectedTemplate() {
@@ -149,8 +125,8 @@ export class ProjectClaTemplatePage {
   }
 
   backToProject() {
-    if(this.navCtrl.getViews().length > 1){
-      if(this.pdfPath.corporatePDFURL || this.pdfPath.individualPDFURL){
+    if (this.navCtrl.getViews().length > 1) {
+      if (this.pdfPath.corporatePDFURL || this.pdfPath.individualPDFURL) {
         this.events.publish('reloadProjectCla');
       }
       this.navCtrl.pop();

@@ -13,8 +13,6 @@ import {
   ViewController,
 } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
-import { SortService } from '../../services/sort.service';
-import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { RolesService } from '../../services/roles.service';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 
@@ -50,13 +48,11 @@ export class ClaContractViewCompaniesSignaturesModal {
   childColumn = [{ head: 'Name', dataKey: 'username' }, { head: 'Email', dataKey: 'lfEmail' }, { head: 'username/LFID', dataKey: 'lfUsername' }];
 
   constructor(
-    public navCtrl: NavController,
     public navParams: NavParams,
     private claService: ClaService,
     public viewCtrl: ViewController,
     public modalCtrl: ModalController,
     private popoverCtrl: PopoverController,
-    public rolesService: RolesService,
     public events: Events,
     private formBuilder: FormBuilder,
     private location: PlatformLocation
@@ -100,7 +96,6 @@ export class ClaContractViewCompaniesSignaturesModal {
     this.page = {
       pageNumber: 0,
     };
-
     // Pagination initialization
     this.nextKey = null;
     this.previousKeys = [];
@@ -109,9 +104,7 @@ export class ClaContractViewCompaniesSignaturesModal {
     this.loading = {
       signatures: true,
     };
-
   }
-
 
   filterDatatable() {
     if (this.form.valid) {
@@ -245,8 +238,7 @@ export class ClaContractViewCompaniesSignaturesModal {
       this[callback](popoverData.callbackData);
     }
   }
-
-
+  
   dismiss() {
     this.viewCtrl.dismiss();
   }

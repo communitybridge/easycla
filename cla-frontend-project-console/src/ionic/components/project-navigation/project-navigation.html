@@ -3,13 +3,12 @@
     <div class="project-navigation__container">
       <nav class="project-navigation__navigation" #scrollArea>
         <ng-container *ngFor="let item of navItems;">
-          <span *ngIf="item.access" [ngClass]="{'active': (item.page === context)}" class="project-navigation__link clickable" (click)='disabled=true'>
+          <span *ngIf="item.access" [ngClass]="{'active': (item.page === context)}"
+            class="project-navigation__link clickable" (click)='disabled=true'>
             {{ item.label }}
           </span>
         </ng-container>
       </nav>
     </div>
-    <!-- <ion-icon #scrollRight class="scrollindicator scrollindicator--right" name="arrow-dropright" (click)="scrollTowardsEnd()"></ion-icon> -->
-    <!-- <ion-icon #scrollLeft class="scrollindicator scrollindicator--left" name="arrow-dropleft" (click)="scrollTowardsStart()"></ion-icon> -->
   </div>
 </div>
