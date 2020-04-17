@@ -84,9 +84,9 @@ export class ClaEmployeeRequestAccessModal {
       }
       this.form.controls['recipient_name'].setValidators(Validators.compose([Validators.required]));
       this.form.controls['recipient_email'].setValidators(Validators.compose([Validators.required, EmailValidator.isValid]));
-      this.form.controls['recipient_name'].updateValueAndValidity();
-      this.form.controls['recipient_email'].updateValueAndValidity();
     }
+    this.form.controls['recipient_name'].updateValueAndValidity();
+    this.form.controls['recipient_email'].updateValueAndValidity();
   }
 
   resetFormValues(value) {
@@ -235,10 +235,10 @@ export class ClaEmployeeRequestAccessModal {
     }
     this.claService.postCCLAWhitelistRequest(this.companyId, this.projectId, user).subscribe(
       () => {
-        console.log(this.userId + ' ccla whitelist request for project: ' + this.projectId + ' for company: ' + this.companyId);
+        console.log(this.userId + ' ccla approved list request for project: ' + this.projectId + ' for company: ' + this.companyId);
       },
       (exception) => {
-        console.log('Exception during ccla whitelist request for user ' + this.userId + ' on project: ' + this.projectId + ' and company: ' + this.companyId);
+        console.log('Exception during ccla approved list request for user ' + this.userId + ' on project: ' + this.projectId + ' and company: ' + this.companyId);
         console.log(exception);
       }
     );

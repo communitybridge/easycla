@@ -37,6 +37,11 @@ custom:
     port: 8001
     directory: /tmp
   allowed_origins: ${file(./env.json):cla-allowed-origins-${opt:stage}, ssm:/cla-allowed-origins-${opt:stage}}
+  # Config for serverless-prune-plugin - remove all but the 10 most recent
+  # versions to avoid the "Code storage limit exceeded" error
+  prune:
+    automatic: true
+    number: 10
 
 provider:
   name: aws
@@ -132,6 +137,7 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-companies/index/external-company-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/external-project-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/project-name-search-index"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/project-name-lower-search-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/project-repository-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/external-repository-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/sfdc-repository-index"
@@ -190,6 +196,9 @@ plugins:
   # Serverless Finch does s3 uploading. Called with 'sls client deploy'.
   # Also allows bucket removal with 'sls client remove'.
   - serverless-finch
+  # To avoid a Code Storage Limit after tons of deploys and revisions - we can prune old versions
+  # This plugin allows us to remove/prune the old versions either manually or automatically
+  - serverless-prune-plugin
 
 functions:
   authorizer:

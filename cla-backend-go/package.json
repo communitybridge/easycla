@@ -6,7 +6,14 @@
   "scripts": {
     "sls": "./node_modules/serverless/bin/serverless",
     "deploy:dev": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless deploy -s dev -r us-east-2 --verbose",
-    "package:dev": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless package -s dev -r us-east-2 --verbose"
+    "package:dev": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless package -s dev -r us-east-2 --verbose",
+    "prune:dev": "SLS_DEBUG=* time ./node_modules/serverless/bin/serverless prune -n 10 -s dev -r us-east-2 --verbose",
+    "deploy:staging": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless deploy -s staging -r us-east-2 --verbose",
+    "package:staging": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless package -s staging -r us-east-2 --verbose",
+    "prune:staging": "SLS_DEBUG=* time ./node_modules/serverless/bin/serverless prune -n 10 -s staging -r us-east-2 --verbose",
+    "deploy:prod": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless deploy -s prod -r us-east-2 --verbose",
+    "package:prod": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless package -s prod -r us-east-2 --verbose",
+    "prune:prod": "SLS_DEBUG=* time ./node_modules/serverless/bin/serverless prune -n 10 -s prod -r us-east-2 --verbose"
   },
   "dependencies": {
     "install": "^0.13.0",
@@ -16,6 +23,7 @@
     "serverless-finch": "^2.3.2",
     "serverless-layers": "^1.4.3",
     "serverless-plugin-tracing": "^2.0.0",
+    "serverless-prune-plugin": "^1.4.2",
     "serverless-pseudo-parameters": "^2.5.0"
   }
 }

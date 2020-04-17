@@ -75,7 +75,7 @@ _If you are a project manager, make sure that you are logged out of the CLA Mana
 
    **YES**—go to **Step 5**.
 
-   **NO**—A Request Access form appears. Complete the form and click **SEND**. The CCLA manager signs a Corporate CLA and adds you to the whitelist.
+   **NO**—A Request Access form appears. Complete the form and click **SEND**. The CCLA manager signs a Corporate CLA and adds you to the approved list.
 
    ![CLA Request Access](../.gitbook/assets/cla-request-access.png)
 

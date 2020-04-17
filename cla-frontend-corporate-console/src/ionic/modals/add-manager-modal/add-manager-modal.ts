@@ -19,6 +19,7 @@ export class AddManagerModal {
   submitAttempt: boolean = false;
   signatureId: string;
   managerLFID: string;
+  showError: boolean;
   linuxFoundationIdentityURL: string = generalConstants.linuxFoundationIdentityURL;
 
   constructor(
@@ -34,6 +35,10 @@ export class AddManagerModal {
   }
 
   submit() {
+    if(/[~`!@#$%\^&*()+=\-\[\]\\';,/{}|\\":<>\?]/g.test(this.form.value.managerLFID)) {
+      this.showError = true;
+      return;
+    }
     this.submitAttempt = true;
     this.addManager();
   }
@@ -44,5 +49,9 @@ export class AddManagerModal {
 
   dismiss(data = false) {
     this.viewCtrl.dismiss(data);
+  }
+
+  clearError(event) {
+    this.showError = false;
   }
 }

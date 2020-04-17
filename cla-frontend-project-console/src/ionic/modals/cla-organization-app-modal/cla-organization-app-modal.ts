@@ -6,6 +6,7 @@ import { NavController, ModalController, NavParams, ViewController, IonicPage, E
 import { PopoverController } from 'ionic-angular';
 import { EnvConfig } from '../../services/cla.env.utils';
 import { ClaService } from '../../services/cla.service';
+import { PlatformLocation } from '@angular/common';
 
 @IonicPage({
   segment: 'cla-organization-app-modal'
@@ -15,6 +16,7 @@ import { ClaService } from '../../services/cla.service';
   templateUrl: 'cla-organization-app-modal.html'
 })
 export class ClaOrganizationAppModal {
+  alert: any;
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -22,25 +24,33 @@ export class ClaOrganizationAppModal {
     private popoverCtrl: PopoverController,
     public modalCtrl: ModalController,
     public alertCtrl: AlertController,
-    public events: Events
+    public events: Events,
+    private location: PlatformLocation
   ) {
     this.getDefaults();
+
+    this.location.onPopState(() => {
+      this.viewCtrl.dismiss(false);
+      if (this.alert) {
+        this.alert.dismiss();
+      }
+    });
 
     events.subscribe('modal:close', () => {
       this.dismiss();
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
-  getDefaults() {}
+  getDefaults() { }
 
   // TODO: Do we want a call to cla that polls for the installation status?
   // UH YEA?
 
 
   openMessageDialog() {
-    let alert = this.alertCtrl.create({
+    this.alert = this.alertCtrl.create({
       title: 'You are exiting EasyCLA and going to GitHub site. Please make sure you are already logged into GitHub so that you can install EasyCLA app',
       buttons: [
         {
@@ -52,7 +62,7 @@ export class ClaOrganizationAppModal {
         },
       ]
     });
-    alert.present();
+    this.alert.present();
   }
 
   openAppPage() {

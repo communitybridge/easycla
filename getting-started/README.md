@@ -56,7 +56,7 @@ You are a _contributor_ \(developer\) if you contribute code to GitHub or Gerrit
 You are a _Corporate CLA manager_ \(CCLA manager\) if you are the person authorized to manage the list of approved contributors under your company’s Corporate CLA. With this responsibility, you use EasyCLA to:
 
 * [Add companies to a project](../ccla-managers-and-ccla-signatories/add-a-company-to-a-project.md).
-* [Whitelist contributors](../ccla-managers-and-ccla-signatories/whitelist-contributors.md).
+* [Approved List contributors](../ccla-managers-and-ccla-signatories/whitelist-contributors.md).
 
 ### Corporate CLA Signatory
 
