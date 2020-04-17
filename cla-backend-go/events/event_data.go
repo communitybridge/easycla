@@ -19,6 +19,14 @@ type GithubRepositoryDeletedEventData struct {
 
 type GerritProjectDeletedEventData struct{}
 
+type GerritAddedEventData struct {
+	GerritRepositoryName string
+}
+
+type GerritDeletedEventData struct {
+	GerritRepositoryName string
+}
+
 type GithubProjectDeletedEventData struct{}
 
 type SignatureProjectInvalidatedEventData struct{}
@@ -191,7 +199,20 @@ func (ed *ProjectDeletedEventData) GetEventString(args *LogEventArgs) (string, b
 func (ed *GerritProjectDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("Gerrit Repository Deleted  due to CLA Group/Project: [%s] deletion",
 		args.projectName)
-	return data, true
+	containsPII := false
+	return data, containsPII
+}
+
+func (ed *GerritAddedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] has added gerrit [%s]", args.userName, ed.GerritRepositoryName)
+	containsPII := true
+	return data, containsPII
+}
+
+func (ed *GerritDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] has deleted gerrit [%s]", args.userName, ed.GerritRepositoryName)
+	containsPII := true
+	return data, containsPII
 }
 
 func (ed *GithubProjectDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {

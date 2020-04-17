@@ -1618,6 +1618,67 @@ paths:
       tags:
         - metrics
 
+  /project/{projectID}/gerrits/{gerritID}:
+    delete:
+      summary: delete the gerrit
+      description: Delete the gerrit
+      security:
+        - OauthSecurity:
+            - project
+      operationId: deleteGerrit
+      parameters:
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: gerritID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - gerrits
+
+  /project/{projectID}/gerrits:
+    post:
+      summary: add the gerrit
+      description: add the gerrit
+      security:
+        - OauthSecurity:
+            - project
+      operationId: addGerrit
+      parameters:
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - in: body
+          name: add-gerrit-input
+          schema:
+            $ref: '#/definitions/add-gerrit-input'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/gerrit'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - gerrits
+
 # Common parameters
 parameters:
   pageSize:
@@ -2943,6 +3004,21 @@ definitions:
       repositoryUrl:
         type: string
       version:
+        type: string
+
+  add-gerrit-input:
+    type: object
+    required:
+      - gerritName
+      - gerritUrl
+    properties:
+      gerritName:
+        type: string
+      gerritUrl:
+        type: string
+      groupIdCcla:
+        type: string
+      groupIdIcla:
         type: string
 
   gerrit:

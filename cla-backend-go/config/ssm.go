@@ -71,6 +71,10 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config {
 		fmt.Sprintf("cla-auth0-platform-audience-%s", stage),
 		fmt.Sprintf("cla-auth0-platform-url-%s", stage),
 		fmt.Sprintf("cla-auth0-platform-api-gw-%s", stage),
+		fmt.Sprintf("cla-lf-group-client-id-%s", stage),
+		fmt.Sprintf("cla-lf-group-client-secret-%s", stage),
+		fmt.Sprintf("cla-lf-group-client-url-%s", stage),
+		fmt.Sprintf("cla-lf-group-refresh-token-%s", stage),
 	}
 
 	// For each key to lookup
@@ -145,6 +149,14 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config {
 			config.Auth0Platform.URL = resp.value
 		case fmt.Sprintf("cla-auth0-platform-api-gw-%s", stage):
 			config.APIGatewayURL = resp.value
+		case fmt.Sprintf("cla-lf-group-client-id-%s", stage):
+			config.LFGroup.ClientID = resp.value
+		case fmt.Sprintf("cla-lf-group-client-secret-%s", stage):
+			config.LFGroup.ClientSecret = resp.value
+		case fmt.Sprintf("cla-lf-group-client-url-%s", stage):
+			config.LFGroup.ClientUrl = resp.value
+		case fmt.Sprintf("cla-lf-group-refresh-token-%s", stage):
+			config.LFGroup.RefreshToken = resp.value
 		}
 	}
 

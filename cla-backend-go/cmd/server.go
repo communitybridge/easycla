@@ -17,6 +17,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/token"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
+	v2Gerrits "github.com/communitybridge/easycla/cla-backend-go/v2/gerrits"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 
@@ -213,7 +214,12 @@ func server(localMode bool) http.Handler {
 	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo, metricsRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
 	repositoriesService := repositories.NewService(repositoriesRepo)
-	gerritService := gerrits.NewService(gerritRepo)
+	gerritService := gerrits.NewService(gerritRepo, &gerrits.LFGroup{
+		LfBaseUrl:    configFile.LFGroup.ClientUrl,
+		ClientID:     configFile.LFGroup.ClientID,
+		ClientSecret: configFile.LFGroup.ClientSecret,
+		RefreshToken: configFile.LFGroup.RefreshToken,
+	})
 	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
@@ -253,6 +259,8 @@ func server(localMode bool) http.Handler {
 	v2GithubOrganizations.Configure(v2API, githubOrganizationsService, eventsService)
 	repositories.Configure(api, repositoriesService, eventsService)
 	v2Repositories.Configure(v2API, repositoriesService, eventsService)
+	gerrits.Configure(api, gerritService, projectService, eventsService)
+	v2Gerrits.Configure(v2API, gerritService, projectService, eventsService)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler
