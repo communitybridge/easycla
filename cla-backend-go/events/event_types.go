@@ -39,7 +39,7 @@ const (
 	GithubRepositoryAdded   = "github_repository.added"
 	GithubRepositoryDeleted = "github_repository.deleted"
 
-	GerritRepositoryAdded   = "gerrit_repository.addded"
+	GerritRepositoryAdded   = "gerrit_repository.added"
 	GerritRepositoryDeleted = "gerrit_repository.deleted"
 
 	GithubOrganizationAdded   = "github_organization.added"
