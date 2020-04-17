@@ -6,7 +6,6 @@ import { NavParams, ViewController, IonicPage, Events } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ExtraValidators } from '../../validators/requireSelfAnd';
 import { ClaService } from '../../services/cla.service';
-import { Http } from '@angular/http';
 import { PlatformLocation } from '@angular/common';
 
 @IonicPage({
@@ -27,7 +26,6 @@ export class ClaGerritModal {
     public navParams: NavParams,
     public viewCtrl: ViewController,
     private formBuilder: FormBuilder,
-    public http: Http,
     public claService: ClaService,
     public events: Events,
     private location: PlatformLocation
@@ -59,8 +57,6 @@ export class ClaGerritModal {
   }
 
   ngOnInit() { }
-
-  getDefaults() { }
 
   dismiss(data?) {
     this.viewCtrl.dismiss(data);

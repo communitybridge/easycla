@@ -16,10 +16,12 @@ import { IonicPage, NavParams, ViewController } from 'ionic-angular';
 })
 export class ActionPopoverComponent {
   popoverItems: any;
-
   @Output() popoverNotice: EventEmitter<{}> = new EventEmitter<{}>();
 
-  constructor(private navParams: NavParams, private viewCtrl: ViewController) {}
+  constructor(
+    private navParams: NavParams,
+    private viewCtrl: ViewController
+  ) { }
 
   ngOnInit() {
     if (this.navParams.data) {

@@ -8,10 +8,9 @@ import {
   ModalController,
   NavController,
   NavParams,
-  PopoverController,
   ViewController
 } from 'ionic-angular';
-import { ClaService } from '../../services/cla.service';
+
 import { PlatformLocation } from '@angular/common';
 
 @IonicPage({
@@ -22,7 +21,6 @@ import { PlatformLocation } from '@angular/common';
   templateUrl: 'cla-contract-version-modal.html'
 })
 export class ClaContractVersionModal {
-  claProjectId: string;
   documentType: string; // individual | corporate
   documents: any;
   currentDocument: any;
@@ -32,39 +30,28 @@ export class ClaContractVersionModal {
     public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
-    private popoverCtrl: PopoverController,
     public modalCtrl: ModalController,
-    private claService: ClaService,
     public events: Events,
     private location: PlatformLocation,
   ) {
     this.location.onPopState(() => {
       this.viewCtrl.dismiss(false);
     });
-    this.claProjectId = this.navParams.get('claProjectId');
     this.documentType = this.navParams.get('documentType');
     this.documents = this.navParams.get('documents').reverse();
     if (this.documents.length > 0) {
       this.currentDocument = this.documents.slice(0, 1);
-      console.log(this.documentType + ' document:');
-      console.log(this.currentDocument);
       if (this.documents.length > 1) {
         this.previousDocuments = this.documents.slice(1);
       }
-    } else {
-      console.log('No documents for project: ' + this.claProjectId);
     }
 
     events.subscribe('modal:close', () => {
       this.dismiss();
     });
-
-    this.getDefaults();
   }
 
-  getDefaults() {}
-
-  ngOnInit() {}
+  ngOnInit() { }
 
   /**
    * Called if popover dismissed with data. Passes data to a callback function
@@ -85,30 +72,21 @@ export class ClaContractVersionModal {
         ' - document URL is empty.' +
         ' For further assistance with EasyCLA, please ' +
         '<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4">submit a support request ticket</a>.';
-      console.log(msg);
       const height = Math.floor(window.innerHeight * 0.8);
       const width = Math.floor(window.innerWidth * 0.8);
       const myWindow = window.open('', '_blank', 'titlebar=yes,width=' + width + ',height=' + height);
       myWindow.document.write(
         '<html><head><title>PDF Document Unavailable</title></head>' +
-          '<body>' +
-          '<p>' +
-          msg +
-          '</p>' +
-          '</body></html>'
+        '<body>' +
+        '<p>' +
+        msg +
+        '</p>' +
+        '</body></html>'
       );
     } else {
-      const modal = this.modalCtrl.create('PdfViewerModal', {doc: document.documentS3URL, documentType: this.documentType});
+      const modal = this.modalCtrl.create('PdfViewerModal', { doc: document.documentS3URL, documentType: this.documentType });
       modal.present();
     }
-  }
-
-  openClaContractUploadModal() {
-    let modal = this.modalCtrl.create('ClaContractUploadModal', {
-      claProjectId: this.claProjectId,
-      documentType: this.documentType
-    });
-    modal.present();
   }
 
   dismiss() {
