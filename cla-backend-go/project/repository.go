@@ -509,7 +509,7 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 		expressionAttributeValues[":n"] = &dynamodb.AttributeValue{S: aws.String(projectModel.ProjectName)}
 		updateExpression = updateExpression + " #N = :n, "
 		log.Debugf("UpdateProject- adding project name lower: %s", strings.ToLower(projectModel.ProjectName))
-		expressionAttributeNames["#LOW"] = aws.String("project_name")
+		expressionAttributeNames["#LOW"] = aws.String("project_name_lower")
 		expressionAttributeValues[":low"] = &dynamodb.AttributeValue{S: aws.String(strings.ToLower(projectModel.ProjectName))}
 		updateExpression = updateExpression + " #LOW = :low, "
 	}
