@@ -151,17 +151,6 @@ export class ProjectClaPage {
     });
   }
 
-  openClaContractUploadModal(claProjectId, documentType) {
-    let modal = this.modalCtrl.create('ClaContractUploadModal', {
-      claProjectId: claProjectId,
-      documentType: documentType
-    });
-    modal.onDidDismiss((data) => {
-      this.getClaProjects();
-    });
-    modal.present();
-  }
-
   openClaViewSignaturesModal(projectID: string, projectName: string) {
     let modal = this.modalCtrl.create(
       'ClaContractViewSignaturesModal',
@@ -173,10 +162,7 @@ export class ProjectClaPage {
         cssClass: 'medium'
       }
     );
-    // Signatures view modal doesn't change anything - let's not refresh the parent view
-    // modal.onDidDismiss(data => {
-    //   this.getClaProjects();
-    // });
+
     modal.present().catch((error) => {
       console.log('Error opening signatures modal view, error: ' + error);
     });
@@ -245,13 +231,6 @@ export class ProjectClaPage {
     let modal = this.modalCtrl.create('ClaOrganizationAppModal', {});
     modal.onDidDismiss((data) => {
       this.getGithubOrganisation();
-    });
-    modal.present();
-  }
-
-  openClaContractCompaniesModal(claProjectId) {
-    let modal = this.modalCtrl.create('ClaContractCompaniesModal', {
-      claProjectId: claProjectId
     });
     modal.present();
   }
@@ -413,5 +392,5 @@ export class ProjectClaPage {
   trimCharacter(text, length) {
     return text.length > length ? text.substring(0, length) + '...' : text;
   }
-  
+
 }

@@ -98,14 +98,6 @@ export class ClaContractVersionModal {
     }
   }
 
-  openClaContractUploadModal() {
-    let modal = this.modalCtrl.create('ClaContractUploadModal', {
-      claProjectId: this.claProjectId,
-      documentType: this.documentType
-    });
-    modal.present();
-  }
-
   dismiss() {
     this.viewCtrl.dismiss();
   }
