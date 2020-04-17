@@ -10,10 +10,12 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// ProjectService contains Project methods
 type ProjectService interface {
 	GetProjectByID(projectID string) (*models.Project, error)
 }
 
+// Configure the gerrit api
 func Configure(api *operations.ClaAPI, service Service, projectService ProjectService, eventService events.Service) {
 	api.GerritsDeleteGerritHandler = gerrits.DeleteGerritHandlerFunc(
 		func(params gerrits.DeleteGerritParams, claUser *user.CLAUser) middleware.Responder {

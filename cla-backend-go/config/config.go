@@ -82,9 +82,9 @@ type Docraptor struct {
 	TestMode bool   `json:"testMode"`
 }
 
-// LF Group model
+// LFGroup contains LF LDAP group access information
 type LFGroup struct {
-	ClientUrl    string `json:"client_url"`
+	ClientURL    string `json:"client_url"`
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
 	RefreshToken string `json:"refresh_token"`

@@ -215,7 +215,7 @@ func server(localMode bool) http.Handler {
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
 	repositoriesService := repositories.NewService(repositoriesRepo)
 	gerritService := gerrits.NewService(gerritRepo, &gerrits.LFGroup{
-		LfBaseUrl:    configFile.LFGroup.ClientUrl,
+		LfBaseURL:    configFile.LFGroup.ClientURL,
 		ClientID:     configFile.LFGroup.ClientID,
 		ClientSecret: configFile.LFGroup.ClientSecret,
 		RefreshToken: configFile.LFGroup.RefreshToken,

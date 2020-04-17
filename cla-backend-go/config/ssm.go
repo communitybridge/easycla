@@ -37,7 +37,7 @@ func getSSMString(ssmClient *ssm.SSM, key string) (string, error) {
 }
 
 // loadSSMConfig fetches all the configuration values and populates the response Config model
-func loadSSMConfig(awsSession *session.Session, stage string) Config {
+func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
 	config := Config{}
 
 	ssmClient := ssm.New(awsSession)
@@ -154,7 +154,7 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config {
 		case fmt.Sprintf("cla-lf-group-client-secret-%s", stage):
 			config.LFGroup.ClientSecret = resp.value
 		case fmt.Sprintf("cla-lf-group-client-url-%s", stage):
-			config.LFGroup.ClientUrl = resp.value
+			config.LFGroup.ClientURL = resp.value
 		case fmt.Sprintf("cla-lf-group-refresh-token-%s", stage):
 			config.LFGroup.RefreshToken = resp.value
 		}

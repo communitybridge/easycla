@@ -12,10 +12,11 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-type ProjectService interface {
+type ProjectService interface { //nolint
 	GetProjectByID(projectID string) (*v1Models.Project, error)
 }
 
+// Configure the gerrit api
 func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectService ProjectService, eventService events.Service) {
 	api.GerritsDeleteGerritHandler = gerrits.DeleteGerritHandlerFunc(
 		func(params gerrits.DeleteGerritParams, authUser *auth.User) middleware.Responder {

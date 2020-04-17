@@ -9,17 +9,20 @@ import (
 	"time"
 )
 
+// constants
 const (
-	HttpTimeout = time.Duration(10 * time.Second)
+	DefaultHTTPTimeout = 10 * time.Second
 )
 
+// LFGroup contains access information of lf LDAP group
 type LFGroup struct {
-	LfBaseUrl    string
+	LfBaseURL    string
 	ClientID     string
 	ClientSecret string
 	RefreshToken string
 }
 
+// LDAPGroup model
 type LDAPGroup struct {
 	Title string `json:"title"`
 }
@@ -30,7 +33,10 @@ func (lfg *LFGroup) getAccessToken() (string, error) {
 		"refresh_token": lfg.RefreshToken,
 		"scope":         "manage_groups",
 	})
-	OauthURL := fmt.Sprintf("%s/oauth2/token", lfg.LfBaseUrl)
+	if err != nil {
+		return "", err
+	}
+	OauthURL := fmt.Sprintf("%s/oauth2/token", lfg.LfBaseURL)
 	req, err := http.NewRequest("POST", OauthURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return "", err
@@ -39,7 +45,7 @@ func (lfg *LFGroup) getAccessToken() (string, error) {
 	req.Header.Add("Content-Type", "application/json")
 
 	client := http.Client{
-		Timeout: HttpTimeout,
+		Timeout: DefaultHTTPTimeout,
 	}
 	res, err := client.Do(req)
 	if err != nil {
@@ -60,13 +66,14 @@ func (lfg *LFGroup) getAccessToken() (string, error) {
 	return out.AccessToken, nil
 }
 
+// GetGroup returns LF LDAP group
 func (lfg *LFGroup) GetGroup(groupID string) (*LDAPGroup, error) {
 	accessToken, err := lfg.getAccessToken()
 	if err != nil {
 		return nil, err
 	}
-	getGroupUrl := fmt.Sprintf("%s/rest/auth0/og/%s", lfg.LfBaseUrl, groupID)
-	req, err := http.NewRequest("GET", getGroupUrl, nil)
+	getGroupURL := fmt.Sprintf("%s/rest/auth0/og/%s", lfg.LfBaseURL, groupID)
+	req, err := http.NewRequest("GET", getGroupURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +81,7 @@ func (lfg *LFGroup) GetGroup(groupID string) (*LDAPGroup, error) {
 	req.Header.Add("Authorization", "Bearer "+accessToken)
 
 	client := http.Client{
-		Timeout: HttpTimeout,
+		Timeout: DefaultHTTPTimeout,
 	}
 	res, err := client.Do(req)
 	if err != nil {
