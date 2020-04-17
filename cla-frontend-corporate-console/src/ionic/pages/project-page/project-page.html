@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <button ion-button class="back-btn" (click)="back()">
-        <ion-icon name="arrow-round-back"></ion-icon>
+      <ion-icon name="arrow-round-back"></ion-icon>
     </button>
     <ion-title>{{ company.company_name }} Project Signatures</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
@@ -12,16 +12,15 @@
 <ion-content headerspacing>
   <div class="page-content">
 
-
-    <ion-grid *ngIf="canEdit">
+    <ion-grid>
       <ion-row justify-content-center>
         <ion-card>
           <ion-card-content>
             <ion-row>
               <ion-col col-12 col-md-3>
                 <h3>
-                  Domain Whitelist
-                  <ion-icon class="clickable" name="md-create" item-right
+                  Domain Approved List
+                  <ion-icon *ngIf="canEdit" class="clickable" name="md-create" item-right
                     (click)="openWhitelistDomainModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
@@ -34,8 +33,8 @@
               </ion-col>
               <ion-col col-12 col-md-3>
                 <h3>
-                  Email Whitelist
-                  <ion-icon class="clickable" name="md-create" item-right
+                  Email Approved List
+                  <ion-icon *ngIf="canEdit" class="clickable" name="md-create" item-right
                     (click)="openWhitelistEmailModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
@@ -48,8 +47,8 @@
               </ion-col>
               <ion-col col-12 col-md-3>
                 <h3>
-                  GitHub Whitelist
-                  <ion-icon class="clickable" name="md-create" item-right
+                  GitHub Approved List
+                  <ion-icon *ngIf="canEdit" class="clickable" name="md-create" item-right
                     (click)="openWhitelistGithubModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
@@ -62,8 +61,8 @@
               </ion-col>
               <ion-col col-12 col-md-3>
                 <h3>
-                  GitHub Org Whitelist
-                  <ion-icon class="clickable" name="md-create" item-right
+                  GitHub Org Approved List
+                  <ion-icon *ngIf="canEdit" class="clickable" name="md-create" item-right
                     (click)="openWhitelistGithubOrgModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
@@ -80,8 +79,6 @@
       </ion-row>
     </ion-grid>
 
-
-
     <ion-grid [loading-display]="loading.requests">
       <ion-row justify-content-center>
         <ion-col>
@@ -89,7 +86,7 @@
 
             <ion-card-content>
               <ion-card-title>
-                Pending Whitelist Request
+                Pending Approved List Request
               </ion-card-title>
 
               <ion-row>
@@ -179,8 +176,8 @@
                     <div class="manager-details" *ngIf="manager.email">
                       <div class="manager-name">
                         <span>{{ manager.name}}</span>
-                        <span *ngIf="managers.length > 1 && canEdit"
-                          (click)="deleteManagerConfirmation(manager)" class="delete-btn">Delete</span>
+                        <span *ngIf="managers.length > 1 && canEdit" (click)="deleteManagerConfirmation(manager)"
+                          class="delete-btn">Delete</span>
                       </div>
                       <h4>{{ manager.email }}</h4>
                     </div>
@@ -248,3 +245,4 @@
   </div>
   <cla-footer></cla-footer>
 </ion-content>
+

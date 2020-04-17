@@ -11,6 +11,8 @@ import {
   ViewController
 } from 'ionic-angular';
 
+import { PlatformLocation } from '@angular/common';
+
 @IonicPage({
   segment: 'cla-contract-version-modal'
 })
@@ -29,8 +31,12 @@ export class ClaContractVersionModal {
     public navParams: NavParams,
     public viewCtrl: ViewController,
     public modalCtrl: ModalController,
-    public events: Events
+    public events: Events,
+    private location: PlatformLocation,
   ) {
+    this.location.onPopState(() => {
+      this.viewCtrl.dismiss(false);
+    });
     this.documentType = this.navParams.get('documentType');
     this.documents = this.navParams.get('documents').reverse();
     if (this.documents.length > 0) {
@@ -45,7 +51,7 @@ export class ClaContractVersionModal {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   /**
    * Called if popover dismissed with data. Passes data to a callback function
@@ -71,14 +77,14 @@ export class ClaContractVersionModal {
       const myWindow = window.open('', '_blank', 'titlebar=yes,width=' + width + ',height=' + height);
       myWindow.document.write(
         '<html><head><title>PDF Document Unavailable</title></head>' +
-          '<body>' +
-          '<p>' +
-          msg +
-          '</p>' +
-          '</body></html>'
+        '<body>' +
+        '<p>' +
+        msg +
+        '</p>' +
+        '</body></html>'
       );
     } else {
-      const modal = this.modalCtrl.create('PdfViewerModal', {doc: document.documentS3URL, documentType: this.documentType});
+      const modal = this.modalCtrl.create('PdfViewerModal', { doc: document.documentS3URL, documentType: this.documentType });
       modal.present();
     }
   }

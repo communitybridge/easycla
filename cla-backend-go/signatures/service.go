@@ -20,7 +20,6 @@ import (
 
 // SignatureService interface
 type SignatureService interface {
-	GetMetrics() (*models.SignatureMetrics, error)
 	GetSignature(signatureID string) (*models.Signature, error)
 	GetProjectSignatures(params signatures.GetProjectSignaturesParams) (*models.Signatures, error)
 	GetProjectCompanySignatures(params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error)
@@ -45,11 +44,6 @@ func NewService(repo SignatureRepository, githubOrgValidation bool) SignatureSer
 		repo,
 		githubOrgValidation,
 	}
-}
-
-// GetMetrics returns signature metrics
-func (s service) GetMetrics() (*models.SignatureMetrics, error) {
-	return s.repo.GetMetrics()
 }
 
 // GetSignature returns the signature associated with the specified signature ID
@@ -146,7 +140,7 @@ func (s service) GetUserSignatures(params signatures.GetUserSignaturesParams) (*
 func (s service) GetGithubOrganizationsFromWhitelist(signatureID string, githubAccessToken string) ([]models.GithubOrg, error) {
 
 	if signatureID == "" {
-		msg := fmt.Sprintf("unable to get GitHub organizations whitelist - signature ID is nil")
+		msg := "unable to get GitHub organizations whitelist - signature ID is nil"
 		log.Warn(msg)
 		return nil, errors.New(msg)
 	}
@@ -200,13 +194,13 @@ func (s service) AddGithubOrganizationToWhitelist(signatureID string, whiteListP
 	organizationID := whiteListParams.OrganizationID
 
 	if signatureID == "" {
-		msg := fmt.Sprintf("unable to add GitHub organization from whitelist - signature ID is nil")
+		msg := "unable to add GitHub organization from whitelist - signature ID is nil"
 		log.Warn(msg)
 		return nil, errors.New(msg)
 	}
 
 	if organizationID == nil {
-		msg := fmt.Sprintf("unable to add GitHub organization from whitelist - organization ID is nil")
+		msg := "unable to add GitHub organization from whitelist - organization ID is nil"
 		log.Warn(msg)
 		return nil, errors.New(msg)
 	}
@@ -272,13 +266,13 @@ func (s service) DeleteGithubOrganizationFromWhitelist(signatureID string, white
 	organizationID := whiteListParams.OrganizationID
 
 	if signatureID == "" {
-		msg := fmt.Sprintf("unable to delete GitHub organization from whitelist - signature ID is nil")
+		msg := "unable to delete GitHub organization from whitelist - signature ID is nil"
 		log.Warn(msg)
 		return nil, errors.New(msg)
 	}
 
 	if organizationID == nil {
-		msg := fmt.Sprintf("unable to delete GitHub organization from whitelist - organization ID is nil")
+		msg := "unable to delete GitHub organization from whitelist - organization ID is nil"
 		log.Warn(msg)
 		return nil, errors.New(msg)
 	}
