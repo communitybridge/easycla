@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Input, Component } from '@angular/core';
-import { NavController, ModalController } from 'ionic-angular';
-import { CincoService } from '../../services/cinco.service';
+import { ModalController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 
 @Component({
@@ -15,11 +14,7 @@ export class SectionHeaderComponent {
 
   project: any;
 
-  // projectSectors: any;
-
   constructor(
-    private navCtrl: NavController,
-    private cincoService: CincoService,
     private claService: ClaService,
     public modalCtrl: ModalController
   ) {
@@ -27,12 +22,10 @@ export class SectionHeaderComponent {
   }
 
   ngOnInit() {
-    // this.getProjectSectors();
     this.getProject(this.projectId);
   }
 
   getDefaults() {
-    // this.projectSectors = {};
     this.project = {
       id: '',
       name: 'Project',
@@ -41,40 +34,11 @@ export class SectionHeaderComponent {
     };
   }
 
-  // viewProjectDetails(projectId) {
-  //   this.navCtrl.push("ProjectDetailsPage", {
-  //     projectId: projectId
-  //   });
-  // }
-
   getProject(projectId) {
-    // let getMembers = true;
     this.claService.getProjectFromSFDC(projectId).subscribe((response) => {
       if (response) {
         this.project = response;
       }
     });
   }
-
-  // getProjectSectors() {
-  //   this.cincoService.getProjectSectors().subscribe(response => {
-  //     this.projectSectors = response;
-  //   });
-  // }
-
-  // openProjectUserManagementModal() {
-  //   let modal = this.modalCtrl.create("ProjectUserManagementModal", {
-  //     projectId: this.projectId,
-  //     projectName: this.project.name
-  //   });
-  //   modal.present();
-  // }
-
-  // openAssetManagementModal() {
-  //   let modal = this.modalCtrl.create("AssetManagementModal", {
-  //     projectId: this.projectId,
-  //     projectName: this.project.name
-  //   });
-  //   modal.present();
-  // }
 }

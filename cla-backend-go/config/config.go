@@ -55,6 +55,9 @@ type Config struct {
 
 	// S3 bucket to store signatures
 	SignatureFilesBucket string `json:"signatureFilesBucket"`
+
+	// LF Group
+	LFGroup LFGroup `json:"lf_group"`
 }
 
 // Auth0 model
@@ -77,6 +80,14 @@ type Auth0Platform struct {
 type Docraptor struct {
 	APIKey   string `json:"apiKey"`
 	TestMode bool   `json:"testMode"`
+}
+
+// LFGroup contains LF LDAP group access information
+type LFGroup struct {
+	ClientURL    string `json:"client_url"`
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 // AWS model

@@ -1020,6 +1020,69 @@ paths:
       tags:
         - signatures
 
+  /project/{projectID}/gerrits/{gerritID}:
+    delete:
+      summary: delete the gerrit
+      description: Delete the gerrit
+      operationId: deleteGerrit
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: gerritID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - gerrits
+
+  /project/{projectID}/gerrits:
+    post:
+      summary: add the gerrit
+      description: add the gerrit
+      operationId: addGerrit
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - in: body
+          name: add-gerrit-input
+          schema:
+            $ref: '#/definitions/add-gerrit-input'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/gerrit'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - gerrits
+
 responses:
   unauthorized:
     description: Unauthorized
@@ -1413,6 +1476,18 @@ definitions:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1Models"
       type: "GhOrgWhitelist"
+  add-gerrit-input:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Models"
+      type: "AddGerritInput"
+  gerrit:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Models"
+      type: "Gerrit"
 
   error-response:
     type: object

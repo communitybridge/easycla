@@ -4,11 +4,7 @@
 import { Component } from '@angular/core';
 import { NavController, ModalController, NavParams, IonicPage } from 'ionic-angular';
 import { ClaService } from '../../../services/cla.service';
-import { CincoService } from '../../../services/cinco.service';
-import { KeycloakService } from '../../../services/keycloak/keycloak.service';
-import { SortService } from '../../../services/sort.service';
 import { SFProjectModel } from '../../../models/sfdc-project-model';
-import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
 
 @Restricted({
@@ -33,11 +29,7 @@ export class ProjectPage {
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
-    private cincoService: CincoService,
-    private sortService: SortService,
     public modalCtrl: ModalController,
-    private keycloak: KeycloakService,
-    private rolesService: RolesService,
     private claService: ClaService
   ) {
     this.projectId = navParams.get('projectId');
@@ -45,16 +37,7 @@ export class ProjectPage {
   }
 
   ngOnInit() {
-    console.log('project id: ' + this.projectId);
-    // this.getSFDCProject(this.projectId);
 
-    // this.cincoService
-    //   .getEventsForProject(this.projectId)
-    //   .subscribe(response => {
-    //     if (response) {
-    //       console.log(response);
-    //     }
-    //   });
   }
 
   getSFDCProject(projectId) {
@@ -65,29 +48,6 @@ export class ProjectPage {
       }
     });
   }
-
-  // getProject(projectId) {
-  //   let getMembers = true;
-  //   this.cincoService
-  //     .getMockProject(projectId, getMembers)
-  //     .subscribe(response => {
-  //       if (response) {
-  //         this.project = response;
-  //         // // This is to refresh an image that have same URL
-  //         // if (this.project.config.logoRef) {
-  //         //   this.project.config.logoRef += "?" + new Date().getTime();
-  //         // }
-  //         this.loading.project = false;
-  //       }
-  //     });
-  // }
-
-  // memberSelected(event, memberId) {
-  //   this.navCtrl.push("MemberPage", {
-  //     projectId: this.projectId,
-  //     memberId: memberId
-  //   });
-  // }
 
   getDefaults() {
     this.loading = {
@@ -132,8 +92,4 @@ export class ProjectPage {
       }
     };
   }
-
-  // sortMembers(prop) {
-  //   this.sortService.toggleSort(this.sort, prop, this.project.members);
-  // }
 }
