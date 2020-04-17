@@ -105,7 +105,7 @@ jobs:
 
   buildGoBackend: &buildGoBackendAnchor
     docker:
-      - image: circleci/golang:1.14
+      - image: circleci/golang:1.14.2
     working_directory: /go/src/github.com/communitybridge/easycla/
     steps:
       - checkout
