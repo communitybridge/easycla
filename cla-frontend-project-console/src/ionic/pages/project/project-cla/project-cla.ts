@@ -25,7 +25,7 @@ export class ProjectClaPage {
   sfdcProjectId: string;
   githubOrganizations: GithubOrganisationModel[];
 
-  claProjects: any;
+  claProjects: any = [];
   projectsByExternalId: any;
   alert;
   iclaUploadInfo: any;

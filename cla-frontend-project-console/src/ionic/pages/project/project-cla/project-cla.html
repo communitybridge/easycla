@@ -13,7 +13,7 @@
   <div class="page-content">
     <section-header [projectId]="sfdcProjectId"></section-header>
 
-    <loading-spinner *ngIf="claProjects.length == 0" [loading]="loading.claProjects"></loading-spinner>
+    <loading-spinner *ngIf="claProjects!== null" [loading]="loading.claProjects"></loading-spinner>
 
     <ion-grid [loading-display]="loading.claProjects" class="project-grid">
       <ion-row *ngIf="!claProjects">
@@ -61,7 +61,8 @@
                         </ion-card-title>
 
                         <p>
-                          <a target="_blank" href="https://github.com/{{ getOrganisationName(organization.organizationName) }}">
+                          <a target="_blank"
+                            href="https://github.com/{{ getOrganisationName(organization.organizationName) }}">
                             https://github.com/{{getOrganisationName(organization.organizationName)}}
                           </a>
                         </p>
@@ -141,8 +142,7 @@
                       View Companies
                     </button>
 
-                    <button ion-button (click)="deleteClaGroup(project.projectName,project.projectID)"
-                      color="light">
+                    <button ion-button (click)="deleteClaGroup(project.projectName,project.projectID)" color="light">
                       Delete
                     </button>
                   </ion-buttons>
