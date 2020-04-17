@@ -366,27 +366,6 @@ paths:
       tags:
         - onboard
 
-  /signatures/metrics:
-    get:
-      summary: Get signature metrics
-      description: Returns signature metrics
-      security:
-        - OauthSecurity: []
-      operationId: getSignatureMetrics
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/signature-metrics'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-      tags:
-        - signatures
-
   /signatures/id/{signatureID}:
     get:
       summary: Get the signature by ID
@@ -773,28 +752,6 @@ paths:
       responses:
         '204':
           description: 'Success'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-        '404':
-          $ref: '#/responses/not-found'
-      tags:
-        - project
-
-  /project/metrics:
-    get:
-      summary: Get Project Metrics
-      security:
-        - OauthSecurity: []
-      operationId: getProjectMetrics
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/project-metrics'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1253,28 +1210,6 @@ paths:
       tags:
         - company
 
-  /company/metrics:
-    get:
-      summary: Get Company Metrics
-      security:
-        - OauthSecurity: []
-      operationId: getCompanyMetrics
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/companies-metrics'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-        '404':
-          $ref: '#/responses/not-found'
-      tags:
-        - company
-
   /template:
     get:
       summary: Get Available Templates
@@ -1596,28 +1531,6 @@ paths:
       tags:
         - events
 
-
-  /metrics:
-    get:
-      summary: Get metrics
-      description: Returns metrics
-      security:
-        - OauthSecurity: []
-      operationId: getMetrics
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/metrics'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-      tags:
-        - metrics
-
 # Common parameters
 parameters:
   pageSize:
@@ -1667,20 +1580,6 @@ parameters:
     type: string
     required: false
     enum: [ccla,cla]
-  lfid:
-    name: lfid
-    description: The optional LFID filter
-    in: query
-    type: string
-    required: false
-    pattern: '^\w+$'
-  ghid:
-    name: ghid
-    description: The optional GitHub ID filter
-    in: query
-    type: string
-    required: false
-    pattern: '^\w+$'
   nextKey:
     name: nextKey
     description: The next key to scan - used as a page offset for scanning batches of records
@@ -2111,25 +2010,6 @@ definitions:
         example: '2019-08-01T06:55:09Z'
         type: string
 
-  project-simple-model:
-    type: object
-    x-nullable: false
-    title: Project
-    description: Project simple data model
-    properties:
-      projectName:
-        description: the project name
-        type: string
-      projectManagerCount:
-        description: A count of project managers
-        type: integer
-        format: int64
-        x-omitempty: false
-      projectExternalID:
-        description: SF ID of the project
-        type: string
-        x-omitempty: false
-
   create-cla-group-template:
     title: CreateCLAGroupTemplate
     type: object
@@ -2230,22 +2110,6 @@ definitions:
         description: The company record update date/time
         format: date-time
 
-  company-simple-model:
-    type: object
-    x-nullable: false
-    title: Company
-    description: Company Simple Data Model
-    properties:
-      companyName:
-        description: The company name
-        example: Acme, Inc.
-        type: string
-      companyManagerCount:
-        description: A count of company managers
-        type: integer
-        format: int64
-        x-omitempty: false
-
   company-with-invite:
     type: object
     x-nullable: false
@@ -2277,115 +2141,6 @@ definitions:
         description: The company record update date/time
         format: date-time
 
-  metrics:
-    type: object
-    x-nullable: false
-    title: Metrics
-    description: All Metrics
-    properties:
-      projects:
-        $ref: '#/definitions/project-metrics'
-      companies:
-        $ref: '#/definitions/companies-metrics'
-      repositories:
-        $ref: '#/definitions/repository-metrics'
-      users:
-        $ref: '#/definitions/user-metrics'
-      signatures:
-        $ref: '#/definitions/signature-metrics'
-
-  project-metrics:
-    type: object
-    x-nullable: false
-    title: ProjectMetrics
-    description: Project Metrics
-    properties:
-      totalCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-      projects:
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/project-simple-model'
-
-  companies-metrics:
-    type: object
-    x-nullable: false
-    title: CompaniesMetrics
-    description: Companies Metrics
-    properties:
-      totalCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-      companies:
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/company-simple-model'
-
-  repository-metrics:
-    type: object
-    x-nullable: false
-    title: RepositoryMetrics
-    description: Repository Metrics
-    properties:
-      totalCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-
-  user-metrics:
-    type: object
-    x-nullable: false
-    title: UserMetrics
-    description: User Metrics
-    properties:
-      totalCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-
-  signature-metrics:
-    type: object
-    x-nullable: false
-    title: Signatures
-    description: Signature Metrics
-    properties:
-      totalCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-      totalUniqueCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-      cclaCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-      employeeCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-      iclaCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-      employeeAndIndividualUnqiueCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-      claManagerCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-      claManagerUniqueCount:
-        type: integer
-        format: int64
-        x-omitempty: false
 
   signatures:
     type: object
@@ -2797,6 +2552,22 @@ definitions:
       averageCompanyClaManagers:
         type: integer
         x-omitempty: false
+
+  top-projects:
+    type: object
+    properties:
+      topProjectsByIcla:
+        type: array
+        items:
+          $ref: '#/definitions/project-metric'
+      topProjectsByCcla:
+        type: array
+        items:
+          $ref: '#/definitions/project-metric'
+      topProjectsByIclaAndCcla:
+        type: array
+        items:
+          $ref: '#/definitions/project-metric'
 
   company-metric:
     type: object

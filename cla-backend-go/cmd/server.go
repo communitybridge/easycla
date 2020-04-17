@@ -202,7 +202,6 @@ func server(localMode bool) http.Handler {
 		CompanyRepository: companyRepo,
 		ProjectRepository: projectRepo,
 	})
-	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
 	usersService := users.NewService(usersRepo)
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
@@ -211,9 +210,11 @@ func server(localMode bool) http.Handler {
 	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo)
 	onboardService := onboard.NewService(onboardRepo)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
-	metricsService := metrics.NewService(usersRepo, companyRepo, repositoriesRepo, signaturesRepo, projectRepo, metricsRepo)
+	metricsService := metrics.NewService(metricsRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
 	repositoriesService := repositories.NewService(repositoriesRepo)
+	gerritService := gerrits.NewService(gerritRepo)
+	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
@@ -228,7 +229,7 @@ func server(localMode bool) http.Handler {
 
 	// Setup our API handlers
 	users.Configure(api, usersService, eventsService)
-	project.Configure(api, projectService, eventsService)
+	project.Configure(api, projectService, eventsService, gerritService, repositoriesService, signaturesService)
 	v2Project.Configure(v2API, projectService, eventsService)
 	health.Configure(api, healthService)
 	v2Health.Configure(v2API, healthService)
@@ -246,7 +247,6 @@ func server(localMode bool) http.Handler {
 	v2Version.Configure(v2API, Version, Commit, Branch, BuildDate)
 	events.Configure(api, eventsService)
 	v2Events.Configure(v2API, eventsService)
-	metrics.Configure(api, metricsService)
 	v2Metrics.Configure(v2API, metricsService)
 	github_organizations.Configure(api, githubOrganizationsService, eventsService)
 	v2GithubOrganizations.Configure(v2API, githubOrganizationsService, eventsService)

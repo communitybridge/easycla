@@ -32,9 +32,8 @@ export class ProjectPage {
   company: ClaCompanyModel;
   manager: ClaUserModel;
   showModal: any;
-  pendingRequests: any[]
+  pendingRequests: any[];
   project: any;
-  users: any;
   userEmail: any;
   sort: any;
   canEdit: boolean = false;
@@ -60,7 +59,6 @@ export class ProjectPage {
       requests: false,
       managers: true
     };
-    this.users = {};
     this.sort = {
       date: {
         arrayProp: 'date_modified',
@@ -372,7 +370,7 @@ export class ProjectPage {
   }
 
   acceptPendingRequest() {
-
+    // dead functionality.
   }
 
   back(){

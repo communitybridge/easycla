@@ -21,6 +21,7 @@ import (
 // Repository defines functions of Repositories
 type Repository interface {
 	GetProjectGerrits(projectID string) ([]*models.Gerrit, error)
+	DeleteProject(projectID string) error
 }
 
 // NewRepository create new Repository
@@ -79,4 +80,23 @@ func (repo repo) GetProjectGerrits(projectID string) ([]*models.Gerrit, error) {
 		}
 	}
 	return out, nil
+}
+
+func (repo *repo) DeleteProject(gerritID string) error {
+	tableName := fmt.Sprintf("cla-%s-gerrit-instances", repo.stage)
+	input := &dynamodb.DeleteItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"gerrit_id": {
+				S: aws.String(gerritID),
+			},
+		},
+		TableName: aws.String(tableName),
+	}
+
+	_, err := repo.dynamoDBClient.DeleteItem(input)
+	if err != nil {
+		log.Warnf("error updating gerrit repository : %s during delete project process ", gerritID)
+		return err
+	}
+	return nil
 }

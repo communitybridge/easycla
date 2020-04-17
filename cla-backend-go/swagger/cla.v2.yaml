@@ -84,30 +84,16 @@ paths:
       tags:
         - docs
 
-  /metrics:
-    get:
-      summary: Get EasyCLA Metrics
-      description: Returns EasyCLA Metrics
-      operationId: getMetrics
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/metrics'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-      tags:
-        - metrics
-
   /metrics/cla-manager-distribution:
     get:
       summary: Get cla manager distribution for easycla
       description: Returns cla manager distribution
       operationId: getClaManagerDistribution
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '200':
           description: 'Success'
@@ -127,6 +113,11 @@ paths:
       summary: Get total count metrics
       description: Returns total count metrics
       operationId: getTotalCount
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '200':
           description: 'Success'
@@ -147,6 +138,10 @@ paths:
       description: Returns company metrics
       operationId: getCompanyMetric
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: companyID
           description: the company ID
           in: path
@@ -171,11 +166,40 @@ paths:
       summary: company metrics of top companies
       description: Returns list company metrics of top companies
       operationId: getTopCompanies
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '200':
           description: 'Success'
           schema:
             $ref: '#/definitions/top-companies'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
+  /metrics/top-projects:
+    get:
+      summary: project metrics of top projects
+      description: Returns list project metrics of top projects
+      operationId: getTopProjects
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/top-projects'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -191,6 +215,10 @@ paths:
       description: Returns project metrics
       operationId: getProjectMetric
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: projectID
           description: the project ID
           in: path
@@ -220,10 +248,14 @@ paths:
     get:
       summary: list metrics of project
       description: Returns list of project metrics
+      operationId: listProjectMetrics
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/pageSize'
-      operationId: listProjectMetrics
       responses:
         '200':
           description: 'Success'
@@ -245,6 +277,10 @@ paths:
       description: Creates a new CLA Group within the EasyCLA system.
       operationId: createProject
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: body
           in: body
           schema:
@@ -268,6 +304,10 @@ paths:
       summary: Update Project by ID
       operationId: updateProject
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: body
           in: body
           schema:
@@ -291,6 +331,10 @@ paths:
       summary: Get Projects
       operationId: getProjects
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - $ref: '#/parameters/searchTerm'
         - $ref: '#/parameters/searchField'
         - $ref: '#/parameters/nextKey'
@@ -319,6 +363,11 @@ paths:
     get:
       summary: Get Project by ID
       operationId: getProjectById
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '200':
           description: 'Success'
@@ -337,6 +386,11 @@ paths:
     delete:
       summary: Delete Project by ID
       operationId: deleteProjectById
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '204':
           description: 'Success'
@@ -355,14 +409,18 @@ paths:
     get:
       summary: Get Projects By External ID
       description: Returns a list of CLA groups associated with the specified external ID
+      operationId: getProjectsByExternalID
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: externalID
           in: path
           type: string
           required: true
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/pageSize'
-      operationId: getProjectsByExternalID
       responses:
         '200':
           description: 'Success'
@@ -379,36 +437,20 @@ paths:
       tags:
         - project
 
-  /project/metrics:
-    get:
-      summary: Get Project Metrics
-      operationId: getProjectMetrics
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/project-metrics'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-        '404':
-          $ref: '#/responses/not-found'
-      tags:
-        - project
-
   /project/name/{projectName}:
     get:
       summary: Get Project By Name
       description: Returns the project object when provided the project name - exact match
+      operationId: getProjectByName
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: projectName
           in: path
           type: string
           required: true
-      operationId: getProjectByName
       responses:
         '200':
           description: 'Success'
@@ -431,6 +473,10 @@ paths:
       description: Returns list of events matching with search criteria
       operationId: getRecentEvents
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - $ref: '#/parameters/pageSize'
       produces:
         - application/json
@@ -454,6 +500,11 @@ paths:
     get:
       summary: Get Available Templates
       operationId: getTemplates
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
       responses:
         '200':
           description: 'Success'
@@ -480,6 +531,10 @@ paths:
       summary: Create contract template for CLA Group
       operationId: createCLAGroupTemplate
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - in: body
           name: body
           schema:
@@ -677,6 +732,10 @@ paths:
       description: Returns the signature when provided the signature ID
       operationId: getSignature
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: signatureID
           description: the signature ID
           in: path
@@ -705,6 +764,10 @@ paths:
       description: Returns a list of project signature models when provided the project ID
       operationId: getProjectSignatures
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: projectID
           description: the project ID
           in: path
@@ -736,6 +799,10 @@ paths:
       description: Returns a list of project signature models when provided the project ID and company ID
       operationId: getProjectCompanySignatures
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: projectID
           description: the project ID
           in: path
@@ -768,6 +835,10 @@ paths:
       description: Returns a list of company signatures when provided the company ID
       operationId: getCompanySignatures
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: companyID
           description: the company ID
           in: path
@@ -796,6 +867,10 @@ paths:
       description: Returns a list of user signatures when provided the user ID
       operationId: getUserSignatures
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: userID
           description: the user ID
           in: path
@@ -824,6 +899,10 @@ paths:
       description: Returns a list of employee project signature models when provided the project ID and company ID
       operationId: getProjectCompanyEmployeeSignatures
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: projectID
           description: the project ID
           in: path
@@ -855,6 +934,10 @@ paths:
       summary: Signature Update
       operationId: getGitHubOrgWhitelist
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: signatureID
           in: path
           type: string
@@ -878,6 +961,10 @@ paths:
       summary: Signature Update
       operationId: deleteGitHubOrgWhitelist
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: signatureID
           in: path
           type: string
@@ -905,6 +992,10 @@ paths:
       summary: Signature Update
       operationId: addGitHubOrgWhitelist
       parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - name: signatureID
           in: path
           type: string
@@ -1008,20 +1099,6 @@ parameters:
     type: string
     required: false
     enum: [ccla,cla]
-  lfid:
-    name: lfid
-    description: The optional LFID filter
-    in: query
-    type: string
-    required: false
-    pattern: '^\w+$'
-  ghid:
-    name: ghid
-    description: The optional GitHub ID filter
-    in: query
-    type: string
-    required: false
-    pattern: '^\w+$'
   x-acl:
     name: X-ACL
     description: The access control list header value encoded as base64 - assigned by the API Gateway based on user/request permissions
@@ -1118,30 +1195,6 @@ definitions:
         type: string
     title: Health Status
 
-  metrics:
-    type: object
-    x-nullable: false
-    title: Metrics
-    description: All Metrics
-    properties:
-      projects:
-        $ref: '#/definitions/project-metrics'
-      companies:
-        $ref: '#/definitions/companies-metrics'
-      repositories:
-        $ref: '#/definitions/repository-metrics'
-      users:
-        $ref: '#/definitions/user-metrics'
-      signatures:
-        $ref: '#/definitions/signature-metrics'
-    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
-    # Imported package and type alias may be specified as options
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Metrics"
-      type: "Metrics"
-
   cla-manager-distribution:
     x-go-type:
       import:
@@ -1162,6 +1215,13 @@ definitions:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1models"
       type: "TopCompanies"
+
+  top-projects:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1models"
+      type: "TopProjects"
 
   company-metric:
     x-go-type:
@@ -1211,196 +1271,6 @@ definitions:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1models"
       type: "ListGithubRepositories"
-
-  project-metrics:
-    type: object
-    x-nullable: false
-    title: ProjectMetrics
-    description: Project Metrics
-    properties:
-      totalCount:
-        description: The total number of projects
-        type: integer
-        format: int64
-        example: 123
-        x-omitempty: false
-      projects:
-        description: A list of projects
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/project-simple-model'
-    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
-    # Imported package and type alias may be specified as options
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1ProjectMetrics"
-      type: "ProjectMetrics"
-
-  project-simple-model:
-    type: object
-    x-nullable: false
-    title: Project
-    description: Project simple data model
-    properties:
-      projectName:
-        description: the project name
-        example: "CNCF"
-        type: string
-      projectManagerCount:
-        description: A count of project managers
-        type: integer
-        example: 6
-        format: int64
-        x-omitempty: false
-    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
-    # Imported package and type alias may be specified as options
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1ProjectSimpleMetrics"
-      type: "ProjectSimpleMetrics"
-
-  companies-metrics:
-    type: object
-    x-nullable: false
-    title: CompaniesMetrics
-    description: Companies Metrics
-    properties:
-      totalCount:
-        description: The total number of companies
-        type: integer
-        format: int64
-        example: 621
-        x-omitempty: false
-      companies:
-        description: The company list
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/company-simple-model'
-    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
-    # Imported package and type alias may be specified as options
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1CompaniesMetrics"
-      type: "CompaniesMetrics"
-
-  company-simple-model:
-    type: object
-    x-nullable: false
-    title: Company
-    description: Company Simple Data Model
-    properties:
-      companyName:
-        description: The company name
-        example: Acme, Inc.
-        type: string
-      companyManagerCount:
-        description: The number of company managers for this company
-        type: integer
-        format: int64
-        example: 12
-        x-omitempty: false
-    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
-    # Imported package and type alias may be specified as options
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1CompaniesSimpleMetrics"
-      type: "CompaniesSimpleMetrics"
-
-  repository-metrics:
-    type: object
-    x-nullable: false
-    title: RepositoryMetrics
-    description: Repository Metrics
-    properties:
-      totalCount:
-        description: The total number of repositories managed by EasyCLA
-        type: integer
-        format: int64
-        example: 42
-        x-omitempty: false
-    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
-    # Imported package and type alias may be specified as options
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1RepositoryMetrics"
-      type: "RepositoryMetrics"
-
-  user-metrics:
-    type: object
-    x-nullable: false
-    title: UserMetrics
-    description: User Metrics
-    properties:
-      totalCount:
-        description: The total number of users managed by EasyCLA
-        type: integer
-        format: int64
-        example: 394
-        x-omitempty: false
-    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
-    # Imported package and type alias may be specified as options
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1UserMetrics"
-      type: "UserMetrics"
-
-  signature-metrics:
-    type: object
-    x-nullable: false
-    title: Signatures
-    description: Signature Metrics
-    properties:
-      count:
-        description: The total number of signatures managed by EasyCLA
-        type: integer
-        format: int64
-        example: 10939
-        x-omitempty: false
-      cclaCount:
-        description: The total number of Corporate Signatures managed by EasyCLA
-        type: integer
-        format: int64
-        example: 622
-        x-omitempty: false
-      employeeCount:
-        description: The total number of Employee Signatures managed by EasyCLA
-        type: integer
-        format: int64
-        example: 1862
-        x-omitempty: false
-      iclaCount:
-        description: The total number of Individual Contributor Signatures managed by EasyCLA
-        type: integer
-        format: int64
-        example: 8453
-        x-omitempty: false
-      claManagerCount:
-        description: The total number of CLA Managers managed by EasyCLA
-        type: integer
-        format: int64
-        example: 1146
-        x-omitempty: false
-      claManagerUniqueCount:
-        description: The total number of unique CLA Managers managed by EasyCLA
-        type: integer
-        format: int64
-        example: 1014
-        x-omitempty: false
-    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
-    # Imported package and type alias may be specified as options
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1SignatureMetrics"
-      type: "SignatureMetrics"
 
   projects:
     type: object

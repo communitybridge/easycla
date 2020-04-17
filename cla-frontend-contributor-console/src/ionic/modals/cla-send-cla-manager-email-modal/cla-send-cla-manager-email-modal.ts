@@ -116,13 +116,21 @@ export class ClaSendClaManagerEmailModal {
       userId: this.userId
     };
 
+<<<<<<< HEAD
     this.claService.postUserCCLARequestToManager(this.companyId, this.projectId, data).subscribe(
       (response) => {
+=======
+    this.claService.postCCLAWhitelistRequest(this.companyId, this.projectId, data).subscribe(
+      () => {
+>>>>>>> e3b809a8a87884d8ca0ade02f84d8237db213c4d
         this.emailSent();
       },
       (exception) => {
         this.hasRequestError = true;
+<<<<<<< HEAD
         console.log( this.hasRequestError)
+=======
+>>>>>>> e3b809a8a87884d8ca0ade02f84d8237db213c4d
       }
     );
   }

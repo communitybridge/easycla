@@ -4,11 +4,7 @@
 import { Component } from '@angular/core';
 import { IonicPage, ModalController, NavController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
-import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
-import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { EmailValidator } from '../../validators/email';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -23,47 +19,20 @@ import { EmailValidator } from '../../validators/email';
 export class CompaniesPage {
   loading: any;
   companies: any;
-
   userId: string;
   userEmail: string;
   userName: string;
   companyId: string;
-
-  manager: string;
-  columns: any[];
   rows: any[];
-  formErrors: any[];
-  form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
-  formSuccessfullySubmitted: boolean = false;
-  claManagerApproved: boolean = false;
-
-  ColumnMode = ColumnMode;
-  SelectionType = SelectionType;
-  SortType = SortType;
 
   constructor(
     public navCtrl: NavController,
     private claService: ClaService,
     public modalCtrl: ModalController,
-    private formBuilder: FormBuilder,
-    private rolesService: RolesService // for @Restricted
   ) {
-    this.form = formBuilder.group({
-      project_name: [''],
-      compnay_name: ['', Validators.compose([Validators.required])],
-      full_name: ['', Validators.compose([Validators.required])],
-      lfid: [''],
-      email_address: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      cla_admin: ['', Validators.compose([Validators.required])]
-    });
-    this.formErrors = [];
     this.getDefaults();
-  }
-
-  approveCLAManager() {
-    this.claManagerApproved = true;
   }
 
   getDefaults() {
@@ -73,43 +42,11 @@ export class CompaniesPage {
     this.userId = localStorage.getItem('userid');
     this.userEmail = localStorage.getItem('user_email');
     this.userName = localStorage.getItem('user_name');
-    this.setUserDetails();
     this.companies = [];
-    this.columns = [{ prop: 'CompanyName' }, { prop: 'Status' }, { prop: 'Action' }, { prop: 'CompanyID' }, { prop: 'ProjectName' }];
   }
 
   ngOnInit() {
     this.getCompanies();
-    this.getSignedCLAs();
-    this.getUserByUserId();
-  }
-
-  setUserDetails() {
-    this.form.controls['lfid'].setValue(this.userId);
-    this.form.controls['email_address'].setValue(this.userEmail);
-    this.form.controls['full_name'].setValue(this.userName);
-  }
-
-  openCompanyModal() {
-    let modal = this.modalCtrl.create('AddCompanyModal', {});
-    modal.onDidDismiss((data) => {
-      // A refresh of data anytime the modal is dismissed
-    });
-    modal.present();
-  }
-
-  getUserByUserId() {
-    this.userId && this.claService.getUserByUserName(this.userId).subscribe((user) => {
-      if (user.companyID != null) {
-        this.companyId = user.companyID;
-      }
-    })
-  }
-
-  getSignedCLAs() {
-  }
-
-  getPendingInvites() {
   }
 
   /**
@@ -119,7 +56,6 @@ export class CompaniesPage {
     this.loading.companies = true;
     this.claService.getUserByUserName(this.userId).subscribe(
       (response) => {
-        //console.log(response);
         // We need the user's unique ID - grab it from the first record
         this.getCompaniesByUserManagerWithInvites(response.userID);
       },
@@ -127,12 +63,8 @@ export class CompaniesPage {
         // Typically get this if the user is not found in our database
         this.loading.companies = false;
         this.rows = [];
-
-        console.log('Received exception:');
-        console.log(exception);
         if (exception.status === 404) {
           // Create the user if it does't exist
-          console.log('Creating user record...');
           const user = {
             lfUsername: this.userId,
             username: this.userName,
@@ -140,12 +72,10 @@ export class CompaniesPage {
           };
           this.claService.createUserV3(user).subscribe(
             (response) => {
-              console.log('Success creating user record: ');
-              console.log(response);
+              // Success creating user record
             },
             (exception) => {
-              console.log('Error creating user record: ');
-              console.log(exception);
+              // Error creating user record
             }
           );
         }
@@ -170,8 +100,6 @@ export class CompaniesPage {
       },
       (exception) => {
         this.loading.companies = false;
-        console.log('Exception while calling: getCompaniesByUserManagerWithInvites() for userId: ' + userId);
-        console.log(exception);
       }
     );
   }
@@ -181,14 +109,6 @@ export class CompaniesPage {
       this.navCtrl.setRoot('CompanyPage', {
         companyId: companyId
       });
-    }
-  }
-
-
-  onSelect(event) {
-    let company = event.selected[0];
-    if (company.Status === 'Joined') {
-      this.viewCompany(company.CompanyID, '');
     }
   }
 
@@ -206,28 +126,15 @@ export class CompaniesPage {
   }
 
   openSelectCompany() {
-    let modal = this.modalCtrl.create('AddCompanyModal', {});
-    modal.onDidDismiss((data) => {
-      console.log('AddCompanyModel dismissed with data: ' + data);
-      // A refresh of data anytime the modal is dismissed
-      if (data) {
-        this.getUserByUserId();
-      }
-    });
-    modal.present();
+    if (!this.loading.companies) {
+      let modal = this.modalCtrl.create('AddCompanyModal', {
+        associatedCompanies: this.rows
+      });
+      modal.present();
+    }
   }
 
   trimCharacter(text, length) {
     return text.length > length ? text.substring(0, length) + '...' : text;
-  }
-
-  openRequestManagerModal() {
-    let modal = this.modalCtrl.create('ClaManagerOnboardingPage', {});
-    modal.dismiss((data) => {
-      // A refresh of data anytime the modal is dismissed
-
-
-    });
-    modal.present();
   }
 }

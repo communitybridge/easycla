@@ -32,10 +32,10 @@ import (
 
 // SignatureRepository interface defines the functions for the github whitelist service
 type SignatureRepository interface {
-	GetMetrics() (*models.SignatureMetrics, error)
 	GetGithubOrganizationsFromWhitelist(signatureID string) ([]models.GithubOrg, error)
 	AddGithubOrganizationToWhitelist(signatureID, githubOrganizationID string) ([]models.GithubOrg, error)
 	DeleteGithubOrganizationFromWhitelist(signatureID, githubOrganizationID string) ([]models.GithubOrg, error)
+	InvalidateProjectRecord(signatureID string, projectName string) error
 
 	GetSignature(signatureID string) (*models.Signature, error)
 	GetProjectSignatures(params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error)
@@ -43,10 +43,7 @@ type SignatureRepository interface {
 	GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetCompanySignatures(params signatures.GetCompanySignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetUserSignatures(params signatures.GetUserSignaturesParams, pageSize int64) (*models.Signatures, error)
-
-	getSignatureCount(tableName string, filter expression.ConditionBuilder) (int64, error)
-	getSignatureUserUniqueCount(tableName string, filter expression.ConditionBuilder) (int64, error)
-	getSignatureManagerCounts(tableName string, filter expression.ConditionBuilder) (int64, int64, error)
+	ProjectSignatures(projectID string) (*models.Signatures, error)
 }
 
 // repository data model
@@ -65,290 +62,6 @@ func NewRepository(awsSession *session.Session, stage string, companyRepo compan
 		companyRepo:    companyRepo,
 		usersRepo:      usersRepo,
 	}
-}
-
-// GetMetrics returns a summary of signature metrics
-func (repo repository) GetMetrics() (*models.SignatureMetrics, error) {
-	// get item from dynamoDB table
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
-
-	// Do these counts in parallel
-	var wg sync.WaitGroup
-	wg.Add(5)
-
-	var cclaCount int64
-	var employeeCount int64
-	var iclaCount int64
-	var employeeAndICLAUniqueCount int64
-	var claManagerCount int64
-	var claManagerUniqueCount int64
-
-	// Corporate Signatures Signed by CLA Managers
-	go func(tableName string) {
-		defer wg.Done()
-		count, err := repo.getSignatureCount(tableName,
-			expression.Name("signature_user_ccla_company_id").AttributeNotExists().And(
-				expression.Name("signature_reference_type").Equal(expression.Value("company"))).And(
-				expression.Name("signature_type").Equal(expression.Value("ccla"))).And(
-				expression.Name("signature_signed").Equal(expression.Value(true))).And(
-				expression.Name("signature_approved").Equal(expression.Value(true))))
-		if err != nil {
-			log.Warnf("error retrieving CCLA signature total record count, error: %v", err)
-			return
-		}
-		cclaCount = count
-	}(tableName)
-
-	// Employee Signatures
-	go func(tableName string) {
-		defer wg.Done()
-		count, err := repo.getSignatureCount(tableName,
-			expression.Name("signature_user_ccla_company_id").AttributeExists().And(
-				expression.Name("signature_reference_type").Equal(expression.Value("user"))).And(
-				expression.Name("signature_type").Equal(expression.Value("cla"))).And(
-				expression.Name("signature_signed").Equal(expression.Value(true))).And(
-				expression.Name("signature_approved").Equal(expression.Value(true))))
-		if err != nil {
-			log.Warnf("error retrieving employee signature total record count, error: %v", err)
-			return
-		}
-		employeeCount = count
-	}(tableName)
-
-	// Individual Signatures
-	go func(tableName string) {
-		defer wg.Done()
-		count, err := repo.getSignatureCount(tableName,
-			expression.Name("signature_user_ccla_company_id").AttributeNotExists().And(
-				expression.Name("signature_reference_type").Equal(expression.Value("user"))).And(
-				expression.Name("signature_type").Equal(expression.Value("cla"))).And(
-				expression.Name("signature_signed").Equal(expression.Value(true))).And(
-				expression.Name("signature_approved").Equal(expression.Value(true))))
-		if err != nil {
-			log.Warnf("error retrieving ICLA signature total record count, error: %v", err)
-			return
-		}
-		iclaCount = count
-	}(tableName)
-
-	// Unique Employee and Individual Signatures
-	go func(tableName string) {
-		defer wg.Done()
-		// ICLA and CCLA Employee filter
-		count, err := repo.getSignatureUserUniqueCount(tableName,
-			expression.Name("signature_reference_type").Equal(expression.Value("user")).And(
-				expression.Name("signature_type").Equal(expression.Value("cla"))).And(
-				expression.Name("signature_signed").Equal(expression.Value(true))).And(
-				expression.Name("signature_approved").Equal(expression.Value(true))))
-		if err != nil {
-			log.Warnf("error retrieving ICLA signature total record count, error: %v", err)
-			return
-		}
-		employeeAndICLAUniqueCount = count
-	}(tableName)
-
-	// Get Manager Counts
-	go func(tableName string) {
-		defer wg.Done()
-		count, uniqueCount, err := repo.getSignatureManagerCounts(tableName,
-			expression.Name("signature_user_ccla_company_id").AttributeNotExists().And(
-				expression.Name("signature_reference_type").Equal(expression.Value("company"))).And(
-				expression.Name("signature_type").Equal(expression.Value("ccla"))).And(
-				expression.Name("signature_signed").Equal(expression.Value(true))).And(
-				expression.Name("signature_approved").Equal(expression.Value(true))))
-		if err != nil {
-			log.Warnf("error retrieving CLA Manager counts, error: %v", err)
-			return
-		}
-		claManagerCount = count
-		claManagerUniqueCount = uniqueCount
-	}(tableName)
-
-	// Wait for the counts to finish
-	wg.Wait()
-
-	// Build the response model
-	metrics := models.SignatureMetrics{
-		TotalCount:                       cclaCount + employeeCount + iclaCount,
-		TotalUniqueCount:                 cclaCount + employeeAndICLAUniqueCount,
-		CclaCount:                        cclaCount,
-		EmployeeCount:                    employeeCount,
-		IclaCount:                        iclaCount,
-		EmployeeAndIndividualUnqiueCount: employeeAndICLAUniqueCount,
-		ClaManagerCount:                  claManagerCount,
-		ClaManagerUniqueCount:            claManagerUniqueCount,
-	}
-
-	return &metrics, nil
-}
-
-// getSignatureCount returns the signature counts based on the specified query filter
-func (repo repository) getSignatureCount(tableName string, filter expression.ConditionBuilder) (int64, error) {
-	var count int64
-
-	// Use the nice builder to create the expression
-	expr, err := expression.NewBuilder().WithFilter(filter).Build()
-	if err != nil {
-		log.Warnf("error building expression for signature scan, error: %v", err)
-		return count, err
-	}
-
-	// Assemble the query input parameters
-	scanInput := &dynamodb.ScanInput{
-		Select:                    aws.String("COUNT"),
-		ExpressionAttributeNames:  expr.Names(),
-		ExpressionAttributeValues: expr.Values(),
-		FilterExpression:          expr.Filter(),
-		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
-	}
-
-	var lastEvaluatedKey string
-
-	// Loop until we have all the records
-	for ok := true; ok; ok = lastEvaluatedKey != "" {
-		results, errQuery := repo.dynamoDBClient.Scan(scanInput)
-		if errQuery != nil {
-			log.Warnf("error retrieving signatures, error: %v", errQuery)
-			return count, errQuery
-		}
-
-		count += *results.Count
-
-		if results.LastEvaluatedKey["signature_id"] != nil {
-			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
-			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-				"signature_id": {
-					S: aws.String(lastEvaluatedKey),
-				},
-			}
-		} else {
-			lastEvaluatedKey = ""
-		}
-	}
-
-	return count, nil
-}
-
-// getSignatureUserUniqueCount returns the number of unique user records based on the query expression
-func (repo repository) getSignatureUserUniqueCount(tableName string, filter expression.ConditionBuilder) (int64, error) {
-	// Use the nice builder to create the expression
-	expr, err := expression.NewBuilder().WithFilter(filter).WithProjection(buildUserProjection()).Build()
-	if err != nil {
-		log.Warnf("error building expression for signature scan, error: %v", err)
-		return 0, err
-	}
-
-	userIDMap := make(map[string]bool)
-
-	// Assemble the query input parameters
-	scanInput := &dynamodb.ScanInput{
-		ExpressionAttributeNames:  expr.Names(),
-		ExpressionAttributeValues: expr.Values(),
-		FilterExpression:          expr.Filter(),
-		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
-	}
-
-	var lastEvaluatedKey string
-
-	// Loop until we have all the records
-	for ok := true; ok; ok = lastEvaluatedKey != "" {
-		results, errQuery := repo.dynamoDBClient.Scan(scanInput)
-		if errQuery != nil {
-			log.Warnf("error retrieving signatures, error: %v", errQuery)
-			return 0, errQuery
-		}
-
-		var dbSignatureUsersModel []DBSignatureUsersModel
-		unmarshalErr := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbSignatureUsersModel)
-		if unmarshalErr != nil {
-			log.Warnf("error unmarshalling signatures from database, error: %v", unmarshalErr)
-			return 0, unmarshalErr
-		}
-
-		for _, userModel := range dbSignatureUsersModel {
-			userIDMap[userModel.UserID] = true
-		}
-
-		if results.LastEvaluatedKey["signature_id"] != nil {
-			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
-			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-				"signature_id": {
-					S: aws.String(lastEvaluatedKey),
-				},
-			}
-		} else {
-			lastEvaluatedKey = ""
-		}
-	}
-
-	return int64(len(userIDMap)), nil
-}
-
-// getSignatureManagerCount returns the total number of CLA Managers and unique CLA Managers in the system
-func (repo repository) getSignatureManagerCounts(tableName string, filter expression.ConditionBuilder) (int64, int64, error) {
-	var count int64
-	managerMap := make(map[string]bool)
-
-	// Use the nice builder to create the expression
-	expr, err := expression.NewBuilder().WithProjection(buildManagerProjection()).WithFilter(filter).Build()
-	if err != nil {
-		log.Warnf("error building expression for signature scan, error: %v", err)
-		return 0, 0, err
-	}
-
-	// Assemble the query input parameters
-	scanInput := &dynamodb.ScanInput{
-		ExpressionAttributeNames:  expr.Names(),
-		ExpressionAttributeValues: expr.Values(),
-		FilterExpression:          expr.Filter(),
-		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
-	}
-
-	var lastEvaluatedKey string
-
-	// Loop until we have all the records
-	for ok := true; ok; ok = lastEvaluatedKey != "" {
-		results, errQuery := repo.dynamoDBClient.Scan(scanInput)
-		if errQuery != nil {
-			log.Warnf("error retrieving signatures for CLA Manager Count, error: %v", errQuery)
-			return 0, 0, errQuery
-		}
-
-		var dbManagersModel []DBManagersModel
-		err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbManagersModel)
-		if err != nil {
-			log.Warnf("error unmarshalling signatures from database, error: %v", err)
-			return 0, 0, err
-		}
-
-		for _, record := range dbManagersModel {
-			if record.SignatureACL != nil {
-				// Tally the total count
-				count += int64(len(record.SignatureACL))
-				// Add the individual managers to our map - duplicate entries have the same key
-				for _, manager := range record.SignatureACL {
-					managerMap[manager] = true
-				}
-			}
-		}
-
-		if results.LastEvaluatedKey["signature_id"] != nil {
-			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
-			scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-				"signature_id": {
-					S: aws.String(lastEvaluatedKey),
-				},
-			}
-		} else {
-			lastEvaluatedKey = ""
-		}
-	}
-
-	// Return the total and unique count
-	return count, int64(len(managerMap)), nil
 }
 
 // GetGithubOrganizationsFromWhitelist returns a list of GH organizations stored in the whitelist
@@ -657,6 +370,8 @@ func addConditionToFilter(filter expression.ConditionBuilder, cond expression.Co
 	return filter
 }
 
+const projIndexName = "project-signature-index"
+
 // GetProjectSignatures returns a list of signatures for the specified project
 func (repo repository) GetProjectSignatures(params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error) {
 
@@ -665,7 +380,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 	// The table we're interested in
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 
-	indexName := "project-signature-index"
+	indexName := projIndexName
 
 	// This is the key we want to match
 	condition := expression.Key("signature_project_id").Equal(expression.Value(params.ProjectID))
@@ -939,6 +654,116 @@ func (repo repository) GetProjectCompanySignatures(params signatures.GetProjectC
 	}, nil
 }
 
+// Get project signatures with no pagination
+func (repo repository) ProjectSignatures(projectID string) (*models.Signatures, error) {
+	queryStartTime := time.Now()
+
+	// The table we're interested in
+	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+
+	indexName := projIndexName
+
+	// This is the key we want to match
+	condition := expression.Key("signature_project_id").Equal(expression.Value(projectID))
+
+	builder := expression.NewBuilder().WithProjection(buildProjection())
+	var filter expression.ConditionBuilder
+	var filterAdded bool
+
+	// Filter condition to cater for approved and signed signatures
+	signatureApprovedExpression := expression.Name("signature_approved").Equal(expression.Value(true))
+	filter = addConditionToFilter(filter, signatureApprovedExpression, &filterAdded)
+
+	signatureSignedExpression := expression.Name("signature_signed").Equal(expression.Value(true))
+	filter = addConditionToFilter(filter, signatureSignedExpression, &filterAdded)
+
+	if filterAdded {
+		builder = builder.WithFilter(filter)
+	}
+	builder = builder.WithKeyCondition(condition)
+
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		log.Warnf("error building expression for project signature query, projectID: %s, error: %v",
+			projectID, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String(indexName), // Name of a secondary index to scan
+	}
+
+	results, errQuery := repo.dynamoDBClient.Query(queryInput)
+
+	if errQuery != nil {
+		log.Warnf("error retrieving project signature ID for project: %s, error: %v",
+			projectID, errQuery)
+		return nil, errQuery
+	}
+
+	log.Debugf("Signature project query took: %v resulting in %d results",
+		utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
+
+	// Convert the list of DB models to a list of response models
+	signatures, modelErr := repo.buildProjectSignatureModels(results, projectID)
+	if modelErr != nil {
+		log.Warnf("error converting DB model to response model for signatures with project %s, error: %v",
+			projectID, modelErr)
+		return nil, modelErr
+	}
+
+	return &models.Signatures{
+		ProjectID:  projectID,
+		Signatures: signatures,
+	}, nil
+}
+
+func (repo repository) InvalidateProjectRecord(signatureID string, projectName string) error {
+	// Update project signatures for signature_approved and notes attributes
+	signatureTableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+
+	expressionAttributeNames := map[string]*string{}
+	expressionAttributeValues := map[string]*dynamodb.AttributeValue{}
+	updateExpression := "SET "
+
+	expressionAttributeNames["#A"] = aws.String("signature_approved")
+	expressionAttributeValues[":a"] = &dynamodb.AttributeValue{BOOL: aws.Bool(false)}
+	updateExpression = updateExpression + " #A = :a,"
+
+	expressionAttributeNames["#S"] = aws.String("note")
+	note := fmt.Sprintf("Signature invalidated (approved set to false) due to CLA Group/Project: %s deletion", projectName)
+	expressionAttributeValues[":s"] = &dynamodb.AttributeValue{S: aws.String(note)}
+	updateExpression = updateExpression + " #S = :s"
+
+	input := &dynamodb.UpdateItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"signature_id": {
+				S: aws.String(signatureID),
+			},
+		},
+		ExpressionAttributeNames:  expressionAttributeNames,
+		ExpressionAttributeValues: expressionAttributeValues,
+		UpdateExpression:          &updateExpression,
+		TableName:                 aws.String(signatureTableName),
+	}
+
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Warnf("error updating signature_approved for signature_id : %s error : %v ", signatureID, updateErr)
+		return updateErr
+	}
+
+	return nil
+}
+
 // GetProjectCompanyEmployeeSignatures returns a list of employee signatures for the specified project and specified company
 func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams, pageSize int64) (*models.Signatures, error) {
 
@@ -1067,8 +892,11 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 	// This is the keys we want to match
 	condition := expression.Key("signature_reference_id").Equal(expression.Value(params.CompanyID))
 
+	// Check for approved signatures
+	filter := expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true)))
+
 	// Use the nice builder to create the expression
-	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithFilter(filter).WithProjection(buildProjection()).Build()
 	if err != nil {
 		log.Warnf("error building expression for company signature query, companyID: %s, error: %v",
 			params.CompanyID, err)
@@ -1427,6 +1255,7 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("github_org_whitelist"),
 	)
 }
+<<<<<<< HEAD
 
 // buildManagerProject is a helper function to build a projection with only the manager details
 func buildManagerProjection() expression.ProjectionBuilder {
@@ -1445,3 +1274,5 @@ func buildUserProjection() expression.ProjectionBuilder {
 		expression.Name("signature_reference_id"),
 	)
 }
+=======
+>>>>>>> e3b809a8a87884d8ca0ade02f84d8237db213c4d

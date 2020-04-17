@@ -268,6 +268,7 @@ export class ClaService {
   }
 
   /**
+<<<<<<< HEAD
    * /user/{user_id}/request-company-ccla
    */
   postUserCCLARequestToManager(companyId, projectId, data) {
@@ -277,6 +278,8 @@ export class ClaService {
   }
 
   /**
+=======
+>>>>>>> e3b809a8a87884d8ca0ade02f84d8237db213c4d
    * /user/{user_id}/active-signature
    */
   getUserSignatureIntent(userId) {

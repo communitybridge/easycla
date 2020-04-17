@@ -97,7 +97,7 @@ export class ClaSelectCompanyModal {
       Before an employee begins the signing process, ensure that
       1. The given project, company, and user exists
       2. The company signatory has signed the CCLA for their company.
-      3. The user is included as part of the whitelist of the CCLA that the company signed.
+      3. The user is included as part of the approved list of the CCLA that the company signed.
       the CLA service will throw an error if any of the above is false.
       */
       this.loading.activateSpinner = false;

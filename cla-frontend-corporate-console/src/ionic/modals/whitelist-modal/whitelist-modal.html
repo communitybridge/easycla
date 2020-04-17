@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      <span>Edit {{  getTitleType() }} Whitelist for {{ companyName }}</span>
+      <span>Edit {{  getTitleType() }} approved list for {{ companyName }}</span>
     </ion-title>
     <ion-buttons start>
       <button ion-button (click)="dismiss()">
@@ -17,7 +17,7 @@
       <ion-row>
         <ion-col col-12>
           <button type="button" ion-button class="clickable" (click)="addNewWhitelistItem()">Add New Line</button>
-          <p *ngIf="type === 'github'">Note: Any GitHub bots you whitelist will be automatically affiliated
+          <p *ngIf="type === 'github'">Note: Any GitHub bots you approved will be automatically affiliated
             to {{companyName}} on {{projectName}}.</p>
         </ion-col>
       </ion-row>
@@ -50,11 +50,10 @@
     <ion-buttons end>
       <loading-spinner [loading]="currentlySubmitting"></loading-spinner>
       <button type="button" ion-button icon-left (click)="dismiss()" color="primary" [disabled]="currentlySubmitting">
-<!--        <button ion-button icon-left (click)="dismiss()" [color]="cancelButton()" [disabled]="currentlySubmitting">-->
         Cancel
       </button>
       <button form="form" type="submit" ion-button icon-right [color]="saveButton()" [disabled]="currentlySubmitting">
-        Save Whitelist
+        Save Approved List
       </button>
     </ion-buttons>
   </ion-toolbar>

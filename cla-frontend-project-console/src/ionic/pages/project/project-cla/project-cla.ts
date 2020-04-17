@@ -3,13 +3,11 @@
 
 import { Component, ViewChild } from '@angular/core';
 import { AlertController, Events, IonicPage, ModalController, Nav, NavController, NavParams } from 'ionic-angular';
-import { CincoService } from '../../../services/cinco.service';
-import { KeycloakService } from '../../../services/keycloak/keycloak.service';
-import { SortService } from '../../../services/sort.service';
 import { ClaService } from '../../../services/cla.service';
 import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
 import { GithubOrganisationModel } from '../../../models/github-organisation-model';
+import { PlatformLocation } from '@angular/common';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -29,7 +27,7 @@ export class ProjectClaPage {
 
   claProjects: any;
   projectsByExternalId: any;
-
+  alert;
   iclaUploadInfo: any;
   cclaUploadInfo: any;
   @ViewChild(Nav) nav: Nav;
@@ -37,16 +35,19 @@ export class ProjectClaPage {
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
-    private cincoService: CincoService,
-    private sortService: SortService,
     public modalCtrl: ModalController,
-    private keycloak: KeycloakService,
     public alertCtrl: AlertController,
     public claService: ClaService,
     public rolesService: RolesService,
-    public events: Events
+    public events: Events,
+    private location: PlatformLocation
   ) {
     this.sfdcProjectId = navParams.get('projectId');
+    this.location.onPopState(() => {
+      if (this.alert) {
+        this.alert.dismiss();
+      }
+    });
     this.getDefaults();
     this.listenEvents();
   }
@@ -86,6 +87,15 @@ export class ProjectClaPage {
     });
   }
 
+  sortGithubOrganisation(githubOrganizations) {
+    if (githubOrganizations == null || githubOrganizations.length == 0) {
+      return githubOrganizations;
+    }
+
+    return githubOrganizations.sort((a, b) => {
+      return this.getOrganisationName(a.organizationName).trim().localeCompare(this.getOrganisationName(b.organizationName).trim());
+    });
+  }
 
   getClaProjects() {
     this.loading.claProjects = true;
@@ -100,7 +110,7 @@ export class ProjectClaPage {
     this.loading.orgs = true;
     this.claService.getOrganizations(this.sfdcProjectId).subscribe((organizations) => {
       this.loading.orgs = false;
-      this.githubOrganizations = organizations.list;
+      this.githubOrganizations = this.sortGithubOrganisation(organizations.list);
     });
   }
 
@@ -234,8 +244,6 @@ export class ProjectClaPage {
   openClaOrganizationAppModal() {
     let modal = this.modalCtrl.create('ClaOrganizationAppModal', {});
     modal.onDidDismiss((data) => {
-      // console.log('data', data)
-      // this.getClaProjects();
       this.getGithubOrganisation();
     });
     modal.present();
@@ -270,7 +278,7 @@ export class ProjectClaPage {
   }
 
   deleteConfirmation(type, payload) {
-    let alert = this.alertCtrl.create({
+    this.alert = this.alertCtrl.create({
       subTitle: `Delete ${type}`,
       message: `Are you sure you want to delete this ${type}?`,
       buttons: [
@@ -297,12 +305,12 @@ export class ProjectClaPage {
       ]
     });
 
-    alert.present();
+    this.alert.present();
   }
 
 
   deleteClaGroup(name: string, id: string) {
-    let alert = this.alertCtrl.create({
+    this.alert = this.alertCtrl.create({
       subTitle: `Delete ${name}`,
       message: `Are you sure you want to delete this ${name}?`,
       buttons: [
@@ -321,11 +329,11 @@ export class ProjectClaPage {
       ]
     });
 
-    alert.present();
+    this.alert.present();
   }
 
   deleteClaGroupError(name: string, id: string) {
-    let alert = this.alertCtrl.create({
+    this.alert = this.alertCtrl.create({
       subTitle: `Delete ${name}`,
       message: `Could not delete ${name}. Please try again or contact support`,
       buttons: [
@@ -344,11 +352,11 @@ export class ProjectClaPage {
       ]
     });
 
-    alert.present();
+    this.alert.present();
   }
 
   deleteClaGroupSuccess(name: string) {
-    let alert = this.alertCtrl.create({
+    this.alert = this.alertCtrl.create({
       subTitle: `Delete ${name}`,
       message: `${name} was deleted successfully`,
       buttons: [
@@ -361,20 +369,18 @@ export class ProjectClaPage {
       ]
     });
 
-    alert.present();
+    this.alert.present();
   }
 
 
   deleteClaProject(name: string, id: string) {
-    console.log('deleting');
     this.loading.claProject = true;
-    this.claService.deleteClaProject(id).subscribe((res : any)=>{
-      console.log('deleting complete');
-      if(res.status === 204) {
+    this.claService.deleteClaProject(id).subscribe((res: any) => {
+      if (res.status === 204) {
         this.getClaProjects();
         this.deleteClaGroupSuccess(name);
       }
-      else{
+      else {
         this.deleteClaGroupError(name, id)
         this.loading.claProject = false;
       }
@@ -386,8 +392,8 @@ export class ProjectClaPage {
 
 
   deleteClaGithubOrganization(organization) {
-    this.claService.deleteGithubOrganization(this.sfdcProjectId , this.getOrganisationName(organization.organizationName)).subscribe((response) => {
-      if(response.status === 200) {
+    this.claService.deleteGithubOrganization(this.sfdcProjectId, this.getOrganisationName(organization.organizationName)).subscribe((response) => {
+      if (response.status === 200) {
         this.getGithubOrganisation();
       }
     });
@@ -409,4 +415,9 @@ export class ProjectClaPage {
       this[callback](popoverData.callbackData);
     }
   }
+
+  trimCharacter(text, length) {
+    return text.length > length ? text.substring(0, length) + '...' : text;
+  }
+  
 }

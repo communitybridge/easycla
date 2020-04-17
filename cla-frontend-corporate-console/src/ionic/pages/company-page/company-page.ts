@@ -68,7 +68,7 @@ export class CompanyPage {
       { prop: 'ProjectManagers' },
       { prop: 'Status' },
       { prop: 'PendingRequets' },
-      { prop: 'WhiteList' }
+      { prop: 'Approved List' }
     ];
   }
 
@@ -160,16 +160,6 @@ export class CompanyPage {
     let modal = this.modalCtrl.create('ViewCLAManagerModal', {
       'managers': row.ProjectManagers,
       'ProjectName': row.ProjectName
-    });
-    modal.present();
-  }
-
-  openCompanyModal() {
-    let modal = this.modalCtrl.create('EditCompanyModal', {
-      company: this.company
-    });
-    modal.onDidDismiss((data) => {
-      this.getCompany();
     });
     modal.present();
   }

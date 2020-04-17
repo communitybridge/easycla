@@ -84,9 +84,14 @@ export class ClaEmployeeRequestAccessModal {
       }
       this.form.controls['recipient_name'].setValidators(Validators.compose([Validators.required]));
       this.form.controls['recipient_email'].setValidators(Validators.compose([Validators.required, EmailValidator.isValid]));
+<<<<<<< HEAD
       this.form.controls['recipient_name'].updateValueAndValidity();
       this.form.controls['recipient_email'].updateValueAndValidity();
+=======
+>>>>>>> e3b809a8a87884d8ca0ade02f84d8237db213c4d
     }
+    this.form.controls['recipient_name'].updateValueAndValidity();
+    this.form.controls['recipient_email'].updateValueAndValidity();
   }
 
   resetFormValues(value) {
@@ -197,14 +202,20 @@ export class ClaEmployeeRequestAccessModal {
     this.submitAttempt = true;
     this.currentlySubmitting = true;
     this.formErrors = [];
+<<<<<<< HEAD
     console.log("Form");
     console.log(this.form);
+=======
+>>>>>>> e3b809a8a87884d8ca0ade02f84d8237db213c4d
 
     if (!this.form.valid) {
       this.getFormValidationErrors();
       this.currentlySubmitting = false;
       // prevent submit
+<<<<<<< HEAD
       console.log('invalid')
+=======
+>>>>>>> e3b809a8a87884d8ca0ade02f84d8237db213c4d
       return;
     }
  
@@ -238,10 +249,14 @@ export class ClaEmployeeRequestAccessModal {
     }
     this.claService.postCCLAWhitelistRequest(this.companyId, this.projectId, user).subscribe(
       () => {
+<<<<<<< HEAD
         console.log(this.userId + ' ccla whitelist request for project: ' + this.projectId + ' for company: ' + this.companyId);
+=======
+        console.log(this.userId + ' ccla approved list request for project: ' + this.projectId + ' for company: ' + this.companyId);
+>>>>>>> e3b809a8a87884d8ca0ade02f84d8237db213c4d
       },
       (exception) => {
-        console.log('Exception during ccla whitelist request for user ' + this.userId + ' on project: ' + this.projectId + ' and company: ' + this.companyId);
+        console.log('Exception during ccla approved list request for user ' + this.userId + ' on project: ' + this.projectId + ' and company: ' + this.companyId);
         console.log(exception);
       }
     );

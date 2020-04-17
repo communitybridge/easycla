@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
@@ -28,6 +30,13 @@ var (
 // Configure establishes the middleware handlers for the project service
 func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsService events.Service) {
 	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, user *auth.User) middleware.Responder {
+		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
+		if !user.IsUserAuthorized(auth.Project, params.Body.ProjectExternalID) {
+			return project.NewCreateProjectUnauthorized().WithPayload(&models.ErrorResponse{
+				Code:    "401",
+				Message: "user does not have access to this project",
+			})
+		}
 		if params.Body.ProjectName == "" || params.Body.ProjectACL == nil {
 			msg := "Missing Project Name or Project ACL parameter."
 			log.Warnf("Create Project Failed - %s", msg)
@@ -50,27 +59,6 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 		// If the project with the same name exists...
 		if exitingModel != nil {
 			msg := fmt.Sprintf("Project with same name exists: %s", params.Body.ProjectName)
-			log.Warnf("Create Project Failed - %s", msg)
-			return project.NewCreateProjectConflict().WithPayload(&models.ErrorResponse{
-				Code:    "409",
-				Message: msg,
-			})
-		}
-
-		exitingModel, getErr = service.GetProjectByID(params.Body.ProjectExternalID)
-		if getErr != nil {
-			msg := fmt.Sprintf("Error querying the project by ID: %s, error: %+v",
-				params.Body.ProjectExternalID, getErr)
-			log.Warnf("Create Project Failed - %s", msg)
-			return project.NewCreateProjectBadRequest().WithPayload(&models.ErrorResponse{
-				Code:    "500",
-				Message: msg,
-			})
-		}
-
-		// If the project with the same name exists...
-		if exitingModel != nil {
-			msg := fmt.Sprintf("Project with same external ID exists: %s", params.Body.ProjectExternalID)
 			log.Warnf("Create Project Failed - %s", msg)
 			return project.NewCreateProjectConflict().WithPayload(&models.ErrorResponse{
 				Code:    "409",
@@ -116,7 +104,6 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 
 	// Get Project By ID
 	api.ProjectGetProjectByIDHandler = project.GetProjectByIDHandlerFunc(func(projectParams project.GetProjectByIDParams, user *auth.User) middleware.Responder {
-
 		projectModel, err := service.GetProjectByID(projectParams.ProjectSfdcID)
 		if err != nil {
 			return project.NewGetProjectByIDBadRequest().WithPayload(errorResponse(err))
@@ -124,11 +111,23 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 		if projectModel == nil {
 			return project.NewGetProjectByIDNotFound()
 		}
+		if !user.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
+			return project.NewGetProjectByIDUnauthorized().WithPayload(&models.ErrorResponse{
+				Code:    "401",
+				Message: "user does not have access to this project",
+			})
+		}
 
 		return project.NewGetProjectByIDOK().WithPayload(projectModel)
 	})
 
 	api.ProjectGetProjectsByExternalIDHandler = project.GetProjectsByExternalIDHandlerFunc(func(projectParams project.GetProjectsByExternalIDParams, user *auth.User) middleware.Responder {
+		if !user.IsUserAuthorized(auth.Project, projectParams.ExternalID) {
+			return project.NewGetProjectsByExternalIDUnauthorized().WithPayload(&models.ErrorResponse{
+				Code:    "401",
+				Message: "user does not have access to this project",
+			})
+		}
 
 		projectModel, err := service.GetProjectsByExternalID(&v1ProjectOps.GetProjectsByExternalIDParams{
 			HTTPRequest: projectParams.HTTPRequest,
@@ -152,6 +151,12 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 		if projectModel == nil {
 			return project.NewGetProjectByNameNotFound()
 		}
+		if !user.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
+			return project.NewGetProjectByNameUnauthorized().WithPayload(&models.ErrorResponse{
+				Code:    "401",
+				Message: "user does not have access to this project",
+			})
+		}
 
 		return project.NewGetProjectByNameOK().WithPayload(projectModel)
 	})
@@ -159,12 +164,19 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 	// Delete Project By ID
 	api.ProjectDeleteProjectByIDHandler = project.DeleteProjectByIDHandlerFunc(func(projectParams project.DeleteProjectByIDParams, user *auth.User) middleware.Responder {
 		log.Debugf("Processing delete request with project id: %s", projectParams.ProjectSfdcID)
+		utils.SetAuthUserProperties(user, projectParams.XUSERNAME, projectParams.XEMAIL)
 		projectModel, err := service.GetProjectByID(projectParams.ProjectSfdcID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
 				return project.NewDeleteProjectByIDNotFound()
 			}
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
+		}
+		if !user.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
+			return project.NewDeleteProjectByIDUnauthorized().WithPayload(&models.ErrorResponse{
+				Code:    "401",
+				Message: "user does not have access to this project",
+			})
 		}
 		err = service.DeleteProject(projectParams.ProjectSfdcID)
 		if err != nil {
@@ -185,7 +197,21 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 
 	// Update Project By ID
 	api.ProjectUpdateProjectHandler = project.UpdateProjectHandlerFunc(func(projectParams project.UpdateProjectParams, user *auth.User) middleware.Responder {
-		projectModel, err := service.UpdateProject(&projectParams.Body)
+		utils.SetAuthUserProperties(user, projectParams.XUSERNAME, projectParams.XEMAIL)
+		projectModel, err := service.GetProjectByID(projectParams.Body.ProjectID)
+		if err != nil {
+			if err == ErrProjectDoesNotExist {
+				return project.NewDeleteProjectByIDNotFound()
+			}
+			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
+		}
+		if !user.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
+			return project.NewUpdateProjectUnauthorized().WithPayload(&models.ErrorResponse{
+				Code:    "401",
+				Message: "user does not have access to this project",
+			})
+		}
+		projectModel, err = service.UpdateProject(&projectParams.Body)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
 				return project.NewUpdateProjectNotFound()
@@ -202,18 +228,6 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 		return project.NewUpdateProjectOK().WithPayload(projectModel)
 	})
 
-	// Project metrics
-	api.ProjectGetProjectMetricsHandler = project.GetProjectMetricsHandlerFunc(func(projectParams project.GetProjectMetricsParams, user *auth.User) middleware.Responder {
-		projectMetrics, err := service.GetMetrics()
-		if err != nil {
-			if err == ErrProjectDoesNotExist {
-				return project.NewGetProjectMetricsNotFound()
-			}
-			return project.NewGetProjectMetricsBadRequest().WithPayload(errorResponse(err))
-		}
-
-		return project.NewGetProjectMetricsOK().WithPayload(projectMetrics)
-	})
 }
 
 // codedResponse interface

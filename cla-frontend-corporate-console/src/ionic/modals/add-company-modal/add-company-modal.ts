@@ -19,7 +19,6 @@ export class AddCompanyModal {
   form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
-
   company: ClaCompanyModel;
   companyName: string;
   userEmail: string;
@@ -28,26 +27,25 @@ export class AddCompanyModal {
   companies: any[];
   filteredCompanies: any[];
   companySet: boolean = false;
-  joinExistingCompany: boolean = true;
   addNewCompany: boolean = false;
-  enableJoinButton: boolean = false;
   existingCompanyId: string;
   mode: string = 'add';
   loading: any;
   searching: boolean;
-  actionButtonsEnabled: boolean;
   activateButtons: boolean;
   join: boolean;
   add: boolean;
+  associatedCompanies: any[] = [];
 
   constructor(
-    public navParams: NavParams,
-    public viewCtrl: ViewController,
-    public formBuilder: FormBuilder,
+    private navParams: NavParams,
+    private viewCtrl: ViewController,
+    private formBuilder: FormBuilder,
     private claService: ClaService,
     private authService: AuthService,
-    public alertCtrl: AlertController
+    private alertCtrl: AlertController
   ) {
+    this.associatedCompanies = this.navParams.get('associatedCompanies');
     this.getDefaults();
   }
 
@@ -64,17 +62,12 @@ export class AddCompanyModal {
       companies: true
     };
     this.addNewCompany = true;
-    this.actionButtonsEnabled = true;
-
-
     this.add = true;
     this.join = false;
     this.activateButtons = true;
 
     this.form = this.formBuilder.group({
       companyName: [this.companyName, Validators.compose([Validators.required])],
-      // userEmail: [this.userEmail, Validators.compose([Validators.required])],
-      // userName: [this.userName, Validators.compose([Validators.required])]
     });
   }
 
@@ -186,12 +179,12 @@ export class AddCompanyModal {
     }
     this.claService.getAllV3Companies().subscribe((response) => {
       this.loading.companies = false;
-      this.companies = response.companies;
+      this.associatedCompanies = this.associatedCompanies.map(aCompany => aCompany.CompanyID);
+      this.companies = response.companies.filter(company => this.associatedCompanies.indexOf(company.companyID) < 0);
     });
   }
 
   findCompany(event) {
-    this.getAllCompanies();
     this.filteredCompanies = [];
     if (!this.companies) {
       this.searching = true;
@@ -205,12 +198,9 @@ export class AddCompanyModal {
       this.add = false;
     }
 
-    this.companies.length >= 0 && this.getAllCompanies();
-    // Remove all non-alpha numeric, -, _ values
     let companyName = event.value;
     if (companyName.length > 0 && this.companies) {
       this.activateButtons = false;
-      this.actionButtonEnabled()
       this.searching = false;
       this.companySet = false;
       this.filteredCompanies = this.companies
@@ -222,9 +212,6 @@ export class AddCompanyModal {
               (match) => '<span class="highlightText">' + match + '</span>'
             );
           }
-          if (formattedCompany === undefined && companyName.length > 4) {
-            this.enableJoinButton = true
-          }
           company.filteredCompany = formattedCompany;
           return company;
         })
@@ -235,7 +222,6 @@ export class AddCompanyModal {
 
     if (companyName.length >= 2) {
       this.addNewCompany = false;
-      this.joinExistingCompany = true;
     }
   }
 
@@ -261,41 +247,10 @@ export class AddCompanyModal {
           }
         })
         .catch((error) => {
-          console.log(JSON.stringify(error));
+          console.warn(JSON.stringify(error));
           return;
         });
     }
     return;
   }
-
-  //  Move action methods
-
-  actionButtonEnabled() {
-    this.actionButtonsEnabled = false
-  }
-
-  addButtonDisabled(): boolean {
-    return false;
-  }
-
-  joinButtonDisabled(): boolean {
-    return !this.enableJoinButton;
-  }
-
-  addButtonColorDisabled(): string {
-    if (this.addNewCompany) {
-      return 'gray';
-    } else {
-      return 'secondary';
-    }
-  }
-
-  joinButtonColorDisabled(): string {
-    if (this.joinExistingCompany) {
-      return 'gray';
-    } else {
-      return 'secondary';
-    }
-  }
-
 }

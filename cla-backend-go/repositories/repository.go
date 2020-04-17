@@ -37,13 +37,13 @@ var (
 
 // Repository defines functions of Repositories
 type Repository interface {
-	GetMetrics() (*models.RepositoryMetrics, error)
 	GetProjectRepositoriesGroupByOrgs(projectID string) ([]*models.GithubRepositoriesGroupByOrgs, error)
 	DeleteRepositoriesOfGithubOrganization(externalProjectID, githubOrgName string) error
 	AddGithubRepository(externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
 	DeleteGithubRepository(externalProjectID string, repositoryID string) error
 	ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error)
 	GetGithubRepository(repositoryID string) (*models.GithubRepository, error)
+	DeleteProject(projectID string) error
 }
 
 // NewRepository create new Repository
@@ -59,23 +59,6 @@ type repo struct {
 	stage               string
 	dynamoDBClient      *dynamodb.DynamoDB
 	repositoryTableName string
-}
-
-// GetMetrics returns the metrics for the github repository
-func (repo repo) GetMetrics() (*models.RepositoryMetrics, error) {
-	var out models.RepositoryMetrics
-	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
-	describeTableInput := &dynamodb.DescribeTableInput{
-		TableName: &tableName,
-	}
-	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
-	if err != nil {
-		log.Warnf("error retrieving total record count of repositories, error: %v", err)
-		return nil, err
-	}
-
-	out.TotalCount = *describeTableResult.Table.ItemCount
-	return &out, nil
 }
 
 // GetProjectRepositoriesGroupByOrgs returns a list of GH orgs by project id
@@ -378,4 +361,26 @@ func (repo *repo) GetGithubRepository(repositoryID string) (*models.GithubReposi
 		return nil, err
 	}
 	return out.toModel(), nil
+}
+
+// Unassign project from given repository
+func (repo *repo) DeleteProject(repositoryID string) error {
+	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
+
+	input := &dynamodb.DeleteItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"repository_id": {
+				S: aws.String(repositoryID),
+			},
+		},
+		TableName: aws.String(tableName),
+	}
+
+	_, err := repo.dynamoDBClient.DeleteItem(input)
+	if err != nil {
+		log.Warnf("error updating repository :%s for unassigning project", repositoryID)
+		return err
+	}
+
+	return nil
 }

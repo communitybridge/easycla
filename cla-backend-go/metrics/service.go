@@ -4,137 +4,34 @@ import (
 	"errors"
 	"math"
 	"sort"
+	"strings"
 	"sync"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
-	"github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
-	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/metrics"
-	"github.com/communitybridge/easycla/cla-backend-go/project"
-	"github.com/communitybridge/easycla/cla-backend-go/repositories"
-	"github.com/communitybridge/easycla/cla-backend-go/signatures"
-	"github.com/communitybridge/easycla/cla-backend-go/users"
 )
 
 // Service interface defines function of Metrics service
 type Service interface {
-	GetMetrics(params metrics.GetMetricsParams) (*models.Metrics, error)
 	GetCLAManagerDistribution() (*models.ClaManagerDistribution, error)
 	GetTotalCountMetrics() (*models.TotalCountMetrics, error)
 	GetCompanyMetric(companyID string) (*models.CompanyMetric, error)
 	GetProjectMetric(projectID string, idType string) (*models.SfProjectMetric, error)
 	GetTopCompanies() (*models.TopCompanies, error)
+	GetTopProjects() (*models.TopProjects, error)
 	ListProjectMetrics(paramPageSize *int64, paramNextKey *string) (*models.ListProjectMetric, error)
 }
 
 type service struct {
-	userRepo         users.UserRepository
-	companyRepo      company.CompanyRepository
-	repositoriesRepo repositories.Repository
-	signatureRepo    signatures.SignatureRepository
-	projectRepo      project.ProjectRepository
-	metricsRepo      Repository
+	metricsRepo Repository
 }
 
 // NewService creates new instance of metrics service
-func NewService(
-	userRepo users.UserRepository,
-	companyRepo company.CompanyRepository,
-	repositoriesRepo repositories.Repository,
-	signatureRepo signatures.SignatureRepository,
-	projectRepo project.ProjectRepository,
-	metricsRepo Repository,
-) Service {
+func NewService(metricsRepo Repository) Service {
 	return &service{
-		userRepo:         userRepo,
-		companyRepo:      companyRepo,
-		repositoriesRepo: repositoriesRepo,
-		signatureRepo:    signatureRepo,
-		projectRepo:      projectRepo,
-		metricsRepo:      metricsRepo,
+		metricsRepo: metricsRepo,
 	}
-}
-
-func (s *service) GetMetrics(params metrics.GetMetricsParams) (*models.Metrics, error) {
-	var out models.Metrics
-	var wg sync.WaitGroup
-	var userMetrics *models.UserMetrics
-	var signatureMetrics *models.SignatureMetrics
-	var companyMetrics *models.CompaniesMetrics
-	var repositoriesMetrics *models.RepositoryMetrics
-	var projectMetrics *models.ProjectMetrics
-	wg.Add(5)
-
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		var err error
-		userMetrics, err = s.userRepo.GetMetrics()
-		if err != nil {
-			log.Warnf("Unable to get user metrics. error = %v", err)
-			return
-		}
-	}(&wg)
-
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		var err error
-		signatureMetrics, err = s.signatureRepo.GetMetrics()
-		if err != nil {
-			log.Warnf("Unable to get signature metrics. error = %v", err)
-			return
-		}
-	}(&wg)
-
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		var err error
-		companyMetrics, err = s.companyRepo.GetMetrics()
-		if err != nil {
-			log.Warnf("Unable to get company metrics. error = %v", err)
-			return
-		}
-
-	}(&wg)
-
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		var err error
-		repositoriesMetrics, err = s.repositoriesRepo.GetMetrics()
-		if err != nil {
-			log.Warnf("Unable to get repository metrics. error = %v", err)
-			return
-		}
-	}(&wg)
-
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		var err error
-		projectMetrics, err = s.projectRepo.GetMetrics()
-		if err != nil {
-			log.Warnf("Unable to get project metrics. error = %v", err)
-			return
-		}
-	}(&wg)
-
-	wg.Wait()
-
-	if userMetrics != nil {
-		out.Users = *userMetrics
-	}
-	if signatureMetrics != nil {
-		out.Signatures = *signatureMetrics
-	}
-	if companyMetrics != nil {
-		out.Companies = *companyMetrics
-	}
-	if repositoriesMetrics != nil {
-		out.Repositories = *repositoriesMetrics
-	}
-	if projectMetrics != nil {
-		out.Projects = *projectMetrics
-	}
-	return &out, nil
 }
 
 func (s *service) GetCLAManagerDistribution() (*models.ClaManagerDistribution, error) {
@@ -229,6 +126,9 @@ func (s *service) GetTopCompanies() (*models.TopCompanies, error) {
 	go func() {
 		defer wg.Done()
 		sort.Slice(cmByProjectCount, func(i, j int) bool {
+			if cmByProjectCount[i].ProjectCount == cmByProjectCount[j].ProjectCount {
+				return strings.ToLower(cmByProjectCount[i].CompanyName) < strings.ToLower(cmByProjectCount[j].CompanyName)
+			}
 			return cmByProjectCount[i].ProjectCount > cmByProjectCount[j].ProjectCount
 		})
 	}()
@@ -236,6 +136,9 @@ func (s *service) GetTopCompanies() (*models.TopCompanies, error) {
 	go func() {
 		defer wg.Done()
 		sort.Slice(cmByCorporateContributors, func(i, j int) bool {
+			if cmByCorporateContributors[i].CorporateContributorsCount == cmByCorporateContributors[j].CorporateContributorsCount {
+				return strings.ToLower(cmByCorporateContributors[i].CompanyName) < strings.ToLower(cmByCorporateContributors[j].CompanyName)
+			}
 			return cmByCorporateContributors[i].CorporateContributorsCount > cmByCorporateContributors[j].CorporateContributorsCount
 		})
 	}()
@@ -243,6 +146,9 @@ func (s *service) GetTopCompanies() (*models.TopCompanies, error) {
 	go func() {
 		defer wg.Done()
 		sort.Slice(cmByClaManagers, func(i, j int) bool {
+			if cmByClaManagers[i].ClaManagersCount == cmByClaManagers[j].ClaManagersCount {
+				return strings.ToLower(cmByClaManagers[i].CompanyName) < strings.ToLower(cmByClaManagers[j].CompanyName)
+			}
 			return cmByClaManagers[i].ClaManagersCount > cmByClaManagers[j].ClaManagersCount
 		})
 	}()
@@ -256,6 +162,84 @@ func (s *service) GetTopCompanies() (*models.TopCompanies, error) {
 		TopCompaniesByProjectCount:          companiesToModel(cmByProjectCount[:returnCount]),
 	}, nil
 }
+
+func descSortCompare(left, right int64, leftName, rightName string) bool {
+	if left == right {
+		return leftName < rightName
+	}
+	return left > right
+}
+
+func (s *service) GetTopProjects() (*models.TopProjects, error) {
+	returnCount := 5
+	var pageSize int64 = 100000
+	var pmetrics []*ProjectMetric
+	var nextKey string
+	for ok := true; ok; ok = nextKey != "" {
+		var result []*ProjectMetric
+		var err error
+		result, nextKey, err = s.metricsRepo.GetProjectMetrics(pageSize, nextKey)
+		if err != nil {
+			return nil, err
+		}
+		pmetrics = append(pmetrics, result...)
+	}
+	if len(pmetrics) < returnCount {
+		returnCount = len(pmetrics)
+	}
+	pmIcla := make([]*ProjectMetric, len(pmetrics))
+	pmCcla := make([]*ProjectMetric, len(pmetrics))
+	pmIclaAndCcla := make([]*ProjectMetric, len(pmetrics))
+
+	copy(pmIcla, pmetrics)
+	copy(pmCcla, pmetrics)
+	copy(pmIclaAndCcla, pmetrics)
+
+	var wg sync.WaitGroup
+	wg.Add(3)
+	go func() {
+		defer wg.Done()
+		sort.Slice(pmIcla, func(i, j int) bool {
+			return descSortCompare(
+				pmIcla[i].IndividualContributorsCount,
+				pmIcla[j].IndividualContributorsCount,
+				pmIcla[i].ProjectName,
+				pmIcla[j].ProjectName,
+			)
+		})
+	}()
+
+	go func() {
+		defer wg.Done()
+		sort.Slice(pmCcla, func(i, j int) bool {
+			return descSortCompare(
+				pmCcla[i].CompaniesCount,
+				pmCcla[j].CompaniesCount,
+				pmCcla[i].ProjectName,
+				pmCcla[j].ProjectName,
+			)
+		})
+	}()
+
+	go func() {
+		defer wg.Done()
+		sort.Slice(pmIclaAndCcla, func(i, j int) bool {
+			return descSortCompare(
+				pmIclaAndCcla[i].IndividualContributorsCount+pmIclaAndCcla[i].CompaniesCount,
+				pmIclaAndCcla[j].IndividualContributorsCount+pmIclaAndCcla[j].CompaniesCount,
+				pmIclaAndCcla[i].ProjectName,
+				pmIclaAndCcla[j].ProjectName,
+			)
+		})
+	}()
+	wg.Wait()
+	return &models.TopProjects{
+		TopProjectsByIcla:        projectsToModel(pmIcla[:returnCount]),
+		TopProjectsByCcla:        projectsToModel(pmCcla[:returnCount]),
+		TopProjectsByIclaAndCcla: projectsToModel(pmIclaAndCcla[:returnCount]),
+	}, nil
+}
+
 func (s *service) ListProjectMetrics(paramPageSize *int64, paramNextKey *string) (*models.ListProjectMetric, error) {
 	var out models.ListProjectMetric
 	var pageSize int64 = 100

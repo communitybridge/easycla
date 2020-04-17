@@ -67,6 +67,11 @@ companies-page {
   font-size: 16px;
   font-weight: 500;
 
+  &.inactive {
+    background-color: gray;
+    color: white;
+  }
+
   a {
     color: #4c79b6;
   }
@@ -96,10 +101,6 @@ span a {
   }
 
   .navbar-logo {
-    // width: 100px;
-    // position: absolute;
-    // left: calc(50% - 20px);
-
     margin: -30px 0 -18px -138px;
     width: 300px;
     padding: 1rem;
@@ -136,6 +137,10 @@ span[title="Pending Approval"] {
 
 span[title="rejeted"] {
   color: red;
+}
+
+.default-pointer {
+  cursor: default !important;
 }
 
 ion-label {

@@ -223,6 +223,7 @@ class DocuSign(signing_service_interface.SigningService):
                               signature_document_minor_version=document.get_document_minor_version(),
                               signature_reference_id=user_id,
                               signature_reference_type='user',
+                              signature_reference_name=user.get_user_name(),
                               signature_type='cla',
                               signature_return_url_type='Github',
                               signature_signed=False,
@@ -318,6 +319,7 @@ class DocuSign(signing_service_interface.SigningService):
                               signature_document_minor_version=document.get_document_minor_version(),
                               signature_reference_id=user_id,
                               signature_reference_type='user',
+                              signature_reference_name=user.get_user_name(),
                               signature_type='cla',
                               signature_return_url_type='Gerrit',
                               signature_signed=False,
@@ -483,6 +485,10 @@ class DocuSign(signing_service_interface.SigningService):
         company.load(company_id)
         cla.log.info(f'Loaded company details for: {request_info}')
 
+        # user has already been checked from check_and_prepare_employee_signature. Load user with user ID.
+        user = User()
+        user.load(str(user_id))
+
         # Get project's latest corporate document to get major/minor version numbers.
         last_document = project.get_latest_corporate_document()
         cla.log.info(f'Loaded last project document details for: {request_info}')
@@ -494,6 +500,7 @@ class DocuSign(signing_service_interface.SigningService):
                                   signature_document_major_version=last_document.get_document_major_version(),
                                   signature_reference_id=user_id,
                                   signature_reference_type='user',
+                                  signature_reference_name=user.get_user_name(),
                                   signature_type='cla',
                                   signature_signed=True,
                                   signature_approved=True,
@@ -501,9 +508,7 @@ class DocuSign(signing_service_interface.SigningService):
                                   signature_user_ccla_company_id=company_id)
         cla.log.info(f'Created new signature document for: {request_info} - signature: {new_signature}')
 
-        # Set signature ACL (user already validated in 'check_and_prepare_employee_signature')
-        user = User()
-        user.load(str(user_id))
+        # Set signature ACL
         new_signature.set_signature_acl(f'github:{user.get_user_github_id()}')
 
         # Save signature
@@ -579,7 +584,10 @@ class DocuSign(signing_service_interface.SigningService):
         company.load(company_id)
         cla.log.info(f'Loaded company details for: {request_info}')
 
-        # Get project's latest corporate document to get major/minor version numbers. 
+        # user has already been checked from check_and_prepare_employee_signature. Load user with user ID.
+        user = User()
+        user.load(str(user_id))
+        # Get project's latest corporate document to get major/minor version numbers.
         last_document = project.get_latest_corporate_document()
 
         new_signature = Signature(signature_id=str(uuid.uuid4()),
@@ -588,6 +596,7 @@ class DocuSign(signing_service_interface.SigningService):
                                   signature_document_major_version=last_document.get_document_major_version(),
                                   signature_reference_id=user_id,
                                   signature_reference_type='user',
+                                  signature_reference_name=user.get_user_name(),
                                   signature_type='cla',
                                   signature_signed=True,
                                   signature_approved=True,
@@ -595,8 +604,6 @@ class DocuSign(signing_service_interface.SigningService):
                                   signature_user_ccla_company_id=company_id)
 
         # Set signature ACL (user already validated in 'check_and_prepare_employee_signature')
-        user = User()
-        user.load(str(user_id))
         new_signature.set_signature_acl(user.get_lf_username())
 
         # Save signature before adding user to the LDAP Group. 
@@ -680,6 +687,7 @@ class DocuSign(signing_service_interface.SigningService):
                               signature_document_major_version=last_document.get_document_major_version(),
                               signature_reference_id=company.get_company_id(),
                               signature_reference_type='company',
+                              signature_reference_name=company.get_company_name(),
                               signature_type='ccla',
                               signature_signed=False,
                               signature_approved=True)

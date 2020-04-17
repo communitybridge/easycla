@@ -372,9 +372,10 @@ func (repo repository) getEventByDay(day string, containsPII bool, pageSize int6
 
 	indexName := "event-date-and-contains-pii-event-time-epoch-index"
 	eventDateAndContainsPII := fmt.Sprintf("%s#%t", day, containsPII)
+	filter := expression.Name("event_project_id").AttributeExists()
 	condition = expression.Key("event_date_and_contains_pii").Equal(expression.Value(eventDateAndContainsPII))
 
-	builder = builder.WithKeyCondition(condition)
+	builder = builder.WithKeyCondition(condition).WithFilter(filter)
 	// Use the nice builder to create the expression
 	expr, err := builder.Build()
 	if err != nil {
