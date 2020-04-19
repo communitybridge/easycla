@@ -1,0 +1,22 @@
+
+
+.sub-header {
+  position: absolute;
+  padding: 0.5rem 1rem;
+  right:0;
+}
+
+button.help-btn {
+  background-color: #ffa400;
+  padding: 8px 16px;
+  color: #ffffff;
+  font-size: 12px;
+  border-radius: 200px;
+  cursor: pointer;
+
+  a {
+    text-decoration: none;
+    color: white;
+  }
+}
+
