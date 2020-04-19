@@ -7,10 +7,12 @@ import { ClaLandingPage } from './cla-landing';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 import { LayoutModule } from '../../layout/layout.module';
+import { GetHelpComponentModule } from '../../components/get-help/get-help.module';
 
 @NgModule({
   declarations: [ClaLandingPage],
   imports: [
+    GetHelpComponentModule,
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     IonicPageModule.forChild(ClaLandingPage),

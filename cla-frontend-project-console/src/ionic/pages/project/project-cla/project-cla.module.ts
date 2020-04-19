@@ -10,10 +10,12 @@ import { SortingDisplayComponentModule } from '../../../components/sorting-displ
 import { SectionHeaderComponentModule } from '../../../components/section-header/section-header.module';
 import { ProjectNavigationComponentModule } from '../../../components/project-navigation/project-navigation.module';
 import { LayoutModule } from '../../../layout/layout.module';
+import { GetHelpComponentModule } from '../../../components/get-help/get-help.module';
 
 @NgModule({
   declarations: [ProjectClaPage],
   imports: [
+    GetHelpComponentModule,
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     SortingDisplayComponentModule,

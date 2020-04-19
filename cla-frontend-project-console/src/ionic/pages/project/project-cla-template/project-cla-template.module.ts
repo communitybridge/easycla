@@ -11,10 +11,12 @@ import { SectionHeaderComponentModule } from '../../../components/section-header
 import { ProjectNavigationComponentModule } from '../../../components/project-navigation/project-navigation.module';
 import { LayoutModule } from '../../../layout/layout.module';
 import { PdfViewerComponentModule } from '../../../components/pdf-viewer/pdf-viewer.module';
+import { GetHelpComponentModule } from '../../../components/get-help/get-help.module';
 
 @NgModule({
   declarations: [ProjectClaTemplatePage],
   imports: [
+    GetHelpComponentModule,
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
     SortingDisplayComponentModule,
