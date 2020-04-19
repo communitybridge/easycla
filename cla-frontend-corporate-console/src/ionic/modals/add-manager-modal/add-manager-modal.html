@@ -32,14 +32,16 @@
               username
               will display after signing in.
             </span>
-            </ion-label>
+          </ion-label>
+          <ion-item>
             <ion-input name="managerLFID" formControlName="managerLFID" (ionFocus)="clearError($event)"></ion-input>
           </ion-item>
-          <ion-item *ngIf="!form.controls.managerLFID.valid && (form.controls.managerLFID.touched || submitAttempt)" no-lines>
-            <ion-label  color="danger">* A CLA Manager LFID is required.</ion-label>
+          <ion-item *ngIf="!form.controls.managerLFID.valid && (form.controls.managerLFID.touched || submitAttempt)"
+            no-lines>
+            <ion-label color="danger">* A CLA Manager LFID is required.</ion-label>
           </ion-item>
           <ion-item *ngIf="showError" no-lines>
-            <ion-label  color="danger">Special characters are not allowed</ion-label>
+            <ion-label color="danger">Special characters are not allowed</ion-label>
           </ion-item>
         </ion-col>
       </ion-row>
