@@ -1,8 +1,8 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, ElementRef, ViewChild } from '@angular/core';
-import { NavController, NavParams, ViewController, ModalController, IonicPage } from 'ionic-angular';
+import { Component } from '@angular/core';
+import { NavParams, ViewController, ModalController, IonicPage } from 'ionic-angular';
 import { EnvConfig } from '../../services/cla.env.utils';
 
 @IonicPage({
@@ -14,16 +14,11 @@ import { EnvConfig } from '../../services/cla.env.utils';
 })
 export class ClaCompanyAdminYesnoModal {
   projectId: string;
-  repositoryId: string;
   userId: string;
   authenticated: boolean; //true if coming from gerrit/corporate
-
   consoleLink: string;
 
-  @ViewChild('textArea') textArea: ElementRef;
-
   constructor(
-    public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
     public modalCtrl: ModalController
@@ -37,8 +32,6 @@ export class ClaCompanyAdminYesnoModal {
   getDefaults() {
     this.consoleLink = EnvConfig['corp-console-link'];
   }
-
-  ngOnInit() {}
 
   dismiss() {
     this.viewCtrl.dismiss();

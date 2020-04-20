@@ -1,8 +1,8 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, ChangeDetectorRef } from '@angular/core';
-import { NavController, NavParams, ModalController, ViewController, AlertController, IonicPage } from 'ionic-angular';
+import { Component } from '@angular/core';
+import { NavParams, ViewController, AlertController, IonicPage } from 'ionic-angular';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Validators } from '@angular/forms';
 import { EmailValidator } from '../../validators/email';
@@ -17,27 +17,21 @@ import { ClaService } from '../../services/cla.service';
 })
 export class ClaSendClaManagerEmailModal {
   projectId: string;
-  repositoryId: string;
   userId: string;
   companyId: string;
   authenticated: boolean;
   hasRequestError: boolean = false;
   company: any;
-
   project: any;
   userEmails: Array<string>;
-
   form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
 
   constructor(
-    public navCtrl: NavController,
     public navParams: NavParams,
-    public modalCtrl: ModalController,
     public viewCtrl: ViewController,
     public alertCtrl: AlertController,
-    private changeDetectorRef: ChangeDetectorRef,
     private formBuilder: FormBuilder,
     private claService: ClaService
   ) {
@@ -48,7 +42,7 @@ export class ClaSendClaManagerEmailModal {
     this.authenticated = navParams.get('authenticated');
     this.form = formBuilder.group({
       email: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      message: [''] // Validators.compose([Validators.required])
+      message: ['']
     });
   }
 
@@ -78,7 +72,7 @@ export class ClaSendClaManagerEmailModal {
             this.userEmails.push(user.lf_email);
           }
         } else {
-          console.log('Unable to retrieve user.');
+          console.error('Unable to retrieve user.');
         }
       });
     } else {
@@ -87,7 +81,7 @@ export class ClaSendClaManagerEmailModal {
         if (user) {
           this.userEmails = user.user_emails || [];
         } else {
-          console.log('Unable to retrieve user.');
+          console.error('Unable to retrieve user.');
         }
       });
     }
@@ -99,7 +93,6 @@ export class ClaSendClaManagerEmailModal {
     });
   }
 
-  // ContactUpdateModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }
