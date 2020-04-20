@@ -680,6 +680,14 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
           readCapacity: 1,
           writeCapacity: 1
         },
+        {
+          name: 'company-id-external-project-id-event-epoch-time-index',
+          hashKey: 'company_id_external_project_id',
+          rangeKey: 'event_time_epoch',
+          projectionType: 'ALL',
+          readCapacity: 1,
+          writeCapacity: 1
+        },
       ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,
