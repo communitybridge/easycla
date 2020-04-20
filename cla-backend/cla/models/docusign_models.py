@@ -527,7 +527,7 @@ class DocuSign(signing_service_interface.SigningService):
         # If the project does not require an ICLA to be signed, update the pull request and remove the active
         # signature metadata.
         if not project.get_project_ccla_requires_icla_signature():
-            cla.log.info('Project does not requires ICLA signature from employee - updating PR')
+            cla.log.info('Project does not require ICLA signature from the employee - updating PR')
             github_repository_id = signature_metadata['repository_id']
             change_request_id = signature_metadata['pull_request_id']
 
