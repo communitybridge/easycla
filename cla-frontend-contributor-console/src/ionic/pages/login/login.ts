@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { NavController, IonicPage, NavParams } from 'ionic-angular';
+import { IonicPage, NavParams } from 'ionic-angular';
 import { RolesService } from '../../services/roles.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -19,7 +19,6 @@ export class LoginPage {
   canAccess: boolean;
 
   constructor(
-    public navCtrl: NavController,
     public navParams: NavParams,
     public rolesService: RolesService,
     public authService: AuthService
@@ -37,10 +36,5 @@ export class LoginPage {
 
   login() {
     this.authService.login();
-  }
-
-  logout() {
-    this.authService.logout();
-    this.userRoles.isAuthenticated = false;
   }
 }

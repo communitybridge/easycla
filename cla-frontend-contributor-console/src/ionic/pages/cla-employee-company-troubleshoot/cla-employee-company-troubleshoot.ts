@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { IonicPage, ModalController, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, ModalController, NavParams } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { ClaSignatureModel } from '../../../../../cla-frontend-corporate-console/src/ionic/models/cla-signature';
+import { generalConstants } from '../../constants/general';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/employee/company/:companyId/troubleshoot'
@@ -21,13 +22,11 @@ export class ClaEmployeeCompanyTroubleshootPage {
   companyId: string;
   authenticated: boolean;
   cclaSignature: any;
-
   project: any;
   company: any;
   gitService: string;
 
   constructor(
-    public navCtrl: NavController,
     private modalCtrl: ModalController,
     public navParams: NavParams,
     private claService: ClaService
@@ -81,16 +80,10 @@ export class ClaEmployeeCompanyTroubleshootPage {
     this.claService.getCompanyProjectSignatures(companyId, projectId).subscribe(
       (response) => {
         this.loading.signatures = false;
-        console.log('Signatures for project: ' + projectId + ' for company: ' + companyId);
-        console.log(response);
         if (response.signatures) {
           let cclaSignatures = response.signatures.filter((sig) => sig.signatureType === 'ccla');
-          console.log('CCLA Signatures for project: ' + cclaSignatures.length);
           if (cclaSignatures.length) {
-            console.log('CCLA Signatures for project id: ' + projectId + ' and company id: ' + companyId);
-            console.log(cclaSignatures);
             this.cclaSignature = cclaSignatures[0];
-
             // Sort the values
             if (this.cclaSignature.githubOrgWhitelist) {
               const sortedList: string[] = this.cclaSignature.githubOrgWhitelist.sort((a, b) => {
@@ -104,19 +97,12 @@ export class ClaEmployeeCompanyTroubleshootPage {
       },
       (exception) => {
         this.loading.signatures = false;
-        console.log(
-          'Exception while calling: getCompanyProjectSignatures() for company ID: ' +
-            this.companyId +
-            ' and project ID: ' +
-            this.projectId
-        );
-        console.log(exception);
       }
     );
   }
 
   openGitServiceEmailSettings() {
-    window.open('https://github.com/settings/emails', '_blank');
+    window.open(generalConstants.githubEmailURL, '_blank');
   }
 
   openClaEmployeeRequestAccessModal() {
