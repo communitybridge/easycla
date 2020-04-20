@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { NavController, NavParams, IonicPage, ModalController } from 'ionic-angular';
+import { NavParams, IonicPage } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
+import { generalConstants } from '../../constants/general';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/individual'
@@ -15,19 +16,16 @@ import { ClaService } from '../../services/cla.service';
 export class ClaIndividualPage {
   projectId: string;
   userId: string;
-
   user: any;
   project: any;
   signatureIntent: any;
-  activeSignatures: boolean = true; // we assume true until otherwise
+  activeSignatures: boolean = true;
   signature: any;
   loadingSignature: boolean = true;
   error: any = false;
 
   constructor(
-    public navCtrl: NavController,
     public navParams: NavParams,
-    private modalCtrl: ModalController,
     private claService: ClaService
   ) {
     this.getDefaults();
@@ -79,22 +77,14 @@ export class ClaIndividualPage {
     let signatureRequest = {
       project_id: this.projectId,
       user_id: this.userId,
-      // TODO: Switch this to intermediary loading screen as docusign postback has delay
       return_url_type: 'Github',
       return_url: this.signatureIntent.return_url
     };
 
     this.claService.postIndividualSignatureRequest(signatureRequest).subscribe(
       (response) => {
-        // returns {
-        //   user_id:
-        //   signature_id:
-        //   project_id:
-        //   sign_url: docusign.com/some-docusign-url
-        // }
         if (response.errors) {
           this.error = response.errors;
-          console.log(this.error.message);
         } else {
           this.signature = response;
         }
@@ -106,12 +96,11 @@ export class ClaIndividualPage {
   }
 
   createTicket() {
-    window.open('https://jira.linuxfoundation.org/servicedesk/customer/portal/4', '_blank');
+    window.open(generalConstants.createTicketURL, '_blank');
   }
 
   openClaAgreement() {
     if (!this.signature.sign_url) {
-      // Can't open agreement if we don't have a sign_url yet
       return;
     }
     window.open(this.signature.sign_url, '_blank');

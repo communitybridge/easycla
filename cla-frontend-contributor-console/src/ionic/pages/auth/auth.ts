@@ -39,11 +39,10 @@ export class AuthPage {
             localStorage.removeItem('gerritId');
             localStorage.removeItem('gerritClaType');
           } else {
-            this.navCtrl.setRoot('loginPage');
+            this.navCtrl.setRoot('LoginPage');
           }
         })
         .catch((error) => {
-          console.log('unable lookup user roles - possible session timeout: ' + error);
           this.navCtrl.setRoot('LoginPage');
         });
     }, 2000);

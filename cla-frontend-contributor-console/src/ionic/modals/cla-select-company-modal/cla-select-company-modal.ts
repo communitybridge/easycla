@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { AlertController, IonicPage, ModalController, NavController, NavParams, ViewController } from 'ionic-angular';
+import { IonicPage, ModalController, NavController, NavParams, ViewController } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClaService } from '../../services/cla.service';
 
@@ -31,7 +31,6 @@ export class ClaSelectCompanyModal {
     public navParams: NavParams,
     public viewCtrl: ViewController,
     private modalCtrl: ModalController,
-    public alertCtrl: AlertController,
     public formBuilder: FormBuilder,
     private claService: ClaService
   ) {
@@ -40,8 +39,7 @@ export class ClaSelectCompanyModal {
     this.authenticated = navParams.get('authenticated');
     this.getDefaults();
     this.form = formBuilder.group({
-      // provider: ['', Validators.required],
-      search: ['', Validators.compose([Validators.required]) /*, this.urlCheck.bind(this)*/]
+      search: ['', Validators.compose([Validators.required])]
     });
   }
 
@@ -117,7 +115,6 @@ export class ClaSelectCompanyModal {
       } else {
         // No Errors, expect normal signature response
         this.signature = response;
-
         this.navCtrl.push('ClaEmployeeCompanyConfirmPage', {
           projectId: this.projectId,
           repositoryId: this.repositoryId,
@@ -159,12 +156,8 @@ export class ClaSelectCompanyModal {
     });
   }
 
-  /**
-   * onSearch simply filters the list of companies
-   */
   onSearch() {
     const searchTerm = this.form.value.search;
-    // console.log('Search term:' + searchTerm);
     if (searchTerm === '') {
       this.companiesFiltered = this.companies;
     } else {

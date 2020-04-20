@@ -1,24 +1,30 @@
 login {
   .scroll-content {
-    background: url('../assets/img/boat.jpeg') no-repeat center center fixed #000;
+    background: url("../assets/img/boat.jpeg") no-repeat center center fixed #000;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
     background-size: cover;
+    padding: 0 !important;
   }
 
-  .login-container {
-    text-align: center;
-    margin-top: 60px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 50px 20px;
-    background-color: #ececec;
-    max-width: 400px;
-    button {
-      margin-top: 25px;
-      width: 250px;
-      max-width: 100%;
+  .page-content {
+    min-height: calc(100vh - 274px);
+
+    .login-container {
+      text-align: center;
+      margin: 60px 0;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 50px 20px;
+      background-color: #ececec;
+      max-width: 400px;
+
+      button {
+        margin-top: 25px;
+        width: 250px;
+        max-width: 100%;
+      }
     }
   }
 

@@ -4,9 +4,7 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams, ViewController, ModalController, IonicPage } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
-import { RolesService } from '../../services/roles.service';
 import { AuthService } from '../../services/auth.service';
-import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { Restricted } from '../../decorators/restricted';
 
 @Restricted({
@@ -25,9 +23,7 @@ export class ClaGerritCorporatePage {
   projectId: string;
   gerritId: string;
   userId: string;
-
   signature: string;
-
   companies: any;
 
   constructor(
@@ -36,9 +32,7 @@ export class ClaGerritCorporatePage {
     public viewCtrl: ViewController,
     private modalCtrl: ModalController,
     private claService: ClaService,
-    private rolesService: RolesService,
     private authService: AuthService,
-    private keycloak: KeycloakService
   ) {
     this.gerritId = navParams.get('gerritId');
     this.getDefaults();
@@ -85,9 +79,6 @@ export class ClaGerritCorporatePage {
     // retrieve userInfo from auth0 service
     this.claService.postOrGetUserForGerrit().subscribe((user) => {
       this.userId = user.user_id;
-      console.log(this.userId);
-      // get signatureIntent object, similar to the Github flow.
-      //this.postSignatureRequest();
     });
   }
 
@@ -160,7 +151,6 @@ export class ClaGerritCorporatePage {
   }
 
   getProject(gerritId) {
-    //retrieve projectId from this Gerrit
     this.claService.getGerrit(gerritId).subscribe((gerrit) => {
       this.projectId = gerrit.project_id;
     });
