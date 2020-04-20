@@ -92,12 +92,14 @@ export class ClaCompanyAdminSendEmailModal {
     }
 
     this.claService.getProject(this.projectId).subscribe((project) => {
+      // TODO - Add company_name to the data payload
       let data = {
         user_email: this.form.value.useremail,
-        admin_email: this.form.value.adminemail,
-        admin_name: this.form.value.adminname,
+        cla_manager_name: this.form.value.adminname,
+        cla_manager_email: this.form.value.adminemail,
         project_name: project.project_name,
-        user_name: this.form.value.username
+        company_name: "",
+        user_name: this.form.value.username,
       };
       this.claService.postEmailToCompanyAdmin(this.userId, data).subscribe((response) => {
         this.emailSent();

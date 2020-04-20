@@ -259,5 +259,4 @@ export class ClaService {
     const url: URL = this.getV3Endpoint('/v3/ops/version');
     return this.http.get(url).map((res) => res.json());
   }
-
 }
