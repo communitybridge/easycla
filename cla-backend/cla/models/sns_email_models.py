@@ -15,13 +15,14 @@ from cla.models import email_service_interface
 
 region = os.environ.get('REGION', '')
 sender_email_address = os.environ.get('SES_SENDER_EMAIL_ADDRESS', '')
-topic_arn = os.environ.get('SNS_EVENT_TOPIC_ARN','')
+topic_arn = os.environ.get('SNS_EVENT_TOPIC_ARN', '')
 
 
 class SNS(email_service_interface.EmailService):
     """
     AWS SNS email client model.
     """
+
     def __init__(self):
         self.region = None
         self.sender_email = None
@@ -48,7 +49,7 @@ class SNS(email_service_interface.EmailService):
         """
         return boto3.client('sns', region_name=self.region)
 
-    def _send(self, connection, msg): # pylint: disable=no-self-use
+    def _send(self, connection, msg):  # pylint: disable=no-self-use
         """
         Mockable send method.
         """
@@ -57,22 +58,22 @@ class SNS(email_service_interface.EmailService):
             Message=msg,
         )
 
-    def get_email_message(self, subject, body, sender, recipient, attachment=None): # pylint: disable=too-many-arguments
+    def get_email_message(self, subject, body, sender, recipients, attachment=None):  # pylint: disable=too-many-arguments
         """
         Helper method to get a prepared email message given the subject,
         body, and recipient provided.
 
-        :param subject: The email subject.
+        :param subject: The email subject
         :type subject: string
-        :param body: The email body.
+        :param body: The email body
         :type body: string
-        :param sender: The sender email.
+        :param sender: The sender email
         :type sender: string
-        :param recipient: The recipient email.
+        :param recipients: An array of recipient email addresses
         :type recipient: string
         :param attachment: The attachment dict (see EmailService.send() documentation).
         :type: attachment: dict
-        :return: The json message.
+        :return: The json message
         :rtype: string
         """
         msg = {}
@@ -83,7 +84,7 @@ class SNS(email_service_interface.EmailService):
         data["from"] = sender
         data["subject"] = subject
         data["type"] = "cla-email-event"
-        data["recipients"] = recipient
+        data["recipients"] = recipients
         msg["data"] = data
 
         source["client_id"] = "easycla-service"
@@ -96,10 +97,12 @@ class SNS(email_service_interface.EmailService):
         msg["version"] = "0.1.0"
         return json.dumps(msg)
 
+
 class MockSNS(SNS):
     """
     Mockable AWS SNS email client.
     """
+
     def __init__(self):
         super().__init__()
         self.emails_sent = []
