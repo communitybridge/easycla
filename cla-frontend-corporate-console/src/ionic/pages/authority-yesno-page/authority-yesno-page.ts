@@ -63,8 +63,6 @@ export class AuthorityYesnoPage {
   }
 
   back() {
-    this.navCtrl.setRoot('CompanyPage', {
-      companyId: this.company.company_id
-    });
+    this.navCtrl.pop();
   }
 }
