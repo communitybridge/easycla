@@ -170,27 +170,27 @@ def request_company_whitelist(user_id: str, company_id: str, user_email: str, pr
             else:
                 return {'errors': {'manager_email': 'Manager email is missing - unable to send to recipient'}}
 
-    subject = (f'CLA: {user_name} is requesting to be whitelisted for {project_name} project '
-               f'as a {company_name} employee')
-
-    body = f'''Hello {recipient_name},
-
-{user_name} is requesting to be whitelisted as a contributor for your organization ({company_name}):
-
-    {user_name} <{user_email}>
-
-The message that was attached to the request:
-
-    {message}
-
-You can whitelist {user_name} in the EasyCLA Corporate console. If the email above is the personal email of one of your employees, please request that they add their organization email to their GitHub profile and try signing the CLA again. If you are unsure about this request, it may be prudent to get in touch with {user_name} to clarify.
-Please follow up with the user as necessary.
-
-Click on the following link to navigate to the EasyCLA Corporate Console.
-
- https://{cla.conf['CORPORATE_BASE_URL']}
-
-- EasyCLA System
+    subject = (f'EasyCLA: Request to authorize {user_name} for {project_name}')
+    body = f'''
+<html>
+<head>
+<style>
+body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
+</style>
+</head>
+<body>
+<p>Hello {recipient_name},</p>
+<p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
+<p>{user_name} ({user_email}) has requested to be added to the Allow List as an authorized contributor from {company_name} to the project {project_name}. You are receiving this message as a CLA Manager from {company} for {project_name}.</p>
+<p>{user_name} included the following message in the request:</p>
+<p>{message}
+<p>If you want to add them to the Allow List, please log into the EasyCLA Corporate Console at https://corporate.lfcla.com, where you can approve this user's request by…. This will permit them to begin contributing to {project_name} on behalf of {company}.</p>
+<p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p>
+<p>If you need help or have questions about EasyCLA, you can <a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for support</a>.</p>
+<p>Thanks,
+<p>EasyCLA support team</p>
+</body>
+</html>
 '''
 
     cla.log.debug(f'request_company_whitelist - sending email '
@@ -307,21 +307,24 @@ def send_email_to_cla_manager(contributor_name, contributor_email, cla_manager_n
     # account_exists=True send email to the CLA Manager of the existing company
     # account_exists=False send email to a proposed CLA Manager who needs to register the company through the Corporate Console.
     subject = f'EasyCLA: Request to start CLA signature process for {project_name}'
-    body = f'''<html>
-Hello {cla_manager_name},
+    body = f'''
+<html>
+<head>
+<style>
+body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
+</style>
+</head>
+<body>
+<p>Hello {cla_manager_name},</p>
+<p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
+<p>{project_name} uses EasyCLA to ensure that before a contribution is accepted, the contributor is covered under a signed CLA.</p>
+<p>{contributor_name} ({contributor_email}) has designated you as the proposed initial CLA Manager for contributions from {company_name} to {project_name}. This would mean that, after the CLA is signed, you would be able to maintain the list of employees allowed to contribute to {project_name} on behalf of your company, as well as the list of your company’s CLA Managers for {project_name}.</p>
+<p>If you can be the initial CLA Manager from your company for {project_name}, please log into the EasyCLA Corporate Console at {cla.conf['CLA_LANDING_PAGE']} to begin the CLA signature process. You might not be authorized to sign the CLA yourself on behalf of your company; if not, the signature process will prompt you to designate somebody else who is authorized to sign the CLA.</p>
+<p>If you need help or have questions about EasyCLA, you can <a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for support</a>.</p>
 
-This is a notification email from EasyCLA regarding the project {project_name}.
-
-{project_name} uses EasyCLA to ensure that before a contribution is accepted, the contributor is covered under a signed CLA.
-
-{contributor_name} ({contributor_email}) has designated you as the proposed initial CLA Manager for contributions from {company_name} to {project_name}. This would mean that, after the CLA is signed, you would be able to maintain the list of employees allowed to contribute to {project_name} on behalf of your company, as well as the list of your company’s CLA Managers for {project_name}.
-
-If you can be the initial CLA Manager from your company for {project_name}, please log into the EasyCLA Corporate Console at {cla.conf['CLA_LANDING_PAGE']} to begin the CLA signature process. You might not be authorized to sign the CLA yourself on behalf of your company; if not, the signature process will prompt you to designate somebody else who is authorized to sign the CLA.
-
-If you need help or have questions about EasyCLA, you can <a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for support</a>.
-
-Thanks,
-EasyCLA support team
+<p>Thanks,</p>
+<p>EasyCLA support team</p>
+</body>
 </html>
 '''
     recipient = cla_manager_email
@@ -449,23 +452,30 @@ def request_company_admin_access(user_id, company_id):
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
 
-    subject = 'CLA: Request for Access to Corporate Console'
+    subject = 'EasyCLA: New CLA Manager Access Request'
 
     # Send emails to every CLA manager
     for admin in company.get_managers():
-        body = '''Hello {admin_name},
-
-The following user is requesting CLA Manager access for your organization: {company_name}
-
-    {user_name} <{user_email}>
-
-Navigate to the EasyCLA Corporate Console using the link below and add this user to your Organization's Company Access Control List. Please notify the user once they are added so that they may log in to the EasyCLA Corporate Console with their LFID.
-
-{corporate_console_url}
-
-- EasyCLA System
-'''.format(admin_name=admin.get_user_name(), user_name=user_name, company_name=company.get_company_name(),
-           user_email=user_email, corporate_console_url='https://{}'.format(cla.conf['CORPORATE_BASE_URL']))
+        # TODO: Review this - need to load project
+        body = f'''
+<html>
+<head>
+<style>
+body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
+</style>
+</head>
+<body>
+<p>Hello {admin.get_user_name()},
+<p>This is a notification email from EasyCLA regarding the project {project}.
+<p>You are currently listed as a CLA Manager from {company.get_company_name()} for the project {project}. This means that you are able to maintain the list of employees allowed to contribute to {project} on behalf of your company, as well as the list of your company’s CLA Managers for {project}.
+<p>{user_name} ({user.get_user_email}) has requested to be added as another CLA Manager from {company.get_company_name()} for {project}. This would permit them to maintain the lists of approved contributors and CLA Managers as well.
+<p>If you want to permit this, please log into the EasyCLA Corporate Console at https://{corporate_console_url}, where you can approve this user as an additional CLA Manager.
+<p>If you need help or have questions about EasyCLA, you can <a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for support</a>.</p>
+<p>Thanks,
+<p>EasyCLA support team</p>
+</body>
+</html>
+'''
         recipient = admin.get_lf_email()
         email_service = get_email_service()
         email_service.send(subject, body, recipient)
