@@ -12,6 +12,15 @@ authority-yesno-page {
     margin-top: 96px !important;
   }
 
+  .back-btn {
+    background-color: white;
+    box-shadow: none;
+    &:hover {
+      background-color: white !important;
+      box-shadow: none !important;
+    }
+  }
+
   ion-header {
     border-bottom: 40px solid #4c79b6;
 

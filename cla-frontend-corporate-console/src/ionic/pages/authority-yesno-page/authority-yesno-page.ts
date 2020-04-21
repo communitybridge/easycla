@@ -61,4 +61,10 @@ export class AuthorityYesnoPage {
     });
     modal.present();
   }
+
+  back() {
+    this.navCtrl.setRoot('CompanyPage', {
+      companyId: this.company.company_id
+    });
+  }
 }

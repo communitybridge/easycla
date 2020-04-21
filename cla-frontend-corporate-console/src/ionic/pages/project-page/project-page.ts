@@ -10,6 +10,7 @@ import { ClaSignatureModel } from '../../models/cla-signature';
 import { ClaManager } from '../../models/cla-manager';
 import { SortService } from '../../services/sort.service';
 import { Restricted } from '../../decorators/restricted';
+import { RolesService } from '../../services/roles.service';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -45,7 +46,8 @@ export class ProjectPage {
     public modalCtrl: ModalController,
     private sortService: SortService,
     public viewCtrl: ViewController,
-    public navCtrl: NavController
+    public navCtrl: NavController,
+    private rolesService: RolesService // for @Restricted
   ) {
     this.userEmail = localStorage.getItem('user_email');
     this.companyId = navParams.get('companyId');
@@ -377,5 +379,6 @@ export class ProjectPage {
     this.navCtrl.setRoot('CompanyPage', {
       companyId: this.companyId
     });
+    this.navCtrl.popToRoot();
   }
 }
