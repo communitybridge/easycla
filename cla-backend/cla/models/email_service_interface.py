@@ -48,28 +48,31 @@ class EmailService(object):
         """
         raise NotImplementedError()
 
-    def get_email_message(self, subject, body, sender, recipient, attachment=None): # pylint: disable=too-many-arguments
+    def get_email_message(self, subject, body, sender, recipients, attachment=None): # pylint: disable=too-many-arguments
         """
         Helper method to get a prepared MIMEMultipart email message given the subject,
         body, and recipient provided.
 
-        :param subject: The email subject.
+        :param subject: The email subject
         :type subject: string
-        :param body: The email body.
+        :param body: The email body
         :type body: string
-        :param sender: The sender email.
+        :param sender: The sender email
         :type sender: string
-        :param recipient: The recipient email.
-        :type recipient: string
+        :param recipients: An array of recipient email addresses
+        :type recipients: string
         :param attachment: The attachment dict (see EmailService.send() documentation).
         :type: attachment: dict
-        :return: The compiled MIMEMultipart message.
+        :return: The compiled MIMEMultipart message
         :rtype: MIMEMultipart
         """
         msg = MIMEMultipart()
         msg['Subject'] = subject
         msg['From'] = sender
-        msg['To'] = recipient
+        if isinstance(recipients, str):
+            msg['To'] = [recipients]
+        else:
+            msg['To'] = recipients
         # Add message body.
         part = MIMEText(body)
         msg.attach(part)
