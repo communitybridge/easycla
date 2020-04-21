@@ -84,7 +84,11 @@ class SNS(email_service_interface.EmailService):
         data["from"] = sender
         data["subject"] = subject
         data["type"] = "cla-email-event"
-        data["recipients"] = recipients
+        if isinstance(recipients, str):
+            data["recipients"] = [recipients]
+        else:
+            data["recipients"] = recipients
+
         msg["data"] = data
 
         source["client_id"] = "easycla-service"
@@ -95,7 +99,9 @@ class SNS(email_service_interface.EmailService):
         msg["id"] = str(uuid.uuid4())
         msg["type"] = "cla-email-event"
         msg["version"] = "0.1.0"
-        return json.dumps(msg)
+        json_string = json.dumps(msg)
+        # cla.log.debug(f'Email JSON: {json_string}')
+        return json_string
 
 
 class MockSNS(SNS):
