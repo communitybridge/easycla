@@ -5,6 +5,7 @@ import { Component } from '@angular/core';
 import { IonicPage, ModalController, NavController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { Restricted } from '../../decorators/restricted';
+import { RolesService } from '../../services/roles.service';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -31,6 +32,7 @@ export class CompaniesPage {
     public navCtrl: NavController,
     private claService: ClaService,
     public modalCtrl: ModalController,
+    private rolesService: RolesService // for @Restricted
   ) {
     this.getDefaults();
   }
