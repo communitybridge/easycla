@@ -116,6 +116,7 @@ def get_user_instance(conf=None) -> User:
     """
     return get_database_models(conf)['User']()
 
+
 def get_user_permissions_instance(conf=None) -> UserPermissions:
     """
     Helper function to get a database UserPermissions model instance based on CLA configuration
@@ -126,6 +127,7 @@ def get_user_permissions_instance(conf=None) -> UserPermissions:
     :rtype: cla.models.model_interfaces.UserPermissions
     """
     return get_database_models(conf)['UserPermissions']()
+
 
 def get_company_invites_instance(conf=None):
     """
@@ -221,6 +223,7 @@ def get_document_instance(conf=None):
     :rtype: cla.models.model_interfaces.Document
     """
     return get_database_models(conf)['Document']()
+
 
 def get_event_instance(conf=None) -> Event:
     """
@@ -562,7 +565,7 @@ def user_ccla_check(user: User, project: Project, signature: Signature) -> bool:
         return False
 
 
-def user_signed_project_signature(user: User, project : Project):
+def user_signed_project_signature(user: User, project: Project):
     """
     Helper function to check if a user has signed a project signature tied to a repository.
     Will consider both ICLA and employee signatures.
@@ -581,7 +584,7 @@ def user_signed_project_signature(user: User, project : Project):
     # Check if we have an ICLA for this user
     cla.log.debug(f'checking to see if user has signed an ICLA, user: {user}, project: {project}')
 
-    signature = user.get_latest_signature(project.get_project_id(),signature_signed=True, signature_approved=True)
+    signature = user.get_latest_signature(project.get_project_id(), signature_signed=True, signature_approved=True)
     icla_pass = False
     if signature is not None:
         icla_pass = True
@@ -601,18 +604,20 @@ def user_signed_project_signature(user: User, project : Project):
     ccla_pass = False
     if company_id is not None:
         # Get employee signature
-        employee_signature = user.get_latest_signature(project.get_project_id(), company_id=company_id, signature_signed=True, signature_approved=True)
+        employee_signature = user.get_latest_signature(project.get_project_id(
+        ), company_id=company_id, signature_signed=True, signature_approved=True)
         if employee_signature is not None:
             company = get_company_instance()
             company.load(company_id)
             # Get CCLA signature of company to access whitelist
             cla.log.debug('checking to see if users company has signed an CCLA, '
                           f'user: {user}, project_id: {project}, company_id: {company_id}')
-            signature = company.get_latest_signature(project.get_project_id(), signature_signed=True, signature_approved=True)
+            signature = company.get_latest_signature(
+                project.get_project_id(), signature_signed=True, signature_approved=True)
 
             # Don't check the version for employee signatures.
             if signature is not None:
-                #Verify if user has been whitelisted: https://github.com/communitybridge/easycla/issues/332
+                # Verify if user has been whitelisted: https://github.com/communitybridge/easycla/issues/332
                 if user.is_whitelisted(signature):
                     ccla_pass = True
                 else:
@@ -627,11 +632,12 @@ def user_signed_project_signature(user: User, project : Project):
                         signature.save()
                         Event.create_event(
                             event_type=EventType.EmployeeSignatureDisapproved,
-                            event_project_id= project.get_project_id(),
-                            event_company_id= company.get_company_id(),
-                            event_user_id = user.get_user_id(),
-                            event_data= 'employee signature of user {} disapproved for project {} and company {}'.
-                                format(user.get_user_name(), project.get_project_name(), company.get_company_name()),
+                            event_project_id=project.get_project_id(),
+                            event_company_id=company.get_company_id(),
+                            event_user_id=user.get_user_id(),
+                            event_data=(f'employee signature of user {user.get_user_name()} '
+                                        f'disapproved for project {project.get_project_name()} '
+                                        f'and company {company.get_company_name()}'),
                             contains_pii=True,
                         )
 
@@ -776,12 +782,13 @@ def assemble_cla_comment(repository_type, installation_id, github_repository_id,
     missing_ids = list(filter(lambda x: x[1][0] is None, missing))
     no_user_id = len(missing_ids) > 0
     # check if an unsigned committer has been whitelisted
-    whitelisted_ids = list(filter(lambda x: len(x[1]) == 4 and x[1][3] == True, missing))
+    whitelisted_ids = list(filter(lambda x: len(x[1]) == 4 and x[1][3] is True, missing))
     whitelisted = len(whitelisted_ids) > 0
     sign_url = get_full_sign_url(repository_type, installation_id, github_repository_id, change_request_id)
     comment = get_comment_body(repository_type, sign_url, signed, missing)
     all_signed = num_missing == 0
-    badge = get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=no_user_id, is_whitelisted=whitelisted)
+    badge = get_comment_badge(repository_type, all_signed, sign_url,
+                              missing_user_id=no_user_id, is_whitelisted=whitelisted)
     return badge + '<br />' + comment
 
 
@@ -832,8 +839,8 @@ def get_comment_body(repository_type, sign_url, signed, missing):
             if author[1] not in committers:
                 committers[author[1]] = []
             committers[author[1]].append(commit)
-            #Check case for whitelisted unsigned user
-            if  len(author) == 4:
+            # Check case for whitelisted unsigned user
+            if len(author) == 4:
                 committers[author[1]].append(True)
 
         # Print author commit information.
@@ -1248,6 +1255,7 @@ def update_github_username(github_user: dict, user: User):
                             f'setting the value to: {github_user["login"]}')
             user.set_user_github_username(github_user['login'])
 
+
 def is_whitelisted(ccla_signature: Signature, email=None, github_username=None, github_id=None):
     """
     Given either email, github username or github id a check is made against ccla signature to
@@ -1261,7 +1269,7 @@ def is_whitelisted(ccla_signature: Signature, email=None, github_username=None, 
     """
 
     if email:
-        #Checking email whitelist
+        # Checking email whitelist
         whitelist = ccla_signature.get_email_whitelist()
         cla.log.debug(f'is_whitelisted - testing email: {email} with '
                       f'CCLA whitelist emails: {whitelist}'
@@ -1271,7 +1279,7 @@ def is_whitelisted(ccla_signature: Signature, email=None, github_username=None, 
                 cla.log.debug('found user email in email whitelist')
                 return True
 
-        #Checking domain whitelist
+        # Checking domain whitelist
         patterns = ccla_signature.get_domain_whitelist()
         cla.log.debug(
             f"is_whitelisted - testing user email domain: {email} with "
@@ -1287,10 +1295,10 @@ def is_whitelisted(ccla_signature: Signature, email=None, github_username=None, 
                 "is_whitelisted - no domain whitelist patterns defined in the database"
                 "- skipping domain whitelist check"
             )
-    if github_id :
+    if github_id:
         github_username = lookup_user_github_username(github_id)
 
-    #Github username whitelist
+    # Github username whitelist
     if github_username is not None:
         # remove leading and trailing whitespace from github username
         github_username = github_username.strip()
@@ -1335,6 +1343,7 @@ def is_whitelisted(ccla_signature: Signature, email=None, github_username=None, 
     cla.log.debug('unable to find user in any whitelist')
     return False
 
+
 def audit_event(func):
     """ Decorator that audits events """
     def wrapper(**kwargs):
@@ -1345,6 +1354,7 @@ def audit_event(func):
             cla.log.debug("Failed to add event")
         return response
     return wrapper
+
 
 def get_oauth_client():
     return OAuth2Session(os.environ['GH_OAUTH_CLIENT_ID'])

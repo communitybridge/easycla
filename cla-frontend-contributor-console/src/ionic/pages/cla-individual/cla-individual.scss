@@ -10,6 +10,14 @@ cla-individual {
     font-size: 25px;
   }
 
+  .page-content {
+    min-height: calc(100vh - 276px);
+  }
+
+  .clear-div {
+    clear: both;
+  }
+
   .scroll-content {
     padding-bottom: 162px;
   }

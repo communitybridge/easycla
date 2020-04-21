@@ -14,7 +14,6 @@ from cla.utils import get_user_instance, get_email_service
 from cla.models.event_types import EventType
 
 
-
 def get_users():
     """
     Returns a list of users in the CLA system.
@@ -214,25 +213,37 @@ Click on the following link to navigate to the EasyCLA Corporate Console.
     )
 
 
-
-def invite_company_admin(user_id, user_email, admin_name, admin_email, project_name):
+def invite_cla_manager(user_id, user_email, cla_manager_name, cla_manager_email, project_name, company_name):
     """
-    Sends email to the specified CLA Manager to sign up through the Corporate console and add the requested user to the whitelist.
+    Sends email to the specified CLA Manager to sign up through the Corporate
+    console and adds the requested user to the Approved List request queue.
+
+    :param user_id: The id of the user inviting the CLA Manager
+    :param user_email: The email address that this user wants to be added to the Approved List. Must exist in the user's list of emails.
+    :param cla_manager_name: The name of the CLA manager
+    :param cla_manager_email: The email address of the CLA manager
+    :param project_name: The name of the project
+    :param company_name: The name of the organization/company
     """
     user = User()
     try:
         user.load(user_id)
     except DoesNotExist as err:
+        cla.log.warning(f'unable to load user by id: {user_id} for inviting company admin - error: {err}')
         return {'errors': {'user_id': str(err)}}
 
+    log_msg = (f'sent email to CLA Manager: {cla_manager_name} with email {cla_manager_email} '
+               f'for project {project_name} and company {company_name} '
+               f'to user {user.get_user_name()} with email {user_email}')
     # Send email to the admin. set account_exists=False since the admin needs to sign up through the Corporate Console.
-    send_email_to_admin(user.get_user_name(), user_email, admin_name, admin_email, project_name, False)
+    cla.log.info(log_msg)
+    send_email_to_cla_manager(user.get_user_name(), user_email, cla_manager_name,
+                              cla_manager_email, project_name, company_name, False)
 
-    event_data = f'{user_id} with {user_email} sends to {admin_name}/{admin_email} for project: {project_name}'
     Event.create_event(
         event_user_id=user_id,
         event_project_name=project_name,
-        event_data=event_data,
+        event_data=log_msg,
         event_type=EventType.InviteAdmin,
         contains_pii=True,
     )
@@ -254,6 +265,7 @@ def request_company_ccla(user_id, user_email, company_id, project_id):
         company.load(company_id)
     except DoesNotExist as err:
         return {'errors': {'company_id': str(err)}}
+    company_name = company.get_company_name()
 
     project = Project()
     try:
@@ -265,7 +277,8 @@ def request_company_ccla(user_id, user_email, company_id, project_id):
     # Send an email to sign the ccla for the project for every member in the company ACL
     # account_exists=True since company already exists.
     for admin in company.get_managers():
-        send_email_to_admin(user_name, user_email, admin.get_user_name(), admin.get_lf_email(), project_name, True)
+        send_email_to_cla_manager(user_name, user_email, admin.get_user_name(),
+                                  admin.get_lf_email(), project_name, company_name, True)
 
     # Audit event
     event_data = f'Sent email to sign ccla for {project.get_project_name() }'
@@ -278,39 +291,40 @@ def request_company_ccla(user_id, user_email, company_id, project_id):
     )
 
 
-def send_email_to_admin(user_name, user_email, admin_name, admin_email, project_name, account_exists):
+def send_email_to_cla_manager(contributor_name, contributor_email, cla_manager_name, cla_manager_email, project_name, company_name, account_exists):
     """
-    Helper function to send an email to a company admin.
+    Helper function to send an email to a prospective CLA Manager.
 
-    :param user_name: The name of the user sending the email.
-    :param user_email: The email address that this user wants to be whitelisted. Must exist in the user's list of emails.
-    :param admin_name: The name of the CLA manager or ACL
-    :param admin_email: The email address of the CLA manager or ACL
-    :param company_name: The name of the company
+    :param contributor_name: The name of the user sending the email.
+    :param contributor_email: The email address that this user wants to be whitelisted. Must exist in the user's list of emails.
+    :param cla_manager_name: The name of the CLA manager
+    :param cla_manager_email: The email address of the CLA manager
     :param project_name: The name of the project
+    :param company_name: The name of the organization/company
     :param account_exists: boolean to check whether the email is being sent to a proposed admin(false), or an admin for an existing company(true).
      """
 
-    # account_exists=True send email to an admin of an existing company
-    # account_exists=False send email to a proposed admin who needs to register the company through the Corporate Console.
-    message = 'Please click the following link to sign in to the EasyCLA Corporate Console.' if account_exists else 'Please click the following link to create an account in the CLA Corporate Console.'
+    # account_exists=True send email to the CLA Manager of the existing company
+    # account_exists=False send email to a proposed CLA Manager who needs to register the company through the Corporate Console.
+    subject = f'EasyCLA: Request to start CLA signature process for {project_name}'
+    body = f'''<html>
+Hello {cla_manager_name},
 
-    subject = 'CLA: Invitation to Sign the {} Corporate CLA'.format(project_name)
-    body = '''Hello {admin_name},
+This is a notification email from EasyCLA regarding the project {project_name}.
 
-The following contributor would like to submit a contribution to {project_name} and is requesting to be whitelisted as a contributor for your organization:
+{project_name} uses EasyCLA to ensure that before a contribution is accepted, the contributor is covered under a signed CLA.
 
-    {user_name} <{user_email}>
+{contributor_name} ({contributor_email}) has designated you as the proposed initial CLA Manager for contributions from {company_name} to {project_name}. This would mean that, after the CLA is signed, you would be able to maintain the list of employees allowed to contribute to {project_name} on behalf of your company, as well as the list of your company’s CLA Managers for {project_name}.
 
-Before the contribution can be accepted, your organization must sign a CLA. {account_exists} Complete the CLA for the {project_name} project, and add this contributor to the CLA whitelist. Please notify the contributor once they are added so that they may complete the contribution process.
+If you can be the initial CLA Manager from your company for {project_name}, please log into the EasyCLA Corporate Console at {cla.conf['CLA_LANDING_PAGE']} to begin the CLA signature process. You might not be authorized to sign the CLA yourself on behalf of your company; if not, the signature process will prompt you to designate somebody else who is authorized to sign the CLA.
 
-{corporate_console_url}
+If you need help or have questions about EasyCLA, you can <a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for support</a>.
 
-- EasyCLA System
-'''.format(admin_name=admin_name, project_name=project_name,
-           user_name=user_name, user_email=user_email,
-           account_exists=message, corporate_console_url=cla.conf['CLA_LANDING_PAGE'])
-    recipient = admin_email
+Thanks,
+EasyCLA support team
+</html>
+'''
+    recipient = cla_manager_email
     email_service = get_email_service()
     email_service.send(subject, body, recipient)
 

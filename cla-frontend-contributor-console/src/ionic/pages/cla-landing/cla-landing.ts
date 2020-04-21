@@ -13,15 +13,10 @@ import { ClaService } from '../../services/cla.service';
   templateUrl: 'cla-landing.html'
 })
 export class ClaLandingPage {
-  loading: any;
   projectId: string;
   userId: string;
-
   user: any;
   project: any;
-
-  hasIndividualCla: boolean;
-  hasCorporateCla: boolean;
 
   constructor(
     public navCtrl: NavController,
@@ -35,16 +30,9 @@ export class ClaLandingPage {
   }
 
   getDefaults() {
-    this.loading = {
-      individualDoc: true,
-      corporateDoc: true
-    };
     this.project = {
       project_name: ''
     };
-
-    this.hasCorporateCla = false;
-    this.hasIndividualCla = false;
   }
 
   ngOnInit() {
