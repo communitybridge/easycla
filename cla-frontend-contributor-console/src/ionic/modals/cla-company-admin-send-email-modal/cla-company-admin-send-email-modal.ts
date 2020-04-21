@@ -1,12 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
-import { NavParams, ModalController, ViewController, AlertController, IonicPage } from 'ionic-angular';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { Validators } from '@angular/forms';
-import { EmailValidator } from '../../validators/email';
-import { ClaService } from '../../services/cla.service';
+import {Component} from '@angular/core';
+import {AlertController, IonicPage, ModalController, NavParams, ViewController} from 'ionic-angular';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {EmailValidator} from '../../validators/email';
+import {ClaService} from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/invite-company-admin'
@@ -36,10 +35,11 @@ export class ClaCompanyAdminSendEmailModal {
     this.userId = navParams.get('userId');
     this.authenticated = navParams.get('authenticated');
     this.form = formBuilder.group({
-      useremail: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      adminemail: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
-      adminname: [''],
-      username: ['']
+      company_name: ['', Validators.compose([Validators.required, Validators.minLength(3)])],
+      contributor_name: ['', Validators.compose([Validators.required, Validators.minLength(3)])],
+      contributor_email: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
+      cla_manager_name: ['', Validators.compose([Validators.required, Validators.minLength(3)])],
+      cla_manager_email: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
     });
   }
 
@@ -94,12 +94,12 @@ export class ClaCompanyAdminSendEmailModal {
     this.claService.getProject(this.projectId).subscribe((project) => {
       // TODO - Add company_name to the data payload
       let data = {
-        user_email: this.form.value.useremail,
-        cla_manager_name: this.form.value.adminname,
-        cla_manager_email: this.form.value.adminemail,
+        contributor_name: this.form.value.contributor_name,
+        contributor_email: this.form.value.contributor_name,
+        cla_manager_name: this.form.value.cla_manager_name,
+        cla_manager_email: this.form.value.cla_manager_email,
         project_name: project.project_name,
-        company_name: "",
-        user_name: this.form.value.username,
+        company_name: this.form.value.company_name,
       };
       this.claService.postEmailToCompanyAdmin(this.userId, data).subscribe((response) => {
         this.emailSent();

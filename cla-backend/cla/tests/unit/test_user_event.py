@@ -57,19 +57,21 @@ def test_invite_cla_manager(mock_event, create_event_user, user):
     """ Test send email to CLA manager event """
     User.load = Mock()
     user_controller.send_email_to_cla_manager = Mock()
-    user_id = user.get_user_id()
-    user_email = user.get_user_email()
+    contributor_id = user.get_user_id()
+    contributor_name = user.get_user_name()
+    contributor_email = user.get_user_email()
     cla_manager_name = "admin"
     cla_manager_email = "foo@admin.com"
     project_name = "foo_project"
     company_name = "Test Company"
     event_data = (f'sent email to CLA Manager: {cla_manager_name} with email {cla_manager_email} '
                   f'for project {project_name} and company {company_name} '
-                  f'to user {user.get_user_name()} with email {user_email}')
-    user_controller.invite_cla_manager(user_id, user_email, cla_manager_name,
-                                       cla_manager_email, project_name, company_name)
+                  f'to user {contributor_name} with email {contributor_email}')
+    user_controller.invite_cla_manager(contributor_id, contributor_name, contributor_email,
+                                       cla_manager_name, cla_manager_email,
+                                       project_name, company_name)
     mock_event.assert_called_once_with(
-        event_user_id=user_id,
+        event_user_id=contributor_id,
         event_project_name=project_name,
         event_data=event_data,
         event_type=EventType.InviteAdmin,

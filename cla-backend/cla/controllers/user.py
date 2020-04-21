@@ -213,13 +213,14 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
     )
 
 
-def invite_cla_manager(user_id, user_email, cla_manager_name, cla_manager_email, project_name, company_name):
+def invite_cla_manager(contributor_id, contributor_name, contributor_email, cla_manager_name, cla_manager_email, project_name, company_name):
     """
     Sends email to the specified CLA Manager to sign up through the Corporate
     console and adds the requested user to the Approved List request queue.
 
-    :param user_id: The id of the user inviting the CLA Manager
-    :param user_email: The email address that this user wants to be added to the Approved List. Must exist in the user's list of emails.
+    :param contributor_id: The id of the user inviting the CLA Manager
+    :param contributor_name: The name of the user inviting the CLA Manager
+    :param contributor_email: The email address that this user wants to be added to the Approved List. Must exist in the user's list of emails.
     :param cla_manager_name: The name of the CLA manager
     :param cla_manager_email: The email address of the CLA manager
     :param project_name: The name of the project
@@ -227,21 +228,27 @@ def invite_cla_manager(user_id, user_email, cla_manager_name, cla_manager_email,
     """
     user = User()
     try:
-        user.load(user_id)
+        user.load(contributor_id)
     except DoesNotExist as err:
-        cla.log.warning(f'unable to load user by id: {user_id} for inviting company admin - error: {err}')
-        return {'errors': {'user_id': str(err)}}
+        msg = f'unable to load user by id: {contributor_id} for inviting company admin - error: {err}'
+        cla.log.warning(msg)
+        return {'errors': {'user_id': contributor_id, 'message': msg, 'error': str(err)}}
+
+    # We'll use the user's provided contributor name - if not provided use what we have in the DB
+    if contributor_name is None:
+        contributor_name = user.get_user_name()
 
     log_msg = (f'sent email to CLA Manager: {cla_manager_name} with email {cla_manager_email} '
                f'for project {project_name} and company {company_name} '
-               f'to user {user.get_user_name()} with email {user_email}')
+               f'to user {contributor_name} with email {contributor_email}')
     # Send email to the admin. set account_exists=False since the admin needs to sign up through the Corporate Console.
     cla.log.info(log_msg)
-    send_email_to_cla_manager(user.get_user_name(), user_email, cla_manager_name,
-                              cla_manager_email, project_name, company_name, False)
+    send_email_to_cla_manager(contributor_id, contributor_name, contributor_email,
+                              cla_manager_name, cla_manager_email,
+                              project_name, company_name, False)
 
     Event.create_event(
-        event_user_id=user_id,
+        event_user_id=contributor_id,
         event_project_name=project_name,
         event_data=log_msg,
         event_type=EventType.InviteAdmin,
@@ -318,7 +325,7 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 <p>Hello {cla_manager_name},</p>
 <p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
 <p>{project_name} uses EasyCLA to ensure that before a contribution is accepted, the contributor is covered under a signed CLA.</p>
-<p>{contributor_name} ({contributor_email}) has designated you as the proposed initial CLA Manager for contributions from {company_name} to {project_name}. This would mean that, after the CLA is signed, you would be able to maintain the list of employees allowed to contribute to {project_name} on behalf of your company, as well as the list of your company’s CLA Managers for {project_name}.</p>
+<p>{contributor_name} ({contributor_email}) has designated you as the proposed initial CLA Manager for contributions from {company_name if company_name else 'your company'} to {project_name}. This would mean that, after the CLA is signed, you would be able to maintain the list of employees allowed to contribute to {project_name} on behalf of your company, as well as the list of your company’s CLA Managers for {project_name}.</p>
 <p>If you can be the initial CLA Manager from your company for {project_name}, please log into the EasyCLA Corporate Console at {cla.conf['CLA_LANDING_PAGE']} to begin the CLA signature process. You might not be authorized to sign the CLA yourself on behalf of your company; if not, the signature process will prompt you to designate somebody else who is authorized to sign the CLA.</p>
 <p>If you need help or have questions about EasyCLA, you can <a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for support</a>.</p>
 
