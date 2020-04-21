@@ -23,6 +23,7 @@ from cla.models.event_types import *
 from cla.utils import (get_company_instance, get_document_instance,
                        get_github_organization_instance, get_pdf_service,
                        get_project_instance, get_signature_instance)
+from datetime import datetime
 
 
 def check_user_authorization(auth_user: AuthUser, sfid):
@@ -57,7 +58,7 @@ def project_acl_verify(username, project_obj):
         return True
 
     raise HTTPForbidden('Unauthorized',
-        'Provided Token credentials does not have sufficient permissions to access resource')
+                        'Provided Token credentials does not have sufficient permissions to access resource')
 
 
 def get_project(project_id, user_id=None):
@@ -75,6 +76,7 @@ def get_project(project_id, user_id=None):
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
     return project.to_dict()
+
 
 def get_project_managers(username, project_id, enable_auth):
     """
@@ -138,9 +140,13 @@ def get_unsigned_projects_for_company(company_id):
 
     # get project ids that the company has signed the CCLAs for.
     signature = Signature()
-    signed_project_ids = signature.get_projects_by_company_signed(company_id)
+    # signed_project_ids = signature.get_projects_by_company_signed(company_id)
+    signed_project_ids = signature.get_projects_by_company_signed(company_id, ['signature_id', 'signature_project_id'])
+
     # from all projects, retrieve projects that are not in the signed project ids
-    unsigned_projects = [project for project in Project().all() if project.get_project_id() not in signed_project_ids]
+    unsigned_projects = [project for project in Project().all(attributes_to_get=['project_id'])
+                         if project.get_project_id() not in signed_project_ids]
+
     # filter to get unsigned projects that are not of ccla type
     ccla_unsigned_projects = [project.to_dict() for project in unsigned_projects if project.get_project_ccla_enabled()]
 
@@ -326,6 +332,7 @@ def get_project_companies(project_id):
 
     return all_companies
 
+
 def _get_project_document(project_id, document_type, major_version=None, minor_version=None):
     """
     See documentation for get_project_document().
@@ -347,6 +354,7 @@ def _get_project_document(project_id, document_type, major_version=None, minor_v
             return {'errors': {'document': str(err)}}
     return document
 
+
 def get_project_document(project_id, document_type, major_version=None, minor_version=None):
     """
     Returns the specified project's document based on type (ICLA or CCLA) and version.
@@ -364,6 +372,7 @@ def get_project_document(project_id, document_type, major_version=None, minor_ve
     if isinstance(document, dict):
         return document
     return document.to_dict()
+
 
 def get_project_document_raw(project_id, document_type, document_major_version=None, document_minor_version=None):
     """
@@ -385,6 +394,7 @@ def get_project_document_raw(project_id, document_type, document_major_version=N
         content = document.get_document_content()
         pdf = io.BytesIO(content)
     return pdf
+
 
 def post_project_document(project_id,
                           document_type,
@@ -463,6 +473,7 @@ def post_project_document(project_id,
     )
     return project.to_dict()
 
+
 def post_project_document_template(project_id,
                                    document_type,
                                    document_name,
@@ -529,7 +540,8 @@ def post_project_document_template(project_id,
     project.save()
 
     # Create audit trail
-    event_data = 'Project Document created for project {} created with template {}'.format(project.get_project_name(),template_name)
+    event_data = 'Project Document created for project {} created with template {}'.format(
+        project.get_project_name(), template_name)
     Event.create_event(
         event_type=EventType.CreateProjectDocumentTemplate,
         event_project_id=project.get_project_id(),
@@ -537,6 +549,7 @@ def post_project_document_template(project_id,
         contains_pii=False,
     )
     return project.to_dict()
+
 
 def delete_project_document(project_id, document_type, major_version, minor_version, username=None):
     """
@@ -567,17 +580,18 @@ def delete_project_document(project_id, document_type, major_version, minor_vers
     project.save()
 
     event_data = (
-                f'Project {project.get_project_name()} with {document_type} :'
-                +f'document type , minor version : {minor_version}, major version : {major_version}  deleted'
+        f'Project {project.get_project_name()} with {document_type} :'
+        + f'document type , minor version : {minor_version}, major version : {major_version}  deleted'
     )
 
-    Event.create_event (
-        event_data = event_data,
-        event_project_id = project_id,
-        event_type = EventType.DeleteProjectDocument,
+    Event.create_event(
+        event_data=event_data,
+        event_project_id=project_id,
+        event_type=EventType.DeleteProjectDocument,
         contains_pii=False,
     )
     return {'success': True}
+
 
 def add_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
     if auth_user.username not in admin_list:
@@ -596,12 +610,13 @@ def add_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
     user_permission.save()
 
     event_data = 'User {} given permissions to project {}'.format(username, project_sfdc_id)
-    Event.create_event (
+    Event.create_event(
         event_data=event_data,
         event_project_id=project_sfdc_id,
         event_type=EventType.AddPermission,
         contains_pii=True,
     )
+
 
 def remove_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
     if auth_user.username not in admin_list:
@@ -621,11 +636,12 @@ def remove_permission(auth_user: AuthUser, username: str, project_sfdc_id: str):
     user_permission.remove_project(project_sfdc_id)
     user_permission.save()
     Event.create_event(
-        event_type = EventType.RemovePermission,
+        event_type=EventType.RemovePermission,
         event_data=event_data,
         event_project_id=project_sfdc_id,
         contains_pii=True,
     )
+
 
 def get_project_repositories(auth_user: AuthUser, project_id):
     """
@@ -648,11 +664,12 @@ def get_project_repositories(auth_user: AuthUser, project_id):
     # Validate user is authorized for this project
     can_access = check_user_authorization(auth_user, sfid)
     if not can_access['valid']:
-      return can_access['errors']
+        return can_access['errors']
 
     # Obtain repositories
     repositories = project.get_project_repositories()
     return [repository.to_dict() for repository in repositories]
+
 
 def get_project_repositories_group_by_organization(auth_user: AuthUser, project_id):
     """
@@ -675,7 +692,7 @@ def get_project_repositories_group_by_organization(auth_user: AuthUser, project_
     # Validate user is authorized for this project
     can_access = check_user_authorization(auth_user, sfid)
     if not can_access['valid']:
-      return can_access['errors']
+        return can_access['errors']
 
     # Obtain repositories
     repositories = project.get_project_repositories()
@@ -711,7 +728,7 @@ def get_project_configuration_orgs_and_repos(auth_user: AuthUser, project_id):
     # Validate user is authorized for this project
     can_access = check_user_authorization(auth_user, sfid)
     if not can_access['valid']:
-      return can_access['errors']
+        return can_access['errors']
 
     # Obtain information for this project
     orgs_and_repos = get_github_repositories_by_org(project)
@@ -720,6 +737,7 @@ def get_project_configuration_orgs_and_repos(auth_user: AuthUser, project_id):
         'orgs_and_repos': orgs_and_repos,
         'repositories': repositories
     }
+
 
 def get_github_repositories_by_org(project):
     """
@@ -745,7 +763,8 @@ def get_github_repositories_by_org(project):
     # Get all organizations connected to this project
     cla.log.info("Retrieving GH organization details using ID: {}".format(project.get_project_external_id))
     github_organizations = GitHubOrg().get_organization_by_sfid(project.get_project_external_id())
-    cla.log.info("Retrieved {} GH organizations using ID: {}".format(len(github_organizations), project.get_project_external_id))
+    cla.log.info("Retrieved {} GH organizations using ID: {}".format(
+        len(github_organizations), project.get_project_external_id))
 
     # Iterate over each organization
     for github_organization in github_organizations:
@@ -760,7 +779,8 @@ def get_github_repositories_by_org(project):
                 # Get repositories from Github API
                 github_repos = installation.repos
 
-                cla.log.info("Retrieved {} repositories using GH installation id: {}".format(github_repos, installation_id))
+                cla.log.info("Retrieved {} repositories using GH installation id: {}".format(
+                    github_repos, installation_id))
                 if github_repos is not None:
                     for repo in github_repos:
                         # Convert repository entities from lib to a dict.
@@ -792,6 +812,7 @@ def get_sfdc_project_repositories(project):
     sfdc_id = project.get_project_external_id()
     all_project_repositories = Repository().get_repository_by_sfdc_id(sfdc_id)
     return [repo.to_dict() for repo in all_project_repositories]
+
 
 def add_project_manager(username, project_id, lfid):
     """
@@ -829,7 +850,7 @@ def add_project_manager(username, project_id, lfid):
         'lfid': manager.get_lf_username()
     } for manager in managers]
 
-    event_data = '{} added {} to project {}'.format(username, lfid,project.get_project_name())
+    event_data = '{} added {} to project {}'.format(username, lfid, project.get_project_name())
     Event.create_event(
         event_type=EventType.AddProjectManager,
         event_data=event_data,
@@ -838,6 +859,7 @@ def add_project_manager(username, project_id, lfid):
     )
 
     return managers_dict
+
 
 def remove_project_manager(username, project_id, lfid):
     """
@@ -878,7 +900,7 @@ def remove_project_manager(username, project_id, lfid):
         'lfid': manager.get_lf_username()
     } for manager in managers]
 
-    #log event
+    # log event
     event_data = f'{lfid} removed from project {project.get_project_id()}'
     Event.create_event(
         event_type=EventType.RemoveProjectManager,

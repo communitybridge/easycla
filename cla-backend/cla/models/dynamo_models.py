@@ -305,7 +305,6 @@ class ProjectSignatureIndex(GlobalSecondaryIndex):
     signature_project_id = UnicodeAttribute(hash_key=True)
 
 
-
 class ReferenceSignatureIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying signatures by reference.
@@ -900,7 +899,7 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def get_project_name(self):
         return self.model.project_name
-    
+
     def get_project_name_lower(self):
         return self.model.project_name_lower
 
@@ -1016,7 +1015,7 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def set_project_name(self, project_name):
         self.model.project_name = project_name
-  
+
     def set_project_name_lower(self, project_name_lower):
         self.model.project_name_lower = project_name_lower
 
@@ -1107,11 +1106,11 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
                 managers.append(users[0])
         return managers
 
-    def all(self, project_ids=None):
+    def all(self, project_ids=None, attributes_to_get=None):
         if project_ids is None:
-            projects = self.model.scan()
+            projects = self.model.scan(attributes_to_get=attributes_to_get)
         else:
-            projects = ProjectModel.batch_get(project_ids)
+            projects = ProjectModel.batch_get(project_ids, attributes_to_get=attributes_to_get)
         ret = []
         for project in projects:
             proj = Project()
@@ -1366,16 +1365,13 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
     def set_note(self, note):
         self.model.note = note
 
-    # def set_user_ldap_id(self, user_ldap_id):
-    #     self.model.user_ldap_id = user_ldap_id
-
-    def get_user_by_email(self, user_email) -> Optional[List[User]]:
+    def get_user_by_email(self, user_email, attributes_to_get=None) -> Optional[List[User]]:
         if user_email is None:
             cla.log.warning("Unable to lookup user by user_email - email is empty")
             return None
 
         users = []
-        for user_model in UserModel.scan(UserModel.user_emails.contains(user_email)):
+        for user_model in UserModel.scan(UserModel.user_emails.contains(user_email), attributes_to_get=attributes_to_get):
             user = User()
             user.model = user_model
             users.append(user)
@@ -1466,7 +1462,8 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             f"project_id: {project_id}, "
             f"company_id: {company_id}"
         )
-        signatures = self.get_user_signatures(project_id=project_id, company_id=company_id, signature_signed=signature_signed, signature_approved=signature_approved)
+        signatures = self.get_user_signatures(project_id=project_id, company_id=company_id,
+                                              signature_signed=signature_signed, signature_approved=signature_approved)
         latest = None
         for signature in signatures:
             if latest is None:
@@ -1496,7 +1493,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
 
         return latest
 
-    def preprocess_pattern(self,emails,patterns) -> bool:
+    def preprocess_pattern(self, emails, patterns) -> bool:
         """
         Helper function that preprocesses given emails against patterns
 
@@ -1521,8 +1518,8 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
                     return True
         return False
 
-
     # Accepts a Signature object
+
     def is_whitelisted(self, ccla_signature) -> bool:
         """
         Helper function to determine whether at least one of the user's email
@@ -1646,8 +1643,8 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         self.log_debug("unable to find user in any whitelist")
         return False
 
-    def get_users_by_company(self, company_id):
-        user_generator = self.model.scan(user_company_id__eq=str(company_id))
+    def get_users_by_company(self, company_id, attributes_to_get=None):
+        user_generator = self.model.scan(user_company_id__eq=str(company_id), attributes_to_get=attributes_to_get)
         users = []
         for user_model in user_generator:
             user = User()
@@ -1655,11 +1652,11 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             users.append(user)
         return users
 
-    def all(self, emails=None):
+    def all(self, emails=None, attributes_to_get=None):
         if emails is None:
-            users = self.model.scan()
+            users = self.model.scan(attributes_to_get=attributes_to_get)
         else:
-            users = UserModel.batch_get(emails)
+            users = UserModel.batch_get(emails, attributes_to_get=attributes_to_get)
         ret = []
         for user in users:
             usr = User()
@@ -1812,17 +1809,18 @@ class Repository(model_interfaces.Repository):
             repositories.append(repository)
         return repositories
 
-    def all(self, ids=None):
+    def all(self, ids=None, attributes_to_get=None):
         if ids is None:
-            repositories = self.model.scan()
+            repositories = self.model.scan(attributes_to_get=attributes_to_get)
         else:
-            repositories = RepositoryModel.batch_get(ids)
+            repositories = RepositoryModel.batch_get(ids, attributes_to_get=attributes_to_get)
         ret = []
         for repository in repositories:
             repo = Repository()
             repo.model = repository
             ret.append(repo)
         return ret
+
 
 def create_filter(attributes, model):
     """
@@ -1842,6 +1840,7 @@ def create_filter(attributes, model):
             condition if not isinstance(filter_condition, Condition) else filter_condition & condition
         )
     return filter_condition
+
 
 class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     """
@@ -2364,7 +2363,8 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         }
         filter_condition = create_filter(signature_attributes, SignatureModel)
         signature_generator = self.model.signature_reference_index.query(
-            company_id, filter_condition=filter_condition & (SignatureModel.signature_user_ccla_company_id.does_not_exist())
+            company_id, filter_condition=filter_condition & (
+                SignatureModel.signature_user_ccla_company_id.does_not_exist())
         )
         signatures = []
         for signature_model in signature_generator:
@@ -2414,7 +2414,8 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             return None
         # Oops, we found more than 1?? This isn't good - maybe we simply return the first one?
         if len(signatures) > 1:
-            cla.log.warning("Why do we have more than one employee signature for this user? - Will return the first one only.")
+            cla.log.warning(
+                "Why do we have more than one employee signature for this user? - Will return the first one only.")
         return signatures[0]
 
     def get_employee_signatures_by_company_project_model(self, company_id, project_id) -> List[Signature]:
@@ -2436,11 +2437,11 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             signatures.append(signature)
         return signatures
 
-    def get_projects_by_company_signed(self, company_id):
+    def get_projects_by_company_signed(self, company_id, attributes_to_get=None):
         # Query returns all the signatures that the company has signed a CCLA for.
         # Loop through the signatures and retrieve only the project IDs referenced by the signatures.
         signature_generator = self.model.signature_reference_index.query(
-            company_id, SignatureModel.signature_signed.exists()
+            company_id, SignatureModel.signature_signed.exists(), attributes_to_get=attributes_to_get,
         )
         project_ids = []
         for signature in signature_generator:
@@ -2459,11 +2460,11 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
     def get_managers(self):
         return self.get_managers_by_signature_acl(self.get_signature_acl())
 
-    def all(self, ids=None):
+    def all(self, ids=None, attributes_to_get=None):
         if ids is None:
-            signatures = self.model.scan()
+            signatures = self.model.scan(attributes_to_get=attributes_to_get)
         else:
-            signatures = SignatureModel.batch_get(ids)
+            signatures = SignatureModel.batch_get(ids, attributes_to_get=attributes_to_get)
         ret = []
         for signature in signatures:
             agr = Signature()
@@ -2589,7 +2590,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
             signature_signed=signature_signed,
         )
 
-    def get_latest_signature(self, project_id,signature_signed=None, signature_approved=None):
+    def get_latest_signature(self, project_id, signature_signed=None, signature_approved=None):
         """
         Helper function to get a company's latest signature for a project.
 
@@ -2600,7 +2601,8 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         :return: The latest versioned signature object if it exists.
         :rtype: cla.models.model_interfaces.Signature or None
         """
-        signatures = self.get_company_signatures(project_id=project_id,signature_signed=signature_signed, signature_approved=signature_approved)
+        signatures = self.get_company_signatures(
+            project_id=project_id, signature_signed=signature_signed, signature_approved=signature_approved)
         latest = None
         for signature in signatures:
             if latest is None:
@@ -2632,11 +2634,11 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
             return company
         return None
 
-    def all(self, ids=None):
+    def all(self, ids=None, attributes_to_get=None):
         if ids is None:
-            companies = self.model.scan()
+            companies = self.model.scan(attributes_to_get=attributes_to_get)
         else:
-            companies = CompanyModel.batch_get(ids)
+            companies = CompanyModel.batch_get(ids, attributes_to_get=attributes_to_get)
         ret = []
         for company in companies:
             org = Company()
@@ -2644,8 +2646,8 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
             ret.append(org)
         return ret
 
-    def get_companies_by_manager(self, manager_id):
-        company_generator = self.model.scan(company_manager_id__eq=str(manager_id))
+    def get_companies_by_manager(self, manager_id, attributes_to_get=None):
+        company_generator = self.model.scan(company_manager_id__eq=str(manager_id), attributes_to_get=attributes_to_get)
         companies = []
         for company_model in company_generator:
             company = Company()
@@ -2821,16 +2823,17 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
             organizations.append(org)
         return organizations
 
-    def get_organization_by_installation_id(self, installation_id):
-        organization_generator = self.model.scan(organization_installation_id__eq=installation_id)
+    def get_organization_by_installation_id(self, installation_id, attributes_to_get=None):
+        organization_generator = self.model.scan(
+            organization_installation_id__eq=installation_id, attributes_to_get=attributes_to_get)
         for org_model in organization_generator:
             org = GitHubOrg()
             org.model = org_model
             return org
         return None
 
-    def all(self):
-        orgs = self.model.scan()
+    def all(self, attributes_to_get=None):
+        orgs = self.model.scan(attributes_to_get=attributes_to_get)
         ret = []
         for organization in orgs:
             org = GitHubOrg()
@@ -2943,8 +2946,8 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
     def delete(self):
         self.model.delete()
 
-    def get_gerrit_by_project_id(self, project_id):
-        gerrit_generator = self.model.scan(project_id__eq=str(project_id))
+    def get_gerrit_by_project_id(self, project_id, attributes_to_get=None):
+        gerrit_generator = self.model.scan(project_id__eq=str(project_id), attributes_to_get=attributes_to_get)
         gerrits = []
         for gerrit_model in gerrit_generator:
             gerrit = Gerrit()
@@ -2955,8 +2958,8 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
         else:
             raise cla.models.DoesNotExist("Gerrit instance does not exist")
 
-    def all(self):
-        gerrits = self.model.scan()
+    def all(self, attributes_to_get=None):
+        gerrits = self.model.scan(attributes_to_get=attributes_to_get)
         ret = []
         for gerrit_model in gerrits:
             gerrit = Gerrit()
@@ -3018,8 +3021,8 @@ class UserPermissions(model_interfaces.UserPermissions):  # pylint: disable=too-
     def delete(self):
         self.model.delete()
 
-    def all(self):
-        user_permissions = self.model.scan()
+    def all(self, attributes_to_get=None):
+        user_permissions = self.model.scan(attributes_to_get=attributes_to_get)
         ret = []
         for user_permission in user_permissions:
             permission = UserPermissions()
@@ -3163,7 +3166,6 @@ class Event(model_interfaces.Event):
         if self.model.event_project_name:
             self.model.event_project_name_lower = self.model.event_project_name.lower()
 
-
     def __str__(self):
         return (
             f"id:{self.model.event_id}, "
@@ -3246,11 +3248,11 @@ class Event(model_interfaces.Event):
     def get_event_project_external_id(self):
         return self.model.event_project_external_id
 
-    def all(self, ids=None):
+    def all(self, ids=None, attributes_to_get=None):
         if ids is None:
-            events = self.model.scan()
+            events = self.model.scan(attributes_to_get=attributes_to_get)
         else:
-            events = EventModel.batch_get(ids)
+            events = EventModel.batch_get(ids, attributes_to_get=attributes_to_get)
         ret = []
         for event in events:
             ev = Event()
@@ -3297,7 +3299,7 @@ class Event(model_interfaces.Event):
         dateDDMMYYYY = datetime.date.today().strftime("%d-%m-%Y")
         self.model.contains_pii = contains_pii
         self.model.event_date = dateDDMMYYYY
-        self.model.event_date_and_contains_pii = '{}#{}'.format(dateDDMMYYYY,str(contains_pii).lower())
+        self.model.event_date_and_contains_pii = '{}#{}'.format(dateDDMMYYYY, str(contains_pii).lower())
 
     def search_events(self, **kwargs):
         """
