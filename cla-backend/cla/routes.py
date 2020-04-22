@@ -254,9 +254,9 @@ def request_company_whitelist(
     )
 
 
-@hug.post("/user/{contributor_id}/invite-company-admin", versions=2)
+@hug.post("/user/{user_id}/invite-company-admin", versions=2)
 def invite_company_admin(
-    contributor_id: hug.types.uuid,
+    user_id: hug.types.uuid,
     contributor_name: hug.types.text,
     contributor_email: cla.hug_types.email,
     cla_manager_name: hug.types.text,
@@ -268,7 +268,6 @@ def invite_company_admin(
     POST: /user/{user_id}/invite-company-admin
 
     DATA: {
-            'contributor_id': 'uuid-13434-234234-234234',
             'contributor_email': 'Sally Field',
             'contributor_email': 'user@example.com',
             'cla_manager_name': 'John Doe',
@@ -280,7 +279,7 @@ def invite_company_admin(
     Sends an Email to the prospective CLA Manager to sign up through the ccla console.
     """
     return cla.controllers.user.invite_cla_manager(
-        contributor_id, contributor_name, str(contributor_email),
+        user_id, contributor_name, str(contributor_email),
         str(cla_manager_name), str(cla_manager_email),
         project_name, company_name
     )
