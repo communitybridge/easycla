@@ -1106,11 +1106,11 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
                 managers.append(users[0])
         return managers
 
-    def all(self, project_ids=None, attributes_to_get=None):
+    def all(self, project_ids=None):
         if project_ids is None:
-            projects = self.model.scan(attributes_to_get=attributes_to_get)
+            projects = self.model.scan()
         else:
-            projects = ProjectModel.batch_get(project_ids, attributes_to_get=attributes_to_get)
+            projects = ProjectModel.batch_get(project_ids)
         ret = []
         for project in projects:
             proj = Project()
@@ -1365,13 +1365,13 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
     def set_note(self, note):
         self.model.note = note
 
-    def get_user_by_email(self, user_email, attributes_to_get=None) -> Optional[List[User]]:
+    def get_user_by_email(self, user_email) -> Optional[List[User]]:
         if user_email is None:
             cla.log.warning("Unable to lookup user by user_email - email is empty")
             return None
 
         users = []
-        for user_model in UserModel.scan(UserModel.user_emails.contains(user_email), attributes_to_get=attributes_to_get):
+        for user_model in UserModel.scan(UserModel.user_emails.contains(user_email)):
             user = User()
             user.model = user_model
             users.append(user)
@@ -1643,8 +1643,8 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         self.log_debug("unable to find user in any whitelist")
         return False
 
-    def get_users_by_company(self, company_id, attributes_to_get=None):
-        user_generator = self.model.scan(user_company_id__eq=str(company_id), attributes_to_get=attributes_to_get)
+    def get_users_by_company(self, company_id ):
+        user_generator = self.model.scan(user_company_id__eq=str(company_id))
         users = []
         for user_model in user_generator:
             user = User()
@@ -1652,11 +1652,11 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             users.append(user)
         return users
 
-    def all(self, emails=None, attributes_to_get=None):
+    def all(self, emails=None):
         if emails is None:
-            users = self.model.scan(attributes_to_get=attributes_to_get)
+            users = self.model.scan()
         else:
-            users = UserModel.batch_get(emails, attributes_to_get=attributes_to_get)
+            users = UserModel.batch_get(emails )
         ret = []
         for user in users:
             usr = User()
@@ -1809,11 +1809,11 @@ class Repository(model_interfaces.Repository):
             repositories.append(repository)
         return repositories
 
-    def all(self, ids=None, attributes_to_get=None):
+    def all(self, ids=None):
         if ids is None:
-            repositories = self.model.scan(attributes_to_get=attributes_to_get)
+            repositories = self.model.scan()
         else:
-            repositories = RepositoryModel.batch_get(ids, attributes_to_get=attributes_to_get)
+            repositories = RepositoryModel.batch_get(ids)
         ret = []
         for repository in repositories:
             repo = Repository()
@@ -2437,11 +2437,11 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             signatures.append(signature)
         return signatures
 
-    def get_projects_by_company_signed(self, company_id, attributes_to_get=None):
+    def get_projects_by_company_signed(self, company_id):
         # Query returns all the signatures that the company has signed a CCLA for.
         # Loop through the signatures and retrieve only the project IDs referenced by the signatures.
         signature_generator = self.model.signature_reference_index.query(
-            company_id, SignatureModel.signature_signed.exists(), attributes_to_get=attributes_to_get,
+            company_id, SignatureModel.signature_signed.exists(),
         )
         project_ids = []
         for signature in signature_generator:
@@ -2460,11 +2460,11 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
     def get_managers(self):
         return self.get_managers_by_signature_acl(self.get_signature_acl())
 
-    def all(self, ids=None, attributes_to_get=None):
+    def all(self, ids=None):
         if ids is None:
-            signatures = self.model.scan(attributes_to_get=attributes_to_get)
+            signatures = self.model.scan()
         else:
-            signatures = SignatureModel.batch_get(ids, attributes_to_get=attributes_to_get)
+            signatures = SignatureModel.batch_get(ids)
         ret = []
         for signature in signatures:
             agr = Signature()
@@ -2634,11 +2634,11 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
             return company
         return None
 
-    def all(self, ids=None, attributes_to_get=None):
+    def all(self, ids=None):
         if ids is None:
-            companies = self.model.scan(attributes_to_get=attributes_to_get)
+            companies = self.model.scan()
         else:
-            companies = CompanyModel.batch_get(ids, attributes_to_get=attributes_to_get)
+            companies = CompanyModel.batch_get(ids)
         ret = []
         for company in companies:
             org = Company()
@@ -2646,8 +2646,8 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
             ret.append(org)
         return ret
 
-    def get_companies_by_manager(self, manager_id, attributes_to_get=None):
-        company_generator = self.model.scan(company_manager_id__eq=str(manager_id), attributes_to_get=attributes_to_get)
+    def get_companies_by_manager(self, manager_id):
+        company_generator = self.model.scan(company_manager_id__eq=str(manager_id))
         companies = []
         for company_model in company_generator:
             company = Company()
@@ -2823,17 +2823,16 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
             organizations.append(org)
         return organizations
 
-    def get_organization_by_installation_id(self, installation_id, attributes_to_get=None):
-        organization_generator = self.model.scan(
-            organization_installation_id__eq=installation_id, attributes_to_get=attributes_to_get)
+    def get_organization_by_installation_id(self, installation_id):
+        organization_generator = self.model.scan(organization_installation_id__eq=installation_id)
         for org_model in organization_generator:
             org = GitHubOrg()
             org.model = org_model
             return org
         return None
 
-    def all(self, attributes_to_get=None):
-        orgs = self.model.scan(attributes_to_get=attributes_to_get)
+    def all(self):
+        orgs = self.model.scan()
         ret = []
         for organization in orgs:
             org = GitHubOrg()
@@ -2946,8 +2945,8 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
     def delete(self):
         self.model.delete()
 
-    def get_gerrit_by_project_id(self, project_id, attributes_to_get=None):
-        gerrit_generator = self.model.scan(project_id__eq=str(project_id), attributes_to_get=attributes_to_get)
+    def get_gerrit_by_project_id(self, project_id):
+        gerrit_generator = self.model.scan(project_id__eq=str(project_id))
         gerrits = []
         for gerrit_model in gerrit_generator:
             gerrit = Gerrit()
@@ -2958,8 +2957,8 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
         else:
             raise cla.models.DoesNotExist("Gerrit instance does not exist")
 
-    def all(self, attributes_to_get=None):
-        gerrits = self.model.scan(attributes_to_get=attributes_to_get)
+    def all(self):
+        gerrits = self.model.scan()
         ret = []
         for gerrit_model in gerrits:
             gerrit = Gerrit()
@@ -3021,8 +3020,8 @@ class UserPermissions(model_interfaces.UserPermissions):  # pylint: disable=too-
     def delete(self):
         self.model.delete()
 
-    def all(self, attributes_to_get=None):
-        user_permissions = self.model.scan(attributes_to_get=attributes_to_get)
+    def all(self):
+        user_permissions = self.model.scan()
         ret = []
         for user_permission in user_permissions:
             permission = UserPermissions()
@@ -3248,11 +3247,11 @@ class Event(model_interfaces.Event):
     def get_event_project_external_id(self):
         return self.model.event_project_external_id
 
-    def all(self, ids=None, attributes_to_get=None):
+    def all(self, ids=None):
         if ids is None:
-            events = self.model.scan(attributes_to_get=attributes_to_get)
+            events = self.model.scan()
         else:
-            events = EventModel.batch_get(ids, attributes_to_get=attributes_to_get)
+            events = EventModel.batch_get(ids)
         ret = []
         for event in events:
             ev = Event()

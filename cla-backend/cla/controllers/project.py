@@ -144,8 +144,9 @@ def get_unsigned_projects_for_company(company_id):
     signed_project_ids = signature.get_projects_by_company_signed(company_id, ['signature_id', 'signature_project_id'])
 
     # from all projects, retrieve projects that are not in the signed project ids
-    unsigned_projects = [project for project in Project().all(attributes_to_get=['project_id'])
-                         if project.get_project_id() not in signed_project_ids]
+    # Consider adding attributes_to_get for the projection
+    # unsigned_projects = [project for project in Project().all(attributes_to_get=['project_id'])
+    unsigned_projects = [project for project in Project().all() if project.get_project_id() not in signed_project_ids]
 
     # filter to get unsigned projects that are not of ccla type
     ccla_unsigned_projects = [project.to_dict() for project in unsigned_projects if project.get_project_ccla_enabled()]
