@@ -20,6 +20,11 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 	api.GithubOrganizationsGetProjectGithubOrganizationsHandler = github_organizations.GetProjectGithubOrganizationsHandlerFunc(
 		func(params github_organizations.GetProjectGithubOrganizationsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !authUser.Admin {
+				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
+					return github_organizations.NewGetProjectGithubOrganizationsUnauthorized()
+				}
+			}
 			result, err := service.GetGithubOrganizations(params.ProjectSFID)
 			if err != nil {
 				return github_organizations.NewGetProjectGithubOrganizationsBadRequest().WithPayload(errorResponse(err))
@@ -29,6 +34,11 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 	api.GithubOrganizationsAddProjectGithubOrganizationHandler = github_organizations.AddProjectGithubOrganizationHandlerFunc(
 		func(params github_organizations.AddProjectGithubOrganizationParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !authUser.Admin {
+				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
+					return github_organizations.NewAddProjectGithubOrganizationUnauthorized()
+				}
+			}
 			result, err := service.AddGithubOrganization(params.ProjectSFID, &v1Models.CreateGithubOrganization{
 				OrganizationName: params.Body.OrganizationName,
 			})
@@ -49,6 +59,11 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 	api.GithubOrganizationsDeleteProjectGithubOrganizationHandler = github_organizations.DeleteProjectGithubOrganizationHandlerFunc(
 		func(params github_organizations.DeleteProjectGithubOrganizationParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !authUser.Admin {
+				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
+					return github_organizations.NewDeleteProjectGithubOrganizationUnauthorized()
+				}
+			}
 			err := service.DeleteGithubOrganization(params.ProjectSFID, params.OrgName)
 			if err != nil {
 				return github_organizations.NewDeleteProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))

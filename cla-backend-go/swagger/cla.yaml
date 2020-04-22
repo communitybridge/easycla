@@ -2660,6 +2660,36 @@ definitions:
         items:
           $ref: '#/definitions/sf-project-metric'
 
+  company-project-metrics:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/company-project-metric'
+
+  company-project-metric:
+    type: object
+    properties:
+      companyID:
+        type: string
+        x-omitempty: false
+      projectID:
+        type: string
+        x-omitempty: false
+      claManagersCount:
+        type: integer
+        x-omitempty: false
+      contributorsCount:
+        type: integer
+        x-omitempty: false
+      projectName:
+        type: string
+        x-omitempty: false
+      companyName:
+        type: string
+        x-omitempty: false
+
   sf-project-metric:
     type: object
     properties:

@@ -21,6 +21,7 @@ type Service interface {
 	GetTopCompanies() (*models.TopCompanies, error)
 	GetTopProjects() (*models.TopProjects, error)
 	ListProjectMetrics(paramPageSize *int64, paramNextKey *string) (*models.ListProjectMetric, error)
+	ListCompanyProjectMetrics(companyID string) (*models.CompanyProjectMetrics, error)
 }
 
 type service struct {
@@ -268,4 +269,19 @@ func (s *service) ListProjectMetrics(paramPageSize *int64, paramNextKey *string)
 	}
 	out.NextKey = nextKey
 	return &out, nil
+}
+
+func (s *service) ListCompanyProjectMetrics(companyID string) (*models.CompanyProjectMetrics, error) {
+	list, err := s.metricsRepo.ListCompanyProjectMetrics(companyID)
+	if err != nil {
+		return nil, err
+	}
+	out := &models.CompanyProjectMetrics{List: make([]*models.CompanyProjectMetric, 0)}
+	for _, cpm := range list {
+		out.List = append(out.List, cpm.toModel())
+	}
+	sort.Slice(out.List, func(i, j int) bool {
+		return out.List[i].ProjectName < out.List[j].ProjectName
+	})
+	return out, nil
 }

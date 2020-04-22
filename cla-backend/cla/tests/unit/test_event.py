@@ -92,3 +92,23 @@ def test_event_time_epoch(mock_event):
     """ Test event time epoch """
     mock_event.save()
     assert mock_event.get_event_time_epoch() <= time.time()
+
+def test_company_id_external_project_id(mock_event):
+    mock_event.set_event_project_external_id("external_id")
+    mock_event.set_event_company_id("company_id")
+    mock_event.set_company_id_external_project_id()
+    assert mock_event.get_company_id_external_project_id() == "company_id#external_id"
+
+def test_company_id_external_project_id_empty_test1(mock_event):
+    mock_event.set_event_project_external_id("external_id")
+    mock_event.set_company_id_external_project_id()
+    assert mock_event.get_company_id_external_project_id() == None
+
+def test_company_id_external_project_id_empty_test2(mock_event):
+    mock_event.set_event_company_id("company_id")
+    mock_event.set_company_id_external_project_id()
+    assert mock_event.get_company_id_external_project_id() == None
+
+def test_company_id_external_project_id_empty_test3(mock_event):
+    mock_event.set_company_id_external_project_id()
+    assert mock_event.get_company_id_external_project_id() == None

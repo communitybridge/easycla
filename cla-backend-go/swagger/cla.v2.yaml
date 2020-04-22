@@ -270,6 +270,31 @@ paths:
       tags:
         - metrics
 
+  /metrics/company/{companyID}/project-metrics:
+    get:
+      summary: list project metrics of company
+      description: Returns list of project metrics for company
+      operationId: listCompanyProjectMetrics
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-companyID"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company-project-metrics'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - metrics
+
   # Project Service
   /project:
     post:
@@ -478,6 +503,37 @@ paths:
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
         - $ref: '#/parameters/pageSize'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/event-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - events
+
+  /company/{companyID}/project/{projectSFID}/events:
+    get:
+      summary: return recent events of company and project
+      description: Returns list of events of company and project
+      operationId: getRecentCompanyProjectEvents
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/path-projectSFID'
+        - $ref: '#/parameters/path-companyID'
       produces:
         - application/json
       responses:
@@ -1162,6 +1218,18 @@ parameters:
     type: string
     required: false
     enum: [ccla,cla]
+  path-projectSFID:
+    name: projectSFID
+    description: salesforce id of the project/foundation
+    in: path
+    type: string
+    required: true
+  path-companyID:
+    name: companyID
+    description: id of the company
+    in: path
+    type: string
+    required: true
   x-acl:
     name: X-ACL
     description: The access control list header value encoded as base64 - assigned by the API Gateway based on user/request permissions
@@ -1488,6 +1556,12 @@ definitions:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1Models"
       type: "Gerrit"
+  company-project-metrics:
+    x-go-type:
+      import:
+        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+        alias: "v1Models"
+      type: "CompanyProjectMetrics"
 
   error-response:
     type: object

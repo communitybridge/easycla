@@ -9,8 +9,8 @@ import "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 type Event struct {
 	EventID                string `dynamodbav:"event_id"`
 	EventType              string `dynamodbav:"event_type"`
-	UserID                 string `dynamodbav:"user_id"`
-	UserName               string `dynamodbav:"user_name"`
+	EventUserID            string `dynamodbav:"event_user_id"`
+	EventUserName          string `dynamodbav:"event_user_name"`
 	EventProjectID         string `dynamodbav:"event_project_id"`
 	EventProjectExternalID string `dynamodbav:"event_project_external_id"`
 	EventProjectName       string `dynamodbav:"event_project_name"`
@@ -50,8 +50,8 @@ func (e *Event) toEvent() *models.Event { //nolint
 		EventProjectName:       e.EventProjectName,
 		EventTime:              e.EventTime,
 		EventType:              e.EventType,
-		UserID:                 e.UserID,
-		UserName:               e.UserName,
+		UserID:                 e.EventUserID,
+		UserName:               e.EventUserName,
 		EventTimeEpoch:         e.EventTimeEpoch,
 	}
 }
