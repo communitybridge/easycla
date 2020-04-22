@@ -76,6 +76,14 @@ func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 			}
 			return metrics.NewListProjectMetricsOK().WithPayload(*result)
 		})
+	api.MetricsListCompanyProjectMetricsHandler = metrics.ListCompanyProjectMetricsHandlerFunc(
+		func(params metrics.ListCompanyProjectMetricsParams, user *auth.User) middleware.Responder {
+			result, err := service.ListCompanyProjectMetrics(params.CompanyID)
+			if err != nil {
+				return metrics.NewListCompanyProjectMetricsBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewListCompanyProjectMetricsOK().WithPayload(*result)
+		})
 }
 
 type codedResponse interface {

@@ -136,10 +136,13 @@ export class CompanyPage {
         }
         this.rows.push({
           ProjectID: projectDetail.project_id,
-          ProjectName: projectDetail.project_name,
+          ProjectName: projectDetail.project_name !== undefined ? projectDetail.project_name : '',
           ProjectManagers: signatureACL,
           Status: this.getStatus(this.companySignatures),
           PendingRequests: pendingRequest.length,
+        });
+        this.rows.sort((a, b) => {
+          return a.ProjectName.toLowerCase().localeCompare(b.ProjectName.toLowerCase());
         });
       })
     }
