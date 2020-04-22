@@ -9,7 +9,7 @@
         </ion-col>
         <ion-col text-sm-right>
           <button>
-            <a target="_blank" href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4">Get Help</a>
+            <a target="_blank" [href]="helpURL">Get Help</a>
           </button>
         </ion-col>
       </ion-row>
@@ -17,8 +17,10 @@
       <ion-row>
         <ion-col>
           <small>
-            Copyright &copy; 2019 The Linux Foundation®. All rights reserved. The Linux Foundation has registered trademarks and uses
-            trademarks. For a list of trademarks of The Linux Foundation, please see our Trademark Usage page. Linux is a
+            Copyright &copy; 2019 The Linux Foundation®. All rights reserved. The Linux Foundation has registered
+            trademarks and uses
+            trademarks. For a list of trademarks of The Linux Foundation, please see our Trademark Usage page. Linux is
+            a
             registered trademark of Linus Torvalds.
           </small>
           <br />
@@ -39,10 +41,10 @@
         </ion-col>
         <ion-col text-sm-right>
           <small>
-            <a target="_blank" href="https://communitybridge.dev.platform.linuxfoundation.org/acceptable-use">Acceptable Use Policy | </a>
-            <a target="_blank" href="https://communitybridge.dev.platform.linuxfoundation.org/service-terms">Service-Specific Terms | </a>
-            <a target="_blank" href="https://communitybridge.dev.platform.linuxfoundation.org/platform-use-agreement">Platform Use Agreement | </a>
-            <a target="_blank" href="https://www.linuxfoundation.org/privacy/">Privacy Policy</a>
+            <a target="_blank" [href]="acceptableUsePolicyURL">Acceptable Use Policy | </a>
+            <a target="_blank" [href]="serviceSpecificTermsURL">Service-Specific Terms |</a>
+            <a target="_blank" [href]="platformUseAgreementURL">Platform Use Agreement | </a>
+            <a target="_blank" [href]="privacyPolicyURL">Privacy Policy</a>
           </small>
         </ion-col>
       </ion-row>

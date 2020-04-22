@@ -7,13 +7,11 @@ import {
   Events,
   IonicPage,
   ModalController,
-  NavController,
   NavParams,
   PopoverController,
   ViewController,
 } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
-import { RolesService } from '../../services/roles.service';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 
 @IonicPage({
@@ -28,7 +26,6 @@ export class ClaContractViewSignaturesModal {
   claProjectId: string;
   claProjectName: string;
   loading: any;
-  //sort: any;
   form: FormGroup;
   searchString: string;
   companies: any[];
@@ -54,13 +51,11 @@ export class ClaContractViewSignaturesModal {
   ];
 
   constructor(
-    public navCtrl: NavController,
     public navParams: NavParams,
     private claService: ClaService,
     public viewCtrl: ViewController,
     public modalCtrl: ModalController,
     private popoverCtrl: PopoverController,
-    public rolesService: RolesService,
     public events: Events,
     private formBuilder: FormBuilder,
     private location: PlatformLocation

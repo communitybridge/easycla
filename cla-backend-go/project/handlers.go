@@ -156,7 +156,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 		// Delete gerrit repositories
 		log.Debugf(" Processing gerrit delete with project id: %s", projectParams.ProjectID)
-		err = gerritService.DeleteProject(projectParams.ProjectID)
+		err = gerritService.DeleteProjectGerrits(projectParams.ProjectID)
 		if err != nil {
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}

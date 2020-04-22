@@ -9,10 +9,12 @@ import smtplib
 import cla
 from cla.models import email_service_interface
 
+
 class SMTP(email_service_interface.EmailService):
     """
     Simple SMTP email client.
     """
+
     def __init__(self):
         self.sender_email = None
         self.host = None
@@ -24,7 +26,7 @@ class SMTP(email_service_interface.EmailService):
         self.port = config['SMTP_PORT']
 
     def send(self, subject, body, recipient, attachment=None):
-        msg = self.get_email_message(subject, body, self.sender_email, recipient, attachment)
+        msg = self.get_email_message(subject, body, self.sender_email, [recipient], attachment)
         try:
             self._send(msg)
         except Exception as err:
@@ -39,10 +41,12 @@ class SMTP(email_service_interface.EmailService):
         smtp_client.send_message(msg)
         smtp_client.quit()
 
+
 class MockSMTP(SMTP):
     """
     Mockable simple SMTP email client.
     """
+
     def __init__(self):
         super().__init__()
         self.emails_sent = []

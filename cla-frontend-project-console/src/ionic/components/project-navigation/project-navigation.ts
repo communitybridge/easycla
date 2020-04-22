@@ -115,51 +115,6 @@ export class ProjectNavigationComponent implements AfterViewChecked {
 
   generateNavItems() {
     this.navItems = [
-      // {
-      //   label: "Project",
-      //   page: "ProjectPage",
-      //   access: this.userRoles.isPmcUser,
-      // },
-      // {
-      //   label: "Sub-Projects",
-      //   page: "",
-      //   access: this.userRoles.isAdmin,
-      // },
-      // {
-      //   label: "Members",
-      //   page: "ProjectMembersPage",
-      //   access: this.userRoles.isAdmin,
-      // },
-      // {
-      //   label: "Collaboration",
-      //   page: "ProjectGroupsPage",
-      //   access: this.userRoles.isAdmin,
-      // },
-      // {
-      //   label: "Analytics",
-      //   page: "ProjectAnalyticsPage",
-      //   access: this.userRoles.isAdmin,
-      // },
-      // {
-      //   label: "Marketing",
-      //   page: "",
-      //   access: this.userRoles.isAdmin,
-      // },
-      // {
-      //   label: "Sales",
-      //   page: "",
-      //   access: this.userRoles.isAdmin,
-      // },
-      // {
-      //   label: "Financials",
-      //   page: "",
-      //   access: this.userRoles.isAdmin,
-      // },
-      // {
-      //   label: "Files",
-      //   page: "ProjectFilesPage",
-      //   access: this.userRoles.isAdmin,
-      // },
       {
         label: 'CLA',
         page: 'ProjectClaPage',

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { NavController, NavParams, ViewController, ModalController, IonicPage } from 'ionic-angular';
+import { NavController, NavParams, ViewController, IonicPage } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
@@ -16,20 +16,16 @@ import { ClaService } from '../../services/cla.service';
 export class ClaNextStepModal {
   projectId: string;
   userId: string;
-
   project: any;
   signature: any;
-
   userIsDone: boolean;
   loading: any;
-
   signingType: string; // "Gerrit" / "Github"
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
-    private modalCtrl: ModalController,
     private claService: ClaService
   ) {
     this.projectId = navParams.get('projectId');
@@ -51,12 +47,8 @@ export class ClaNextStepModal {
     if (!requiresIcla) {
       this.userIsDone = true;
       this.loading.icla = false;
-      console.log('no icla required. redirect.');
     } else {
-      console.log('icla required');
       this.claService.getLastIndividualSignature(this.userId, this.projectId).subscribe((response) => {
-        console.log(response);
-        console.log('need to get the value for if the latest icla is valid');
         if (response === null) {
           // User has no icla, they need one
           this.userIsDone = false;
@@ -73,7 +65,6 @@ export class ClaNextStepModal {
     }
   }
 
-  // ClaNextStepsModal modal dismiss
   dismiss() {
     this.viewCtrl.dismiss();
   }

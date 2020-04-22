@@ -18,6 +18,7 @@ class SES(email_service_interface.EmailService):
     """
     AWS SES email client model.
     """
+
     def __init__(self):
         self.sender_email = None
         self.region = None
@@ -42,7 +43,7 @@ class SES(email_service_interface.EmailService):
         """
         return boto3.client('ses', region_name=self.region)
 
-    def _send(self, connection, msg): # pylint: disable=no-self-use
+    def _send(self, connection, msg):  # pylint: disable=no-self-use
         """
         Mockable send method.
         """
@@ -55,6 +56,7 @@ class MockSES(SES):
     """
     Mockable AWS SES email client.
     """
+
     def __init__(self):
         super().__init__()
         self.emails_sent = []

@@ -6,10 +6,11 @@ import { IonicPageModule } from 'ionic-angular';
 import { ClaIndividualPage } from './cla-individual';
 import { LayoutModule } from '../../layout/layout.module';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
+import { GetHelpComponentModule } from '../../components/get-help/get-help.module';
 
 @NgModule({
   declarations: [ClaIndividualPage],
-  imports: [IonicPageModule.forChild(ClaIndividualPage), LayoutModule, LoadingSpinnerComponentModule],
+  imports: [IonicPageModule.forChild(ClaIndividualPage), LayoutModule, LoadingSpinnerComponentModule, GetHelpComponentModule],
   entryComponents: [ClaIndividualPage]
 })
 export class ClaIndividualPageModule {}

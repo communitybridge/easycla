@@ -801,6 +801,7 @@ class ProjectModel(BaseModel):
     project_id = UnicodeAttribute(hash_key=True)
     project_external_id = UnicodeAttribute()
     project_name = UnicodeAttribute()
+    project_name_lower = UnicodeAttribute(null=True)
     project_individual_documents = ListAttribute(of=DocumentModel, default=[])
     project_corporate_documents = ListAttribute(of=DocumentModel, default=[])
     project_member_documents = ListAttribute(of=DocumentModel, default=[])
@@ -821,6 +822,7 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
             project_id=None,
             project_external_id=None,
             project_name=None,
+            project_name_lower=None,
             project_icla_enabled=True,
             project_ccla_enabled=True,
             project_ccla_requires_icla_signature=False,
@@ -831,6 +833,7 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
         self.model.project_id = project_id
         self.model.project_external_id = project_external_id
         self.model.project_name = project_name
+        self.model.project_name_lower = project_name_lower
         self.model.project_icla_enabled = project_icla_enabled
         self.model.project_ccla_enabled = project_ccla_enabled
         self.model.project_ccla_requires_icla_signature = project_ccla_requires_icla_signature
@@ -838,10 +841,11 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def __str__(self):
         return (
-            "id: {}, name: {}, external id: {}, icla enabled: {}, " "ccla enabled: {}, requires icla: {}, acl: {}"
+            "id: {}, name: {}, project_name_lower: {},external id: {}, icla enabled: {}, " "ccla enabled: {}, requires icla: {}, acl: {}"
         ).format(
             self.model.project_id,
             self.model.project_name,
+            self.model.project_name_lower,
             self.model.project_external_id,
             self.model.project_icla_enabled,
             self.model.project_ccla_enabled,
@@ -895,6 +899,9 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def get_project_name(self):
         return self.model.project_name
+
+    def get_project_name_lower(self):
+        return self.model.project_name_lower
 
     def get_project_icla_enabled(self):
         return self.model.project_icla_enabled
@@ -1008,6 +1015,9 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def set_project_name(self, project_name):
         self.model.project_name = project_name
+
+    def set_project_name_lower(self, project_name_lower):
+        self.model.project_name_lower = project_name_lower
 
     def set_project_icla_enabled(self, project_icla_enabled):
         self.model.project_icla_enabled = project_icla_enabled
@@ -1355,9 +1365,6 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
     def set_note(self, note):
         self.model.note = note
 
-    # def set_user_ldap_id(self, user_ldap_id):
-    #     self.model.user_ldap_id = user_ldap_id
-
     def get_user_by_email(self, user_email) -> Optional[List[User]]:
         if user_email is None:
             cla.log.warning("Unable to lookup user by user_email - email is empty")
@@ -1455,7 +1462,8 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             f"project_id: {project_id}, "
             f"company_id: {company_id}"
         )
-        signatures = self.get_user_signatures(project_id=project_id, company_id=company_id, signature_signed=signature_signed, signature_approved=signature_approved)
+        signatures = self.get_user_signatures(project_id=project_id, company_id=company_id,
+                                              signature_signed=signature_signed, signature_approved=signature_approved)
         latest = None
         for signature in signatures:
             if latest is None:
@@ -1485,7 +1493,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
 
         return latest
 
-    def preprocess_pattern(self,emails,patterns) -> bool:
+    def preprocess_pattern(self, emails, patterns) -> bool:
         """
         Helper function that preprocesses given emails against patterns
 
@@ -1510,8 +1518,8 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
                     return True
         return False
 
-
     # Accepts a Signature object
+
     def is_whitelisted(self, ccla_signature) -> bool:
         """
         Helper function to determine whether at least one of the user's email
@@ -1635,7 +1643,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         self.log_debug("unable to find user in any whitelist")
         return False
 
-    def get_users_by_company(self, company_id):
+    def get_users_by_company(self, company_id ):
         user_generator = self.model.scan(user_company_id__eq=str(company_id))
         users = []
         for user_model in user_generator:
@@ -1648,7 +1656,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         if emails is None:
             users = self.model.scan()
         else:
-            users = UserModel.batch_get(emails)
+            users = UserModel.batch_get(emails )
         ret = []
         for user in users:
             usr = User()
@@ -1813,6 +1821,7 @@ class Repository(model_interfaces.Repository):
             ret.append(repo)
         return ret
 
+
 def create_filter(attributes, model):
     """
     Helper function that creates filter condition based on available attributes
@@ -1831,6 +1840,7 @@ def create_filter(attributes, model):
             condition if not isinstance(filter_condition, Condition) else filter_condition & condition
         )
     return filter_condition
+
 
 class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     """
@@ -2353,7 +2363,8 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         }
         filter_condition = create_filter(signature_attributes, SignatureModel)
         signature_generator = self.model.signature_reference_index.query(
-            company_id, filter_condition=filter_condition & (SignatureModel.signature_user_ccla_company_id.does_not_exist())
+            company_id, filter_condition=filter_condition & (
+                SignatureModel.signature_user_ccla_company_id.does_not_exist())
         )
         signatures = []
         for signature_model in signature_generator:
@@ -2403,7 +2414,8 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             return None
         # Oops, we found more than 1?? This isn't good - maybe we simply return the first one?
         if len(signatures) > 1:
-            cla.log.warning("Why do we have more than one employee signature for this user? - Will return the first one only.")
+            cla.log.warning(
+                "Why do we have more than one employee signature for this user? - Will return the first one only.")
         return signatures[0]
 
     def get_employee_signatures_by_company_project_model(self, company_id, project_id) -> List[Signature]:
@@ -2429,7 +2441,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         # Query returns all the signatures that the company has signed a CCLA for.
         # Loop through the signatures and retrieve only the project IDs referenced by the signatures.
         signature_generator = self.model.signature_reference_index.query(
-            company_id, SignatureModel.signature_signed.exists()
+            company_id, SignatureModel.signature_signed.exists(),
         )
         project_ids = []
         for signature in signature_generator:
@@ -2578,7 +2590,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
             signature_signed=signature_signed,
         )
 
-    def get_latest_signature(self, project_id,signature_signed=None, signature_approved=None):
+    def get_latest_signature(self, project_id, signature_signed=None, signature_approved=None):
         """
         Helper function to get a company's latest signature for a project.
 
@@ -2589,7 +2601,8 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         :return: The latest versioned signature object if it exists.
         :rtype: cla.models.model_interfaces.Signature or None
         """
-        signatures = self.get_company_signatures(project_id=project_id,signature_signed=signature_signed, signature_approved=signature_approved)
+        signatures = self.get_company_signatures(
+            project_id=project_id, signature_signed=signature_signed, signature_approved=signature_approved)
         latest = None
         for signature in signatures:
             if latest is None:
@@ -3109,6 +3122,7 @@ class EventModel(BaseModel):
     event_date = UnicodeAttribute(null=True)
     event_project_external_id = UnicodeAttribute(null=True)
     event_date_and_contains_pii = UnicodeAttribute(null=True)
+    company_id_external_project_id = UnicodeAttribute(null=True)
     contains_pii = BooleanAttribute(null=True)
     user_id_index = EventUserIndex()
     event_type_index = EventTypeIndex()
@@ -3151,7 +3165,6 @@ class Event(model_interfaces.Event):
         self.model.event_project_name = event_project_name
         if self.model.event_project_name:
             self.model.event_project_name_lower = self.model.event_project_name.lower()
-
 
     def __str__(self):
         return (
@@ -3235,6 +3248,9 @@ class Event(model_interfaces.Event):
     def get_event_project_external_id(self):
         return self.model.event_project_external_id
 
+    def get_company_id_external_project_id(self):
+        return self.model.company_id_external_project_id
+
     def all(self, ids=None):
         if ids is None:
             events = self.model.scan()
@@ -3286,7 +3302,11 @@ class Event(model_interfaces.Event):
         dateDDMMYYYY = datetime.date.today().strftime("%d-%m-%Y")
         self.model.contains_pii = contains_pii
         self.model.event_date = dateDDMMYYYY
-        self.model.event_date_and_contains_pii = '{}#{}'.format(dateDDMMYYYY,str(contains_pii).lower())
+        self.model.event_date_and_contains_pii = '{}#{}'.format(dateDDMMYYYY, str(contains_pii).lower())
+
+    def set_company_id_external_project_id(self):
+        if self.model.event_project_external_id is not None and self.model.event_company_id is not None:
+            self.model.company_id_external_project_id = '{}#{}'.format(self.model.event_company_id,self.model.event_project_external_id)
 
     def search_events(self, **kwargs):
         """
@@ -3390,6 +3410,7 @@ class Event(model_interfaces.Event):
             event.set_event_company_name(event_company_name)
             event.set_event_data(event_data)
             event.set_event_date_and_contains_pii(contains_pii)
+            event.set_company_id_external_project_id()
             event.save()
             return {"data": event.to_dict()}
 

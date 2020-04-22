@@ -6,7 +6,7 @@ The entry point for the CLA service. Lays out all routes and controller function
 """
 
 import hug
-from falcon import HTTP_401,HTTP_400
+from falcon import HTTP_401, HTTP_400
 from hug.middleware import LogMiddleware
 
 import cla
@@ -257,25 +257,31 @@ def request_company_whitelist(
 @hug.post("/user/{user_id}/invite-company-admin", versions=2)
 def invite_company_admin(
     user_id: hug.types.uuid,
-    user_email: cla.hug_types.email,
-    admin_name: hug.types.text,
-    admin_email: cla.hug_types.email,
+    contributor_name: hug.types.text,
+    contributor_email: cla.hug_types.email,
+    cla_manager_name: hug.types.text,
+    cla_manager_email: cla.hug_types.email,
     project_name: hug.types.text,
+    company_name: hug.types.text,
 ):
     """
     POST: /user/{user_id}/invite-company-admin
 
     DATA: {
-            'admin_name': John Doe,
-            'admin_email': admin@example.com,
-            'user_email': user@example.com,
-            'project_name': Project Name
+            'contributor_email': 'Sally Field',
+            'contributor_email': 'user@example.com',
+            'cla_manager_name': 'John Doe',
+            'cla_manager_email': 'admin@example.com',
+            'project_name': 'Project Name',
+            'company_name': 'Company Name'
         }
 
-    Sends an Email to the user's admin to sign up through the ccla console.
+    Sends an Email to the prospective CLA Manager to sign up through the ccla console.
     """
-    return cla.controllers.user.invite_company_admin(
-        user_id, str(user_email), str(admin_name), str(admin_email), project_name
+    return cla.controllers.user.invite_cla_manager(
+        user_id, contributor_name, str(contributor_email),
+        str(cla_manager_name), str(cla_manager_email),
+        project_name, company_name
     )
 
 
@@ -877,7 +883,7 @@ def get_project_managers(auth_user: check_auth, project_id: hug.types.uuid):
     GET: /project/{project_id}/managers
     Returns the CLA project managers.
     """
-    return cla.controllers.project.get_project_managers(auth_user.username, project_id, enable_auth = True)
+    return cla.controllers.project.get_project_managers(auth_user.username, project_id, enable_auth=True)
 
 
 @hug.post("/project/{project_id}/manager", versions=1)
@@ -1593,8 +1599,8 @@ def github_app_activity(body, request, response):
     # if valid_request:
     event_type = request.headers.get('X-GITHUB-EVENT')
     if event_type is None:
-         response.status = HTTP_400
-         return {'status': 'Invalid request'}
+        response.status = HTTP_400
+        return {'status': 'Invalid request'}
 
     return cla.controllers.github.activity(event_type, body)
     # else:

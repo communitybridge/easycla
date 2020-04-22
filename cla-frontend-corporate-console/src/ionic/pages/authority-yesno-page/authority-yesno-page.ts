@@ -61,4 +61,8 @@ export class AuthorityYesnoPage {
     });
     modal.present();
   }
+
+  back() {
+    this.navCtrl.pop();
+  }
 }

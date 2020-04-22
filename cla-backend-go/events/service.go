@@ -17,6 +17,7 @@ type Service interface {
 	LogEvent(args *LogEventArgs)
 	SearchEvents(params *eventOps.SearchEventsParams) (*models.EventList, error)
 	GetRecentEvents(paramPageSize *int64) (*models.EventList, error)
+	GetRecentEventsForCompanyProject(companyID, projectSFID string, pageSize *int64) (*models.EventList, error)
 }
 
 // CombinedRepo contains the various methods of other repositories
@@ -62,6 +63,14 @@ func (s *service) GetRecentEvents(paramPageSize *int64) (*models.EventList, erro
 		pageSize = *paramPageSize
 	}
 	return s.repo.GetRecentEvents(pageSize)
+}
+func (s *service) GetRecentEventsForCompanyProject(companyID, projectSFID string, paramPageSize *int64) (*models.EventList, error) {
+	const defaultPageSize int64 = 10
+	var pageSize = defaultPageSize
+	if paramPageSize != nil {
+		pageSize = *paramPageSize
+	}
+	return s.repo.GetRecentEventsForCompanyProject(companyID, projectSFID, pageSize)
 }
 
 // LogEventArgs is argument to LogEvent function

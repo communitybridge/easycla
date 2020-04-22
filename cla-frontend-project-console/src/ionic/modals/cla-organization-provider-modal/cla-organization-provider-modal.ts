@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { NavController, NavParams, ViewController, IonicPage, Events } from 'ionic-angular';
+import { NavParams, ViewController, IonicPage, Events } from 'ionic-angular';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClaService } from '../../services/cla.service';
-import { Http } from '@angular/http';
 import { PlatformLocation } from '@angular/common';
 
 @IonicPage({
@@ -25,11 +24,9 @@ export class ClaOrganizationProviderModal {
   loading: boolean;
 
   constructor(
-    public navCtrl: NavController,
     public navParams: NavParams,
     public viewCtrl: ViewController,
     private formBuilder: FormBuilder,
-    public http: Http,
     public claService: ClaService,
     public events: Events,
     private location: PlatformLocation
@@ -51,7 +48,6 @@ export class ClaOrganizationProviderModal {
     this.currentlySubmitting = true;
     if (!this.form.valid) {
       this.currentlySubmitting = false;
-      // prevent submit
       return;
     }
     this.checkGitOrganisationName();
