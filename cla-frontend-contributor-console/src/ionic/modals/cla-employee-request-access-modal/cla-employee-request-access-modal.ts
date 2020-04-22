@@ -17,7 +17,6 @@ import { ClaService } from '../../services/cla.service';
 export class ClaEmployeeRequestAccessModal {
   project: any;
   projectId: string;
-  repositoryId: string;
   userId: string;
   companyId: string;
   company: any;
@@ -36,7 +35,6 @@ export class ClaEmployeeRequestAccessModal {
   showManagerEnterOption: boolean;
 
   constructor(
-    public navCtrl: NavController,
     public navParams: NavParams,
     public modalCtrl: ModalController,
     public viewCtrl: ViewController,
@@ -50,7 +48,6 @@ export class ClaEmployeeRequestAccessModal {
     this.company = {};
 
     this.projectId = navParams.get('projectId');
-    this.repositoryId = navParams.get('repositoryId');
     this.userId = navParams.get('userId');
     this.companyId = navParams.get('companyId');
     this.authenticated = navParams.get('authenticated');
@@ -177,13 +174,6 @@ export class ClaEmployeeRequestAccessModal {
       },
       (exception) => {
         this.loading = false;
-        console.log(
-          'Exception while calling: getCompanyProjectSignatures() for company ID: ' +
-          companyId +
-          ' and project ID: ' +
-          projectId
-        );
-        console.log(exception);
       }
     );
   }
@@ -201,7 +191,6 @@ export class ClaEmployeeRequestAccessModal {
     if (!this.form.valid) {
       this.getFormValidationErrors();
       this.currentlySubmitting = false;
-      // prevent submit
       return;
     }
  
@@ -235,11 +224,10 @@ export class ClaEmployeeRequestAccessModal {
     }
     this.claService.postCCLAWhitelistRequest(this.companyId, this.projectId, user).subscribe(
       () => {
-        console.log(this.userId + ' ccla approved list request for project: ' + this.projectId + ' for company: ' + this.companyId);
+        console.warn(this.userId + ' ccla approved list request for project: ' + this.projectId + ' for company: ' + this.companyId);
       },
       (exception) => {
-        console.log('Exception during ccla approved list request for user ' + this.userId + ' on project: ' + this.projectId + ' and company: ' + this.companyId);
-        console.log(exception);
+        console.warn('Exception during ccla approved list request for user ' + this.userId + ' on project: ' + this.projectId + ' and company: ' + this.companyId);
       }
     );
   }

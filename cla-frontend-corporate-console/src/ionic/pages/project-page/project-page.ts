@@ -373,13 +373,9 @@ export class ProjectPage {
     // dead functionality.
   }
 
-  back(){
+  back() {
     this.navCtrl.setRoot('CompanyPage', {
       companyId: this.companyId
     });
-  }
-
-  trimCharacter(text, length) {
-    return text.length > length ? text.substring(0, length) + '...' : text;
   }
 }

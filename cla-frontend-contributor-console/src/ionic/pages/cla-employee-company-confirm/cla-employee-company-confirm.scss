@@ -10,4 +10,12 @@ cla-employee-company-confirm {
   .scroll-content {
     padding-bottom: 162px;
   }
+
+  .project-title {
+    font-size: 25px;
+  }
+  
+  .page-content {
+    min-height: calc(100vh - 276px)
+  }
 }
