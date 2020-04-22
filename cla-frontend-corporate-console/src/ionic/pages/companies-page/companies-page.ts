@@ -130,8 +130,11 @@ export class CompaniesPage {
 
   sortData(companies: any[]) {
     let joinedCompanies = companies.filter(company => company.status !== 'Pending Approval')
-    const requstCompanies = companies.filter(company => company.status === 'Pending Approval')
+    let requstCompanies = companies.filter(company => company.status === 'Pending Approval')
     joinedCompanies = joinedCompanies.sort((a, b) => {
+      return a.companyName.toLowerCase().localeCompare(b.companyName.toLowerCase());
+    });
+    requstCompanies = requstCompanies.sort((a, b) => {
       return a.companyName.toLowerCase().localeCompare(b.companyName.toLowerCase());
     });
     return joinedCompanies.concat(requstCompanies);
