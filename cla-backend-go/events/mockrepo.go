@@ -11,24 +11,13 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-// MockRepository interface defines methods of event mock repository
-type MockRepository interface {
-	CreateEvent(event *models.Event) error
-	SearchEvents(params *eventOps.SearchEventsParams, pageSize int64) (*models.EventList, error)
-	GetProjectByID(projectID string) (*models.Project, error)
-	GetCompany(companyID string) (*models.Company, error)
-	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
-	GetUser(userID string) (*models.User, error)
-	GetRecentEvents(pageSize int64) (*models.EventList, error)
-}
-
 // mockRepository data model
 type mockRepository struct{}
 
 var events []*models.Event
 
 // NewMockRepository creates a new instance of the mock event repository
-func NewMockRepository() MockRepository {
+func NewMockRepository() *mockRepository {
 	return &mockRepository{}
 }
 
@@ -141,5 +130,9 @@ func (repo *mockRepository) GetUser(userID string) (*models.User, error) {
 }
 
 func (repo *mockRepository) GetRecentEvents(pageSize int64) (*models.EventList, error) {
+	return &models.EventList{}, nil
+}
+
+func (repo *mockRepository) GetRecentEventsForCompanyProject(companyID, projectID string, pageSize int64) (*models.EventList, error) {
 	return &models.EventList{}, nil
 }
