@@ -650,6 +650,7 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'event_user_id', type: 'S' },
         { name: 'event_project_id', type: 'S' },
         { name: 'event_date_and_contains_pii', type: 'B' },
+        { name: 'company_id_external_project_id', type: 'S' },
         { name: 'event_time_epoch', type: 'N' },
       ],
       hashKey: 'event_id',
