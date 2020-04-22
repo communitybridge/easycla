@@ -10,8 +10,8 @@ import uuid
 import cla
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import User, Company, Project, Event
-from cla.utils import get_user_instance, get_email_service
 from cla.models.event_types import EventType
+from cla.utils import get_user_instance, get_email_service
 
 
 def get_users():
@@ -201,7 +201,7 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
     email_service.send(subject, body, recipient_email)
 
     # Create event
-    event_data = f'CLA: {user.get_user_name()} requests to be whitelisted for the organization {company.get_company_name}'\
+    event_data = f'CLA: {user.get_user_name()} requests to be whitelisted for the organization {company.get_company_name}' \
                  f'{user.get_user_name()} <{user.get_user_email()}>'
     Event.create_event(
         event_user_id=user_id,
@@ -213,7 +213,8 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
     )
 
 
-def invite_cla_manager(contributor_id, contributor_name, contributor_email, cla_manager_name, cla_manager_email, project_name, company_name):
+def invite_cla_manager(contributor_id, contributor_name, contributor_email, cla_manager_name, cla_manager_email,
+                       project_name, company_name):
     """
     Sends email to the specified CLA Manager to sign up through the Corporate
     console and adds the requested user to the Approved List request queue.
@@ -243,7 +244,7 @@ def invite_cla_manager(contributor_id, contributor_name, contributor_email, cla_
                f'to user {contributor_name} with email {contributor_email}')
     # Send email to the admin. set account_exists=False since the admin needs to sign up through the Corporate Console.
     cla.log.info(log_msg)
-    send_email_to_cla_manager(contributor_id, contributor_name, contributor_email,
+    send_email_to_cla_manager(contributor_name, contributor_email,
                               cla_manager_name, cla_manager_email,
                               project_name, company_name, False)
 
@@ -288,7 +289,7 @@ def request_company_ccla(user_id, user_email, company_id, project_id):
                                   admin.get_lf_email(), project_name, company_name, True)
 
     # Audit event
-    event_data = f'Sent email to sign ccla for {project.get_project_name() }'
+    event_data = f'Sent email to sign ccla for {project.get_project_name()}'
     Event.create_event(
         event_data=event_data,
         event_type=EventType.RequestCCLA,
@@ -298,7 +299,8 @@ def request_company_ccla(user_id, user_email, company_id, project_id):
     )
 
 
-def send_email_to_cla_manager(contributor_name, contributor_email, cla_manager_name, cla_manager_email, project_name, company_name, account_exists):
+def send_email_to_cla_manager(contributor_name, contributor_email, cla_manager_name, cla_manager_email, project_name,
+                              company_name, account_exists):
     """
     Helper function to send an email to a prospective CLA Manager.
 

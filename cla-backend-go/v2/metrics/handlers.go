@@ -61,12 +61,6 @@ func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 
 	api.MetricsGetTopProjectsHandler = metrics.GetTopProjectsHandlerFunc(
 		func(params metrics.GetTopProjectsParams, user *auth.User) middleware.Responder {
-			if !user.Admin {
-				return metrics.NewGetTopProjectsUnauthorized().WithPayload(&models.ErrorResponse{
-					Code:    "401",
-					Message: "admin access required to for this request",
-				})
-			}
 			result, err := service.GetTopProjects()
 			if err != nil {
 				return metrics.NewGetTopProjectsBadRequest().WithPayload(errorResponse(err))
@@ -81,6 +75,14 @@ func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 				return metrics.NewListProjectMetricsBadRequest().WithPayload(errorResponse(err))
 			}
 			return metrics.NewListProjectMetricsOK().WithPayload(*result)
+		})
+	api.MetricsListCompanyProjectMetricsHandler = metrics.ListCompanyProjectMetricsHandlerFunc(
+		func(params metrics.ListCompanyProjectMetricsParams, user *auth.User) middleware.Responder {
+			result, err := service.ListCompanyProjectMetrics(params.CompanyID)
+			if err != nil {
+				return metrics.NewListCompanyProjectMetricsBadRequest().WithPayload(errorResponse(err))
+			}
+			return metrics.NewListCompanyProjectMetricsOK().WithPayload(*result)
 		})
 }
 

@@ -268,7 +268,7 @@ def invite_company_admin(
     POST: /user/{user_id}/invite-company-admin
 
     DATA: {
-            'contributor_email': 'Sally Field',
+            'contributor_name': 'Sally Field',
             'contributor_email': 'user@example.com',
             'cla_manager_name': 'John Doe',
             'cla_manager_email': 'admin@example.com',

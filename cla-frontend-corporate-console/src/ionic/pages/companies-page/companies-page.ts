@@ -116,6 +116,7 @@ export class CompaniesPage {
 
   mapCompanies(companies) {
     let rows = [];
+    companies = this.sortData(companies);
     for (let company of companies) {
       rows.push({
         CompanyID: company.companyID,
@@ -125,6 +126,18 @@ export class CompaniesPage {
       });
     }
     return rows;
+  }
+
+  sortData(companies: any[]) {
+    let joinedCompanies = companies.filter(company => company.status !== 'Pending Approval')
+    let requstCompanies = companies.filter(company => company.status === 'Pending Approval')
+    joinedCompanies = joinedCompanies.sort((a, b) => {
+      return a.companyName.toLowerCase().localeCompare(b.companyName.toLowerCase());
+    });
+    requstCompanies = requstCompanies.sort((a, b) => {
+      return a.companyName.toLowerCase().localeCompare(b.companyName.toLowerCase());
+    });
+    return joinedCompanies.concat(requstCompanies);
   }
 
   openSelectCompany() {

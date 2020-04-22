@@ -101,7 +101,7 @@ export class ClaCompanyAdminSendEmailModal {
     this.serverError = '';
     let data = {
       contributor_name: this.form.value.contributor_name,
-      contributor_email: this.form.value.contributor_name,
+      contributor_email: this.form.value.contributor_email,
       cla_manager_name: this.form.value.cla_manager_name,
       cla_manager_email: this.form.value.cla_manager_email,
       project_name: project.project_name,
