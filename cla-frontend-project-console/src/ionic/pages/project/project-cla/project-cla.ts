@@ -103,6 +103,9 @@ export class ProjectClaPage {
       this.loading.claProjects = false;
       this.projectsByExternalId = response.projects;
       this.claProjects = this.sortClaProjects(response.projects);
+    }, (error) => {
+      this.loading.claProjects = false;
+      console.log(`error loading projects: ${error}`);
     })
   }
 
@@ -389,8 +392,97 @@ export class ProjectClaPage {
     }
   }
 
-  trimCharacter(text, length) {
-    return text.length > length ? text.substring(0, length) + '...' : text;
+  hasMemberDocuments(project) {
+    return project.projectMemberDocuments !== null && project.projectMemberDocuments.length > 0;
   }
 
+  getMemberDocumentName(project) {
+    if (project.projectMemberDocuments !== null && project.projectMemberDocuments.length > 0) {
+      return project.projectMemberDocuments[project.projectMemberDocuments.length - 1].documentName
+    } else {
+      return "No Document";
+    }
+  }
+
+  getMemberDocumentDate(project) {
+    if (project.projectMemberDocuments !== null && project.projectMemberDocuments.length > 0) {
+      return project.projectMemberDocuments[project.projectMemberDocuments.length - 1].documentCreationDate
+    } else {
+      return "No Document";
+    }
+  }
+
+  getMemberDocumentVersion(project) {
+    if (project.projectMemberDocuments !== null && project.projectMemberDocuments.length > 0) {
+      const major = project.projectMemberDocuments[project.projectMemberDocuments.length - 1].documentMajorVersion;
+      const minor = project.projectMemberDocuments[project.projectMemberDocuments.length - 1].documentMinorVersion;
+      return `${major}.${minor}`;
+    } else {
+      return "v1.0";
+    }
+  }
+
+  hasCorporateDocuments(project) {
+    return project.projectCorporateDocuments !== null && project.projectCorporateDocuments.length > 0;
+  }
+
+  getCorporateDocumentName(project) {
+    if (project.projectCorporateDocuments !== null && project.projectCorporateDocuments.length > 0) {
+      return project.projectCorporateDocuments[project.projectCorporateDocuments.length - 1].documentName
+    } else {
+      return "No Document";
+    }
+  }
+
+  getCorporateDocumentDate(project) {
+    if (project.projectCorporateDocuments !== null && project.projectCorporateDocuments.length > 0) {
+      return project.projectCorporateDocuments[project.projectCorporateDocuments.length - 1].documentCreationDate
+    } else {
+      return "No Document";
+    }
+  }
+
+  getCorporateDocumentVersion(project) {
+    if (project.projectCorporateDocuments !== null && project.projectCorporateDocuments.length > 0) {
+      const major = project.projectCorporateDocuments[project.projectCorporateDocuments.length - 1].documentMajorVersion;
+      const minor = project.projectCorporateDocuments[project.projectCorporateDocuments.length - 1].documentMinorVersion;
+      return `${major}.${minor}`;
+    } else {
+      return "v1.0";
+    }
+  }
+
+  hasIndividualDocuments(project) {
+    return project.projectIndividualDocuments !== null && project.projectIndividualDocuments.length > 0;
+  }
+
+  getIndividualDocumentName(project) {
+    if (project.projectIndividualDocuments !== null && project.projectIndividualDocuments.length > 0) {
+      return project.projectIndividualDocuments[project.projectIndividualDocuments.length - 1].documentName
+    } else {
+      return "No Document";
+    }
+  }
+
+  getIndividualDocumentDate(project) {
+    if (project.projectIndividualDocuments !== null && project.projectIndividualDocuments.length > 0) {
+      return project.projectIndividualDocuments[project.projectIndividualDocuments.length - 1].documentCreationDate
+    } else {
+      return "No Document";
+    }
+  }
+
+  getIndividualDocumentVersion(project) {
+    if (project.projectIndividualDocuments !== null && project.projectIndividualDocuments.length > 0) {
+      const major = project.projectIndividualDocuments[project.projectIndividualDocuments.length - 1].documentMajorVersion;
+      const minor = project.projectIndividualDocuments[project.projectIndividualDocuments.length - 1].documentMinorVersion;
+      return `${major}.${minor}`;
+    } else {
+      return "v1.0";
+    }
+  }
+
+  trimCharacter(text, length) {
+    return text != null && text.length > length ? text.substring(0, length) + '...' : text;
+  }
 }
