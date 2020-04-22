@@ -521,6 +521,37 @@ paths:
       tags:
         - events
 
+  /company/{companyID}/project/{projectSFID}/events:
+    get:
+      summary: return recent events of company and project
+      description: Returns list of events of company and project
+      operationId: getRecentCompanyProjectEvents
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/path-projectSFID'
+        - $ref: '#/parameters/path-companyID'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/event-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - events
+
   /template:
     get:
       summary: Get Available Templates
@@ -1187,9 +1218,15 @@ parameters:
     type: string
     required: false
     enum: [ccla,cla]
+  path-projectSFID:
+    name: projectSFID
+    description: salesforce id of the project/foundation
+    in: path
+    type: string
+    required: true
   path-companyID:
     name: companyID
-    description: the company ID
+    description: id of the company
     in: path
     type: string
     required: true

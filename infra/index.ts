@@ -650,6 +650,7 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'event_user_id', type: 'S' },
         { name: 'event_project_id', type: 'S' },
         { name: 'event_date_and_contains_pii', type: 'B' },
+        { name: 'company_id_external_project_id', type: 'S' },
         { name: 'event_time_epoch', type: 'N' },
       ],
       hashKey: 'event_id',
@@ -675,6 +676,14 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'event-date-and-contains-pii-event-time-epoch-index',
           hashKey: 'event_date_and_contains_pii',
+          rangeKey: 'event_time_epoch',
+          projectionType: 'ALL',
+          readCapacity: 1,
+          writeCapacity: 1
+        },
+        {
+          name: 'company-id-external-project-id-event-epoch-time-index',
+          hashKey: 'company_id_external_project_id',
           rangeKey: 'event_time_epoch',
           projectionType: 'ALL',
           readCapacity: 1,

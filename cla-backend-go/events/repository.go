@@ -12,9 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/communitybridge/easycla/cla-backend-go/utils"
-
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 
@@ -41,6 +40,7 @@ type Repository interface {
 	CreateEvent(event *models.Event) error
 	SearchEvents(params *eventOps.SearchEventsParams, pageSize int64) (*models.EventList, error)
 	GetRecentEvents(pageSize int64) (*models.EventList, error)
+	GetRecentEventsForCompanyProject(companyID, projectID string, pageSize int64) (*models.EventList, error)
 }
 
 // repository data model
@@ -100,6 +100,10 @@ func (repo *repository) CreateEvent(event *models.Event) error {
 	addAttribute(input.Item, "event_date_and_contains_pii", eventDateAndContainsPII)
 	input.Item["contains_pii"] = &dynamodb.AttributeValue{BOOL: &event.ContainsPII}
 	input.Item["event_time_epoch"] = &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(currentTime.Unix(), 10))}
+	if event.EventCompanyID != "" && event.EventProjectExternalID != "" {
+		companyIDexternalProjectID := fmt.Sprintf("%s#%s", event.EventCompanyID, event.EventProjectExternalID)
+		addAttribute(input.Item, "company_id_external_project_id", companyIDexternalProjectID)
+	}
 
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
@@ -413,6 +417,72 @@ func (repo repository) getEventByDay(day string, containsPII bool, pageSize int6
 		}
 		if int64(len(events)) >= pageSize {
 			return events[0:pageSize], nil
+		}
+		if len(results.LastEvaluatedKey) != 0 {
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			break
+		}
+	}
+	return events, nil
+}
+
+func (repo repository) GetRecentEventsForCompanyProject(companyID, projectSFID string, pageSize int64) (*models.EventList, error) {
+	key := fmt.Sprintf("%s#%s", companyID, projectSFID)
+	indexName := "company-id-external-project-id-event-epoch-time-index"
+	condition := expression.Key("company_id_external_project_id").Equal(expression.Value(key))
+	events, err := repo.eventIndexQuery(indexName, condition, nil, pageSize, false)
+	if err != nil {
+		return nil, err
+	}
+	var out models.EventList
+	out.Events = events
+	return &out, nil
+}
+
+func (repo repository) eventIndexQuery(indexName string, condition expression.KeyConditionBuilder, filter *expression.ConditionBuilder, pageSize int64, scanIndexForward bool) ([]*models.Event, error) {
+	tableName := fmt.Sprintf("cla-%s-events", repo.stage)
+	builder := expression.NewBuilder().WithProjection(buildProjection())
+	builder = builder.WithKeyCondition(condition)
+	if filter != nil {
+		builder = builder.WithFilter(*filter)
+	}
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String(indexName),
+		Limit:                     aws.Int64(pageSize), // The maximum number of items to evaluate (not necessarily the number of matching items)
+		ScanIndexForward:          aws.Bool(scanIndexForward),
+	}
+
+	events := make([]*models.Event, 0)
+
+	for {
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		if errQuery != nil {
+			log.Warnf("error retrieving events. error = %s", errQuery.Error())
+			return nil, errQuery
+		}
+
+		eventsList, modelErr := buildEventListModels(results)
+		if modelErr != nil {
+			return nil, modelErr
+		}
+
+		if len(eventsList) > 0 {
+			events = append(events, eventsList...)
+		}
+		if int64(len(events)) >= pageSize {
+			events = events[0:pageSize]
+			break
 		}
 		if len(results.LastEvaluatedKey) != 0 {
 			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
