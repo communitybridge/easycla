@@ -31,11 +31,10 @@ var (
 func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsService events.Service) {
 	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, user *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
-		if !user.IsUserAuthorized(auth.Project, params.Body.ProjectExternalID) {
-			return project.NewCreateProjectUnauthorized().WithPayload(&models.ErrorResponse{
-				Code:    "401",
-				Message: "user does not have access to this project",
-			})
+		if !user.Admin {
+			if !user.Allowed || !user.IsUserAuthorized(auth.Project, params.Body.ProjectExternalID) {
+				return project.NewCreateProjectUnauthorized()
+			}
 		}
 		if params.Body.ProjectName == "" || params.Body.ProjectACL == nil {
 			msg := "Missing Project Name or Project ACL parameter."
@@ -111,22 +110,20 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 		if projectModel == nil {
 			return project.NewGetProjectByIDNotFound()
 		}
-		if !user.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
-			return project.NewGetProjectByIDUnauthorized().WithPayload(&models.ErrorResponse{
-				Code:    "401",
-				Message: "user does not have access to this project",
-			})
+		if !user.Admin {
+			if !user.Allowed || !user.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
+				return project.NewGetProjectByIDUnauthorized()
+			}
 		}
 
 		return project.NewGetProjectByIDOK().WithPayload(projectModel)
 	})
 
 	api.ProjectGetProjectsByExternalIDHandler = project.GetProjectsByExternalIDHandlerFunc(func(projectParams project.GetProjectsByExternalIDParams, user *auth.User) middleware.Responder {
-		if !user.IsUserAuthorized(auth.Project, projectParams.ExternalID) {
-			return project.NewGetProjectsByExternalIDUnauthorized().WithPayload(&models.ErrorResponse{
-				Code:    "401",
-				Message: "user does not have access to this project",
-			})
+		if !user.Admin {
+			if !user.Allowed || !user.IsUserAuthorized(auth.Project, projectParams.ExternalID) {
+				return project.NewGetProjectsByExternalIDUnauthorized()
+			}
 		}
 
 		projectModel, err := service.GetProjectsByExternalID(&v1ProjectOps.GetProjectsByExternalIDParams{
@@ -151,11 +148,10 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 		if projectModel == nil {
 			return project.NewGetProjectByNameNotFound()
 		}
-		if !user.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
-			return project.NewGetProjectByNameUnauthorized().WithPayload(&models.ErrorResponse{
-				Code:    "401",
-				Message: "user does not have access to this project",
-			})
+		if !user.Admin {
+			if !user.Allowed || !user.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
+				return project.NewGetProjectByNameUnauthorized()
+			}
 		}
 
 		return project.NewGetProjectByNameOK().WithPayload(projectModel)
@@ -172,11 +168,10 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 			}
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
-		if !user.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
-			return project.NewDeleteProjectByIDUnauthorized().WithPayload(&models.ErrorResponse{
-				Code:    "401",
-				Message: "user does not have access to this project",
-			})
+		if !user.Admin {
+			if !user.Allowed || !user.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
+				return project.NewDeleteProjectByIDUnauthorized()
+			}
 		}
 		err = service.DeleteProject(projectParams.ProjectSfdcID)
 		if err != nil {
@@ -205,11 +200,10 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 			}
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
-		if !user.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
-			return project.NewUpdateProjectUnauthorized().WithPayload(&models.ErrorResponse{
-				Code:    "401",
-				Message: "user does not have access to this project",
-			})
+		if !user.Admin {
+			if !user.Allowed || !user.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
+				return project.NewUpdateProjectUnauthorized()
+			}
 		}
 		projectModel, err = service.UpdateProject(&projectParams.Body)
 		if err != nil {

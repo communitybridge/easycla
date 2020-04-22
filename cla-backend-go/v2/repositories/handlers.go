@@ -16,6 +16,11 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 	api.GithubRepositoriesGetProjectGithubRepositoriesHandler = github_repositories.GetProjectGithubRepositoriesHandlerFunc(
 		func(params github_repositories.GetProjectGithubRepositoriesParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !authUser.Admin {
+				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
+					return github_repositories.NewGetProjectGithubRepositoriesUnauthorized()
+				}
+			}
 			result, err := service.ListProjectRepositories(params.ProjectSFID)
 			if err != nil {
 				return github_repositories.NewGetProjectGithubRepositoriesBadRequest().WithPayload(errorResponse(err))
@@ -26,6 +31,11 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 	api.GithubRepositoriesAddProjectGithubRepositoryHandler = github_repositories.AddProjectGithubRepositoryHandlerFunc(
 		func(params github_repositories.AddProjectGithubRepositoryParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !authUser.Admin {
+				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
+					return github_repositories.NewAddProjectGithubRepositoryUnauthorized()
+				}
+			}
 			result, err := service.AddGithubRepository(params.ProjectSFID, &params.GithubRepositoryInput)
 			if err != nil {
 				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
@@ -45,6 +55,11 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 	api.GithubRepositoriesDeleteProjectGithubRepositoryHandler = github_repositories.DeleteProjectGithubRepositoryHandlerFunc(
 		func(params github_repositories.DeleteProjectGithubRepositoryParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !authUser.Admin {
+				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
+					return github_repositories.NewDeleteProjectGithubRepositoryUnauthorized()
+				}
+			}
 			ghRepo, err := service.GetGithubRepository(params.RepositoryID)
 			if err != nil {
 				if err == repositories.ErrGithubRepositoryNotFound {
