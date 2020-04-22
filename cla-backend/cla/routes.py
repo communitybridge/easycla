@@ -257,7 +257,7 @@ def request_company_whitelist(
 @hug.post("/user/{contributor_id}/invite-company-admin", versions=2)
 def invite_company_admin(
     contributor_id: hug.types.uuid,
-    contributor_name: cla.hug_types.text,
+    contributor_name: hug.types.text,
     contributor_email: cla.hug_types.email,
     cla_manager_name: hug.types.text,
     cla_manager_email: cla.hug_types.email,
