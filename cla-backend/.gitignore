@@ -10,3 +10,4 @@ env.json
 _env.json
 .mypy_cache
 .venv
+.vscode/

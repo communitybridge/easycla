@@ -2,11 +2,10 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { NavController, NavParams, IonicPage, ModalController } from 'ionic-angular';
+import { NavController, NavParams, IonicPage } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { RolesService } from '../../services/roles.service';
 import { AuthService } from '../../services/auth.service';
-import { KeycloakService } from '../../services/keycloak/keycloak.service';
 import { Restricted } from '../../decorators/restricted';
 
 @Restricted({
@@ -35,11 +34,9 @@ export class ClaGerritIndividualPage {
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
-    private modalCtrl: ModalController,
     private claService: ClaService,
     private rolesService: RolesService,
     private authService: AuthService,
-    private keycloak: KeycloakService
   ) {
     this.getDefaults();
     this.gerritId = navParams.get('gerritId');
@@ -69,7 +66,7 @@ export class ClaGerritIndividualPage {
     return this.authService.isAuthenticated;
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
   getProject(gerritId) {
     //retrieve projectId from this Gerrit
@@ -99,12 +96,6 @@ export class ClaGerritIndividualPage {
       return_url_type: 'Gerrit'
     };
     this.claService.postIndividualSignatureRequest(signatureRequest).subscribe((response) => {
-      // returns {
-      //   user_id:
-      //   signature_id:
-      //   project_id:
-      //   sign_url: docusign.com/some-docusign-url
-      // }
       this.signature = response;
     });
   }

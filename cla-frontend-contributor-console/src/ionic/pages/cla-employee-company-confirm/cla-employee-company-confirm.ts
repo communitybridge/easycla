@@ -6,6 +6,7 @@ import { NavController, NavParams, IonicPage, ModalController } from 'ionic-angu
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CheckboxValidator } from '../../validators/checkbox';
 import { ClaService } from '../../services/cla.service';
+import { generalConstants } from '../../constants/general';
 
 @IonicPage({
   segment: 'project/:projectId/user/:userId/employee/company/:companyId/confirm'
@@ -20,19 +21,16 @@ export class ClaEmployeeCompanyConfirmPage {
   userId: string;
   companyId: string;
   signingType: string; // used to differentiate Github/Gerrit Users
-
   user: any;
   project: any;
   company: any;
-  gitService: string;
   signature: any;
 
   form: FormGroup;
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
-
   errorMessage: string = null;
-  helpDeskLink: URL = new URL('https://jira.linuxfoundation.org/servicedesk/customer/portal/4');
+  helpDeskLink: URL = new URL(generalConstants.getHelpURL);
 
   constructor(
     public navCtrl: NavController,
@@ -100,7 +98,6 @@ export class ClaEmployeeCompanyConfirmPage {
 
     if (!this.form.valid) {
       this.currentlySubmitting = false;
-      // prevent submit
       return;
     }
 
@@ -115,8 +112,6 @@ export class ClaEmployeeCompanyConfirmPage {
 
       let errors = response.hasOwnProperty('errors');
       if (errors) {
-        console.log('Signature request response:');
-        console.log(response.errors);
         this.errorMessage = response.errors;
 
         if (response.errors.hasOwnProperty('ccla_whitelist')) {
