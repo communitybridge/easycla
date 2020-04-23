@@ -1,11 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
-import { AlertController, IonicPage, ModalController, NavController, NavParams, ViewController } from 'ionic-angular';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { EmailValidator } from '../../validators/email';
-import { ClaService } from '../../services/cla.service';
+import {Component} from '@angular/core';
+import {AlertController, IonicPage, ModalController, NavParams, ViewController} from 'ionic-angular';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {EmailValidator} from '../../validators/email';
+import {ClaService} from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company/contact'
@@ -54,6 +54,7 @@ export class ClaEmployeeRequestAccessModal {
 
     this.form = formBuilder.group({
       user_email: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
+      user_name: ['', Validators.compose([Validators.required, Validators.minLength(3)])],
       message: ['', Validators.compose([Validators.required])],
       recipient_name: [''],
       recipient_email: [''],
@@ -76,7 +77,7 @@ export class ClaEmployeeRequestAccessModal {
     } else if (option === 'enter manager') {
       this.showManagerSelectOption = false;
       this.showManagerEnterOption = true;
-      if(this.managers.length > 1) {
+      if (this.managers.length > 1) {
         this.resetFormValues('manager');
       }
       this.form.controls['recipient_name'].setValidators(Validators.compose([Validators.required]));
@@ -91,20 +92,19 @@ export class ClaEmployeeRequestAccessModal {
   }
 
   getCLAManagerDetails(managerId) {
-    const manager = this.managers.find((manager) => {
-      return (manager.userID = managerId);
+    return this.managers.find((manager) => {
+      return (manager.userID === managerId);
     });
-    return manager;
   }
 
-   getDefaults() {
+  getDefaults() {
     this.userEmails = [];
   }
 
   ngOnInit() {
     this.getUser(this.userId, this.authenticated).subscribe((user) => {
       if (user) {
-        if(user.user_emails.length === 1) {
+        if (user.user_emails.length === 1) {
           this.form.controls['user_email'].setValue(user.user_emails[0]);
         }
         this.userEmails = user.user_emails || [];
@@ -158,7 +158,7 @@ export class ClaEmployeeRequestAccessModal {
           if (cclaSignatures.length) {
             this.cclaSignature = cclaSignatures[0];
             if (this.cclaSignature.signatureACL != null) {
-              if(this.cclaSignature.signatureACL.length === 1) {
+              if (this.cclaSignature.signatureACL.length === 1) {
                 this.form.controls['manager'].setValue(this.cclaSignature.signatureACL[0].userID);
               }
               for (let manager of this.cclaSignature.signatureACL) {
@@ -193,35 +193,42 @@ export class ClaEmployeeRequestAccessModal {
       this.currentlySubmitting = false;
       return;
     }
- 
-    let selectedMangerEmail;
-    let selectedManagerUsername;
+
+    let managerEmail = '';
+    let managerUsername = '';
+
+    // 'select manager' or 'enter manager'
     if (this.form.value.manager && this.form.value.managerOptions === 'select manager') {
-     selectedMangerEmail = this.getCLAManagerDetails(this.form.value.manager).lfEmail;
-     selectedManagerUsername = this.getCLAManagerDetails(this.form.value.manager).username;
+      managerEmail = this.getCLAManagerDetails(this.form.value.manager).lfEmail;
+      managerUsername = this.getCLAManagerDetails(this.form.value.manager).username;
+    } else {
+      managerEmail = this.form.value.recipient_email;
+      managerUsername = this.form.value.recipient_name;
     }
 
     let data = {
       company_id: this.companyId,
       user_id: this.userId,
+      user_name: this.form.value.user_name,
       user_email: this.form.value.user_email,
       project_id: this.projectId,
       message: this.form.value.message,
-      recipient_name: this.form.value.managerOptions === 'select manager' ? selectedManagerUsername : this.form.value.recipient_name,
-      recipient_email: this.form.value.managerOptions === 'select manager' ? selectedMangerEmail : this.form.value.recipient_email,
+      recipient_name: managerUsername,
+      recipient_email: managerEmail,
     };
 
-    this.claService.postUserMessageToCompanyManager(this.userId, this.companyId, data).subscribe((response) => {
+    this.claService.requestToBeOnCompanyApprovedList(this.userId, this.companyId, data).subscribe((response) => {
       this.loading = true;
       this.emailSent();
     });
-
   }
 
   saveWhiteListRequest() {
     let user = {
-      userId: this.userId
-    }
+      userId: this.userId,
+      userName: this.form.value.user_name,
+      userEmail: this.form.value.user_email,
+    };
     this.claService.postCCLAWhitelistRequest(this.companyId, this.projectId, user).subscribe(
       () => {
         console.warn(this.userId + ' ccla approved list request for project: ' + this.projectId + ' for company: ' + this.companyId);
@@ -257,6 +264,9 @@ export class ClaEmployeeRequestAccessModal {
             case 'managerOptions':
               message = `*Selecting an Option for Entering a CLA Manager is ${keyError}`;
               break;
+            case 'user_name':
+              message = `*User Name Field is ${keyError}`;
+              break;
             case 'user_email':
               message = `*Email Authorize Field is ${keyError}`;
               break;
@@ -264,7 +274,7 @@ export class ClaEmployeeRequestAccessModal {
               message = `*Receipent Email Field is ${keyError}`;
               break;
             case 'message':
-                  message = `*Message Field is ${keyError}`;
+              message = `*Message Field is ${keyError}`;
               break;
 
             default:
