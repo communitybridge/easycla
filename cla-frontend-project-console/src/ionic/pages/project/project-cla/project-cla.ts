@@ -105,7 +105,6 @@ export class ProjectClaPage {
       this.claProjects = this.sortClaProjects(response.projects);
     }, (error) => {
       this.loading.claProjects = false;
-      console.log(`error loading projects: ${error}`);
     })
   }
 

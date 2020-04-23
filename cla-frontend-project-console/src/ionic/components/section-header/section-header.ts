@@ -12,26 +12,15 @@ import { ClaService } from '../../services/cla.service';
 export class SectionHeaderComponent {
   @Input('projectId') private projectId: string;
 
-  project: any;
+  project: any = null;
 
   constructor(
     private claService: ClaService,
     public modalCtrl: ModalController
-  ) {
-    this.getDefaults();
-  }
+  ) { }
 
   ngOnInit() {
     this.getProject(this.projectId);
-  }
-
-  getDefaults() {
-    this.project = {
-      id: '',
-      name: 'Project',
-      logoRef: '',
-      description: ''
-    };
   }
 
   getProject(projectId) {
