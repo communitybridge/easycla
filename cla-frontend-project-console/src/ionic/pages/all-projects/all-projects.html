@@ -55,21 +55,11 @@
               </div>
             </div>
             <ion-card-content>
-              <div class="expand" *ngIf="expand && expand[project.id]">
-                <dl>
-                  <dt>Industry:</dt>
-                  <dd>{{ projectSectors[project.sector] }}</dd>
-                </dl>
-                <dl *ngIf="!userRoles.isStaffInc">
-                  <dt>PM:</dt>
-                  <dd>
-                    <span *ngFor="let manager of project.managers" class="manager">{{ manager }}</span>
-                    <span *ngIf="!project.managers.length">none</span>
-                  </dd>
-                </dl>
-              </div>
-              <p>
+              <p *ngIf="project.description">
                 {{ project.description }}
+              </p>
+              <p *ngIf="!project.description" class="error">
+                Description not available.
               </p>
             </ion-card-content>
           </ion-card>

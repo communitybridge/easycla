@@ -138,7 +138,7 @@
                             color="light">
                       View Signatures
                     </button>
-                    <button ion-button (click)="openClaViewCompaniesModal(project.projectID, project.projectName)"
+                    <button  *ngIf="hasCorporateDocuments(project)" ion-button (click)="openClaViewCompaniesModal(project.projectID, project.projectName)"
                             color="light">
                       View Companies
                     </button>
