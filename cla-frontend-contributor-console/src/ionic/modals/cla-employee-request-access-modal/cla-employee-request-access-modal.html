@@ -68,7 +68,7 @@
             <ion-textarea formControlName="recipient_name"></ion-textarea>
           </ion-item>
           <p class="field-description">
-            Type your CLA manager's name. 
+            Type your CLA manager's name.
             <ng-container *ngIf="!form.controls.recipient_email.valid && (form.controls.recipient_email.touched || submitAttempt)">
               <span class="error-message">* CLA manager's name is required.</span>
             </ng-container>
@@ -79,9 +79,26 @@
             <ion-textarea formControlName="recipient_email"></ion-textarea>
           </ion-item>
           <p class="field-description">
-            Type an E-Mail. 
+            Type an E-Mail.
             <ng-container *ngIf="!form.controls.recipient_email.valid && (form.controls.recipient_email.touched || submitAttempt)">
               <span class="error-message">* A valid email address is required.</span>
+            </ng-container>
+          </p>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-list-header no-lines>
+          <b>Enter Your Name</b>
+        </ion-list-header>
+        <ion-col col-12>
+          <ion-item lines="none">
+            <ion-label stacked>Your Name:</ion-label>
+            <ion-textarea formControlName="user_name"></ion-textarea>
+          </ion-item>
+          <p class="field-description">Add your name to help identify you to your CLA Manager.
+            <ng-container *ngIf="!form.controls.user_name.valid && (form.controls.user_name.touched || submitAttempt)">
+              <span class="error-message"> * Name is required </span>
             </ng-container>
           </p>
         </ion-col>
@@ -103,7 +120,7 @@
               <span class="error-message"> * A valid email address is required </span>
             </ng-container>
           </p>
-          
+
         </ion-col>
       </ion-row>
 
