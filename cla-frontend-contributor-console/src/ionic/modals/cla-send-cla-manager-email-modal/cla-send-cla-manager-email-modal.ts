@@ -1,12 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
-import { NavParams, ViewController, AlertController, IonicPage } from 'ionic-angular';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { Validators } from '@angular/forms';
-import { EmailValidator } from '../../validators/email';
-import { ClaService } from '../../services/cla.service';
+import {Component} from '@angular/core';
+import {AlertController, IonicPage, NavParams, ViewController} from 'ionic-angular';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {EmailValidator} from '../../validators/email';
+import {ClaService} from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/employee/company/contact'
@@ -42,6 +41,7 @@ export class ClaSendClaManagerEmailModal {
     this.authenticated = navParams.get('authenticated');
     this.form = formBuilder.group({
       email: ['', Validators.compose([Validators.required, EmailValidator.isValid])],
+      user_name: ['', Validators.compose([Validators.required, Validators.minLength(3)])],
       message: ['']
     });
   }
@@ -105,8 +105,11 @@ export class ClaSendClaManagerEmailModal {
       this.currentlySubmitting = false;
       return;
     }
+
     const data = {
-      userId: this.userId
+      userId: this.userId,
+      userName: this.form.value.user_name,
+      userEmail: this.form.value.email,
     };
 
     this.claService.postCCLAWhitelistRequest(this.companyId, this.projectId, data).subscribe(
