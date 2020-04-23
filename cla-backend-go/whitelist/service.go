@@ -61,7 +61,7 @@ func (s service) AddCclaWhitelistRequest(companyID string, projectID string, arg
 	if userModel == nil {
 		return "", errors.New("invalid user")
 	}
-	return s.repo.AddCclaWhitelistRequest(companyModel, projectModel, userModel)
+	return s.repo.AddCclaWhitelistRequest(companyModel, projectModel, userModel, args.Name, args.Email)
 }
 
 // DeleteCclaWhitelistRequest is the handler for the Delete CLA Whitelist request

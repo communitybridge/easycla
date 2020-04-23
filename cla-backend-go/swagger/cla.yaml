@@ -2298,6 +2298,10 @@ definitions:
     properties:
       userId:
         type: string
+      name:
+        type: string
+      email:
+        type: string
 
   ccla-whitelist-request-list:
     type: object
