@@ -170,7 +170,7 @@
                           </div>
                         </ion-card-title>
                         <ng-container *ngIf="!hasCorporateDocuments(project)">
-                          <p>
+                          <p class="error">
                             No template selected.
                           </p>
                         </ng-container>
@@ -226,7 +226,7 @@
                           </div>
                         </ion-card-title>
                         <ng-container *ngIf="!hasIndividualDocuments(project)">
-                          <p>
+                          <p class="error">
                             No template selected.
                           </p>
                         </ng-container>
