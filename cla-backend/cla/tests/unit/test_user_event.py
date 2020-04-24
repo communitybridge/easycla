@@ -21,12 +21,12 @@ def test_request_company_whitelist(mock_event, create_event_user, project, compa
     """ Test user requesting to be added to the Approved List event """
     event_type = EventType.RequestCompanyWL
     User.load = Mock()
+    User.get_user_name = Mock(return_value=user.get_user_name())
     User.get_user_emails = Mock(return_value=[user.get_user_email()])
     User.get_user_email = Mock(return_value=user.get_user_email())
     Company.load = Mock()
-    Project.load = Mock()
-    User.get_user_name = Mock(return_value=user.get_user_name())
     Company.get_company_name = Mock(return_value=company.get_company_name())
+    Project.load = Mock()
     Project.get_project_name = Mock(return_value=project.get_project_name())
     user_controller.get_email_service = Mock()
     user_controller.send = Mock()
@@ -37,20 +37,23 @@ def test_request_company_whitelist(mock_event, create_event_user, project, compa
         user.get_user_email(),
         project.get_project_id(),
         message="Please add",
+        recipient_name="Recipient Name",
+        recipient_email="Recipient Email",
     )
+
     event_data = (f'CLA: contributor {user.get_user_name()} requests to be Approved for the '
                   f'project: {project.get_project_name()} '
-                  f'organization: {company.get_company_name} '
+                  f'organization: {company.get_company_name()} '
                   f'as {user.get_user_name()} <{user.get_user_email()}>')
 
-    #mock_event.assert_called_once_with(
-    #    event_user_id=user.get_user_id(),
-    #    event_project_id=project.get_project_id(),
-    #    event_company_id=company.get_company_id(),
-    #    event_type=event_type,
-    #    event_data=event_data,
-    #    contains_pii=True,
-    #)
+    mock_event.assert_called_once_with(
+       event_user_id=user.get_user_id(),
+       event_project_id=project.get_project_id(),
+       event_company_id=company.get_company_id(),
+       event_type=event_type,
+       event_data=event_data,
+       contains_pii=True,
+    )
 
 
 @patch('cla.controllers.user.Event.create_event')
