@@ -18,7 +18,7 @@
               {{ document.documentCreationDate | date:'medium' }} <br>
               Version {{ document.documentMajorVersion }}.{{ document.documentMinorVersion }}
             </td>
-            <td class="actions-cell">
+            <td *ngIf="document.documentS3URL" class="actions-cell">
               <button ion-button icon-only clear round (click)="openPdfModal(document)">
                 <ion-img src="/assets/img/pdf.png" title="Download as a PDF" alt="pdf icon"></ion-img>
               </button>
@@ -28,7 +28,9 @@
 
         <ng-container *ngIf="previousDocuments">
           <tr>
-            <th><ion-icon name="checkmark"></ion-icon></th>
+            <th>
+              <ion-icon name="checkmark"></ion-icon>
+            </th>
             <th colspan="5">Previous Versions</th>
           </tr>
           <tr *ngFor="let document of previousDocuments">
@@ -37,7 +39,7 @@
               {{ document.documentCreationDate | date:'medium' }} <br>
               Version {{ document.documentMajorVersion }}.{{ document.documentMinorVersion }}
             </td>
-            <td class="actions-cell">
+            <td *ngIf="document.documentS3URL" class="actions-cell">
               <button ion-button icon-only clear round (click)="openPdfModal(document)">
                 <ion-img src="/assets/img/pdf.png" title="Download as a PDF" alt="pdf icon"></ion-img>
               </button>
