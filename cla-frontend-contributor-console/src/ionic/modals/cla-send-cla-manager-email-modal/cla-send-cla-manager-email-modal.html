@@ -27,9 +27,27 @@
             you like to send an E-Mail Notification to the CLA Manager to sign the Corporate CLA?</p>
         </ion-col>
         <ion-col col-12 class="error" *ngIf="hasRequestError">
-          CCLA Approval List request already exists
+          CCLA Approval List request already exists for you.
         </ion-col>
       </ion-row>
+
+      <ion-row>
+        <ion-list-header no-lines>
+          <b>Enter Your Name</b>
+        </ion-list-header>
+        <ion-col col-12>
+          <ion-item lines="none">
+            <ion-label stacked>Your Name:</ion-label>
+            <ion-textarea formControlName="user_name"></ion-textarea>
+          </ion-item>
+          <p class="field-description">Add your name to help identify you to your CLA Manager.
+            <ng-container *ngIf="!form.controls.user_name.valid && (form.controls.user_name.touched || submitAttempt)">
+              <span class="error-message"> * Name is required </span>
+            </ng-container>
+          </p>
+        </ion-col>
+      </ion-row>
+
       <ion-row>
         <ion-col col-12>
           <ion-item>
@@ -49,7 +67,6 @@
   </form>
 </ion-content>
 
-<ion-footer>
 <ion-footer class="fixed">
   <ion-toolbar>
     <ion-buttons end>

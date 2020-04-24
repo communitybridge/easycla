@@ -109,7 +109,7 @@
 
                               <td data-title="CLA Manager">
                                 <button clear ion-button color="secondary" (click)="viewCLAManager(row)">
-                                  View Manager
+                                  View Manager{{row.ProjectManagers != null && row.ProjectManagers.length > 0 ? 's' : ''}}
                                 </button>
                               </td>
 

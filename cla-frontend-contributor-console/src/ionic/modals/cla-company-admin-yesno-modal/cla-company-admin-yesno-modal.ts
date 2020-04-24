@@ -14,6 +14,8 @@ import { EnvConfig } from '../../services/cla.env.utils';
 })
 export class ClaCompanyAdminYesnoModal {
   projectId: string;
+  companyId: string;
+  companyName: string;
   userId: string;
   authenticated: boolean; //true if coming from gerrit/corporate
   consoleLink: string;
@@ -24,6 +26,10 @@ export class ClaCompanyAdminYesnoModal {
     public modalCtrl: ModalController
   ) {
     this.projectId = navParams.get('projectId');
+    // May be empty
+    this.companyId = navParams.get('companyId') || '';
+    // May be empty
+    this.companyName = navParams.get('companyName') || '';
     this.userId = navParams.get('userId');
     this.authenticated = navParams.get('authenticated');
     this.getDefaults();
@@ -44,6 +50,8 @@ export class ClaCompanyAdminYesnoModal {
   openCompanyAdminSendEmail() {
     let modal = this.modalCtrl.create('ClaCompanyAdminSendEmailModal', {
       projectId: this.projectId,
+      companyId: this.companyId,
+      companyName: this.companyName,
       userId: this.userId,
       authenticated: this.authenticated
     });

@@ -7,6 +7,7 @@ import { ClaService } from '../../services/cla.service';
 import { FilterService } from '../../services/filter.service';
 import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
+import { generalConstants } from '../../constants/general';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -21,7 +22,6 @@ import { Restricted } from '../../decorators/restricted';
 })
 export class AllProjectsPage {
   loading: any;
-  projectSectors: any;
   allProjects: any;
   allFilteredProjects: any;
   userRoles: any;
@@ -102,10 +102,7 @@ export class AllProjectsPage {
     }
   }
 
-  /**
-   * Opens the access page in a new window
-   */
   openAccessPage() {
-    window.open('https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started', '_blank');
+    window.open(generalConstants.getAccessURL, '_blank');
   }
 }
