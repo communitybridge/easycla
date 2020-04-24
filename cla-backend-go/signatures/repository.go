@@ -39,7 +39,7 @@ type SignatureRepository interface {
 
 	GetSignature(signatureID string) (*models.Signature, error)
 	GetProjectSignatures(params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error)
-	GetProjectCompanySignatures(params signatures.GetProjectCompanySignaturesParams, pageSize int64) (*models.Signatures, error)
+	GetProjectCompanySignatures(companyID, projectID string, nextKey *string, pageSize int64) (*models.Signatures, error)
 	GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetCompanySignatures(params signatures.GetCompanySignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetUserSignatures(params signatures.GetUserSignaturesParams, pageSize int64) (*models.Signatures, error)
@@ -495,7 +495,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 		// Add to the signatures response model to the list
 		signatures = append(signatures, signatureList...)
 
-		log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
+		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
 			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
@@ -538,7 +538,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 }
 
 // GetProjectCompanySignatures returns a list of signatures for the specified project and specified company
-func (repo repository) GetProjectCompanySignatures(params signatures.GetProjectCompanySignaturesParams, pageSize int64) (*models.Signatures, error) {
+func (repo repository) GetProjectCompanySignatures(companyID, projectID string, nextKey *string, pageSize int64) (*models.Signatures, error) {
 
 	queryStartTime := time.Now()
 
@@ -546,14 +546,14 @@ func (repo repository) GetProjectCompanySignatures(params signatures.GetProjectC
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 
 	// These are the keys we want to match
-	condition := expression.Key("signature_project_id").Equal(expression.Value(params.ProjectID))
-	filter := expression.Name("signature_reference_id").Equal(expression.Value(params.CompanyID))
+	condition := expression.Key("signature_project_id").Equal(expression.Value(projectID))
+	filter := expression.Name("signature_reference_id").Equal(expression.Value(companyID))
 
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithFilter(filter).WithProjection(buildProjection()).Build()
 	if err != nil {
 		log.Warnf("error building expression for project signature ID query, project: %s, error: %v",
-			params.ProjectID, err)
+			projectID, err)
 		return nil, err
 	}
 
@@ -570,16 +570,16 @@ func (repo repository) GetProjectCompanySignatures(params signatures.GetProjectC
 	}
 
 	// If we have the next key, set the exclusive start key value
-	if params.NextKey != nil {
-		log.Debugf("Received a nextKey, value: %s", *params.NextKey)
+	if nextKey != nil {
+		log.Debugf("Received a nextKey, value: %s", *nextKey)
 		// The primary key of the first item that this operation will evaluate.
 		// and the query key (if not the same)
 		queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
 			"signature_id": {
-				S: params.NextKey,
+				S: nextKey,
 			},
 			"signature_project_id": {
-				S: &params.ProjectID,
+				S: &projectID,
 			},
 		}
 	}
@@ -594,7 +594,7 @@ func (repo repository) GetProjectCompanySignatures(params signatures.GetProjectC
 		results, errQuery := repo.dynamoDBClient.Query(queryInput)
 		if errQuery != nil {
 			log.Warnf("error retrieving project signature ID for project: %s with company: %s, error: %v",
-				params.ProjectID, params.CompanyID, errQuery)
+				projectID, companyID, errQuery)
 			return nil, errQuery
 		}
 
@@ -602,17 +602,17 @@ func (repo repository) GetProjectCompanySignatures(params signatures.GetProjectC
 			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
 		// Convert the list of DB models to a list of response models
-		signatureList, modelErr := repo.buildProjectSignatureModels(results, params.ProjectID)
+		signatureList, modelErr := repo.buildProjectSignatureModels(results, projectID)
 		if modelErr != nil {
 			log.Warnf("error converting DB model to response model for signatures with project %s with company: %s, error: %v",
-				params.ProjectID, params.CompanyID, modelErr)
+				projectID, companyID, modelErr)
 			return nil, modelErr
 		}
 
 		// Add to the signatures response model to the list
 		signatures = append(signatures, signatureList...)
 
-		log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
+		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
 			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
@@ -620,7 +620,7 @@ func (repo repository) GetProjectCompanySignatures(params signatures.GetProjectC
 					S: aws.String(lastEvaluatedKey),
 				},
 				"signature_project_id": {
-					S: &params.ProjectID,
+					S: &projectID,
 				},
 			}
 		} else {
@@ -638,7 +638,7 @@ func (repo repository) GetProjectCompanySignatures(params signatures.GetProjectC
 	}
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
 	if err != nil {
-		log.Warnf("error retrieving total record count for project: %s, error: %v", params.ProjectID, err)
+		log.Warnf("error retrieving total record count for project: %s, error: %v", projectID, err)
 		return nil, err
 	}
 
@@ -646,7 +646,7 @@ func (repo repository) GetProjectCompanySignatures(params signatures.GetProjectC
 	totalCount := *describeTableResult.Table.ItemCount
 
 	return &models.Signatures{
-		ProjectID:      params.ProjectID,
+		ProjectID:      projectID,
 		ResultCount:    int64(len(signatures)),
 		TotalCount:     totalCount,
 		LastKeyScanned: lastEvaluatedKey,
@@ -839,7 +839,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 		// Add to the signatures response model to the list
 		signatures = append(signatures, signatureList...)
 
-		log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
+		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
 			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
@@ -958,7 +958,7 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 		// Add to the signatures response model to the list
 		signatures = append(signatures, signatureList...)
 
-		log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
+		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
 			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
@@ -1074,7 +1074,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 		// Add to the signatures response model to the list
 		signatures = append(signatures, signatureList...)
 
-		log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
+		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
 			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{

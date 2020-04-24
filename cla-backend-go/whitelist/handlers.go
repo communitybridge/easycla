@@ -15,7 +15,7 @@ import (
 )
 
 // Configure setups handlers on api with service
-func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.Store, signatureService signatures.SignatureService, eventsService events.Service) {
+func Configure(api *operations.ClaAPI, service IService, sessionStore *dynastore.Store, signatureService signatures.SignatureService, eventsService events.Service) {
 
 	api.CompanyAddCclaWhitelistRequestHandler = company.AddCclaWhitelistRequestHandlerFunc(
 		func(params company.AddCclaWhitelistRequestParams) middleware.Responder {
@@ -28,7 +28,7 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 				EventType: events.CCLAWhitelistRequestCreated,
 				ProjectID: params.ProjectID,
 				CompanyID: params.CompanyID,
-				UserID:    params.Body.UserID,
+				UserID:    params.Body.ContributorID,
 				EventData: &events.CCLAWhitelistRequestCreatedEventData{RequestID: requestID},
 			})
 
@@ -61,6 +61,26 @@ func Configure(api *operations.ClaAPI, service service, sessionStore *dynastore.
 			}
 
 			return company.NewListCclaWhitelistRequestsOK().WithPayload(result)
+		})
+
+	api.CompanyListCclaWhitelistRequestsByCompanyAndProjectHandler = company.ListCclaWhitelistRequestsByCompanyAndProjectHandlerFunc(
+		func(params company.ListCclaWhitelistRequestsByCompanyAndProjectParams, claUser *user.CLAUser) middleware.Responder {
+			result, err := service.ListCclaWhitelistRequest(params.CompanyID, &params.ProjectID)
+			if err != nil {
+				return company.NewListCclaWhitelistRequestsByCompanyAndProjectBadRequest().WithPayload(errorResponse(err))
+			}
+
+			return company.NewListCclaWhitelistRequestsByCompanyAndProjectOK().WithPayload(result)
+		})
+
+	api.CompanyListCclaWhitelistRequestsByCompanyAndProjectAndUserHandler = company.ListCclaWhitelistRequestsByCompanyAndProjectAndUserHandlerFunc(
+		func(params company.ListCclaWhitelistRequestsByCompanyAndProjectAndUserParams, claUser *user.CLAUser) middleware.Responder {
+			result, err := service.ListCclaWhitelistRequestByCompanyProjectUser(params.CompanyID, &params.ProjectID, &claUser.LFUsername)
+			if err != nil {
+				return company.NewListCclaWhitelistRequestsByCompanyAndProjectAndUserBadRequest().WithPayload(errorResponse(err))
+			}
+
+			return company.NewListCclaWhitelistRequestsByCompanyAndProjectAndUserOK().WithPayload(result)
 		})
 }
 

@@ -431,7 +431,7 @@ export class ClaService {
       .map((res) => res.json())
       .catch((error) => this.handleServiceError(error));
   }
- 
+
   /**
    * POST /v1/request-corporate-signature
    */
@@ -689,7 +689,6 @@ export class ClaService {
   }
 
   addCCLAWhitelistRequest( companyId: string, projectId:  string) {
-
   }
 
   deleteCCLAWhitelistRequest(companyID: string, projectID: string, requestID: string) {
@@ -703,7 +702,7 @@ export class ClaService {
   }
 
   getProjectWhitelistRequest(companyId: string, projectId: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla_whitelist_requests?projectId=${projectId}`);
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla_whitelist_requests/${projectId}`);
     return this.http.get(url).map((res) => res.json())
   }
 
