@@ -1211,13 +1211,47 @@ paths:
       tags:
         - company
 
-  /company/{companyID}/ccla-whitelist-requests/{projectID}/{requestID}:
-    delete:
-      summary: Delete CCLA whitelist request
+  /company/{companyID}/ccla-whitelist-requests/{projectID}/{requestID}/approve:
+    put:
+      summary: Approve CCLA whitelist request
       security:
         - OauthSecurity:
             - company
-      operationId: deleteCclaWhitelistRequest
+      operationId: approveCclaWhitelistRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: requestID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
+  /company/{companyID}/ccla-whitelist-requests/{projectID}/{requestID}/reject:
+    put:
+      summary: Reject CCLA whitelist request
+      security:
+        - OauthSecurity:
+            - company
+      operationId: rejectCclaWhitelistRequest
       parameters:
         - name: companyID
           in: path
