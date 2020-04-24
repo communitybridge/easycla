@@ -175,7 +175,7 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 {project_name}.</p>
 {msg}
 <p>If you want to add them to the Allow List, please
-<a href="http://{cla.conf['CORPORATE_BASE_URL']}#/company/{company_id}" target="_blank">log into the EasyCLA Corporate
+<a href="https://{cla.conf['CORPORATE_BASE_URL']}#/company/{company_id}" target="_blank">log into the EasyCLA Corporate
 Console</a>, where you can approve this user's request by…. This will permit them to begin contributing to
 {project_name} on behalf of {company}.</p>
 <p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p>
@@ -304,16 +304,19 @@ def send_email_to_cla_manager(contributor_name, contributor_email, cla_manager_n
     Helper function to send an email to a prospective CLA Manager.
 
     :param contributor_name: The name of the user sending the email.
-    :param contributor_email: The email address that this user wants to be whitelisted. Must exist in the user's list of emails.
+    :param contributor_email: The email address that this user wants to be whitelisted. Must exist in the user's list
+           of emails.
     :param cla_manager_name: The name of the CLA manager
     :param cla_manager_email: The email address of the CLA manager
     :param project_name: The name of the project
     :param company_name: The name of the organization/company
-    :param account_exists: boolean to check whether the email is being sent to a proposed admin(false), or an admin for an existing company(true).
+    :param account_exists: boolean to check whether the email is being sent to a proposed admin(false), or an admin for
+           an existing company(true).
      """
 
     # account_exists=True send email to the CLA Manager of the existing company
-    # account_exists=False send email to a proposed CLA Manager who needs to register the company through the Corporate Console.
+    # account_exists=False send email to a proposed CLA Manager who needs to register the company through
+    # the Corporate Console.
     subject = f'EasyCLA: Request to start CLA signature process for {project_name}'
     body = f'''
 <html>
@@ -325,10 +328,20 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 <body>
 <p>Hello {cla_manager_name},</p>
 <p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
-<p>{project_name} uses EasyCLA to ensure that before a contribution is accepted, the contributor is covered under a signed CLA.</p>
-<p>{contributor_name} ({contributor_email}) has designated you as the proposed initial CLA Manager for contributions from {company_name if company_name else 'your company'} to {project_name}. This would mean that, after the CLA is signed, you would be able to maintain the list of employees allowed to contribute to {project_name} on behalf of your company, as well as the list of your company’s CLA Managers for {project_name}.</p>
-<p>If you can be the initial CLA Manager from your company for {project_name}, please log into the EasyCLA Corporate Console at {cla.conf['CLA_LANDING_PAGE']} to begin the CLA signature process. You might not be authorized to sign the CLA yourself on behalf of your company; if not, the signature process will prompt you to designate somebody else who is authorized to sign the CLA.</p>
-<p>If you need help or have questions about EasyCLA, you can <a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for support</a>.</p>
+<p>{project_name} uses EasyCLA to ensure that before a contribution is accepted, the contributor is covered under a
+signed CLA.</p>
+<p>{contributor_name} ({contributor_email}) has designated you as the proposed initial CLA Manager for contributions
+from {company_name if company_name else 'your company'} to {project_name}. This would mean that, after the CLA is
+signed, you would be able to maintain the list of employees allowed to contribute to {project_name} on behalf of your
+company, as well as the list of your company’s CLA Managers for {project_name}.</p>
+<p>If you can be the initial CLA Manager from your company for {project_name}, please log into the EasyCLA Corporate
+Console at {cla.conf['CLA_LANDING_PAGE']} to begin the CLA signature process. You might not be authorized to sign the
+CLA yourself on behalf of your company; if not, the signature process will prompt you to designate somebody else who is
+authorized to sign the CLA.</p>
+<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or
+<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+support</a>.</p>
 
 <p>Thanks,</p>
 <p>EasyCLA support team</p>

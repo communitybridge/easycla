@@ -207,46 +207,43 @@ export class ClaEmployeeRequestAccessModal {
     }
 
     let data = {
-      company_id: this.companyId,
-      user_id: this.userId,
-      user_name: this.form.value.user_name,
-      user_email: this.form.value.user_email,
-      project_id: this.projectId,
+      contributorId: this.userId,
+      contributorName: this.form.value.user_name,
+      contributorEmail: this.form.value.user_email,
       message: this.form.value.message,
-      recipient_name: managerUsername,
-      recipient_email: managerEmail,
+      recipientName: managerUsername,
+      recipientEmail: managerEmail,
     };
 
-    this.claService.requestToBeOnCompanyApprovedList(this.userId, this.companyId, data).subscribe((response) => {
-      this.loading = true;
-      this.emailSent();
-    });
-  }
-
-  saveWhiteListRequest() {
-    let user = {
-      userId: this.userId,
-      userName: this.form.value.user_name,
-      userEmail: this.form.value.user_email,
-    };
-    this.claService.postCCLAWhitelistRequest(this.companyId, this.projectId, user).subscribe(
-      () => {
-        console.warn(this.userId + ' ccla approved list request for project: ' + this.projectId + ' for company: ' + this.companyId);
-      },
-      (exception) => {
-        console.warn('Exception during ccla approved list request for user ' + this.userId + ' on project: ' + this.projectId + ' and company: ' + this.companyId);
-      }
-    );
+    this.claService.requestToBeOnCompanyApprovedList(this.userId, this.companyId, this.projectId, data)
+      .subscribe((response) => {
+        this.loading = true;
+        this.emailSent();
+      }, (error) => {
+        this.loading = true;
+        this.emailSentError(error);
+      });
   }
 
   emailSent() {
     this.loading = false;
-    this.saveWhiteListRequest();
     let message = this.authenticated
       ? "Thank you for contacting your company's administrators. Once the CLA is signed and you are authorized, please navigate to the Agreements tab in the Gerrit Settings page and restart the CLA signing process"
       : "Thank you for contacting your company's administrators. Once the CLA is signed and you are authorized, you will have to complete the CLA process from your existing pull request.";
     let alert = this.alertCtrl.create({
       title: 'E-Mail Successfully Sent!',
+      subTitle: message,
+      buttons: ['Dismiss']
+    });
+    alert.onDidDismiss(() => this.dismiss());
+    alert.present();
+  }
+
+  emailSentError(error) {
+    this.loading = false;
+    let message = `The request already exists for you. Please ask the CLA Manager to log into the EasyCLA Corporate Console and authorize you using one of the available methods.`;
+    let alert = this.alertCtrl.create({
+      title: 'Problem Sending Request',
       subTitle: message,
       buttons: ['Dismiss']
     });

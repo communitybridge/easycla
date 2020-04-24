@@ -100,14 +100,18 @@ export class ClaSelectCompanyModal {
       */
       this.loading.activateSpinner = false;
       let errors = response.hasOwnProperty('errors');
+      console.log(`errors: ${errors}`);
       this.selectCompanyModalActive = false;
       if (errors) {
         if (response.errors.hasOwnProperty('missing_ccla')) {
           // When the company does NOT have a CCLA with the project: {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
-          this.openClaSendClaManagerEmailModal(company);
+          console.log(`errors - missing_ccla: ${response}`);
+          //this.openClaSendClaManagerEmailModal(company);
+          this.openClaCompanyAdminYesnoModal(company);
         }
 
         if (response.errors.hasOwnProperty('ccla_whitelist')) {
+          console.log(`errors - ccla_whitelist: ${response}`);
           // When the user is not whitelisted with the company: return {'errors': {'ccla_whitelist': 'No user email whitelisted for this ccla'}}
           this.openClaEmployeeCompanyTroubleshootPage(company);
           return;
@@ -136,9 +140,11 @@ export class ClaSelectCompanyModal {
     modal.present();
   }
 
-  openClaCompanyAdminYesnoModal() {
+  openClaCompanyAdminYesnoModal(company) {
     let modal = this.modalCtrl.create('ClaCompanyAdminYesnoModal', {
       projectId: this.projectId,
+      companyId: company == null ? '' : company.company_id,
+      companyName: company == null ? '' : company.company_name,
       userId: this.userId,
       authenticated: false // Github users are not authenticated.
     });
