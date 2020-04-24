@@ -422,7 +422,14 @@ export class ProjectClaPage {
   }
 
   hasCorporateDocuments(project) {
-    return project.projectCorporateDocuments !== null && project.projectCorporateDocuments.length > 0;
+    const documents = project.projectCorporateDocuments;
+    if (documents !== null && documents.length > 0)
+      for (let index = 0; index < documents.length; index++) {
+        if (documents[index].documentS3URL) {
+          return true;
+        }
+      }
+    return false;
   }
 
   getCorporateDocumentName(project) {
@@ -452,7 +459,14 @@ export class ProjectClaPage {
   }
 
   hasIndividualDocuments(project) {
-    return project.projectIndividualDocuments !== null && project.projectIndividualDocuments.length > 0;
+    const documents = project.projectIndividualDocuments;
+    if (documents !== null && documents.length > 0)
+      for (let index = 0; index < documents.length; index++) {
+        if (documents[index].documentS3URL) {
+          return true;
+        }
+      }
+    return false;
   }
 
   getIndividualDocumentName(project) {
