@@ -1,15 +1,15 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
-import { AlertController, ViewController, IonicPage, ModalController, NavParams, NavController } from 'ionic-angular';
-import { ClaService } from '../../services/cla.service';
-import { ClaCompanyModel } from '../../models/cla-company';
-import { ClaUserModel } from '../../models/cla-user';
-import { ClaSignatureModel } from '../../models/cla-signature';
-import { ClaManager } from '../../models/cla-manager';
-import { SortService } from '../../services/sort.service';
-import { Restricted } from '../../decorators/restricted';
+import {Component} from '@angular/core';
+import {AlertController, IonicPage, ModalController, NavController, NavParams, ViewController} from 'ionic-angular';
+import {ClaService} from '../../services/cla.service';
+import {ClaCompanyModel} from '../../models/cla-company';
+import {ClaUserModel} from '../../models/cla-user';
+import {ClaSignatureModel} from '../../models/cla-signature';
+import {ClaManager} from '../../models/cla-manager';
+import {SortService} from '../../services/sort.service';
+import {Restricted} from '../../decorators/restricted';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -32,7 +32,10 @@ export class ProjectPage {
   company: ClaCompanyModel;
   manager: ClaUserModel;
   showModal: any;
+  allRequests: any[];
+  approvedRequests: any[];
   pendingRequests: any[];
+  rejectedRequests: any[];
   project: any;
   userEmail: any;
   sort: any;
@@ -74,7 +77,7 @@ export class ProjectPage {
   ngOnInit() {
     this.getProject();
     this.getCompany();
-    this.listPendingRequests()
+    this.listPendingRequests();
   }
 
   getProject() {
@@ -273,7 +276,8 @@ export class ProjectPage {
           text: 'Cancel',
           role: 'cancel',
           cssClass: 'secondary',
-          handler: () => { }
+          handler: () => {
+          }
         },
         {
           text: 'Delete',
@@ -309,9 +313,11 @@ export class ProjectPage {
     this.claService.getProjectWhitelistRequest(this.companyId, this.projectId).subscribe((request) => {
       if (request.list.length == 0) {
         this.noPendingRequests = true;
-      }
-      else {
-        this.pendingRequests = request.list;
+      } else {
+        this.allRequests = request.list;
+        this.pendingRequests = request.list.filter((req) => req.requestStatus === 'pending');
+        this.approvedRequests = request.list.filter((req) => req.requestStatus === 'approved');
+        this.rejectedRequests = request.list.filter((req) => req.requestStatus === 'rejected');
         this.noPendingRequests = false;
       }
       this.loading.request = true;
@@ -320,19 +326,28 @@ export class ProjectPage {
 
   accept(requestID) {
     let alert = this.alertCtrl.create({
-      subTitle: `Accept Request`,
-      message: `Are you sure you want to accept this request?`,
+      subTitle: `Accept Request - Confirmation`,
+      message: 'This will dismiss this pending request and send the contributor ' +
+        'an email confirming that they have access. <br/><br/>Please confirm that you ' +
+        'have updated the Approved Lists by adding this user by email, domain, ' +
+        'GitHub username or Organization.<br/><br/>Are you sure?',
       buttons: [
         {
           text: 'Cancel',
           role: 'cancel',
           cssClass: 'secondary',
-          handler: () => { }
+          handler: () => {
+          }
         },
         {
           text: 'Accept',
           handler: () => {
-            this.acceptPendingRequest()
+            this.claService.approveCclaWhitelistRequest(this.companyId, this.projectId, requestID)
+              .subscribe(
+                (res) => {
+                  this.listPendingRequests();
+                },
+                (error) => console.log(error));
           }
         }
       ]
@@ -342,21 +357,27 @@ export class ProjectPage {
 
   decline(requestID) {
     let alert = this.alertCtrl.create({
-      subTitle: `Decline Request`,
-      message: `Are you sure you want to decline this request?`,
+      subTitle: 'Decline Request - Confirmation',
+      message: 'This will dismiss this pending request and send the contributor ' +
+        'an email confirming that their request was denied.' +
+        '<br/><br/>Are you sure you want to decline this request?',
       buttons: [
         {
           text: 'Cancel',
           role: 'cancel',
           cssClass: 'secondary',
-          handler: () => { }
+          handler: () => {
+          }
         },
         {
           text: 'Decline Request',
           handler: () => {
-            this.claService
-              .deleteCclaWhitelistRequest(this.companyId, this.projectId, requestID)
-              .subscribe((res) => console.log('res', res));
+            this.claService.rejectCclaWhitelistRequest(this.companyId, this.projectId, requestID)
+              .subscribe(
+                (res) => {
+                  this.listPendingRequests();
+                },
+                (error) => console.log(error));
           }
         }
       ]
@@ -369,13 +390,13 @@ export class ProjectPage {
     this.viewCtrl.dismiss();
   }
 
-  acceptPendingRequest() {
-    // dead functionality.
-  }
-
   back() {
     this.navCtrl.setRoot('CompanyPage', {
       companyId: this.companyId
     });
+  }
+
+  showRequestType(requestType: string) {
+    // TODO: implement filter to show which items should be selected
   }
 }

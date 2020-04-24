@@ -49,8 +49,9 @@ const (
 	CompanyACLRequestAdded   = "company_acl.request_added"
 	CompanyACLRequestDeleted = "company_acl.request_deleted"
 
-	CCLAWhitelistRequestCreated = "ccla_whitelist_request.created"
-	CCLAWhitelistRequestDeleted = "ccla_whitelist_request.deleted"
+	CCLAWhitelistRequestCreated  = "ccla_whitelist_request.created"
+	CCLAWhitelistRequestApproved = "ccla_whitelist_request.approved"
+	CCLAWhitelistRequestRejected = "ccla_whitelist_request.rejected"
 
 	WhitelistGithubOrganizationAdded   = "whitelist.github_organization_added"
 	WhitelistGithubOrganizationDeleted = "whitelist.github_organization_deleted"
