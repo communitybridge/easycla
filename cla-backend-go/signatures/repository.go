@@ -893,7 +893,12 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 	condition := expression.Key("signature_reference_id").Equal(expression.Value(params.CompanyID))
 
 	// Check for approved signatures
-	filter := expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true)))
+	filter := expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true))).
+		And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(true))))
+
+	if params.SignatureType != nil {
+		filter = filter.And(expression.Name("signature_type").Equal(expression.Value(*params.SignatureType)))
+	}
 
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithFilter(filter).WithProjection(buildProjection()).Build()

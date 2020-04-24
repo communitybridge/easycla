@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
+
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
 	v2GithubOrganizations "github.com/communitybridge/easycla/cla-backend-go/v2/github_organizations"
 
@@ -60,6 +62,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/health"
 	"github.com/communitybridge/easycla/cla-backend-go/template"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
+	v2Company "github.com/communitybridge/easycla/cla-backend-go/v2/company"
 	v2Health "github.com/communitybridge/easycla/cla-backend-go/v2/health"
 	v2Template "github.com/communitybridge/easycla/cla-backend-go/v2/template"
 	"github.com/communitybridge/easycla/cla-backend-go/whitelist"
@@ -222,6 +225,8 @@ func server(localMode bool) http.Handler {
 	})
 	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
 
+	v2CompanyService := v2Company.NewService(signaturesRepo, projectRepo)
+
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
 		log.Fatalf("Unable to create new Dynastore session - Error: %v", err)
@@ -260,6 +265,9 @@ func server(localMode bool) http.Handler {
 	v2Repositories.Configure(v2API, repositoriesService, eventsService)
 	gerrits.Configure(api, gerritService, projectService, eventsService)
 	v2Gerrits.Configure(v2API, gerritService, projectService, eventsService)
+	v2Company.Configure(v2API, v2CompanyService)
+
+	user_service.InitClient(configFile.APIGatewayURL)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler

@@ -839,6 +839,7 @@ paths:
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
+        - $ref: '#/parameters/signatureType'
         - name: companyID
           description: the company ID
           in: path
@@ -1083,6 +1084,31 @@ paths:
       tags:
         - gerrits
 
+  /company/{companyID}/cla-managers:
+    get:
+      summary: get cla manager for company
+      description: Returns list cla managers for the company
+      operationId: getCompanyClaManagers
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-companyID"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company-cla-managers'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - company
+
 responses:
   unauthorized:
     description: Unauthorized
@@ -1162,6 +1188,11 @@ parameters:
     type: string
     required: false
     enum: [ccla,cla]
+  path-companyID:
+    name: companyID
+    in: path
+    type: string
+    required: true
   x-acl:
     name: X-ACL
     description: The access control list header value encoded as base64 - assigned by the API Gateway based on user/request permissions
@@ -1488,6 +1519,55 @@ definitions:
         package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
         alias: "v1Models"
       type: "Gerrit"
+
+  company-cla-managers:
+    type: object
+    title: Company CLA Managers
+    description: List of CLA Managers for the company
+    properties:
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/company-cla-manager'
+
+  company-cla-manager:
+    type: object
+    title: Company CLA Manager
+    description: CLA Managers details
+    properties:
+      lfUsername:
+        type: string
+        x-omitempty: false
+        example: "john.doe"
+      name:
+        type: string
+        x-omitempty: false
+        example: "John Doe"
+      userSFID:
+        type: string
+        x-omitempty: false
+      logoURL:
+        type: string
+        x-omitempty: false
+      email:
+        type: string
+        x-omitempty: false
+        example: "john.doe@company.com"
+      approved_on:
+        type: string
+        x-omitempty: false
+      project_id:
+        type: string
+        x-omitempty: false
+        example: "e1e30240-a722-4c82-a648-121681d959c7"
+      project_sfid:
+        type: string
+        x-omitempty: false
+        example: "a2g17000000hyxNAAA"
+      project_name:
+        type: string
+        example: "Appium"
+        x-omitempty: false
 
   error-response:
     type: object

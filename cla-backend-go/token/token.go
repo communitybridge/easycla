@@ -1,6 +1,8 @@
 package token
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -49,7 +51,7 @@ func Init(paramClientID, paramClientSecret, paramAuth0URL, paramAudience string)
 	}
 }
 
-func retrieveToken() {
+func retrieveToken() error {
 	log.Debugf("Refreshing auth0 token...")
 
 	tg := tokenGen{
@@ -62,35 +64,42 @@ func retrieveToken() {
 	resp, err := req.Post(oauthTokenURL, req.BodyJSON(&tg))
 	if err != nil {
 		log.Warnf("refresh token request failed")
-		return
+		return err
 	}
 
 	if resp.Response().StatusCode < 200 || resp.Response().StatusCode > 299 {
-		log.Fatalf("invalid response from auth0 service %s - received error code: %d, response: %s",
+		err = fmt.Errorf("invalid response from auth0 service %s - received error code: %d, response: %s",
 			oauthTokenURL, resp.Response().StatusCode, resp.String())
+		log.WithError(err).Warn("invalid response from auth0 service")
+		return err
 	}
 
 	var tr tokenReturn
 	err = resp.ToJSON(&tr)
 	if err != nil {
 		log.Warnf("refresh token::json unmarshal failed of response: %s, error: %+v", resp.String(), err)
-		return
+		return err
 	}
 
-	//log.Infof("%+v", tr)
-	//log.Infof("Token response: %s", resp.String())
-	token = tr.TokenType + " " + tr.AccessToken
+	//token = tr.TokenType + " " + tr.AccessToken
+	token = tr.AccessToken
 	if tr.AccessToken == "" || tr.TokenType == "" {
-		log.Warnf("Error fetching authentication token - response value is empty.")
+		err = errors.New("Error fetching authentication token - response value is empty.")
+		log.WithError(err).Warn("empty response from auth server")
+		return err
 	}
 
 	expiry = time.Now().Add(time.Second * time.Duration(tr.ExpiresIn))
+	return nil
 }
 
 // GetToken returns the Auth0 Token - in necessary, refreshes the token when expired
-func GetToken() string {
+func GetToken() (string, error) {
 	if expiry.Unix()-time.Now().Unix() < 120 {
-		retrieveToken()
+		err := retrieveToken()
+		if err != nil {
+			return "", err
+		}
 	}
-	return token
+	return token, nil
 }
