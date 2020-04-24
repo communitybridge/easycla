@@ -4,6 +4,7 @@
 package whitelist
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -28,7 +29,7 @@ const (
 
 // Repository interface defines the functions for the whitelist service
 type Repository interface {
-	AddCclaWhitelistRequest(company *models.Company, project *models.Project, user *models.User) (string, error)
+	AddCclaWhitelistRequest(company *models.Company, project *models.Project, user *models.User, requesterName, requesterEmail string) (string, error)
 	DeleteCclaWhitelistRequest(requestID string) error
 	ListCclaWhitelistRequest(companyID string, projectID *string, userID *string) (*models.CclaWhitelistRequestList, error)
 }
@@ -68,7 +69,7 @@ func currentTime() string {
 	return time.Now().UTC().Format(time.RFC3339)
 }
 
-func (repo repository) AddCclaWhitelistRequest(company *models.Company, project *models.Project, user *models.User) (string, error) {
+func (repo repository) AddCclaWhitelistRequest(company *models.Company, project *models.Project, user *models.User, requesterName, requesterEmail string) (string, error) {
 	requestID, err := uuid.NewV4()
 	status := "status:fail"
 
@@ -89,8 +90,8 @@ func (repo repository) AddCclaWhitelistRequest(company *models.Company, project 
 	addStringAttribute(input.Item, "project_id", project.ProjectID)
 	addStringAttribute(input.Item, "project_name", project.ProjectName)
 	addStringAttribute(input.Item, "user_id", user.UserID)
-	addStringSliceAttribute(input.Item, "user_emails", user.Emails)
-	addStringAttribute(input.Item, "user_name", user.Username)
+	addStringSliceAttribute(input.Item, "user_emails", []string{requesterEmail})
+	addStringAttribute(input.Item, "user_name", requesterName)
 	addStringAttribute(input.Item, "user_github_id", user.GithubID)
 	addStringAttribute(input.Item, "user_github_username", user.GithubUsername)
 	addStringAttribute(input.Item, "date_created", currentTime)
@@ -103,9 +104,14 @@ func (repo repository) AddCclaWhitelistRequest(company *models.Company, project 
 		return status, err
 	}
 
-	status = "status:success"
+	// Load the new record - should be able to find it quickly
+	record, readErr := repo.ListCclaWhitelistRequest(company.CompanyID, &project.ProjectID, &user.UserID)
+	if readErr != nil || record == nil || record.List == nil {
+		log.Warnf("AddCclaWhitelistRequest - unable to read newly created invite record, error: %v", readErr)
+		return status, err
+	}
 
-	return status, nil
+	return record.List[0].RequestID, nil
 }
 
 func (repo repository) DeleteCclaWhitelistRequest(requestID string) error {
@@ -137,32 +143,33 @@ func addConditionToFilter(filter expression.ConditionBuilder, cond expression.Co
 }
 
 func (repo repository) ListCclaWhitelistRequest(companyID string, projectID *string, userID *string) (*models.CclaWhitelistRequestList, error) {
+	if projectID == nil {
+		return nil, errors.New("project ID can not be nil for ListCclaWhitelistRequest")
+	}
+
 	tableName := fmt.Sprintf("cla-%s-ccla-whitelist-requests", repo.stage)
 
+	// hashkey is company_id, range key is project_id
 	indexName := "company-id-project-id-index"
 
 	condition := expression.Key("company_id").Equal(expression.Value(companyID))
+	projectExpression := expression.Key("project_id").Equal(expression.Value(projectID))
+	condition = condition.And(projectExpression)
 
-	builder := expression.NewBuilder().WithProjection(buildProjection())
+	builder := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection())
 
 	var filter expression.ConditionBuilder
 	var filterAdded bool
 
+	// Add the user ID filter if provided
 	if userID != nil {
 		userFilterExpression := expression.Name("user_id").Equal(expression.Value(userID))
 		filter = addConditionToFilter(filter, userFilterExpression, &filterAdded)
 	}
-
-	if projectID != nil {
-		projectExpression := expression.Key("project_id").Equal(expression.Value(projectID))
-		condition = condition.And(projectExpression)
-	}
-
 	if filterAdded {
 		builder = builder.WithFilter(filter)
 	}
 
-	builder = builder.WithKeyCondition(condition)
 	// Use the nice builder to create the expression
 	expr, err := builder.Build()
 	if err != nil {
@@ -179,14 +186,19 @@ func (repo repository) ListCclaWhitelistRequest(companyID string, projectID *str
 		TableName:                 aws.String(tableName),
 		IndexName:                 aws.String(indexName),
 	}
-	queryOutput, err := repo.dynamoDBClient.Query(input)
-	if err != nil {
-		return nil, err
+
+	queryOutput, queryErr := repo.dynamoDBClient.Query(input)
+	if queryErr != nil {
+		log.Warnf("list requests error while querying, error: %+v", queryErr)
+		return nil, queryErr
 	}
+
 	list, err := buildCclaWhitelistRequestsModels(queryOutput)
 	if err != nil {
+		log.Warnf("unmarshall requests error while decoding the response, error: %+v", err)
 		return nil, err
 	}
+
 	return &models.CclaWhitelistRequestList{List: list}, nil
 }
 
@@ -216,7 +228,7 @@ func buildCclaWhitelistRequestsModels(results *dynamodb.QueryOutput) ([]models.C
 
 	err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &itemRequests)
 	if err != nil {
-		log.Warnf("error unmarshalling ccla_whitelist_requests from database, error: %v",
+		log.Warnf("error unmarshalling CCLA Authorization Request from database, error: %v",
 			err)
 		return nil, err
 	}

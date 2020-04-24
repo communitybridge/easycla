@@ -17,6 +17,8 @@ import { Content } from 'ionic-angular';
 })
 export class ClaCompanyAdminSendEmailModal {
   projectId: string;
+  companyId: string;
+  companyName: string;
   userId: string;
   authenticated: boolean; // true if coming from gerrit/corporate
   userEmails: Array<string>;
@@ -35,6 +37,10 @@ export class ClaCompanyAdminSendEmailModal {
   ) {
     this.userEmails = [];
     this.projectId = navParams.get('projectId');
+    // May be empty
+    this.companyId = navParams.get('companyId');
+    // May be empty
+    this.companyName = navParams.get('companyName');
     this.userId = navParams.get('userId');
     this.authenticated = navParams.get('authenticated');
     this.form = formBuilder.group({

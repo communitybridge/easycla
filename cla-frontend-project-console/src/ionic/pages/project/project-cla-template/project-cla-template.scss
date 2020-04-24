@@ -7,16 +7,13 @@ body {
 }
 
 project-cla-template {
-  ion-header {
-    border-bottom: 40px solid #4c79b6;
-  }
 
   .icon-mr {
     margin-right: 15px;
   }
 
   .page-content {
-    min-height: calc(100vh - 200px);
+    min-height: calc(100vh - 365px);
     padding: 10px 10px;
 
     @media (min-width: 768px) and (max-width: 1200px) {

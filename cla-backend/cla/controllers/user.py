@@ -89,7 +89,7 @@ def get_users_company(user_company_id):
     return [user.to_dict() for user in users]
 
 
-def request_company_whitelist(user_id: str, company_id: str, user_email: str, project_id: str,
+def request_company_whitelist(user_id: str, company_id: str, user_name: str, user_email: str, project_id: str,
                               message: str = None, recipient_name: str = None, recipient_email: str = None):
     """
     Sends email to the specified company manager notifying them that a user has requested to be
@@ -99,6 +99,8 @@ def request_company_whitelist(user_id: str, company_id: str, user_email: str, pr
     :type user_id: string
     :param company_id: The ID of the company that the request is going to.
     :type company_id: string
+    :param user_name: The name hat this user wants to be whitelisted
+    :type user_name: string
     :param user_email: The email address that this user wants to be whitelisted. Must exist in the
         user's list of emails.
     :type user_email: string
@@ -117,8 +119,14 @@ def request_company_whitelist(user_id: str, company_id: str, user_email: str, pr
         return {'errors': {'company_id': 'Company ID is missing from the request'}}
     if user_id is None:
         return {'errors': {'user_id': 'User ID is missing from the request'}}
+    if user_name is None:
+        return {'errors': {'user_name': 'User Name is missing from the request'}}
     if user_email is None:
         return {'errors': {'user_email': 'User Email is missing from the request'}}
+    if recipient_name is None:
+        return {'errors': {'recipient_name': 'Recipient Name is missing from the request'}}
+    if recipient_email is None:
+        return {'errors': {'recipient_email': 'Recipient Email is missing from the request'}}
     if message is None:
         return {'errors': {'message': 'Message is missing from the request'}}
 
@@ -128,9 +136,8 @@ def request_company_whitelist(user_id: str, company_id: str, user_email: str, pr
     except DoesNotExist as err:
         return {'errors': {'user_id': str(err)}}
 
-    emails = user.get_user_emails()
-    if user_email not in emails:
-        return {'errors': {'user_email': 'Must provide one of the user\'s existing emails'}}
+    if user_email not in user.get_user_emails():
+        return {'errors': {'user_email': 'User\'s email must match one of the user\'s existing emails in their profile'}}
 
     company = Company()
     try:
@@ -144,33 +151,15 @@ def request_company_whitelist(user_id: str, company_id: str, user_email: str, pr
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
 
-    user_name = user.get_user_name()
     company_name = company.get_company_name()
     project_name = project.get_project_name()
 
-    # If provided, we will use the parameter for the recipient name and email - if not provided, then we will use the
-    # default company manager's email
-    if not recipient_name and not recipient_email:
-        cla.log.debug('request_company_whitelist - recipient name and email missing from request - '
-                      'using the company manager as the recipient')
-        manager_id = company.get_company_manager_id()
-        manager = get_user_instance()
-        try:
-            manager.load(manager_id)
-        except DoesNotExist as err:
-            return {'errors': {'company_id': 'No CLA Manager exists for this company - can not send email'}}
+    msg = ''
+    if message is not None:
+        msg += f'<p>{user_name} included the following message in the request:</p>'
+        msg += f'<p>{message}</p>'
 
-        recipient_name = manager.get_user_name()
-        if manager.get_lf_email() is not None:
-            recipient_email = manager.get_lf_email()
-        else:
-            emails = manager.get_user_emails()
-            if len(emails) > 0:
-                recipient_email = emails[0]
-            else:
-                return {'errors': {'manager_email': 'Manager email is missing - unable to send to recipient'}}
-
-    subject = (f'EasyCLA: Request to authorize {user_name} for {project_name}')
+    subject = f'EasyCLA: Request to authorize {user_name} for {project_name}'
     body = f'''
 <html>
 <head>
@@ -181,12 +170,19 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 <body>
 <p>Hello {recipient_name},</p>
 <p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
-<p>{user_name} ({user_email}) has requested to be added to the Allow List as an authorized contributor from {company_name} to the project {project_name}. You are receiving this message as a CLA Manager from {company} for {project_name}.</p>
-<p>{user_name} included the following message in the request:</p>
-<p>{message}
-<p>If you want to add them to the Allow List, please log into the EasyCLA Corporate Console at https://corporate.lfcla.com, where you can approve this user's request by…. This will permit them to begin contributing to {project_name} on behalf of {company}.</p>
+<p>{user_name} ({user_email}) has requested to be added to the Allow List as an authorized contributor from
+{company_name} to the project {project_name}. You are receiving this message as a CLA Manager from {company} for
+{project_name}.</p>
+{msg}
+<p>If you want to add them to the Allow List, please
+<a href="https://{cla.conf['CORPORATE_BASE_URL']}#/company/{company_id}" target="_blank">log into the EasyCLA Corporate
+Console</a>, where you can approve this user's request by…. This will permit them to begin contributing to
+{project_name} on behalf of {company}.</p>
 <p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p>
-<p>If you need help or have questions about EasyCLA, you can <a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for support</a>.</p>
+<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or 
+<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+support</a>.</p>
 <p>Thanks,
 <p>EasyCLA support team</p>
 </body>
@@ -195,14 +191,17 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 
     cla.log.debug(f'request_company_whitelist - sending email '
                   f'to recipient {recipient_name}/{recipient_email} '
+                  f'for user {user_name}/{user_email} '
                   f'for project {project_name} '
                   f'assigned to company {company_name}')
     email_service = get_email_service()
     email_service.send(subject, body, recipient_email)
 
     # Create event
-    event_data = f'CLA: {user.get_user_name()} requests to be whitelisted for the organization {company.get_company_name}' \
-                 f'{user.get_user_name()} <{user.get_user_email()}>'
+    event_data = (f'CLA: contributor {user_name} requests to be Approved for the '
+                  f'project: {project_name} '
+                  f'organization: {company_name} '
+                  f'as {user_name} <{user_email}>')
     Event.create_event(
         event_user_id=user_id,
         event_project_id=project_id,
@@ -305,16 +304,19 @@ def send_email_to_cla_manager(contributor_name, contributor_email, cla_manager_n
     Helper function to send an email to a prospective CLA Manager.
 
     :param contributor_name: The name of the user sending the email.
-    :param contributor_email: The email address that this user wants to be whitelisted. Must exist in the user's list of emails.
+    :param contributor_email: The email address that this user wants to be whitelisted. Must exist in the user's list
+           of emails.
     :param cla_manager_name: The name of the CLA manager
     :param cla_manager_email: The email address of the CLA manager
     :param project_name: The name of the project
     :param company_name: The name of the organization/company
-    :param account_exists: boolean to check whether the email is being sent to a proposed admin(false), or an admin for an existing company(true).
+    :param account_exists: boolean to check whether the email is being sent to a proposed admin(false), or an admin for
+           an existing company(true).
      """
 
     # account_exists=True send email to the CLA Manager of the existing company
-    # account_exists=False send email to a proposed CLA Manager who needs to register the company through the Corporate Console.
+    # account_exists=False send email to a proposed CLA Manager who needs to register the company through
+    # the Corporate Console.
     subject = f'EasyCLA: Request to start CLA signature process for {project_name}'
     body = f'''
 <html>
@@ -326,10 +328,20 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 <body>
 <p>Hello {cla_manager_name},</p>
 <p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
-<p>{project_name} uses EasyCLA to ensure that before a contribution is accepted, the contributor is covered under a signed CLA.</p>
-<p>{contributor_name} ({contributor_email}) has designated you as the proposed initial CLA Manager for contributions from {company_name if company_name else 'your company'} to {project_name}. This would mean that, after the CLA is signed, you would be able to maintain the list of employees allowed to contribute to {project_name} on behalf of your company, as well as the list of your company’s CLA Managers for {project_name}.</p>
-<p>If you can be the initial CLA Manager from your company for {project_name}, please log into the EasyCLA Corporate Console at {cla.conf['CLA_LANDING_PAGE']} to begin the CLA signature process. You might not be authorized to sign the CLA yourself on behalf of your company; if not, the signature process will prompt you to designate somebody else who is authorized to sign the CLA.</p>
-<p>If you need help or have questions about EasyCLA, you can <a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for support</a>.</p>
+<p>{project_name} uses EasyCLA to ensure that before a contribution is accepted, the contributor is covered under a
+signed CLA.</p>
+<p>{contributor_name} ({contributor_email}) has designated you as the proposed initial CLA Manager for contributions
+from {company_name if company_name else 'your company'} to {project_name}. This would mean that, after the CLA is
+signed, you would be able to maintain the list of employees allowed to contribute to {project_name} on behalf of your
+company, as well as the list of your company’s CLA Managers for {project_name}.</p>
+<p>If you can be the initial CLA Manager from your company for {project_name}, please log into the EasyCLA Corporate
+Console at {cla.conf['CLA_LANDING_PAGE']} to begin the CLA signature process. You might not be authorized to sign the
+CLA yourself on behalf of your company; if not, the signature process will prompt you to designate somebody else who is
+authorized to sign the CLA.</p>
+<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or
+<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+support</a>.</p>
 
 <p>Thanks,</p>
 <p>EasyCLA support team</p>

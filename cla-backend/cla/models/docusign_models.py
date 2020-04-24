@@ -353,7 +353,7 @@ class DocuSign(signing_service_interface.SigningService):
         # Returns an error if any of the above is false. 
 
         request_info = f'project: {project_id}, company: {company_id}, user: {user_id}'
-        cla.log.debug(f'Check and prepare employee signature for {request_info}')
+        cla.log.info(f'Check and prepare employee signature for {request_info}')
 
         # Ensure the project exists
         project = Project()
