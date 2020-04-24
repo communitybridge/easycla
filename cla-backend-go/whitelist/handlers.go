@@ -35,22 +35,40 @@ func Configure(api *operations.ClaAPI, service IService, sessionStore *dynastore
 			return company.NewAddCclaWhitelistRequestOK()
 		})
 
-	api.CompanyDeleteCclaWhitelistRequestHandler = company.DeleteCclaWhitelistRequestHandlerFunc(
-		func(params company.DeleteCclaWhitelistRequestParams, claUser *user.CLAUser) middleware.Responder {
-			err := service.DeleteCclaWhitelistRequest(params.RequestID)
+	api.CompanyApproveCclaWhitelistRequestHandler = company.ApproveCclaWhitelistRequestHandlerFunc(
+		func(params company.ApproveCclaWhitelistRequestParams, claUser *user.CLAUser) middleware.Responder {
+			err := service.ApproveCclaWhitelistRequest(params.CompanyID, params.ProjectID, params.RequestID)
 			if err != nil {
-				return company.NewDeleteCclaWhitelistRequestBadRequest().WithPayload(errorResponse(err))
+				return company.NewApproveCclaWhitelistRequestBadRequest().WithPayload(errorResponse(err))
 			}
 
 			eventsService.LogEvent(&events.LogEventArgs{
-				EventType: events.CCLAWhitelistRequestDeleted,
+				EventType: events.CCLAWhitelistRequestApproved,
 				ProjectID: params.ProjectID,
 				CompanyID: params.CompanyID,
 				UserID:    claUser.UserID,
-				EventData: &events.CCLAWhitelistRequestDeletedEventData{RequestID: params.RequestID},
+				EventData: &events.CCLAWhitelistRequestApprovedEventData{RequestID: params.RequestID},
 			})
 
-			return company.NewDeleteCclaWhitelistRequestOK()
+			return company.NewRejectCclaWhitelistRequestOK()
+		})
+
+	api.CompanyRejectCclaWhitelistRequestHandler = company.RejectCclaWhitelistRequestHandlerFunc(
+		func(params company.RejectCclaWhitelistRequestParams, claUser *user.CLAUser) middleware.Responder {
+			err := service.RejectCclaWhitelistRequest(params.CompanyID, params.ProjectID, params.RequestID)
+			if err != nil {
+				return company.NewRejectCclaWhitelistRequestBadRequest().WithPayload(errorResponse(err))
+			}
+
+			eventsService.LogEvent(&events.LogEventArgs{
+				EventType: events.CCLAWhitelistRequestRejected,
+				ProjectID: params.ProjectID,
+				CompanyID: params.CompanyID,
+				UserID:    claUser.UserID,
+				EventData: &events.CCLAWhitelistRequestRejectedEventData{RequestID: params.RequestID},
+			})
+
+			return company.NewRejectCclaWhitelistRequestOK()
 		})
 
 	api.CompanyListCclaWhitelistRequestsHandler = company.ListCclaWhitelistRequestsHandlerFunc(

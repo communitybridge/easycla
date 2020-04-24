@@ -386,7 +386,7 @@ export class ClaService {
   postCLAManager(signatureId, payload) {
     const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId + '/manager');
     return this.http
-      .post(url, {lfid: payload.managerLFID})
+      .post(url, { lfid: payload.managerLFID })
       .map((res) => res.json())
       .catch((error) => this.handleServiceError(error));
   }
@@ -480,7 +480,7 @@ export class ClaService {
    **/
   addGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
-    const data = {organization_id: organizationId};
+    const data = { organization_id: organizationId };
     const url: URL = this.getV3Endpoint(path);
     return this.http.postWithCreds(url, data).map((res) => res.json());
   }
@@ -490,7 +490,7 @@ export class ClaService {
    **/
   removeGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
-    const data = {organization_id: organizationId};
+    const data = { organization_id: organizationId };
     const url: URL = this.getV3Endpoint(path);
     return this.http.deleteWithCredsAndBody(url, data).map((res) => res.json());
   }
@@ -500,7 +500,7 @@ export class ClaService {
    **/
   addGithubOrganizationWhitelist(signatureID, companyID, corporateClaID, organizationId) {
     const path = `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`;
-    const data = {id: organizationId};
+    const data = { id: organizationId };
     const url: URL = this.getV3Endpoint(path);
     return this.http.postWithCreds(url, data).map((res) => res.json());
   }
@@ -510,7 +510,7 @@ export class ClaService {
    **/
   removeGithubOrganizationWhitelist(companyID, corporateClaID, organizationId) {
     const path = `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`;
-    const data = {id: organizationId};
+    const data = { id: organizationId };
     const url: URL = this.getV3Endpoint(path);
     return this.http.deleteWithCredsAndBody(url, data).map((res) => res.json());
   }
@@ -688,7 +688,7 @@ export class ClaService {
     return this.http.get(url).map((res) => res.json());
   }
 
-  addCCLAWhitelistRequest( companyId: string, projectId:  string) {
+  addCCLAWhitelistRequest(companyId: string, projectId: string) {
   }
 
   deleteCCLAWhitelistRequest(companyID: string, projectID: string, requestID: string) {
@@ -706,13 +706,14 @@ export class ClaService {
     return this.http.get(url).map((res) => res.json())
   }
 
-  deleteCclaWhitelistRequest(companyId: string, projectId: string, requestID: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests/${projectId}/${requestID}`);
-    return this.http
-      .delete(url)
-      .map((res) => {
-        return res.json()
-      })
+  approveCclaWhitelistRequest(companyId: string, projectId: string, requestID: string) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests/${projectId}/${requestID}/approve`);
+    return this.http.put(url);
+  }
+
+  rejectCclaWhitelistRequest(companyId: string, projectId: string, requestID: string) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests/${projectId}/${requestID}/reject`);
+    return this.http.put(url);
   }
 
   //////////////////////////////////////////////////////////////////////////////
