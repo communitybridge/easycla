@@ -306,7 +306,7 @@ export class ProjectPage {
   }
 
   listPendingRequests() {
-    this.claService.listCCLAWhitelistRequest(this.companyId).subscribe((request) => {
+    this.claService.getProjectWhitelistRequest(this.companyId, this.projectId).subscribe((request) => {
       if (request.list.length == 0) {
         this.noPendingRequests = true;
       }
