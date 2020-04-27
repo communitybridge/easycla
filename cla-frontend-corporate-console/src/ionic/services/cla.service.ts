@@ -554,7 +554,7 @@ export class ClaService {
    * @param companyId the company ID
    **/
   getPendingInvites(companyId) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/invitelist`);
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/invitelist?status=pending`);
     return this.http.getWithCreds(url).map((res) => res.json());
   }
 
@@ -691,18 +691,13 @@ export class ClaService {
   addCCLAWhitelistRequest(companyId: string, projectId: string) {
   }
 
-  deleteCCLAWhitelistRequest(companyID: string, projectID: string, requestID: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/{companyID}/ccla-whitelist-requests/{projectID}/{requestID}`);
-    return this.http.delete(url).map((res) => res.json())
-  }
+  getProjectWhitelistRequest(companyId: string, projectId: string, status: string) {
+    let statusFilter = '';
+    if (status != null && status.length > 0) {
+      statusFilter = `?status=${status}`;
+    }
 
-  listCCLAWhitelistRequest(companyId: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests`);
-    return this.http.get(url).map((res) => res.json())
-  }
-
-  getProjectWhitelistRequest(companyId: string, projectId: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests/${projectId}`);
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests/${projectId}${statusFilter}`);
     return this.http.get(url).map((res) => res.json())
   }
 
