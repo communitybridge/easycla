@@ -691,12 +691,7 @@ export class ClaService {
   addCCLAWhitelistRequest(companyId: string, projectId: string) {
   }
 
-  deleteCCLAWhitelistRequest(companyID: string, projectID: string, requestID: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/{companyID}/ccla-whitelist-requests/{projectID}/{requestID}`);
-    return this.http.delete(url).map((res) => res.json())
-  }
-
-  getProjectWhitelistRequest(companyId: string, projectId: string, status: string = "pending") {
+  getProjectWhitelistRequest(companyId: string, projectId: string, status: string) {
     let statusFilter = '';
     if (status != null && status.length > 0) {
       statusFilter = `?status=${status}`;
