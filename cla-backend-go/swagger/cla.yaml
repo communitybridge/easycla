@@ -1128,6 +1128,10 @@ paths:
           in: path
           type: string
           required: true
+        - name: status
+          in: query
+          type: string
+          required: false
       responses:
         '200':
           description: 'Success'
@@ -1195,6 +1199,10 @@ paths:
           in: path
           type: string
           required: true
+        - name: status
+          in: query
+          type: string
+          required: false
       responses:
         '200':
           description: 'Success'
@@ -1294,6 +1302,10 @@ paths:
         - name: projectID
           in: query
           type: string
+        - name: status
+          in: query
+          type: string
+          required: false
       responses:
         '200':
           description: 'Success'

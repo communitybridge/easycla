@@ -84,7 +84,7 @@ export class ClaContractConfigModal {
     }
   }
 
-  isFormValid(){
+  isFormValid() {
     return this.form.valid && (this.form.controls.ccla.value || this.form.controls.icla.value)
   }
 
@@ -109,7 +109,7 @@ export class ClaContractConfigModal {
       this.dismiss(true);
     }, (error) => {
       this.loading = false;
-      if(!error.ok) {
+      if (!error.ok) {
         this.errorMessage = JSON.parse(error._body).Message;
       }
     });
@@ -126,10 +126,17 @@ export class ClaContractConfigModal {
       projectCCLARequiresICLA: this.form.value.cclaAndIcla,
       projectICLAEnabled: this.form.value.icla
     };
-    this.claService.putProject(claProject).subscribe((response) => {
-      this.loading = false;
-      this.dismiss(true);
-    });
+    this.claService.putProject(claProject).subscribe(
+      (res) => {
+        this.loading = false;
+        this.dismiss(true);
+      },
+      (error) => {
+        this.loading = false;
+        if (!error.ok) {
+          this.errorMessage = JSON.parse(error._body).Message;
+        }
+      });
   }
 
   dismiss(data?) {
