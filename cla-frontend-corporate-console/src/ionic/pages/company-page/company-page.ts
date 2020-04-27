@@ -126,7 +126,7 @@ export class CompanyPage {
 
   mapProjects(projectDetail, signatureACL) {
     if (projectDetail) {
-      this.claService.getProjectWhitelistRequest(this.companyId, projectDetail.project_id, "approved").subscribe((res) => {
+      this.claService.getProjectWhitelistRequest(this.companyId, projectDetail.project_id, "pending").subscribe((res) => {
         let pendingRequest = [];
         this.loading.projects = false;
         if (res.list.length > 0) {
