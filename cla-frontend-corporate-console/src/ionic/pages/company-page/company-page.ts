@@ -126,12 +126,12 @@ export class CompanyPage {
 
   mapProjects(projectDetail, signatureACL) {
     if (projectDetail) {
-      this.claService.getProjectWhitelistRequest(this.companyId, projectDetail.project_id).subscribe((res) => {
+      this.claService.getProjectWhitelistRequest(this.companyId, projectDetail.project_id, "approved").subscribe((res) => {
         let pendingRequest = [];
         this.loading.projects = false;
         if (res.list.length > 0) {
           pendingRequest = res.list.filter((r) => {
-            return r.projectId === projectDetail.project_id
+            return r.projectId === projectDetail.project_id //&& r.requestStatus === "pending"
           })
         }
         this.rows.push({
@@ -206,6 +206,12 @@ export class CompanyPage {
   getInvites() {
     this.claService.getPendingInvites(this.companyId).subscribe((response) => {
       this.invites = response;
+      if (this.invites != null && this.invites.length > 0) {
+        this.invites = response.list.filter((r) => {
+          // Only show pending requests
+          return r.requestStatus === "pending"
+        })
+      }
       this.loading.invites = false;
     });
   }

@@ -8,6 +8,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/company"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 	"github.com/go-openapi/runtime/middleware"
@@ -73,7 +74,9 @@ func Configure(api *operations.ClaAPI, service IService, sessionStore *dynastore
 
 	api.CompanyListCclaWhitelistRequestsHandler = company.ListCclaWhitelistRequestsHandlerFunc(
 		func(params company.ListCclaWhitelistRequestsParams, claUser *user.CLAUser) middleware.Responder {
-			result, err := service.ListCclaWhitelistRequest(params.CompanyID, params.ProjectID)
+			log.Debugf("Invoking ListCclaWhitelistRequest with Company ID: %+v, Project ID: %+v, Status: %+v",
+				params.CompanyID, params.ProjectID, params.Status)
+			result, err := service.ListCclaWhitelistRequest(params.CompanyID, params.ProjectID, params.Status)
 			if err != nil {
 				return company.NewListCclaWhitelistRequestsBadRequest().WithPayload(errorResponse(err))
 			}
@@ -83,7 +86,9 @@ func Configure(api *operations.ClaAPI, service IService, sessionStore *dynastore
 
 	api.CompanyListCclaWhitelistRequestsByCompanyAndProjectHandler = company.ListCclaWhitelistRequestsByCompanyAndProjectHandlerFunc(
 		func(params company.ListCclaWhitelistRequestsByCompanyAndProjectParams, claUser *user.CLAUser) middleware.Responder {
-			result, err := service.ListCclaWhitelistRequest(params.CompanyID, &params.ProjectID)
+			log.Debugf("Invoking ListCclaWhitelistRequestByCompanyProjectUser with Company ID: %+v, Project ID: %+v, Status: %+v",
+				params.CompanyID, params.ProjectID, params.Status)
+			result, err := service.ListCclaWhitelistRequestByCompanyProjectUser(params.CompanyID, &params.ProjectID, params.Status, nil)
 			if err != nil {
 				return company.NewListCclaWhitelistRequestsByCompanyAndProjectBadRequest().WithPayload(errorResponse(err))
 			}
@@ -93,7 +98,9 @@ func Configure(api *operations.ClaAPI, service IService, sessionStore *dynastore
 
 	api.CompanyListCclaWhitelistRequestsByCompanyAndProjectAndUserHandler = company.ListCclaWhitelistRequestsByCompanyAndProjectAndUserHandlerFunc(
 		func(params company.ListCclaWhitelistRequestsByCompanyAndProjectAndUserParams, claUser *user.CLAUser) middleware.Responder {
-			result, err := service.ListCclaWhitelistRequestByCompanyProjectUser(params.CompanyID, &params.ProjectID, &claUser.LFUsername)
+			log.Debugf("Invoking ListCclaWhitelistRequestByCompanyProjectUser with Company ID: %+v, Project ID: %+v, Status: %+v, User: %+v",
+				params.CompanyID, params.ProjectID, params.Status, claUser.LFUsername)
+			result, err := service.ListCclaWhitelistRequestByCompanyProjectUser(params.CompanyID, &params.ProjectID, params.Status, &claUser.LFUsername)
 			if err != nil {
 				return company.NewListCclaWhitelistRequestsByCompanyAndProjectAndUserBadRequest().WithPayload(errorResponse(err))
 			}
