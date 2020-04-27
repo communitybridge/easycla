@@ -395,7 +395,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 	}
 
 	if params.SignatureType != nil {
-		if params.SearchTerm != nil {
+		if params.SearchTerm != nil && (params.FullMatch != nil && !*params.FullMatch) {
 			indexName = "signature-project-id-type-index"
 			condition = condition.And(expression.Key("signature_type").Equal(expression.Value(strings.ToLower(*params.SignatureType))))
 		} else {
@@ -465,9 +465,14 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 				S: &params.ProjectID,
 			},
 		}
+		if params.FullMatch != nil && *params.FullMatch && params.SearchTerm != nil {
+			queryInput.ExclusiveStartKey["signature_reference_name_lower"] = &dynamodb.AttributeValue{
+				S: params.SearchTerm,
+			}
+		}
 	}
 
-	var signatures []*models.Signature
+	signatures := make([]*models.Signature, 0)
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -495,17 +500,10 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 		// Add to the signatures response model to the list
 		signatures = append(signatures, signatureList...)
 
-		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
+		log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey)
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
-			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-				"signature_id": {
-					S: aws.String(lastEvaluatedKey),
-				},
-				"signature_project_id": {
-					S: &params.ProjectID,
-				},
-			}
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
 		} else {
 			lastEvaluatedKey = ""
 		}
@@ -527,6 +525,10 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 
 	// Meta-data for the response
 	totalCount := *describeTableResult.Table.ItemCount
+	if int64(len(signatures)) > pageSize {
+		signatures = signatures[0:pageSize]
+		lastEvaluatedKey = signatures[pageSize-1].SignatureID
+	}
 
 	return &models.Signatures{
 		ProjectID:      params.ProjectID,
@@ -1162,7 +1164,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			var userLFID = ""
 			var userGHID = ""
 
-			if dbSignature.SignatureReferenceType == "user" {
+			if sigModel.SignatureReferenceType == "user" {
 				userModel, userErr := repo.usersRepo.GetUser(sigModel.SignatureReferenceID)
 				if userErr != nil || userModel == nil {
 					log.Warnf("unable to lookup user using id: %s, error: %v", sigModel.SignatureReferenceID, userErr)
