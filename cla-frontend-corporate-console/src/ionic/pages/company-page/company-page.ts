@@ -131,7 +131,7 @@ export class CompanyPage {
         this.loading.projects = false;
         if (res.list.length > 0) {
           pendingRequest = res.list.filter((r) => {
-            return r.projectId === projectDetail.project_id //&& r.requestStatus === "pending"
+            return r.projectId === projectDetail.project_id
           })
         }
         this.rows.push({
