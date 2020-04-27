@@ -357,7 +357,7 @@ func (repo repository) GetSignature(signatureID string) (*models.Signature, erro
 		return nil, nil
 	}
 
-	return &signatureList[0], nil
+	return signatureList[0], nil
 }
 
 func addConditionToFilter(filter expression.ConditionBuilder, cond expression.ConditionBuilder, filterAdded *bool) expression.ConditionBuilder {
@@ -467,7 +467,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 		}
 	}
 
-	var signatures []models.Signature
+	var signatures []*models.Signature
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -584,7 +584,7 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 		}
 	}
 
-	var signatures []models.Signature
+	var signatures []*models.Signature
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -811,7 +811,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 		}
 	}
 
-	var signatures []models.Signature
+	var signatures []*models.Signature
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -930,7 +930,7 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 		}
 	}
 
-	var signatures []models.Signature
+	var signatures []*models.Signature
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -1047,7 +1047,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 		}
 	}
 
-	var signatures []models.Signature
+	var signatures []*models.Signature
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -1118,13 +1118,13 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 }
 
 // buildProjectSignatureModels converts the response model into a response data model
-func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput, projectID string) ([]models.Signature, error) {
-	var signatures []models.Signature
+func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput, projectID string) ([]*models.Signature, error) {
+	var signatures []*models.Signature
 
 	// The DB signature model
-	var dbSignature []ItemSignature
+	var dbSignatures []ItemSignature
 
-	err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbSignature)
+	err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbSignatures)
 	if err != nil {
 		log.Warnf("error unmarshalling signatures from database for project: %s, error: %v",
 			projectID, err)
@@ -1132,10 +1132,30 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(len(dbSignature))
-
-	for _, dbSignature := range dbSignature {
-		go func(dbSignature ItemSignature) {
+	wg.Add(len(dbSignatures))
+	for _, dbSignature := range dbSignatures {
+		sig := &models.Signature{
+			SignatureID:                 dbSignature.SignatureID,
+			SignatureCreated:            dbSignature.DateCreated,
+			SignatureModified:           dbSignature.DateModified,
+			SignatureType:               dbSignature.SignatureType,
+			SignatureReferenceID:        dbSignature.SignatureReferenceID,
+			SignatureReferenceName:      dbSignature.SignatureReferenceName,
+			SignatureReferenceNameLower: dbSignature.SignatureReferenceNameLower,
+			SignatureSigned:             dbSignature.SignatureSigned,
+			SignatureApproved:           dbSignature.SignatureApproved,
+			Version:                     dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
+			SignatureReferenceType:      dbSignature.SignatureReferenceType,
+			ProjectID:                   dbSignature.SignatureProjectID,
+			Created:                     dbSignature.DateCreated,
+			Modified:                    dbSignature.DateModified,
+			EmailWhitelist:              dbSignature.EmailWhitelist,
+			DomainWhitelist:             dbSignature.DomainWhitelist,
+			GithubWhitelist:             dbSignature.GitHubWhitelist,
+			GithubOrgWhitelist:          dbSignature.GitHubOrgWhitelist,
+		}
+		signatures = append(signatures, sig)
+		go func(sigModel *models.Signature, signatureUserCompanyID string, sigACL []string) {
 			defer wg.Done()
 			var companyName = ""
 			var userName = ""
@@ -1143,76 +1163,60 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			var userGHID = ""
 
 			if dbSignature.SignatureReferenceType == "user" {
-				userModel, userErr := repo.usersRepo.GetUser(dbSignature.SignatureReferenceID)
+				userModel, userErr := repo.usersRepo.GetUser(sigModel.SignatureReferenceID)
 				if userErr != nil || userModel == nil {
-					log.Warnf("unable to lookup user using id: %s, error: %v", dbSignature.SignatureReferenceID, userErr)
+					log.Warnf("unable to lookup user using id: %s, error: %v", sigModel.SignatureReferenceID, userErr)
 				} else {
 					userName = userModel.Username
 					userLFID = userModel.LfUsername
 					userGHID = userModel.GithubID
 				}
-				if dbSignature.SignatureUserCompanyID != "" {
-					dbCompanyModel, companyErr := repo.companyRepo.GetCompany(dbSignature.SignatureUserCompanyID)
+				if signatureUserCompanyID != "" {
+					dbCompanyModel, companyErr := repo.companyRepo.GetCompany(signatureUserCompanyID)
 					if companyErr != nil {
-						log.Warnf("unable to lookup company using id: %s, error: %v", dbSignature.SignatureUserCompanyID, companyErr)
+						log.Warnf("unable to lookup company using id: %s, error: %v", signatureUserCompanyID, companyErr)
 					} else {
 						companyName = dbCompanyModel.CompanyName
 					}
 				}
-			} else if dbSignature.SignatureReferenceType == "company" {
-				dbCompanyModel, companyErr := repo.companyRepo.GetCompany(dbSignature.SignatureReferenceID)
+			} else if sigModel.SignatureReferenceType == "company" {
+				dbCompanyModel, companyErr := repo.companyRepo.GetCompany(sigModel.SignatureReferenceID)
 				if companyErr != nil {
-					log.Warnf("unable to lookup company using id: %s, error: %v", dbSignature.SignatureReferenceID, companyErr)
+					log.Warnf("unable to lookup company using id: %s, error: %v", sigModel.SignatureReferenceID, companyErr)
 				} else {
 					companyName = dbCompanyModel.CompanyName
 				}
 			}
 
 			var signatureACL []models.User
-			for _, userName := range dbSignature.SignatureACL {
+			for _, userName := range sigACL {
 				userModel, userErr := repo.usersRepo.GetUserByUserName(userName, true)
 				if userErr != nil {
 					log.Warnf("unable to lookup user using username: %s, error: %v", userName, userErr)
 				} else {
 					if userModel == nil {
-						log.Warnf("User looking for username is null: %s for signature: %s", userName, dbSignature.SignatureID)
+						log.Warnf("User looking for username is null: %s for signature: %s", userName, sigModel.SignatureID)
 					} else {
 						signatureACL = append(signatureACL, *userModel)
 					}
 				}
 			}
-
-			signatures = append(signatures, models.Signature{
-				SignatureID:                 dbSignature.SignatureID,
-				CompanyName:                 companyName,
-				SignatureCreated:            dbSignature.DateCreated,
-				SignatureModified:           dbSignature.DateModified,
-				SignatureType:               dbSignature.SignatureType,
-				SignatureReferenceID:        dbSignature.SignatureReferenceID,
-				SignatureReferenceName:      dbSignature.SignatureReferenceName,
-				SignatureReferenceNameLower: dbSignature.SignatureReferenceNameLower,
-				SignatureSigned:             dbSignature.SignatureSigned,
-				SignatureApproved:           dbSignature.SignatureApproved,
-				Version:                     dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
-				SignatureReferenceType:      dbSignature.SignatureReferenceType,
-				ProjectID:                   dbSignature.SignatureProjectID,
-				Created:                     dbSignature.DateCreated,
-				Modified:                    dbSignature.DateModified,
-				UserName:                    userName,
-				UserLFID:                    userLFID,
-				UserGHID:                    userGHID,
-				EmailWhitelist:              dbSignature.EmailWhitelist,
-				DomainWhitelist:             dbSignature.DomainWhitelist,
-				GithubWhitelist:             dbSignature.GitHubWhitelist,
-				GithubOrgWhitelist:          dbSignature.GitHubOrgWhitelist,
-				SignatureACL:                signatureACL,
-			})
-		}(dbSignature)
+			sigModel.CompanyName = companyName
+			sigModel.UserName = userName
+			sigModel.UserLFID = userLFID
+			sigModel.UserGHID = userGHID
+			sigModel.SignatureACL = signatureACL
+		}(sig, dbSignature.SignatureUserCompanyID, dbSignature.SignatureACL)
 	}
-
 	wg.Wait()
-
 	return signatures, nil
+	/*
+		var result []models.Signature
+		for _, s := range signatures {
+			result = append(result, *s)
+		}
+				return result, nil
+	*/
 }
 
 // buildResponse is a helper function which converts a database model to a GitHub organization response model
