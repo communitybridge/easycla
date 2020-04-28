@@ -795,7 +795,6 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(tableName),
 		IndexName:                 aws.String("project-signature-index"), // Name of a secondary index to scan
-		Limit:                     aws.Int64(pageSize),                   // The maximum number of items to evaluate (not necessarily the number of matching items)
 	}
 
 	// If we have the next key, set the exclusive start key value
@@ -813,7 +812,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 		}
 	}
 
-	var signatures []*models.Signature
+	signatures := make([]*models.Signature, 0)
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -844,14 +843,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
-			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-				"signature_id": {
-					S: aws.String(lastEvaluatedKey),
-				},
-				"signature_project_id": {
-					S: &params.ProjectID,
-				},
-			}
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
 		} else {
 			lastEvaluatedKey = ""
 		}
@@ -873,6 +865,10 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 
 	// Meta-data for the response
 	totalCount := *describeTableResult.Table.ItemCount
+	if int64(len(signatures)) > pageSize {
+		signatures = signatures[0:pageSize]
+		lastEvaluatedKey = signatures[pageSize-1].SignatureID
+	}
 
 	return &models.Signatures{
 		ProjectID:      params.ProjectID,
