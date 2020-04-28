@@ -928,7 +928,7 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 		}
 	}
 
-	var signatures []*models.Signature
+	signatures := make([]*models.Signature, 0)
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -959,14 +959,7 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
-			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-				"signature_id": {
-					S: aws.String(lastEvaluatedKey),
-				},
-				"signature_reference_id": {
-					S: &params.CompanyID,
-				},
-			}
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
 		} else {
 			lastEvaluatedKey = ""
 		}
@@ -985,6 +978,10 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 		log.Warnf("error retrieving total record count for company: %s/%s, error: %v",
 			params.CompanyID, *params.CompanyName, err)
 		return nil, err
+	}
+	if int64(len(signatures)) > pageSize {
+		signatures = signatures[0:pageSize]
+		lastEvaluatedKey = signatures[pageSize-1].SignatureID
 	}
 
 	// Meta-data for the response
