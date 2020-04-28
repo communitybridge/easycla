@@ -1,6 +1,7 @@
 package company
 
 import (
+	"sort"
 	"sync"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -15,10 +16,12 @@ import (
 	v2UserServiceModels "github.com/communitybridge/easycla/cla-backend-go/v2/user-service/models"
 )
 
+// Service functions for company
 type Service interface {
 	GetCompanyCLAManagers(companyID string) (*models.CompanyClaManagers, error)
 }
 
+// ProjectRepo contains project repo methods
 type ProjectRepo interface {
 	GetProjectByID(projectID string) (*v1Models.Project, error)
 }
@@ -28,6 +31,7 @@ type service struct {
 	projectRepo   ProjectRepo
 }
 
+// NewService returns instance of company service
 func NewService(sigRepo signatures.SignatureRepository, projectRepo ProjectRepo) Service {
 	return &service{
 		signatureRepo: sigRepo,
@@ -35,7 +39,7 @@ func NewService(sigRepo signatures.SignatureRepository, projectRepo ProjectRepo)
 	}
 }
 
-func (s service) getAllCCLASignatures(companyID string) ([]v1Models.Signature, error) {
+func (s *service) getAllCCLASignatures(companyID string) ([]v1Models.Signature, error) {
 	var sigs []v1Models.Signature
 	var lastScannedKey *string
 	for {
@@ -56,12 +60,15 @@ func (s service) getAllCCLASignatures(companyID string) ([]v1Models.Signature, e
 	return sigs, nil
 }
 
-func (s service) GetCompanyCLAManagers(companyID string) (*models.CompanyClaManagers, error) {
+func (s *service) GetCompanyCLAManagers(companyID string) (*models.CompanyClaManagers, error) {
 	sigs, err := s.getAllCCLASignatures(companyID)
 	if err != nil {
 		return nil, err
 	}
 	var claManagers []*models.CompanyClaManager
+	lfUsernames := utils.NewStringSet()
+	projectIDs := utils.NewStringSet()
+	// Get CLA managers
 	for _, sig := range sigs {
 		for _, user := range sig.SignatureACL {
 			claManagers = append(claManagers, &models.CompanyClaManager{
@@ -69,33 +76,52 @@ func (s service) GetCompanyCLAManagers(companyID string) (*models.CompanyClaMana
 				LfUsername: user.LfUsername,
 				ProjectID:  sig.ProjectID,
 			})
+			lfUsernames.Add(user.LfUsername)
+			projectIDs.Add(sig.ProjectID)
 		}
 	}
-	err = fillUserInfo(claManagers)
+	// get userinfo and project info
+	var usermap map[string]*v2UserServiceModels.User
+	var projects map[string]*v1Models.Project
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		usermap, err = getUsersInfo(lfUsernames.List())
+	}()
+	go func() {
+		defer wg.Done()
+		projects = s.getProjects(projectIDs.List())
+	}()
+	wg.Wait()
 	if err != nil {
 		return nil, err
 	}
-	err = s.fillProjectInfo(claManagers)
-	if err != nil {
-		return nil, err
-	}
+	// fill user info
+	fillUsersInfo(claManagers, usermap)
+	// fill project info
+	fillProjectInfo(claManagers, projects)
+	// sort result by cla manager name
+	sort.Slice(claManagers, func(i, j int) bool {
+		return claManagers[i].Name < claManagers[j].Name
+	})
 	return &models.CompanyClaManagers{List: claManagers}, nil
 }
 
-func fillUserInfo(claManagers []*models.CompanyClaManager) error {
-	var lfUserNames []string
-	for _, cm := range claManagers {
-		lfUserNames = append(lfUserNames, cm.LfUsername)
-	}
+func getUsersInfo(lfUsernames []string) (map[string]*v2UserServiceModels.User, error) {
 	userServiceClient := v2UserService.GetClient()
-	users, err := userServiceClient.GetUsersByUsernames(lfUserNames)
+	users, err := userServiceClient.GetUsersByUsernames(lfUsernames)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	usermap := make(map[string]*v2UserServiceModels.User)
 	for _, user := range users {
 		usermap[user.Username] = user
 	}
+	return usermap, nil
+}
+
+func fillUsersInfo(claManagers []*models.CompanyClaManager, usermap map[string]*v2UserServiceModels.User) {
 	for _, cm := range claManagers {
 		user, ok := usermap[cm.LfUsername]
 		if !ok {
@@ -113,24 +139,36 @@ func fillUserInfo(claManagers []*models.CompanyClaManager) error {
 			}
 		}
 	}
-	return nil
 }
 
-func (s service) fillProjectInfo(claManagers []*models.CompanyClaManager) error {
-	var wg sync.WaitGroup
-	wg.Add(len(claManagers))
-	for i, _ := range claManagers {
-		go func(claManager *models.CompanyClaManager) {
-			defer wg.Done()
-			project, err := s.projectRepo.GetProjectByID(claManager.ProjectID)
+func (s *service) getProjects(projectIDs []string) map[string]*v1Models.Project {
+	projects := make(map[string]*v1Models.Project)
+	prChan := make(chan *v1Models.Project)
+	for _, id := range projectIDs {
+		go func(projectID string) {
+			project, err := s.projectRepo.GetProjectByID(projectID)
 			if err != nil {
-				logging.Warnf("Unable to fetch project details for project %s. error = %s", claManager.ProjectID, err)
-				return
+				logging.Warnf("Unable to fetch project details for project %s. error = %s", projectID, err)
 			}
-			claManager.ProjectName = project.ProjectName
-			claManager.ProjectSfid = project.ProjectExternalID
-		}(claManagers[i])
+			prChan <- project
+		}(id)
 	}
-	wg.Wait()
-	return nil
+	for range projectIDs {
+		project := <-prChan
+		if project != nil {
+			projects[project.ProjectID] = project
+		}
+	}
+	return projects
+}
+
+func fillProjectInfo(claManagers []*models.CompanyClaManager, projects map[string]*v1Models.Project) {
+	for _, claManager := range claManagers {
+		project, ok := projects[claManager.ProjectID]
+		if !ok {
+			continue
+		}
+		claManager.ProjectName = project.ProjectName
+		claManager.ProjectSfid = project.ProjectExternalID
+	}
 }

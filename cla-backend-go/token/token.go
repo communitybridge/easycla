@@ -84,7 +84,7 @@ func retrieveToken() error {
 	//token = tr.TokenType + " " + tr.AccessToken
 	token = tr.AccessToken
 	if tr.AccessToken == "" || tr.TokenType == "" {
-		err = errors.New("Error fetching authentication token - response value is empty.")
+		err = errors.New("error fetching authentication token - response value is empty")
 		log.WithError(err).Warn("empty response from auth server")
 		return err
 	}

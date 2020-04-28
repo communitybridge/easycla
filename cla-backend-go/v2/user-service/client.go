@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
+// Client is client for user_service
 type Client struct {
 	cl        *client.UserService
 	dummyXACL string
@@ -21,11 +22,12 @@ var (
 	userServiceClient *Client
 )
 
-func InitClient(ApiGwURL string) {
-	ApiGwURL = strings.ReplaceAll(ApiGwURL, "https://", "")
+// InitClient initializes the user_service client
+func InitClient(APIGwURL string) {
+	APIGwURL = strings.ReplaceAll(APIGwURL, "https://", "")
 	userServiceClient = &Client{
 		cl: client.NewHTTPClientWithConfig(strfmt.Default, &client.TransportConfig{
-			Host:     ApiGwURL,
+			Host:     APIGwURL,
 			BasePath: "user-service/v1",
 			Schemes:  []string{"https"},
 		}),
@@ -33,10 +35,12 @@ func InitClient(ApiGwURL string) {
 	}
 }
 
+// GetClient return user_service client
 func GetClient() *Client {
 	return userServiceClient
 }
 
+// GetUsersByUsernames search users by lf username
 func (usc *Client) GetUsersByUsernames(lfUsernames []string) ([]*models.User, error) {
 	params := bulk.NewSearchBulkParams()
 	params.SearchBulk = &models.SearchBulk{
