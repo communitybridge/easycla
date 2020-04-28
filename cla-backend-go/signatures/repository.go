@@ -500,7 +500,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 		// Add to the signatures response model to the list
 		signatures = append(signatures, signatureList...)
 
-		log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey)
+		//log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey)
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
 			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
@@ -1024,7 +1024,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(tableName),
 		IndexName:                 aws.String("reference-signature-index"), // Name of a secondary index to scan
-		//Limit:                     aws.Int64(pageSize),                   // The maximum number of items to evaluate (not necessarily the number of matching items)
+		Limit:                     aws.Int64(pageSize),                     // The maximum number of items to evaluate (not necessarily the number of matching items)
 	}
 
 	// If we have the next key, set the exclusive start key value
@@ -1042,7 +1042,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 		}
 	}
 
-	var signatures []*models.Signature
+	signatures := make([]*models.Signature, 0)
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -1072,14 +1072,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
-			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-				"signature_id": {
-					S: aws.String(lastEvaluatedKey),
-				},
-				"signature_reference_id": {
-					S: &params.UserID,
-				},
-			}
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
 		} else {
 			lastEvaluatedKey = ""
 		}
@@ -1205,13 +1198,6 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 	}
 	wg.Wait()
 	return signatures, nil
-	/*
-		var result []models.Signature
-		for _, s := range signatures {
-			result = append(result, *s)
-		}
-				return result, nil
-	*/
 }
 
 // buildResponse is a helper function which converts a database model to a GitHub organization response model
