@@ -48,9 +48,11 @@
                         </ion-input>
                         <ion-label class="field-description" stacked>{{ field.description }}</ion-label>
                       </ion-item>
-                      <ion-item class="no-margin-bottom"
-                        *ngIf="!form.controls[getFieldName(field)].valid && (submitAttempt)" no-lines>
-                        <ion-label class="field-error">{{field.name}} is required.</ion-label>
+                      <ion-item class="no-margin-bottom" *ngIf="!getFieldError(field)" no-lines>
+                        <ion-label *ngIf="field.name.indexOf('Email')<0" class="field-error">{{field.name}} is required.
+                        </ion-label>
+                        <ion-label *ngIf="field.name.indexOf('Email')>=0" class="field-error">{{field.name}} is invalid.
+                        </ion-label>
                       </ion-item>
                     </ion-col>
                   </ion-row>
@@ -80,12 +82,12 @@
 
                 <ion-row>
                   <ion-col>
-                    <button *ngIf="pdfPath.corporatePDFURL" ion-button (click)="showPDF('corporatePDFURL')" color="secondary"
-                      [disabled]="currentPDF === 'corporatePDFURL'">
+                    <button *ngIf="pdfPath.corporatePDFURL" ion-button (click)="showPDF('corporatePDFURL')"
+                      color="secondary" [disabled]="currentPDF === 'corporatePDFURL'">
                       View CCLA
                     </button>
-                    <button *ngIf="pdfPath.individualPDFURL" ion-button (click)="showPDF('individualPDFURL')" color="secondary"
-                      [disabled]="currentPDF === 'individualPDFURL'">
+                    <button *ngIf="pdfPath.individualPDFURL" ion-button (click)="showPDF('individualPDFURL')"
+                      color="secondary" [disabled]="currentPDF === 'individualPDFURL'">
                       View ICLA
                     </button>
                   </ion-col>
@@ -114,4 +116,3 @@
 
   <cla-footer></cla-footer>
 </ion-content>
-
