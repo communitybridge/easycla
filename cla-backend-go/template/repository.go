@@ -29,7 +29,7 @@ type Repository interface {
 	GetTemplates() ([]models.Template, error)
 	GetTemplate(templateID string) (models.Template, error)
 	GetCLAGroup(claGroupID string) (*models.Project, error)
-	UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template, pdfUrls models.TemplatePdfs) error
+	UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template, pdfUrls models.TemplatePdfs, projectCCLAEnabled, projectICLAEnabled bool) error
 }
 
 type repository struct {
@@ -165,64 +165,8 @@ func (r repository) buildProjectModel(dbModel DBProjectModel) *models.Project {
 }
 
 // UpdateDynamoContractGroupTemplates updates the templates in the data store
-func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template, pdfUrls models.TemplatePdfs) error {
+func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template, pdfUrls models.TemplatePdfs, projectCCLAEnabled, projectICLAEnabled bool) error {
 	tableName := fmt.Sprintf("cla-%s-projects", r.stage)
-
-	// Map the fields to the dynamo model as the attribute names are different
-	// Map Template Fields into DocumentTab
-	cclaDocumentTabs := []DocumentTab{}
-
-	for _, field := range template.CclaFields {
-		dynamoTab := DocumentTab{
-			DocumentTabType:                     field.FieldType,
-			DocumentTabID:                       field.ID,
-			DocumentTabPage:                     1,
-			DocumentTabName:                     field.Name,
-			DocumentTabWidth:                    field.Width,
-			DocumentTabHeight:                   field.Height,
-			DocumentTabIsLocked:                 field.IsEditable,
-			DocumentTabAnchorString:             field.AnchorString,
-			DocumentTabIsRequired:               field.IsOptional,
-			DocumentTabAnchorIgnoreIfNotPresent: field.IsOptional,
-			DocumentTabAnchorXOffset:            field.OffsetX,
-			DocumentTabAnchorYOffset:            field.OffsetY,
-			DocumentTabPositionX:                0,
-			DocumentTabPositionY:                0,
-		}
-		cclaDocumentTabs = append(cclaDocumentTabs, dynamoTab)
-	}
-
-	currentTime := time.Now().Format(time.RFC3339)
-
-	// Map CCLA Template to Document
-	dynamoCorporateProjectDocument := DynamoProjectDocument{
-		DocumentName:            template.Name,
-		DocumentFileID:          template.ID,
-		DocumentContentType:     "storage+pdf",
-		DocumentMajorVersion:    2,
-		DocumentMinorVersion:    0,
-		DocumentCreationDate:    currentTime,
-		DocumentPreamble:        template.Name,
-		DocumentLegalEntityName: template.Name,
-		DocumentAuthorName:      template.Name,
-		DocumentS3URL:           pdfUrls.CorporatePDFURL,
-		DocumentTabs:            cclaDocumentTabs,
-	}
-
-	// project_corporate_documents is a List type, and thus the item needs to be in a slice
-	dynamoCorporateProjectDocuments := []DynamoProjectDocument{}
-	dynamoCorporateProjectDocuments = append(dynamoCorporateProjectDocuments, dynamoCorporateProjectDocument)
-
-	dynamoCorporateProject := DynamoProjectCorporateDocuments{
-		DynamoProjectDocument: dynamoCorporateProjectDocuments,
-	}
-
-	// Marshal object into dynamodb attribute
-	expr, err := dynamodbattribute.MarshalMap(dynamoCorporateProject)
-	if err != nil {
-		return err
-	}
-
 	// Find Contract Group to update the Templates on
 	key := map[string]*dynamodb.AttributeValue{
 		"project_id": {
@@ -230,89 +174,148 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 		},
 	}
 
-	log.Debugf("Updating table %s with corporate template details - CLA Group id: %s.", tableName, ContractGroupID)
-	input := &dynamodb.UpdateItemInput{
-		ExpressionAttributeValues: expr,
-		TableName:                 aws.String(tableName),
-		Key:                       key,
-		ReturnValues:              aws.String("UPDATED_NEW"),
-		// UpdateExpression:          aws.String("set project_corporate_documents =  list_append(project_corporate_documents, :project_corporate_documents)"),
-		UpdateExpression: aws.String("set project_corporate_documents =  :project_corporate_documents"),
-	}
+	if projectCCLAEnabled {
+		// Map the fields to the dynamo model as the attribute names are different
+		// Map Template Fields into DocumentTab
+		cclaDocumentTabs := []DocumentTab{}
 
-	_, err = r.dynamoDBClient.UpdateItem(input)
-	if err != nil {
-		log.Warnf("Error updating the CLA Group corporate document with template from: %s, error: %+v", template.Name, err)
-		return err
-	}
-
-	// Map ICLA Template Fields into DocumentTab
-	iclaDocumentTabs := []DocumentTab{}
-
-	for _, field := range template.IclaFields {
-		dynamoTab := DocumentTab{
-			DocumentTabType:                     field.FieldType,
-			DocumentTabID:                       field.ID,
-			DocumentTabPage:                     1,
-			DocumentTabName:                     field.Name,
-			DocumentTabWidth:                    field.Width,
-			DocumentTabHeight:                   field.Height,
-			DocumentTabIsLocked:                 field.IsEditable,
-			DocumentTabIsRequired:               field.IsOptional,
-			DocumentTabAnchorString:             field.AnchorString,
-			DocumentTabAnchorIgnoreIfNotPresent: field.IsOptional,
-			DocumentTabAnchorXOffset:            field.OffsetX,
-			DocumentTabAnchorYOffset:            field.OffsetY,
-			DocumentTabPositionX:                0,
-			DocumentTabPositionY:                0,
+		for _, field := range template.CclaFields {
+			dynamoTab := DocumentTab{
+				DocumentTabType:                     field.FieldType,
+				DocumentTabID:                       field.ID,
+				DocumentTabPage:                     1,
+				DocumentTabName:                     field.Name,
+				DocumentTabWidth:                    field.Width,
+				DocumentTabHeight:                   field.Height,
+				DocumentTabIsLocked:                 field.IsEditable,
+				DocumentTabAnchorString:             field.AnchorString,
+				DocumentTabIsRequired:               field.IsOptional,
+				DocumentTabAnchorIgnoreIfNotPresent: field.IsOptional,
+				DocumentTabAnchorXOffset:            field.OffsetX,
+				DocumentTabAnchorYOffset:            field.OffsetY,
+				DocumentTabPositionX:                0,
+				DocumentTabPositionY:                0,
+			}
+			cclaDocumentTabs = append(cclaDocumentTabs, dynamoTab)
 		}
-		iclaDocumentTabs = append(iclaDocumentTabs, dynamoTab)
+
+		currentTime := time.Now().Format(time.RFC3339)
+
+		// Map CCLA Template to Document
+		dynamoCorporateProjectDocument := DynamoProjectDocument{
+			DocumentName:            template.Name,
+			DocumentFileID:          template.ID,
+			DocumentContentType:     "storage+pdf",
+			DocumentMajorVersion:    2,
+			DocumentMinorVersion:    0,
+			DocumentCreationDate:    currentTime,
+			DocumentPreamble:        template.Name,
+			DocumentLegalEntityName: template.Name,
+			DocumentAuthorName:      template.Name,
+			DocumentS3URL:           pdfUrls.CorporatePDFURL,
+			DocumentTabs:            cclaDocumentTabs,
+		}
+
+		// project_corporate_documents is a List type, and thus the item needs to be in a slice
+		dynamoCorporateProjectDocuments := []DynamoProjectDocument{}
+		dynamoCorporateProjectDocuments = append(dynamoCorporateProjectDocuments, dynamoCorporateProjectDocument)
+
+		dynamoCorporateProject := DynamoProjectCorporateDocuments{
+			DynamoProjectDocument: dynamoCorporateProjectDocuments,
+		}
+
+		// Marshal object into dynamodb attribute
+		expr, err := dynamodbattribute.MarshalMap(dynamoCorporateProject)
+		if err != nil {
+			return err
+		}
+
+		log.Debugf("Updating table %s with corporate template details - CLA Group id: %s.", tableName, ContractGroupID)
+		input := &dynamodb.UpdateItemInput{
+			ExpressionAttributeValues: expr,
+			TableName:                 aws.String(tableName),
+			Key:                       key,
+			ReturnValues:              aws.String("UPDATED_NEW"),
+			// UpdateExpression:          aws.String("set project_corporate_documents =  list_append(project_corporate_documents, :project_corporate_documents)"),
+			UpdateExpression: aws.String("set project_corporate_documents =  :project_corporate_documents"),
+		}
+
+		_, err = r.dynamoDBClient.UpdateItem(input)
+		if err != nil {
+			log.Warnf("Error updating the CLA Group corporate document with template from: %s, error: %+v", template.Name, err)
+			return err
+		}
 	}
 
-	currentTime = time.Now().Format(time.RFC3339)
-	// Map Template to Document
-	dynamoIndividualDocument := DynamoProjectDocument{
-		DocumentName:            template.Name,
-		DocumentFileID:          template.ID,
-		DocumentContentType:     "storage+pdf",
-		DocumentMajorVersion:    2,
-		DocumentMinorVersion:    0,
-		DocumentCreationDate:    currentTime,
-		DocumentPreamble:        template.Name,
-		DocumentLegalEntityName: template.Name,
-		DocumentAuthorName:      template.Name,
-		DocumentS3URL:           pdfUrls.IndividualPDFURL,
-		DocumentTabs:            iclaDocumentTabs,
+	if projectICLAEnabled {
+		// Map ICLA Template Fields into DocumentTab
+		iclaDocumentTabs := []DocumentTab{}
+
+		for _, field := range template.IclaFields {
+			dynamoTab := DocumentTab{
+				DocumentTabType:                     field.FieldType,
+				DocumentTabID:                       field.ID,
+				DocumentTabPage:                     1,
+				DocumentTabName:                     field.Name,
+				DocumentTabWidth:                    field.Width,
+				DocumentTabHeight:                   field.Height,
+				DocumentTabIsLocked:                 field.IsEditable,
+				DocumentTabIsRequired:               field.IsOptional,
+				DocumentTabAnchorString:             field.AnchorString,
+				DocumentTabAnchorIgnoreIfNotPresent: field.IsOptional,
+				DocumentTabAnchorXOffset:            field.OffsetX,
+				DocumentTabAnchorYOffset:            field.OffsetY,
+				DocumentTabPositionX:                0,
+				DocumentTabPositionY:                0,
+			}
+			iclaDocumentTabs = append(iclaDocumentTabs, dynamoTab)
+		}
+
+		currentTime := time.Now().Format(time.RFC3339)
+		// Map Template to Document
+		dynamoIndividualDocument := DynamoProjectDocument{
+			DocumentName:            template.Name,
+			DocumentFileID:          template.ID,
+			DocumentContentType:     "storage+pdf",
+			DocumentMajorVersion:    2,
+			DocumentMinorVersion:    0,
+			DocumentCreationDate:    currentTime,
+			DocumentPreamble:        template.Name,
+			DocumentLegalEntityName: template.Name,
+			DocumentAuthorName:      template.Name,
+			DocumentS3URL:           pdfUrls.IndividualPDFURL,
+			DocumentTabs:            iclaDocumentTabs,
+		}
+
+		dynamoProjectIndividualDocuments := []DynamoProjectDocument{}
+		dynamoProjectIndividualDocuments = append(dynamoProjectIndividualDocuments, dynamoIndividualDocument)
+
+		dynamoIndividualProject := DynamoProjectIndividualDocuments{
+			DynamoProjectDocument: dynamoProjectIndividualDocuments,
+		}
+
+		expr, err := dynamodbattribute.MarshalMap(dynamoIndividualProject)
+		if err != nil {
+			log.Warnf("Error updating the CLA Group individual document with template from: %s, error: %+v", template.Name, err)
+			return err
+		}
+
+		input := &dynamodb.UpdateItemInput{
+			ExpressionAttributeValues: expr,
+			TableName:                 aws.String(tableName),
+			Key:                       key,
+			ReturnValues:              aws.String("UPDATED_NEW"),
+			UpdateExpression:          aws.String("set project_individual_documents =  list_append(project_individual_documents, :project_individual_documents)"),
+		}
+
+		log.Debugf("Updating table %s with individual template details - CLA Group id: %s.", tableName, ContractGroupID)
+		_, err = r.dynamoDBClient.UpdateItem(input)
+		if err != nil {
+			log.Warnf("Error updating the CLA Group individual document with template from: %s, error: %+v", template.Name, err)
+			return err
+		}
+
 	}
-
-	dynamoProjectIndividualDocuments := []DynamoProjectDocument{}
-	dynamoProjectIndividualDocuments = append(dynamoProjectIndividualDocuments, dynamoIndividualDocument)
-
-	dynamoIndividualProject := DynamoProjectIndividualDocuments{
-		DynamoProjectDocument: dynamoProjectIndividualDocuments,
-	}
-
-	expr, err = dynamodbattribute.MarshalMap(dynamoIndividualProject)
-	if err != nil {
-		log.Warnf("Error updating the CLA Group individual document with template from: %s, error: %+v", template.Name, err)
-		return err
-	}
-
-	input = &dynamodb.UpdateItemInput{
-		ExpressionAttributeValues: expr,
-		TableName:                 aws.String(tableName),
-		Key:                       key,
-		ReturnValues:              aws.String("UPDATED_NEW"),
-		UpdateExpression:          aws.String("set project_individual_documents =  list_append(project_individual_documents, :project_individual_documents)"),
-	}
-
-	log.Debugf("Updating table %s with individual template details - CLA Group id: %s.", tableName, ContractGroupID)
-	_, err = r.dynamoDBClient.UpdateItem(input)
-	if err != nil {
-		log.Warnf("Error updating the CLA Group individual document with template from: %s, error: %+v", template.Name, err)
-		return err
-	}
-
 	return nil
 }
 

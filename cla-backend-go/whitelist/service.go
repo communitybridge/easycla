@@ -32,9 +32,6 @@ type IService interface {
 	RejectCclaWhitelistRequest(companyID, projectID, requestID string) error
 	ListCclaWhitelistRequest(companyID string, projectID, status *string) (*models.CclaWhitelistRequestList, error)
 	ListCclaWhitelistRequestByCompanyProjectUser(companyID string, projectID, status, userID *string) (*models.CclaWhitelistRequestList, error)
-
-	sendRequestSentEmail(companyModel *models.Company, projectModel *models.Project, signature models.Signature, contributorName, contributorEmail, recipientName, recipientEmail, message string)
-	sendRequestEmailToRecipient(companyModel *models.Company, projectModel *models.Project, contributorName, contributorEmail, recipientName, recipientAddress, message string)
 }
 
 type service struct {
@@ -208,7 +205,7 @@ func (s service) ListCclaWhitelistRequestByCompanyProjectUser(companyID string, 
 }
 
 // sendRequestSentEmail sends emails to the CLA managers specified in the signature record
-func (s service) sendRequestSentEmail(companyModel *models.Company, projectModel *models.Project, signature models.Signature, contributorName, contributorEmail, recipientName, recipientEmail, message string) {
+func (s service) sendRequestSentEmail(companyModel *models.Company, projectModel *models.Project, signature *models.Signature, contributorName, contributorEmail, recipientName, recipientEmail, message string) {
 
 	// If we have an override name and email from the request - possibly from the web form where the user selected the
 	// CLA Manager Name/Email from a list, send this to this recipient (CLA Manager) - otherwise we will send to all
@@ -340,7 +337,7 @@ support</a>.</p>
 }
 
 // sendRequestRejectedEmailToRecipient generates and sends an email to the specified recipient
-func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Company, projectModel *models.Project, signature models.Signature, recipientName, recipientAddress string) {
+func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Company, projectModel *models.Project, signature *models.Signature, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
 	projectName := projectModel.ProjectName
 
