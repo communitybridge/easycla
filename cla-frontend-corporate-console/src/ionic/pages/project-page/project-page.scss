@@ -47,6 +47,25 @@ project-page {
     }
   }
 
+  table {
+    tr {
+      td {
+        .email {
+          color: #4c79b6;
+          text-align: left;
+        }
+        &.wrap-word {
+          word-break: break-all;
+        }
+        .button {
+          background-color: #f4f4f4;
+          font-size: 12px;
+          height: 30px;
+        }
+      }
+    }
+  }
+
   ion-header {
     border-bottom: 0px solid #4c79b6;
 

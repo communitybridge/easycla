@@ -148,8 +148,4 @@ export class CompaniesPage {
       modal.present();
     }
   }
-
-  trimCharacter(text, length) {
-    return text.length > length ? text.substring(0, length) + '...' : text;
-  }
 }
