@@ -8,6 +8,9 @@ all-projects {
     color: color($colors, dark) !important;
   }
 
+  .error {
+    color: red !important;
+  }
   .text-align-center {
     text-align: center;
   }
@@ -28,12 +31,8 @@ all-projects {
     left: calc(50% - 20px);
   }
 
-  ion-header {
-    border-bottom: 40px solid #4c79b6;
-  }
-
   .page-content {
-    min-height: calc(100vh - 200px);
+    min-height: calc(100vh - 314px);
     padding: 10px 10px;
 
     @media (min-width: 768px) and (max-width: 1200px) {
@@ -72,7 +71,7 @@ all-projects {
     .manager {
       &::after {
         display: inline;
-        content: ', ';
+        content: ", ";
       }
       &:last-child::after {
         content: none;
@@ -81,6 +80,7 @@ all-projects {
   }
 
   .cla-project-card {
+    cursor: pointer;
     ion-card-content {
       padding: 30px 30px 33px 56px;
 

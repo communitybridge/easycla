@@ -28,7 +28,7 @@
       <ion-col col-12>
         <ion-item>
           <ion-label stacked>Company Name*:</ion-label>
-          <ion-textarea formControlName="company_name"></ion-textarea>
+          <ion-textarea formControlName="company_name" value="{{this.companyName}}"></ion-textarea>
         </ion-item>
         <p class="field-description">Enter your company name.</p>
         <ion-item *ngIf="!form.controls.company_name.valid && (form.controls.company_name.touched)" no-lines>

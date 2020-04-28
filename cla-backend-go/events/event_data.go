@@ -63,9 +63,14 @@ type CCLAWhitelistRequestCreatedEventData struct {
 	RequestID string
 }
 
-type CCLAWhitelistRequestDeletedEventData struct {
+type CCLAWhitelistRequestApprovedEventData struct {
 	RequestID string
 }
+
+type CCLAWhitelistRequestRejectedEventData struct {
+	RequestID string
+}
+
 type WhitelistGithubOrganizationAddedEventData struct {
 	GithubOrganizationName string
 }
@@ -143,14 +148,20 @@ func (ed *GithubOrganizationDeletedEventData) GetEventString(args *LogEventArgs)
 	return data, true
 }
 
-func (ed *CCLAWhitelistRequestDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user [%s] deleted a CCLA Whitelist Request for project: [%s], company: [%s] - request id: %s",
+func (ed *CCLAWhitelistRequestApprovedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] approved a CCLA Approval Request for project: [%s], company: [%s] - request id: %s",
+		args.userName, args.projectName, args.companyName, ed.RequestID)
+	return data, true
+}
+
+func (ed *CCLAWhitelistRequestRejectedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] rejected a CCLA Approval Request for project: [%s], company: [%s] - request id: %s",
 		args.userName, args.projectName, args.companyName, ed.RequestID)
 	return data, true
 }
 
 func (ed *CCLAWhitelistRequestCreatedEventData) GetEventString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user [%s] created a CCLA Whitelist Request for project: [%s], company: [%s] - request id: %s",
+	data := fmt.Sprintf("user [%s] created a CCLA Approval Request for project: [%s], company: [%s] - request id: %s",
 		args.userName, args.projectName, args.companyName, ed.RequestID)
 	return data, true
 }

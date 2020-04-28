@@ -6,9 +6,9 @@ import { Component, Input } from '@angular/core';
 })
 export class PdfViewerComponent {
   zoom: number = 0.7;
-  @Input() src: string;
+  @Input() src: string = '';
 
-  constructor() { }
+  constructor() {}
 
   //zoom in pdf
   increment() {

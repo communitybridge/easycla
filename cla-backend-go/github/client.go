@@ -10,7 +10,7 @@ import (
 )
 
 func newGithubAppClient(installationID int64) (*github.Client, error) {
-	itr, err := ghinstallation.New(http.DefaultTransport, getGithubAppID(), int(installationID), []byte(getGithubAppPrivateKey()))
+	itr, err := ghinstallation.New(http.DefaultTransport, int64(getGithubAppID()), installationID, []byte(getGithubAppPrivateKey()))
 	if err != nil {
 		return nil, err
 	}

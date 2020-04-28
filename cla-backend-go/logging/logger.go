@@ -74,6 +74,8 @@ func init() {
 	case "trace":
 		logger.SetLevel(logrus.TraceLevel)
 	}
+	logger.Infof("Logger Format           : %s", logFormat)
+	logger.Infof("Logger Level            : %s", logger.GetLevel())
 }
 
 // GetLogger returns an instance of our logger
