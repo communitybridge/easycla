@@ -180,7 +180,7 @@ Console</a>, where you can approve this user's request by…. This will permit t
 {project_name} on behalf of {company}.</p>
 <p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p>
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or 
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
@@ -339,7 +339,7 @@ Console at {cla.conf['CLA_LANDING_PAGE']} to begin the CLA signature process. Yo
 CLA yourself on behalf of your company; if not, the signature process will prompt you to designate somebody else who is
 authorized to sign the CLA.</p>
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 
@@ -491,7 +491,7 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 <p>You are currently listed as a CLA Manager from {company.get_company_name()} for the project {project}. This means that you are able to maintain the list of employees allowed to contribute to {project} on behalf of your company, as well as the list of your company’s CLA Managers for {project}.
 <p>{user_name} ({user.get_user_email}) has requested to be added as another CLA Manager from {company.get_company_name()} for {project}. This would permit them to maintain the lists of approved contributors and CLA Managers as well.
 <p>If you want to permit this, please log into the EasyCLA Corporate Console at https://{corporate_console_url}, where you can approve this user as an additional CLA Manager.
-<p>If you need help or have questions about EasyCLA, you can <a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for support</a>.</p>
+<p>If you need help or have questions about EasyCLA, you can <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for support</a>.</p>
 <p>Thanks,
 <p>EasyCLA support team</p>
 </body>
