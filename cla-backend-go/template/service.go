@@ -152,7 +152,7 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	}
 
 	// Save Template to DynamoDB
-	err = s.templateRepo.UpdateDynamoContractGroupTemplates(ctx, claGroupID, template, pdfUrls)
+	err = s.templateRepo.UpdateDynamoContractGroupTemplates(ctx, claGroupID, template, pdfUrls, claGroup.ProjectCCLAEnabled, claGroup.ProjectICLAEnabled)
 	if err != nil {
 		log.Warnf("Problem updating the database with ICLA/CCLA new PDF details, error: %v - returning empty template PDFs", err)
 		return models.TemplatePdfs{}, err
