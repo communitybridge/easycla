@@ -2341,7 +2341,6 @@ definitions:
 
   signature:
     type: object
-    x-nullable: false
     title: A signature model
     description: A signature - may be an ICLA or CCLA signature
     properties:

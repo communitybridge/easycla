@@ -30,15 +30,14 @@
               </ion-card-title>
               <div>
                 <p>
-                  We are generating a document to sign for the purposes of your CLA. Please fill out accurately and complete the signing process.
+                  We are generating a document to sign for the purposes of your CLA. Please fill out accurately and
+                  complete the signing process.
                 </p>
                 <ion-row>
-                  <ion-col col-3>
-                    <ion-label class="header">
-                      <button [disabled]="!signature.sign_url || error" ion-button (click)="openClaAgreement()">
-                        Open CLA
-                      </button>
-                    </ion-label>
+                  <ion-col col-auto>
+                    <button [disabled]="!signature.sign_url || error" ion-button (click)="openClaAgreement()">
+                      Open CLA
+                    </button>
                   </ion-col>
                   <ion-col col-1>
                     <loading-spinner [loading]="loading"></loading-spinner>
@@ -50,10 +49,12 @@
                   Your company has already signed a CLA with this project.
                 </p>
                 <p *ngIf="error.errors.project_id" class="error-message">
-                  The Corporate CLA template has not been selected by the Project Manager. Please <a (click)="createTicket()">create a ticket</a> to help us resolve this issue.
+                  The Corporate CLA template has not been selected by the Project Manager. Please <a
+                    (click)="createTicket()">create a ticket</a> to help us resolve this issue.
                 </p>
                 <p *ngIf="!error.errors.project_id && !error.errors.signature_id" class="error-message">
-                  It looks like something has gone wrong. Please <a (click)="createTicket()">create a ticket</a> to help us resolve this issue.
+                  It looks like something has gone wrong. Please <a (click)="createTicket()">create a ticket</a> to help
+                  us resolve this issue.
                 </p>
               </div>
             </ion-card-content>
