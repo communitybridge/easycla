@@ -26,11 +26,11 @@
               <h1>Sign New CLA</h1>
             </ion-card-title>
             <ion-card-title>
-                <p>To begin the CLA signature process for a new project, where you will be the new CLA Manager for your
-                  company,
-                  click "Sign New CLA" below
-                </p>
-              </ion-card-title>
+              <p>To begin the CLA signature process for a new project, where you will be the new CLA Manager for your
+                company,
+                click "Sign New CLA" below
+              </p>
+            </ion-card-title>
             <ion-card-content>
               <ion-row justify-content-center>
                 <button ion-button (click)="openProjectsCclaSelectModal()" color="secondary">
@@ -57,7 +57,8 @@
               </ion-card-title>
               <ion-card-title>
                 <p>
-                  "Request Access" will send an email to the CLA Managers of that project requesting CLA Manager privileges
+                  "Request Access" will send an email to the CLA Managers of that project requesting CLA Manager
+                  privileges
                   for you.
                 </p>
               </ion-card-title>
@@ -109,17 +110,18 @@
 
                               <td data-title="CLA Manager">
                                 <button clear ion-button color="secondary" (click)="viewCLAManager(row)">
-                                  View Manager{{row.ProjectManagers != null && row.ProjectManagers.length > 0 ? 's' : ''}}
+                                  View
+                                  Manager{{row.ProjectManagers != null && row.ProjectManagers.length > 0 ? 's' : ''}}
                                 </button>
                               </td>
 
                               <td data-title="Whitelist">
-                                <button *ngIf="row.Status === 'CLA Manager'" clear ion-button color="secondary"
-                                  (click)="onSelect(row.ProjectID)">
+                                <button *ngIf="row.Status === 'CLA Manager'" clear ion-button
+                                  color="secondary" (click)="onSelect(row.ProjectID)">
                                   Manage Approved List
                                 </button>
-                                <button *ngIf="row.Status !== 'CLA Manager'" clear ion-button color="secondary"
-                                  (click)="onSelect(row.ProjectID)">
+                                <button *ngIf="row.Status !== 'CLA Manager'" clear ion-button
+                                  color="secondary" (click)="onSelect(row.ProjectID)">
                                   View Approved List
                                 </button>
                               </td>
@@ -183,14 +185,14 @@
                         <td class="wrap-word" data-title="Name">
                           <span>{{ invite.userName }}</span>
                         </td>
-                        <td data-title="Email">
+                        <td class="wrap-word" data-title="Email">
                           <span>{{invite.userEmail}}</span>
                         </td>
                         <td data-title="LFID">
                           <span>{{invite.userLFID}}</span>
                         </td>
                         <td data-title="Actions">
-                          <button clear ion-button (click)="acceptCompanyInvite(invite)" color="secondary">
+                          <button clear ion-button class="mr-5" (click)="acceptCompanyInvite(invite)" color="secondary">
                             Accept
                           </button>
                           <button clear ion-button (click)="declineCompanyInvite(invite)" color="danger">
