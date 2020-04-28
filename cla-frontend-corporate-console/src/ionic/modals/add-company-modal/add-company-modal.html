@@ -29,7 +29,11 @@
         <ion-col col-12>
           <ion-item>
             <ion-label stacked>Select Company:</ion-label>
-            <ion-input name="companyName" maxlength="150" formControlName="companyName" [(ngModel)]="companyName" (ionChange)="findCompany($event)" placeholder="Type company name to start search"></ion-input>
+            <ion-input name="companyName" maxlength="150" formControlName="companyName" [(ngModel)]="companyName"
+              (ionChange)="findCompany($event)" placeholder="Type company name to start search"></ion-input>
+          </ion-item>
+          <ion-item *ngIf="!form.controls.companyName.valid && (form.controls.companyName.touched)" no-lines>
+            <p class="error">A valid name is required - at most 60 characters are expected.</p>
           </ion-item>
           <ion-row *ngIf="filteredCompanies.length > 0 && !companySet">
             <ion-list class="company-dropdown-list" lines="none">
@@ -39,18 +43,16 @@
               </ion-item>
             </ion-list>
           </ion-row>
-
-          <ion-item *ngIf="!form.controls.companyName.valid && (form.controls.companyName.touched || submitAttempt)" no-lines>
-            <p class="danger">* A company name is required.</p>
-          </ion-item>
         </ion-col>
       </ion-row>
       <ion-row margin-top>
         <span>
           <b>Note:</b>
         </span>
-        <p class="danger">If you do not see your company in "Select Company", you should try other variations of the company name (e.g. acronyms
-          or full spelling). If your company still does not appear, you may need to type in your company and select {{((!join && add)?'add company':'join company') | uppercase}}.
+        <p class="danger">If you do not see your company in "Select Company", you should try other variations of the
+          company name (e.g. acronyms
+          or full spelling). If your company still does not appear, you may need to type in your company and select
+          {{((!join && add)?'add company':'join company') | uppercase}}.
         </p>
       </ion-row>
     </ion-grid>
@@ -66,7 +68,7 @@
       <button [disabled]="activateButtons" ion-button icon-right (click)="joinCompany()" *ngIf="join && !add">
         Join Company
       </button>
-      <button [disabled]="activateButtons"  (click)="addCompany()" ion-button icon-right *ngIf="!join && add">
+      <button [disabled]="!form.valid" (click)="addCompany()" ion-button icon-right *ngIf="!join && add">
         Add Company
       </button>
     </ion-buttons>
