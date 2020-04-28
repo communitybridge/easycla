@@ -272,7 +272,7 @@ contributor's email, the contributor's entire email domain, their github ID or t
 repository. This will permit them to begin contributing to %s on behalf of %s.</p>
 <p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p>
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or 
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
@@ -318,7 +318,7 @@ https://%s, and select your company and then the project %s. From here you will
 be able to edit the list of approved employees and CLA Managers.
 </p>
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or 
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
@@ -383,7 +383,7 @@ If you have further questions about this denial, please contact one of the exist
 %s for %s:</p>
 %s
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or 
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,

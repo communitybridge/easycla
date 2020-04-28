@@ -10,5 +10,5 @@ export const generalConstants = {
     createTicketURL: 'https://jira.linuxfoundation.org/servicedesk/customer/portal/4',
     easyCLAHelpURL: 'https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/easycla-faqs',
     githubEmailURL: 'https://github.com/settings/emails',
-    easyCLADocURL: 'https://docs.linuxfoundation.org/easycla/getting-started',
+    easyCLADocURL: 'https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla',
 } 
