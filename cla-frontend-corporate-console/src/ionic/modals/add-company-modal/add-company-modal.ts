@@ -67,7 +67,7 @@ export class AddCompanyModal {
     this.activateButtons = true;
 
     this.form = this.formBuilder.group({
-      companyName: [this.companyName, Validators.compose([Validators.required])],
+      companyName: [this.companyName, Validators.compose([Validators.required, Validators.maxLength(60)])],
     });
   }
 
