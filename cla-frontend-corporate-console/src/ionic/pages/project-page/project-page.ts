@@ -310,7 +310,7 @@ export class ProjectPage {
   }
 
   listPendingRequests() {
-    this.claService.getProjectWhitelistRequest(this.companyId, this.projectId).subscribe((request) => {
+    this.claService.getProjectWhitelistRequest(this.companyId, this.projectId, null).subscribe((request) => {
       if (request.list.length == 0) {
         this.noPendingRequests = true;
       } else {

@@ -20,7 +20,16 @@ sf_client_secret = os.environ.get('SF_CLIENT_SECRET', '')
 sf_username = os.environ.get('SF_USERNAME', '')
 sf_password = os.environ.get('SF_PASSWORD', '')
 
+
+
 cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
+
+platform_gateway_url = os.environ.get('PLATFORM_GATEWAY_URL', '')
+auth0_url = os.environ.get('PLATFORM_AUTH0_URL')
+platform_client_id = os.environ.get('PLATFORM_AUTH0_CLIENT_ID')
+platform_client_secret = os.environ.get('PLATFORM_AUTH0_CLIENT_SECRET')
+platform_audience = os.environ.get('PLATFORM_GATEWAY_URL')
+
 
 
 def format_response(status_code, headers, body):
@@ -84,6 +93,7 @@ def get_projects(event, context):
     except Exception as e:
         cla.log.error('Unknown authorization error: {}'.format(e))
         return format_json_cors_response(401, 'Error parsing Bearer token')
+    
 
     # Get project access list for user
     user_permissions = UserPermissions()
@@ -100,27 +110,24 @@ def get_projects(event, context):
         cla.log.error('Error user not authorized to access projects: {}'.format(user_permissions))
         return format_json_cors_response(403, 'Error user not authorized to access projects')
 
-    project_list = ', '.join('\'' + project_id + '\'' for project_id in authorized_projects)
+    project_list = ','.join([id for id in authorized_projects])
 
-    oauth_response = get_sf_oauth_access()
-    if oauth_response is None:
-        cla.log.error('Unable to acquire oauth token.')
-        return format_json_cors_response(400, 'authentication error')
+    access_token, code = get_access_token()
 
-    token = oauth_response['access_token']
-    instance_url = oauth_response['instance_url']
+    if code != HTTPStatus.OK:
+        cla.log.error('Authentication failure')
+        return format_json_cors_response(code, 'Authentication failure')
 
     headers = {
-        'Authorization': 'Bearer {}'.format(token),
-        'Content-Type': 'application/json',
+        'Authorization': f'bearer {access_token}',
+        'accept': 'application/json'
     }
 
-    query_url = '{}/services/data/v20.0/query/'.format(instance_url)
-    query = {'q': 'SELECT id, Name, Description__c from Project__c WHERE id IN ({})'.format(project_list)}
-    r = requests.get(query_url, headers=headers, params=query)
+    query_url = f'{platform_gateway_url}/project-service/v1/projects/search?id={project_list}'
+    resp = requests.get(query_url, headers=headers)
 
-    response = r.json()
-    status_code = r.status_code
+    response = json.loads(resp.text)
+    status_code = resp.status_code
     if status_code != HTTPStatus.OK:
         cla.log.error('Error retrieving projects: %s', response[0].get('message'))
         return format_json_cors_response(status_code, 'Error retrieving projects')
@@ -142,6 +149,37 @@ def get_projects(event, context):
 
     return format_json_cors_response(status_code, projects)
 
+def get_access_token():
+    """
+    Get token access token for platform service
+    """
+    auth0_payload = {
+        'grant_type': 'client_credentials',
+        'client_id': platform_client_id,
+        'client_secret': platform_client_secret,
+        'audience': platform_audience
+    }
+
+    headers = {
+        'content-type': 'application/x-www-form-urlencoded',
+        'accept': 'application/json'
+    }
+    
+    access_token = ''
+    try:
+        # cla.log.debug(f'Sending POST to {auth0_url} with payload: {auth0_payload}')
+        cla.log.debug(f'Sending POST to {auth0_url}')
+        resp = requests.post(auth0_url, data=auth0_payload, headers=headers)
+        status_code = resp.status_code
+        if status_code != HTTPStatus.OK:
+            cla.log.error('Forbidden: %s', resp.raise_for_status())
+        json_data = json.loads(resp.text)
+        access_token = json_data["access_token"]
+        return access_token, status_code
+    except requests.exceptions.HTTPError as err:
+        msg = f'Could not get auth token, error: {err}'
+        cla.log.warning(msg)
+        return None, err.response.status_code
 
 def get_project(event, context):
     """
@@ -182,20 +220,23 @@ def get_project(event, context):
         cla.log.error('Error user not authorized')
         return format_json_cors_response(403, 'Error user not authorized')
 
-    oauth_response = get_sf_oauth_access()
-    token = oauth_response['access_token']
-    instance_url = oauth_response['instance_url']
+    token, code = get_access_token()
+
+    if code != HTTPStatus.OK:
+        cla.log.error('Authentication failure')
+        return format_json_cors_response(code, 'Authentication failure')
 
     headers = {
         'Authorization': 'Bearer {}'.format(token)
     }
 
-    url = '{}/services/data/v20.0/sobjects/Project__c/{}'.format(instance_url, project_id)
-    cla.log.info('Calling salesforce api for project info..')
-    r = requests.get(url, headers=headers)
+    url = f'{platform_gateway_url}/project-service/v1/projects/search?id={project_id}'
 
-    response = r.json()
-    status_code = r.status_code
+    cla.log.info('Using Project service to get project info..')
+    resp = requests.get(url, headers=headers)
+
+    response = resp.json()
+    status_code = resp.status_code
     if status_code != HTTPStatus.OK:
         cla.log.error('Error retrieving project: %s', response[0].get('message'))
         return format_json_cors_response(status_code, 'Error retrieving project')

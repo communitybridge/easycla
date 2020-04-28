@@ -6,6 +6,7 @@ import { IonicPage, Nav, NavController, NavParams, Events } from 'ionic-angular'
 import { ClaService } from '../../../services/cla.service';
 import { Restricted } from '../../../decorators/restricted';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { EmailValidator } from '../../../validators/email';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -57,9 +58,8 @@ export class ProjectClaTemplatePage {
   ngOnInit() {
     this.setLoadingSpinner(false);
   }
-  
+
   getPdfPath() {
-    // PDF renderer library - or we can simply use the default browser behavior
     return this.pdfPath[this.currentPDF];
   }
 
@@ -78,13 +78,26 @@ export class ProjectClaTemplatePage {
     const metaFields = this.selectedTemplate.metaFields;
     metaFields.forEach(template => {
       let field = this.getFieldName(template);
-      group[field] = new FormControl('', Validators.required);
+
+      if (field.indexOf('Email') >= 0) {
+        group[field] = new FormControl('', Validators.compose([Validators.required, EmailValidator.isValid]));
+      } else {
+        group[field] = new FormControl('', Validators.compose([Validators.required]));
+      }
     })
+
     this.form = new FormGroup(group);
   }
 
   getFieldName(template) {
     return template.name.split(' ').join('');
+  }
+
+  getFieldError(field) {
+    if (field) {
+      return this.form.controls[this.getFieldName(field)].valid;
+    }
+    return '';
   }
 
   reviewSelectedTemplate() {
@@ -109,6 +122,7 @@ export class ProjectClaTemplatePage {
           this.buttonGenerateEnabled = true;
           this.message = null;
           this.pdfPath = response;
+          this.currentPDF = this.pdfPath.corporatePDFURL ? 'corporatePDFURL' : 'individualPDFURL';
           this.goToStep('review');
         },
         (error) => {
