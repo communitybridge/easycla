@@ -1113,9 +1113,43 @@ paths:
         - company
 
 
-  /company/{companyID}/ccla_whitelist_requests/{projectID}:
+  /company/{companyID}/ccla-whitelist-requests/{projectID}:
+    get:
+      summary: get ccla whitelist requests for given company and project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: listCclaWhitelistRequestsByCompanyAndProject
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: status
+          in: query
+          type: string
+          required: false
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/ccla-whitelist-request-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
     post:
-      summary: create ccla whitelist request for given project
+      summary: create ccla Approval request for given project
       security: []
       operationId: addCclaWhitelistRequest
       parameters:
@@ -1146,13 +1180,53 @@ paths:
       tags:
         - company
 
-  /company/{companyID}/ccla_whitelist_requests/{projectID}/{requestID}:
-    delete:
-      summary: Delete CCLA whitelist request
+  /company/{companyID}/ccla-whitelist-requests/{projectID}/user/{userID}:
+    get:
+      summary: get ccla whitelist requests for given company, project, user
+      security:
+        - OauthSecurity:
+            - user
+      operationId: listCclaWhitelistRequestsByCompanyAndProjectAndUser
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: userID
+          in: path
+          type: string
+          required: true
+        - name: status
+          in: query
+          type: string
+          required: false
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/ccla-whitelist-request-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
+  /company/{companyID}/ccla-whitelist-requests/{projectID}/{requestID}/approve:
+    put:
+      summary: Approve CCLA whitelist request
       security:
         - OauthSecurity:
             - company
-      operationId: deleteCclaWhitelistRequest
+      operationId: approveCclaWhitelistRequest
       parameters:
         - name: companyID
           in: path
@@ -1180,9 +1254,43 @@ paths:
       tags:
         - company
 
-  /company/{companyID}/ccla_whitelist_requests:
+  /company/{companyID}/ccla-whitelist-requests/{projectID}/{requestID}/reject:
+    put:
+      summary: Reject CCLA whitelist request
+      security:
+        - OauthSecurity:
+            - company
+      operationId: rejectCclaWhitelistRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: requestID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
+  /company/{companyID}/ccla-whitelist-requests:
     get:
-      summary: get ccla whitelist requests for given project
+      summary: get ccla whitelist requests for given company
       security:
         - OauthSecurity:
             - user
@@ -1195,6 +1303,10 @@ paths:
         - name: projectID
           in: query
           type: string
+        - name: status
+          in: query
+          type: string
+          required: false
       responses:
         '200':
           description: 'Success'
@@ -2297,7 +2409,17 @@ definitions:
     title: Ccla whitelist request input
     description: Ccla whitelist request input
     properties:
-      userId:
+      contributorId:
+        type: string
+      contributorName:
+        type: string
+      contributorEmail:
+        type: string
+      recipientName:
+        type: string
+      recipientEmail:
+        type: string
+      message:
         type: string
 
   ccla-whitelist-request-list:
@@ -2660,6 +2782,36 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/sf-project-metric'
+
+  company-project-metrics:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/company-project-metric'
+
+  company-project-metric:
+    type: object
+    properties:
+      companyID:
+        type: string
+        x-omitempty: false
+      projectID:
+        type: string
+        x-omitempty: false
+      claManagersCount:
+        type: integer
+        x-omitempty: false
+      contributorsCount:
+        type: integer
+        x-omitempty: false
+      projectName:
+        type: string
+        x-omitempty: false
+      companyName:
+        type: string
+        x-omitempty: false
 
   sf-project-metric:
     type: object

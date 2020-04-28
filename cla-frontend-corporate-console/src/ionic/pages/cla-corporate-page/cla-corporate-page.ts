@@ -77,10 +77,9 @@ export class ClaCorporatePage {
 
   openClaAgreement() {
     if (!this.signature.sign_url) {
-      // Can't open agreement if we don't have a sign_url yet
       return;
     }
-    window.open(this.signature.sign_url, '_blank');
+    window.open(this.signature.sign_url, '_self');
   }
 
   createTicket() {

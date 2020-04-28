@@ -19,6 +19,15 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service) {
 			}
 			return events.NewGetRecentEventsOK().WithPayload(*result)
 		})
+
+	api.EventsGetRecentCompanyProjectEventsHandler = events.GetRecentCompanyProjectEventsHandlerFunc(
+		func(params events.GetRecentCompanyProjectEventsParams, user *auth.User) middleware.Responder {
+			result, err := service.GetRecentEventsForCompanyProject(params.CompanyID, params.ProjectSFID, params.PageSize)
+			if err != nil {
+				return events.NewGetRecentEventsBadRequest().WithPayload(errorResponse(err))
+			}
+			return events.NewGetRecentEventsOK().WithPayload(*result)
+		})
 }
 
 type codedResponse interface {

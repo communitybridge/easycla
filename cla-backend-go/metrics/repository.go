@@ -45,6 +45,7 @@ type Repository interface {
 	GetCompanyMetric(companyID string) (*CompanyMetric, error)
 	GetProjectMetric(projectID string) (*ProjectMetric, error)
 	GetProjectMetricBySalesForceID(salesforceID string) ([]*ProjectMetric, error)
+	ListCompanyProjectMetrics(companyID string) ([]*CompanyProjectMetric, error)
 }
 
 type repo struct {
@@ -77,6 +78,7 @@ const (
 	MetricTypeTotalCount             = "total_count"
 	MetricTypeCompany                = "company"
 	MetricTypeProject                = "project"
+	MetricTypeCompanyProject         = "company_project"
 	MetricTypeClaManagerDistribution = "cla_manager_distribution"
 
 	IDTotalCount             = "total_count"
@@ -128,6 +130,7 @@ type Metrics struct {
 	TotalCountMetrics       *TotalCountMetrics       `json:"total_metrics"`
 	CompanyMetrics          *CompanyMetrics          `json:"company_metrics"`
 	ProjectMetrics          *ProjectMetrics          `json:"project_metrics"`
+	CompanyProjectMetrics   *CompanyProjectMetrics   `json:"company_project_metrics"`
 	ClaManagersDistribution *ClaManagersDistribution `json:"cla_managers_distribution"`
 	CalculatedAt            string                   `json:"calculated_at"`
 }
@@ -200,6 +203,7 @@ func newMetrics() *Metrics {
 		TotalCountMetrics:       newTotalCountMetrics(),
 		CompanyMetrics:          newCompanyMetrics(),
 		ProjectMetrics:          newProjectMetrics(),
+		CompanyProjectMetrics:   newCompanyProjectMetrics(),
 		ClaManagersDistribution: &ClaManagersDistribution{},
 	}
 }
@@ -268,6 +272,44 @@ func newProjectMetrics() *ProjectMetrics {
 	}
 }
 
+// CompanyProjectMetric contain metrics for company-project pair
+type CompanyProjectMetric struct {
+	CompanyID         string `json:"company_id"`
+	ProjectID         string `json:"project_id"`
+	ProjectName       string `json:"project_name"`
+	CompanyName       string `json:"company_name"`
+	ClaManagersCount  int64  `json:"cla_managers_count"`
+	ContributorsCount int64  `json:"contributors_count"`
+	claManagers       map[string]interface{}
+	contributors      map[string]interface{}
+}
+
+// CompanyProjectMetrics contain collection of company-project metric
+type CompanyProjectMetrics struct {
+	CompanyProjectMetrics map[string]*CompanyProjectMetric
+}
+
+func newCompanyProjectMetrics() *CompanyProjectMetrics {
+	return &CompanyProjectMetrics{
+		CompanyProjectMetrics: make(map[string]*CompanyProjectMetric),
+	}
+}
+
+func (pcm *CompanyProjectMetrics) getCompanyProjectMetric(projectID, companyID string) *CompanyProjectMetric {
+	id := fmt.Sprintf("%s#%s", companyID, projectID)
+	m, ok := pcm.CompanyProjectMetrics[id]
+	if !ok {
+		m = &CompanyProjectMetric{
+			CompanyID:    companyID,
+			ProjectID:    projectID,
+			claManagers:  make(map[string]interface{}),
+			contributors: make(map[string]interface{}),
+		}
+		pcm.CompanyProjectMetrics[id] = m
+	}
+	return m
+}
+
 func increaseCountIfNotPresent(cacheData map[string]interface{}, count *int64, key string) {
 	if _, ok := cacheData[key]; !ok {
 		cacheData[key] = nil
@@ -298,6 +340,17 @@ func (pm *ProjectMetric) toModel() *models.ProjectMetric {
 		TotalContributorsCount:      pm.TotalContributorsCount,
 		ExternalProjectID:           pm.ExternalProjectID,
 		ProjectName:                 pm.ProjectName,
+	}
+}
+
+func (cpm *CompanyProjectMetric) toModel() *models.CompanyProjectMetric {
+	return &models.CompanyProjectMetric{
+		ClaManagersCount:  cpm.ClaManagersCount,
+		CompanyID:         cpm.CompanyID,
+		ContributorsCount: cpm.ContributorsCount,
+		ProjectID:         cpm.ProjectID,
+		ProjectName:       cpm.ProjectName,
+		CompanyName:       cpm.CompanyName,
 	}
 }
 
@@ -357,6 +410,7 @@ func (m *Metrics) processSignature(sig *ItemSignature, usersCache map[string]*It
 	m.CompanyMetrics.processSignature(sig, sigType, usersCache)
 	m.TotalCountMetrics.processSignature(sig, sigType, usersCache)
 	m.ProjectMetrics.processSignature(sig, sigType, usersCache)
+	m.CompanyProjectMetrics.processSignature(sig, sigType, usersCache)
 }
 
 // calculate total count metrics fields as follows
@@ -392,6 +446,28 @@ func (tcm *TotalCountMetrics) processSignature(sig *ItemSignature, sigType int, 
 		userID := sig.SignatureReferenceID
 		increaseCountIfNotPresent(tcm.individualContributors, &tcm.IndividualContributorsCount, userID)
 		increaseCountIfNotPresent(tcm.contributors, &tcm.ContributorsCount, userID)
+	}
+}
+
+// calculate number of cla-managers of company for particular project
+// calculate number of contributors of company for particular project
+func (pcm *CompanyProjectMetrics) processSignature(sig *ItemSignature, sigType int, usersCache map[string]*ItemUser) {
+	projectID := sig.SignatureProjectID
+	switch sigType {
+	case CclaSignature:
+		companyID := sig.SignatureReferenceID
+		m := pcm.getCompanyProjectMetric(projectID, companyID)
+		for _, claManagerLfusername := range sig.SignatureACL {
+			if _, ok := usersCache[claManagerLfusername]; ok {
+				// only increase cla manager count if user is present in database
+				increaseCountIfNotPresent(m.claManagers, &m.ClaManagersCount, claManagerLfusername)
+			}
+		}
+	case EmployeeSignature:
+		companyID := sig.SignatureUserCompanyID
+		userID := sig.SignatureReferenceID
+		m := pcm.getCompanyProjectMetric(projectID, companyID)
+		increaseCountIfNotPresent(m.contributors, &m.ContributorsCount, userID)
 	}
 }
 
@@ -811,6 +887,10 @@ func (repo *repo) saveMetrics(metrics *Metrics) error {
 	if err != nil {
 		return err
 	}
+	err = repo.saveCompanyProjectMetrics(metrics.CompanyProjectMetrics, metrics.ProjectMetrics.ProjectMetrics, metrics.CompanyMetrics.CompanyMetrics)
+	if err != nil {
+		return err
+	}
 	log.Printf("save metrics took :%s \n", time.Since(t).String())
 	return nil
 }
@@ -964,6 +1044,42 @@ func (repo *repo) saveProjectMetrics(projectMetrics *ProjectMetrics) error {
 		}
 	}
 	log.Printf("saving project_metrics took :%s \n", time.Since(t).String())
+	return nil
+}
+
+func (repo *repo) saveCompanyProjectMetrics(in *CompanyProjectMetrics, pmm map[string]*ProjectMetric, cmm map[string]*CompanyMetric) error {
+	t := time.Now()
+	log.Println("saving company_project_metrics")
+	for id, cpm := range in.CompanyProjectMetrics {
+		pm, ok := pmm[cpm.ProjectID]
+		if !ok {
+			log.Warnf("saveCompanyProjectMetrics error = project not found with id. [%s]", cpm.ProjectID)
+			continue
+		}
+		cm, ok := cmm[cpm.CompanyID]
+		if !ok {
+			log.Warnf("saveCompanyProjectMetrics error = company not found with id. [%s]", cpm.CompanyID)
+			continue
+		}
+		cpm.CompanyName = cm.CompanyName
+		cpm.ProjectName = pm.ProjectName
+		av, err := dynamodbattribute.MarshalMap(cpm)
+		if err != nil {
+			return err
+		}
+
+		addIDTypeTime(av, id, MetricTypeCompanyProject)
+		_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
+			Item:      av,
+			TableName: aws.String(repo.metricTableName),
+		})
+		if err != nil {
+			log.Printf("cannot put company_project_metric in dynamodb, metric = %v, error = %s\n", cpm, err.Error())
+
+			return err
+		}
+	}
+	log.Printf("saving company_project_metrics took :%s \n", time.Since(t).String())
 	return nil
 }
 
@@ -1191,4 +1307,38 @@ func (repo *repo) getMetricBySalesforceID(salesforceID string, metricType string
 		return err
 	}
 	return nil
+}
+
+func (repo *repo) ListCompanyProjectMetrics(companyID string) ([]*CompanyProjectMetric, error) {
+	var condition expression.KeyConditionBuilder
+	builder := expression.NewBuilder()
+	prefix := companyID + "#"
+	condition = expression.Key("metric_type").Equal(expression.Value(MetricTypeCompanyProject)).
+		And(expression.Key("id").BeginsWith(prefix))
+
+	builder = builder.WithKeyCondition(condition)
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(repo.metricTableName),
+	}
+
+	results, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.Warnf("error retrieving company_project metrics. error = %s", err.Error())
+		return nil, err
+	}
+	out := make([]*CompanyProjectMetric, 0)
+	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }

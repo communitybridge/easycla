@@ -26,9 +26,12 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
 			}
 			// verify user have access to the project
-			if !authUser.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
-				return gerrits.NewDeleteGerritUnauthorized()
+			if !authUser.Admin {
+				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
+					return gerrits.NewDeleteGerritUnauthorized()
+				}
 			}
+
 			gerrit, err := service.GetGerrit(params.GerritID)
 			if err != nil {
 				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
@@ -65,8 +68,10 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
 			}
 			// verify user have access to the project
-			if !authUser.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
-				return gerrits.NewDeleteGerritUnauthorized()
+			if !authUser.Admin {
+				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, projectModel.ProjectExternalID) {
+					return gerrits.NewAddGerritUnauthorized()
+				}
 			}
 			// add the gerrit
 			addGerritInput := &v1Models.AddGerritInput{

@@ -1,11 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {AlertController, IonicPage, ModalController, NavParams, ViewController} from 'ionic-angular';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {EmailValidator} from '../../validators/email';
-import {ClaService} from '../../services/cla.service';
+import { Component, ViewChild } from '@angular/core';
+import { AlertController, IonicPage, ModalController, NavParams, ViewController } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { EmailValidator } from '../../validators/email';
+import { ClaService } from '../../services/cla.service';
+import { Content } from 'ionic-angular';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/invite-company-admin'
@@ -16,11 +17,15 @@ import {ClaService} from '../../services/cla.service';
 })
 export class ClaCompanyAdminSendEmailModal {
   projectId: string;
+  companyId: string;
+  companyName: string;
   userId: string;
   authenticated: boolean; // true if coming from gerrit/corporate
   userEmails: Array<string>;
   form: FormGroup;
-  submitAttempt: boolean = false;
+  serverError: string = '';
+  isSendClicked = false;
+  @ViewChild('pageTop') pageTop: Content;
 
   constructor(
     public navParams: NavParams,
@@ -32,6 +37,10 @@ export class ClaCompanyAdminSendEmailModal {
   ) {
     this.userEmails = [];
     this.projectId = navParams.get('projectId');
+    // May be empty
+    this.companyId = navParams.get('companyId');
+    // May be empty
+    this.companyName = navParams.get('companyName');
     this.userId = navParams.get('userId');
     this.authenticated = navParams.get('authenticated');
     this.form = formBuilder.group({
@@ -86,25 +95,38 @@ export class ClaCompanyAdminSendEmailModal {
   }
 
   submit() {
-    this.submitAttempt = true;
-    if (!this.form.valid) {
-      return;
+    this.isSendClicked = true;
+    if (this.form.valid) {
+      this.claService.getProject(this.projectId).subscribe((response) => {
+        this.sendRequest(response);
+      });
     }
+  }
 
-    this.claService.getProject(this.projectId).subscribe((project) => {
-      // TODO - Add company_name to the data payload
-      let data = {
-        contributor_name: this.form.value.contributor_name,
-        contributor_email: this.form.value.contributor_name,
-        cla_manager_name: this.form.value.cla_manager_name,
-        cla_manager_email: this.form.value.cla_manager_email,
-        project_name: project.project_name,
-        company_name: this.form.value.company_name,
-      };
-      this.claService.postEmailToCompanyAdmin(this.userId, data).subscribe((response) => {
+  sendRequest(project) {
+    this.serverError = '';
+    let data = {
+      contributor_name: this.form.value.contributor_name,
+      contributor_email: this.form.value.contributor_email,
+      cla_manager_name: this.form.value.cla_manager_name,
+      cla_manager_email: this.form.value.cla_manager_email,
+      project_name: project.project_name,
+      company_name: this.form.value.company_name,
+    };
+    this.claService.postEmailToCompanyAdmin(this.userId, data).subscribe(
+      (response) => {
+        this.isSendClicked = false;
         this.emailSent();
         this.dismiss();
-      });
-    });
+      },
+      (exception) => {
+        this.isSendClicked = false;
+        const errorObj = JSON.parse(exception._body);
+        if (errorObj) {
+          this.serverError = errorObj.errors.contributor_email;
+          this.pageTop.scrollToTop();
+        }
+      }
+    );
   }
 }

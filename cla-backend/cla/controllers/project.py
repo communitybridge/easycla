@@ -141,7 +141,7 @@ def get_unsigned_projects_for_company(company_id):
     # get project ids that the company has signed the CCLAs for.
     signature = Signature()
     # signed_project_ids = signature.get_projects_by_company_signed(company_id)
-    signed_project_ids = signature.get_projects_by_company_signed(company_id, ['signature_id', 'signature_project_id'])
+    signed_project_ids = signature.get_projects_by_company_signed(company_id)
 
     # from all projects, retrieve projects that are not in the signed project ids
     # Consider adding attributes_to_get for the projection

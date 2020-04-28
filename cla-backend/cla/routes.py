@@ -235,6 +235,7 @@ def get_users_company(auth_user: check_auth, user_company_id: hug.types.uuid):
 def request_company_whitelist(
     user_id: hug.types.uuid,
     company_id: hug.types.uuid,
+    user_name: hug.types.text,
     user_email: cla.hug_types.email,
     project_id: hug.types.uuid,
     message=None,
@@ -250,7 +251,8 @@ def request_company_whitelist(
     be added the the specified company's whitelist.
     """
     return cla.controllers.user.request_company_whitelist(
-        user_id, str(company_id), str(user_email), str(project_id), message, str(recipient_name), str(recipient_email),
+        user_id, str(company_id), str(user_name), str(user_email), str(project_id), message,
+        str(recipient_name), str(recipient_email),
     )
 
 
@@ -268,7 +270,7 @@ def invite_company_admin(
     POST: /user/{user_id}/invite-company-admin
 
     DATA: {
-            'contributor_email': 'Sally Field',
+            'contributor_name': 'Sally Field',
             'contributor_email': 'user@example.com',
             'cla_manager_name': 'John Doe',
             'cla_manager_email': 'admin@example.com',

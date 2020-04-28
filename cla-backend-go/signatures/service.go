@@ -76,7 +76,7 @@ func (s service) GetProjectCompanySignatures(params signatures.GetProjectCompany
 		pageSize = *params.PageSize
 	}
 
-	projectSignatures, err := s.repo.GetProjectCompanySignatures(params, pageSize)
+	projectSignatures, err := s.repo.GetProjectCompanySignatures(params.CompanyID, params.ProjectID, params.NextKey, pageSize)
 	if err != nil {
 		return nil, err
 	}

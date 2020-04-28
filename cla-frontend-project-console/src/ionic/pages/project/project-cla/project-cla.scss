@@ -10,6 +10,10 @@ body {
   box-shadow: none;
 }
 
+.error {
+  color: red !important;
+}
+
 .namespace-error {
   margin-top: 5px !important;
   color: #db4e4e !important;
@@ -56,12 +60,8 @@ project-cla {
     top: 30%;
   }
 
-  ion-header {
-    border-bottom: 40px solid #4c79b6;
-  }
-
   .page-content {
-    min-height: calc(100vh - 200px);
+    min-height: calc(100vh - 314px);
     padding: 10px 10px;
 
     @media (min-width: 768px) and (max-width: 1200px) {

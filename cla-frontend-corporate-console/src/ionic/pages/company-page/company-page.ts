@@ -126,7 +126,7 @@ export class CompanyPage {
 
   mapProjects(projectDetail, signatureACL) {
     if (projectDetail) {
-      this.claService.getProjectWhitelistRequest(this.companyId, projectDetail.project_id).subscribe((res) => {
+      this.claService.getProjectWhitelistRequest(this.companyId, projectDetail.project_id, "pending").subscribe((res) => {
         let pendingRequest = [];
         this.loading.projects = false;
         if (res.list.length > 0) {
@@ -136,10 +136,13 @@ export class CompanyPage {
         }
         this.rows.push({
           ProjectID: projectDetail.project_id,
-          ProjectName: projectDetail.project_name,
+          ProjectName: projectDetail.project_name !== undefined ? projectDetail.project_name : '',
           ProjectManagers: signatureACL,
           Status: this.getStatus(this.companySignatures),
           PendingRequests: pendingRequest.length,
+        });
+        this.rows.sort((a, b) => {
+          return a.ProjectName.toLowerCase().localeCompare(b.ProjectName.toLowerCase());
         });
       })
     }
@@ -203,6 +206,12 @@ export class CompanyPage {
   getInvites() {
     this.claService.getPendingInvites(this.companyId).subscribe((response) => {
       this.invites = response;
+      if (this.invites != null && this.invites.length > 0) {
+        this.invites = response.list.filter((r) => {
+          // Only show pending requests
+          return r.requestStatus === "pending"
+        })
+      }
       this.loading.invites = false;
     });
   }

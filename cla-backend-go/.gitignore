@@ -3,7 +3,10 @@
 # Project specific ignores
 cla-backend-go
 cla
+cla-mac
 backend-aws-lambda
+metrics-aws-lambda
+metrics-aws-lambda-mac
 *env.json
 db/schema.sql
 

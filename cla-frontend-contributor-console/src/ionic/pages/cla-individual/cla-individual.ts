@@ -103,6 +103,6 @@ export class ClaIndividualPage {
     if (!this.signature.sign_url) {
       return;
     }
-    window.open(this.signature.sign_url, '_blank');
+    window.open(this.signature.sign_url, '_self');
   }
 }

@@ -386,7 +386,7 @@ export class ClaService {
   postCLAManager(signatureId, payload) {
     const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId + '/manager');
     return this.http
-      .post(url, {lfid: payload.managerLFID})
+      .post(url, { lfid: payload.managerLFID })
       .map((res) => res.json())
       .catch((error) => this.handleServiceError(error));
   }
@@ -431,7 +431,7 @@ export class ClaService {
       .map((res) => res.json())
       .catch((error) => this.handleServiceError(error));
   }
- 
+
   /**
    * POST /v1/request-corporate-signature
    */
@@ -480,7 +480,7 @@ export class ClaService {
    **/
   addGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
-    const data = {organization_id: organizationId};
+    const data = { organization_id: organizationId };
     const url: URL = this.getV3Endpoint(path);
     return this.http.postWithCreds(url, data).map((res) => res.json());
   }
@@ -490,7 +490,7 @@ export class ClaService {
    **/
   removeGithubOrganizationWhitelistEntry(signatureID, organizationId) {
     const path = `/v3/signatures/${signatureID}/gh-org-whitelist`;
-    const data = {organization_id: organizationId};
+    const data = { organization_id: organizationId };
     const url: URL = this.getV3Endpoint(path);
     return this.http.deleteWithCredsAndBody(url, data).map((res) => res.json());
   }
@@ -500,7 +500,7 @@ export class ClaService {
    **/
   addGithubOrganizationWhitelist(signatureID, companyID, corporateClaID, organizationId) {
     const path = `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`;
-    const data = {id: organizationId};
+    const data = { id: organizationId };
     const url: URL = this.getV3Endpoint(path);
     return this.http.postWithCreds(url, data).map((res) => res.json());
   }
@@ -510,7 +510,7 @@ export class ClaService {
    **/
   removeGithubOrganizationWhitelist(companyID, corporateClaID, organizationId) {
     const path = `/v3/company/${companyID}/cla/${corporateClaID}/whitelist/githuborg`;
-    const data = {id: organizationId};
+    const data = { id: organizationId };
     const url: URL = this.getV3Endpoint(path);
     return this.http.deleteWithCredsAndBody(url, data).map((res) => res.json());
   }
@@ -554,7 +554,7 @@ export class ClaService {
    * @param companyId the company ID
    **/
   getPendingInvites(companyId) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/invitelist`);
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/invitelist?status=pending`);
     return this.http.getWithCreds(url).map((res) => res.json());
   }
 
@@ -688,32 +688,27 @@ export class ClaService {
     return this.http.get(url).map((res) => res.json());
   }
 
-  addCCLAWhitelistRequest( companyId: string, projectId:  string) {
-
+  addCCLAWhitelistRequest(companyId: string, projectId: string) {
   }
 
-  deleteCCLAWhitelistRequest(companyID: string, projectID: string, requestID: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/{companyID}/ccla_whitelist_requests/{projectID}/{requestID}`);
-    return this.http.delete(url).map((res) => res.json())
-  }
+  getProjectWhitelistRequest(companyId: string, projectId: string, status: string) {
+    let statusFilter = '';
+    if (status != null && status.length > 0) {
+      statusFilter = `?status=${status}`;
+    }
 
-  listCCLAWhitelistRequest(companyId: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla_whitelist_requests`);
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests/${projectId}${statusFilter}`);
     return this.http.get(url).map((res) => res.json())
   }
 
-  getProjectWhitelistRequest(companyId: string, projectId: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla_whitelist_requests?projectId=${projectId}`);
-    return this.http.get(url).map((res) => res.json())
+  approveCclaWhitelistRequest(companyId: string, projectId: string, requestID: string) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests/${projectId}/${requestID}/approve`);
+    return this.http.put(url);
   }
 
-  deleteCclaWhitelistRequest(companyId: string, projectId: string, requestID: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla_whitelist_requests/${projectId}/${requestID}`);
-    return this.http
-      .delete(url)
-      .map((res) => {
-        return res.json()
-      })
+  rejectCclaWhitelistRequest(companyId: string, projectId: string, requestID: string) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests/${projectId}/${requestID}/reject`);
+    return this.http.put(url);
   }
 
   //////////////////////////////////////////////////////////////////////////////

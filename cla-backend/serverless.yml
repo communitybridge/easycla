@@ -145,6 +145,7 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-company-invites/index/requested-company-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-events/index/event-type-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-events/index/user-id-index"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-events/index/company-id-external-project-id-event-epoch-time-index"
 
   environment:
     STAGE: ${self:provider.stage}
@@ -185,6 +186,11 @@ provider:
     LF_GROUP_CLIENT_URL: ${file(./env.json):lf-group-client-url, ssm:/cla-lf-group-client-url-${opt:stage}}
     SNS_EVENT_TOPIC_ARN: ${file(./env.json):sns-event-topic-arn, ssm:/cla-sns-event-topic-arn-${opt:stage}}
     DOCRAPTOR_TEST_MODE: ${file(./env.json):docraptor-test-mode}
+    PLATFORM_AUTH0_URL: ${file(./env.json):cla-auth0-platform-url, ssm:/cla-auth0-platform-url-${opt:stage}}
+    PLATFORM_AUTH0_CLIENT_ID: ${file(./env.json):cla-auth0-platform-client-id, ssm:/cla-auth0-platform-client-id-${opt:stage}}
+    PLATFORM_AUTH0_CLIENT_SECRET: ${file(./env.json):cla-auth0-platform-client-secret, ssm:/cla-auth0-platform-client-secret-${opt:stage}}
+    PLATFORM_AUTH0_AUDIENCE: ${file(./env.json):cla-auth0-platform-audience, ssm:/cla-auth0-platform-audience-${opt:stage}}
+    PLATFORM_GATEWAY_URL: ${file(./env.json):platform-gateway-url, ssm:/cla-auth0-platform-api-gw-${opt:stage}}
 
 plugins:
   - serverless-python-requirements
