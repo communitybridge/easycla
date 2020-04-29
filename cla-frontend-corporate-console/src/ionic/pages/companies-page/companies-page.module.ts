@@ -10,6 +10,7 @@ import { LayoutModule } from '../../layout/layout.module';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { GetHelpComponentModule } from '../../components/get-help/get-help.module'; 
+import { SharedModule } from '../../shared.module';
 
 @NgModule({
   declarations: [CompaniesPage],
@@ -20,7 +21,8 @@ import { GetHelpComponentModule } from '../../components/get-help/get-help.modul
     IonicPageModule.forChild(CompaniesPage),
     LayoutModule,
     NgxDatatableModule,
-    NgxPaginationModule
+    NgxPaginationModule,
+    SharedModule
   ],
   entryComponents: [CompaniesPage]
 })

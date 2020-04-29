@@ -87,7 +87,13 @@ company-page {
   }
 
   .table button {
+    padding: 0;
+    margin: 0;
     text-decoration: underline;
+
+    &.mr-5 {
+      margin-right: 5px;
+    }
   }
 
   ion-footer {

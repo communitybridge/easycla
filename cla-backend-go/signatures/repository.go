@@ -357,7 +357,7 @@ func (repo repository) GetSignature(signatureID string) (*models.Signature, erro
 		return nil, nil
 	}
 
-	return &signatureList[0], nil
+	return signatureList[0], nil
 }
 
 func addConditionToFilter(filter expression.ConditionBuilder, cond expression.ConditionBuilder, filterAdded *bool) expression.ConditionBuilder {
@@ -395,7 +395,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 	}
 
 	if params.SignatureType != nil {
-		if params.SearchTerm != nil {
+		if params.SearchTerm != nil && (params.FullMatch != nil && !*params.FullMatch) {
 			indexName = "signature-project-id-type-index"
 			condition = condition.And(expression.Key("signature_type").Equal(expression.Value(strings.ToLower(*params.SignatureType))))
 		} else {
@@ -465,9 +465,14 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 				S: &params.ProjectID,
 			},
 		}
+		if params.FullMatch != nil && *params.FullMatch && params.SearchTerm != nil {
+			queryInput.ExclusiveStartKey["signature_reference_name_lower"] = &dynamodb.AttributeValue{
+				S: params.SearchTerm,
+			}
+		}
 	}
 
-	var signatures []models.Signature
+	signatures := make([]*models.Signature, 0)
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -495,17 +500,10 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 		// Add to the signatures response model to the list
 		signatures = append(signatures, signatureList...)
 
-		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
+		//log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey)
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
-			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-				"signature_id": {
-					S: aws.String(lastEvaluatedKey),
-				},
-				"signature_project_id": {
-					S: &params.ProjectID,
-				},
-			}
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
 		} else {
 			lastEvaluatedKey = ""
 		}
@@ -527,6 +525,10 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 
 	// Meta-data for the response
 	totalCount := *describeTableResult.Table.ItemCount
+	if int64(len(signatures)) > pageSize {
+		signatures = signatures[0:pageSize]
+		lastEvaluatedKey = signatures[pageSize-1].SignatureID
+	}
 
 	return &models.Signatures{
 		ProjectID:      params.ProjectID,
@@ -584,7 +586,7 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 		}
 	}
 
-	var signatures []models.Signature
+	var signatures []*models.Signature
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -793,7 +795,6 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(tableName),
 		IndexName:                 aws.String("project-signature-index"), // Name of a secondary index to scan
-		Limit:                     aws.Int64(pageSize),                   // The maximum number of items to evaluate (not necessarily the number of matching items)
 	}
 
 	// If we have the next key, set the exclusive start key value
@@ -811,7 +812,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 		}
 	}
 
-	var signatures []models.Signature
+	signatures := make([]*models.Signature, 0)
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -842,14 +843,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
-			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-				"signature_id": {
-					S: aws.String(lastEvaluatedKey),
-				},
-				"signature_project_id": {
-					S: &params.ProjectID,
-				},
-			}
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
 		} else {
 			lastEvaluatedKey = ""
 		}
@@ -871,6 +865,10 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 
 	// Meta-data for the response
 	totalCount := *describeTableResult.Table.ItemCount
+	if int64(len(signatures)) > pageSize {
+		signatures = signatures[0:pageSize]
+		lastEvaluatedKey = signatures[pageSize-1].SignatureID
+	}
 
 	return &models.Signatures{
 		ProjectID:      params.ProjectID,
@@ -935,7 +933,7 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 		}
 	}
 
-	var signatures []models.Signature
+	signatures := make([]*models.Signature, 0)
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -966,14 +964,7 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
-			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-				"signature_id": {
-					S: aws.String(lastEvaluatedKey),
-				},
-				"signature_reference_id": {
-					S: &params.CompanyID,
-				},
-			}
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
 		} else {
 			lastEvaluatedKey = ""
 		}
@@ -992,6 +983,10 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 		log.Warnf("error retrieving total record count for company: %s/%s, error: %v",
 			params.CompanyID, *params.CompanyName, err)
 		return nil, err
+	}
+	if int64(len(signatures)) > pageSize {
+		signatures = signatures[0:pageSize]
+		lastEvaluatedKey = signatures[pageSize-1].SignatureID
 	}
 
 	// Meta-data for the response
@@ -1034,7 +1029,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(tableName),
 		IndexName:                 aws.String("reference-signature-index"), // Name of a secondary index to scan
-		//Limit:                     aws.Int64(pageSize),                   // The maximum number of items to evaluate (not necessarily the number of matching items)
+		Limit:                     aws.Int64(pageSize),                     // The maximum number of items to evaluate (not necessarily the number of matching items)
 	}
 
 	// If we have the next key, set the exclusive start key value
@@ -1052,7 +1047,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 		}
 	}
 
-	var signatures []models.Signature
+	signatures := make([]*models.Signature, 0)
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -1082,14 +1077,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
 			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
-			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
-				"signature_id": {
-					S: aws.String(lastEvaluatedKey),
-				},
-				"signature_reference_id": {
-					S: &params.UserID,
-				},
-			}
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
 		} else {
 			lastEvaluatedKey = ""
 		}
@@ -1123,13 +1111,13 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 }
 
 // buildProjectSignatureModels converts the response model into a response data model
-func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput, projectID string) ([]models.Signature, error) {
-	var signatures []models.Signature
+func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput, projectID string) ([]*models.Signature, error) {
+	var signatures []*models.Signature
 
 	// The DB signature model
-	var dbSignature []ItemSignature
+	var dbSignatures []ItemSignature
 
-	err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbSignature)
+	err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbSignatures)
 	if err != nil {
 		log.Warnf("error unmarshalling signatures from database for project: %s, error: %v",
 			projectID, err)
@@ -1137,86 +1125,83 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(len(dbSignature))
-
-	for _, dbSignature := range dbSignature {
-		go func(dbSignature ItemSignature) {
+	wg.Add(len(dbSignatures))
+	for _, dbSignature := range dbSignatures {
+		sig := &models.Signature{
+			SignatureID:                 dbSignature.SignatureID,
+			SignatureCreated:            dbSignature.DateCreated,
+			SignatureModified:           dbSignature.DateModified,
+			SignatureType:               dbSignature.SignatureType,
+			SignatureReferenceID:        dbSignature.SignatureReferenceID,
+			SignatureReferenceName:      dbSignature.SignatureReferenceName,
+			SignatureReferenceNameLower: dbSignature.SignatureReferenceNameLower,
+			SignatureSigned:             dbSignature.SignatureSigned,
+			SignatureApproved:           dbSignature.SignatureApproved,
+			Version:                     dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
+			SignatureReferenceType:      dbSignature.SignatureReferenceType,
+			ProjectID:                   dbSignature.SignatureProjectID,
+			Created:                     dbSignature.DateCreated,
+			Modified:                    dbSignature.DateModified,
+			EmailWhitelist:              dbSignature.EmailWhitelist,
+			DomainWhitelist:             dbSignature.DomainWhitelist,
+			GithubWhitelist:             dbSignature.GitHubWhitelist,
+			GithubOrgWhitelist:          dbSignature.GitHubOrgWhitelist,
+		}
+		signatures = append(signatures, sig)
+		go func(sigModel *models.Signature, signatureUserCompanyID string, sigACL []string) {
 			defer wg.Done()
 			var companyName = ""
 			var userName = ""
 			var userLFID = ""
 			var userGHID = ""
 
-			if dbSignature.SignatureReferenceType == "user" {
-				userModel, userErr := repo.usersRepo.GetUser(dbSignature.SignatureReferenceID)
+			if sigModel.SignatureReferenceType == "user" {
+				userModel, userErr := repo.usersRepo.GetUser(sigModel.SignatureReferenceID)
 				if userErr != nil || userModel == nil {
-					log.Warnf("unable to lookup user using id: %s, error: %v", dbSignature.SignatureReferenceID, userErr)
+					log.Warnf("unable to lookup user using id: %s, error: %v", sigModel.SignatureReferenceID, userErr)
 				} else {
 					userName = userModel.Username
 					userLFID = userModel.LfUsername
 					userGHID = userModel.GithubID
 				}
-				if dbSignature.SignatureUserCompanyID != "" {
-					dbCompanyModel, companyErr := repo.companyRepo.GetCompany(dbSignature.SignatureUserCompanyID)
+				if signatureUserCompanyID != "" {
+					dbCompanyModel, companyErr := repo.companyRepo.GetCompany(signatureUserCompanyID)
 					if companyErr != nil {
-						log.Warnf("unable to lookup company using id: %s, error: %v", dbSignature.SignatureUserCompanyID, companyErr)
+						log.Warnf("unable to lookup company using id: %s, error: %v", signatureUserCompanyID, companyErr)
 					} else {
 						companyName = dbCompanyModel.CompanyName
 					}
 				}
-			} else if dbSignature.SignatureReferenceType == "company" {
-				dbCompanyModel, companyErr := repo.companyRepo.GetCompany(dbSignature.SignatureReferenceID)
+			} else if sigModel.SignatureReferenceType == "company" {
+				dbCompanyModel, companyErr := repo.companyRepo.GetCompany(sigModel.SignatureReferenceID)
 				if companyErr != nil {
-					log.Warnf("unable to lookup company using id: %s, error: %v", dbSignature.SignatureReferenceID, companyErr)
+					log.Warnf("unable to lookup company using id: %s, error: %v", sigModel.SignatureReferenceID, companyErr)
 				} else {
 					companyName = dbCompanyModel.CompanyName
 				}
 			}
 
 			var signatureACL []models.User
-			for _, userName := range dbSignature.SignatureACL {
+			for _, userName := range sigACL {
 				userModel, userErr := repo.usersRepo.GetUserByUserName(userName, true)
 				if userErr != nil {
 					log.Warnf("unable to lookup user using username: %s, error: %v", userName, userErr)
 				} else {
 					if userModel == nil {
-						log.Warnf("User looking for username is null: %s for signature: %s", userName, dbSignature.SignatureID)
+						log.Warnf("User looking for username is null: %s for signature: %s", userName, sigModel.SignatureID)
 					} else {
 						signatureACL = append(signatureACL, *userModel)
 					}
 				}
 			}
-
-			signatures = append(signatures, models.Signature{
-				SignatureID:                 dbSignature.SignatureID,
-				CompanyName:                 companyName,
-				SignatureCreated:            dbSignature.DateCreated,
-				SignatureModified:           dbSignature.DateModified,
-				SignatureType:               dbSignature.SignatureType,
-				SignatureReferenceID:        dbSignature.SignatureReferenceID,
-				SignatureReferenceName:      dbSignature.SignatureReferenceName,
-				SignatureReferenceNameLower: dbSignature.SignatureReferenceNameLower,
-				SignatureSigned:             dbSignature.SignatureSigned,
-				SignatureApproved:           dbSignature.SignatureApproved,
-				Version:                     dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
-				SignatureReferenceType:      dbSignature.SignatureReferenceType,
-				ProjectID:                   dbSignature.SignatureProjectID,
-				Created:                     dbSignature.DateCreated,
-				Modified:                    dbSignature.DateModified,
-				UserName:                    userName,
-				UserLFID:                    userLFID,
-				UserGHID:                    userGHID,
-				EmailWhitelist:              dbSignature.EmailWhitelist,
-				DomainWhitelist:             dbSignature.DomainWhitelist,
-				GithubWhitelist:             dbSignature.GitHubWhitelist,
-				GithubOrgWhitelist:          dbSignature.GitHubOrgWhitelist,
-				SignatureACL:                signatureACL,
-			})
-		}(dbSignature)
+			sigModel.CompanyName = companyName
+			sigModel.UserName = userName
+			sigModel.UserLFID = userLFID
+			sigModel.UserGHID = userGHID
+			sigModel.SignatureACL = signatureACL
+		}(sig, dbSignature.SignatureUserCompanyID, dbSignature.SignatureACL)
 	}
-
 	wg.Wait()
-
 	return signatures, nil
 }
 

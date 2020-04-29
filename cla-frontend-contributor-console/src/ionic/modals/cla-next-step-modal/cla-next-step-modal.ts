@@ -90,6 +90,6 @@ export class ClaNextStepModal {
   }
 
   gotoRepo() {
-    window.open(this.signature.signature_return_url, '_blank');
+    window.open(this.signature.signature_return_url, '_self');
   }
 }
