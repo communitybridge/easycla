@@ -1604,7 +1604,7 @@ definitions:
     title: Company CLA Manager
     description: CLA Managers details
     properties:
-      lfUsername:
+      lf_username:
         type: string
         x-omitempty: false
         example: "john.doe"
@@ -1612,10 +1612,10 @@ definitions:
         type: string
         x-omitempty: false
         example: "John Doe"
-      userSFID:
+      user_sfid:
         type: string
         x-omitempty: false
-      logoURL:
+      logo_url:
         type: string
         x-omitempty: false
       email:

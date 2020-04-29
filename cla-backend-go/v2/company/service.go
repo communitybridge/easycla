@@ -72,6 +72,7 @@ func (s *service) GetCompanyCLAManagers(companyID string) (*models.CompanyClaMan
 	for _, sig := range sigs {
 		for _, user := range sig.SignatureACL {
 			claManagers = append(claManagers, &models.CompanyClaManager{
+				// DB doesn't have approved_on value
 				ApprovedOn: "",
 				LfUsername: user.LfUsername,
 				ProjectID:  sig.ProjectID,
@@ -130,7 +131,7 @@ func fillUsersInfo(claManagers []*models.CompanyClaManager, usermap map[string]*
 		}
 		cm.Name = user.Name
 		cm.LogoURL = user.LogoURL
-		cm.UserSFID = user.ID
+		cm.UserSfid = user.ID
 		if user.Email != nil {
 			cm.Email = *user.Email
 		} else {

@@ -14,8 +14,7 @@ import (
 
 // Client is client for user_service
 type Client struct {
-	cl        *client.UserService
-	dummyXACL string
+	cl *client.UserService
 }
 
 var (
@@ -31,7 +30,6 @@ func InitClient(APIGwURL string) {
 			BasePath: "user-service/v1",
 			Schemes:  []string{"https"},
 		}),
-		dummyXACL: "ewogICAgImFsbG93ZWQiOnRydWUsCiAgICAiaXNBZG1pbiI6IHRydWUsICAgIAogICAgInJlc291cmNlIjoidmlld19wcm9qZWN0IiwKICAgICJzY29wZXMiOlsgCiAgICBdIAp9",
 	}
 }
 
@@ -52,7 +50,6 @@ func (usc *Client) GetUsersByUsernames(lfUsernames []string) ([]*models.User, er
 		return nil, err
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
-	params.XACL = usc.dummyXACL
 	result, err := usc.cl.Bulk.SearchBulk(params, clientAuth)
 	if err != nil {
 		return nil, err
