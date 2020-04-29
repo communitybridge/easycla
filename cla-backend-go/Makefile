@@ -33,7 +33,7 @@ setup_deploy:
 	npm install serverless
 
 clean:
-	@rm -rf bin/ cla cla-mac cla-linux
+	@rm -rf bin/ cla cla-mac cla-linux ./v2/user-service/client ./v2/user-service/models
 
 clean-swagger:
 	@rm -rf gen/
@@ -63,7 +63,12 @@ swagger-build: clean-swagger
 		--exclude-main \
 		-A easycla \
 		-P auth.User
-
+	@echo "Generating swagger client for user-service"
+	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/user-service/swagger.json --output user_service.yaml
+	sed -i 's/X-ACL/Empty-Header/g' user_service.yaml
+	swagger -q generate client \
+		-t v2/user-service \
+		-f user_service.yaml
 swagger-validate:
 	@echo "Validating v1 legacy API models..."
 	swagger validate swagger/cla.yaml

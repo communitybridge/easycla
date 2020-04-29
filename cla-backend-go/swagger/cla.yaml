@@ -361,6 +361,7 @@ paths:
           in: path
           type: string
           required: true
+        - $ref: '#/parameters/signatureType'
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/companyName'
@@ -2968,6 +2969,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/github-repository'
+
 
 responses:
   resource-deleted:
