@@ -13,6 +13,7 @@ type Service interface {
 	Save(user *models.UserUpdate) (*models.User, error)
 	Delete(userID string) error
 	GetUser(userID string) (*models.User, error)
+	GetUserByLFUserName(lfUserName string) (*models.User, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
 	SearchUsers(field string, searchTerm string, fullMatch bool) (*models.Users, error)
 }
@@ -56,6 +57,11 @@ func (s service) GetUser(userID string) (*models.User, error) {
 	}
 
 	return userModel, nil
+}
+
+// GetuserByLFUserName returns the user record associated with the LF Username value
+func (s service) GetUserByLFUserName(lfUserName string) (*models.User, error) {
+	return s.repo.GetUserByLFUserName(lfUserName)
 }
 
 // GetUserByUserName attempts to locate the user by the user name field

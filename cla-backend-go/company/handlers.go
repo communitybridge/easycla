@@ -19,7 +19,7 @@ import (
 )
 
 // Configure sets up the middleware handlers
-func Configure(api *operations.ClaAPI, service Service, usersService users.Service, companyUserValidation bool, eventsService events.Service) {
+func Configure(api *operations.ClaAPI, service IService, usersService users.Service, companyUserValidation bool, eventsService events.Service) {
 
 	api.CompanyGetCompaniesHandler = company.GetCompaniesHandlerFunc(func(params company.GetCompaniesParams, claUser *user.CLAUser) middleware.Responder {
 		companiesModel, err := service.GetCompanies()
@@ -139,29 +139,9 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 		return company.NewGetCompaniesByUserManagerWithInvitesOK().WithPayload(companies)
 	})
 
-	api.CompanyAddUsertoCompanyAccessListHandler = company.AddUsertoCompanyAccessListHandlerFunc(func(params company.AddUsertoCompanyAccessListParams, claUser *user.CLAUser) middleware.Responder {
-		err := service.AddUserToCompanyAccessList(params.CompanyID, params.User.InviteID, params.User.UserLFID)
-		if err != nil {
-			log.Warnf("error adding user to company access list using company id: %s, invite id: %s, and user LFID: %s, error: %v",
-				params.CompanyID, params.User.InviteID, params.User.UserLFID, err)
-			return company.NewAddUsertoCompanyAccessListBadRequest()
-		}
-
-		eventsService.LogEvent(&events.LogEventArgs{
-			EventType: events.CompanyACLUserAdded,
-			CompanyID: params.CompanyID,
-			UserID:    claUser.UserID,
-			EventData: &events.CompanyACLUserAddedEventData{
-				UserLFID: params.User.UserLFID,
-			},
-		})
-
-		return company.NewAddUsertoCompanyAccessListOK()
-	})
-
 	api.CompanyGetCompanyInviteRequestsHandler = company.GetCompanyInviteRequestsHandlerFunc(func(params company.GetCompanyInviteRequestsParams, claUser *user.CLAUser) middleware.Responder {
 		log.Debugf("Processing get company invite request for company ID: %s", params.CompanyID)
-		result, err := service.GetCompanyInviteRequests(params.CompanyID)
+		result, err := service.GetCompanyInviteRequests(params.CompanyID, params.Status)
 		if err != nil {
 			log.Warnf("error getting company invite using company id: %s, error: %v", params.CompanyID, err)
 			return company.NewGetCompanyInviteRequestsBadRequest().WithPayload(errorResponse(err))
@@ -185,50 +165,93 @@ func Configure(api *operations.ClaAPI, service Service, usersService users.Servi
 		return company.NewGetCompanyUserInviteRequestsOK().WithPayload(result)
 	})
 
-	api.CompanySendInviteRequestHandler = company.SendInviteRequestHandlerFunc(func(params company.SendInviteRequestParams, claUser *user.CLAUser) middleware.Responder {
-		log.Debugf("Processing send invite request for company ID: %s, user: %+v", params.CompanyID, claUser)
-		if claUser.UserID == "" {
-			claUser.UserID = params.Body.UserID
-			claUser.LFUsername = params.Body.UserID
-			claUser.LFEmail = params.Body.LfEmail
-			claUser.Name = params.Body.Username
-			log.Debugf("Processing send invite request - added userID for company ID: %s, user: %+v", params.CompanyID, claUser)
-		}
-		err := service.SendRequestAccessEmail(params.CompanyID, claUser)
+	api.CompanyAddUsertoCompanyAccessListHandler = company.AddUsertoCompanyAccessListHandlerFunc(func(params company.AddUsertoCompanyAccessListParams, claUser *user.CLAUser) middleware.Responder {
+		err := service.AddUserToCompanyAccessList(params.CompanyID, params.User.UserLFID)
 		if err != nil {
-			log.Warnf("error sending request access email using company id: %s with user: %v, error: %v", params.CompanyID, claUser, err)
-			return company.NewSendInviteRequestBadRequest().WithPayload(errorResponse(err))
+			log.Warnf("error adding user to company access list using company id: %s, invite id: %s, and user LFID: %s, error: %v",
+				params.CompanyID, params.User.InviteID, params.User.UserLFID, err)
+			return company.NewAddUsertoCompanyAccessListBadRequest()
 		}
 
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.CompanyACLUserAdded,
+			CompanyID: params.CompanyID,
+			UserID:    claUser.UserID,
+			EventData: &events.CompanyACLUserAddedEventData{
+				UserLFID: params.User.UserLFID,
+			},
+		})
+
+		return company.NewAddUsertoCompanyAccessListOK()
+	})
+
+	api.CompanyRequestCompanyAccessRequestHandler = company.RequestCompanyAccessRequestHandlerFunc(func(params company.RequestCompanyAccessRequestParams, claUser *user.CLAUser) middleware.Responder {
+		log.Debugf("Processing company access request for company ID: %s, by user %+v", params.CompanyID, claUser)
+		newInvite, err := service.AddPendingCompanyInviteRequest(params.CompanyID, claUser.UserID)
+		if err != nil {
+			log.Warnf("error creating company access request for company id: %s, User: %+v, error: %v", params.CompanyID, claUser, err)
+			return company.NewRequestCompanyAccessRequestBadRequest().WithPayload(errorResponse(err))
+		}
+
+		// Add an event to the log
 		eventsService.LogEvent(&events.LogEventArgs{
 			EventType: events.CompanyACLRequestAdded,
 			CompanyID: params.CompanyID,
 			UserID:    claUser.UserID,
 			EventData: &events.CompanyACLRequestAddedEventData{
-				UserID: params.Body.UserID,
+				UserID:    newInvite.UserID,
+				UserName:  newInvite.UserName,
+				UserEmail: newInvite.UserEmail,
 			},
 		})
 
-		return company.NewSendInviteRequestOK()
+		return company.NewRequestCompanyAccessRequestOK()
 	})
 
-	api.CompanyDeletePendingInviteHandler = company.DeletePendingInviteHandlerFunc(func(params company.DeletePendingInviteParams, claUser *user.CLAUser) middleware.Responder {
-		err := service.DeletePendingCompanyInviteRequest(params.CompanyID, params.User.InviteID, params.User.UserLFID)
+	api.CompanyApproveCompanyAccessRequestHandler = company.ApproveCompanyAccessRequestHandlerFunc(func(params company.ApproveCompanyAccessRequestParams, claUser *user.CLAUser) middleware.Responder {
+		log.Debugf("Processing approve company access request for request ID: %s, company ID: %s, by user %+v", params.RequestID, params.CompanyID, claUser)
+		inviteModel, err := service.ApproveCompanyAccessRequest(params.RequestID)
 		if err != nil {
-			log.Warnf("error deleting pending company invite using id: %s, error: %v", params.User.InviteID, err)
-			return company.NewDeletePendingInviteBadRequest().WithPayload(errorResponse(err))
+			log.Warnf("error approving company access for request ID: %s, company id: %s, error: %v", params.RequestID, params.CompanyID, err)
+			return company.NewApproveCompanyAccessRequestBadRequest().WithPayload(errorResponse(err))
 		}
 
+		// Add an event to the log
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType: events.CompanyACLRequestDeleted,
+			EventType: events.CompanyACLRequestApproved,
 			CompanyID: params.CompanyID,
 			UserID:    claUser.UserID,
-			EventData: &events.CompanyACLRequestDeletedEventData{
-				UserLFID: params.User.UserLFID,
+			EventData: &events.CompanyACLRequestApprovedEventData{
+				UserID:    inviteModel.UserID,
+				UserName:  inviteModel.UserName,
+				UserEmail: inviteModel.UserEmail,
 			},
 		})
 
-		return company.NewDeletePendingInviteOK()
+		return company.NewApproveCompanyAccessRequestOK()
+	})
+
+	api.CompanyRejectCompanyAccessRequestHandler = company.RejectCompanyAccessRequestHandlerFunc(func(params company.RejectCompanyAccessRequestParams, claUser *user.CLAUser) middleware.Responder {
+		log.Debugf("Processing reject company access request for request ID: %s, company ID: %s, by user %+v", params.RequestID, params.CompanyID, claUser)
+		inviteModel, err := service.RejectCompanyAccessRequest(params.RequestID)
+		if err != nil {
+			log.Warnf("error rejecting company access for request ID: %s, company id: %s, error: %v", params.RequestID, params.CompanyID, err)
+			return company.NewRejectCompanyAccessRequestBadRequest().WithPayload(errorResponse(err))
+		}
+
+		// Add an event to the log
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.CompanyACLRequestDenied,
+			CompanyID: params.CompanyID,
+			UserID:    claUser.UserID,
+			EventData: &events.CompanyACLRequestDeniedEventData{
+				UserID:    inviteModel.UserID,
+				UserName:  inviteModel.UserName,
+				UserEmail: inviteModel.UserEmail,
+			},
+		})
+
+		return company.NewRejectCompanyAccessRequestOK()
 	})
 }
 

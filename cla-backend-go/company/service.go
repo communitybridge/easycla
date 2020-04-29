@@ -4,9 +4,9 @@
 package company
 
 import (
-	"errors"
 	"fmt"
-	"strings"
+
+	"github.com/communitybridge/easycla/cla-backend-go/users"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
@@ -16,41 +16,45 @@ import (
 )
 
 type service struct {
-	repo                CompanyRepository
+	repo                IRepository
 	userDynamoRepo      user.RepositoryService
 	corporateConsoleURL string
+	userService         users.Service
 }
 
 const (
 	// StatusPending indicates the invitation status is pending
-	StatusPending = "Pending Approval"
+	StatusPending = "pending"
 )
 
-// Service interface defining the public functions
-type Service interface { // nolint
+// IService interface defining the functions for the company service
+type IService interface { // nolint
 	GetCompanies() (*models.Companies, error)
 	GetCompany(companyID string) (*models.Company, error)
 	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
 	GetCompaniesByUserManager(userID string) (*models.Companies, error)
 	GetCompaniesByUserManagerWithInvites(userID string) (*models.CompaniesWithInvites, error)
 
-	AddPendingCompanyInviteRequest(companyID string, userID string) error
-	GetCompanyInviteRequests(companyID string) ([]models.CompanyInviteUser, error)
+	AddUserToCompanyAccessList(companyID, lfid string) error
+	GetCompanyInviteRequests(companyID string, status *string) ([]models.CompanyInviteUser, error)
 	GetCompanyUserInviteRequests(companyID string, userID string) (*models.CompanyInviteUser, error)
-	RejectCompanyInviteRequest(companyID string, userID string) error
-	DeletePendingCompanyInviteRequest(CompanyID string, InviteID string, lfID string) error
+	AddPendingCompanyInviteRequest(companyID string, userID string) (*InviteModel, error)
+	ApproveCompanyAccessRequest(companyInviteID string) (*InviteModel, error)
+	RejectCompanyAccessRequest(companyInviteID string) (*InviteModel, error)
 
-	AddUserToCompanyAccessList(companyID string, inviteID string, lfid string) error
-	SendRequestAccessEmail(companyID string, user *user.CLAUser) error
-	//sendRejectionEmail(company *models.Company, recipientAddress string, rejectedUser *user.CLAUser) error
+	sendRequestAccessEmail(companyModel *models.Company, requesterName, requesterEmail, recipientName, recipientAddress string)
+	sendRequestApprovedEmailToRecipient(companyModel *models.Company, recipientName, recipientAddress string)
+	sendRequestRejectedEmailToRecipient(companyModel *models.Company, recipientName, recipientAddress string)
+	getPreferredNameAndEmail(lfid string) (string, string, error)
 }
 
 // NewService creates a new company service object
-func NewService(repo CompanyRepository, corporateConsoleURL string, userDynamoRepo user.RepositoryService) Service {
+func NewService(repo IRepository, corporateConsoleURL string, userDynamoRepo user.RepositoryService, userService users.Service) IService {
 	return service{
 		repo:                repo,
 		userDynamoRepo:      userDynamoRepo,
 		corporateConsoleURL: corporateConsoleURL,
+		userService:         userService,
 	}
 }
 
@@ -97,14 +101,9 @@ func (s service) GetCompaniesByUserManagerWithInvites(userID string) (*models.Co
 	return s.repo.GetCompaniesByUserManagerWithInvites(userID, userModel)
 }
 
-// AddPendingCompanyInviteRequest adds a new company invite request
-func (s service) AddPendingCompanyInviteRequest(companyID string, userID string) error {
-	return s.repo.AddPendingCompanyInviteRequest(companyID, userID)
-}
-
 // GetCompanyInviteRequests returns a list of company invites when provided the company ID
-func (s service) GetCompanyInviteRequests(companyID string) ([]models.CompanyInviteUser, error) {
-	companyInvites, err := s.repo.GetCompanyInviteRequests(companyID)
+func (s service) GetCompanyInviteRequests(companyID string, status *string) ([]models.CompanyInviteUser, error) {
+	companyInvites, err := s.repo.GetCompanyInviteRequests(companyID, status)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +132,6 @@ func (s service) GetCompanyInviteRequests(companyID string) ([]models.CompanyInv
 	}
 
 	return users, nil
-
 }
 
 // GetCompanyUserInviteRequests returns a list of company invites when provided the company ID
@@ -178,45 +176,183 @@ func (s service) GetCompanyUserInviteRequests(companyID string, userID string) (
 	}, nil
 }
 
-// RejectCompanyInviteRequest updates the invite with the rejection status
-func (s service) RejectCompanyInviteRequest(companyID string, userID string) error {
-	return s.repo.RejectCompanyInviteRequest(companyID, userID)
+// AddPendingCompanyInviteRequest adds a new company invite request
+func (s service) AddPendingCompanyInviteRequest(companyID string, userID string) (*InviteModel, error) {
+
+	newInvite, err := s.repo.AddPendingCompanyInviteRequest(companyID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	companyModel, companyErr := s.GetCompany(companyID)
+	if companyErr != nil {
+		log.Warnf("AddPendingCompanyInviteRequest - unable to locate company model by ID: %s, error: %+v",
+			companyID, companyErr)
+		return nil, companyErr
+	}
+
+	userModel, userErr := s.userDynamoRepo.GetUser(userID)
+	if userErr != nil {
+		log.Warnf("AddPendingCompanyInviteRequest - unable to locate user model by ID: %s, error: %+v",
+			userID, userErr)
+		return nil, userErr
+	}
+
+	// Need to determine which email...
+	var requesterEmail = ""
+	if userModel.LFEmail != "" {
+		requesterEmail = userModel.LFEmail
+	}
+
+	// If no LF Email try to grab the first other email in their email list
+	if userModel.LFEmail == "" && userModel.UserEmails != nil {
+		requesterEmail = userModel.UserEmails[0]
+	}
+
+	// Send the email to each company manager
+	for _, companyManagerLFID := range companyModel.CompanyACL {
+		companyManagerName, companyManagerEmail, err := s.getPreferredNameAndEmail(companyManagerLFID)
+		if err != nil {
+			log.Warnf("unable to lookup company manager's name and email using LFID: %s - unable to send email, error: %+v",
+				companyManagerLFID, err)
+			continue
+		}
+
+		// Send an email to this company manager
+		s.sendRequestAccessEmail(companyModel, userModel.UserName, requesterEmail, companyManagerName, companyManagerEmail)
+	}
+
+	return &InviteModel{
+		CompanyInviteID:    newInvite.CompanyInviteID,
+		RequestedCompanyID: newInvite.RequestedCompanyID,
+		CompanyName:        companyModel.CompanyName,
+		UserName:           userModel.UserName,
+		UserEmail:          userModel.LFEmail,
+		UserID:             newInvite.UserID,
+		Status:             newInvite.Status,
+		Created:            newInvite.Created,
+		Updated:            newInvite.Updated,
+	}, nil
 }
 
-// DeletePendingCompanyInviteRequest deletes the pending company invite request when provided the invite ID
-func (s service) DeletePendingCompanyInviteRequest(companyID string, inviteID string, lfID string) error {
-	// When a CLA Manager Declines a pending invite, remove the invite from the table
-	company, err := s.repo.GetCompany(companyID)
+// ApproveCompanyAccessRequest approve access request service method
+func (s service) ApproveCompanyAccessRequest(companyInviteID string) (*InviteModel, error) {
+	err := s.repo.ApproveCompanyAccessRequest(companyInviteID)
 	if err != nil {
-		log.Warnf("Error retrieving company by company ID: %s, error: %v", companyID, err)
-		return err
-	}
-	log.Debugf("Deleting Company Invite Request inviteID : %s", inviteID)
-
-	userProfile, err := s.userDynamoRepo.GetUserAndProfilesByLFID(lfID)
-	if err != nil {
-		log.Warnf("Error getting user profile by LFID: %s, error: %v", lfID, err)
-		return nil
+		return nil, err
 	}
 
-	recipientEmailAddress := userProfile.LFEmail
-
-	err = s.repo.DeletePendingCompanyInviteRequest(inviteID)
-	if err != nil {
-		log.Warnf("Error deleting the pending company invite with invite ID: %s, error: %v", inviteID, err)
-		return err
+	inviteModel, inviteErr := s.repo.GetCompanyInviteRequest(companyInviteID)
+	if inviteErr != nil || inviteModel == nil {
+		log.Warnf("ApproveCompanyAccessRequest - unable to locate company invite: %s, error: %+v",
+			companyInviteID, inviteErr)
+		return nil, inviteErr
 	}
 
-	err = s.sendRejectionEmail(company, recipientEmailAddress, &userProfile)
-	if err != nil {
-		return errors.New("failed to send notification email")
+	companyModel, companyErr := s.GetCompany(inviteModel.RequestedCompanyID)
+	if companyErr != nil {
+		log.Warnf("ApproveCompanyAccessRequest - unable to locate company model by ID: %s, error: %+v",
+			inviteModel.RequestedCompanyID, companyErr)
+		return nil, companyErr
 	}
 
-	return nil
+	userModel, userErr := s.userDynamoRepo.GetUser(inviteModel.UserID)
+	if userErr != nil {
+		log.Warnf("ApproveCompanyAccessRequest - unable to locate user model by ID: %s, error: %+v",
+			inviteModel.UserID, userErr)
+		return nil, userErr
+	}
+
+	// update the company ACL
+	aclErr := s.AddUserToCompanyAccessList(inviteModel.RequestedCompanyID, userModel.LFUsername)
+	if aclErr != nil {
+		log.Warnf("ApproveCompanyAccessRequest - unable to add user to Company ACL, company ID: %s, user LFID: %s, error: %+v",
+			inviteModel.RequestedCompanyID, userModel.UserName, err)
+		return nil, aclErr
+	}
+
+	// Need to determine which email...
+	var whichEmail = ""
+	if userModel.LFEmail != "" {
+		whichEmail = userModel.LFEmail
+	}
+
+	// If no LF Email try to grab the first other email in their email list
+	if userModel.LFEmail == "" && userModel.UserEmails != nil {
+		whichEmail = userModel.UserEmails[0]
+	}
+
+	s.sendRequestApprovedEmailToRecipient(companyModel, userModel.UserName, whichEmail)
+
+	return &InviteModel{
+		CompanyInviteID:    inviteModel.CompanyInviteID,
+		RequestedCompanyID: inviteModel.RequestedCompanyID,
+		CompanyName:        companyModel.CompanyName,
+		UserName:           userModel.UserName,
+		UserEmail:          userModel.LFEmail,
+		UserID:             inviteModel.UserID,
+		Status:             inviteModel.Status,
+		Created:            inviteModel.Created,
+		Updated:            inviteModel.Updated,
+	}, nil
+}
+
+// RejectCompanyAccessRequest approve access request service method
+func (s service) RejectCompanyAccessRequest(companyInviteID string) (*InviteModel, error) {
+	err := s.repo.RejectCompanyAccessRequest(companyInviteID)
+	if err != nil {
+		return nil, err
+	}
+
+	inviteModel, inviteErr := s.repo.GetCompanyInviteRequest(companyInviteID)
+	if inviteErr != nil || inviteModel == nil {
+		log.Warnf("RejectCompanyAccessRequest - unable to locate company invite: %s, error: %+v",
+			companyInviteID, inviteErr)
+		return nil, inviteErr
+	}
+
+	companyModel, companyErr := s.GetCompany(inviteModel.RequestedCompanyID)
+	if companyErr != nil {
+		log.Warnf("RejectCompanyAccessRequest - unable to locate company model by ID: %s, error: %+v",
+			inviteModel.RequestedCompanyID, companyErr)
+		return nil, companyErr
+	}
+
+	userModel, userErr := s.userDynamoRepo.GetUser(inviteModel.UserID)
+	if userErr != nil {
+		log.Warnf("RejectCompanyAccessRequest - unable to locate user model by ID: %s, error: %+v",
+			inviteModel.UserID, userErr)
+		return nil, userErr
+	}
+
+	// Need to determine which email...
+	var whichEmail = ""
+	if userModel.LFEmail != "" {
+		whichEmail = userModel.LFEmail
+	}
+
+	// If no LF Email try to grab the first other email in their email list
+	if userModel.LFEmail == "" && userModel.UserEmails != nil {
+		whichEmail = userModel.UserEmails[0]
+	}
+
+	s.sendRequestRejectedEmailToRecipient(companyModel, userModel.UserName, whichEmail)
+
+	return &InviteModel{
+		CompanyInviteID:    inviteModel.CompanyInviteID,
+		RequestedCompanyID: inviteModel.RequestedCompanyID,
+		CompanyName:        companyModel.CompanyName,
+		UserName:           userModel.UserName,
+		UserEmail:          userModel.LFEmail,
+		UserID:             inviteModel.UserID,
+		Status:             inviteModel.Status,
+		Created:            inviteModel.Created,
+		Updated:            inviteModel.Updated,
+	}, nil
 }
 
 // AddUserToCompanyAccessList adds a user to the specified company
-func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, lfid string) error {
+func (s service) AddUserToCompanyAccessList(companyID, lfid string) error {
 	// call the get company function
 	company, err := s.repo.GetCompany(companyID)
 	if err != nil {
@@ -229,11 +365,6 @@ func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, l
 	for _, acl := range company.CompanyACL {
 		if acl == lfid {
 			log.Warnf(fmt.Sprintf("User %s has already been added to the company acl", lfid))
-			err = s.repo.DeletePendingCompanyInviteRequest(inviteID)
-			if err != nil {
-				log.Warnf("Error deleting pending company invite request with inviteID: %s, error: %v", inviteID, err)
-				return fmt.Errorf("failed to delete pending invite")
-			}
 			return nil
 		}
 	}
@@ -246,146 +377,186 @@ func (s service) AddUserToCompanyAccessList(companyID string, inviteID string, l
 		return err
 	}
 
-	userProfile, err := s.userDynamoRepo.GetUserAndProfilesByLFID(lfid)
-	if err != nil {
-		log.Warnf("Error getting user profile by LFID: %s, error: %v", lfid, err)
-		return nil
-	}
-
-	recipientEmailAddress := userProfile.LFEmail
-
-	err = sendApprovalEmail(company.CompanyName, recipientEmailAddress, &userProfile)
-	if err != nil {
-		return errors.New("failed to send notification email")
-	}
-
-	// Remove pending invite ID once approval emails are sent
-	err = s.repo.DeletePendingCompanyInviteRequest(inviteID)
-	if err != nil {
-		return fmt.Errorf("failed to delete pending invite")
-	}
-
 	return nil
 }
 
-// sendApprovalEmail sends the approval email when provided the company name, address and user object
-func sendApprovalEmail(companyName string, recipientAddress string, user *user.CLAUser) error {
-	var (
-		Recipient = recipientAddress
-		Subject   = "CLA: Approval of Access for Corporate CLA"
+// sendRequestAccessEmail sends the request access email
+func (s service) sendRequestAccessEmail(companyModel *models.Company, requesterName, requesterEmail, recipientName, recipientAddress string) {
+	companyName := companyModel.CompanyName
 
-		//The email body for recipients with non-HTML email clients.
-		TextBody = fmt.Sprintf(`Hello %s,
+	requestedUserInfo := fmt.Sprintf("<ul><li>%s (%s)</li></ul>", requesterName, requesterEmail)
 
-You have now been granted access to the organization: %s
-
-	%s <%s>
-
-- Linux Foundation CLA System`, user.Name, companyName, user.LFUsername, user.LFEmail)
-		// The character encoding for the email.
-	)
-
-	err := utils.SendEmail(Subject, TextBody, []string{Recipient})
-	if err != nil {
-		log.Warnf("Error sending mail, error: %v", err)
-		return err
-	}
-	log.Debugf("Sent '%s' email to: %s", Subject, Recipient)
-
-	return nil
-}
-
-// sendRejectionEmail sends the rejection email
-func (s service) sendRejectionEmail(company *models.Company, recipientAddress string, rejectedUser *user.CLAUser) error {
-	// Get CLAUser admin list
-	log.Debugf("Processing rejection email for User: %s for Company: %s ", rejectedUser.LFUsername, company.CompanyName)
-	var admins []*user.CLAUser
-	for _, acl := range company.CompanyACL {
-		admin, err := s.userDynamoRepo.GetUserAndProfilesByLFID(acl)
-		if err != nil {
-			log.Warnf("Error fetching user profile using admin: %s, error: %v", admin, err)
-			continue
-		}
-		admins = append(admins, &admin)
-	}
-
-	// String builder to return 'Manager <email>' list
-	var sb strings.Builder
-	for _, admin := range admins {
-		sb.WriteString(fmt.Sprintf("- %s <%s>\n", admin.Name, admin.LFEmail))
-	}
-
-	var (
-		Recipient = recipientAddress
-		Subject   = "CLA: Denial of Access for Corporate CLA "
-		TextBody  = fmt.Sprintf(` Hello %s,
-		Your request to become a CLA Manager for the organization: %s was denied.
-		If you have further questions, contact one of the existing CLA Managers :
-		%s 
-		
-		- Linux Foundation CLA System`, rejectedUser.Name, company.CompanyName, sb.String())
-	)
-	log.Debugf("acls : %v", company.CompanyACL)
-	err := utils.SendEmail(Subject, TextBody, []string{Recipient})
-	if err != nil {
-		log.Warnf("Error sending mail, error: %v", err)
-		return err
-	}
-	log.Debugf("Send '%s' email to: %s", Subject, Recipient)
-
-	return nil
-
-}
-
-// SendRequestAccessEmail sends the request access e-mail when provided the company ID and user object
-func (s service) SendRequestAccessEmail(companyID string, user *user.CLAUser) error {
-
-	log.Debugf("Processing send invite access email for company ID: %s, user: %+v", companyID, user)
-
-	// Get Company
-	company, err := s.repo.GetCompany(companyID)
-	if err != nil {
-		log.Warnf("Error fetching company by company ID: %s, error: %v", companyID, err)
-		return err
-	}
-
-	// Add a pending request to the company-invites table
-	err = s.repo.AddPendingCompanyInviteRequest(companyID, user.UserID)
-	if err != nil {
-		log.Warnf("Error adding pending company invite request using company ID: %s, user ID: %s, error: %v", companyID, user.UserID, err)
-		return err
-	}
-
-	// Send Email to every CLA Manager in the Company ACL
-	Subject := "CLA: Request of Access for Corporate CLA Manager"
-
-	for _, admin := range company.CompanyACL {
-		// Retrieve admin's user profile for email and name
-		adminUser, err := s.userDynamoRepo.GetUserAndProfilesByLFID(admin)
-		if err != nil {
-			log.Warnf("Error fetching user profile using admin: %s, error: %v", admin, err)
-			return err
-		}
-
-		TextBody := fmt.Sprintf(`Hello %s, 
-
-The following user is requesting access to your organization: %s
-
-	%s <%s>
-
-Please navigate to the Corporate Console using the link below, where you can approve this user's request.
-
+	// subject string, body string, recipients []string
+	subject := fmt.Sprintf("EasyCLA: New Company Manager Access Request for %s", companyName)
+	recipients := []string{recipientAddress}
+	body := fmt.Sprintf(`
+<html>
+<head>
+<style>
+body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
+</style>
+</head>
+<body>
+<p>Hello %s,</p>
+<p>This is a notification email from EasyCLA regarding the company %s.</p>
+<p>The following user has requested to join %s as a Company Manager. 
+By approving this request the user could view and apply for CLA Manager
+status on projects associated with your company. </p>
 %s
+<p>To get started, please log into the EasyCLA Corporate Console at 
+https://%s, and select your company. From there you will
+be able to view the list of projects which have EasyCLA configured and apply
+for CLA Manager status.
+</p>
+<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
+<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+support</a>.</p>
+<p>Thanks,
+<p>EasyCLA support team</p>
+</body>
+</html>`, recipientName, companyName, companyName, requestedUserInfo, s.corporateConsoleURL)
 
-- Linux Foundation CLA System`, adminUser.Name, company.CompanyName, user.LFUsername, user.LFEmail, s.corporateConsoleURL)
+	err := utils.SendEmail(subject, body, recipients)
+	if err != nil {
+		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+	} else {
+		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	}
+}
 
-		err = utils.SendEmail(Subject, TextBody, []string{adminUser.LFEmail})
-		if err != nil {
-			log.Warnf("Error sending mail, error: %v", err)
-			return err
+// sendRequestApprovedEmailToRecipient generates and sends an email to the specified recipient
+func (s service) sendRequestApprovedEmailToRecipient(companyModel *models.Company, recipientName, recipientAddress string) {
+	companyName := companyModel.CompanyName
+
+	// subject string, body string, recipients []string
+	subject := fmt.Sprintf("EasyCLA: Company Manager Access Approved for %s", companyName)
+	recipients := []string{recipientAddress}
+	body := fmt.Sprintf(`
+<html>
+<head>
+<style>
+body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
+</style>
+</head>
+<body>
+<p>Hello %s,</p>
+<p>This is a notification email from EasyCLA regarding the company %s.</p>
+<p>You have now been approved as a Company Manager for %s.
+This means that you can now view and apply for CLA Manager status on
+projects associated with your company.
+</p>
+<p>To get started, please log into the EasyCLA Corporate Console at 
+https://%s, and select your company. From there you will
+be able to view the list of projects which have EasyCLA configured and apply
+for CLA Manager status.
+</p>
+<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
+<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+support</a>.</p>
+<p>Thanks,
+<p>EasyCLA support team</p>
+</body>
+</html>`, recipientName, companyName, companyName, s.corporateConsoleURL)
+
+	err := utils.SendEmail(subject, body, recipients)
+	if err != nil {
+		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+	} else {
+		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	}
+}
+
+// sendRequestRejectedEmailToRecipient generates and sends an email to the specified recipient
+func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Company, recipientName, recipientAddress string) {
+	companyName := companyModel.CompanyName
+
+	var companyManagerText = ""
+	companyManagerText += "<ul>"
+
+	// Build a fancy text string with CLA Manager name <email> as an HTML unordered list
+	for _, companyAdminLFID := range companyModel.CompanyACL {
+
+		userModel, userErr := s.userDynamoRepo.GetUserAndProfilesByLFID(companyAdminLFID)
+		if userErr != nil {
+			log.Warnf("RejectCompanyAccessRequest - unable to locate user model by ID: %s, error: %+v",
+				companyAdminLFID, userErr)
 		}
-		log.Debugf("Sent '%s' email to: %s", Subject, adminUser.LFEmail)
+
+		// Need to determine which email...
+		var whichEmail = ""
+		if userModel.LFEmail != "" {
+			whichEmail = userModel.LFEmail
+		}
+
+		// If no LF Email try to grab the first other email in their email list
+		if userModel.LFEmail == "" && userModel.Emails != nil {
+			whichEmail = userModel.Emails[0]
+		}
+
+		if whichEmail == "" {
+			log.Warnf("unable to send email to manager: %+v - no email on file...", userModel)
+		} else {
+			companyManagerText += fmt.Sprintf("<li>%s <%s></li>", userModel.Name, whichEmail)
+		}
 	}
 
-	return nil
+	companyManagerText += "</ul>"
+
+	// subject string, body string, recipients []string
+	subject := fmt.Sprintf("EasyCLA: CLA Manager Access Denied for %s", companyName)
+	recipients := []string{recipientAddress}
+	body := fmt.Sprintf(`
+<html>
+<head>
+<style>
+body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
+</style>
+</head>
+<body>
+<p>Hello %s,</p>
+<p>This is a notification email from EasyCLA regarding the company %s.</p>
+<p>Your request to become a Company Manager was denied by one of the existing Company Managers.
+If you have further questions about this denial, please contact one of the existing managers from
+%s:</p>
+%s
+<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
+<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+support</a>.</p>
+<p>Thanks,
+<p>EasyCLA support team</p>
+</body>
+</html>`, recipientName, companyName, companyName, companyManagerText)
+
+	err := utils.SendEmail(subject, body, recipients)
+	if err != nil {
+		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+	} else {
+		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	}
+}
+
+// getPreferredNameAndEmail when given the user LFID, this routine returns the user's name and preferred email
+func (s service) getPreferredNameAndEmail(lfid string) (string, string, error) {
+	userModel, userErr := s.userService.GetUserByLFUserName(lfid)
+	if userErr != nil {
+		log.Warnf("getPreferredNameAndEmail - unable to locate user model by ID: %s, error: %+v",
+			lfid, userErr)
+		return "", "", userErr
+	}
+
+	userName := userModel.Username
+	// If no user name specified - then use the user's LF user name I guess
+	if userName == "" {
+		userName = userModel.LfUsername
+	}
+
+	userEmail := userModel.LfEmail
+	if userEmail == "" && userModel.Emails != nil && len(userModel.Emails) > 0 {
+		userEmail = userModel.Emails[0]
+	}
+
+	return userName, userEmail, nil
 }

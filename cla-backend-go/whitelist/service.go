@@ -37,7 +37,7 @@ type IService interface {
 type service struct {
 	repo           IRepository
 	userRepo       users.UserRepository
-	companyRepo    company.CompanyRepository
+	companyRepo    company.IRepository
 	projectRepo    project.ProjectRepository
 	signatureRepo  signatures.SignatureRepository
 	corpConsoleURL string
@@ -45,7 +45,7 @@ type service struct {
 }
 
 // NewService creates a new whitelist service
-func NewService(repo IRepository, userRepo users.UserRepository, companyRepo company.CompanyRepository, projectRepo project.ProjectRepository, signatureRepo signatures.SignatureRepository, corpConsoleURL string, httpClient *http.Client) IService {
+func NewService(repo IRepository, userRepo users.UserRepository, companyRepo company.IRepository, projectRepo project.ProjectRepository, signatureRepo signatures.SignatureRepository, corpConsoleURL string, httpClient *http.Client) IService {
 	return service{
 		repo:           repo,
 		userRepo:       userRepo,

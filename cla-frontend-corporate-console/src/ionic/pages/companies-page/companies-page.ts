@@ -117,6 +117,7 @@ export class CompaniesPage {
   mapCompanies(companies) {
     let rows = [];
     companies = this.sortData(companies);
+    companies = this.removeDuplicates(companies);
     for (let company of companies) {
       rows.push({
         CompanyID: company.companyID,
@@ -129,21 +130,37 @@ export class CompaniesPage {
   }
 
   sortData(companies: any[]) {
-    let joinedCompanies = companies.filter(company => company.status !== 'Pending Approval')
-    let requstCompanies = companies.filter(company => company.status === 'Pending Approval')
+    let joinedCompanies = companies.filter(company => company.status !== 'pending')
+    let requestCompanies = companies.filter(company => company.status === 'pending')
     joinedCompanies = joinedCompanies.sort((a, b) => {
       return a.companyName.toLowerCase().localeCompare(b.companyName.toLowerCase());
     });
-    requstCompanies = requstCompanies.sort((a, b) => {
+    requestCompanies = requestCompanies.sort((a, b) => {
       return a.companyName.toLowerCase().localeCompare(b.companyName.toLowerCase());
     });
-    return joinedCompanies.concat(requstCompanies);
+    return joinedCompanies.concat(requestCompanies);
+  }
+
+  removeDuplicates(companies: any[]) {
+    let seenCompanies = {};
+    return companies.filter(company => {
+      if (seenCompanies[company.companyID] == null) {
+        seenCompanies[company.companyID] = true;
+        return true; // unique, pass filter
+      }
+      return false; // duplicate, fail filter
+    });
   }
 
   openSelectCompany() {
     if (!this.loading.companies) {
+      //console.log(this.rows);
       let modal = this.modalCtrl.create('AddCompanyModal', {
-        associatedCompanies: this.rows
+        // For this modal, we share the list of companies where the user is either pending acceptance, approved/joined.
+        // From this, the modal dialog will filter the list so that these companies are not shown. We allow the user
+        // to request to join companies where they have been previously rejected.
+        associatedCompanies: this.rows.filter(row => row.Status === 'pending' || row.Status === 'Joined' || row.Status === 'approved')
+        //associatedCompanies: this.rows
       });
       modal.present();
     }

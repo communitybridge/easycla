@@ -33,15 +33,17 @@ setup_deploy:
 	npm install serverless
 
 clean:
-	rm -rf ./gen ./bin
-	rm -rf ./v2/user-service/client ./v2/user-service/models
+	@rm -rf bin/ cla cla-mac cla-linux ./v2/user-service/client ./v2/user-service/models
 
-clean-all: clean
-	rm -rf vendor
+clean-swagger:
+	@rm -rf gen/
 
-swagger: clean swagger-build swagger-validate
+clean-all: clean clean-swagger
+	@rm -rf vendor/
 
-swagger-build: clean
+swagger: clean-swagger swagger-build swagger-validate
+
+swagger-build: clean-swagger
 	@mkdir gen
 	@echo "Generating v1 legacy API models..."
 	swagger -q generate server \
@@ -95,27 +97,25 @@ build: deps
 build-mac: deps
 	@echo "Building Mac OSX amd64 binary..."
 	env GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(SERVICE)-mac main.go
-	@chmod +x $(SERVICE)
+	@chmod +x $(SERVICE)-mac
 
-rebuild-mac:
-	rm -rf ./cla
-	make fmt build-mac lint
-	./$(SERVICE)
+rebuild-mac: clean fmt build-mac lint
+	./$(SERVICE)-mac
 
 build-aws-lambda: deps
 	@echo "Building a statically linked Linux amd64 binary..."
 	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) $(BUILD_TAGS) -o $(LAMBDA_BIN) main.go
-	chmod +x $(LAMBDA_BIN)
+	@chmod +x $(LAMBDA_BIN)
 
 build-metrics-lambda: deps
 	@echo "Building a statically linked Linux amd64 binary..."
 	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(METRICS_BIN) cmd/metrics_lambda/main.go
-	chmod +x $(METRICS_BIN)
+	@chmod +x $(METRICS_BIN)
 
 build-metrics-lambda-mac: deps
 	@echo "Building a statically linked Mac OSX amd64 binary..."
 	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(METRICS_BIN)-mac cmd/metrics_lambda/main.go
-	chmod +x $(METRICS_BIN)-mac
+	@chmod +x $(METRICS_BIN)-mac
 
 $(LINT_TOOL):
 	@echo "Downloading golangci-lint version $(LINT_VERSION)..."

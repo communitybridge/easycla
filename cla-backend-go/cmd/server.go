@@ -40,8 +40,6 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/project"
 	v2Project "github.com/communitybridge/easycla/cla-backend-go/v2/project"
 
-	"github.com/communitybridge/easycla/cla-backend-go/onboard"
-
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
@@ -103,7 +101,7 @@ func init() {
 
 type combinedRepo struct {
 	users.UserRepository
-	company.CompanyRepository
+	company.IRepository
 	project.ProjectRepository
 }
 
@@ -194,7 +192,6 @@ func server(localMode bool) http.Handler {
 	whitelistRepo := whitelist.NewRepository(awsSession, stage)
 	companyRepo := company.NewRepository(awsSession, stage)
 	signaturesRepo := signatures.NewRepository(awsSession, stage, companyRepo, usersRepo)
-	onboardRepo := onboard.NewRepository(awsSession, stage)
 	projectRepo := project.NewRepository(awsSession, stage, repositoriesRepo, gerritRepo)
 	eventsRepo := events.NewRepository(awsSession, stage)
 	metricsRepo := metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL)
@@ -202,17 +199,16 @@ func server(localMode bool) http.Handler {
 
 	// Our service layer handlers
 	eventsService := events.NewService(eventsRepo, combinedRepo{
-		UserRepository:    usersRepo,
-		CompanyRepository: companyRepo,
-		ProjectRepository: projectRepo,
+		usersRepo,
+		companyRepo,
+		projectRepo,
 	})
 	usersService := users.NewService(usersRepo)
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
 	signaturesService := signatures.NewService(signaturesRepo, githubOrgValidation)
 	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, signaturesRepo, configFile.CorporateConsoleURL, http.DefaultClient)
-	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo)
-	onboardService := onboard.NewService(onboardRepo)
+	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo, usersService)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 	metricsService := metrics.NewService(metricsRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
@@ -251,7 +247,6 @@ func server(localMode bool) http.Handler {
 	v2Signatures.Configure(v2API, signaturesService, sessionStore, eventsService)
 	whitelist.Configure(api, whitelistService, sessionStore, signaturesService, eventsService)
 	company.Configure(api, companyService, usersService, companyUserValidation, eventsService)
-	onboard.Configure(api, onboardService, eventsService)
 	docs.Configure(api)
 	v2Docs.Configure(v2API)
 	version.Configure(api, Version, Commit, Branch, BuildDate)
