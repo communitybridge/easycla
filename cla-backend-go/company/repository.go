@@ -31,20 +31,22 @@ var (
 	ErrCompanyDoesNotExist = errors.New("company does not exist")
 )
 
-// CompanyRepository interface methods
-type CompanyRepository interface { //nolint
+// IRepository interface methods
+type IRepository interface { //nolint
 	GetCompanies() (*models.Companies, error)
 	GetCompany(companyID string) (*models.Company, error)
 	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
 	GetCompaniesByUserManager(userID string, userModel user.User) (*models.Companies, error)
 	GetCompaniesByUserManagerWithInvites(userID string, userModel user.User) (*models.CompaniesWithInvites, error)
 
-	AddPendingCompanyInviteRequest(companyID string, userID string) error
-	GetCompanyInviteRequests(companyID string) ([]Invite, error)
+	AddPendingCompanyInviteRequest(companyID string, userID string) (*Invite, error)
+	GetCompanyInviteRequest(companyInviteID string) (*Invite, error)
+	GetCompanyInviteRequests(companyID string, status *string) ([]Invite, error)
 	GetCompanyUserInviteRequests(companyID string, userID string) (*Invite, error)
 	GetUserInviteRequests(userID string) ([]Invite, error)
-	RejectCompanyInviteRequest(companyID string, userID string) error
-	DeletePendingCompanyInviteRequest(InviteID string) error
+	ApproveCompanyAccessRequest(companyInviteID string) error
+	RejectCompanyAccessRequest(companyInviteID string) error
+	updateInviteRequestStatus(companyInviteID, status string) error
 
 	UpdateCompanyAccessList(companyID string, companyACL []string) error
 }
@@ -54,25 +56,8 @@ type repository struct {
 	dynamoDBClient *dynamodb.DynamoDB
 }
 
-// Company data model
-type Company struct {
-	CompanyID   string   `dynamodbav:"company_id"`
-	CompanyName string   `dynamodbav:"company_name"`
-	CompanyACL  []string `dynamodbav:"company_acl"`
-	Created     string   `dynamodbav:"date_created"`
-	Updated     string   `dynamodbav:"date_modified"`
-}
-
-// Invite data model
-type Invite struct {
-	CompanyInviteID    string `dynamodbav:"company_invite_id"`
-	RequestedCompanyID string `dynamodbav:"requested_company_id"`
-	UserID             string `dynamodbav:"user_id"`
-	Status             string `dynamodbav:"status"`
-}
-
 // NewRepository creates a new company repository instance
-func NewRepository(awsSession *session.Session, stage string) CompanyRepository {
+func NewRepository(awsSession *session.Session, stage string) IRepository {
 	return repository{
 		stage:          stage,
 		dynamoDBClient: dynamodb.New(awsSession),
@@ -159,7 +144,6 @@ func (repo repository) GetCompanies() (*models.Companies, error) {
 func (repo repository) GetCompany(companyID string) (*models.Company, error) {
 
 	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
-	queryStartTime := time.Now()
 
 	companyTableData, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
@@ -179,7 +163,6 @@ func (repo repository) GetCompany(companyID string) (*models.Company, error) {
 	if len(companyTableData.Item) == 0 {
 		return nil, ErrCompanyDoesNotExist
 	}
-	log.Debugf("Get company query took: %v", utils.FmtDuration(time.Since(queryStartTime)))
 
 	dbCompanyModel := Company{}
 	err = dynamodbattribute.UnmarshalMap(companyTableData.Item, &dbCompanyModel)
@@ -187,16 +170,19 @@ func (repo repository) GetCompany(companyID string) (*models.Company, error) {
 		log.Warnf("error unmarshalling company table data, error: %v", err)
 		return nil, err
 	}
-	const timeFormat = "2006-01-02T15:04:05.999999+0000"
+
 	// Convert the "string" date time
-	createdDateTime, err := time.Parse(timeFormat, dbCompanyModel.Created)
+	createdDateTime, err := utils.ParseDateTime(dbCompanyModel.Created)
 	if err != nil {
-		log.Warnf("Error converting created date time for company: %s, error: %v", companyID, err)
+		log.Warnf("error converting created date time for company: %s with value: %s, error: %v",
+			companyID, dbCompanyModel.Created, err)
 		return nil, err
 	}
-	updateDateTime, err := time.Parse(timeFormat, dbCompanyModel.Updated)
+
+	updateDateTime, err := utils.ParseDateTime(dbCompanyModel.Updated)
 	if err != nil {
-		log.Warnf("Error converting updated date time for company: %s, error: %v", companyID, err)
+		log.Warnf("Error converting updated date time for company: %s with value: %s, error: %v",
+			companyID, dbCompanyModel.Updated, err)
 		return nil, err
 	}
 
@@ -223,8 +209,6 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 			TotalCount:     0,
 		}, nil
 	}
-
-	queryStartTime := time.Now()
 
 	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
 
@@ -284,9 +268,6 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 		// Add to our response model list
 		companies = append(companies, companyList...)
 
-		log.Debugf("Company search scan took: %v resulting in %d results",
-			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
-
 		if results.LastEvaluatedKey["company_id"] != nil {
 			//log.Debugf("LastEvaluatedKey: %+v", result.LastEvaluatedKey["signature_id"])
 			lastEvaluatedKey = *results.LastEvaluatedKey["company_id"].S
@@ -313,9 +294,6 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 
 	totalCount := *describeTableResult.Table.ItemCount
 
-	log.Debugf("Total company search took: %v resulting in %d results",
-		utils.FmtDuration(time.Since(queryStartTime)), len(companies))
-
 	return &models.Companies{
 		ResultCount:    int64(len(companies)),
 		TotalCount:     totalCount,
@@ -335,8 +313,6 @@ func (repo repository) GetCompaniesByUserManager(userID string, userModel user.U
 			TotalCount:     0,
 		}, nil
 	}
-
-	queryStartTime := time.Now()
 
 	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
 
@@ -395,9 +371,6 @@ func (repo repository) GetCompaniesByUserManager(userID string, userModel user.U
 		// Add to our response model list
 		companies = append(companies, companyList...)
 
-		log.Debugf("Company search with user in ACL scan took: %v resulting in %d results",
-			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
-
 		if results.LastEvaluatedKey["company_invite_id"] != nil {
 			//log.Debugf("LastEvaluatedKey: %+v", result.LastEvaluatedKey["signature_id"])
 			lastEvaluatedKey = *results.LastEvaluatedKey["company_invite_id"].S
@@ -423,9 +396,6 @@ func (repo repository) GetCompaniesByUserManager(userID string, userModel user.U
 	}
 
 	totalCount := *describeTableResult.Table.ItemCount
-
-	log.Debugf("Total company search took: %v resulting in %d results",
-		utils.FmtDuration(time.Since(queryStartTime)), len(companies))
 
 	return &models.Companies{
 		ResultCount:    int64(len(companies)),
@@ -546,35 +516,89 @@ func buildCompanyModels(results *dynamodb.ScanOutput) ([]models.Company, error) 
 	return companies, nil
 }
 
-// GetCompanyInviteRequests returns a list of company invites when provided the company ID
-func (repo repository) GetCompanyInviteRequests(companyID string) ([]Invite, error) {
-
-	queryStartTime := time.Now()
+// GetCompanyInviteRequest returns the specified request
+func (repo repository) GetCompanyInviteRequest(companyInviteID string) (*Invite, error) {
 
 	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
+	condition := expression.Key("company_invite_id").Equal(expression.Value(companyInviteID))
 
-	input := &dynamodb.QueryInput{
-		KeyConditions: map[string]*dynamodb.Condition{
-			"requested_company_id": {
-				ComparisonOperator: aws.String("EQ"),
-				AttributeValueList: []*dynamodb.AttributeValue{
-					{
-						S: aws.String(companyID),
-					},
-				},
-			},
-		},
-		TableName: aws.String(tableName),
-		IndexName: aws.String("requested-company-index"),
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildInvitesProjection()).Build()
+
+	if err != nil {
+		log.Warnf("error building expression for company invites, invite ID: %s, error: %v", companyInviteID, err)
+		return nil, err
 	}
-	companyInviteAV, err := repo.dynamoDBClient.Query(input)
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+	}
+
+	queryResults, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.Warnf("Unable to query the company invite based on invite ID: %s, error: %v", companyInviteID, err)
+		return nil, err
+	}
+
+	var companyInvites []Invite
+	err = dynamodbattribute.UnmarshalListOfMaps(queryResults.Items, &companyInvites)
+	if err != nil || companyInvites == nil {
+		log.Warnf("unable to unmarshall the company invite based on invite ID: %s, error: %v", companyInviteID, err)
+		return nil, err
+	}
+	if len(companyInvites) == 0 {
+		log.Warnf("unable to locate the company invite based on invite ID: %s, error: %v", companyInviteID, err)
+		return nil, nil
+	}
+
+	return &companyInvites[0], nil
+}
+
+// GetCompanyInviteRequests returns a list of company invites when provided the company ID
+func (repo repository) GetCompanyInviteRequests(companyID string, status *string) ([]Invite, error) {
+
+	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
+	// These are the keys we want to match
+	condition := expression.Key("requested_company_id").Equal(expression.Value(companyID))
+
+	// Use the nice builder to create the expression
+	builder := expression.NewBuilder().
+		WithKeyCondition(condition).
+		WithProjection(buildInvitesProjection())
+
+	if status != nil {
+		builder.WithFilter(expression.Name("status").Equal(expression.Value(*status)))
+	}
+
+	expr, err := builder.Build()
+	if err != nil {
+		log.Warnf("error building expression for company invite query, companyID: %s, error: %v",
+			companyID, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String("requested-company-index"), // Name of a secondary index
+	}
+
+	companyInviteAV, err := repo.dynamoDBClient.Query(queryInput)
 	if err != nil {
 		log.Warnf("Unable to retrieve data from Company-Invites table, error: %v", err)
 		return nil, err
 	}
-
-	log.Debugf("Company Invites query took: %v",
-		utils.FmtDuration(time.Since(queryStartTime)))
 
 	var companyInvites []Invite
 	err = dynamodbattribute.UnmarshalListOfMaps(companyInviteAV.Items, &companyInvites)
@@ -588,7 +612,6 @@ func (repo repository) GetCompanyInviteRequests(companyID string) ([]Invite, err
 
 // GetCompanyUserInviteRequests returns a list of company invites when provided the company ID and user ID
 func (repo repository) GetCompanyUserInviteRequests(companyID string, userID string) (*Invite, error) {
-	queryStartTime := time.Now()
 
 	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
 
@@ -624,9 +647,6 @@ func (repo repository) GetCompanyUserInviteRequests(companyID string, userID str
 		return nil, err
 	}
 
-	log.Debugf("Company Invites query took: %v with %d results",
-		utils.FmtDuration(time.Since(queryStartTime)), len(queryResults.Items))
-
 	var companyInvites []Invite
 	err = dynamodbattribute.UnmarshalListOfMaps(queryResults.Items, &companyInvites)
 	if err != nil {
@@ -650,8 +670,6 @@ func (repo repository) GetCompanyUserInviteRequests(companyID string, userID str
 
 // GetUserInviteRequests returns a list of company invites when provided the user ID
 func (repo repository) GetUserInviteRequests(userID string) ([]Invite, error) {
-
-	queryStartTime := time.Now()
 
 	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
 	filter := expression.Name("user_id").Equal(expression.Value(userID))
@@ -686,9 +704,6 @@ func (repo repository) GetUserInviteRequests(userID string) ([]Invite, error) {
 			return nil, err
 		}
 
-		log.Debugf("Company Invites query with user ID %s took: %v with %d results", userID,
-			utils.FmtDuration(time.Since(queryStartTime)), len(queryResults.Items))
-
 		var companyInvitesList []Invite
 		err = dynamodbattribute.UnmarshalListOfMaps(queryResults.Items, &companyInvitesList)
 		if err != nil {
@@ -717,27 +732,29 @@ func (repo repository) GetUserInviteRequests(userID string) ([]Invite, error) {
 }
 
 // AddPendingCompanyInviteRequest adds a pending company invite when provided the company ID and user ID
-func (repo repository) AddPendingCompanyInviteRequest(companyID string, userID string) error {
+func (repo repository) AddPendingCompanyInviteRequest(companyID string, userID string) (*Invite, error) {
 
 	// First, let's check if we already have a previous invite for this company and user ID pair
 	previousInvite, err := repo.GetCompanyUserInviteRequests(companyID, userID)
 	if err != nil {
 		log.Warnf("Previous invite already exists for company id: %s and user: %s, error: %v",
 			companyID, userID, err)
-		return err
+		return nil, err
 	}
 
 	// We we already have an invite...don't create another one
 	if previousInvite != nil {
 		log.Warnf("Invite already exists for company id: %s and user: %s - skipping creation", companyID, userID)
-		return nil
+		return previousInvite, nil
 	}
 
 	companyInviteID, err := uuid.NewV4()
 	if err != nil {
 		log.Warnf("Unable to generate a UUID for a pending invite, error: %v", err)
-		return err
+		return nil, err
 	}
+
+	now := currentTime()
 
 	input := &dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
@@ -750,6 +767,15 @@ func (repo repository) AddPendingCompanyInviteRequest(companyID string, userID s
 			"user_id": {
 				S: aws.String(userID),
 			},
+			"status": {
+				S: aws.String("pending"),
+			},
+			"date_created": {
+				S: aws.String(now),
+			},
+			"date_modified": {
+				S: aws.String(now),
+			},
 		},
 		TableName: aws.String(fmt.Sprintf("cla-%s-company-invites", repo.stage)),
 	}
@@ -757,34 +783,75 @@ func (repo repository) AddPendingCompanyInviteRequest(companyID string, userID s
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
 		log.Warnf("Unable to create a new pending invite, error: %v", err)
+		return nil, err
+	}
+
+	createdInvite, err := repo.GetCompanyInviteRequest(companyInviteID.String())
+	if err != nil || createdInvite == nil {
+		log.Warnf("Unable to query newly created company invite id: %s, error: %v",
+			companyInviteID.String(), err)
+		return nil, err
+	}
+
+	return createdInvite, nil
+}
+
+// ApproveCompanyAccessRequest approves the specified company invite
+func (repo repository) ApproveCompanyAccessRequest(companyInviteID string) error {
+	return repo.updateInviteRequestStatus(companyInviteID, "approved")
+}
+
+// RejectCompanyInviteRequest rejects the specified company invite
+func (repo repository) RejectCompanyAccessRequest(companyInviteID string) error {
+	return repo.updateInviteRequestStatus(companyInviteID, "rejected")
+}
+
+// updateInviteRequestStatus updates the specified invite with the specified status
+func (repo repository) updateInviteRequestStatus(companyInviteID, status string) error {
+
+	// First, let's check if we already have a previous invite
+	inviteModel, err := repo.GetCompanyInviteRequest(companyInviteID)
+	if err != nil || inviteModel == nil {
+		log.Warnf("ApproveCompanyAccessRequest - unable to locate previous invite, error: %v",
+			err)
 		return err
 	}
 
-	return nil
-}
-
-// RejectCompanyInviteRequest rejects a pending company invite when provided the company ID and user ID
-func (repo repository) RejectCompanyInviteRequest(companyID string, userID string) error {
-	log.Warnf("RejectCompanyInviteRequest not implemented")
-	return nil
-}
-
-// DeletePendingCompanyInviteRequest deletes the spending invite
-func (repo repository) DeletePendingCompanyInviteRequest(inviteID string) error {
-	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
-	input := &dynamodb.DeleteItemInput{
+	input := &dynamodb.UpdateItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"company_invite_id": {
-				S: aws.String(inviteID),
+				S: aws.String(companyInviteID),
 			},
 		},
-		TableName: aws.String(tableName),
+		ExpressionAttributeNames: map[string]*string{
+			"#C": aws.String("requested_company_id"),
+			"#U": aws.String("user_id"),
+			"#S": aws.String("status"),
+			"#M": aws.String("date_modified"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":c": {
+				S: aws.String(inviteModel.RequestedCompanyID),
+			},
+			":u": {
+				S: aws.String(inviteModel.UserID),
+			},
+			":s": {
+				S: aws.String(status),
+			},
+			":m": {
+				S: aws.String(currentTime()),
+			},
+		},
+		UpdateExpression: aws.String("SET #C = :c, #U = :u, #S = :s, #M = :m"),
+		TableName:        aws.String(fmt.Sprintf("cla-%s-company-invites", repo.stage)),
 	}
 
-	_, err := repo.dynamoDBClient.DeleteItem(input)
-	if err != nil {
-		log.Warnf("Unable to delete Company Invite Request, error: %v", err)
-		return err
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Warnf("ApproveCompanyAccessRequest - unable to update request with approved status, error: %v",
+			updateErr)
+		return updateErr
 	}
 
 	return nil
@@ -796,10 +863,14 @@ func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []st
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeNames: map[string]*string{
 			"#S": aws.String("company_acl"),
+			"#M": aws.String("date_modified"),
 		},
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":s": {
 				SS: aws.StringSlice(companyACL),
+			},
+			":m": {
+				S: aws.String(currentTime()),
 			},
 		},
 		TableName: aws.String(tableName),
@@ -808,7 +879,7 @@ func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []st
 				S: aws.String(companyID),
 			},
 		},
-		UpdateExpression: aws.String("SET #S = :s"),
+		UpdateExpression: aws.String("SET #S = :s, #M = :m"),
 	}
 
 	_, err := repo.dynamoDBClient.UpdateItem(input)
@@ -818,4 +889,9 @@ func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []st
 	}
 
 	return nil
+}
+
+// currentTime helper routine to return the date/time
+func currentTime() string {
+	return time.Now().UTC().Format(time.RFC3339)
 }

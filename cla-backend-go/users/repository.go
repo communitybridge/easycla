@@ -29,6 +29,7 @@ type UserRepository interface {
 	Save(user *models.UserUpdate) (*models.User, error)
 	Delete(userID string) error
 	GetUser(userID string) (*models.User, error)
+	GetUserByLFUserName(lfUserName string) (*models.User, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
 	SearchUsers(searchField string, searchTerm string, fullMatch bool) (*models.Users, error)
 }
@@ -305,6 +306,59 @@ func (repo repository) GetUser(userID string) (*models.User, error) {
 	}
 
 	return convertDBUserModel(dbUserModels[0]), nil
+}
+
+// GetuserByLFUserName returns the user record associated with the LF Username value
+func (repo repository) GetUserByLFUserName(lfUserName string) (*models.User, error) {
+	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
+
+	// This is the key we want to match
+	condition := expression.Key("lf_username").Equal(expression.Value(lfUserName))
+
+	// These are the columns we want returned
+	projection := buildUserProjection()
+
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(projection).Build()
+	if err != nil {
+		log.Warnf("error building expression for lf_username : %s, error: %v", lfUserName, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String("lf-username-index"),
+	}
+
+	// Make the DynamoDB Query API call
+	result, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.Warnf("Error retrieving user by lf_username: %s, error: %+v", lfUserName, err)
+		return nil, err
+	}
+
+	// The user model
+	var dbUserModels []DBUser
+
+	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &dbUserModels)
+	if err != nil {
+		log.Warnf("error unmarshalling user record from database for lf_username: %s, error: %+v", lfUserName, err)
+		return nil, err
+	}
+
+	if len(dbUserModels) == 0 {
+		return nil, nil
+	} else if len(dbUserModels) > 1 {
+		log.Warnf("retrieved %d results for the getUser(id) query when we should return 0 or 1", len(dbUserModels))
+	}
+
+	return convertDBUserModel(dbUserModels[0]), nil
+
 }
 
 func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*models.User, error) {

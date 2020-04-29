@@ -3,7 +3,7 @@
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <ion-title>Company</ion-title>
+    <ion-title>{{this.company.company_name}}</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-navbar>
   <get-help></get-help>
@@ -87,7 +87,10 @@
                                 Approved List
                               </th>
                               <th class="clickable">
-                                Pending Requests
+                                Pending Contributor Requests
+                              </th>
+                              <th class="clickable">
+                                Pending CLA Manager Requests
                               </th>
                             </tr>
                           </thead>
@@ -126,8 +129,12 @@
                                 </button>
                               </td>
 
-                              <td data-title="Project Name" class="text-center">
-                                <span>{{ row.PendingRequests}}</span>
+                              <td data-title="Contributor Pending Count" class="text-center">
+                                <span>{{ row.PendingContributorRequests}}</span>
+                              </td>
+
+                              <td data-title="CLA Manager Count" class="text-center">
+                                <span>{{ row.PendingCLAManagerRequests}}</span>
                               </td>
                             </tr>
                           </tbody>
@@ -158,7 +165,7 @@
         <ion-col col-12 col-md-8>
           <ion-card *ngIf="invites">
             <ion-card-title>
-              <h1>Pending CLA Manager Requests</h1>
+              <h1>Pending Requests to Join {{this.company.company_name}}</h1>
             </ion-card-title>
             <ion-card-content>
               <ion-list>

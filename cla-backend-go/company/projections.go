@@ -28,5 +28,7 @@ func buildInvitesProjection() expression.ProjectionBuilder {
 		expression.Name("requested_company_id"),
 		expression.Name("user_id"),
 		expression.Name("status"),
+		expression.Name("date_created"),
+		expression.Name("date_modified"),
 	)
 }

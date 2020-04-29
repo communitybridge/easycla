@@ -27,7 +27,7 @@
         <loading-spinner [loading]="loading.companies"></loading-spinner>
 
         <ion-row *ngIf="loading.companies" justify-content-center>
-          <h2>Wait we are loading companies associated with easyCLA...</h2>
+          <h2>Searching for companies that you are associated with...</h2>
         </ion-row>
 
         <ion-card-content *ngIf="!loading.companies && rows && rows.length > 0">
@@ -45,10 +45,14 @@
             <ion-row justify-content-center>
               <ion-list>
                 <ion-item *ngFor="let company of rows">
-                  <ion-label (click)="viewCompany(company.CompanyID, company.Status)">
-                    <a href="javascript:void(0);" [ngClass]="{'default-pointer':company.Status === 'Pending Approval'}"
+                  <!-- Note: we don't show request denied entries on this view -->
+                  <ion-label *ngIf="company.Status !== 'pending' && company.Status !== 'rejected'" (click)="viewCompany(company.CompanyID, company.Status)">
+                    <a href="javascript:void(0);" [ngClass]="{'default-pointer':company.Status === 'pending'}"
                       [title]="company.CompanyName">{{ company.CompanyName | trimCharacters:25  }}</a>
-                    <span class="alert" *ngIf="company.Status === 'Pending Approval'">Request to Join Pending</span>
+                  </ion-label>
+                  <ion-label *ngIf="company.Status === 'pending'">
+                    <h3>{{ company.CompanyName | trimCharacters:25  }}</h3>
+                    <span class="alert" *ngIf="company.Status === 'pending'">Awaiting Approval</span>
                   </ion-label>
                 </ion-item>
               </ion-list>
@@ -58,7 +62,7 @@
 
         <ion-card-content *ngIf="!loading.companies && rows && rows.length <= 0">
           <ion-row justify-content-center>
-            <h2>No Company found associated with easyCLA.</h2>
+            <h2>You are not associated with any companies. Click Get Started to join your company.</h2>
           </ion-row>
         </ion-card-content>
 
