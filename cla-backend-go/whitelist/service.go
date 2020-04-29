@@ -32,9 +32,6 @@ type IService interface {
 	RejectCclaWhitelistRequest(companyID, projectID, requestID string) error
 	ListCclaWhitelistRequest(companyID string, projectID, status *string) (*models.CclaWhitelistRequestList, error)
 	ListCclaWhitelistRequestByCompanyProjectUser(companyID string, projectID, status, userID *string) (*models.CclaWhitelistRequestList, error)
-
-	sendRequestSentEmail(companyModel *models.Company, projectModel *models.Project, signature models.Signature, contributorName, contributorEmail, recipientName, recipientEmail, message string)
-	sendRequestEmailToRecipient(companyModel *models.Company, projectModel *models.Project, contributorName, contributorEmail, recipientName, recipientAddress, message string)
 }
 
 type service struct {
@@ -208,7 +205,7 @@ func (s service) ListCclaWhitelistRequestByCompanyProjectUser(companyID string, 
 }
 
 // sendRequestSentEmail sends emails to the CLA managers specified in the signature record
-func (s service) sendRequestSentEmail(companyModel *models.Company, projectModel *models.Project, signature models.Signature, contributorName, contributorEmail, recipientName, recipientEmail, message string) {
+func (s service) sendRequestSentEmail(companyModel *models.Company, projectModel *models.Project, signature *models.Signature, contributorName, contributorEmail, recipientName, recipientEmail, message string) {
 
 	// If we have an override name and email from the request - possibly from the web form where the user selected the
 	// CLA Manager Name/Email from a list, send this to this recipient (CLA Manager) - otherwise we will send to all
@@ -275,7 +272,7 @@ contributor's email, the contributor's entire email domain, their github ID or t
 repository. This will permit them to begin contributing to %s on behalf of %s.</p>
 <p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p>
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or 
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
@@ -321,7 +318,7 @@ https://%s, and select your company and then the project %s. From here you will
 be able to edit the list of approved employees and CLA Managers.
 </p>
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or 
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
@@ -340,7 +337,7 @@ support</a>.</p>
 }
 
 // sendRequestRejectedEmailToRecipient generates and sends an email to the specified recipient
-func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Company, projectModel *models.Project, signature models.Signature, recipientName, recipientAddress string) {
+func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Company, projectModel *models.Project, signature *models.Signature, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
 	projectName := projectModel.ProjectName
 
@@ -386,7 +383,7 @@ If you have further questions about this denial, please contact one of the exist
 %s for %s:</p>
 %s
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/easycla/getting-started" target="_blank">read the documentation</a> or 
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,

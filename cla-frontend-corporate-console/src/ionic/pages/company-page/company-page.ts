@@ -207,9 +207,14 @@ export class CompanyPage {
     this.claService.getPendingInvites(this.companyId).subscribe((response) => {
       this.invites = response;
       if (this.invites != null && this.invites.length > 0) {
-        this.invites = response.list.filter((r) => {
+        // this.invites = response.list.filter((r) => {
+        //   // Only show pending requests
+        //   return r.requestStatus === "pending"
+        // })
+
+        this.invites = response.filter((r) => {
           // Only show pending requests
-          return r.requestStatus === "pending"
+          return r.status === 'Pending Approval';
         })
       }
       this.loading.invites = false;

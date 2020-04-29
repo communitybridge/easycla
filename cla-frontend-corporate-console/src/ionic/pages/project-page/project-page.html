@@ -21,7 +21,7 @@
                 <h3>
                   Domain Approved List
                   <ion-icon *ngIf="canEdit" class="clickable" name="md-create" item-right
-                            (click)="openWhitelistDomainModal()"></ion-icon>
+                    (click)="openWhitelistDomainModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -35,7 +35,7 @@
                 <h3>
                   Email Approved List
                   <ion-icon *ngIf="canEdit" class="clickable" name="md-create" item-right
-                            (click)="openWhitelistEmailModal()"></ion-icon>
+                    (click)="openWhitelistEmailModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -49,7 +49,7 @@
                 <h3>
                   GitHub Approved List
                   <ion-icon *ngIf="canEdit" class="clickable" name="md-create" item-right
-                            (click)="openWhitelistGithubModal()"></ion-icon>
+                    (click)="openWhitelistGithubModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -63,7 +63,7 @@
                 <h3>
                   GitHub Org Approved List
                   <ion-icon *ngIf="canEdit" class="clickable" name="md-create" item-right
-                            (click)="openWhitelistGithubOrgModal()"></ion-icon>
+                    (click)="openWhitelistGithubOrgModal()"></ion-icon>
                 </h3>
                 <div class="list-container">
                   <ion-list>
@@ -90,76 +90,60 @@
               </ion-card-title>
 
               <ion-row>
-<!--                <ion-row justify-content-center>-->
-<!--                  <p>Show:</p>-->
-<!--                  <ion-label>Approved</ion-label>-->
-<!--                  <ion-checkbox name="Approved" value="approved" (click)=showRequestType("approved")></ion-checkbox>-->
-
-<!--                  <ion-label>Pending</ion-label>-->
-<!--                  <ion-checkbox name="Pending" value="pending" checked (click)=showRequestType("pending")></ion-checkbox>-->
-
-<!--                  <ion-label>Rejected</ion-label>-->
-<!--                  <ion-checkbox name="Rejected" value="rejected" (click)=showRequestType("rejected")></ion-checkbox>-->
-<!--                </ion-row>-->
-
                 <ion-row justify-content-center *ngIf="noPendingRequests">
                   <h2>No Pending Requests</h2>
                 </ion-row>
                 <table class="table" *ngIf="!noPendingRequests && loading.request">
                   <thead>
-                  <tr>
-                    <th class="clickable">
-                      Github / Gerrit ID
-                    </th>
-                    <th class="clickable">
-                      Name
-                    </th>
+                    <tr>
+                      <th class="clickable">
+                        Github / Gerrit ID
+                      </th>
+                      <th class="clickable">
+                        Name
+                      </th>
 
-                    <th class="clickable">
-                      Project Name
-                    </th>
-                    <th class="clickable">
-                      Email ID
-                    </th>
-                    <th class="clickable">
-                      Actions
-                    </th>
-                  </tr>
+                      <th class="clickable">
+                        Project Name
+                      </th>
+                      <th class="clickable">
+                        Email ID
+                      </th>
+                      <th class="clickable">
+                        Actions
+                      </th>
+                    </tr>
                   </thead>
                   <tbody>
 
-                  <tr *ngFor="let request of pendingRequests">
-                    <td data-title="Github">
-                      <span>{{ request.userGithubUsername}}</span>
-                    </td>
+                    <tr *ngFor="let request of pendingRequests">
+                      <td data-title="Github">
+                        <span>{{ request.userGithubUsername}}</span>
+                      </td>
 
-                    <td data-title="Name">
-                      <span>{{ request.userName}}</span>
-                    </td>
+                      <td data-title="Name">
+                        <span>{{ request.userName}}</span>
+                      </td>
 
-                    <td data-title="Name">
-                      <span>{{ request.projectName}}</span>
-                    </td>
+                      <td data-title="Name" class="wrap-word">
+                        <span>{{ request.projectName}}</span>
+                      </td>
 
-                    <td data-title="Email">
-                      <ion-list>
-                        <ion-item *ngFor="let email of request.userEmails">
-                          {{ email }}
-                        </ion-item>
-                      </ion-list>
-                    </td>
+                      <td data-title="Email" class="wrap-word">
+                        <div *ngFor="let email of request.userEmails" class="email">{{email}}</div>
+                      </td>
 
-                    <td data-title="Actions">
-                      <button *ngIf="canEdit && request.requestStatus === 'pending'" clear ion-button color="secondary"
-                              (click)="accept(request.requestId)">
-                        Accept
-                      </button>
-                      <button *ngIf="canEdit && request.requestStatus === 'pending'" clear ion-button color="danger"
-                              (click)="decline(request.requestId)">
-                        Decline
-                      </button>
-                    </td>
-                  </tr>
+                      <td data-title="Actions">
+                        <button class="button" *ngIf="canEdit && request.requestStatus === 'pending'" clear ion-button
+                          color="secondary" (click)="accept(request.requestId)">
+                          Accept
+                        </button>
+                        <button *ngIf="canEdit && request.requestStatus === 'pending'" clear ion-button color="danger"
+                          (click)="decline(request.requestId)">
+                          Decline
+                        </button>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </ion-row>
@@ -190,7 +174,7 @@
                       <div class="manager-name">
                         <span>{{ manager.name}}</span>
                         <span *ngIf="managers.length > 1 && canEdit" (click)="deleteManagerConfirmation(manager)"
-                              class="delete-btn">Delete</span>
+                          class="delete-btn">Delete</span>
                       </div>
                       <h4>{{ manager.email }}</h4>
                     </div>
@@ -206,7 +190,7 @@
                 </ion-item>
               </ion-list>
               <button title="Add CLA Manager" bottom right ion-fab mini class="add-manager-btn" *ngIf="canEdit"
-                      (click)="openManagerModal()">
+                (click)="openManagerModal()">
                 <ion-icon name="add"></ion-icon>
               </button>
             </ion-card-content>
@@ -218,37 +202,37 @@
             <loading-spinner [loading]="loading.acknowledgements"></loading-spinner>
             <table class="table table-hover">
               <thead>
-              <tr>
-                <th class="clickable">
-                  LFID/GHID
-                </th>
-                <th class="clickable">
-                  Name
-                </th>
-                <th class="clickable">
-                  Agreement
-                </th>
-                <th class="clickable" (click)="sortMembers('date')">
-                  Date
-                  <sorting-display [sorting]='sort.date.sort'></sorting-display>
-                </th>
-              </tr>
+                <tr>
+                  <th class="clickable">
+                    LFID/GHID
+                  </th>
+                  <th class="clickable">
+                    Name
+                  </th>
+                  <th class="clickable">
+                    Agreement
+                  </th>
+                  <th class="clickable" (click)="sortMembers('date')">
+                    Date
+                    <sorting-display [sorting]='sort.date.sort'></sorting-display>
+                  </th>
+                </tr>
               </thead>
               <tbody>
-              <tr *ngFor="let signature of employeeSignatures">
-                <td data-title="ID">
-                  {{ signature.userLFID }}/{{ signature.userGHID }}
-                </td>
-                <td data-title="Name">
-                  {{ signature.userName }}
-                </td>
-                <td data-title="Agreement">
-                  v{{ signature.version}}
-                </td>
-                <td data-title="Date">
-                  {{ signature.modified | date:'medium' }}
-                </td>
-              </tr>
+                <tr *ngFor="let signature of employeeSignatures">
+                  <td data-title="ID">
+                    {{ signature.userLFID }}/{{ signature.userGHID }}
+                  </td>
+                  <td data-title="Name">
+                    {{ signature.userName }}
+                  </td>
+                  <td data-title="Agreement">
+                    v{{ signature.version}}
+                  </td>
+                  <td data-title="Date">
+                    {{ signature.modified | date:'medium' }}
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -258,4 +242,3 @@
   </div>
   <cla-footer></cla-footer>
 </ion-content>
-
