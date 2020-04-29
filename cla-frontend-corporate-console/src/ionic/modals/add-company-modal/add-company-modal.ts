@@ -113,7 +113,7 @@ export class AddCompanyModal {
     this.loading.submit = false;
     let alert = this.alertCtrl.create({
       title: 'Notification Sent!',
-      subTitle: `A Notification has been sent to the CLA Manager for ${this.companyName}`,
+      subTitle: `A Notification has been sent to the Company Administrators for ${this.companyName}`,
       buttons: [
         {
           text: 'Ok',

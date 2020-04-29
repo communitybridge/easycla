@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { IonicPage, ModalController, NavController, NavParams } from 'ionic-angular';
+import {AlertController, IonicPage, ModalController, NavController, NavParams} from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { ClaCompanyModel } from '../../models/cla-company';
 import { ClaUserModel } from '../../models/cla-user';
@@ -44,6 +44,7 @@ export class CompanyPage {
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
+    public alertCtrl: AlertController,
     private claService: ClaService,
     public modalCtrl: ModalController,
     private rolesService: RolesService // for @Restricted
@@ -127,10 +128,10 @@ export class CompanyPage {
   mapProjects(projectDetail, signatureACL) {
     if (projectDetail) {
       this.claService.getProjectWhitelistRequest(this.companyId, projectDetail.project_id, "pending").subscribe((res) => {
-        let pendingRequest = [];
+        let pendingContributorRequests = [];
         this.loading.projects = false;
         if (res.list.length > 0) {
-          pendingRequest = res.list.filter((r) => {
+          pendingContributorRequests = res.list.filter((r) => {
             return r.projectId === projectDetail.project_id
           })
         }
@@ -139,7 +140,7 @@ export class CompanyPage {
           ProjectName: projectDetail.project_name !== undefined ? projectDetail.project_name : '',
           ProjectManagers: signatureACL,
           Status: this.getStatus(this.companySignatures),
-          PendingRequests: pendingRequest.length,
+          PendingContributorRequests: pendingContributorRequests.length,
         });
         this.rows.sort((a, b) => {
           return a.ProjectName.toLowerCase().localeCompare(b.ProjectName.toLowerCase());
@@ -204,41 +205,64 @@ export class CompanyPage {
   }
 
   getInvites() {
-    this.claService.getPendingInvites(this.companyId).subscribe((response) => {
+    this.claService.getCompanyInvites(this.companyId, "pending").subscribe((response) => {
       this.invites = response;
-      if (this.invites != null && this.invites.length > 0) {
-        // this.invites = response.list.filter((r) => {
-        //   // Only show pending requests
-        //   return r.requestStatus === "pending"
-        // })
-
-        this.invites = response.filter((r) => {
-          // Only show pending requests
-          return r.status === 'Pending Approval';
-        })
-      }
       this.loading.invites = false;
     });
   }
 
   acceptCompanyInvite(invite) {
-    let data = {
-      inviteId: invite.inviteId,
-      userLFID: invite.userLFID
-    };
-    this.claService.acceptCompanyInvite(this.companyId, data).subscribe((response) => {
-      this.getInvites();
+    let alert = this.alertCtrl.create({
+      subTitle: `Accept Request - Confirmation`,
+      message: 'This will dismiss this pending request to join the company and send the company ' +
+        'employee an email confirming that they have access.<br/><br/>' +
+        'Are you sure?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+          }
+        },
+        {
+          text: 'Accept',
+          handler: () => {
+            this.claService.approveCompanyInvite(this.companyId, invite.inviteId).subscribe((response) => {
+              this.getInvites();
+            });
+          }
+        }
+      ]
     });
+    alert.present();
   }
 
   declineCompanyInvite(invite) {
-    let data = {
-      inviteId: invite.inviteId,
-      userLFID: invite.userLFID
-    };
-    this.claService.declineCompanyInvite(this.companyId, data).subscribe((response) => {
-      this.getInvites();
+    let alert = this.alertCtrl.create({
+      subTitle: `Reject Request - Confirmation`,
+      message: 'This will dismiss this pending request to join the company and send the company ' +
+        'employee an email indicating that their request was rejected.<br/><br/>' +
+        'Are you sure?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+          }
+        },
+        {
+          text: 'Accept',
+          handler: () => {
+            this.claService.rejectCompanyInvite(this.companyId, invite.inviteId).subscribe((response) => {
+              this.getInvites();
+            });
+          }
+        }
+      ]
     });
+    alert.present();
   }
 
   getStatus(signatures) {

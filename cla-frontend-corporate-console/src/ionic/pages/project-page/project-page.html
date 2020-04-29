@@ -3,7 +3,7 @@
     <button ion-button class="back-btn" (click)="back()">
       <ion-icon name="arrow-round-back"></ion-icon>
     </button>
-    <ion-title>{{ company.company_name | trimCharacters:25 }} Project Signatures</ion-title>
+    <ion-title>{{ company.company_name | trimCharacters:25 }} - {{this.projectName}} Signatures</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-toolbar>
   <get-help></get-help>
@@ -86,14 +86,14 @@
 
             <ion-card-content>
               <ion-card-title>
-                Pending Approval List Requests
+                Pending Contributor Requests
               </ion-card-title>
 
               <ion-row>
-                <ion-row justify-content-center *ngIf="noPendingRequests">
-                  <h2>No Pending Requests</h2>
+                <ion-row justify-content-center *ngIf="noPendingContributorRequests">
+                  <h2>No Pending Contributor Requests</h2>
                 </ion-row>
-                <table class="table" *ngIf="!noPendingRequests && loading.request">
+                <table class="table" *ngIf="!noPendingContributorRequests && loading.request">
                   <thead>
                     <tr>
                       <th class="clickable">
@@ -116,7 +116,7 @@
                   </thead>
                   <tbody>
 
-                    <tr *ngFor="let request of pendingRequests">
+                    <tr *ngFor="let request of pendingContributorRequests">
                       <td data-title="Github">
                         <span>{{ request.userGithubUsername}}</span>
                       </td>
@@ -153,6 +153,74 @@
       </ion-row>
     </ion-grid>
 
+    <ion-grid [loading-display]="loading.requests">
+      <ion-row justify-content-center>
+        <ion-col>
+          <ion-card>
+
+            <ion-card-content>
+              <ion-card-title>
+                CLA Manager Requests
+              </ion-card-title>
+
+              <ion-row>
+                <ion-row justify-content-center *ngIf="noPendingCLAManagerRequests">
+                  <h2>No CLA Manager Requests</h2>
+                </ion-row>
+                <table class="table" *ngIf="!noPendingCLAManagerRequests && loading.request">
+                  <thead>
+                  <tr>
+                    <th class="clickable">
+                      Name
+                    </th>
+
+                    <th class="clickable">
+                      Project Name
+                    </th>
+
+                    <th class="clickable">
+                      Email ID
+                    </th>
+
+                    <th class="clickable">
+                      Actions
+                    </th>
+                  </tr>
+                  </thead>
+                  <tbody>
+
+                  <tr *ngFor="let request of pendingCLAManagerRequests">
+                    <td data-title="Name">
+                      <span>{{ request.userName}}</span>
+                    </td>
+
+                    <td data-title="Name" class="wrap-word">
+                      <span>{{ request.projectName}}</span>
+                    </td>
+
+                    <td data-title="Email" class="wrap-word">
+                      <div *ngFor="let email of request.userEmails" class="email">{{email}}</div>
+                    </td>
+
+                    <td data-title="Actions">
+                      <button class="button" *ngIf="canEdit && request.requestStatus === 'pending'" clear ion-button
+                              color="secondary" (click)="accept(request.requestId)">
+                        Accept
+                      </button>
+                      <button *ngIf="canEdit && request.requestStatus === 'pending'" clear ion-button color="danger"
+                              (click)="decline(request.requestId)">
+                        Decline
+                      </button>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </ion-row>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
     <ion-grid [loading-display]="loading.signatures">
       <ion-row justify-content-center>
         <ion-col col-4>
