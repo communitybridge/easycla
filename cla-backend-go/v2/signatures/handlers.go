@@ -216,11 +216,12 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 	// Get Company Signatures
 	api.SignaturesGetCompanySignaturesHandler = signatures.GetCompanySignaturesHandlerFunc(func(params signatures.GetCompanySignaturesParams, authUser *auth.User) middleware.Responder {
 		companySignatures, err := service.GetCompanySignatures(v1Signatures.GetCompanySignaturesParams{
-			HTTPRequest: params.HTTPRequest,
-			CompanyID:   params.CompanyID,
-			CompanyName: params.CompanyName,
-			NextKey:     params.NextKey,
-			PageSize:    params.PageSize,
+			HTTPRequest:   params.HTTPRequest,
+			CompanyID:     params.CompanyID,
+			CompanyName:   params.CompanyName,
+			NextKey:       params.NextKey,
+			PageSize:      params.PageSize,
+			SignatureType: params.SignatureType,
 		})
 		if err != nil {
 			log.Warnf("error retrieving company signatures for companyID: %s, error: %+v", params.CompanyID, err)
