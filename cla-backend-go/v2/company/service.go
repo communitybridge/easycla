@@ -39,8 +39,8 @@ func NewService(sigRepo signatures.SignatureRepository, projectRepo ProjectRepo)
 	}
 }
 
-func (s *service) getAllCCLASignatures(companyID string) ([]v1Models.Signature, error) {
-	var sigs []v1Models.Signature
+func (s *service) getAllCCLASignatures(companyID string) ([]*v1Models.Signature, error) {
+	var sigs []*v1Models.Signature
 	var lastScannedKey *string
 	for {
 		signatures, err := s.signatureRepo.GetCompanySignatures(v1SignatureParams.GetCompanySignaturesParams{
