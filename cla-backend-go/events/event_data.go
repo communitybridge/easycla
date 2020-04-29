@@ -38,11 +38,21 @@ type UserDeletedEventData struct {
 type UserUpdatedEventData struct{}
 
 type CompanyACLRequestAddedEventData struct {
-	UserID string
+	UserName  string
+	UserID    string
+	UserEmail string
 }
 
-type CompanyACLRequestDeletedEventData struct {
-	UserLFID string
+type CompanyACLRequestApprovedEventData struct {
+	UserName  string
+	UserID    string
+	UserEmail string
+}
+
+type CompanyACLRequestDeniedEventData struct {
+	UserName  string
+	UserID    string
+	UserEmail string
 }
 
 type CompanyACLUserAddedEventData struct {
@@ -114,14 +124,21 @@ func (ed *UserDeletedEventData) GetEventString(args *LogEventArgs) (string, bool
 	return data, true
 }
 
-func (ed *CompanyACLRequestDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user [%s] deleted pending invite for user with lf username [%s] for company: [%s]",
-		args.userName, ed.UserLFID, args.companyName)
+func (ed *CompanyACLRequestAddedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] added pending invite with id [%s], email [%s] for company: [%s]",
+		ed.UserName, ed.UserID, ed.UserEmail, args.companyName)
 	return data, true
 }
-func (ed *CompanyACLRequestAddedEventData) GetEventString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user [%s] added pending invite for user with user_id [%s] for company: [%s]",
-		args.userName, ed.UserID, args.companyName)
+
+func (ed *CompanyACLRequestApprovedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] company invite was approved access with id [%s], email [%s] for company: [%s]",
+		ed.UserName, ed.UserID, ed.UserEmail, args.companyName)
+	return data, true
+}
+
+func (ed *CompanyACLRequestDeniedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] company invite was denied access with id [%s], email [%s] for company: [%s]",
+		ed.UserName, ed.UserID, ed.UserEmail, args.companyName)
 	return data, true
 }
 

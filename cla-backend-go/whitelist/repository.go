@@ -231,11 +231,10 @@ func (repo repository) ListCclaWhitelistRequest(companyID string, projectID, sta
 	var filter expression.ConditionBuilder
 	var filterAdded bool
 
-	log.Debugf("ListCclaWhitelistRequest - Checking status: %+v", status)
 	// Add the status filter if provided
 	if status != nil {
 		log.Debugf("ListCclaWhitelistRequest - Adding status: %s", *status)
-		statusFilterExpression := expression.Name("request_status").Equal(expression.Value(status))
+		statusFilterExpression := expression.Name("request_status").Equal(expression.Value(*status))
 		filter = addConditionToFilter(filter, statusFilterExpression, &filterAdded)
 	}
 
