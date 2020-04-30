@@ -482,7 +482,6 @@ jobs:
       - run:
           name: Install UI Dependencies
           command: |
-            echo "Node version is: $(node --version)"
             pushd $PROJECT_DIR
             echo "Running yarn install in folder: `pwd`. This will run yarn install in several places - see output below."
             yarn install-frontend
@@ -490,7 +489,6 @@ jobs:
       - run:
           name: Build UI Source
           command: |
-            echo "Node version is: $(node --version)"
             echo "Building src..."
             pushd $PROJECT_DIR/src
             echo "Current directory is: `pwd`"
@@ -502,7 +500,6 @@ jobs:
       - run:
           name: Build Edge Source
           command: |
-            echo "Node version is: $(node --version)"
             echo "Building edge..."
             pushd $PROJECT_DIR/edge
             echo "Current directory is: `pwd`"
@@ -513,15 +510,13 @@ jobs:
       - run:
           name: Deploy Cloudfront and LambdaEdge
           command: |
-            echo "Node version is: $(node --version)"
             pushd $PROJECT_DIR
-            echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true"
-            yarn sls deploy --stage="${STAGE}" --cloudfront=true
+            echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true""
+            yarn sls deploy --stage="${STAGE}" --cloudfront=true"
             popd
       - run:
           name: Deploy Frontend Bucket
           command: |
-            echo "Node version is: $(node --version)"
             pushd $PROJECT_DIR
             echo "Running: yarn sls client deploy --stage=\"${STAGE}\" --cloudfront=true --no-confirm --no-policy-change --no-config-change"
             yarn sls client deploy --stage="${STAGE}" --cloudfront=true --no-confirm --no-policy-change --no-config-change
@@ -529,7 +524,6 @@ jobs:
       - run:
           name: Invalidate Cache
           command: |
-            echo "Node version is: $(node --version)"
             pushd $PROJECT_DIR
             echo "Running: yarn sls cloudfrontInvalidate --stage=\"${STAGE}\" --region=\"${AWS_REGION}\" --cloudfront=\"true\""
             yarn sls cloudfrontInvalidate --stage="${STAGE}" --region="${AWS_REGION}" --cloudfront="true"
@@ -715,37 +709,17 @@ jobs:
       - run:
           name: Deploy
           command: |
-            echo "Node version is: $(node --version)"
             echo "Using AWS profile: ${AWS_PROFILE}"
             echo "Stage is: ${STAGE}"
             echo "PROJECT_DIR=${PROJECT_DIR}"
-
             # Run the deploy scripts
             pushd ${PROJECT_DIR}
             echo "Current directory is: `pwd`"
             echo "Running pre-fetch config: `yarn prebuild:${STAGE}`..."
             yarn prebuild:${STAGE}
+            echo "Running: 'yarn deploy -s ${STAGE} -r ${AWS_REGION} -c' in folder: `pwd`"
+            yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
 
-            #echo "Running: 'yarn deploy -s ${STAGE} -r ${AWS_REGION} -c' in folder: `pwd`"
-            #yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
-            echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true in folder: `pwd`"
-            yarn sls deploy --stage="${STAGE}" --cloudfront=true
-      - run:
-          name: Deploy Frontend Bucket
-          command: |
-            echo "Node version is: $(node --version)"
-            pushd ${PROJECT_DIR}
-            echo "Running: yarn sls client deploy --stage=\"${STAGE}\" --cloudfront=true --no-confirm --no-policy-change --no-config-change"
-            yarn sls client deploy --stage="${STAGE}" --cloudfront=true --no-confirm --no-policy-change --no-config-change
-            popd
-      - run:
-          name: Invalidate Cache
-          command: |
-            echo "Node version is: $(node --version)"
-            pushd ${PROJECT_DIR}
-            echo "Running: yarn sls cloudfrontInvalidate --stage=\"${STAGE}\" --region=\"${AWS_REGION}\" --cloudfront=\"true\""
-            yarn sls cloudfrontInvalidate --stage="${STAGE}" --region="${AWS_REGION}" --cloudfront="true"
-            popd
           no_output_timeout: 1.5h
 
   # Landing Page

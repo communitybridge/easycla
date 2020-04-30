@@ -35,7 +35,6 @@
     "serve": "^11.1.0",
     "serverless-cloudfront-invalidate": "^1.2.1",
     "serverless-finch": "^2.3.2",
-    "serverless-lambda-version": "^0.1.2",
     "serverless-plugin-tracing": "^2.0.0",
     "serverless-pseudo-parameters": "^2.5.0"
   }
