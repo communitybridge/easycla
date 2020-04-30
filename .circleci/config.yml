@@ -512,7 +512,7 @@ jobs:
           command: |
             pushd $PROJECT_DIR
             echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true"
-            yarn sls deploy --stage="${STAGE}" --cloudfront=true"
+            yarn sls deploy --stage="${STAGE}" --cloudfront=true
             popd
       - run:
           name: Deploy Frontend Bucket
@@ -722,7 +722,7 @@ jobs:
             #echo "Running: 'yarn deploy -s ${STAGE} -r ${AWS_REGION} -c' in folder: `pwd`"
             #yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
             echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true in folder: `pwd`"
-            yarn sls deploy --stage="${STAGE}" --cloudfront=true"
+            yarn sls deploy --stage="${STAGE}" --cloudfront=true
       - run:
           name: Deploy Frontend Bucket
           command: |
