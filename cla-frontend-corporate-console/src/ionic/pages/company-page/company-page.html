@@ -3,7 +3,7 @@
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <ion-title>Company</ion-title>
+    <ion-title>{{this.company.company_name}}</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-navbar>
   <get-help></get-help>
@@ -26,11 +26,11 @@
               <h1>Sign New CLA</h1>
             </ion-card-title>
             <ion-card-title>
-                <p>To begin the CLA signature process for a new project, where you will be the new CLA Manager for your
-                  company,
-                  click "Sign New CLA" below
-                </p>
-              </ion-card-title>
+              <p>To begin the CLA signature process for a new project, where you will be the new CLA Manager for your
+                company,
+                click "Sign New CLA" below
+              </p>
+            </ion-card-title>
             <ion-card-content>
               <ion-row justify-content-center>
                 <button ion-button (click)="openProjectsCclaSelectModal()" color="secondary">
@@ -57,7 +57,8 @@
               </ion-card-title>
               <ion-card-title>
                 <p>
-                  "Request Access" will send an email to the CLA Managers of that project requesting CLA Manager privileges
+                  "Request Access" will send an email to the CLA Managers of that project requesting CLA Manager
+                  privileges
                   for you.
                 </p>
               </ion-card-title>
@@ -86,7 +87,10 @@
                                 Approved List
                               </th>
                               <th class="clickable">
-                                Pending Requests
+                                Pending Contributor Requests
+                              </th>
+                              <th class="clickable">
+                                Pending CLA Manager Requests
                               </th>
                             </tr>
                           </thead>
@@ -109,23 +113,28 @@
 
                               <td data-title="CLA Manager">
                                 <button clear ion-button color="secondary" (click)="viewCLAManager(row)">
-                                  View Manager{{row.ProjectManagers != null && row.ProjectManagers.length > 0 ? 's' : ''}}
+                                  View
+                                  Manager{{row.ProjectManagers != null && row.ProjectManagers.length > 0 ? 's' : ''}}
                                 </button>
                               </td>
 
                               <td data-title="Whitelist">
-                                <button *ngIf="row.Status === 'CLA Manager'" clear ion-button color="secondary"
-                                  (click)="onSelect(row.ProjectID)">
+                                <button *ngIf="row.Status === 'CLA Manager'" clear ion-button
+                                  color="secondary" (click)="onSelect(row.ProjectID)">
                                   Manage Approved List
                                 </button>
-                                <button *ngIf="row.Status !== 'CLA Manager'" clear ion-button color="secondary"
-                                  (click)="onSelect(row.ProjectID)">
+                                <button *ngIf="row.Status !== 'CLA Manager'" clear ion-button
+                                  color="secondary" (click)="onSelect(row.ProjectID)">
                                   View Approved List
                                 </button>
                               </td>
 
-                              <td data-title="Project Name" class="text-center">
-                                <span>{{ row.PendingRequests}}</span>
+                              <td data-title="Contributor Pending Count" class="text-center">
+                                <span>{{ row.PendingContributorRequests}}</span>
+                              </td>
+
+                              <td data-title="CLA Manager Count" class="text-center">
+                                <span>{{ row.PendingCLAManagerRequests}}</span>
                               </td>
                             </tr>
                           </tbody>
@@ -156,7 +165,7 @@
         <ion-col col-12 col-md-8>
           <ion-card *ngIf="invites">
             <ion-card-title>
-              <h1>Pending CLA Manager Requests</h1>
+              <h1>Pending Requests to Join {{this.company.company_name}}</h1>
             </ion-card-title>
             <ion-card-content>
               <ion-list>
@@ -183,14 +192,14 @@
                         <td class="wrap-word" data-title="Name">
                           <span>{{ invite.userName }}</span>
                         </td>
-                        <td data-title="Email">
+                        <td class="wrap-word" data-title="Email">
                           <span>{{invite.userEmail}}</span>
                         </td>
                         <td data-title="LFID">
                           <span>{{invite.userLFID}}</span>
                         </td>
                         <td data-title="Actions">
-                          <button clear ion-button (click)="acceptCompanyInvite(invite)" color="secondary">
+                          <button clear ion-button class="mr-5" (click)="acceptCompanyInvite(invite)" color="secondary">
                             Accept
                           </button>
                           <button clear ion-button (click)="declineCompanyInvite(invite)" color="danger">

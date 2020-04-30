@@ -33,7 +33,7 @@ type IRepository interface {
 	GetCclaWhitelistRequest(requestID string) (*CLARequestModel, error)
 	ApproveCclaWhitelistRequest(requestID string) error
 	RejectCclaWhitelistRequest(requestID string) error
-	ListCclaWhitelistRequest(companyID string, projectID *string, userID *string) (*models.CclaWhitelistRequestList, error)
+	ListCclaWhitelistRequest(companyID string, projectID, status, userID *string) (*models.CclaWhitelistRequestList, error)
 }
 
 type repository struct {
@@ -104,7 +104,7 @@ func (repo repository) AddCclaWhitelistRequest(company *models.Company, project 
 	}
 
 	// Load the new record - should be able to find it quickly
-	record, readErr := repo.ListCclaWhitelistRequest(company.CompanyID, &project.ProjectID, &user.UserID)
+	record, readErr := repo.ListCclaWhitelistRequest(company.CompanyID, &project.ProjectID, nil, &user.UserID)
 	if readErr != nil || record == nil || record.List == nil {
 		log.Warnf("AddCclaWhitelistRequest - unable to read newly created invite record, error: %v", readErr)
 		return status, err
@@ -210,11 +210,13 @@ func (repo repository) RejectCclaWhitelistRequest(requestID string) error {
 }
 
 // ListCclaWhitelistRequest list the requests for the specified query parameters
-func (repo repository) ListCclaWhitelistRequest(companyID string, projectID *string, userID *string) (*models.CclaWhitelistRequestList, error) {
+func (repo repository) ListCclaWhitelistRequest(companyID string, projectID, status, userID *string) (*models.CclaWhitelistRequestList, error) {
 	if projectID == nil {
 		return nil, errors.New("project ID can not be nil for ListCclaWhitelistRequest")
 	}
 
+	log.Debugf("ListCclaWhitelistRequest with Company ID: %s, Project ID: %+v, Status: %+v, User ID: %+v",
+		companyID, projectID, status, userID)
 	tableName := fmt.Sprintf("cla-%s-ccla-whitelist-requests", repo.stage)
 
 	// hashkey is company_id, range key is project_id
@@ -228,6 +230,13 @@ func (repo repository) ListCclaWhitelistRequest(companyID string, projectID *str
 
 	var filter expression.ConditionBuilder
 	var filterAdded bool
+
+	// Add the status filter if provided
+	if status != nil {
+		log.Debugf("ListCclaWhitelistRequest - Adding status: %s", *status)
+		statusFilterExpression := expression.Name("request_status").Equal(expression.Value(*status))
+		filter = addConditionToFilter(filter, statusFilterExpression, &filterAdded)
+	}
 
 	// Add the user ID filter if provided
 	if userID != nil {

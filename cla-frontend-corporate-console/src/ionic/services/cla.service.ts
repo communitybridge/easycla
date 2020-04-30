@@ -519,17 +519,14 @@ export class ClaService {
    * POST /v3/company/{companyId}/invite-request
    **/
   sendInviteRequestEmail(companyId: string, userId: string, userEmail: string, userName: string): Observable<any> {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/invite-request`);
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/accesslist/request`);
     const data = {
       userID: userId,
       lfUsername: userId,
       lfEmail: userEmail,
       username: userName
     };
-    return this.http
-      .postWithCreds(url, data)
-      .map((res) => res.json())
-      .catch(this.handleServiceError);
+    return this.http.putWithCreds(url, data);
   }
 
   /**
@@ -552,9 +549,10 @@ export class ClaService {
    * ]
    *
    * @param companyId the company ID
+   * @param status the status value - one of: {pending, approved, rejected}
    **/
-  getPendingInvites(companyId) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/invitelist`);
+  getCompanyInvites(companyId: string, status: string) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/invitelist?status=${status}`);
     return this.http.getWithCreds(url).map((res) => res.json());
   }
 
@@ -590,14 +588,14 @@ export class ClaService {
     return this.http.getWithCreds(url).map((res) => res.json());
   }
 
-  acceptCompanyInvite(companyId, data) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/accesslist`);
-    return this.http.postWithCreds(url, data).map((res) => res.json());
+  approveCompanyInvite(companyId: string, requestId: string) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/accesslist/${requestId}/approve`);
+    return this.http.putWithCreds(url);
   }
 
-  declineCompanyInvite(companyId, data) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/accesslist`);
-    return this.http.deleteWithCredsAndBody(url, data).map((res) => res.json());
+  rejectCompanyInvite(companyId: string, requestId: string ) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/accesslist/${requestId}/reject`);
+    return this.http.putWithCreds(url);
   }
 
   /**
@@ -641,25 +639,6 @@ export class ClaService {
   }
 
   /**
-   * Sends an notification to the specified recipients.
-   *
-   * @param sender the sender of the message
-   * @param subject the subject of the message
-   * @param recipients the list of recipients
-   * @param messageBody the message body
-   */
-  sendNotification(sender: string, subject: string, recipients: string[], messageBody: string) {
-    const url: URL = this.getV3Endpoint(`/v3/onboard/notification`);
-    const payload = {
-      "sender_email": sender,
-      "subject": subject,
-      "recipient_emails": recipients,
-      "email_body": messageBody,
-    };
-    return this.http.post(url, payload)
-  }
-
-  /**
    * Handle service error is a common routine to handle HTTP response errors
    * @param error the error
    */
@@ -688,21 +667,13 @@ export class ClaService {
     return this.http.get(url).map((res) => res.json());
   }
 
-  addCCLAWhitelistRequest(companyId: string, projectId: string) {
-  }
+  getProjectWhitelistRequest(companyId: string, projectId: string, status: string) {
+    let statusFilter = '';
+    if (status != null && status.length > 0) {
+      statusFilter = `?status=${status}`;
+    }
 
-  deleteCCLAWhitelistRequest(companyID: string, projectID: string, requestID: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/{companyID}/ccla-whitelist-requests/{projectID}/{requestID}`);
-    return this.http.delete(url).map((res) => res.json())
-  }
-
-  listCCLAWhitelistRequest(companyId: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests`);
-    return this.http.get(url).map((res) => res.json())
-  }
-
-  getProjectWhitelistRequest(companyId: string, projectId: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests/${projectId}`);
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/ccla-whitelist-requests/${projectId}${statusFilter}`);
     return this.http.get(url).map((res) => res.json())
   }
 

@@ -252,120 +252,6 @@ paths:
       tags:
         - users
 
-  /onboard/cla-manager/lfid/{lf_id}:
-    get:
-      summary: Get CLA Manager Request by LFID
-      description: Get CLA Manager Request by LFID
-      security:
-        - OauthSecurity: []
-      operationId: getCLAManagerRequestsByLFID
-      parameters:
-        - name: lf_id
-          description: the user lfid
-          in: path
-          type: string
-          required: true
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/onboard-cla-manager-requests'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-        '404':
-          $ref: '#/responses/not-found'
-      tags:
-        - onboard
-
-  /onboard/cla-manager/requests/{request_id}:
-    delete:
-      summary: Deletes a CLA Manager Request by request id
-      description: Deletes CLA Manager Request by request id
-      security:
-        - OauthSecurity: []
-      operationId: deleteCLAManagerRequestsByRequestID
-      parameters:
-        - name: request_id
-          description: the request id
-          in: path
-          type: string
-          required: true
-      responses:
-        '204':
-          $ref: '#/responses/resource-deleted'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-        '404':
-          $ref: '#/responses/not-found'
-      tags:
-        - onboard
-
-  /onboard/cla-manager:
-    post:
-      summary: CLA Manager Request
-      description: CLA Manager Request
-      security:
-        - OauthSecurity: []
-      operationId: createCLAManagerRequest
-      parameters:
-        - name: body
-          in: body
-          schema:
-            $ref: '#/definitions/onboard-cla-manager-request'
-          required: true
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/onboard-cla-manager-request'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-        '409':
-          $ref: '#/responses/conflict'
-      tags:
-        - onboard
-
-  /onboard/notification:
-    post:
-      summary: Onboard Send Notification/Message
-      description: Onboard Send Notification/Message
-      operationId: sendNotification
-      security:
-        - OauthSecurity: []
-      parameters:
-        - name: body
-          in: body
-          schema:
-            $ref: '#/definitions/onboard-notification-request'
-          required: true
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/onboard-notification-response'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-        '409':
-          $ref: '#/responses/conflict'
-      tags:
-        - onboard
-
   /signatures/id/{signatureID}:
     get:
       summary: Get the signature by ID
@@ -475,6 +361,7 @@ paths:
           in: path
           type: string
           required: true
+        - $ref: '#/parameters/signatureType'
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/companyName'
@@ -981,6 +868,10 @@ paths:
           in: path
           type: string
           required: true
+        - name: status
+          in: query
+          type: string
+          required: false
       responses:
         '200':
           description: 'Success'
@@ -1032,40 +923,21 @@ paths:
         - company
 
   /company/{companyID}/cla/accesslist:
-    parameters:
-      - name: companyID
-        in: path
-        type: string
-        required: true
-      - name: user
-        in: body
-        schema:
-          $ref: '#/definitions/access-list-user'
     post:
-      summary: Add user to CLA accesslist
+      summary: Add user to the company access list
       security:
         - OauthSecurity:
             - company
       operationId: addUsertoCompanyAccessList
-      responses:
-        '200':
-          description: 'Success'
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: user
+          in: body
           schema:
-            type: object
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-      tags:
-        - company
-    delete:
-      summary: Delete user from pending invites
-      security:
-        - OauthSecurity:
-            - company
-      operationId: deletePendingInvite
+            $ref: '#/definitions/access-list-user'
       responses:
         '200':
           description: 'Success'
@@ -1080,28 +952,81 @@ paths:
       tags:
         - company
 
-  /company/{companyID}/invite-request:
-    post:
-      summary: Send Email to Company Admins for Request of Access to be a CLA Manager
+  /company/{companyID}/cla/accesslist/request:
+    put:
+      summary: Request access to the Company
       security:
         - OauthSecurity:
             - company
-      operationId: sendInviteRequest
+      operationId: requestCompanyAccessRequest
       parameters:
         - name: companyID
           in: path
           type: string
           required: true
-        - in: body
-          name: body
+        - name: user
+          in: body
           schema:
-            $ref: '#/definitions/user'
+            $ref: '#/definitions/access-list-user'
+      responses:
+        '200':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - company
+
+  /company/{companyID}/cla/accesslist/{requestID}/approve:
+    put:
+      summary: Approve the Company Access List Request
+      security:
+        - OauthSecurity:
+            - company
+      operationId: approveCompanyAccessRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: requestID
+          in: path
+          type: string
           required: true
       responses:
         '200':
           description: 'Success'
-          schema:
-            type: object
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+      tags:
+        - company
+
+  /company/{companyID}/cla/accesslist/{requestID}/reject:
+    put:
+      summary: Rejects the Company Access List Request
+      security:
+        - OauthSecurity:
+            - company
+      operationId: rejectCompanyAccessRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: requestID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1128,6 +1053,10 @@ paths:
           in: path
           type: string
           required: true
+        - name: status
+          in: query
+          type: string
+          required: false
       responses:
         '200':
           description: 'Success'
@@ -1195,6 +1124,10 @@ paths:
           in: path
           type: string
           required: true
+        - name: status
+          in: query
+          type: string
+          required: false
       responses:
         '200':
           description: 'Success'
@@ -1294,6 +1227,10 @@ paths:
         - name: projectID
           in: query
           type: string
+        - name: status
+          in: query
+          type: string
+          required: false
       responses:
         '200':
           description: 'Success'
@@ -2329,7 +2266,6 @@ definitions:
 
   signature:
     type: object
-    x-nullable: false
     title: A signature model
     description: A signature - may be an ICLA or CCLA signature
     properties:
@@ -2830,6 +2766,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/github-repository'
+
 
 responses:
   resource-deleted:

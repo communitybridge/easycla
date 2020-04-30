@@ -38,7 +38,7 @@ class CLAStep extends Component {
                   <li className="cla-list">Start contributing faster with a streamlined authorization workflow for Corporate CLAs</li>
                 </ul>
                 <div className="center-item">
-                  <Link href="https://www.linuxfoundation.org/uncategorized/2019/07/easycla-beta/">
+                  <Link href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla">
                     <a>
                       <Button variant="primary">LEARN MORE</Button>
                     </a>

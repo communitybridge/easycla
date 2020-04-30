@@ -591,12 +591,16 @@ func cacheProjectMembership(externalProjectID, apiGatewayURL string) {
 	url := apiGatewayURL + "/project-service/v1/projects/" + externalProjectID + "/members"
 
 	// Grab our token
-	authToken := token.GetToken()
+	authToken, err := token.GetToken()
+	if err != nil {
+		log.Error("unable to get token", err)
+		return
+	}
 
 	// Use Req object to initiate requests.
 	r := req.New()
 	authHeader := req.Header{
-		"Authorization": authToken,
+		"Authorization": "Bearer " + authToken,
 		"Accept":        "application/json",
 	}
 	resp, err := r.Get(url, authHeader)

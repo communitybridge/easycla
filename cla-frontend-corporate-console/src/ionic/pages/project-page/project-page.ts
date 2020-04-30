@@ -22,20 +22,28 @@ import {Restricted} from '../../decorators/restricted';
   templateUrl: 'project-page.html'
 })
 export class ProjectPage {
-  noPendingRequests: boolean;
   cclaSignature: any;
   employeeSignatures: any[];
   loading: any;
   companyId: string;
   projectId: string;
+  projectName: string;
   managers: ClaManager[];
   company: ClaCompanyModel;
   manager: ClaUserModel;
   showModal: any;
   allRequests: any[];
-  approvedRequests: any[];
-  pendingRequests: any[];
-  rejectedRequests: any[];
+
+  noPendingContributorRequests: boolean;
+  approvedContributorRequests: any[];
+  pendingContributorRequests: any[];
+  rejectedContributorRequests: any[];
+
+  noPendingCLAManagerRequests: boolean;
+  approvedCLAManagerRequests: any[];
+  pendingCLAManagerRequests: any[];
+  rejectedCLAManagerRequests: any[];
+
   project: any;
   userEmail: any;
   sort: any;
@@ -77,7 +85,8 @@ export class ProjectPage {
   ngOnInit() {
     this.getProject();
     this.getCompany();
-    this.listPendingRequests();
+    this.listPendingContributorRequests();
+    this.listPendingCLAManagerRequests();
   }
 
   getProject() {
@@ -85,6 +94,7 @@ export class ProjectPage {
     this.claService.getProject(this.projectId).subscribe((response) => {
       this.loading.projects = false;
       this.project = response;
+      this.projectName = this.project.project_name;
       this.getProjectSignatures();
     });
   }
@@ -309,19 +319,35 @@ export class ProjectPage {
     modal.present();
   }
 
-  listPendingRequests() {
-    this.claService.getProjectWhitelistRequest(this.companyId, this.projectId).subscribe((request) => {
+  listPendingContributorRequests() {
+    this.claService.getProjectWhitelistRequest(this.companyId, this.projectId, null).subscribe((request) => {
       if (request.list.length == 0) {
-        this.noPendingRequests = true;
+        this.noPendingContributorRequests = true;
       } else {
         this.allRequests = request.list;
-        this.pendingRequests = request.list.filter((req) => req.requestStatus === 'pending');
-        this.approvedRequests = request.list.filter((req) => req.requestStatus === 'approved');
-        this.rejectedRequests = request.list.filter((req) => req.requestStatus === 'rejected');
-        this.noPendingRequests = false;
+        this.pendingContributorRequests = request.list.filter((req) => req.requestStatus === 'pending');
+        this.approvedContributorRequests = request.list.filter((req) => req.requestStatus === 'approved');
+        this.rejectedContributorRequests = request.list.filter((req) => req.requestStatus === 'rejected');
+        this.noPendingContributorRequests = false;
       }
       this.loading.request = true;
     })
+
+  }
+  listPendingCLAManagerRequests() {
+    this.claService.getProjectWhitelistRequest(this.companyId, this.projectId, null).subscribe((request) => {
+      if (request.list.length == 0) {
+        this.noPendingCLAManagerRequests = true;
+      } else {
+        this.allRequests = request.list;
+        this.pendingCLAManagerRequests = request.list.filter((req) => req.requestStatus === 'pending');
+        this.approvedCLAManagerRequests = request.list.filter((req) => req.requestStatus === 'approved');
+        this.rejectedCLAManagerRequests = request.list.filter((req) => req.requestStatus === 'rejected');
+        this.noPendingCLAManagerRequests = false;
+      }
+      this.loading.request = true;
+    })
+
   }
 
   accept(requestID) {
@@ -345,7 +371,7 @@ export class ProjectPage {
             this.claService.approveCclaWhitelistRequest(this.companyId, this.projectId, requestID)
               .subscribe(
                 (res) => {
-                  this.listPendingRequests();
+                  this.listPendingContributorRequests();
                 },
                 (error) => console.log(error));
           }
@@ -375,7 +401,7 @@ export class ProjectPage {
             this.claService.rejectCclaWhitelistRequest(this.companyId, this.projectId, requestID)
               .subscribe(
                 (res) => {
-                  this.listPendingRequests();
+                  this.listPendingContributorRequests();
                 },
                 (error) => console.log(error));
           }
