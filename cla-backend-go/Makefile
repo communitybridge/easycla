@@ -64,16 +64,18 @@ swagger-build: clean-swagger
 		-A easycla \
 		-P auth.User
 	@echo "Generating swagger client for user-service"
-	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/user-service/swagger.json --output user_service.yaml
-	sed -i 's/X-ACL/Empty-Header/g' user_service.yaml
+	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/user-service/swagger.json --output swagger/user_service.yaml
+	sed -i.bak 's/X-ACL/Empty-Header/g' swagger/user_service.yaml
 	swagger -q generate client \
 		-t v2/user-service \
-		-f user_service.yaml
+		-f swagger/user_service.yaml
 swagger-validate:
-	@echo "Validating v1 legacy API models..."
+	@echo "Validating v1 legacy API specification..."
 	swagger validate swagger/cla.yaml
-	@echo "Validating v2 API models..."
+	@echo "Validating v2 API specification..."
 	swagger validate swagger/cla.v2.yaml
+	@echo "Validating User Service API specification..."
+	swagger validate swagger/user_service.yaml
 
 fmt:
 	@gofmt -w -l -s $(GO_FILES)

@@ -25,6 +25,7 @@ const parameters = [
   `cla-gh-app-id-${program.stage}`,
   `cla-gh-oauth-client-id-${program.stage}`,
   `cla-gh-oauth-secret-${program.stage}`,
+  `cla-gh-access-token-${program.stage}`,
   `cla-auth0-domain-${program.stage}`,
   `cla-auth0-clientId-${program.stage}`,
   `cla-auth0-username-claim-${program.stage}`,
