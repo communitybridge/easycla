@@ -712,14 +712,31 @@ jobs:
             echo "Using AWS profile: ${AWS_PROFILE}"
             echo "Stage is: ${STAGE}"
             echo "PROJECT_DIR=${PROJECT_DIR}"
+
             # Run the deploy scripts
             pushd ${PROJECT_DIR}
             echo "Current directory is: `pwd`"
             echo "Running pre-fetch config: `yarn prebuild:${STAGE}`..."
             yarn prebuild:${STAGE}
-            echo "Running: 'yarn deploy -s ${STAGE} -r ${AWS_REGION} -c' in folder: `pwd`"
-            yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
 
+            #echo "Running: 'yarn deploy -s ${STAGE} -r ${AWS_REGION} -c' in folder: `pwd`"
+            #yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
+            echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true in folder: `pwd`"
+            yarn sls deploy --stage="${STAGE}" --cloudfront=true"
+      - run:
+          name: Deploy Frontend Bucket
+          command: |
+            pushd ${PROJECT_DIR}
+            echo "Running: yarn sls client deploy --stage=\"${STAGE}\" --cloudfront=true --no-confirm --no-policy-change --no-config-change"
+            yarn sls client deploy --stage="${STAGE}" --cloudfront=true --no-confirm --no-policy-change --no-config-change
+            popd
+      - run:
+          name: Invalidate Cache
+          command: |
+            pushd ${PROJECT_DIR}
+            echo "Running: yarn sls cloudfrontInvalidate --stage=\"${STAGE}\" --region=\"${AWS_REGION}\" --cloudfront=\"true\""
+            yarn sls cloudfrontInvalidate --stage="${STAGE}" --region="${AWS_REGION}" --cloudfront="true"
+            popd
           no_output_timeout: 1.5h
 
   # Landing Page
