@@ -13,6 +13,7 @@ import (
 
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
 	v2GithubOrganizations "github.com/communitybridge/easycla/cla-backend-go/v2/github_organizations"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
 
 	"github.com/communitybridge/easycla/cla-backend-go/token"
 
@@ -23,7 +24,6 @@ import (
 
 	lfxAuth "github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/docs"
-	"github.com/communitybridge/easycla/cla-backend-go/metrics"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	v2Docs "github.com/communitybridge/easycla/cla-backend-go/v2/docs"
@@ -211,7 +211,7 @@ func server(localMode bool) http.Handler {
 	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo)
 	onboardService := onboard.NewService(onboardRepo)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
-	metricsService := metrics.NewService(metricsRepo)
+	v2MetricsService := metrics.NewService(metricsRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
 	repositoriesService := repositories.NewService(repositoriesRepo)
 	gerritService := gerrits.NewService(gerritRepo, &gerrits.LFGroup{
@@ -253,7 +253,7 @@ func server(localMode bool) http.Handler {
 	v2Version.Configure(v2API, Version, Commit, Branch, BuildDate)
 	events.Configure(api, eventsService)
 	v2Events.Configure(v2API, eventsService)
-	v2Metrics.Configure(v2API, metricsService)
+	v2Metrics.Configure(v2API, v2MetricsService)
 	github_organizations.Configure(api, githubOrganizationsService, eventsService)
 	v2GithubOrganizations.Configure(v2API, githubOrganizationsService, eventsService)
 	repositories.Configure(api, repositoriesService, eventsService)

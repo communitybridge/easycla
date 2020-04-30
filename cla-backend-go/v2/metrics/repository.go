@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/token"
 	"github.com/imroc/req"
 
