@@ -511,7 +511,7 @@ jobs:
           name: Deploy Cloudfront and LambdaEdge
           command: |
             pushd $PROJECT_DIR
-            echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true""
+            echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true"
             yarn sls deploy --stage="${STAGE}" --cloudfront=true"
             popd
       - run:
