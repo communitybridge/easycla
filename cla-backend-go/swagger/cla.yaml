@@ -1247,6 +1247,185 @@ paths:
       tags:
         - company
 
+  /company/{companyID}/project/{projectID}/cla-manager/requests:
+    get:
+      summary: Returns the CLA Manager requests list for the specified Company and Project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: getCLAManagerRequests
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: status
+          in: query
+          type: string
+          required: false
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-request-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - cla-manager-requests
+    post:
+      summary: Creates a new CLA Manager request for the specified Company and Project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: createCLAManagerRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/cla-manager-user'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-request'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - cla-manager-requests
+
+  /company/{companyID}/project/{projectID}/cla-manager/request/{requestID}:
+    get:
+      summary: Returns the CLA Manager request for the specified Company, Project and Request ID
+      security:
+        - OauthSecurity:
+            - user
+      operationId: getCLAManagerRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: requestID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-request'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - cla-manager-requests
+
+  /company/{companyID}/project/{projectID}/cla-manager/request/{requestID}/approve:
+    put:
+      summary: Approves the CLA Manager request for the specified Company and Project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: approveCLAManagerRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: requestID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-request'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - cla-manager-requests
+
+  /company/{companyID}/project/{projectID}/cla-manager/request/{requestID}/reject:
+    put:
+      summary: Denies/Rejects the CLA Manager request for the specified Company and Project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: rejectCLAManagerRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: requestID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-request'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - cla-manager-requests
+
   /template:
     get:
       summary: Get Available Templates
@@ -1965,6 +2144,44 @@ definitions:
     description: User used for request in company access list
     properties:
       inviteId:
+        type: string
+      userLFID:
+        type: string
+
+  cla-manager-request-list:
+    type: object
+    x-nullable: false
+    title: CLA Manager Request List
+    description: A list of CLA Manager requests for the specified company and project
+    properties:
+      requests:
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/cla-manager-request'
+
+  cla-manager-request:
+    type: object
+    x-nullable: false
+    title: CLA Manager Request
+    description: A CLA Manager request for the specified company and project
+    properties:
+      requestID:
+        type: string
+      userEmail:
+        type: string
+      status:
+        type: string
+
+  cla-manager-user:
+    type: object
+    x-nullable: false
+    title: CLA Manager User
+    description: User object used for CLA Manager requests
+    properties:
+      userName:
+        type: string
+      userEmail:
         type: string
       userLFID:
         type: string

@@ -1175,7 +1175,12 @@ def lookup_user_github_username(user_github_id: int) -> Optional[str]:
     :return: the user's github login/username
     """
     try:
-        r = requests.get(f'https://api.github.com/user/{user_github_id}')
+        headers = {
+            'Authorization': 'Bearer {}'.format(cla.conf['GITHUB_OAUTH_TOKEN']),
+            'Accept': 'application/json',
+        }
+
+        r = requests.get(f'https://api.github.com/user/{user_github_id}', headers=headers)
         r.raise_for_status()
     except requests.exceptions.HTTPError as err:
         msg = f'Could not get user github user from id: {user_github_id}: error: {err}'
@@ -1203,7 +1208,12 @@ def lookup_user_github_id(user_github_username: str) -> Optional[int]:
     :return: the user's github id
     """
     try:
-        r = requests.get(f'https://api.github.com/users/{user_github_username}')
+        headers = {
+            'Authorization': 'Bearer {}'.format(cla.conf['GITHUB_OAUTH_TOKEN']),
+            'Accept': 'application/json',
+        }
+
+        r = requests.get(f'https://api.github.com/users/{user_github_username}', headers=headers)
         r.raise_for_status()
     except requests.exceptions.HTTPError as err:
         msg = f'Could not get user github id from username: {user_github_username}: error: {err}'
@@ -1227,7 +1237,12 @@ def lookup_user_github_id(user_github_username: str) -> Optional[int]:
 def lookup_github_organizations(github_username: str):
     # Use the Github API to retrieve github orgs that the user is a member of (user must be a public member).
     try:
-        r = requests.get(f'https://api.github.com/users/{github_username}/orgs')
+        headers = {
+            'Authorization': 'Bearer {}'.format(cla.conf['GITHUB_OAUTH_TOKEN']),
+            'Accept': 'application/json',
+        }
+
+        r = requests.get(f'https://api.github.com/users/{github_username}/orgs', headers=headers)
         r.raise_for_status()
     except requests.exceptions.HTTPError as err:
         cla.log.warning('Could not get user github org: {}'.format(err))
