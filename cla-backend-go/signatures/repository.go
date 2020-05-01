@@ -658,7 +658,6 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 
 // Get project signatures with no pagination
 func (repo repository) ProjectSignatures(projectID string) (*models.Signatures, error) {
-	queryStartTime := time.Now()
 
 	// The table we're interested in
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
@@ -711,11 +710,8 @@ func (repo repository) ProjectSignatures(projectID string) (*models.Signatures, 
 		return nil, errQuery
 	}
 
-	log.Debugf("Signature project query took: %v resulting in %d results",
-		utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
-
 	// Convert the list of DB models to a list of response models
-	signatures, modelErr := repo.buildProjectSignatureModels(results, projectID)
+	sigs, modelErr := repo.buildProjectSignatureModels(results, projectID)
 	if modelErr != nil {
 		log.Warnf("error converting DB model to response model for signatures with project %s, error: %v",
 			projectID, modelErr)
@@ -724,7 +720,7 @@ func (repo repository) ProjectSignatures(projectID string) (*models.Signatures, 
 
 	return &models.Signatures{
 		ProjectID:  projectID,
-		Signatures: signatures,
+		Signatures: sigs,
 	}, nil
 }
 
