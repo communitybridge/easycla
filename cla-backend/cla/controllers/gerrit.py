@@ -5,13 +5,14 @@
 Controller related to repository operations.
 """
 
-import uuid
-import cla.hug_types
 import os
-import cla 
-from cla.models.dynamo_models import Gerrit
-from cla.models import DoesNotExist
+import uuid
+
+import cla
+import cla.hug_types
 from cla.controllers.lf_group import LFGroup
+from cla.models import DoesNotExist
+from cla.models.dynamo_models import Gerrit
 
 lf_group_client_url = os.environ.get('LF_GROUP_CLIENT_URL', '')
 lf_group_client_id = os.environ.get('LF_GROUP_CLIENT_ID', '')
@@ -49,11 +50,11 @@ def get_gerrit(gerrit_id):
     return gerrit.to_dict()
 
 
-def create_gerrit(project_id, 
-                    gerrit_name, 
-                    gerrit_url, 
-                    group_id_icla,
-                    group_id_ccla):
+def create_gerrit(project_id,
+                  gerrit_name,
+                  gerrit_url,
+                  group_id_icla,
+                  group_id_ccla):
     """
     Creates a gerrit instance and returns the newly created gerrit object dict format.
 
@@ -134,9 +135,10 @@ def get_agreement_html(project_id, contract_type):
     contributor_base_url = cla.conf['CONTRIBUTOR_BASE_URL']
     return """
         <html>
-            <a href="https://{contributor_base_url}/#/cla/gerrit/project/{project_id}/{contract_type}">Thank you. Unfortunately, your account is not authorized under a signed CLA. Please click here to proceed. </a>
+            <a href="https://{contributor_base_url}/#/cla/gerrit/project/{project_id}/{contract_type}">Thank you.
+            Unfortunately, your account is not authorized under a signed CLA. Please click here to proceed.</a>
         <html>""".format(
-            contributor_base_url = contributor_base_url,
-            project_id = project_id,
-            contract_type = contract_type
-        )
+        contributor_base_url=contributor_base_url,
+        project_id=project_id,
+        contract_type=contract_type
+    )
