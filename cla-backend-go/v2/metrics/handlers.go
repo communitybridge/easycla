@@ -5,19 +5,18 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/metrics"
-	v1Metrics "github.com/communitybridge/easycla/cla-backend-go/metrics"
 	"github.com/go-openapi/runtime/middleware"
 )
 
 // Configure setups handlers on api with service
-func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
+func Configure(api *operations.EasyclaAPI, service Service) {
 	api.MetricsGetClaManagerDistributionHandler = metrics.GetClaManagerDistributionHandlerFunc(
 		func(params metrics.GetClaManagerDistributionParams, user *auth.User) middleware.Responder {
 			result, err := service.GetCLAManagerDistribution()
 			if err != nil {
 				return metrics.NewGetClaManagerDistributionBadRequest().WithPayload(errorResponse(err))
 			}
-			return metrics.NewGetClaManagerDistributionOK().WithPayload(*result)
+			return metrics.NewGetClaManagerDistributionOK().WithPayload(result)
 		})
 
 	api.MetricsGetTotalCountHandler = metrics.GetTotalCountHandlerFunc(
@@ -26,7 +25,7 @@ func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 			if err != nil {
 				return metrics.NewGetTotalCountBadRequest().WithPayload(errorResponse(err))
 			}
-			return metrics.NewGetTotalCountOK().WithPayload(*result)
+			return metrics.NewGetTotalCountOK().WithPayload(result)
 		})
 
 	api.MetricsGetCompanyMetricHandler = metrics.GetCompanyMetricHandlerFunc(
@@ -35,7 +34,7 @@ func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 			if err != nil {
 				return metrics.NewGetCompanyMetricBadRequest().WithPayload(errorResponse(err))
 			}
-			return metrics.NewGetCompanyMetricOK().WithPayload(*result)
+			return metrics.NewGetCompanyMetricOK().WithPayload(result)
 		})
 
 	api.MetricsGetProjectMetricHandler = metrics.GetProjectMetricHandlerFunc(
@@ -47,7 +46,7 @@ func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 				}
 				return metrics.NewGetProjectMetricBadRequest().WithPayload(errorResponse(err))
 			}
-			return metrics.NewGetProjectMetricOK().WithPayload(*result)
+			return metrics.NewGetProjectMetricOK().WithPayload(result)
 		})
 
 	api.MetricsGetTopCompaniesHandler = metrics.GetTopCompaniesHandlerFunc(
@@ -56,7 +55,7 @@ func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 			if err != nil {
 				return metrics.NewGetTopCompaniesBadRequest().WithPayload(errorResponse(err))
 			}
-			return metrics.NewGetTopCompaniesOK().WithPayload(*result)
+			return metrics.NewGetTopCompaniesOK().WithPayload(result)
 		})
 
 	api.MetricsGetTopProjectsHandler = metrics.GetTopProjectsHandlerFunc(
@@ -65,7 +64,7 @@ func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 			if err != nil {
 				return metrics.NewGetTopProjectsBadRequest().WithPayload(errorResponse(err))
 			}
-			return metrics.NewGetTopProjectsOK().WithPayload(*result)
+			return metrics.NewGetTopProjectsOK().WithPayload(result)
 		})
 
 	api.MetricsListProjectMetricsHandler = metrics.ListProjectMetricsHandlerFunc(
@@ -74,7 +73,7 @@ func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 			if err != nil {
 				return metrics.NewListProjectMetricsBadRequest().WithPayload(errorResponse(err))
 			}
-			return metrics.NewListProjectMetricsOK().WithPayload(*result)
+			return metrics.NewListProjectMetricsOK().WithPayload(result)
 		})
 	api.MetricsListCompanyProjectMetricsHandler = metrics.ListCompanyProjectMetricsHandlerFunc(
 		func(params metrics.ListCompanyProjectMetricsParams, user *auth.User) middleware.Responder {
@@ -82,7 +81,7 @@ func Configure(api *operations.EasyclaAPI, service v1Metrics.Service) {
 			if err != nil {
 				return metrics.NewListCompanyProjectMetricsBadRequest().WithPayload(errorResponse(err))
 			}
-			return metrics.NewListCompanyProjectMetricsOK().WithPayload(*result)
+			return metrics.NewListCompanyProjectMetricsOK().WithPayload(result)
 		})
 }
 
