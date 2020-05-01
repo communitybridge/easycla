@@ -79,6 +79,10 @@ export class ClaGerritCorporatePage {
     // retrieve userInfo from auth0 service
     this.claService.postOrGetUserForGerrit().subscribe((user) => {
       this.userId = user.user_id;
+    }, (error) => {
+      // Got an auth error, redirect to the login
+      console.log('Got an auth error, redirect to the login...');
+      setTimeout(() => this.navCtrl.setRoot('LoginPage'));
     });
   }
 
