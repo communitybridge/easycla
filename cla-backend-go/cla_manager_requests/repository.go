@@ -52,51 +52,65 @@ func (repo repository) CreateRequest(reqModel *CLAManagerRequest) (*CLAManagerRe
 
 	_, now := utils.CurrentTime()
 
-	input := &dynamodb.PutItemInput{
-		Item: map[string]*dynamodb.AttributeValue{
-			"request_id": {
-				S: aws.String(requestID.String()),
-			},
-			"company_id": {
-				S: aws.String(reqModel.CompanyID),
-			},
-			"company_external_id": {
-				S: aws.String(reqModel.CompanyExternalID),
-			},
-			"company_name": {
-				S: aws.String(reqModel.CompanyName),
-			},
-			"project_id": {
-				S: aws.String(reqModel.ProjectID),
-			},
-			"project_external_id": {
-				S: aws.String(reqModel.ProjectExternalID),
-			},
-			"project_name": {
-				S: aws.String(reqModel.ProjectName),
-			},
-			"user_id": {
-				S: aws.String(reqModel.UserID),
-			},
-			"user_external_id": {
-				S: aws.String(reqModel.UserExternalID),
-			},
-			"user_name": {
-				S: aws.String(reqModel.UserName),
-			},
-			"user_email": {
-				S: aws.String(reqModel.UserEmail),
-			},
-			"status": {
-				S: aws.String("pending"),
-			},
-			"date_created": {
-				S: aws.String(now),
-			},
-			"date_modified": {
-				S: aws.String(now),
-			},
+	log.Debugf("request model: %+v", reqModel)
+
+	itemMap := map[string]*dynamodb.AttributeValue{
+		"request_id": {
+			S: aws.String(requestID.String()),
 		},
+		"company_id": {
+			S: aws.String(reqModel.CompanyID),
+		},
+		"company_name": {
+			S: aws.String(reqModel.CompanyName),
+		},
+		"project_id": {
+			S: aws.String(reqModel.ProjectID),
+		},
+		"project_name": {
+			S: aws.String(reqModel.ProjectName),
+		},
+		"user_id": {
+			S: aws.String(reqModel.UserID),
+		},
+		"user_name": {
+			S: aws.String(reqModel.UserName),
+		},
+		"user_email": {
+			S: aws.String(reqModel.UserEmail),
+		},
+		"status": {
+			S: aws.String("pending"),
+		},
+		"date_created": {
+			S: aws.String(now),
+		},
+		"date_modified": {
+			S: aws.String(now),
+		},
+	}
+
+	// If provided the project external ID - add it
+	if reqModel.ProjectExternalID != "" {
+		itemMap["project_external_id"] = &dynamodb.AttributeValue{
+			S: aws.String(reqModel.ProjectExternalID),
+		}
+	}
+	// If provided the company project external - add it
+	if reqModel.CompanyExternalID != "" {
+		itemMap["company_external_id"] = &dynamodb.AttributeValue{
+			S: aws.String(reqModel.CompanyExternalID),
+		}
+	}
+	// If provided the user external ID - add it
+	if reqModel.UserExternalID != "" {
+		itemMap["user_external_id"] = &dynamodb.AttributeValue{
+			S: aws.String(reqModel.UserExternalID),
+		}
+	}
+
+	input := &dynamodb.PutItemInput{
+		Item:      itemMap,
 		TableName: aws.String(tableName),
 	}
 
@@ -187,8 +201,9 @@ func (repo repository) GetRequest(requestID string) (*CLAManagerRequest, error) 
 		Key: map[string]*dynamodb.AttributeValue{
 			"request_id": {S: aws.String(requestID)},
 		},
-		ProjectionExpression: expr.Projection(),
-		TableName:            aws.String(tableName),
+		ProjectionExpression:     expr.Projection(),
+		ExpressionAttributeNames: expr.Names(),
+		TableName:                aws.String(tableName),
 	}
 
 	result, errQuery := repo.dynamoDBClient.GetItem(queryInput)
@@ -196,6 +211,11 @@ func (repo repository) GetRequest(requestID string) (*CLAManagerRequest, error) 
 		log.Warnf("error running query for cla manager request query using request ID: %s, error: %v",
 			requestID, err)
 		return nil, errQuery
+	}
+
+	// If no response...
+	if result.Item == nil {
+		return nil, nil
 	}
 
 	var request CLAManagerRequest
@@ -225,7 +245,7 @@ func (repo repository) updateRequestStatus(companyID, projectID, requestID, stat
 
 	input := &dynamodb.UpdateItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
-			"requestID": {
+			"request_id": {
 				S: aws.String(requestID),
 			},
 		},
@@ -279,13 +299,13 @@ func buildRequestProjection() expression.ProjectionBuilder {
 	return expression.NamesList(
 		expression.Name("request_id"),
 		expression.Name("company_id"),
-		expression.Name("company_external_id"),
+		//expression.Name("company_external_id"),
 		expression.Name("company_name"),
 		expression.Name("project_id"),
 		expression.Name("project_external_id"),
 		expression.Name("project_name"),
 		expression.Name("user_id"),
-		expression.Name("user_external_id"),
+		//expression.Name("user_external_id"),
 		expression.Name("user_name"),
 		expression.Name("user_email"),
 		expression.Name("status"),

@@ -1390,13 +1390,13 @@ paths:
       tags:
         - cla-manager-requests
 
-  /company/{companyID}/project/{projectID}/cla-manager/request/{requestID}/reject:
+  /company/{companyID}/project/{projectID}/cla-manager/request/{requestID}/deny:
     put:
       summary: Denies/Rejects the CLA Manager request for the specified Company and Project
       security:
         - OauthSecurity:
             - user
-      operationId: rejectCLAManagerRequest
+      operationId: denyCLAManagerRequest
       parameters:
         - name: companyID
           in: path
@@ -2018,80 +2018,6 @@ definitions:
         items:
           $ref: '#/definitions/user'
 
-  onboard-cla-manager-requests:
-    type: object
-    x-nullable: false
-    title: Onboard CLA Manager Models
-    description: Onboard CLA Manager Request Models
-    properties:
-      requests:
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/onboard-cla-manager-request'
-
-  onboard-cla-manager-request:
-    type: object
-    x-nullable: false
-    title: Onboard CLA Manager Model
-    description: Onboard CLA Manager Request Model
-    properties:
-      request_id:
-        type: string
-      lf_id:
-        type: string
-      project_name:
-        type: string
-      company_name:
-        type: string
-      user_full_name:
-        type: string
-      user_email:
-        type: string
-      date_created:
-        type: string
-      date_modified:
-        type: string
-    required:
-      - lf_id
-      - project_name
-      - company_name
-      - user_full_name
-      - user_email
-
-  onboard-notification-request:
-    type: object
-    x-nullable: false
-    title: Onboard Notification Request Model
-    description: Onboard Notification Request Model
-    properties:
-      sender_email:
-        type: string
-      recipient_emails:
-        type: array
-        description: A list of recipient email addresses
-        items:
-          type: string
-      subject:
-        type: string
-      email_body:
-        type: string
-    required:
-      - sender_email
-      - recipient_emails
-      - subject
-      - email_body
-
-  onboard-notification-response:
-    type: object
-    x-nullable: false
-    title: Onboard Notification Response Model
-    description: Onboard Notification Response Model
-    properties:
-      message:
-        type: string
-    required:
-      - message
 
   gh-org-whitelist:
     type: object
@@ -2168,10 +2094,46 @@ definitions:
     properties:
       requestID:
         type: string
+        description: The request ID
+      companyID:
+        type: string
+        description: The company's ID
+      companyExternalID:
+        type: string
+        description: The company's external ID
+      companyName:
+        type: string
+        description: The company name
+      projectID:
+        type: string
+        description: The project's ID
+      projectExternalID:
+        type: string
+        description: The project's external ID
+      projectName:
+        type: string
+        description: The project name
+      userID:
+        type: string
+        description: The user's ID
+      userExternalID:
+        type: string
+        description: The user's external ID
+      userName:
+        type: string
+        description: The user's name
       userEmail:
         type: string
+        description: The user's email
       status:
         type: string
+        description: The request status - typically, one of pending, approved, denied
+      created:
+        type: string
+        description: Date/time the record was created
+      updated:
+        type: string
+        description: Date/time the record was last modified
 
   cla-manager-user:
     type: object

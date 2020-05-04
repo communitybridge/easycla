@@ -1,14 +1,14 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
+import {Component} from '@angular/core';
 import {AlertController, IonicPage, ModalController, NavController, NavParams} from 'ionic-angular';
-import { ClaService } from '../../services/cla.service';
-import { ClaCompanyModel } from '../../models/cla-company';
-import { ClaUserModel } from '../../models/cla-user';
-import { RolesService } from '../../services/roles.service';
-import { Restricted } from '../../decorators/restricted';
-import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+import {ClaService} from '../../services/cla.service';
+import {ClaCompanyModel} from '../../models/cla-company';
+import {ClaUserModel} from '../../models/cla-user';
+import {RolesService} from '../../services/roles.service';
+import {Restricted} from '../../decorators/restricted';
+import {ColumnMode, SelectionType, SortType} from '@swimlane/ngx-datatable';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -79,7 +79,6 @@ export class CompanyPage {
     this.getCompany();
     this.getCompanySignatures();
     this.getCompanyInvites();
-    this.getCLAManagerRequests();
   }
 
   getCompany() {
@@ -138,17 +137,23 @@ export class CompanyPage {
             return r.projectId === projectDetail.project_id
           })
         }
-        this.rows.push({
-          ProjectID: projectDetail.project_id,
-          ProjectName: projectDetail.project_name !== undefined ? projectDetail.project_name : '',
-          ProjectManagers: signatureACL,
-          Status: this.getStatus(this.companySignatures),
-          PendingContributorRequests: (pendingContributorRequests != null) ? pendingContributorRequests.length : 0,
-          PendingCLAManagerRequests: 0,
-        });
-        this.rows.sort((a, b) => {
-          return a.ProjectName.toLowerCase().localeCompare(b.ProjectName.toLowerCase());
-        });
+        this.claService.getCLAManagerRequests(this.companyId, projectDetail.project_id).subscribe((response) => {
+          let numCLAManagerRequests = 0;
+          if (response.requests != null && response.requests.length > 0) {
+            numCLAManagerRequests = response.requests.filter((req) => req.status === 'pending').length;
+          }
+          this.rows.push({
+            ProjectID: projectDetail.project_id,
+            ProjectName: projectDetail.project_name !== undefined ? projectDetail.project_name : '',
+            ProjectManagers: signatureACL,
+            Status: this.getStatus(this.companySignatures),
+            PendingContributorRequests: (pendingContributorRequests != null) ? pendingContributorRequests.length : 0,
+            PendingCLAManagerRequests: numCLAManagerRequests,
+          });
+          this.rows.sort((a, b) => {
+            return a.ProjectName.toLowerCase().localeCompare(b.ProjectName.toLowerCase());
+          });
+        })
       })
     }
   }
@@ -218,19 +223,6 @@ export class CompanyPage {
     });
   }
 
-  /**
-   * Gets the list of CLA Manager requests for this company.
-   */
-  getCLAManagerRequests() {
-    /*
-    this.claService.getCompanyInvites(this.companyId, "pending").subscribe((response) => {
-      this.claManagerRequests = response;
-      this.loading.claManagerRequests = false;
-    });
-     */
-    this.loading.claManagerRequests = false;
-  }
-
   acceptCompanyInvite(invite) {
     let alert = this.alertCtrl.create({
       subTitle: `Accept Request - Confirmation`,
@@ -287,22 +279,68 @@ export class CompanyPage {
 
   getStatus(signatures) {
     for (let i = 0; i < signatures.length; i++) {
-      return (this.checkStatusOfSignature(signatures[i].signatureACL, this.userEmail))
+      return (this.checkStatusOfSignature(signatures[i].signatureACL, signatures[i].projectID, this.userEmail))
     }
   }
 
-  checkStatusOfSignature(signatureACL, userEmail) {
+  checkStatusOfSignature(signatureACL, projectID: string, userEmail: string) {
     for (let i = 0; i < signatureACL.length; i++) {
       if (signatureACL[i].lfEmail === userEmail) {
         return 'CLA Manager';
       }
     }
 
-    for (let i = 0; i < this.invites.length; i++) {
-      if (this.invites[i].userEmail === userEmail) {
-        return 'Pending';
+    let status = 'Request Access';
+    this.claService.getCLAManagerRequests(this.companyId, projectID).subscribe((response) => {
+      console.log('response:');
+      console.log(response);
+      if (response.requests != null && response.requests.length > 0) {
+        const userId = localStorage.getItem('userid');
+        console.log(`Testing ${userId}`);
+        let pendingCLAManagerRequests = response.requests.filter((req) => req.status === 'pending' && req.userID === userId);
+        console.log(`pending requests:`);
+        console.log(pendingCLAManagerRequests);
+        if (pendingCLAManagerRequests.length > 0) {
+          console.log('setting pending status');
+          status = 'Pending';
+        }
       }
-    }
-    return 'Request Access'
+    }, (error) => {
+      console.log(`error loading cla manager requests: ${error}`);
+    })
+
+    console.log(`returnging status: ${status}`);
+    return status;
+  }
+
+
+  claManagerRequest(companyID: string, companyName: string, projectID: string, projectName: string) {
+    let alert = this.alertCtrl.create({
+      subTitle: `CLA Manager Request - Confirmation`,
+      message: `This will send an email to all the CLA Managers for ${companyName} associated with project ${projectName}.` +
+        'The email will instruct the CLA Managers on how to log into the EasyCLA Corporate Console and review this request.' +
+        '<br/><br/>' +
+        'Are you sure you want to send the request?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+          }
+        },
+        {
+          text: 'Send Request',
+          handler: () => {
+            const userId = localStorage.getItem('userid');
+            const userEmail = localStorage.getItem('user_email');
+            const userName = localStorage.getItem('user_name');
+            this.claService.createCLAManagerRequest(companyID, projectID, userName, userEmail, userId).subscribe((response) => {
+            });
+          }
+        }
+      ]
+    });
+    alert.present();
   }
 }
