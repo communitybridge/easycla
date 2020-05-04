@@ -1166,6 +1166,32 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - company
+  /company/{companySFID}/active-cla-list:
+    get:
+      summary: get active cla list of company
+      description: Returns list active cla of the company
+      operationId: getCompanyActiveCla
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-companySFID"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/active-cla-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
 
 responses:
   unauthorized:
@@ -1645,6 +1671,76 @@ definitions:
         type: string
         example: "Appium"
         x-omitempty: false
+
+  active-cla-list:
+    type: object
+    title: Active cla list of the companies
+    description: details of the companies active cla
+    properties:
+      list:
+        type: array
+        items:
+          $ref : '#/definitions/active-cla'
+
+  active-cla:
+    type: object
+    title: Active cla of the company
+    description: details of active cla
+    properties:
+      signed_on:
+        type: string
+        x-omitempty: false
+        example: "2019-07-18T11:38:13.144674+0000"
+      project_id:
+        type: string
+        x-omitempty: false
+        example: "e1e30240-a722-4c82-a648-121681d959c7"
+      project_sfid:
+        type: string
+        x-omitempty: false
+        example: "a2g17000000hyxNAAA"
+      project_name:
+        type: string
+        example: "Appium"
+        x-omitempty: false
+      project_type:
+        type: string
+        example: "Foundation"
+        x-omitempty: false
+      signatory_name:
+        type: string
+        example: "John Doe"
+        x-omitempty: false
+      project_logo:
+        type: string
+        example: "http://wwwlinuxfoundation.org/logo.gif"
+        x-omitempty: false
+      subprojects:
+        type: array
+        items:
+          $ref: '#/definitions/subproject'
+
+
+  subproject:
+    type: object
+    properties:
+      project_name:
+        type: string
+        example: "Appium"
+        x-omitempty: false
+      project_sfid:
+        type: string
+        example: "a2g17000000hyxNABB"
+        x-omitempty: false
+      project_type:
+        type: string
+        example: "Project"
+        x-omitempty: false
+      project_logo:
+        type: string
+        example: "http://wwwlinuxfoundation.org/logo.gif"
+        x-omitempty: false
+
 
   error-response:
     type: object

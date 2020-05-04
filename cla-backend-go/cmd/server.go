@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
+	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
 	v2GithubOrganizations "github.com/communitybridge/easycla/cla-backend-go/v2/github_organizations"
@@ -263,6 +264,8 @@ func server(localMode bool) http.Handler {
 	v2Company.Configure(v2API, v2CompanyService, companyRepo)
 
 	user_service.InitClient(configFile.APIGatewayURL)
+	project_service.InitClient(configFile.APIGatewayURL)
+
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler

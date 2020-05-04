@@ -49,6 +49,7 @@ func Init(paramClientID, paramClientSecret, paramAuth0URL, paramAudience string)
 	if expiry.Year() == 1 {
 		expiry = time.Now()
 	}
+	go retrieveToken()
 }
 
 func retrieveToken() error {
