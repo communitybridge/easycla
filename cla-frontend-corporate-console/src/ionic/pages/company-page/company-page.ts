@@ -34,6 +34,7 @@ export class CompanyPage {
   projects: any[];
   loading: any;
   invites: any;
+  claManagerRequests: any;
 
   data: any;
   columns: any[];
@@ -57,6 +58,7 @@ export class CompanyPage {
     this.loading = {
       companySignatures: true,
       invites: true,
+      claManagerRequests: true,
       projects: true
     };
     this.company = new ClaCompanyModel();
@@ -76,7 +78,8 @@ export class CompanyPage {
   ngOnInit() {
     this.getCompany();
     this.getCompanySignatures();
-    this.getInvites();
+    this.getCompanyInvites();
+    this.getCLAManagerRequests();
   }
 
   getCompany() {
@@ -140,7 +143,8 @@ export class CompanyPage {
           ProjectName: projectDetail.project_name !== undefined ? projectDetail.project_name : '',
           ProjectManagers: signatureACL,
           Status: this.getStatus(this.companySignatures),
-          PendingContributorRequests: pendingContributorRequests.length,
+          PendingContributorRequests: (pendingContributorRequests != null) ? pendingContributorRequests.length : 0,
+          PendingCLAManagerRequests: 0,
         });
         this.rows.sort((a, b) => {
           return a.ProjectName.toLowerCase().localeCompare(b.ProjectName.toLowerCase());
@@ -204,11 +208,27 @@ export class CompanyPage {
     modal.present();
   }
 
-  getInvites() {
+  /**
+   * Gets the pending company invites for this company.
+   */
+  getCompanyInvites() {
     this.claService.getCompanyInvites(this.companyId, "pending").subscribe((response) => {
       this.invites = response;
       this.loading.invites = false;
     });
+  }
+
+  /**
+   * Gets the list of CLA Manager requests for this company.
+   */
+  getCLAManagerRequests() {
+    /*
+    this.claService.getCompanyInvites(this.companyId, "pending").subscribe((response) => {
+      this.claManagerRequests = response;
+      this.loading.claManagerRequests = false;
+    });
+     */
+    this.loading.claManagerRequests = false;
   }
 
   acceptCompanyInvite(invite) {
@@ -229,7 +249,7 @@ export class CompanyPage {
           text: 'Accept',
           handler: () => {
             this.claService.approveCompanyInvite(this.companyId, invite.inviteId).subscribe((response) => {
-              this.getInvites();
+              this.getCompanyInvites();
             });
           }
         }
@@ -256,7 +276,7 @@ export class CompanyPage {
           text: 'Accept',
           handler: () => {
             this.claService.rejectCompanyInvite(this.companyId, invite.inviteId).subscribe((response) => {
-              this.getInvites();
+              this.getCompanyInvites();
             });
           }
         }

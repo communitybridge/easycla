@@ -41,3 +41,7 @@ gen-v1/
 
 # Ignore test reports
 cover.out
+
+# Ignore build-time swagger files
+swagger/user_service.yaml
+swagger/user_service.yaml.bak

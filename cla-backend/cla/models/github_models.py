@@ -8,17 +8,16 @@ import json
 import os
 import uuid
 
+import cla
 import falcon
 import github
-from github import PullRequest
-from github.GithubException import UnknownObjectException, BadCredentialsException, GithubException
-from requests_oauthlib import OAuth2Session
-
-import cla
 from cla.controllers.github_application import GitHubInstallation
 from cla.models import repository_service_interface, DoesNotExist
 from cla.models.dynamo_models import Repository, GitHubOrg
 from cla.utils import get_project_instance
+from github import PullRequest
+from github.GithubException import UnknownObjectException, BadCredentialsException, GithubException
+from requests_oauthlib import OAuth2Session
 
 
 class GitHub(repository_service_interface.RepositoryService):
@@ -271,7 +270,7 @@ class GitHub(repository_service_interface.RepositoryService):
             _ = int(change_request_id)
             pull_request = self.get_pull_request(github_repository_id, change_request_id, installation_id)
         except ValueError:
-            cla.log.error ('Invalid PR: %s . (Unable to cast to integer) ', change_request_id)
+            cla.log.error('Invalid PR: %s . (Unable to cast to integer) ', change_request_id)
             return
         cla.log.debug(f'Retrieved pull request: {pull_request}')
 
@@ -581,20 +580,22 @@ def handle_commit_from_user(project, commit_sha, author_info, signed, missing): 
                   f'author_username: {author_username}, '
                   f'auth_email: {author_email})')
 
-    # attempt to lookup the user by GH id - may return multiple users that match this author_id
+    # attempt to lookup the user in our database by GH id -
+    # may return multiple users that match this author_id
     users = cla.utils.get_user_instance().get_user_by_github_id(author_id)
     if users is None:
         # GitHub user not in system yet, signature does not exist for this user.
-        cla.log.debug('GitHub user (id: {}, user: {}, email: {}) lookup by id not found, '
-                      'attempting to looking up user by email...'.
-                      format(author_id, author_username, author_email))
+        cla.log.debug(f'GitHub user (id: {author_id}, '
+                      f'user: {author_username}, '
+                      f'email: {author_email}) lookup by github id not found in our database, '
+                      'attempting to looking up user by email...')
 
         # Try looking up user by email as a fallback
         users = cla.utils.get_user_instance().get_user_by_email(author_email)
         if users is not None:
             cla.log.debug(f'Found {len(users)} GitHub user(s) matching github email: {author_email}')
             for user in users:
-                cla.log.debug(f'GitHub user found - {user}')
+                cla.log.debug(f'GitHub user found in our database: {user}')
 
                 # For now, accept non-github users as legitimate users.
                 # Does this user have a signed signature for this project? If so, add to the signed list and return,
@@ -605,32 +606,38 @@ def handle_commit_from_user(project, commit_sha, author_info, signed, missing): 
 
             # Didn't find a signed signature for this project - add to our missing bucket list
             missing.append((commit_sha, list(author_info)))
-
         else:
-            cla.log.debug('GitHub user (id: {}, user: {}, email: {}) lookup by email not found'.
-                          format(author_id, author_username, author_email))
-            #Check to see if not found user is whitelisted to assist in triaging github comment
-            signatures = cla.utils.get_signature_instance().get_signatures_by_project(project.get_project_id())
+            cla.log.debug(f'GitHub user (id: {author_id}, '
+                          f'user: {author_username}, '
+                          f'email: {author_email}) lookup by email in our database failed - not found')
+
+            # Check to see if not found user is whitelisted to assist in triaging github comment
+            # Search for the CCLA signatures for this project - wish we had a company ID to restrict the query...
+            signatures = cla.utils.get_signature_instance().get_signatures_by_project(
+                project.get_project_id(),
+                signature_signed=True,
+                signature_approved=True,
+                signature_reference_type='company')
+
             list_author_info = list(author_info)
             for signature in signatures:
                 if cla.utils.is_whitelisted(
-                                            signature,
-                                            email=author_email,
-                                            github_id=author_id,
-                                            github_username=author_username
-                                            ):
+                        signature,
+                        email=author_email,
+                        github_id=author_id,
+                        github_username=author_username
+                ):
                     # Append whitelisted flag to the author info list
-                    cla.log.debug(
-                        'Github user(id:{}, user: {}, email {}) is whitelisted but not a CLA user'.
-                        format(author_id, author_username, author_email)
-                    )
+                    cla.log.debug(f'Github user(id:{author_id}, '
+                                  f'user: {author_username}, '
+                                  f'email {author_email}) is whitelisted but not a CLA user')
                     list_author_info.append(True)
                     break
             missing.append((commit_sha, list_author_info))
     else:
-        cla.log.debug(f'Found {len(users)} GitHub user(s) matching github id: {author_id}')
+        cla.log.debug(f'Found {len(users)} GitHub user(s) matching github id: {author_id} in our database')
         for user in users:
-            cla.log.debug(f'GitHub user found - {user}')
+            cla.log.debug(f'GitHub user found in our database: {user}')
 
             # Does this user have a signed signature for this project? If so, add to the signed list and return,
             # no reason to continue looking
@@ -643,16 +650,16 @@ def handle_commit_from_user(project, commit_sha, author_info, signed, missing): 
         signatures = cla.utils.get_signature_instance().get_signatures_by_project(project.get_project_id())
         for signature in signatures:
             if cla.utils.is_whitelisted(
-                                        signature,
-                                        email=author_email,
-                                        github_id=author_id,
-                                        github_username=author_username
-                                        ):
+                    signature,
+                    email=author_email,
+                    github_id=author_id,
+                    github_username=author_username
+            ):
                 # Append whitelisted flag to the author info list
-                cla.log.debug(
-                    'Github user(id:{}, user: {}, email {}) is whitelisted but not affiliated'.
-                    format(author_id, author_username, author_email)
-                )
+                cla.log.debug(f'Github user(id:{author_id}, '
+                              f'user: {author_username}, '
+                              f'email {author_email}) is on the approved list, '
+                              'but not affiliated with a company')
                 list_author_info.append(True)
                 break
         missing.append((commit_sha, list_author_info))
@@ -764,17 +771,18 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
 
     # Here we update the PR status by adding/updating the PR body - this is the way the EasyCLA app
     # knows if it is pass/fail.
-    #Create check run for users that havent yet signed and/or affiliated
+    # Create check run for users that havent yet signed and/or affiliated
     if missing:
         text = ""
         for authors in missing:
-            #Check for valid github id
+            # Check for valid github id
             if authors[1][0] is None:
                 help_url = "https://help.github.com/en/github/committing-changes-to-your-project/why-are-my-commits-linked-to-the-wrong-user"
             else:
-                help_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
+                help_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id,
+                                                       pull_request.number)
             client = GitHubInstallation(installation_id)
-            #check if unsigned user is whitelisted
+            # check if unsigned user is whitelisted
             commit_sha = authors[0]
             if commit_sha != last_commit.sha:
                 continue
@@ -843,7 +851,6 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
             create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
 
 
-
 def create_commit_status(pull_request, commit_hash, state, sign_url, body, context):
     """
     Helper function to create a pull request commit status message given the PR and commit hash.
@@ -888,8 +895,6 @@ def create_commit_status(pull_request, commit_hash, state, sign_url, body, conte
             exc.status,
             exc.data,
         )
-
-
 
 
 def update_cla_comment(pull_request, body):

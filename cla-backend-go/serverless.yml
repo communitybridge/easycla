@@ -149,6 +149,7 @@ provider:
     GH_APP_ID: ${file(./env.json):gh-app-id, ssm:/cla-gh-app-id-${opt:stage}~true}
     GH_OAUTH_CLIENT_ID: ${file(./env.json):gh-oauth-client-id, ssm:/cla-gh-oauth-client-id-${opt:stage}~true}
     GH_OAUTH_SECRET: ${file(./env.json):gh-oauth-secret, ssm:/cla-gh-oauth-secret-${opt:stage}~true}
+    GITHUB_OAUTH_TOKEN: ${file(./env.json):gh-access-token, ssm:/cla-gh-access-token-${opt:stage}~true}
     GH_STATUS_CTX_NAME: "EasyCLA"
     GH_ORG_VALIDATION: true
     COMPANY_USER_VALIDATION: true
