@@ -2218,6 +2218,9 @@ definitions:
         description: The company unique ID
         example: 13f79a8f-734d-44c1-ab03-ab98c2a1b64a
         type: string
+      companyExternalID:
+        description: the company external ID
+        type: string
       companyName:
         description: The company name
         example: Acme, Inc.

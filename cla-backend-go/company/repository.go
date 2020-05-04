@@ -81,11 +81,12 @@ func (dbCompanyModel *Company) toModel() (*models.Company, error) {
 
 	// Convert the local DB model to a public swagger model
 	return &models.Company{
-		CompanyACL:  dbCompanyModel.CompanyACL,
-		CompanyID:   dbCompanyModel.CompanyID,
-		CompanyName: dbCompanyModel.CompanyName,
-		Created:     strfmt.DateTime(createdDateTime),
-		Updated:     strfmt.DateTime(updateDateTime),
+		CompanyACL:        dbCompanyModel.CompanyACL,
+		CompanyID:         dbCompanyModel.CompanyID,
+		CompanyName:       dbCompanyModel.CompanyName,
+		CompanyExternalID: dbCompanyModel.CompanyExternalID,
+		Created:           strfmt.DateTime(createdDateTime),
+		Updated:           strfmt.DateTime(updateDateTime),
 	}, nil
 }
 
@@ -472,12 +473,13 @@ func (repo repository) buildCompaniesByUserManagerWithInvites(companies *models.
 	var companyWithInvite []models.CompanyWithInvite
 	for _, company := range companies.Companies {
 		companyWithInvite = append(companyWithInvite, models.CompanyWithInvite{
-			CompanyName: company.CompanyName,
-			CompanyID:   company.CompanyID,
-			CompanyACL:  company.CompanyACL,
-			Created:     company.Created,
-			Updated:     company.Updated,
-			Status:      "Joined",
+			CompanyName:       company.CompanyName,
+			CompanyID:         company.CompanyID,
+			CompanyExternalID: company.CompanyExternalID,
+			CompanyACL:        company.CompanyACL,
+			Created:           company.Created,
+			Updated:           company.Updated,
+			Status:            "Joined",
 		})
 	}
 
@@ -513,11 +515,12 @@ func buildCompanyModels(results *dynamodb.ScanOutput) ([]models.Company, error) 
 	var companies []models.Company
 
 	type ItemSignature struct {
-		CompanyID   string   `json:"company_id"`
-		CompanyName string   `json:"company_name"`
-		CompanyACL  []string `json:"company_acl"`
-		Created     string   `json:"date_created"`
-		Modified    string   `json:"date_modified"`
+		CompanyID         string   `json:"company_id"`
+		CompanyName       string   `json:"company_name"`
+		CompanyACL        []string `json:"company_acl"`
+		CompanyExternalID string   `json:"company_external_id"`
+		Created           string   `json:"date_created"`
+		Modified          string   `json:"date_modified"`
 	}
 
 	// The DB company model
@@ -543,13 +546,13 @@ func buildCompanyModels(results *dynamodb.ScanOutput) ([]models.Company, error) 
 				dbCompany.Created, err)
 			modifiedDateTime = time.Now()
 		}
-
 		companies = append(companies, models.Company{
-			CompanyACL:  dbCompany.CompanyACL,
-			CompanyID:   dbCompany.CompanyID,
-			CompanyName: dbCompany.CompanyName,
-			Created:     strfmt.DateTime(createdDateTime),
-			Updated:     strfmt.DateTime(modifiedDateTime),
+			CompanyACL:        dbCompany.CompanyACL,
+			CompanyID:         dbCompany.CompanyID,
+			CompanyName:       dbCompany.CompanyName,
+			CompanyExternalID: dbCompany.CompanyExternalID,
+			Created:           strfmt.DateTime(createdDateTime),
+			Updated:           strfmt.DateTime(modifiedDateTime),
 		})
 	}
 
