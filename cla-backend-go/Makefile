@@ -33,7 +33,7 @@ setup_deploy:
 	npm install serverless
 
 clean:
-	@rm -rf bin/ cla cla-mac cla-linux ./v2/user-service/client ./v2/user-service/models
+	@rm -rf bin/ cla cla-mac cla-linux ./v2/user-service/client ./v2/user-service/models ./v2/project-service/models ./v2/project-service/client
 
 clean-swagger:
 	@rm -rf gen/
@@ -41,7 +41,21 @@ clean-swagger:
 clean-all: clean clean-swagger
 	@rm -rf vendor/
 
-swagger: clean-swagger swagger-build swagger-validate
+swagger: clean-swagger swagger-build swagger-clients swagger-validate
+
+swagger-clients:
+	@echo "Generating swagger client for user-service"
+	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/user-service/swagger.json --output user_service.yaml
+	perl -i -pe "s/X-ACL/Empty-Header/g" user_service.yaml
+	swagger -q generate client \
+		-t v2/user-service \
+		-f user_service.yaml
+	@echo "Generating swagger client for project-service"
+	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/project-service/swagger.json --output project_service.yaml
+	perl -i -pe "s/X-ACL/Empty-Header/g" project_service.yaml
+	swagger -q generate client \
+		-t v2/project-service \
+		-f project_service.yaml
 
 swagger-build: clean-swagger
 	@mkdir gen
@@ -63,12 +77,6 @@ swagger-build: clean-swagger
 		--exclude-main \
 		-A easycla \
 		-P auth.User
-	@echo "Generating swagger client for user-service"
-	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/user-service/swagger.json --output user_service.yaml
-	sed -i 's/X-ACL/Empty-Header/g' user_service.yaml
-	swagger -q generate client \
-		-t v2/user-service \
-		-f user_service.yaml
 swagger-validate:
 	@echo "Validating v1 legacy API models..."
 	swagger validate swagger/cla.yaml
