@@ -79,7 +79,7 @@
       </ion-row>
     </ion-grid>
 
-    <ion-grid [loading-display]="loading.requests">
+    <ion-grid [loading-display]="loading.contributorRequests">
       <ion-row justify-content-center>
         <ion-col>
           <ion-card>
@@ -93,7 +93,7 @@
                 <ion-row justify-content-center *ngIf="noPendingContributorRequests">
                   <h2>No Pending Contributor Requests</h2>
                 </ion-row>
-                <table class="table" *ngIf="!noPendingContributorRequests && loading.request">
+                <table class="table" *ngIf="!noPendingContributorRequests && loading.contributorRequests">
                   <thead>
                     <tr>
                       <th class="clickable">
@@ -153,7 +153,7 @@
       </ion-row>
     </ion-grid>
 
-    <ion-grid [loading-display]="loading.requests">
+    <ion-grid [loading-display]="loading.claManagerRequests">
       <ion-row justify-content-center>
         <ion-col>
           <ion-card>
@@ -167,19 +167,23 @@
                 <ion-row justify-content-center *ngIf="noPendingCLAManagerRequests">
                   <h2>No CLA Manager Requests</h2>
                 </ion-row>
-                <table class="table" *ngIf="!noPendingCLAManagerRequests && loading.request">
+                <table class="table" *ngIf="!noPendingCLAManagerRequests && !loading.claManagerRequests">
                   <thead>
                   <tr>
                     <th class="clickable">
-                      Name
+                      Date/Time
                     </th>
 
                     <th class="clickable">
-                      Project Name
+                      User ID
                     </th>
 
                     <th class="clickable">
-                      Email ID
+                      User Name
+                    </th>
+
+                    <th class="clickable">
+                      User Email
                     </th>
 
                     <th class="clickable">
@@ -191,24 +195,28 @@
 
                   <tr *ngFor="let request of pendingCLAManagerRequests">
                     <td data-title="Name">
+                      <span>{{ request.created}}</span>
+                    </td>
+
+                    <td data-title="Name">
+                      <span>{{ request.userID}}</span>
+                    </td>
+
+                    <td data-title="Name">
                       <span>{{ request.userName}}</span>
                     </td>
 
-                    <td data-title="Name" class="wrap-word">
-                      <span>{{ request.projectName}}</span>
-                    </td>
-
                     <td data-title="Email" class="wrap-word">
-                      <div *ngFor="let email of request.userEmails" class="email">{{email}}</div>
+                      <span>{{ request.userEmail}}</span>
                     </td>
 
                     <td data-title="Actions">
-                      <button class="button" *ngIf="canEdit && request.requestStatus === 'pending'" clear ion-button
-                              color="secondary" (click)="accept(request.requestId)">
+                      <button class="button" *ngIf="canEdit && request.status === 'pending'" clear ion-button
+                              color="secondary" (click)="approveCLAManagerRequest(request.companyID, request.companyName, request.projectID, request.projectName, request.requestID)">
                         Accept
                       </button>
-                      <button *ngIf="canEdit && request.requestStatus === 'pending'" clear ion-button color="danger"
-                              (click)="decline(request.requestId)">
+                      <button *ngIf="canEdit && request.status === 'pending'" clear ion-button color="danger"
+                              (click)="denyCLAManagerRequest(request.companyID, request.companyName, request.projectID, request.projectName, request.requestID)">
                         Decline
                       </button>
                     </td>

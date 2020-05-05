@@ -600,42 +600,51 @@ export class ClaService {
 
   /**
    * Creates a new CLA Manager Request with the specified parameters.
-   * @param lfid the LF ID of the user
-   * @param projectName the project name
-   * @param companyName the company name
-   * @param userFullName the user full name
-   * @param userEmail the user email
+   *
    */
-  createCLAManagerRequest(lfid, projectName: string, companyName: string, userFullName: string, userEmail: string) {
-    const url: URL = this.getV3Endpoint(`/v3/onboard/cla-manager`);
+  createCLAManagerRequest(companyID: string, projectID: string, userName: string, userEmail: string, userLFID: string) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyID}/project/${projectID}/cla-manager/requests`);
     const requestBody = {
-      lf_id: lfid,
-      project_name: projectName,
-      company_name: companyName,
-      user_full_name: userFullName,
-      user_email: userEmail
+      userName: userName,
+      userEmail: userEmail,
+      userLFID: userLFID,
     };
-    //return this.http.post(url, requestBody)
-    return this.http.postWithCreds(url, requestBody);
+    return this.http.postWithCreds(url, requestBody).map((res) => res.json());
   }
 
   /**
    * Returns zero or more CLA manager requests based on the user LFID.
    *
-   * @param lfid the user's LF ID
+   * @param companyID the company ID
+   * @param projectID the project ID
    */
-  getCLAManagerRequests(lfid: string) {
-    const url: URL = this.getV3Endpoint(`/v3/onboard/cla-manager/lfid/${lfid}`);
+  getCLAManagerRequests(companyID: string, projectID: string){
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyID}/project/${projectID}/cla-manager/requests`);
     return this.http.getWithCreds(url).map((res) => res.json());
   }
 
   /**
-   * Deletes the CLA manager request by request id
+   * Approves the CLA manager request using the specified parameters.
+   *
+   * @param companyID the company ID
+   * @param projectID the project ID
    * @param requestID the unique request id
    */
-  deleteCLAManagerRequests(requestID: string) {
-    const url: URL = this.getV3Endpoint(`/v3/onboard/cla-manager/requests/${requestID}`);
-    return this.http.delete(url);
+  approveCLAManagerRequest(companyID: string, projectID: string, requestID: string) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyID}/project/${projectID}/cla-manager/request/${requestID}/approve`);
+    return this.http.putWithCreds(url).map((res) => res.json());
+  }
+
+  /**
+   * Deny the CLA manager request using the specified parameters.
+   *
+   * @param companyID the company ID
+   * @param projectID the project ID
+   * @param requestID the unique request id
+   */
+  denyCLAManagerRequest(companyID: string, projectID: string, requestID: string) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyID}/project/${projectID}/cla-manager/request/${requestID}/deny`);
+    return this.http.putWithCreds(url).map((res) => res.json());
   }
 
   /**

@@ -33,7 +33,10 @@ setup_deploy:
 	npm install serverless
 
 clean:
-	@rm -rf bin/ cla cla-mac cla-linux ./v2/user-service/client ./v2/user-service/models
+	@rm -rf bin/ cla cla-mac cla-linux \
+		./v2/project-service/client ./v2/project-service/models \
+		./v2/organization-service/client ./v2/organization-service/models \
+		./v2/user-service/client ./v2/user-service/models
 
 clean-swagger:
 	@rm -rf gen/
@@ -43,8 +46,10 @@ clean-all: clean clean-swagger
 
 swagger: clean-swagger swagger-build swagger-validate
 
-swagger-build: clean-swagger
+swagger-prep:
 	@mkdir gen
+
+swagger-build-v1-services:
 	@echo "Generating v1 legacy API models..."
 	swagger -q generate server \
 		-t gen \
@@ -53,6 +58,8 @@ swagger-build: clean-swagger
 		--exclude-main \
 		-A cla \
 		-P user.CLAUser
+
+swagger-build-v2-services:
 	@echo "Generating v2 API models..."
 	swagger -q generate server \
 		-t gen \
@@ -63,19 +70,50 @@ swagger-build: clean-swagger
 		--exclude-main \
 		-A easycla \
 		-P auth.User
-	@echo "Generating swagger client for user-service"
-	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/user-service/swagger.json --output swagger/user_service.yaml
-	sed -i.bak 's/X-ACL/Empty-Header/g' swagger/user_service.yaml
+
+swagger-build-project-service:
+	@echo "Generating swagger client for the project-service..."
+	@mkdir -p v2/project-service
+	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/project-service/swagger.json --output swagger/project-service.yaml
+	sed -i.bak 's/X-ACL/Empty-Header/g' swagger/project-service.yaml
 	swagger -q generate client \
+		--copyright-file=copyright-header.txt \
+		-t v2/project-service \
+		-f swagger/project-service.yaml
+
+swagger-build-organization-service:
+	@echo "Generating swagger client for the organization-service..."
+	@mkdir -p v2/organization-service
+	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/organization-service/swagger.json --output swagger/organization-service.yaml
+	sed -i.bak 's/X-ACL/Empty-Header/g' swagger/organization-service.yaml
+	swagger -q generate client \
+		--copyright-file=copyright-header.txt \
+		-t v2/organization-service \
+		-f swagger/organization-service.yaml
+
+swagger-build-user-service:
+	@echo "Generating swagger client for the user-service..."
+	@mkdir -p v2/user-service
+	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/user-service/swagger.json --output swagger/user-service.yaml
+	sed -i.bak 's/X-ACL/Empty-Header/g' swagger/user-service.yaml
+	swagger -q generate client \
+		--copyright-file=copyright-header.txt \
 		-t v2/user-service \
-		-f swagger/user_service.yaml
+		-f swagger/user-service.yaml
+
+swagger-build: clean-swagger swagger-prep swagger-build-v1-services swagger-build-v2-services swagger-build-project-service swagger-build-organization-service swagger-build-user-service
+
 swagger-validate:
 	@echo "Validating v1 legacy API specification..."
 	swagger validate swagger/cla.yaml
 	@echo "Validating v2 API specification..."
 	swagger validate swagger/cla.v2.yaml
+	@echo "Validating Project Service API specification..."
+	swagger validate swagger/project-service.yaml
+	@echo "Validating Organization Service API specification..."
+	swagger validate swagger/organization-service.yaml
 	@echo "Validating User Service API specification..."
-	swagger validate swagger/user_service.yaml
+	swagger validate swagger/user-service.yaml
 
 fmt:
 	@gofmt -w -l -s $(GO_FILES)
