@@ -1864,13 +1864,13 @@ definitions:
         type: string
         example: "http://wwwlinuxfoundation.org/logo.gif"
         x-omitempty: false
-      subprojects:
+      sub_projects:
         type: array
         items:
-          $ref: '#/definitions/subproject'
+          $ref: '#/definitions/sub_project'
 
 
-  subproject:
+  sub_project:
     type: object
     properties:
       project_name:

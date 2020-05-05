@@ -222,7 +222,7 @@ func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, act
 	activeCla.ProjectType = projectDetails.ProjectType
 	activeCla.ProjectLogo = projectDetails.ProjectLogo
 	activeCla.SignedOn = sig.SignatureCreated
-	activeCla.Subprojects = make([]*models.Subproject, 0, len(projectDetails.Projects))
+	activeCla.SubProjects = make([]*models.SubProject, 0, len(projectDetails.Projects))
 
 	var subProjects []*v2ProjectServiceModels.ProjectOutput
 	var signatoryName string
@@ -253,13 +253,13 @@ func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, act
 
 	activeCla.SignatoryName = signatoryName
 	for _, subProject := range subProjects {
-		sp := &models.Subproject{
+		sp := &models.SubProject{
 			ProjectName: subProject.Name,
 			ProjectSfid: subProject.ID,
 			ProjectLogo: subProject.ProjectLogo,
 			ProjectType: subProject.ProjectType,
 		}
-		activeCla.Subprojects = append(activeCla.Subprojects, sp)
+		activeCla.SubProjects = append(activeCla.SubProjects, sp)
 	}
 }
 
