@@ -100,7 +100,7 @@ def test_get_comment_body_whitelisted_missing_user():
         + "("
         + " ,".join([GITHUB_FAKE_SHA])
         + ")"
-        + "is whitelisted, but they must confirm "
+        + "is authorized, but they must confirm "
         + "their affiliation with the company that did so."
         + f'[Start by clicking here]({SIGN_URL}), click "Corporate",'
         + "select the appropriate company from the list, then confirm "

@@ -592,6 +592,8 @@ def handle_commit_from_user(project, commit_sha, author_info, signed, missing): 
 
         # Try looking up user by email as a fallback
         users = cla.utils.get_user_instance().get_user_by_email(author_email)
+
+        # Got one or more records by searching the email
         if users is not None:
             cla.log.debug(f'Found {len(users)} GitHub user(s) matching github email: {author_email}')
             for user in users:
@@ -607,33 +609,37 @@ def handle_commit_from_user(project, commit_sha, author_info, signed, missing): 
             # Didn't find a signed signature for this project - add to our missing bucket list
             missing.append((commit_sha, list(author_info)))
         else:
+            # Not seen this user before - no record on file in our user's database
             cla.log.debug(f'GitHub user (id: {author_id}, '
                           f'user: {author_username}, '
                           f'email: {author_email}) lookup by email in our database failed - not found')
 
-            # Check to see if not found user is whitelisted to assist in triaging github comment
-            # Search for the CCLA signatures for this project - wish we had a company ID to restrict the query...
-            signatures = cla.utils.get_signature_instance().get_signatures_by_project(
-                project.get_project_id(),
-                signature_signed=True,
-                signature_approved=True,
-                signature_reference_type='company')
-
-            list_author_info = list(author_info)
-            for signature in signatures:
-                if cla.utils.is_whitelisted(
-                        signature,
-                        email=author_email,
-                        github_id=author_id,
-                        github_username=author_username
-                ):
-                    # Append whitelisted flag to the author info list
-                    cla.log.debug(f'Github user(id:{author_id}, '
-                                  f'user: {author_username}, '
-                                  f'email {author_email}) is whitelisted but not a CLA user')
-                    list_author_info.append(True)
-                    break
-            missing.append((commit_sha, list_author_info))
+            # # Check to see if not found user is whitelisted to assist in triaging github comment
+            # # Search for the CCLA signatures for this project - wish we had a company ID to restrict the query...
+            # signatures = cla.utils.get_signature_instance().get_signatures_by_project(
+            #     project.get_project_id(),
+            #     signature_signed=True,
+            #     signature_approved=True,
+            #     signature_reference_type='company')
+            #
+            # list_author_info = list(author_info)
+            # for signature in signatures:
+            #     if cla.utils.is_whitelisted(
+            #             signature,
+            #             email=author_email,
+            #             github_id=author_id,
+            #             github_username=author_username
+            #     ):
+            #         # Append whitelisted flag to the author info list
+            #         cla.log.debug(f'Github user(id:{author_id}, '
+            #                       f'user: {author_username}, '
+            #                       f'email {author_email}) is whitelisted but not a CLA user')
+            #         list_author_info.append(True)
+            #         break
+            # missing.append((commit_sha, list_author_info))
+            # For now - we'll just return the author info as a list without the flag to indicate that they have been on
+            # the approved list for any company/signature
+            missing.append((commit_sha, list(author_info)))
     else:
         cla.log.debug(f'Found {len(users)} GitHub user(s) matching github id: {author_id} in our database')
         for user in users:
@@ -771,7 +777,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
 
     # Here we update the PR status by adding/updating the PR body - this is the way the EasyCLA app
     # knows if it is pass/fail.
-    # Create check run for users that havent yet signed and/or affiliated
+    # Create check run for users that haven't yet signed and/or affiliated
     if missing:
         text = ""
         for authors in missing:
@@ -908,12 +914,10 @@ def update_cla_comment(pull_request, body):
     """
     comment = get_existing_cla_comment(pull_request)
     if comment is not None:
-        cla.log.debug('Updating existing CLA comment for PR: %s', pull_request.number)
-        cla.log.debug('Updated CLA comment for PR %s: %s', pull_request.number, body)
+        cla.log.debug(f'Updating existing CLA comment for PR: {pull_request.number} with body: {body}')
         comment.edit(body)
     else:
-        cla.log.debug('Creating new CLA comment for PR: %s', pull_request.number)
-        cla.log.debug('New comment for PR %s: %s', pull_request.number, body)
+        cla.log.debug(f'Creating a new CLA comment for PR: {pull_request.number} with body: {body}')
         pull_request.create_issue_comment(body)
 
 
