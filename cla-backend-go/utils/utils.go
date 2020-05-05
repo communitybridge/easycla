@@ -72,3 +72,32 @@ func AddNumberAttribute(item map[string]*dynamodb.AttributeValue, key string, va
 	numString := strconv.FormatInt(value, 10)
 	item[key] = &dynamodb.AttributeValue{N: aws.String(numString)}
 }
+
+// StringInSlice returns true if the specified string value exists in the slice, otherwise returns false
+func StringInSlice(a string, list []string) bool {
+	if list == nil {
+		return false
+	}
+
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+// HostInSlice returns true if the specified host value exists in the slice, otherwise returns false
+func HostInSlice(a string, list []string) bool {
+	if list == nil {
+		return false
+	}
+
+	for _, b := range list {
+		b = strings.Split(b, ":")[0]
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
