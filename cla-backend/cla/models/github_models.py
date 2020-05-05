@@ -8,16 +8,17 @@ import json
 import os
 import uuid
 
-import cla
 import falcon
 import github
+from github import PullRequest
+from github.GithubException import UnknownObjectException, BadCredentialsException, GithubException
+from requests_oauthlib import OAuth2Session
+
+import cla
 from cla.controllers.github_application import GitHubInstallation
 from cla.models import repository_service_interface, DoesNotExist
 from cla.models.dynamo_models import Repository, GitHubOrg
 from cla.utils import get_project_instance
-from github import PullRequest
-from github.GithubException import UnknownObjectException, BadCredentialsException, GithubException
-from requests_oauthlib import OAuth2Session
 
 
 class GitHub(repository_service_interface.RepositoryService):
@@ -642,18 +643,47 @@ def handle_commit_from_user(project, commit_sha, author_info, signed, missing): 
             missing.append((commit_sha, list(author_info)))
     else:
         cla.log.debug(f'Found {len(users)} GitHub user(s) matching github id: {author_id} in our database')
-        for user in users:
-            cla.log.debug(f'GitHub user found in our database: {user}')
+        if len(users) > 1:
+            cla.log.warning(f'more than 1 user found in our user database - user: {users} - '
+                            f'will ONLY evaluate the first one')
 
-            # Does this user have a signed signature for this project? If so, add to the signed list and return,
-            # no reason to continue looking
-            if cla.utils.user_signed_project_signature(user, project):
-                signed.append((commit_sha, author_username))
-                return
+        # Just review the first user that we were able to fetch from our DB
+        user = users[0]
+        cla.log.debug(f'GitHub user found in our database: {user}')
 
-        # Didn't find a signed signature for this project - add to our missing bucket list
+        # Does this user have a signed signature for this project? If so, add to the signed list and return,
+        # no reason to continue looking
+        if cla.utils.user_signed_project_signature(user, project):
+            signed.append((commit_sha, author_username))
+            return
+
         list_author_info = list(author_info)
-        signatures = cla.utils.get_signature_instance().get_signatures_by_project(project.get_project_id())
+
+        # If the user does not have a company ID assigned, then they have not been associated with a company as
+        # part of the Contributor console workflow
+        if user.get_user_company_id() is None:
+            missing.append((commit_sha, list_author_info))
+            return
+
+        # Perform a specific search for the user's project + company + CCLA
+        signatures = cla.utils.get_signature_instance().get_signatures_by_project(
+            project_id=project.get_project_id(),
+            signature_signed=True,
+            signature_approved=True,
+            signature_type='ccla',
+            signature_reference_type='company',
+            signature_reference_id=user.get_user_company_id(),
+            signature_user_ccla_company_id=None,
+        )
+
+        # Should only return one signature record
+        cla.log.debug(f'Found {len(signatures)} CCLA signatures for company: {user.get_user_company_id()}, '
+                      f'project: {project.get_project_id()} in our database.')
+
+        # Should never happen - warn if we see this
+        if len(signatures) > 1:
+            cla.log.warning(f'more than 1 CCLA signature record found in our database - signatures: {signatures}')
+
         for signature in signatures:
             if cla.utils.is_whitelisted(
                     signature,
