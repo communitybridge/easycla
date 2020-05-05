@@ -283,7 +283,6 @@ export class CompanyPage {
 
   checkStatusOfSignature(signatureACL, projectId, index) {
     const isManager = this.isCLAManger(signatureACL);
-    console.log(isManager);
     if (!isManager) {
       let status = 'Request Access';
       this.claService.getCLAManagerRequests(this.companyId, projectId).subscribe((response) => {
@@ -302,6 +301,7 @@ export class CompanyPage {
     } else {
       return 'CLA Manager';
     }
+    return '-';
   }
 
   isCLAManger(signatureACL) {
