@@ -110,7 +110,7 @@ func (s service) GetCompanySignatures(params signatures.GetCompanySignaturesPara
 		pageSize = *params.PageSize
 	}
 
-	companySignatures, err := s.repo.GetCompanySignatures(params, pageSize)
+	companySignatures, err := s.repo.GetCompanySignatures(params, pageSize, LoadACLDetails)
 	if err != nil {
 		return nil, err
 	}

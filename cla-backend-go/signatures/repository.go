@@ -30,6 +30,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 )
 
+// constants
+const (
+	LoadACLDetails     = true
+	DontLoadACLDetails = false
+)
+
 // SignatureRepository interface defines the functions for the github whitelist service
 type SignatureRepository interface {
 	GetGithubOrganizationsFromWhitelist(signatureID string) ([]models.GithubOrg, error)
@@ -41,7 +47,7 @@ type SignatureRepository interface {
 	GetProjectSignatures(params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetProjectCompanySignatures(companyID, projectID string, nextKey *string, pageSize int64) (*models.Signatures, error)
 	GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams, pageSize int64) (*models.Signatures, error)
-	GetCompanySignatures(params signatures.GetCompanySignaturesParams, pageSize int64) (*models.Signatures, error)
+	GetCompanySignatures(params signatures.GetCompanySignaturesParams, pageSize int64, loadACL bool) (*models.Signatures, error)
 	GetUserSignatures(params signatures.GetUserSignaturesParams, pageSize int64) (*models.Signatures, error)
 	ProjectSignatures(projectID string) (*models.Signatures, error)
 }
@@ -346,7 +352,7 @@ func (repo repository) GetSignature(signatureID string) (*models.Signature, erro
 	}
 
 	// Convert the list of DB models to a list of response models - should have zero or 1 given that we query by ID
-	signatureList, modelErr := repo.buildProjectSignatureModels(results, "")
+	signatureList, modelErr := repo.buildProjectSignatureModels(results, "", LoadACLDetails)
 	if modelErr != nil {
 		log.Warnf("error converting DB model to response model for signature: %s, error: %v",
 			signatureID, modelErr)
@@ -490,7 +496,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
 		// Convert the list of DB models to a list of response models
-		signatureList, modelErr := repo.buildProjectSignatureModels(results, params.ProjectID)
+		signatureList, modelErr := repo.buildProjectSignatureModels(results, params.ProjectID, LoadACLDetails)
 		if modelErr != nil {
 			log.Warnf("error converting DB model to response model for signatures with project %s, error: %v",
 				params.ProjectID, modelErr)
@@ -604,7 +610,7 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
 		// Convert the list of DB models to a list of response models
-		signatureList, modelErr := repo.buildProjectSignatureModels(results, projectID)
+		signatureList, modelErr := repo.buildProjectSignatureModels(results, projectID, LoadACLDetails)
 		if modelErr != nil {
 			log.Warnf("error converting DB model to response model for signatures with project %s with company: %s, error: %v",
 				projectID, companyID, modelErr)
@@ -715,7 +721,7 @@ func (repo repository) ProjectSignatures(projectID string) (*models.Signatures, 
 		utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
 	// Convert the list of DB models to a list of response models
-	signatures, modelErr := repo.buildProjectSignatureModels(results, projectID)
+	signatures, modelErr := repo.buildProjectSignatureModels(results, projectID, LoadACLDetails)
 	if modelErr != nil {
 		log.Warnf("error converting DB model to response model for signatures with project %s, error: %v",
 			projectID, modelErr)
@@ -830,7 +836,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
 		// Convert the list of DB models to a list of response models
-		signatureList, modelErr := repo.buildProjectSignatureModels(results, params.ProjectID)
+		signatureList, modelErr := repo.buildProjectSignatureModels(results, params.ProjectID, LoadACLDetails)
 		if modelErr != nil {
 			log.Warnf("error converting DB model to response model for employee signatures with project %s with company: %s, error: %v",
 				params.ProjectID, params.CompanyID, modelErr)
@@ -880,7 +886,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 }
 
 // GetCompanySignatures returns a list of company signatures for the specified company
-func (repo repository) GetCompanySignatures(params signatures.GetCompanySignaturesParams, pageSize int64) (*models.Signatures, error) {
+func (repo repository) GetCompanySignatures(params signatures.GetCompanySignaturesParams, pageSize int64, loadACL bool) (*models.Signatures, error) {
 
 	queryStartTime := time.Now()
 
@@ -951,7 +957,7 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
 		// Convert the list of DB models to a list of response models
-		signatureList, modelErr := repo.buildProjectSignatureModels(results, "")
+		signatureList, modelErr := repo.buildProjectSignatureModels(results, "", loadACL)
 		if modelErr != nil {
 			log.Warnf("error converting DB model to response model for signatures with company: %s, error: %v",
 				params.CompanyID, modelErr)
@@ -1064,7 +1070,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
 		// Convert the list of DB models to a list of response models
-		signatureList, modelErr := repo.buildProjectSignatureModels(results, "")
+		signatureList, modelErr := repo.buildProjectSignatureModels(results, "", LoadACLDetails)
 		if modelErr != nil {
 			log.Warnf("error converting DB model to response model for signatures for user %s/%s, error: %v",
 				params.UserID, *params.UserName, modelErr)
@@ -1111,7 +1117,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 }
 
 // buildProjectSignatureModels converts the response model into a response data model
-func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput, projectID string) ([]*models.Signature, error) {
+func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput, projectID string, loadACLDetails bool) ([]*models.Signature, error) {
 	var signatures []*models.Signature
 
 	// The DB signature model
@@ -1154,46 +1160,59 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			var userName = ""
 			var userLFID = ""
 			var userGHID = ""
+			var swg sync.WaitGroup
+			swg.Add(2)
 
-			if sigModel.SignatureReferenceType == "user" {
-				userModel, userErr := repo.usersRepo.GetUser(sigModel.SignatureReferenceID)
-				if userErr != nil || userModel == nil {
-					log.Warnf("unable to lookup user using id: %s, error: %v", sigModel.SignatureReferenceID, userErr)
-				} else {
-					userName = userModel.Username
-					userLFID = userModel.LfUsername
-					userGHID = userModel.GithubID
-				}
-				if signatureUserCompanyID != "" {
-					dbCompanyModel, companyErr := repo.companyRepo.GetCompany(signatureUserCompanyID)
+			go func() {
+				defer swg.Done()
+				if sigModel.SignatureReferenceType == "user" {
+					userModel, userErr := repo.usersRepo.GetUser(sigModel.SignatureReferenceID)
+					if userErr != nil || userModel == nil {
+						log.Warnf("unable to lookup user using id: %s, error: %v", sigModel.SignatureReferenceID, userErr)
+					} else {
+						userName = userModel.Username
+						userLFID = userModel.LfUsername
+						userGHID = userModel.GithubID
+					}
+					if signatureUserCompanyID != "" {
+						dbCompanyModel, companyErr := repo.companyRepo.GetCompany(signatureUserCompanyID)
+						if companyErr != nil {
+							log.Warnf("unable to lookup company using id: %s, error: %v", signatureUserCompanyID, companyErr)
+						} else {
+							companyName = dbCompanyModel.CompanyName
+						}
+					}
+				} else if sigModel.SignatureReferenceType == "company" {
+					dbCompanyModel, companyErr := repo.companyRepo.GetCompany(sigModel.SignatureReferenceID)
 					if companyErr != nil {
-						log.Warnf("unable to lookup company using id: %s, error: %v", signatureUserCompanyID, companyErr)
+						log.Warnf("unable to lookup company using id: %s, error: %v", sigModel.SignatureReferenceID, companyErr)
 					} else {
 						companyName = dbCompanyModel.CompanyName
 					}
 				}
-			} else if sigModel.SignatureReferenceType == "company" {
-				dbCompanyModel, companyErr := repo.companyRepo.GetCompany(sigModel.SignatureReferenceID)
-				if companyErr != nil {
-					log.Warnf("unable to lookup company using id: %s, error: %v", sigModel.SignatureReferenceID, companyErr)
-				} else {
-					companyName = dbCompanyModel.CompanyName
-				}
-			}
+			}()
 
 			var signatureACL []models.User
-			for _, userName := range sigACL {
-				userModel, userErr := repo.usersRepo.GetUserByUserName(userName, true)
-				if userErr != nil {
-					log.Warnf("unable to lookup user using username: %s, error: %v", userName, userErr)
-				} else {
-					if userModel == nil {
-						log.Warnf("User looking for username is null: %s for signature: %s", userName, sigModel.SignatureID)
+			go func() {
+				defer swg.Done()
+				for _, userName := range sigACL {
+					if loadACLDetails {
+						userModel, userErr := repo.usersRepo.GetUserByUserName(userName, true)
+						if userErr != nil {
+							log.Warnf("unable to lookup user using username: %s, error: %v", userName, userErr)
+						} else {
+							if userModel == nil {
+								log.Warnf("User looking for username is null: %s for signature: %s", userName, sigModel.SignatureID)
+							} else {
+								signatureACL = append(signatureACL, *userModel)
+							}
+						}
 					} else {
-						signatureACL = append(signatureACL, *userModel)
+						signatureACL = append(signatureACL, models.User{LfUsername: userName})
 					}
 				}
-			}
+			}()
+			swg.Wait()
 			sigModel.CompanyName = companyName
 			sigModel.UserName = userName
 			sigModel.UserLFID = userLFID

@@ -53,7 +53,7 @@ func (s *service) getAllCCLASignatures(companyID string) ([]*v1Models.Signature,
 			CompanyID:     companyID,
 			SignatureType: aws.String("ccla"),
 			NextKey:       lastScannedKey,
-		}, 1000)
+		}, 1000, signatures.DontLoadACLDetails)
 		if err != nil {
 			return nil, err
 		}
@@ -281,10 +281,8 @@ func (s *service) filterClaProjects(projects []*v2ProjectServiceModels.ProjectOu
 			if project.ResultCount == 0 {
 				prChan <- nil
 				return
-			} else {
-				prChan <- projectOutput
-				return
 			}
+			prChan <- projectOutput
 		}(v)
 	}
 	for range projects {
