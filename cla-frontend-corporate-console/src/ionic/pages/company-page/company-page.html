@@ -102,13 +102,13 @@
                               </td>
 
                               <td data-title="Status" *ngIf="row.Status === 'Request Access'">
-                                <button clear ion-button color="secondary">
-                                  {{ row.Status}}
+                                <button clear ion-button color="secondary" (click)="claManagerRequest(this.company.company_id, this.company.company_name, row.ProjectID, row.ProjectName)">
+                                  {{ row.Status }}
                                 </button>
                               </td>
 
                               <td data-title="Status" *ngIf="row.Status !== 'Request Access'">
-                                <span [title]="row.Status">{{ row.Status}}</span>
+                                <span [title]="row.Status">{{row.Status}}</span>
                               </td>
 
                               <td data-title="CLA Manager">

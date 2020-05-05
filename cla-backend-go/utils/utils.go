@@ -30,7 +30,7 @@ func TimeToString(t time.Time) string {
 
 // CurrentTime returns the current UTC time and current Time in the RFC3339 format
 func CurrentTime() (time.Time, string) {
-	t := time.Now()
+	t := time.Now().UTC()
 	return t, TimeToString(t)
 }
 

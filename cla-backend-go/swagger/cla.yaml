@@ -1247,6 +1247,185 @@ paths:
       tags:
         - company
 
+  /company/{companyID}/project/{projectID}/cla-manager/requests:
+    get:
+      summary: Returns the CLA Manager requests list for the specified Company and Project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: getCLAManagerRequests
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: status
+          in: query
+          type: string
+          required: false
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-request-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - cla-manager-requests
+    post:
+      summary: Creates a new CLA Manager request for the specified Company and Project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: createCLAManagerRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/cla-manager-user'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-request'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - cla-manager-requests
+
+  /company/{companyID}/project/{projectID}/cla-manager/request/{requestID}:
+    get:
+      summary: Returns the CLA Manager request for the specified Company, Project and Request ID
+      security:
+        - OauthSecurity:
+            - user
+      operationId: getCLAManagerRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: requestID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-request'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - cla-manager-requests
+
+  /company/{companyID}/project/{projectID}/cla-manager/request/{requestID}/approve:
+    put:
+      summary: Approves the CLA Manager request for the specified Company and Project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: approveCLAManagerRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: requestID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-request'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - cla-manager-requests
+
+  /company/{companyID}/project/{projectID}/cla-manager/request/{requestID}/deny:
+    put:
+      summary: Denies/Rejects the CLA Manager request for the specified Company and Project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: denyCLAManagerRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: requestID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-request'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - cla-manager-requests
+
   /template:
     get:
       summary: Get Available Templates
@@ -1839,80 +2018,6 @@ definitions:
         items:
           $ref: '#/definitions/user'
 
-  onboard-cla-manager-requests:
-    type: object
-    x-nullable: false
-    title: Onboard CLA Manager Models
-    description: Onboard CLA Manager Request Models
-    properties:
-      requests:
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/onboard-cla-manager-request'
-
-  onboard-cla-manager-request:
-    type: object
-    x-nullable: false
-    title: Onboard CLA Manager Model
-    description: Onboard CLA Manager Request Model
-    properties:
-      request_id:
-        type: string
-      lf_id:
-        type: string
-      project_name:
-        type: string
-      company_name:
-        type: string
-      user_full_name:
-        type: string
-      user_email:
-        type: string
-      date_created:
-        type: string
-      date_modified:
-        type: string
-    required:
-      - lf_id
-      - project_name
-      - company_name
-      - user_full_name
-      - user_email
-
-  onboard-notification-request:
-    type: object
-    x-nullable: false
-    title: Onboard Notification Request Model
-    description: Onboard Notification Request Model
-    properties:
-      sender_email:
-        type: string
-      recipient_emails:
-        type: array
-        description: A list of recipient email addresses
-        items:
-          type: string
-      subject:
-        type: string
-      email_body:
-        type: string
-    required:
-      - sender_email
-      - recipient_emails
-      - subject
-      - email_body
-
-  onboard-notification-response:
-    type: object
-    x-nullable: false
-    title: Onboard Notification Response Model
-    description: Onboard Notification Response Model
-    properties:
-      message:
-        type: string
-    required:
-      - message
 
   gh-org-whitelist:
     type: object
@@ -1965,6 +2070,80 @@ definitions:
     description: User used for request in company access list
     properties:
       inviteId:
+        type: string
+      userLFID:
+        type: string
+
+  cla-manager-request-list:
+    type: object
+    x-nullable: false
+    title: CLA Manager Request List
+    description: A list of CLA Manager requests for the specified company and project
+    properties:
+      requests:
+        type: array
+        x-omitempty: false
+        items:
+          $ref: '#/definitions/cla-manager-request'
+
+  cla-manager-request:
+    type: object
+    x-nullable: false
+    title: CLA Manager Request
+    description: A CLA Manager request for the specified company and project
+    properties:
+      requestID:
+        type: string
+        description: The request ID
+      companyID:
+        type: string
+        description: The company's ID
+      companyExternalID:
+        type: string
+        description: The company's external ID
+      companyName:
+        type: string
+        description: The company name
+      projectID:
+        type: string
+        description: The project's ID
+      projectExternalID:
+        type: string
+        description: The project's external ID
+      projectName:
+        type: string
+        description: The project name
+      userID:
+        type: string
+        description: The user's ID
+      userExternalID:
+        type: string
+        description: The user's external ID
+      userName:
+        type: string
+        description: The user's name
+      userEmail:
+        type: string
+        description: The user's email
+      status:
+        type: string
+        description: The request status - typically, one of pending, approved, denied
+      created:
+        type: string
+        description: Date/time the record was created
+      updated:
+        type: string
+        description: Date/time the record was last modified
+
+  cla-manager-user:
+    type: object
+    x-nullable: false
+    title: CLA Manager User
+    description: User object used for CLA Manager requests
+    properties:
+      userName:
+        type: string
+      userEmail:
         type: string
       userLFID:
         type: string
@@ -2576,210 +2755,7 @@ definitions:
         description: contains personal identifiable information
 
 
-  cla-manager-distribution:
-    type: object
-    properties:
-      oneClaManager:
-        type: integer
-        x-omitempty: false
-      twoClaManagers:
-        type: integer
-        x-omitempty: false
-      threeClaManagers:
-        type: integer
-        x-omitempty: false
-      fourOrMoreClaManagers:
-        type: integer
-        x-omitempty: false
-      createdAt:
-        type: string
-    title: CLA manager distribution across companies
 
-  total-count-metrics:
-    type: object
-    properties:
-      corporateContributorsCount:
-        type: integer
-        x-omitempty: false
-      individualContributorsCount:
-        type: integer
-        x-omitempty: false
-      claManagersCount:
-        type: integer
-        x-omitempty: false
-      contributorsCount:
-        type: integer
-        x-omitempty: false
-      projectsCount:
-        type: integer
-        x-omitempty: false
-      companiesCount:
-        type: integer
-        x-omitempty: false
-      repositoriesCount:
-        type: integer
-        x-omitempty: false
-      githubRepositoriesCount:
-        type: integer
-        x-omitempty: false
-      gerritRepositoriesCount:
-        type: integer
-        x-omitempty: false
-      companiesProjectContributionCount:
-        type: integer
-        x-omitempty: false
-      lfMembersCLACount:
-        type: integer
-        x-omitempty: false
-      nonLfMembersCLACount:
-        type: integer
-        x-omitempty: false
-      createdAt:
-        type: string
-    title: CLA total metrics
-
-  top-companies:
-    type: object
-    properties:
-      topCompaniesByProjectCount:
-        type: array
-        items:
-          $ref: '#/definitions/company-metric'
-      topCompaniesByCorporateContributors:
-        type: array
-        items:
-          $ref: '#/definitions/company-metric'
-      topCompaniesByClaManagers:
-        type: array
-        items:
-          $ref: '#/definitions/company-metric'
-      averageCompanyProjectCount:
-        type: integer
-        x-omitempty: false
-      averageCompanyCorporateContributors:
-        type: integer
-        x-omitempty: false
-      averageCompanyClaManagers:
-        type: integer
-        x-omitempty: false
-
-  top-projects:
-    type: object
-    properties:
-      topProjectsByIcla:
-        type: array
-        items:
-          $ref: '#/definitions/project-metric'
-      topProjectsByCcla:
-        type: array
-        items:
-          $ref: '#/definitions/project-metric'
-      topProjectsByIclaAndCcla:
-        type: array
-        items:
-          $ref: '#/definitions/project-metric'
-
-  company-metric:
-    type: object
-    properties:
-      id:
-        type: string
-      companyName:
-        type: string
-      claManagersCount:
-        type: integer
-        x-omitempty: false
-      corporateContributorsCount:
-        type: integer
-        x-omitempty: false
-      projectsCount:
-        type: integer
-        x-omitempty: false
-      createdAt:
-        type: string
-    title: Company metrics
-
-  list-project-metric:
-    type: object
-    properties:
-      nextKey:
-        type: string
-      list:
-        type: array
-        items:
-          $ref: '#/definitions/sf-project-metric'
-
-  company-project-metrics:
-    type: object
-    properties:
-      list:
-        type: array
-        items:
-          $ref: '#/definitions/company-project-metric'
-
-  company-project-metric:
-    type: object
-    properties:
-      companyID:
-        type: string
-        x-omitempty: false
-      projectID:
-        type: string
-        x-omitempty: false
-      claManagersCount:
-        type: integer
-        x-omitempty: false
-      contributorsCount:
-        type: integer
-        x-omitempty: false
-      projectName:
-        type: string
-        x-omitempty: false
-      companyName:
-        type: string
-        x-omitempty: false
-
-  sf-project-metric:
-    type: object
-    properties:
-      projectExternalId:
-        type : string
-      list:
-        type: array
-        items:
-          $ref: '#/definitions/project-metric'
-
-
-  project-metric:
-    type: object
-    properties:
-      id:
-        type: string
-      externalProjectID:
-        type: string
-      projectName:
-        type: string
-      companiesCount:
-        type: integer
-        x-omitempty: false
-      claManagersCount:
-        type: integer
-        x-omitempty: false
-      corporateContributorsCount:
-        type: integer
-        x-omitempty: false
-      individualContributorsCount:
-        type: integer
-        x-omitempty: false
-      totalContributorsCount:
-        type: integer
-        x-omitempty: false
-      repositoriesCount:
-        type: integer
-        x-omitempty: false
-      createdAt:
-        type: string
-    title: project metrics
 
   github-repositories-group-by-orgs:
     type: object

@@ -44,12 +44,16 @@ type SignatureRepository interface {
 	InvalidateProjectRecord(signatureID string, projectName string) error
 
 	GetSignature(signatureID string) (*models.Signature, error)
+	GetSignatureACL(signatureID string) ([]string, error)
 	GetProjectSignatures(params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetProjectCompanySignatures(companyID, projectID string, nextKey *string, pageSize int64) (*models.Signatures, error)
 	GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetCompanySignatures(params signatures.GetCompanySignaturesParams, pageSize int64, loadACL bool) (*models.Signatures, error)
 	GetUserSignatures(params signatures.GetUserSignaturesParams, pageSize int64) (*models.Signatures, error)
 	ProjectSignatures(projectID string) (*models.Signatures, error)
+
+	AddCLAManager(signatureID, claManagerID string) (*models.Signature, error)
+	RemoveCLAManager(signatureID, claManagerID string) (*models.Signature, error)
 }
 
 // repository data model
@@ -366,6 +370,55 @@ func (repo repository) GetSignature(signatureID string) (*models.Signature, erro
 	return signatureList[0], nil
 }
 
+// GetSignatureACL returns the signature ACL for the specified signature id
+func (repo repository) GetSignatureACL(signatureID string) ([]string, error) {
+	// The table we're interested in
+	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().
+		WithProjection(buildSignatureACLProjection()).
+		Build()
+	if err != nil {
+		log.Warnf("error building expression for signature ID query, signatureID: %s, error: %v",
+			signatureID, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	itemInput := &dynamodb.GetItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"signature_id": {S: aws.String(signatureID)},
+		},
+		ExpressionAttributeNames: expr.Names(),
+		ProjectionExpression:     expr.Projection(),
+		TableName:                aws.String(tableName),
+	}
+
+	// Make the DynamoDB Query API call
+	result, queryErr := repo.dynamoDBClient.GetItem(itemInput)
+	if queryErr != nil {
+		log.Warnf("error retrieving signature ID: %s, error: %v", signatureID, queryErr)
+		return nil, queryErr
+	}
+
+	// No match, didn't find it
+	if result.Item == nil {
+		return nil, nil
+	}
+
+	var dbModel DBManagersModel
+	// Unmarshall the DB response
+	unmarshallErr := dynamodbattribute.UnmarshalMap(result.Item, &dbModel)
+	if unmarshallErr != nil {
+		log.Warnf("error converting DB model signature query using siganture ID: %s, error: %v",
+			signatureID, unmarshallErr)
+		return nil, unmarshallErr
+	}
+
+	return dbModel.SignatureACL, nil
+}
+
 func addConditionToFilter(filter expression.ConditionBuilder, cond expression.ConditionBuilder, filterAdded *bool) expression.ConditionBuilder {
 	if !(*filterAdded) {
 		*filterAdded = true
@@ -664,7 +717,6 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 
 // Get project signatures with no pagination
 func (repo repository) ProjectSignatures(projectID string) (*models.Signatures, error) {
-	queryStartTime := time.Now()
 
 	// The table we're interested in
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
@@ -717,11 +769,8 @@ func (repo repository) ProjectSignatures(projectID string) (*models.Signatures, 
 		return nil, errQuery
 	}
 
-	log.Debugf("Signature project query took: %v resulting in %d results",
-		utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
-
 	// Convert the list of DB models to a list of response models
-	signatures, modelErr := repo.buildProjectSignatureModels(results, projectID, LoadACLDetails)
+	sigs, modelErr := repo.buildProjectSignatureModels(results, projectID, LoadACLDetails)
 	if modelErr != nil {
 		log.Warnf("error converting DB model to response model for signatures with project %s, error: %v",
 			projectID, modelErr)
@@ -730,7 +779,7 @@ func (repo repository) ProjectSignatures(projectID string) (*models.Signatures, 
 
 	return &models.Signatures{
 		ProjectID:  projectID,
-		Signatures: signatures,
+		Signatures: sigs,
 	}, nil
 }
 
@@ -1116,6 +1165,135 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 	}, nil
 }
 
+func (repo repository) AddCLAManager(signatureID, claManagerID string) (*models.Signature, error) {
+	aclEntries, err := repo.GetSignatureACL(signatureID)
+	if err != nil {
+		log.Warnf("unable to fetch signature by ID: %s, error: %+v", signatureID, err)
+		return nil, err
+	}
+
+	if aclEntries == nil {
+		log.Warnf("unable to fetch signature by ID: %s - record not found", signatureID)
+		return nil, nil
+	}
+
+	for _, manager := range aclEntries {
+		if claManagerID == manager {
+			return nil, errors.New("manager already in signature ACL")
+		}
+	}
+
+	aclEntries = append(aclEntries, claManagerID)
+
+	_, now := utils.CurrentTime()
+
+	input := &dynamodb.UpdateItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"signature_id": {
+				S: aws.String(signatureID),
+			},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#A": aws.String("signature_acl"),
+			"#M": aws.String("date_modified"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":a": {
+				SS: aws.StringSlice(aclEntries),
+			},
+			":m": {
+				S: aws.String(now),
+			},
+		},
+		UpdateExpression: aws.String("SET #A = :a, #M = :m"),
+		TableName:        aws.String(fmt.Sprintf("cla-%s-signatures", repo.stage)),
+	}
+
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Warnf("add CLA manager - unable to update request with new ACL entry of '%s' for signature ID: %s, error: %v",
+			claManagerID, signatureID, updateErr)
+		return nil, updateErr
+	}
+
+	// Load the updated document and return it
+	sigModel, err := repo.GetSignature(signatureID)
+	if err != nil {
+		log.Warnf("unable to fetch signature by ID: %s - record not found", signatureID)
+		return nil, err
+	}
+
+	return sigModel, nil
+}
+
+func (repo repository) RemoveCLAManager(signatureID, claManagerID string) (*models.Signature, error) {
+	aclEntries, err := repo.GetSignatureACL(signatureID)
+	if err != nil {
+		log.Warnf("unable to fetch signature by ID: %s, error: %+v", signatureID, err)
+		return nil, err
+	}
+
+	if aclEntries == nil {
+		log.Warnf("unable to fetch signature by ID: %s - record not found", signatureID)
+		return nil, nil
+	}
+
+	// A bit of logic to determine if the manager is listed and to build the new list without the specified manager
+	found := false
+	var updateEntries []string
+	for _, manager := range aclEntries {
+		if claManagerID == manager {
+			found = true
+		} else {
+			updateEntries = append(updateEntries, manager)
+		}
+	}
+
+	if !found {
+		return nil, fmt.Errorf("manager ID: %s not found in signature ACL", claManagerID)
+	}
+
+	_, now := utils.CurrentTime()
+
+	input := &dynamodb.UpdateItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"signature_id": {
+				S: aws.String(signatureID),
+			},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#A": aws.String("signature_acl"),
+			"#M": aws.String("date_modified"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":a": {
+				SS: aws.StringSlice(updateEntries),
+			},
+			":m": {
+				S: aws.String(now),
+			},
+		},
+		UpdateExpression: aws.String("SET #A = :a, #M = :m"),
+		TableName:        aws.String(fmt.Sprintf("cla-%s-signatures", repo.stage)),
+	}
+
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Warnf("remove CLA manager - unable to remove ACL entry of '%s' for signature ID: %s, error: %v",
+			claManagerID, signatureID, updateErr)
+		return nil, updateErr
+	}
+
+	// Load the updated document and return it
+	sigModel, err := repo.GetSignature(signatureID)
+	if err != nil {
+		log.Warnf("unable to fetch signature by ID: %s - record not found", signatureID)
+		return nil, err
+	}
+
+	return sigModel, nil
+}
+
 // buildProjectSignatureModels converts the response model into a response data model
 func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput, projectID string, loadACLDetails bool) ([]*models.Signature, error) {
 	var signatures []*models.Signature
@@ -1262,5 +1440,14 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("domain_whitelist"),
 		expression.Name("github_whitelist"),
 		expression.Name("github_org_whitelist"),
+	)
+}
+
+// buildSignatureACLProject is a helper function to build a signature ACL response/projection
+func buildSignatureACLProjection() expression.ProjectionBuilder {
+	// These are the columns we want returned
+	return expression.NamesList(
+		expression.Name("signature_id"),
+		expression.Name("signature_acl"),
 	)
 }

@@ -69,7 +69,7 @@ GITHUB_PR_NOTIFICATION = 'status+comment'
 # GitHub Application Service.
 GITHUB_APP_WEBHOOK_SECRET = 'webhook-secret'
 
-# GitHub Oauth token for testing the GH API - used in unit tests
+# GitHub Oauth token used for authenticated GitHub API calls and testing
 GITHUB_OAUTH_TOKEN = os.environ.get('GITHUB_OAUTH_TOKEN', '')
 
 # Email Service.

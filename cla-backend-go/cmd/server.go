@@ -12,10 +12,13 @@ import (
 	"strings"
 
 	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
+	"github.com/communitybridge/easycla/cla-backend-go/cla_manager_requests"
+
 	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
 	v2GithubOrganizations "github.com/communitybridge/easycla/cla-backend-go/v2/github_organizations"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
 
 	"github.com/communitybridge/easycla/cla-backend-go/token"
 
@@ -26,7 +29,6 @@ import (
 
 	lfxAuth "github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/docs"
-	"github.com/communitybridge/easycla/cla-backend-go/metrics"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	v2Docs "github.com/communitybridge/easycla/cla-backend-go/v2/docs"
@@ -197,6 +199,7 @@ func server(localMode bool) http.Handler {
 	eventsRepo := events.NewRepository(awsSession, stage)
 	metricsRepo := metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL)
 	githubOrganizationsRepo := github_organizations.NewRepository(awsSession, stage)
+	claManagerReqRepo := cla_manager_requests.NewRepository(awsSession, stage)
 
 	// Our service layer handlers
 	eventsService := events.NewService(eventsRepo, combinedRepo{
@@ -211,7 +214,7 @@ func server(localMode bool) http.Handler {
 	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, signaturesRepo, configFile.CorporateConsoleURL, http.DefaultClient)
 	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo, usersService)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
-	metricsService := metrics.NewService(metricsRepo)
+	v2MetricsService := metrics.NewService(metricsRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
 	repositoriesService := repositories.NewService(repositoriesRepo)
 	gerritService := gerrits.NewService(gerritRepo, &gerrits.LFGroup{
@@ -221,8 +224,8 @@ func server(localMode bool) http.Handler {
 		RefreshToken: configFile.LFGroup.RefreshToken,
 	})
 	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
-
 	v2CompanyService := v2Company.NewService(signaturesRepo, projectRepo)
+	claManagerReqService := cla_manager_requests.NewService(claManagerReqRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
@@ -254,7 +257,7 @@ func server(localMode bool) http.Handler {
 	v2Version.Configure(v2API, Version, Commit, Branch, BuildDate)
 	events.Configure(api, eventsService)
 	v2Events.Configure(v2API, eventsService)
-	v2Metrics.Configure(v2API, metricsService)
+	v2Metrics.Configure(v2API, v2MetricsService)
 	github_organizations.Configure(api, githubOrganizationsService, eventsService)
 	v2GithubOrganizations.Configure(v2API, githubOrganizationsService, eventsService)
 	repositories.Configure(api, repositoriesService, eventsService)
@@ -262,6 +265,7 @@ func server(localMode bool) http.Handler {
 	gerrits.Configure(api, gerritService, projectService, eventsService)
 	v2Gerrits.Configure(v2API, gerritService, projectService, eventsService)
 	v2Company.Configure(v2API, v2CompanyService, companyRepo)
+	cla_manager_requests.Configure(api, claManagerReqService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 
 	user_service.InitClient(configFile.APIGatewayURL)
 	project_service.InitClient(configFile.APIGatewayURL)

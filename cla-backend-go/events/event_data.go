@@ -81,6 +81,35 @@ type CCLAWhitelistRequestRejectedEventData struct {
 	RequestID string
 }
 
+type CLAManagerRequestCreatedEventData struct {
+	RequestID   string
+	CompanyName string
+	ProjectName string
+	UserName    string
+	UserEmail   string
+	UserLFID    string
+}
+
+type CLAManagerRequestApprovedEventData struct {
+	RequestID    string
+	CompanyName  string
+	ProjectName  string
+	UserName     string
+	UserEmail    string
+	ManagerName  string
+	ManagerEmail string
+}
+
+type CLAManagerRequestDeniedEventData struct {
+	RequestID    string
+	CompanyName  string
+	ProjectName  string
+	UserName     string
+	UserEmail    string
+	ManagerName  string
+	ManagerEmail string
+}
+
 type WhitelistGithubOrganizationAddedEventData struct {
 	GithubOrganizationName string
 }
@@ -174,6 +203,24 @@ func (ed *CCLAWhitelistRequestApprovedEventData) GetEventString(args *LogEventAr
 func (ed *CCLAWhitelistRequestRejectedEventData) GetEventString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user [%s] rejected a CCLA Approval Request for project: [%s], company: [%s] - request id: %s",
 		args.userName, args.projectName, args.companyName, ed.RequestID)
+	return data, true
+}
+
+func (ed *CLAManagerRequestCreatedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s / %s / %s] added CLA Manager Request [%s] for Company: %s, Project: %s",
+		ed.UserLFID, ed.UserName, ed.UserEmail, ed.RequestID, ed.CompanyName, ed.ProjectName)
+	return data, true
+}
+
+func (ed *CLAManagerRequestApprovedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("CLA Manager Request [%s] for user [%s / %s] was approved by [%s / %s] for Company: %s, Project: %s",
+		ed.RequestID, ed.UserName, ed.UserEmail, ed.ManagerName, ed.ManagerEmail, ed.CompanyName, ed.ProjectName)
+	return data, true
+}
+
+func (ed *CLAManagerRequestDeniedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("CLA Manager Request [%s] for user [%s / %s] was denied by [%s / %s] for Company: %s, Project: %s",
+		ed.RequestID, ed.UserName, ed.UserEmail, ed.ManagerName, ed.ManagerEmail, ed.CompanyName, ed.ProjectName)
 	return data, true
 }
 

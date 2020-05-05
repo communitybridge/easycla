@@ -551,15 +551,27 @@ function buildCLAManagerRequestsTable(importResources: boolean): aws.dynamodb.Ta
       name: 'cla-' + stage + '-cla-manager-requests',
       attributes: [
         { name: 'request_id', type: 'S' },
-        { name: 'lf_id', type: 'S' },
+        { name: 'company_id', type: 'S' },
+        { name: 'company_external_id', type: 'S' },
+        { name: 'project_id', type: 'S' },
+        { name: 'project_external_id', type: 'S' },
       ],
       hashKey: 'request_id',
       readCapacity: defaultReadCapacity,
       writeCapacity: defaultWriteCapacity,
       globalSecondaryIndexes: [
         {
-          name: 'cla-manager-requests-lfid-index',
-          hashKey: 'lf_id',
+          name: 'cla-manager-requests-company-project-index',
+          hashKey: 'company_id',
+          rangeKey: 'project_id',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
+        },
+        {
+          name: 'cla-manager-requests-external-company-project-index',
+          hashKey: 'company_external_id',
+          rangeKey: 'project_external_id',
           projectionType: 'ALL',
           readCapacity: defaultReadCapacity,
           writeCapacity: defaultWriteCapacity,
@@ -570,7 +582,7 @@ function buildCLAManagerRequestsTable(importResources: boolean): aws.dynamodb.Ta
       },
       tags: defaultTags,
     },
-    importResources ? { import: 'cla-' + stage + '-manager-requests' } : {},
+    importResources ? { import: 'cla-' + stage + '-cla-manager-requests' } : {},
   );
 }
 

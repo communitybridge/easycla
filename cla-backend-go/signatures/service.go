@@ -30,6 +30,9 @@ type SignatureService interface {
 	GetGithubOrganizationsFromWhitelist(signatureID string, githubAccessToken string) ([]models.GithubOrg, error)
 	AddGithubOrganizationToWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
 	DeleteGithubOrganizationFromWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
+
+	AddCLAManager(signatureID, claManagerID string) (*models.Signature, error)
+	RemoveCLAManager(signatureID, claManagerID string) (*models.Signature, error)
 }
 
 type service struct {
@@ -345,4 +348,14 @@ func (s service) InvalidateProjectRecords(projectID string, projectName string) 
 		}
 	}
 	return nil
+}
+
+// AddCLAManager adds the specified manager to the signature ACL list
+func (s service) AddCLAManager(signatureID, claManagerID string) (*models.Signature, error) {
+	return s.repo.AddCLAManager(signatureID, claManagerID)
+}
+
+// RemoveCLAManager removes the specified manager from the signature ACL list
+func (s service) RemoveCLAManager(signatureID, claManagerID string) (*models.Signature, error) {
+	return s.repo.RemoveCLAManager(signatureID, claManagerID)
 }

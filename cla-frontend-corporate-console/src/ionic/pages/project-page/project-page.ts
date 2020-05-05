@@ -32,17 +32,18 @@ export class ProjectPage {
   company: ClaCompanyModel;
   manager: ClaUserModel;
   showModal: any;
-  allRequests: any[];
 
   noPendingContributorRequests: boolean;
+  allContributorRequests: any[];
   approvedContributorRequests: any[];
   pendingContributorRequests: any[];
   rejectedContributorRequests: any[];
 
   noPendingCLAManagerRequests: boolean;
-  approvedCLAManagerRequests: any[];
+  allCLAManagerRequests: any[];
   pendingCLAManagerRequests: any[];
-  rejectedCLAManagerRequests: any[];
+  approvedCLAManagerRequests: any[];
+  deniedCLAManagerRequests: any[];
 
   project: any;
   userEmail: any;
@@ -67,7 +68,8 @@ export class ProjectPage {
 
   getDefaults() {
     this.loading = {
-      requests: false,
+      contributorRequests: false,
+      claManagerRequests: false,
       managers: true
     };
     this.sort = {
@@ -324,35 +326,45 @@ export class ProjectPage {
       if (request.list.length == 0) {
         this.noPendingContributorRequests = true;
       } else {
-        this.allRequests = request.list;
+        this.allContributorRequests = request.list;
         this.pendingContributorRequests = request.list.filter((req) => req.requestStatus === 'pending');
         this.approvedContributorRequests = request.list.filter((req) => req.requestStatus === 'approved');
         this.rejectedContributorRequests = request.list.filter((req) => req.requestStatus === 'rejected');
         this.noPendingContributorRequests = false;
       }
-      this.loading.request = true;
+      this.loading.contributorRequests = false;
+    }, (error) => {
+      console.log(`error loading contributor requests: ${error}`);
+      this.loading.contributorRequests = false;
     })
-
   }
+
   listPendingCLAManagerRequests() {
-    this.claService.getProjectWhitelistRequest(this.companyId, this.projectId, null).subscribe((request) => {
-      if (request.list.length == 0) {
+    console.log('loading CLA Manager Requests');
+    this.claService.getCLAManagerRequests(this.companyId, this.projectId).subscribe((response) => {
+      //console.log('CLA Manager Requests:');
+      //console.log(response);
+      if (response.requests == null || response.requests.length == 0) {
+        console.log('No Pending CLA Manager Requests')
         this.noPendingCLAManagerRequests = true;
       } else {
-        this.allRequests = request.list;
-        this.pendingCLAManagerRequests = request.list.filter((req) => req.requestStatus === 'pending');
-        this.approvedCLAManagerRequests = request.list.filter((req) => req.requestStatus === 'approved');
-        this.rejectedCLAManagerRequests = request.list.filter((req) => req.requestStatus === 'rejected');
+        this.allCLAManagerRequests = response.requests;
+        this.pendingCLAManagerRequests = response.requests.filter((req) => req.status === 'pending');
+        this.approvedCLAManagerRequests = response.requests.filter((req) => req.status === 'approved');
+        this.deniedCLAManagerRequests = response.requests.filter((req) => req.status === 'denied');
         this.noPendingCLAManagerRequests = false;
       }
-      this.loading.request = true;
+      this.loading.claManagerRequests = false;
+    }, (error) => {
+      console.log(`error loading cla manager requests: ${error}`);
+      this.loading.claManagerRequests = false;
     })
 
   }
 
   accept(requestID) {
     let alert = this.alertCtrl.create({
-      subTitle: `Accept Request - Confirmation`,
+      subTitle: `Approve Request - Confirmation`,
       message: 'This will dismiss this pending request and send the contributor ' +
         'an email confirming that they have access. <br/><br/>Please confirm that you ' +
         'have updated the Approved Lists by adding this user by email, domain, ' +
@@ -402,6 +414,69 @@ export class ProjectPage {
               .subscribe(
                 (res) => {
                   this.listPendingContributorRequests();
+                },
+                (error) => console.log(error));
+          }
+        }
+      ]
+    });
+    alert.present();
+    alert.present();
+  }
+
+  approveCLAManagerRequest(companyID: string, companyName: string, projectID, projectName: string, requestID: string) {
+    let alert = this.alertCtrl.create({
+      subTitle: `Approve Request - Confirmation`,
+      message: `This will dismiss this pending CLA Manager request and send all the CLA Managers for ${companyName} `+
+        `for project ${projectName} ` +
+        'an email confirming that this user will now have CLA Manager authority. '+
+        'Additionally, the new CLA Manager will also receive an email with instructions '+
+        'on how to login, view and manage the approval lists.'+
+        '<br/><br/>Are you sure you want to approve this request?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+          }
+        },
+        {
+          text: 'Approve Request',
+          handler: () => {
+            this.claService.approveCLAManagerRequest(companyID, projectID, requestID)
+              .subscribe(
+                (res) => {
+                  this.listPendingCLAManagerRequests();
+                },
+                (error) => console.log(error));
+          }
+        }
+      ]
+    });
+    alert.present();
+  }
+
+  denyCLAManagerRequest(companyID: string, companyName: string, projectID, projectName: string, requestID: string) {
+    let alert = this.alertCtrl.create({
+      subTitle: 'Decline Request - Confirmation',
+      message: 'This will dismiss this CLA Manager request and send the current CLA Managers an email indicating that this request was denied.' +
+        '<br/><br/>Are you sure you want to decline this request?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+          }
+        },
+        {
+          text: 'Decline Request',
+          handler: () => {
+            this.claService.denyCLAManagerRequest(companyID, projectID, requestID)
+              .subscribe(
+                (res) => {
+                  this.listPendingCLAManagerRequests();
                 },
                 (error) => console.log(error));
           }

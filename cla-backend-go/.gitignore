@@ -37,7 +37,12 @@ vendor
 
 # Ignore the generated folder
 gen/
-gen-v1/
 
 # Ignore test reports
 cover.out
+
+# Ignore build-time swagger files
+swagger/user-service.yaml
+swagger/user-service.yaml.bak
+swagger/organization-service.yaml
+swagger/organization-service.yaml.bak
