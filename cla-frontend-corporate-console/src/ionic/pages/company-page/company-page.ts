@@ -283,6 +283,7 @@ export class CompanyPage {
 
   checkStatusOfSignature(signatureACL, projectId, index) {
     const isManager = this.isCLAManger(signatureACL);
+    console.log(isManager);
     if (!isManager) {
       let status = 'Request Access';
       this.claService.getCLAManagerRequests(this.companyId, projectId).subscribe((response) => {
@@ -293,9 +294,9 @@ export class CompanyPage {
             status = 'Pending';
           }
         }
-        this.rows[index].status = status;
+        this.rows[index].Status = status;
       }, (error) => {
-        this.rows[index].status = '-';
+        this.rows[index].Status = '-';
         console.log(`error loading cla manager requests: ${error}`);
       })
     } else {
