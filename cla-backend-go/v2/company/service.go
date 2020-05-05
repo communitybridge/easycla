@@ -4,14 +4,18 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/communitybridge/easycla/cla-backend-go/logging"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/aws/aws-sdk-go/aws"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	v1ProjectParams "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 	v1SignatureParams "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
-	"github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
+	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
+	v2ProjectServiceModels "github.com/communitybridge/easycla/cla-backend-go/v2/project-service/models"
 	v2UserService "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 	v2UserServiceModels "github.com/communitybridge/easycla/cla-backend-go/v2/user-service/models"
 )
@@ -19,11 +23,13 @@ import (
 // Service functions for company
 type Service interface {
 	GetCompanyCLAManagers(companyID string) (*models.CompanyClaManagers, error)
+	GetCompanyActiveCLAs(companyID string) (*models.ActiveClaList, error)
 }
 
 // ProjectRepo contains project repo methods
 type ProjectRepo interface {
 	GetProjectByID(projectID string) (*v1Models.Project, error)
+	GetProjectsByExternalID(params *v1ProjectParams.GetProjectsByExternalIDParams) (*v1Models.Projects, error)
 }
 
 type service struct {
@@ -47,7 +53,7 @@ func (s *service) getAllCCLASignatures(companyID string) ([]*v1Models.Signature,
 			CompanyID:     companyID,
 			SignatureType: aws.String("ccla"),
 			NextKey:       lastScannedKey,
-		}, 1000)
+		}, 1000, signatures.DontLoadACLDetails)
 		if err != nil {
 			return nil, err
 		}
@@ -149,7 +155,7 @@ func (s *service) getProjects(projectIDs []string) map[string]*v1Models.Project 
 		go func(projectID string) {
 			project, err := s.projectRepo.GetProjectByID(projectID)
 			if err != nil {
-				logging.Warnf("Unable to fetch project details for project %s. error = %s", projectID, err)
+				log.Warnf("Unable to fetch project details for project %s. error = %s", projectID, err)
 			}
 			prChan <- project
 		}(id)
@@ -172,4 +178,118 @@ func fillProjectInfo(claManagers []*models.CompanyClaManager, projects map[strin
 		claManager.ProjectName = project.ProjectName
 		claManager.ProjectSfid = project.ProjectExternalID
 	}
+}
+
+func (s *service) GetCompanyActiveCLAs(companyID string) (*models.ActiveClaList, error) {
+	var out models.ActiveClaList
+	sigs, err := s.getAllCCLASignatures(companyID)
+	if err != nil {
+		return nil, err
+	}
+	out.List = make([]*models.ActiveCla, 0, len(sigs))
+	if len(sigs) == 0 {
+		return &out, nil
+	}
+	var wg sync.WaitGroup
+	wg.Add(len(sigs))
+	for _, sig := range sigs {
+		activeCla := &models.ActiveCla{}
+		out.List = append(out.List, activeCla)
+		go func(swg *sync.WaitGroup, signature *v1Models.Signature, acla *models.ActiveCla) {
+			s.fillActiveCLA(swg, signature, acla)
+		}(&wg, sig, activeCla)
+	}
+	wg.Wait()
+	return &out, nil
+}
+
+func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, activeCla *models.ActiveCla) {
+	defer wg.Done()
+	p, err := s.projectRepo.GetProjectByID(sig.ProjectID)
+	if err != nil {
+		log.Error("fillActiveCLA : unable to get project", err)
+		return
+	}
+	psc := v2ProjectService.GetClient()
+	projectDetails, err := psc.GetProject(p.ProjectExternalID)
+	if err != nil {
+		log.Error("fillActiveCLA : unable to get project details", err)
+		return
+	}
+	activeCla.ProjectID = sig.ProjectID
+	activeCla.ProjectName = projectDetails.Name
+	activeCla.ProjectSfid = p.ProjectExternalID
+	activeCla.ProjectType = projectDetails.ProjectType
+	activeCla.ProjectLogo = projectDetails.ProjectLogo
+	activeCla.SignedOn = sig.SignatureCreated
+	activeCla.SubProjects = make([]*models.SubProject, 0, len(projectDetails.Projects))
+
+	var subProjects []*v2ProjectServiceModels.ProjectOutput
+	var signatoryName string
+	var cwg sync.WaitGroup
+	cwg.Add(2)
+
+	go func() {
+		defer cwg.Done()
+		usc := v2UserService.GetClient()
+		if len(sig.SignatureACL) == 0 {
+			log.Warnf("signature : %s have empty signature_acl", sig.SignatureID)
+			return
+		}
+		lfUsername := sig.SignatureACL[0].LfUsername
+		user, err := usc.GetUserByUsername(lfUsername)
+		if err != nil {
+			log.Warnf("unable to get user with lf username : %s", lfUsername)
+			return
+		}
+		signatoryName = user.Name
+	}()
+
+	go func() {
+		defer cwg.Done()
+		subProjects = s.filterClaProjects(projectDetails.Projects)
+	}()
+	cwg.Wait()
+
+	activeCla.SignatoryName = signatoryName
+	for _, subProject := range subProjects {
+		sp := &models.SubProject{
+			ProjectName: subProject.Name,
+			ProjectSfid: subProject.ID,
+			ProjectLogo: subProject.ProjectLogo,
+			ProjectType: subProject.ProjectType,
+		}
+		activeCla.SubProjects = append(activeCla.SubProjects, sp)
+	}
+}
+
+// return projects output for which cla_group is present in cla
+func (s *service) filterClaProjects(projects []*v2ProjectServiceModels.ProjectOutput) []*v2ProjectServiceModels.ProjectOutput {
+	results := make([]*v2ProjectServiceModels.ProjectOutput, 0)
+	prChan := make(chan *v2ProjectServiceModels.ProjectOutput)
+	for _, v := range projects {
+		go func(projectOutput *v2ProjectServiceModels.ProjectOutput) {
+			project, err := s.projectRepo.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
+				ExternalID: projectOutput.ID,
+				PageSize:   aws.Int64(1),
+			})
+			if err != nil {
+				log.Warnf("Unable to fetch project details for project with external id %s. error = %s", projectOutput.ID, err)
+				prChan <- nil
+				return
+			}
+			if project.ResultCount == 0 {
+				prChan <- nil
+				return
+			}
+			prChan <- projectOutput
+		}(v)
+	}
+	for range projects {
+		project := <-prChan
+		if project != nil {
+			results = append(results, project)
+		}
+	}
+	return results
 }

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/cla_manager_requests"
+	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 
 	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 
@@ -267,6 +268,7 @@ func server(localMode bool) http.Handler {
 	cla_manager_requests.Configure(api, claManagerReqService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 
 	user_service.InitClient(configFile.APIGatewayURL)
+	project_service.InitClient(configFile.APIGatewayURL)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler
