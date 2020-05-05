@@ -1,13 +1,15 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-package utils
+package tests
 
 import (
 	"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +19,7 @@ func TestFmtDuration(t *testing.T) {
 	duration, err := time.ParseDuration("2h45m35s")
 	assert.Nil(t, err, fmt.Sprintf("Time parse error: %+v", err))
 	future := now.Add(duration)
-	strDuration := FmtDuration(future.Sub(now))
+	strDuration := utils.FmtDuration(future.Sub(now))
 	assert.True(t, strings.HasPrefix(strDuration, "02:45:35"))
 }
 
@@ -29,7 +31,7 @@ func TestParseDateTimeDefault(t *testing.T) {
 	}
 
 	for _, dateTimeStr := range validInput {
-		dateTimeValue, err := ParseDateTime(dateTimeStr)
+		dateTimeValue, err := utils.ParseDateTime(dateTimeStr)
 		assert.Nil(t, err, fmt.Sprintf("Check for Valid Date Time: %s - %+v", dateTimeStr, dateTimeValue))
 		assert.True(t, dateTimeValue.After(time.Unix(0, 0)))
 	}
@@ -45,20 +47,21 @@ func TestParseDateTimeDefault(t *testing.T) {
 	}
 
 	for _, dateTimeStr := range inValidInput {
-		dateTimeValue, err := ParseDateTime(dateTimeStr)
+		dateTimeValue, err := utils.ParseDateTime(dateTimeStr)
 		assert.NotNil(t, err, fmt.Sprintf("Check for Invalid Date Time: %s - %v", dateTimeStr, dateTimeValue))
 	}
 }
 
 func TestParseDateTimeZulu(t *testing.T) {
 	validInput := []string{
+		"2020-05-05T16:09:37Z",
 		"2020-03-27T15:04:05Z+07:00",
 		"2020-09-02T15:04:05Z-07:00",
 		"2016-01-02T15:04:05Z-07:00",
 	}
 
 	for _, dateTimeStr := range validInput {
-		dateTimeValue, err := ParseDateTime(dateTimeStr)
+		dateTimeValue, err := utils.ParseDateTime(dateTimeStr)
 		assert.Nil(t, err, fmt.Sprintf("Check for Valid Date Time: %s - %+v", dateTimeStr, dateTimeValue))
 		assert.True(t, dateTimeValue.After(time.Unix(0, 0)))
 	}
@@ -74,7 +77,7 @@ func TestParseDateTimeZulu(t *testing.T) {
 	}
 
 	for _, dateTimeStr := range inValidInput {
-		dateTimeValue, err := ParseDateTime(dateTimeStr)
+		dateTimeValue, err := utils.ParseDateTime(dateTimeStr)
 		assert.NotNil(t, err, fmt.Sprintf("Check for Invalid Date Time: %s - %+v", dateTimeStr, dateTimeValue))
 	}
 }
@@ -87,7 +90,7 @@ func TestParseDateTimeMS(t *testing.T) {
 	}
 
 	for _, dateTimeStr := range validInput {
-		dateTimeValue, err := ParseDateTime(dateTimeStr)
+		dateTimeValue, err := utils.ParseDateTime(dateTimeStr)
 		assert.Nil(t, err, fmt.Sprintf("Check for Valid Date Time: %s - %+v", dateTimeStr, dateTimeValue))
 		assert.True(t, dateTimeValue.After(time.Unix(0, 0)))
 	}
@@ -103,7 +106,31 @@ func TestParseDateTimeMS(t *testing.T) {
 	}
 
 	for _, dateTimeStr := range inValidInput {
-		dateTimeValue, err := ParseDateTime(dateTimeStr)
+		dateTimeValue, err := utils.ParseDateTime(dateTimeStr)
 		assert.NotNil(t, err, fmt.Sprintf("Check for Invalid Date Time: %s - %+v", dateTimeStr, dateTimeValue))
 	}
+}
+
+func TestStringInSlice(t *testing.T) {
+	mySlice := []string{"aaaa", "bbbb", "cccc"}
+	assert.True(t, utils.StringInSlice("aaaa", mySlice))
+	assert.True(t, utils.StringInSlice("bbbb", mySlice))
+	assert.True(t, utils.StringInSlice("cccc", mySlice))
+	assert.False(t, utils.StringInSlice("aaaa1", mySlice))
+	assert.False(t, utils.StringInSlice("aaaa", nil))
+	assert.False(t, utils.StringInSlice("aaaa", []string{}))
+}
+
+func TestHostInSlice(t *testing.T) {
+	mySlice := []string{"project.dev.lfcla.com", "corporate.dev.lfcla.com", "contributor.dev.lfcla.com", "api.dev.lfcla.com", "dev.lfcla.com", "localhost", "localhost:8100", "localhost:8101"}
+	assert.True(t, utils.HostInSlice("project.dev.lfcla.com", mySlice))
+	assert.False(t, utils.HostInSlice("*.dev.lfcla.com", mySlice))
+	assert.True(t, utils.HostInSlice("corporate.dev.lfcla.com", mySlice))
+	assert.True(t, utils.HostInSlice("contributor.dev.lfcla.com", mySlice))
+	assert.True(t, utils.HostInSlice("api.dev.lfcla.com", mySlice))
+	assert.False(t, utils.HostInSlice("https://api.dev.lfcla.com", mySlice))
+	assert.True(t, utils.HostInSlice("dev.lfcla.com", mySlice))
+	assert.False(t, utils.HostInSlice("https://dev.lfcla.com", mySlice))
+	assert.True(t, utils.HostInSlice("localhost", []string{"localhost", "foo", "bar"}))
+	assert.True(t, utils.HostInSlice("localhost", []string{"foo", "localhost:8100", "localhost:8101"}))
 }

@@ -314,7 +314,7 @@ func setupCORSHandler(handler http.Handler, allowedOrigins []string) http.Handle
 			}
 
 			// Ensure the origin is in our allowed list
-			allowedOrigin := hostInSlice(u.Hostname(), allowedOrigins)
+			allowedOrigin := utils.HostInSlice(u.Hostname(), allowedOrigins)
 			if allowedOrigin {
 				// localhost with HTTP is allowed
 				if strings.HasPrefix(u.Hostname(), "localhost") && u.Scheme == "http" {
@@ -372,35 +372,6 @@ func setupCORSHandlerLocal(handler http.Handler) http.Handler {
 	})
 
 	return c.Handler(handler)
-}
-
-// stringInSlice returns true if the specified string value exists in the slice, otherwise returns false
-func stringInSlice(a string, list []string) bool {
-	if list == nil {
-		return false
-	}
-
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-// hostInSlice returns true if the specified host value exists in the slice, otherwise returns false
-func hostInSlice(a string, list []string) bool {
-	if list == nil {
-		return false
-	}
-
-	for _, b := range list {
-		b = strings.Split(b, ":")[0]
-		if b == a {
-			return true
-		}
-	}
-	return false
 }
 
 // LoggingResponseWriter is a wrapper around an http.ResponseWriter which captures the
