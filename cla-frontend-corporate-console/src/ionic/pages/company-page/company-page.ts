@@ -293,14 +293,15 @@ export class CompanyPage {
             status = 'Pending';
           }
         }
-        this.rows[index].status = status;
+        this.rows[index].Status = status;
       }, (error) => {
-        this.rows[index].status = '-';
+        this.rows[index].Status = '-';
         console.log(`error loading cla manager requests: ${error}`);
       })
     } else {
       return 'CLA Manager';
     }
+    return '-';
   }
 
   isCLAManger(signatureACL) {
