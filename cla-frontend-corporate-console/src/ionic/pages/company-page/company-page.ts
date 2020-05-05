@@ -1,14 +1,14 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {AlertController, IonicPage, ModalController, NavController, NavParams} from 'ionic-angular';
-import {ClaService} from '../../services/cla.service';
-import {ClaCompanyModel} from '../../models/cla-company';
-import {ClaUserModel} from '../../models/cla-user';
-import {RolesService} from '../../services/roles.service';
-import {Restricted} from '../../decorators/restricted';
-import {ColumnMode, SelectionType, SortType} from '@swimlane/ngx-datatable';
+import { Component } from '@angular/core';
+import { AlertController, IonicPage, ModalController, NavController, NavParams } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
+import { ClaCompanyModel } from '../../models/cla-company';
+import { ClaUserModel } from '../../models/cla-user';
+import { RolesService } from '../../services/roles.service';
+import { Restricted } from '../../decorators/restricted';
+import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -95,18 +95,12 @@ export class CompanyPage {
   }
 
   getCompanySignatures() {
-    this.loading.companySignatures = true;
     this.loading.projects = true;
-
     this.claService.getCompanySignatures(this.companyId).subscribe(
       (response) => {
-        this.loading.companySignatures = false;
-
         if (response.resultCount > 0) {
           this.companySignatures = response.signatures.filter((signature) => signature.signatureSigned === true);
-          if (this.companySignatures.length <= 0) {
-            this.loading.projects = false;
-          }
+          this.loading.projects = this.companySignatures.length <= 0 ? false : true;
           for (let signature of this.companySignatures) {
             this.getProject(signature);
           }
@@ -115,7 +109,6 @@ export class CompanyPage {
         }
       },
       (exception) => {
-        this.loading.companySignatures = false;
         this.loading.projects = false;
       }
     );
@@ -123,39 +116,42 @@ export class CompanyPage {
 
   getProject(signature) {
     this.claService.getProject(signature.projectID).subscribe((response) => {
-      this.mapProjects(response, signature.signatureACL);
+      this.rows.push({
+        ProjectID: response.project_id,
+        ProjectName: response.project_name !== undefined ? response.project_name : '',
+        ProjectManagers: signature.signatureACL,
+        Status: this.getStatus(this.rows.length),
+        PendingContributorRequests: this.getPendingContributorRequests(response.project_id, this.rows.length),
+        PendingCLAManagerRequests: this.getPendingCLAManagerRequests(response.project_id, this.rows.length),
+      });
+      this.rows.sort((a, b) => {
+        return a.ProjectName.toLowerCase().localeCompare(b.ProjectName.toLowerCase());
+      });
     });
   }
 
-  mapProjects(projectDetail, signatureACL) {
-    if (projectDetail) {
-      this.claService.getProjectWhitelistRequest(this.companyId, projectDetail.project_id, "pending").subscribe((res) => {
-        let pendingContributorRequests = [];
-        this.loading.projects = false;
-        if (res.list.length > 0) {
-          pendingContributorRequests = res.list.filter((r) => {
-            return r.projectId === projectDetail.project_id
-          })
-        }
-        this.claService.getCLAManagerRequests(this.companyId, projectDetail.project_id).subscribe((response) => {
-          let numCLAManagerRequests = 0;
-          if (response.requests != null && response.requests.length > 0) {
-            numCLAManagerRequests = response.requests.filter((req) => req.status === 'pending').length;
-          }
-          this.rows.push({
-            ProjectID: projectDetail.project_id,
-            ProjectName: projectDetail.project_name !== undefined ? projectDetail.project_name : '',
-            ProjectManagers: signatureACL,
-            Status: this.getStatus(this.companySignatures),
-            PendingContributorRequests: (pendingContributorRequests != null) ? pendingContributorRequests.length : 0,
-            PendingCLAManagerRequests: numCLAManagerRequests,
-          });
-          this.rows.sort((a, b) => {
-            return a.ProjectName.toLowerCase().localeCompare(b.ProjectName.toLowerCase());
-          });
+  getPendingContributorRequests(projectId, index) {
+    this.claService.getProjectWhitelistRequest(this.companyId, projectId, "pending").subscribe((res) => {
+      let pendingContributorRequests = [];
+      if (res.list.length > 0) {
+        pendingContributorRequests = res.list.filter((r) => {
+          return r.projectId === projectId
         })
-      })
-    }
+      }
+      this.rows[index].PendingContributorRequests = pendingContributorRequests.length;
+    });
+    return '-';
+  }
+
+  getPendingCLAManagerRequests(projectId, index) {
+    this.claService.getCLAManagerRequests(this.companyId, projectId).subscribe((response) => {
+      let numCLAManagerRequests = 0;
+      if (response.requests != null && response.requests.length > 0) {
+        numCLAManagerRequests = response.requests.filter((req) => req.status === 'pending').length;
+      }
+      this.rows[index].pendingCLAManagerRequests = numCLAManagerRequests;
+    });
+    return '-';
   }
 
   onSelect(projectId) {
@@ -277,40 +273,43 @@ export class CompanyPage {
     alert.present();
   }
 
-  getStatus(signatures) {
-    for (let i = 0; i < signatures.length; i++) {
-      return (this.checkStatusOfSignature(signatures[i].signatureACL, signatures[i].projectID, this.userEmail))
+  getStatus(index) {
+    for (let i = 0; i < this.companySignatures.length; i++) {
+      const signatureACL = this.companySignatures[i].signatureACL;
+      const projectId = this.companySignatures[i].projectID;
+      return (this.checkStatusOfSignature(signatureACL, projectId, index))
     }
   }
 
-  checkStatusOfSignature(signatureACL, projectID: string, userEmail: string) {
+  checkStatusOfSignature(signatureACL, projectId, index) {
+    const isManager = this.isCLAManger(signatureACL);
+    if (!isManager) {
+      let status = 'Request Access';
+      this.claService.getCLAManagerRequests(this.companyId, projectId).subscribe((response) => {
+        if (response.requests != null && response.requests.length > 0) {
+          const userId = localStorage.getItem('userid');
+          let pendingCLAManagerRequests = response.requests.filter((req) => req.status === 'pending' && req.userID === userId);
+          if (pendingCLAManagerRequests.length > 0) {
+            status = 'Pending';
+          }
+        }
+        this.rows[index].status = status;
+      }, (error) => {
+        this.rows[index].status = '-';
+        console.log(`error loading cla manager requests: ${error}`);
+      })
+    } else {
+      return 'CLA Manager';
+    }
+  }
+
+  isCLAManger(signatureACL) {
     for (let i = 0; i < signatureACL.length; i++) {
-      if (signatureACL[i].lfEmail === userEmail) {
-        return 'CLA Manager';
+      if (signatureACL[i].lfEmail === this.userEmail) {
+        return true;
       }
     }
-
-    let status = 'Request Access';
-    this.claService.getCLAManagerRequests(this.companyId, projectID).subscribe((response) => {
-      console.log('response:');
-      console.log(response);
-      if (response.requests != null && response.requests.length > 0) {
-        const userId = localStorage.getItem('userid');
-        console.log(`Testing ${userId}`);
-        let pendingCLAManagerRequests = response.requests.filter((req) => req.status === 'pending' && req.userID === userId);
-        console.log(`pending requests:`);
-        console.log(pendingCLAManagerRequests);
-        if (pendingCLAManagerRequests.length > 0) {
-          console.log('setting pending status');
-          status = 'Pending';
-        }
-      }
-    }, (error) => {
-      console.log(`error loading cla manager requests: ${error}`);
-    })
-
-    console.log(`returnging status: ${status}`);
-    return status;
+    return false;
   }
 
 
