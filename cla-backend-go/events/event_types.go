@@ -57,8 +57,9 @@ const (
 	WhitelistGithubOrganizationAdded   = "whitelist.github_organization_added"
 	WhitelistGithubOrganizationDeleted = "whitelist.github_organization_deleted"
 
-	ClaManagerAccessRequestAdded   = "cla_manager.access_request_added"
-	ClaManagerAccessRequestDeleted = "cla_manager.access_request_deleted"
+	ClaManagerAccessRequestCreated  = "cla_manager.access_request_created"
+	ClaManagerAccessRequestApproved = "cla_manager.access_request_approved"
+	ClaManagerAccessRequestDenied   = "cla_manager.access_request_denied"
 
 	ProjectCreated = "project.created"
 	ProjectUpdated = "project.updated"
