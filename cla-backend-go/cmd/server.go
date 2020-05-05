@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 	"github.com/communitybridge/easycla/cla-backend-go/cla_manager_requests"
+	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 
 	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 
