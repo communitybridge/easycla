@@ -281,6 +281,7 @@ functions:
     description: "EasyCLA Save Metrics"
     runtime: go1.x
     handler: metrics-aws-lambda
+    timeout: 900 # maximum time allowed
     events:
       - schedule:
           description: 'A function that gathers metrics on a given schedule'

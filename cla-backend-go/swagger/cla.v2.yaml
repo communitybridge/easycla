@@ -1140,7 +1140,7 @@ paths:
       tags:
         - gerrits
 
-  /company/{companyID}/cla-managers:
+  /company/{companySFID}/cla-managers:
     get:
       summary: get cla manager for company
       description: Returns list cla managers for the company
@@ -1150,7 +1150,7 @@ paths:
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-companySFID"
       responses:
         '200':
           description: 'Success'
@@ -1162,6 +1162,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - company
 
@@ -1253,6 +1255,12 @@ parameters:
   path-companyID:
     name: companyID
     description: id of the company
+    in: path
+    type: string
+    required: true
+  path-companySFID:
+    name: companySFID
+    description: salesforce id of the company
     in: path
     type: string
     required: true

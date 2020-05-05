@@ -13,6 +13,7 @@ func buildCompanyProjection() expression.ProjectionBuilder {
 		expression.Name("company_id"),
 		expression.Name("company_name"),
 		expression.Name("company_acl"),
+		expression.Name("company_external_id"),
 		expression.Name("date_created"),
 		expression.Name("date_modified"),
 		expression.Name("note"),
