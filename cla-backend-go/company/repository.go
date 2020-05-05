@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 
@@ -66,14 +65,13 @@ func NewRepository(awsSession *session.Session, stage string) IRepository {
 }
 
 func (dbCompanyModel *Company) toModel() (*models.Company, error) {
-	const timeFormat = "2006-01-02T15:04:05.999999+0000"
 	// Convert the "string" date time
-	createdDateTime, err := time.Parse(timeFormat, dbCompanyModel.Created)
+	createdDateTime, err := utils.ParseDateTime(dbCompanyModel.Created)
 	if err != nil {
 		log.Warnf("Error converting created date time for company: %s, error: %v", dbCompanyModel.CompanyID, err)
 		return nil, err
 	}
-	updateDateTime, err := time.Parse(timeFormat, dbCompanyModel.Updated)
+	updateDateTime, err := utils.ParseDateTime(dbCompanyModel.Updated)
 	if err != nil {
 		log.Warnf("Error converting updated date time for company: %s, error: %v", dbCompanyModel.CompanyID, err)
 		return nil, err
@@ -532,20 +530,23 @@ func buildCompanyModels(results *dynamodb.ScanOutput) ([]models.Company, error) 
 		return nil, err
 	}
 
+	now, _ := utils.CurrentTime()
+
 	for _, dbCompany := range dbCompanies {
 		createdDateTime, err := utils.ParseDateTime(dbCompany.Created)
 		if err != nil {
 			log.Warnf("Unable to parse company created date time: %s, error: %v - using current time",
 				dbCompany.Created, err)
-			createdDateTime = time.Now()
+			createdDateTime = now
 		}
 
 		modifiedDateTime, err := utils.ParseDateTime(dbCompany.Modified)
 		if err != nil {
 			log.Warnf("Unable to parse company modified date time: %s, error: %v - using current time",
 				dbCompany.Created, err)
-			modifiedDateTime = time.Now()
+			modifiedDateTime = now
 		}
+
 		companies = append(companies, models.Company{
 			CompanyACL:        dbCompany.CompanyACL,
 			CompanyID:         dbCompany.CompanyID,
@@ -797,7 +798,7 @@ func (repo repository) AddPendingCompanyInviteRequest(companyID string, userID s
 		return nil, err
 	}
 
-	now := currentTime()
+	_, now := utils.CurrentTime()
 
 	input := &dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
@@ -860,6 +861,8 @@ func (repo repository) updateInviteRequestStatus(companyInviteID, status string)
 		return err
 	}
 
+	_, now := utils.CurrentTime()
+
 	input := &dynamodb.UpdateItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"company_invite_id": {
@@ -883,7 +886,7 @@ func (repo repository) updateInviteRequestStatus(companyInviteID, status string)
 				S: aws.String(status),
 			},
 			":m": {
-				S: aws.String(currentTime()),
+				S: aws.String(now),
 			},
 		},
 		UpdateExpression: aws.String("SET #C = :c, #U = :u, #S = :s, #M = :m"),
@@ -903,6 +906,9 @@ func (repo repository) updateInviteRequestStatus(companyInviteID, status string)
 // UpdateCompanyAccessList updates the company ACL when provided the company ID and ACL list
 func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []string) error {
 	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
+
+	_, now := utils.CurrentTime()
+
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeNames: map[string]*string{
 			"#S": aws.String("company_acl"),
@@ -913,7 +919,7 @@ func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []st
 				SS: aws.StringSlice(companyACL),
 			},
 			":m": {
-				S: aws.String(currentTime()),
+				S: aws.String(now),
 			},
 		},
 		TableName: aws.String(tableName),
@@ -932,9 +938,4 @@ func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []st
 	}
 
 	return nil
-}
-
-// currentTime helper routine to return the date/time
-func currentTime() string {
-	return time.Now().UTC().Format(time.RFC3339)
 }
