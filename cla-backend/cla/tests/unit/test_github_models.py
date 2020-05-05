@@ -93,7 +93,8 @@ class TestGitHubModels(unittest.TestCase):
         project = Project()
         project.set_project_id('fake_project_id')
         handle_commit_from_user(project, 'fake_sha', (123,'foo','foo@gmail.com'), signed, missing)
-        self.assertListEqual(missing,[('fake_sha', [123, 'foo', 'foo@gmail.com', True])])
+        # We commented out this functionality for now - re-enable if we add it back
+        # self.assertListEqual(missing, [('fake_sha', [123, 'foo', 'foo@gmail.com', True])])
         self.assertEqual(signed, [])
 
 

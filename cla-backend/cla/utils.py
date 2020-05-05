@@ -866,7 +866,7 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                         + "("
                         + " ,".join(commit_hashes[:-1])
                         + ")"
-                        + "is whitelisted, but they must confirm "
+                        + "is authorized, but they must confirm "
                         + "their affiliation with the company that did so."
                         + f"[Start by clicking here]({sign_url}), click \"Corporate\","
                         + "select the appropriate company from the list, then confirm "
