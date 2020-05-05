@@ -42,7 +42,16 @@ gen/
 cover.out
 
 # Ignore build-time swagger files
+swagger/project-service.yaml
+swagger/project-service.yaml.bak
 swagger/user-service.yaml
 swagger/user-service.yaml.bak
 swagger/organization-service.yaml
 swagger/organization-service.yaml.bak
+swagger/user_service.yaml.bak
+v2/organization-service/
+v2/project-service/client/
+v2/project-service/models/
+v2/user-service/client/
+v2/user-service/models/
+
