@@ -73,7 +73,7 @@ func (s *service) GetCompanyCLAManagers(companyID string) (*models.CompanyClaMan
 		for _, user := range sig.SignatureACL {
 			claManagers = append(claManagers, &models.CompanyClaManager{
 				// DB doesn't have approved_on value
-				ApprovedOn: "",
+				ApprovedOn: sig.SignatureCreated,
 				LfUsername: user.LfUsername,
 				ProjectID:  sig.ProjectID,
 			})

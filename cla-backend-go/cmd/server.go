@@ -263,7 +263,7 @@ func server(localMode bool) http.Handler {
 	v2Repositories.Configure(v2API, repositoriesService, eventsService)
 	gerrits.Configure(api, gerritService, projectService, eventsService)
 	v2Gerrits.Configure(v2API, gerritService, projectService, eventsService)
-	v2Company.Configure(v2API, v2CompanyService)
+	v2Company.Configure(v2API, v2CompanyService, companyRepo)
 	cla_manager_requests.Configure(api, claManagerReqService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 
 	user_service.InitClient(configFile.APIGatewayURL)

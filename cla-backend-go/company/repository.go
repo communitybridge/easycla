@@ -35,6 +35,7 @@ var (
 type IRepository interface { //nolint
 	GetCompanies() (*models.Companies, error)
 	GetCompany(companyID string) (*models.Company, error)
+	GetCompanyByExternalID(companySFID string) (*models.Company, error)
 	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
 	GetCompaniesByUserManager(userID string, userModel user.User) (*models.Companies, error)
 	GetCompaniesByUserManagerWithInvites(userID string, userModel user.User) (*models.CompaniesWithInvites, error)
@@ -62,6 +63,31 @@ func NewRepository(awsSession *session.Session, stage string) IRepository {
 		stage:          stage,
 		dynamoDBClient: dynamodb.New(awsSession),
 	}
+}
+
+func (dbCompanyModel *Company) toModel() (*models.Company, error) {
+	const timeFormat = "2006-01-02T15:04:05.999999+0000"
+	// Convert the "string" date time
+	createdDateTime, err := time.Parse(timeFormat, dbCompanyModel.Created)
+	if err != nil {
+		log.Warnf("Error converting created date time for company: %s, error: %v", dbCompanyModel.CompanyID, err)
+		return nil, err
+	}
+	updateDateTime, err := time.Parse(timeFormat, dbCompanyModel.Updated)
+	if err != nil {
+		log.Warnf("Error converting updated date time for company: %s, error: %v", dbCompanyModel.CompanyID, err)
+		return nil, err
+	}
+
+	// Convert the local DB model to a public swagger model
+	return &models.Company{
+		CompanyACL:        dbCompanyModel.CompanyACL,
+		CompanyID:         dbCompanyModel.CompanyID,
+		CompanyName:       dbCompanyModel.CompanyName,
+		CompanyExternalID: dbCompanyModel.CompanyExternalID,
+		Created:           strfmt.DateTime(createdDateTime),
+		Updated:           strfmt.DateTime(updateDateTime),
+	}, nil
 }
 
 // GetCompanies retrieves all the companies
@@ -140,6 +166,45 @@ func (repo repository) GetCompanies() (*models.Companies, error) {
 	}, nil
 }
 
+// GetCompanyByExternalID returns a company based on the company external ID
+func (repo repository) GetCompanyByExternalID(companySFID string) (*models.Company, error) {
+	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
+	condition := expression.Key("company_external_id").Equal(expression.Value(companySFID))
+	builder := expression.NewBuilder().WithKeyCondition(condition)
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String("external-company-index"),
+	}
+
+	results, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.Warnf("error retrieving company using company_external_id. error = %s", err.Error())
+		return nil, err
+	}
+
+	if len(results.Items) == 0 {
+		return nil, ErrCompanyDoesNotExist
+	}
+	dbCompanyModel := Company{}
+	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbCompanyModel)
+	if err != nil {
+		return nil, err
+	}
+	return dbCompanyModel.toModel()
+}
+
 // GetCompany returns a company based on the company ID
 func (repo repository) GetCompany(companyID string) (*models.Company, error) {
 
@@ -170,31 +235,7 @@ func (repo repository) GetCompany(companyID string) (*models.Company, error) {
 		log.Warnf("error unmarshalling company table data, error: %v", err)
 		return nil, err
 	}
-
-	// Convert the "string" date time
-	createdDateTime, err := utils.ParseDateTime(dbCompanyModel.Created)
-	if err != nil {
-		log.Warnf("error converting created date time for company: %s with value: %s, error: %v",
-			companyID, dbCompanyModel.Created, err)
-		return nil, err
-	}
-
-	updateDateTime, err := utils.ParseDateTime(dbCompanyModel.Updated)
-	if err != nil {
-		log.Warnf("Error converting updated date time for company: %s with value: %s, error: %v",
-			companyID, dbCompanyModel.Updated, err)
-		return nil, err
-	}
-
-	// Convert the local DB model to a public swagger model
-	return &models.Company{
-		CompanyACL:  dbCompanyModel.CompanyACL,
-		CompanyID:   dbCompanyModel.CompanyID,
-		CompanyName: dbCompanyModel.CompanyName,
-		Created:     strfmt.DateTime(createdDateTime),
-		Updated:     strfmt.DateTime(updateDateTime),
-	}, nil
-
+	return dbCompanyModel.toModel()
 }
 
 // SearchCompanyByName locates companies by the matching name and return any potential matches
@@ -432,12 +473,13 @@ func (repo repository) buildCompaniesByUserManagerWithInvites(companies *models.
 	var companyWithInvite []models.CompanyWithInvite
 	for _, company := range companies.Companies {
 		companyWithInvite = append(companyWithInvite, models.CompanyWithInvite{
-			CompanyName: company.CompanyName,
-			CompanyID:   company.CompanyID,
-			CompanyACL:  company.CompanyACL,
-			Created:     company.Created,
-			Updated:     company.Updated,
-			Status:      "Joined",
+			CompanyName:       company.CompanyName,
+			CompanyID:         company.CompanyID,
+			CompanyExternalID: company.CompanyExternalID,
+			CompanyACL:        company.CompanyACL,
+			Created:           company.Created,
+			Updated:           company.Updated,
+			Status:            "Joined",
 		})
 	}
 
@@ -473,11 +515,12 @@ func buildCompanyModels(results *dynamodb.ScanOutput) ([]models.Company, error) 
 	var companies []models.Company
 
 	type ItemSignature struct {
-		CompanyID   string   `json:"company_id"`
-		CompanyName string   `json:"company_name"`
-		CompanyACL  []string `json:"company_acl"`
-		Created     string   `json:"date_created"`
-		Modified    string   `json:"date_modified"`
+		CompanyID         string   `json:"company_id"`
+		CompanyName       string   `json:"company_name"`
+		CompanyACL        []string `json:"company_acl"`
+		CompanyExternalID string   `json:"company_external_id"`
+		Created           string   `json:"date_created"`
+		Modified          string   `json:"date_modified"`
 	}
 
 	// The DB company model
@@ -503,13 +546,13 @@ func buildCompanyModels(results *dynamodb.ScanOutput) ([]models.Company, error) 
 				dbCompany.Created, err)
 			modifiedDateTime = time.Now()
 		}
-
 		companies = append(companies, models.Company{
-			CompanyACL:  dbCompany.CompanyACL,
-			CompanyID:   dbCompany.CompanyID,
-			CompanyName: dbCompany.CompanyName,
-			Created:     strfmt.DateTime(createdDateTime),
-			Updated:     strfmt.DateTime(modifiedDateTime),
+			CompanyACL:        dbCompany.CompanyACL,
+			CompanyID:         dbCompany.CompanyID,
+			CompanyName:       dbCompany.CompanyName,
+			CompanyExternalID: dbCompany.CompanyExternalID,
+			Created:           strfmt.DateTime(createdDateTime),
+			Updated:           strfmt.DateTime(modifiedDateTime),
 		})
 	}
 

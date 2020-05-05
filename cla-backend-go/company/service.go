@@ -31,6 +31,7 @@ const (
 type IService interface { // nolint
 	GetCompanies() (*models.Companies, error)
 	GetCompany(companyID string) (*models.Company, error)
+	GetCompanyByExternalID(companySFID string) (*models.Company, error)
 	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
 	GetCompaniesByUserManager(userID string) (*models.Companies, error)
 	GetCompaniesByUserManagerWithInvites(userID string) (*models.CompaniesWithInvites, error)
@@ -559,4 +560,9 @@ func (s service) getPreferredNameAndEmail(lfid string) (string, string, error) {
 	}
 
 	return userName, userEmail, nil
+}
+
+func (s service) GetCompanyByExternalID(companySFID string) (*models.Company, error) {
+	return s.repo.GetCompanyByExternalID(companySFID)
+
 }
