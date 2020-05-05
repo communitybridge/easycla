@@ -1,6 +1,7 @@
 package user_service
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,11 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/v2/user-service/models"
 	runtimeClient "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+)
+
+// errors
+var (
+	ErrUserNotFound = errors.New("user not found")
 )
 
 // Client is client for user_service
@@ -55,4 +61,16 @@ func (usc *Client) GetUsersByUsernames(lfUsernames []string) ([]*models.User, er
 		return nil, err
 	}
 	return result.Payload.Data, nil
+}
+
+// GetUserByUsername returns user by lfUsername
+func (usc *Client) GetUserByUsername(lfUsername string) (*models.User, error) {
+	users, err := usc.GetUsersByUsernames([]string{lfUsername})
+	if err != nil {
+		return nil, err
+	}
+	if len(users) == 0 {
+		return nil, ErrUserNotFound
+	}
+	return users[0], nil
 }
