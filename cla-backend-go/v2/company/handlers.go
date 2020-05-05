@@ -43,6 +43,24 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 			return company.NewGetCompanyClaManagersOK().WithPayload(result)
 		})
+	api.CompanyGetCompanyActiveClaHandler = company.GetCompanyActiveClaHandlerFunc(
+		func(params company.GetCompanyActiveClaParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+				return company.NewGetCompanyActiveClaUnauthorized()
+			}
+			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
+			if err != nil {
+				if err == v1Company.ErrCompanyDoesNotExist {
+					return company.NewGetCompanyActiveClaNotFound()
+				}
+			}
+			result, err := service.GetCompanyActiveCLAs(comp.CompanyID)
+			if err != nil {
+				return company.NewGetCompanyActiveClaBadRequest().WithPayload(errorResponse(err))
+			}
+			return company.NewGetCompanyActiveClaOK().WithPayload(result)
+		})
 }
 
 type codedResponse interface {
