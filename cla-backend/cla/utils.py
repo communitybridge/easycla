@@ -855,7 +855,8 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                     + " ,".join(commit_hashes)
                     + ") is missing the User's ID, preventing the EasyCLA check. [Consult GitHub Help]("
                     + github_help_url
-                    + ") to resolve."
+                    + ") to resolve. For further assistance with EasyCLA, "
+                    + f"[please submit a support request ticket]({support_url})."
                     + "</li>"
                 )
             else:
@@ -870,7 +871,8 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                         + "their affiliation with their company. "
                         + f"[Start the authorization process by clicking here]({sign_url}), click \"Corporate\","
                         + "select the appropriate company from the list, then confirm "
-                        + "your affiliation on the page that appears."
+                        + "your affiliation on the page that appears. For further assistance with EasyCLA, "
+                        + f"[please submit a support request ticket]({support_url})."
                         + "</li>"
                     )
                 else:
