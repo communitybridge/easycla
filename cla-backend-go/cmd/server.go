@@ -196,6 +196,7 @@ func server(localMode bool) http.Handler {
 	companyRepo := company.NewRepository(awsSession, stage)
 	signaturesRepo := signatures.NewRepository(awsSession, stage, companyRepo, usersRepo)
 	projectRepo := project.NewRepository(awsSession, stage, repositoriesRepo, gerritRepo)
+	v2ProjectRepo := v2Project.NewRepository(awsSession, stage, repositoriesRepo, gerritRepo)
 	eventsRepo := events.NewRepository(awsSession, stage)
 	metricsRepo := metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL)
 	githubOrganizationsRepo := github_organizations.NewRepository(awsSession, stage)
@@ -224,6 +225,8 @@ func server(localMode bool) http.Handler {
 		RefreshToken: configFile.LFGroup.RefreshToken,
 	})
 	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
+	v2ProjectService := v2Project.NewService(v2ProjectRepo)
+
 	v2CompanyService := v2Company.NewService(signaturesRepo, projectRepo)
 	claManagerReqService := cla_manager_requests.NewService(claManagerReqRepo)
 
@@ -241,7 +244,7 @@ func server(localMode bool) http.Handler {
 	// Setup our API handlers
 	users.Configure(api, usersService, eventsService)
 	project.Configure(api, projectService, eventsService, gerritService, repositoriesService, signaturesService)
-	v2Project.Configure(v2API, projectService, eventsService)
+	v2Project.Configure(v2API, projectService, v2ProjectService, eventsService)
 	health.Configure(api, healthService)
 	v2Health.Configure(v2API, healthService)
 	template.Configure(api, templateService, eventsService)
