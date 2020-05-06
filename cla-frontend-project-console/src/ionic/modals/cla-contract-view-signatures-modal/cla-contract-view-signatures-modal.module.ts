@@ -11,6 +11,7 @@ import { SortingDisplayComponentModule } from '../../components/sorting-display/
 import { NgxPaginationModule } from 'ngx-pagination';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { SortTableComponentModule } from '../../components/sort-table/sort-table.module';
+import { SharedModule } from '../../shared.module';
 
 @NgModule({
   declarations: [ClaContractViewSignaturesModal],
@@ -22,8 +23,9 @@ import { SortTableComponentModule } from '../../components/sort-table/sort-table
     NgxPaginationModule,
     NgxDatatableModule,
     SortTableComponentModule,
+    SharedModule,
     IonicPageModule.forChild(ClaContractViewSignaturesModal)
   ],
   entryComponents: [ClaContractViewSignaturesModal]
 })
-export class ClaContractViewSignaturesModalModule {}
+export class ClaContractViewSignaturesModalModule { }
