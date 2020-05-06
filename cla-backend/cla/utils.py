@@ -865,10 +865,10 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                         + author
                         + "("
                         + " ,".join(commit_hashes[:-1])
-                        + ")"
+                        + ") "
                         + "is authorized, but they must confirm "
-                        + "their affiliation with the company that did so."
-                        + f"[Start by clicking here]({sign_url}), click \"Corporate\","
+                        + "their affiliation with their company. "
+                        + f"[Start the authorization process by clicking here]({sign_url}), click \"Corporate\","
                         + "select the appropriate company from the list, then confirm "
                         + "your affiliation on the page that appears."
                         + "</li>"
