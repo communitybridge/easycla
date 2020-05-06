@@ -429,6 +429,38 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - project
+  
+  /project/enabled/{externalID}:
+    get:
+      summary: Get CLA enabled projects
+      description: Returns a list of CLA enabled projects that are enabled associated with a given company
+      operationId: getCCLAProjectsByExternalID
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: externalID
+          in: path
+          type: string
+          required: true
+        - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/pageSize'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/projects'
+        '400':
+          $ref: '#responses/invalid-request'
+        '401':
+          $ref: '#responses/unauthorized'
+        '403':
+          $ref: '#responses/forbidden'
+        '404':
+          $ref: '#responses/not-found'
+      tags:
+        - project
 
   /project/external/{externalID}:
     get:
