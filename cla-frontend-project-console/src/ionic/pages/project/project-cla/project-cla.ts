@@ -495,7 +495,4 @@ export class ProjectClaPage {
     }
   }
 
-  trimCharacter(text, length) {
-    return text != null && text.length > length ? text.substring(0, length) + '...' : text;
-  }
 }
