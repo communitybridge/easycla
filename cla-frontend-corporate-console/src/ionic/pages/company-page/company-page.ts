@@ -120,13 +120,16 @@ export class CompanyPage {
         ProjectID: response.project_id,
         ProjectName: response.project_name !== undefined ? response.project_name : '',
         ProjectManagers: signature.signatureACL,
-        Status: this.getStatus(this.rows.length),
+        Status: this.getStatus(response.project_id, this.rows.length),
         PendingContributorRequests: this.getPendingContributorRequests(response.project_id, this.rows.length),
         PendingCLAManagerRequests: this.getPendingCLAManagerRequests(response.project_id, this.rows.length),
       });
-      this.rows.sort((a, b) => {
-        return a.ProjectName.toLowerCase().localeCompare(b.ProjectName.toLowerCase());
-      });
+    });
+  }
+
+  sortData() {
+    this.rows.sort((a, b) => {
+      return a.ProjectName.toLowerCase().localeCompare(b.ProjectName.toLowerCase());
     });
   }
 
@@ -273,11 +276,13 @@ export class CompanyPage {
     alert.present();
   }
 
-  getStatus(index) {
+  getStatus(projectId, index) {
     for (let i = 0; i < this.companySignatures.length; i++) {
-      const signatureACL = this.companySignatures[i].signatureACL;
-      const projectId = this.companySignatures[i].projectID;
-      return (this.checkStatusOfSignature(signatureACL, projectId, index))
+      const currentProjectId = this.companySignatures[i].projectID;
+      if (currentProjectId === projectId) {
+        const signatureACL = this.companySignatures[i].signatureACL;
+        return (this.checkStatusOfSignature(signatureACL, projectId, index))
+      }
     }
   }
 
