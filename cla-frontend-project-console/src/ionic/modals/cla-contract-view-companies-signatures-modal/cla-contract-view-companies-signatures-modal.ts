@@ -150,13 +150,13 @@ export class ClaContractViewCompaniesSignaturesModal {
         }
 
         if (this.data && this.data.signatures) {
-          this.columnData = this.data.signatures.map(e => ({ 
-            ...e, 
-            signatureCreated: e.signatureCreated.split('T')[0], 
+          this.columnData = this.data.signatures.map(e => ({
+            ...e,
+            signatureCreated: e.signatureCreated.split('T')[0],
             companyName: this.trimCharacter(e.companyName, 30)
           }))
         } else {
-          this.columnData = []
+          this.columnData = [];
         }
 
         this.page.totalCount = this.data.resultCount;
@@ -238,7 +238,7 @@ export class ClaContractViewCompaniesSignaturesModal {
       this[callback](popoverData.callbackData);
     }
   }
-  
+
   dismiss() {
     this.viewCtrl.dismiss();
   }
@@ -268,6 +268,8 @@ export class ClaContractViewCompaniesSignaturesModal {
   }
 
   trimCharacter(text, length) {
-    return text.length > length ? text.substring(0, length) + '...' : text;
+    if (text !== undefined && text !== null) {
+      return text.length > length ? text.substring(0, length) + '...' : text;
+    }
   }
 }

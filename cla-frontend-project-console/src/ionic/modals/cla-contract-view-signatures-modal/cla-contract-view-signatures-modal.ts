@@ -266,6 +266,8 @@ export class ClaContractViewSignaturesModal {
   }
 
   trimCharacter(text, length) {
-    return text.length > length ? text.substring(0, length) + '...' : text;
+    if (text !== undefined && text !== null) {
+      return text.length > length ? text.substring(0, length) + '...' : text;
+    }
   }
 }
