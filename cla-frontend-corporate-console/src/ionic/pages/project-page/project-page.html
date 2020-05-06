@@ -93,7 +93,7 @@
                 <ion-row justify-content-center *ngIf="noPendingContributorRequests">
                   <h2>No Pending Contributor Requests</h2>
                 </ion-row>
-                <table class="table" *ngIf="!noPendingContributorRequests && loading.contributorRequests">
+                <table class="table" *ngIf="!noPendingContributorRequests && !loading.contributorRequests">
                   <thead>
                     <tr>
                       <th class="clickable">
