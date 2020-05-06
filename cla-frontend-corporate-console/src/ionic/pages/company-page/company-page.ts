@@ -149,7 +149,7 @@ export class CompanyPage {
       if (response.requests != null && response.requests.length > 0) {
         numCLAManagerRequests = response.requests.filter((req) => req.status === 'pending').length;
       }
-      this.rows[index].pendingCLAManagerRequests = numCLAManagerRequests;
+      this.rows[index].PendingCLAManagerRequests = numCLAManagerRequests;
     });
     return '-';
   }
