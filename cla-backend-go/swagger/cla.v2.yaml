@@ -270,7 +270,7 @@ paths:
       tags:
         - metrics
 
-  /metrics/company/{companyID}/project-metrics:
+  /metrics/company/{companySFID}/project-metrics:
     get:
       summary: list project metrics of company
       description: Returns list of project metrics for company
@@ -280,7 +280,7 @@ paths:
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-companySFID"
       responses:
         '200':
           description: 'Success'
@@ -553,7 +553,7 @@ paths:
       tags:
         - events
 
-  /company/{companyID}/project/{projectSFID}/events:
+  /company/{companySFID}/project/{projectSFID}/events:
     get:
       summary: return recent events of company and project
       description: Returns list of events of company and project
@@ -565,7 +565,7 @@ paths:
         - $ref: "#/parameters/x-email"
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/path-projectSFID'
-        - $ref: '#/parameters/path-companyID'
+        - $ref: '#/parameters/path-companySFID'
       produces:
         - application/json
       responses:
