@@ -378,7 +378,7 @@ export class ProjectPage {
           }
         },
         {
-          text: 'Accept',
+          text: 'Approve Request',
           handler: () => {
             this.claService.approveCclaWhitelistRequest(this.companyId, this.projectId, requestID)
               .subscribe(
