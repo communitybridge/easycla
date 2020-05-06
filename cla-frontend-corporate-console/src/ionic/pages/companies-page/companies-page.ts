@@ -130,7 +130,7 @@ export class CompaniesPage {
   }
 
   sortData(companies: any[]) {
-    let joinedCompanies = companies.filter(company => company.status !== 'pending')
+    let joinedCompanies = companies.filter(company => (company.status !== 'pending' && company.status !== 'rejected'))
     let requestCompanies = companies.filter(company => company.status === 'pending')
     joinedCompanies = joinedCompanies.sort((a, b) => {
       return a.companyName.toLowerCase().localeCompare(b.companyName.toLowerCase());
