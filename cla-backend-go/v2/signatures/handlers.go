@@ -4,6 +4,7 @@
 package signatures
 
 import (
+	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
@@ -17,11 +18,30 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	signatureService "github.com/communitybridge/easycla/cla-backend-go/signatures"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/jinzhu/copier"
 	"github.com/savaki/dynastore"
 )
 
+func v2Signature(src *v1Models.Signature) (*models.Signature, error) {
+	var dst models.Signature
+	err := copier.Copy(&dst, src)
+	if err != nil {
+		return nil, err
+	}
+	return &dst, nil
+}
+
+func v2Signatures(src *v1Models.Signatures) (*models.Signatures, error) {
+	var dst models.Signatures
+	err := copier.Copy(&dst, src)
+	if err != nil {
+		return nil, err
+	}
+	return &dst, nil
+}
+
 // Configure setups handlers on api with service
-func Configure(api *operations.EasyclaAPI, service signatureService.SignatureService, sessionStore *dynastore.Store, eventsService events.Service) {
+func Configure(api *operations.EasyclaAPI, service signatureService.SignatureService, sessionStore *dynastore.Store, eventsService events.Service) { //nolint
 
 	// Get Signature
 	api.SignaturesGetSignatureHandler = signatures.GetSignatureHandlerFunc(func(params signatures.GetSignatureParams, authUser *auth.User) middleware.Responder {
@@ -35,8 +55,12 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 		if signature == nil {
 			return signatures.NewGetSignatureNotFound()
 		}
+		resp, err := v2Signature(signature)
+		if err != nil {
+			return signatures.NewGetCompanySignaturesBadRequest()
+		}
 
-		return signatures.NewGetSignatureOK().WithPayload(*signature)
+		return signatures.NewGetSignatureOK().WithPayload(resp)
 	})
 
 	// Retrieve GitHub Whitelist Entries
@@ -59,7 +83,12 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 				params.SignatureID, err)
 			return signatures.NewGetGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
 		}
-		return signatures.NewGetGitHubOrgWhitelistOK().WithPayload(ghWhiteList)
+		response := []models.GithubOrg{}
+		err = copier.Copy(response, ghWhiteList)
+		if err != nil {
+			return signatures.NewGetGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
+		}
+		return signatures.NewGetGitHubOrgWhitelistOK().WithPayload(response)
 	})
 
 	// Add GitHub Whitelist Entries
@@ -77,7 +106,13 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 			githubAccessToken = ""
 		}
 
-		ghWhiteList, err := service.AddGithubOrganizationToWhitelist(params.SignatureID, params.Body, githubAccessToken)
+		input := v1Models.GhOrgWhitelist{}
+		err = copier.Copy(&input, &params.Body)
+		if err != nil {
+			return signatures.NewAddGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
+		}
+
+		ghWhiteList, err := service.AddGithubOrganizationToWhitelist(params.SignatureID, input, githubAccessToken)
 		if err != nil {
 			log.Warnf("error adding github organization %s using signature_id: %s to the whitelist, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
@@ -106,7 +141,12 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
-		return signatures.NewAddGitHubOrgWhitelistOK().WithPayload(ghWhiteList)
+		response := []models.GithubOrg{}
+		err = copier.Copy(response, ghWhiteList)
+		if err != nil {
+			return signatures.NewAddGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
+		}
+		return signatures.NewAddGitHubOrgWhitelistOK().WithPayload(response)
 	})
 
 	// Delete GitHub Whitelist Entries
@@ -124,7 +164,13 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 			githubAccessToken = ""
 		}
 
-		ghWhiteList, err := service.DeleteGithubOrganizationFromWhitelist(params.SignatureID, params.Body, githubAccessToken)
+		input := v1Models.GhOrgWhitelist{}
+		err = copier.Copy(&input, &params.Body)
+		if err != nil {
+			return signatures.NewDeleteGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
+		}
+
+		ghWhiteList, err := service.DeleteGithubOrganizationFromWhitelist(params.SignatureID, input, githubAccessToken)
 		if err != nil {
 			log.Warnf("error deleting github organization %s using signature_id: %s from the whitelist, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
@@ -152,8 +198,12 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
-
-		return signatures.NewDeleteGitHubOrgWhitelistNoContent().WithPayload(ghWhiteList)
+		response := []models.GithubOrg{}
+		err = copier.Copy(response, ghWhiteList)
+		if err != nil {
+			return signatures.NewDeleteGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
+		}
+		return signatures.NewDeleteGitHubOrgWhitelistNoContent().WithPayload(response)
 	})
 
 	// Get Project Signatures
@@ -173,8 +223,12 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 				params.ProjectID, err)
 			return signatures.NewGetProjectSignaturesBadRequest().WithPayload(errorResponse(err))
 		}
+		resp, err := v2Signatures(projectSignatures)
+		if err != nil {
+			return signatures.NewGetCompanySignaturesBadRequest()
+		}
 
-		return signatures.NewGetProjectSignaturesOK().WithPayload(*projectSignatures)
+		return signatures.NewGetProjectSignaturesOK().WithPayload(resp)
 	})
 
 	// Get Project Company Signatures
@@ -192,7 +246,11 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 			return signatures.NewGetProjectCompanySignaturesBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return signatures.NewGetProjectCompanySignaturesOK().WithPayload(*projectSignatures)
+		resp, err := v2Signatures(projectSignatures)
+		if err != nil {
+			return signatures.NewGetCompanySignaturesBadRequest()
+		}
+		return signatures.NewGetProjectCompanySignaturesOK().WithPayload(resp)
 	})
 
 	// Get Employee Project Company Signatures
@@ -210,7 +268,11 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return signatures.NewGetProjectCompanyEmployeeSignaturesOK().WithPayload(*projectSignatures)
+		resp, err := v2Signatures(projectSignatures)
+		if err != nil {
+			return signatures.NewGetCompanySignaturesBadRequest()
+		}
+		return signatures.NewGetProjectCompanyEmployeeSignaturesOK().WithPayload(resp)
 	})
 
 	// Get Company Signatures
@@ -228,7 +290,11 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 			return signatures.NewGetCompanySignaturesBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return signatures.NewGetCompanySignaturesOK().WithPayload(*companySignatures)
+		resp, err := v2Signatures(companySignatures)
+		if err != nil {
+			return signatures.NewGetCompanySignaturesBadRequest()
+		}
+		return signatures.NewGetCompanySignaturesOK().WithPayload(resp)
 	})
 
 	// Get User Signatures
@@ -245,7 +311,11 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 			return signatures.NewGetUserSignaturesBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return signatures.NewGetUserSignaturesOK().WithPayload(*userSignatures)
+		resp, err := v2Signatures(userSignatures)
+		if err != nil {
+			return signatures.NewGetCompanySignaturesBadRequest().WithPayload(errorResponse(err))
+		}
+		return signatures.NewGetUserSignaturesOK().WithPayload(resp)
 	})
 }
 

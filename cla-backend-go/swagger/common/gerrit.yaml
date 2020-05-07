@@ -1,0 +1,24 @@
+type: object
+properties:
+  dateCreated:
+    type: string
+  dateModified:
+    type: string
+  gerritId:
+    type: string
+  gerritName:
+    type: string
+  gerritUrl:
+    type: string
+  groupIdCcla:
+    type: string
+  groupIdIcla:
+    type: string
+  groupNameCcla:
+    type: string
+  groupNameIcla:
+    type: string
+  projectId:
+    type: string
+  version:
+    type: string

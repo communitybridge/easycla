@@ -3,12 +3,14 @@ package repositories
 import (
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/events"
+	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/github_repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/jinzhu/copier"
 )
 
 // Configure establishes the middleware handlers for the repository service
@@ -25,7 +27,12 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 			if err != nil {
 				return github_repositories.NewGetProjectGithubRepositoriesBadRequest().WithPayload(errorResponse(err))
 			}
-			return github_repositories.NewGetProjectGithubRepositoriesOK().WithPayload(*result)
+			response := &models.ListGithubRepositories{}
+			err = copier.Copy(response, result)
+			if err != nil {
+				return github_repositories.NewGetProjectGithubRepositoriesInternalServerError().WithPayload(errorResponse(err))
+			}
+			return github_repositories.NewGetProjectGithubRepositoriesOK().WithPayload(response)
 		})
 
 	api.GithubRepositoriesAddProjectGithubRepositoryHandler = github_repositories.AddProjectGithubRepositoryHandlerFunc(
@@ -36,7 +43,12 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 					return github_repositories.NewAddProjectGithubRepositoryUnauthorized()
 				}
 			}
-			result, err := service.AddGithubRepository(params.ProjectSFID, &params.GithubRepositoryInput)
+			input := &v1Models.GithubRepositoryInput{}
+			err := copier.Copy(input, &params.GithubRepositoryInput)
+			if err != nil {
+				return github_repositories.NewAddProjectGithubRepositoryInternalServerError().WithPayload(errorResponse(err))
+			}
+			result, err := service.AddGithubRepository(params.ProjectSFID, input)
 			if err != nil {
 				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
@@ -49,7 +61,12 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 					RepositoryName: utils.StringValue(params.GithubRepositoryInput.RepositoryName),
 				},
 			})
-			return github_repositories.NewAddProjectGithubRepositoryOK().WithPayload(*result)
+			response := &models.GithubRepository{}
+			err = copier.Copy(input, result)
+			if err != nil {
+				return github_repositories.NewAddProjectGithubRepositoryInternalServerError().WithPayload(errorResponse(err))
+			}
+			return github_repositories.NewAddProjectGithubRepositoryOK().WithPayload(response)
 		})
 
 	api.GithubRepositoriesDeleteProjectGithubRepositoryHandler = github_repositories.DeleteProjectGithubRepositoryHandlerFunc(

@@ -27,6 +27,7 @@ require (
 	github.com/gorilla/sessions v1.2.0 // indirect
 	github.com/imroc/req v0.3.0
 	github.com/jessevdk/go-flags v1.4.0
+	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lytics/logrus v0.0.0-20170528191427-4389a17ed024
 	github.com/rs/cors v1.7.0

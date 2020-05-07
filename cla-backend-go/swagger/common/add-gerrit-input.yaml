@@ -1,0 +1,13 @@
+type: object
+required:
+  - gerritName
+  - gerritUrl
+properties:
+  gerritName:
+    type: string
+  gerritUrl:
+    type: string
+  groupIdCcla:
+    type: string
+  groupIdIcla:
+    type: string

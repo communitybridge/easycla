@@ -1,0 +1,19 @@
+type: object
+x-nullable: false
+title: Version
+description: Version Information
+properties:
+  version:
+    type: string
+  commit:
+    type: string
+  branch:
+    type: string
+  buildDate:
+    type: string
+required:
+  - version
+  - commit
+  - branch
+  - buildDate
+

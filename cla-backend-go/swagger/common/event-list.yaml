@@ -1,0 +1,9 @@
+type: object
+properties:
+  NextKey:
+    type: string
+  Events:
+    type: array
+    items:
+      type: object
+      $ref: '#/definitions/event'

@@ -1,0 +1,27 @@
+type: object
+x-nullable: false
+title: CLA Template
+description: CLA Template
+properties:
+  Name:
+    type: string
+  ID:
+    type: string
+  description:
+    type: string
+  iclaHtmlBody:
+    type: string
+  cclaHtmlBody:
+    type: string
+  metaFields:
+    type: array
+    items:
+      $ref: '#/definitions/meta-field'
+  iclaFields:
+    type: array
+    items:
+      $ref: '#/definitions/field'
+  cclaFields:
+    type: array
+    items:
+      $ref: '#/definitions/field'

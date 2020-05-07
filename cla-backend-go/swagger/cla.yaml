@@ -1904,61 +1904,10 @@ parameters:
 
 definitions:
   version:
-    type: object
-    x-nullable: false
-    title: Version
-    description: Version Information
-    properties:
-      version:
-        type: string
-      commit:
-        type: string
-      branch:
-        type: string
-      buildDate:
-        type: string
-    required:
-      - version
-      - commit
-      - branch
-      - buildDate
+    $ref: './common/version.yaml'
 
   user:
-    type: object
-    x-nullable: false
-    title: User
-    description: User model
-    properties:
-      userID:
-        type: string
-      userExternalID:
-        type: string
-      username:
-        type: string
-      dateCreated:
-        type: string
-      dateModified:
-        type: string
-      lfEmail:
-        type: string
-      lfUsername:
-        type: string
-      companyID:
-        type: string
-      githubID:
-        type: string
-      githubUsername:
-        type: string
-      admin:
-        type: boolean
-      version:
-        type: string
-      note:
-        type: string
-      emails:
-        type: array
-        items:
-          type: string
+    $ref: './common/user.yaml'
 
   user-update:
     type: object
@@ -2020,29 +1969,10 @@ definitions:
 
 
   gh-org-whitelist:
-    type: object
-    x-nullable: false
-    title: Github Organization Whitelist
-    description: Github Organiation Whitelist
-    properties:
-      organization_id:
-        type: string
-    required:
-      - organization_id
+    $ref: './common/gh-org-whitelist.yaml'
 
   github-org:
-    type: object
-    x-nullable: false
-    title: Github Organization
-    description: Github Organiation object used for CCLA whitelist
-    properties:
-      id:
-        type: string
-      selected:
-        type: boolean
-        default: false
-    required:
-      - id
+    $ref: './common/github-org.yaml'
 
   company-invite-user:
     type: object
@@ -2149,166 +2079,19 @@ definitions:
         type: string
 
   projects:
-    type: object
-    x-nullable: false
-    title: Projects
-    description: A list of projects
-    properties:
-      lastKeyScanned:
-        type: string
-      pageSize:
-        type: integer
-      resultCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-      projects:
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/project'
+    $ref: './common/projects.yaml'
 
   project:
-    type: object
-    x-nullable: false
-    title: Project
-    description: Project data model
-    properties:
-      projectID:
-        description: the project internal ID
-        type: string
-      projectExternalID:
-        description: the project external ID
-        type: string
-      projectName:
-        description: the project name
-        type: string
-      projectACL:
-        type: array
-        description: A list of user ID's authorized to make changes to the project
-        items:
-          type: string
-      projectCCLAEnabled:
-        description: Flag to indicate if the Corporate/Company Contributor License Agreement is enabled
-        type: boolean
-        x-omitempty: false
-      projectICLAEnabled:
-        description: Flag to indicate if the Individual Contributor License Agreement is enabled
-        type: boolean
-        x-omitempty: false
-      projectCCLARequiresICLA:
-        description: Flag to indicate if the CCLA configuration also requires an ICLA
-        type: boolean
-        x-omitempty: false
-      projectCorporateDocuments:
-        description: Project Corporate Documents
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/project-document'
-      projectIndividualDocuments:
-        description: Project Corporate Documents
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/project-document'
-      projectMemberDocuments:
-        description: Project Corporate Documents
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/project-document'
-      dateCreated:
-        description: Date/time the record was created
-        type: string
-      dateModified:
-        description: Date/time the record was last modified
-        type: string
-      version:
-        description: Record version
-        type: string
-      githubRepositories:
-        description: Github repositories associated with project
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/github-repositories-group-by-orgs'
-      gerrits:
-        description: Gerrits associated with project
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/gerrit'
+    $ref: './common/project.yaml'
 
   project-document:
-    type: object
-    x-nullable: false
-    title: Project Document
-    description: Project Document
-    properties:
-      documentName:
-        description: the document name
-        example: "Apache Style"
-        type: string
-      documentFileID:
-        description: the document file ID
-        example: "fb4cc144-a76c-4c17-8a52-c648f158fded"
-        type: string
-      documentPreamble:
-        description: the document preamble
-        example: "Apache Style"
-        type: string
-      documentLegalEntityName:
-        description: the document legal entity name
-        example: "Apache Style"
-        type: string
-      documentAuthorName:
-        description: the document author name
-        example: "Apache Style"
-        type: string
-      documentContentType:
-        description: the document content type
-        example: 'storage+pdf'
-        type: string
-      documentS3URL:
-        description: the document S3 URL
-        example: "https://cla-signature-files-dev.s3.amazonaws.com/contract-group/f7222222-7777-4444-aaaa-1c1c1c1c1c1c/template/ccla.pdf"
-        type: string
-      documentMajorVersion:
-        description: the document major version
-        example: "2"
-        type: string
-      documentMinorVersion:
-        description: the document minor version
-        example: "0"
-        type: string
-      documentCreationDate:
-        description: the document creation date
-        example: '2019-08-01T06:55:09Z'
-        type: string
+    $ref: './common/project-document.yaml'
 
   create-cla-group-template:
-    title: CreateCLAGroupTemplate
-    type: object
-    x-nullable: false
-    properties:
-      TemplateID:
-        type: string
-      MetaFields:
-        type: array
-        items:
-          $ref: '#/definitions/meta-field'
+    $ref: './common/create-cla-group-template.yaml'
 
   template-pdfs:
-    title: TemplatePDFs
-    type: object
-    x-nullable: false
-    properties:
-      individualPDFURL:
-        type: string
-      corporatePDFURL:
-        type: string
-
+    $ref: './common/template-pdfs.yaml'
 
   companies:
     type: object
@@ -2423,90 +2206,9 @@ definitions:
 
 
   signatures:
-    type: object
-    x-nullable: false
-    title: Signatures
-    description: Signatures
-    properties:
-      projectID:
-        type: string
-      resultCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-      totalCount:
-        type: integer
-        format: int64
-        x-omitempty: false
-      lastKeyScanned:
-        type: string
-      signatures:
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/signature'
-
+    $ref: './common/signatures.yaml'
   signature:
-    type: object
-    title: A signature model
-    description: A signature - may be an ICLA or CCLA signature
-    properties:
-      signatureID:
-        type: string
-      signatureCreated:
-        type: string
-      signatureModified:
-        type: string
-      signatureSigned:
-        type: boolean
-      signatureApproved:
-        type: boolean
-      signatureReferenceType:
-        type: string
-      signatureReferenceID:
-        type: string
-      signatureReferenceName:
-        type: string
-      signatureReferenceNameLower:
-        type: string
-      signatureType:
-        type: string
-      signatureACL:
-        type: array
-        items:
-          $ref: '#/definitions/user'
-      userName:
-        type: string
-      companyName:
-        type: string
-      projectID:
-        type: string
-      userGHID:
-        type: string
-      userLFID:
-        type: string
-      version:
-        type: string
-      created:
-        type: string
-      modified:
-        type: string
-      emailWhitelist:
-        type: array
-        items:
-          type: string
-      domainWhitelist:
-        type: array
-        items:
-          type: string
-      githubWhitelist:
-        type: array
-        items:
-          type: string
-      githubOrgWhitelist:
-        type: array
-        items:
-          type: string
+    $ref: './common/signature.yaml'
 
   ccla-whitelist-request-input:
     type: object
@@ -2576,71 +2278,13 @@ definitions:
         type: string
 
   template:
-    type: object
-    x-nullable: false
-    title: CLA Template
-    description: CLA Template
-    properties:
-      Name:
-        type: string
-      ID:
-        type: string
-      description:
-        type: string
-      iclaHtmlBody:
-        type: string
-      cclaHtmlBody:
-        type: string
-      metaFields:
-        type: array
-        items:
-          $ref: '#/definitions/meta-field'
-      iclaFields:
-        type: array
-        items:
-          $ref: '#/definitions/field'
-      cclaFields:
-        type: array
-        items:
-          $ref: '#/definitions/field'
+    $ref: './common/template.yaml'
 
   meta-field:
-    title: MetaField
-    type: object
-    properties:
-      name:
-        type: string
-      value:
-        type: string
-      description:
-        type: string
-      templateVariable:
-        type: string
+    $ref: './common/meta-field.yaml'
 
   field:
-    title: Field
-    type: object
-    properties:
-      id:
-        type: string
-      name:
-        type: string
-      anchorString:
-        type: string
-      fieldType:
-        type: string
-      isOptional:
-        type: boolean
-      isEditable:
-        type: boolean
-      width:
-        type: integer
-      height:
-        type: integer
-      offsetX:
-        type: integer
-      offsetY:
-        type: integer
+    $ref: './common/field.yaml'
 
   error-response:
     type: object
@@ -2665,290 +2309,46 @@ definitions:
         type: string
 
   health:
-    type: object
-    title: Health
-    properties:
-      TimeStamp:
-        type: string
-      Status:
-        type: string
-      Version:
-        type: string
-      Githash:
-        type: string
-      Branch:
-        type: string
-      BuildTimeStamp:
-        type: string
-      Healths:
-        type: array
-        items:
-          $ref: '#/definitions/health-status'
+    $ref: './common/health.yaml'
 
   health-status:
-    type: object
-    properties:
-      Name:
-        type: string
-      Duration:
-        type: string
-      Healthy:
-        type: boolean
-      Error:
-        type: string
-      TimeStamp:
-        type: string
-    title: Health Status
+    $ref: './common/health-status.yaml'
 
   event-list:
-    type: object
-    properties:
-      NextKey:
-        type: string
-      Events:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/event'
+    $ref: './common/event-list.yaml'
 
   event:
-    type: object
-    properties:
-      EventID:
-        type: string
-        description: unique id of the event
-      EventType:
-        type: string
-        description: type of the event
-      UserID:
-        type: string
-        description: id of the user who created this event
-      UserName:
-        type: string
-        description: name of the user
-      EventProjectID:
-        type: string
-        description: id of the SFID project
-      EventProjectName:
-        type: string
-        description: name of the project
-      EventCompanyName:
-        type: string
-        description: name of the company
-      EventCompanyID:
-        type: string
-        description: id od the organization/company
-      EventTime:
-        type: string
-        description: time of the event.
-      EventTimeEpoch:
-        type: integer
-        description: time of the event in epoch.
-      EventData:
-        type: string
-        description: data related to the event
-      EventProjectExternalID:
-        type: string
-        description: sf id of the project
-      ContainsPII:
-        type: boolean
-        description: contains personal identifiable information
-
-
-
+    $ref: './common/event.yaml'
 
   github-repositories-group-by-orgs:
-    type: object
-    properties:
-      organizationName:
-        type: string
-      list:
-        type: array
-        items:
-          $ref: '#/definitions/github-repository'
+    $ref: './common/github-repositories-group-by-orgs.yaml'
 
   github-repository-input:
-    type: object
-    required:
-      - repositoryExternalID
-      - repositoryName
-      - repositoryOrganizationName
-      - repositoryProjectID
-      - repositoryType
-      - repositoryUrl
-    properties:
-      repositoryExternalID:
-        type: string
-      repositoryName:
-        type: string
-      repositoryOrganizationName:
-        type: string
-      repositoryProjectID:
-        type: string
-      repositoryType:
-        type: string
-      repositoryUrl:
-        type: string
+    $ref: './common/github-repository-input.yaml'
 
   github-repository:
-    type: object
-    properties:
-      dateCreated:
-        type: string
-      dateModified:
-        type: string
-      repositoryExternalID:
-        type: string
-      repositoryID:
-        type: string
-      repositoryName:
-        type: string
-      repositoryOrganizationName:
-        type: string
-      repositoryProjectID:
-        type: string
-      repositorySfdcID:
-        type: string
-      repositoryType:
-        type: string
-      repositoryUrl:
-        type: string
-      version:
-        type: string
+    $ref: './common/github-repository.yaml'
 
   add-gerrit-input:
-    type: object
-    required:
-      - gerritName
-      - gerritUrl
-    properties:
-      gerritName:
-        type: string
-      gerritUrl:
-        type: string
-      groupIdCcla:
-        type: string
-      groupIdIcla:
-        type: string
+    $ref: './common/add-gerrit-input.yaml'
 
   gerrit:
-    type: object
-    properties:
-      dateCreated:
-        type: string
-      dateModified:
-        type: string
-      gerritId:
-        type: string
-      gerritName:
-        type: string
-      gerritUrl:
-        type: string
-      groupIdCcla:
-        type: string
-      groupIdIcla:
-        type: string
-      groupNameCcla:
-        type: string
-      groupNameIcla:
-        type: string
-      projectId:
-        type: string
-      version:
-        type: string
+    $ref: './common/gerrit.yaml'
 
   github-organizations:
-    type: object
-    properties:
-      list:
-        type: array
-        items:
-          $ref: '#/definitions/github-organization'
+    $ref: './common/github-organizations.yaml'
 
   create-github-organization:
-    type: object
-    properties:
-      organizationName:
-        type: string
-        example: "kubernetes"
+    $ref: './common/create-github-organization.yaml'
 
   github-organization:
-    type: object
-    properties:
-      dateCreated:
-        type: string
-        example: "2020-02-06T09:31:49.245630+0000"
-      dateModified:
-        type: string
-        example: "2020-02-06T09:31:49.245646+0000"
-      organizationInstallationID:
-        type: integer
-        example: 6635271
-      organizationName:
-        type: string
-        example: "communitybridge"
-      organizationSfid:
-        type: string
-        example: "a0941000002wBz4AAA"
-      version:
-        type: string
-        example: "v1"
-      githubInfo:
-        type: object
-        properties:
-          error:
-            type: string
-            example: "unable to get github info of communitybridge"
-          details:
-            type: object
-            properties:
-              id:
-                type: integer
-                x-nullable: true
-                example: 1476068
-              bio:
-                type: string
-                x-nullable: true
-              htmlUrl:
-                type: string
-                x-nullable: true
-                example: "https://github.com/communitybridge"
-
-      repositories:
-        type: object
-        properties:
-          error:
-            type: string
-            example: "unable to get repositories for installation id : 6854001"
-          list:
-            type: array
-            items:
-              $ref: '#/definitions/github-repository-info'
+    $ref: './common/github-organization.yaml'
 
   github-repository-info:
-    type: object
-    properties:
-      repositoryGithubID:
-        type: integer
-        example: 250509778
-      repositoryName:
-        type: string
-        example: "communitybridge/easycla"
-      repositoryType:
-        type: string
-        example: "github"
-      repositoryUrl:
-        type: string
-        example: "https://github.com/communitybridge/easycla"
+    $ref: './common/github-repository-info.yaml'
 
   list-github-repositories:
-    type: object
-    properties:
-      list:
-        type: array
-        items:
-          $ref: '#/definitions/github-repository'
-
+    $ref: './common/list-github-repositories.yaml'
 
 responses:
   resource-deleted:

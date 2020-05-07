@@ -1,0 +1,12 @@
+type: object
+x-nullable: false
+title: Github Organization
+description: Github Organiation object used for CCLA whitelist
+properties:
+  id:
+    type: string
+  selected:
+    type: boolean
+    default: false
+required:
+  - id

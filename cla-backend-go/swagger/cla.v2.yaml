@@ -323,6 +323,8 @@ paths:
           $ref: '#/responses/forbidden'
         '409':
           $ref: '#/responses/conflict'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - project
     put:
@@ -350,6 +352,8 @@ paths:
           $ref: '#/responses/forbidden'
         '404':
           $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - project
     get:
@@ -376,6 +380,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - project
 
@@ -406,6 +412,8 @@ paths:
           $ref: '#/responses/forbidden'
         '404':
           $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - project
     delete:
@@ -459,6 +467,8 @@ paths:
           $ref: '#/responses/forbidden'
         '404':
           $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - project
 
@@ -489,6 +499,8 @@ paths:
           $ref: '#/responses/forbidden'
         '404':
           $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - project
 
@@ -518,6 +530,8 @@ paths:
           $ref: '#/responses/forbidden'
         '404':
           $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - events
 
@@ -549,6 +563,8 @@ paths:
           $ref: '#/responses/forbidden'
         '404':
           $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - events
 
@@ -574,6 +590,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - template
 
@@ -607,6 +625,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - template
 
@@ -639,6 +659,8 @@ paths:
           $ref: '#/responses/unauthorized'
         403:
           $ref: '#/responses/forbidden'
+        500:
+          $ref: '#/responses/internal-server-error'
       tags:
         - github-organizations
     get:
@@ -664,6 +686,8 @@ paths:
           $ref: '#/responses/unauthorized'
         403:
           $ref: '#/responses/forbidden'
+        500:
+          $ref: '#/responses/internal-server-error'
       tags:
         - github-organizations
 
@@ -724,6 +748,8 @@ paths:
           $ref: '#/responses/unauthorized'
         403:
           $ref: '#/responses/forbidden'
+        500:
+          $ref: '#/responses/internal-server-error'
       tags:
         - github-repositories
     get:
@@ -749,6 +775,8 @@ paths:
           $ref: '#/responses/unauthorized'
         403:
           $ref: '#/responses/forbidden'
+        500:
+          $ref: '#/responses/internal-server-error'
       tags:
         - github-repositories
   /project/{projectSFID}/github/repositories/{repositoryID}:
@@ -810,6 +838,8 @@ paths:
           $ref: '#/responses/forbidden'
         '404':
           $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - signatures
 
@@ -846,6 +876,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - signatures
 
@@ -882,6 +914,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - signatures
 
@@ -915,6 +949,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - signatures
 
@@ -947,6 +983,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - signatures
 
@@ -983,6 +1021,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - signatures
 
@@ -1012,6 +1052,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - signatures
     delete:
@@ -1043,6 +1085,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - signatures
     post:
@@ -1074,6 +1118,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - signatures
 
@@ -1137,6 +1183,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - gerrits
 
@@ -1208,6 +1256,10 @@ responses:
       $ref: '#/definitions/error-response'
   not-found:
     description: Not found
+    schema:
+      $ref: '#/definitions/error-response'
+  internal-server-error:
+    description: Internal server error
     schema:
       $ref: '#/definitions/error-response'
   conflict:
@@ -1317,256 +1369,89 @@ parameters:
 
 definitions:
   version:
-    type: object
-    x-nullable: false
-    title: Version
-    description: Version Information
-    properties:
-      version:
-        type: string
-      commit:
-        type: string
-      branch:
-        type: string
-      buildDate:
-        type: string
-    required:
-      - version
-      - commit
-      - branch
-      - buildDate
-    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
-    # Imported package and type alias may be specified as options
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Health"
-      type: "Version"
+    $ref: './common/version.yaml'
 
   health:
-    type: object
-    title: Health
-    properties:
-      TimeStamp:
-        type: string
-      Status:
-        type: string
-      Version:
-        type: string
-      Githash:
-        type: string
-      Branch:
-        type: string
-      BuildTimeStamp:
-        type: string
-      Healths:
-        type: array
-        items:
-          $ref: '#/definitions/health-status'
-    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
-    # Imported package and type alias may be specified as options
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Health"
-      type: "Health"
+    $ref: './common/health.yaml'
 
   health-status:
-    type: object
-    properties:
-      Name:
-        type: string
-      Duration:
-        type: string
-      Healthy:
-        type: boolean
-      Error:
-        type: string
-      TimeStamp:
-        type: string
-    title: Health Status
+    $ref: './common/health-status.yaml'
 
   event-list:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1models"
-      type: "EventList"
+    $ref: './common/event-list.yaml'
+
+  event:
+    $ref: './common/event.yaml'
 
   github-repository-input:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1models"
-      type: "GithubRepositoryInput"
+    $ref: './common/github-repository-input.yaml'
 
   github-repository:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1models"
-      type: "GithubRepository"
+    $ref: './common/github-repository.yaml'
 
   list-github-repositories:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1models"
-      type: "ListGithubRepositories"
+    $ref: './common/list-github-repositories.yaml'
 
   projects:
-    type: object
-    x-nullable: false
-    title: Projects
-    description: A list of projects
-    properties:
-      lastKeyScanned:
-        type: string
-      pageSize:
-        type: integer
-      projects:
-        type: array
-        x-omitempty: false
-        items:
-          $ref: '#/definitions/project'
-    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
-    # Imported package and type alias may be specified as options
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Projects"
-      type: "Projects"
+    $ref: './common/projects.yaml'
 
   project:
-    type: object
-    x-nullable: false
-    title: Project
-    description: EasyCLA CLA Group/Project data model
-    properties:
-      projectID:
-        description: the EasyCLA Group/Project internal ID
-        type: string
-      projectExternalID:
-        description: the EasyCLA Group/Project external ID
-        type: string
-      projectName:
-        description: the EasyCLA Group/Project Name
-        type: string
-      projectACL:
-        type: array
-        description: A list of user ID's authorized to make changes to the EasyCLA Group/Project
-        items:
-          type: string
-      projectCCLAEnabled:
-        description: CLA Group/Project flag to indicate if the Corporate/Company Contributor License Agreement is enabled
-        type: boolean
-        x-omitempty: false
-      projectICLAEnabled:
-        description: CLA Group/Project flag to indicate if the Individual Contributor License Agreement is enabled
-        type: boolean
-        x-omitempty: false
-      projectCCLARequiresICLA:
-        description: CLA Group/Project flag to indicate if the CCLA configuration also requires an ICLA
-        type: boolean
-        x-omitempty: false
-      dateCreated:
-        description: Date/time the record EasyCLA Group/Project was created
-        type: string
-      dateModified:
-        description: Date/time the record EasyCLA Group/Project was last modified
-        type: string
-      version:
-        description: EasyCLA Group/Project record version
-        type: string
-    # Ask go-swagger to reuse a predefined types generated from v1 to satisfy the definition in the swagger spec.
-    # Imported package and type alias may be specified as options
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Project"
-      type: "Project"
+    $ref: './common/project.yaml'
 
   template:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Models"
-      type: "Template"
+    $ref: './common/template.yaml'
 
   create-cla-group-template:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Models"
-      type: "CreateClaGroupTemplate"
+    $ref: './common/create-cla-group-template.yaml'
 
   template-pdfs:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Models"
-      type: "TemplatePdfs"
+    $ref: './common/template-pdfs.yaml'
 
   github-organizations:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Models"
-      type: "GithubOrganizations"
+    $ref: './common/github-organizations.yaml'
 
   github-organization:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Models"
-      type: "GithubOrganization"
+    $ref: './common/github-organization.yaml'
 
   create-github-organization:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Models"
-      type: "CreateGithubOrganization"
+    $ref: './common/create-github-organization.yaml'
 
-  signature:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Models"
-      type: "Signature"
+  user:
+    $ref: './common/user.yaml'
 
   signatures:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Models"
-      type: "Signatures"
+    $ref: './common/signatures.yaml'
+
+  signature:
+    $ref: './common/signature.yaml'
 
   github-org:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Models"
-      type: "GithubOrg"
+    $ref: './common/github-org.yaml'
 
   gh-org-whitelist:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Models"
-      type: "GhOrgWhitelist"
+    $ref: './common/gh-org-whitelist.yaml'
+
   add-gerrit-input:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Models"
-      type: "AddGerritInput"
+    $ref: './common/add-gerrit-input.yaml'
+
   gerrit:
-    x-go-type:
-      import:
-        package: "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-        alias: "v1Models"
-      type: "Gerrit"
+    $ref: './common/gerrit.yaml'
+
+  github-repositories-group-by-orgs:
+    $ref: './common/github-repositories-group-by-orgs.yaml'
+
+  project-document:
+    $ref: './common/project-document.yaml'
+
+  meta-field:
+    $ref: './common/meta-field.yaml'
+
+  field:
+    $ref: './common/field.yaml'
+
+  github-repository-info:
+    $ref: './common/github-repository-info.yaml'
+
   total-count-metrics:
     type: object
     properties:
