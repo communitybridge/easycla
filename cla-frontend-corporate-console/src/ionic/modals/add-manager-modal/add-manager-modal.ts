@@ -19,7 +19,7 @@ export class AddManagerModal {
   submitAttempt: boolean = false;
   signatureId: string;
   managerLFID: string;
-  showError: boolean;
+  errorMsg: string;
   linuxFoundationIdentityURL: string = generalConstants.linuxFoundationIdentityURL;
 
   constructor(
@@ -35,8 +35,8 @@ export class AddManagerModal {
   }
 
   submit() {
-    if(/[~`!@#$%\^&*()+=\-\[\]\\';,/{}|\\":<>\?]/g.test(this.form.value.managerLFID)) {
-      this.showError = true;
+    if (/[~`!@#$%\^&*()+=\-\[\]\\';,/{}|\\":<>\?]/g.test(this.form.value.managerLFID)) {
+      this.errorMsg = 'Special characters are not allowed';
       return;
     }
     this.submitAttempt = true;
@@ -44,7 +44,14 @@ export class AddManagerModal {
   }
 
   addManager() {
-    this.claService.postCLAManager(this.signatureId, this.form.getRawValue()).subscribe(() => this.dismiss(true));
+    this.claService.postCLAManager(this.signatureId, this.form.getRawValue()).subscribe((result) => {
+      if (result.errors) {
+        this.errorMsg = result.errors[0];
+      } else {
+        this.dismiss(true);
+      }
+
+    });
   }
 
   dismiss(data = false) {
@@ -52,6 +59,6 @@ export class AddManagerModal {
   }
 
   clearError(event) {
-    this.showError = false;
+    this.errorMsg = '';
   }
 }
