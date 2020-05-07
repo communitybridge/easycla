@@ -195,7 +195,7 @@
 
                   <tr *ngFor="let request of pendingCLAManagerRequests">
                     <td data-title="Name">
-                      <span>{{ request.created}}</span>
+                      <span>{{ request.created | localTimeZone}}</span>
                     </td>
 
                     <td data-title="Name">

@@ -1,15 +1,18 @@
 import { NgModule } from '@angular/core';
 import { TrimCharactersPipe } from './pipes/trim-characters.pipe';
+import { LocalTimeZonePipe } from './pipes/local-timezone.pipe';
 
 @NgModule({
     declarations: [
-        TrimCharactersPipe
+        TrimCharactersPipe,
+        LocalTimeZonePipe
     ],
-    imports:[
+    imports: [
 
     ],
     exports: [
-        TrimCharactersPipe
+        TrimCharactersPipe,
+        LocalTimeZonePipe
     ],
     providers: []
 })

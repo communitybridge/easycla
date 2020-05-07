@@ -319,7 +319,7 @@ export class CompanyPage {
   }
 
 
-  claManagerRequest(companyID: string, companyName: string, projectID: string, projectName: string) {
+  claManagerRequest(companyID: string, companyName: string, projectID: string, projectName: string, index) {
     let alert = this.alertCtrl.create({
       subTitle: `CLA Manager Request - Confirmation`,
       message: `This will send an email to all the CLA Managers for ${companyName} associated with project ${projectName}.` +
@@ -341,6 +341,7 @@ export class CompanyPage {
             const userEmail = localStorage.getItem('user_email');
             const userName = localStorage.getItem('user_name');
             this.claService.createCLAManagerRequest(companyID, projectID, userName, userEmail, userId).subscribe((response) => {
+              this.rows[index].Status = 'Pending';
             });
           }
         }
