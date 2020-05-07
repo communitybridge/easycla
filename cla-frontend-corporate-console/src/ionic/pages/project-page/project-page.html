@@ -306,7 +306,7 @@
                     v{{ signature.version}}
                   </td>
                   <td data-title="Date">
-                    {{ signature.modified | date:'medium' }}
+                    {{ signature.modified | localTimeZone}}
                   </td>
                 </tr>
               </tbody>
