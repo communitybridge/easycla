@@ -16,6 +16,7 @@ type IService interface {
 
 	ApproveRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error)
 	DenyRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error)
+	PendingRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error)
 }
 
 type service struct {
@@ -86,7 +87,17 @@ func (s service) ApproveRequest(companyID, projectID, requestID string) (*models
 		return nil, err
 	}
 
-	// Send email
+	return dbModelToServiceModel(request), err
+}
+
+// PendingREquest updates the specified request to the pending state
+func (s service) PendingRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error) {
+	request, err := s.repo.PendingRequest(companyID, projectID, requestID)
+	if err != nil {
+		log.Warnf("problem with setting the pending status for company ID: %s, project ID: %s, request ID: %s, error :%+v",
+			companyID, projectID, requestID, err)
+		return nil, err
+	}
 
 	return dbModelToServiceModel(request), err
 }

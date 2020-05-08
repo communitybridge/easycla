@@ -1,15 +1,13 @@
 # EasyCLA REST API tests using tavern
 
-
-This directory contains REST api tests built using
-[Travern](https://github.com/taverntesting/tavern). Its a RestAPI test framework
+This directory contains REST API tests built using
+[Travern](https://github.com/taverntesting/tavern). The RestAPI test framework
 based on [py.test](http://pytest.org/en/latest/). All the API tests are defined
-in file of format `test_*.tavern.yaml`. Reporting and Visualization of tests are
-done using [allure](https://github.com/allure-framework/allure2) framework.
-
+in using the following file format: `test_*.tavern.yaml`. Reporting and
+Visualization of tests are accomplished using
+[allure](https://github.com/allure-framework/allure2) framework.
 
 ## Install dependencies to run tests in local
-
 
 - Install python dependencies using pip
 
@@ -17,9 +15,8 @@ done using [allure](https://github.com/allure-framework/allure2) framework.
 pip install -r requirements.freeze.txt
 ```
 
-
-- Optional. Install [allure](https://github.com/allure-framework/allure2) for reporting and visualization
-
+Optional step: Install [allure](https://github.com/allure-framework/allure2)
+for reporting and visualization.
 
 ```bash
 brew install allure
