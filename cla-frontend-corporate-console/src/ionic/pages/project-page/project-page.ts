@@ -340,12 +340,8 @@ export class ProjectPage {
   }
 
   listPendingCLAManagerRequests() {
-    console.log('loading CLA Manager Requests');
     this.claService.getCLAManagerRequests(this.companyId, this.projectId).subscribe((response) => {
-      //console.log('CLA Manager Requests:');
-      //console.log(response);
       if (response.requests == null || response.requests.length == 0) {
-        console.log('No Pending CLA Manager Requests')
         this.noPendingCLAManagerRequests = true;
       } else {
         this.allCLAManagerRequests = response.requests;
@@ -448,6 +444,7 @@ export class ProjectPage {
               .subscribe(
                 (res) => {
                   this.listPendingCLAManagerRequests();
+                  this.getCLAManagers();
                 },
                 (error) => console.log(error));
           }
