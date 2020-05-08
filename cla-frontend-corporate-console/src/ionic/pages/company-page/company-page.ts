@@ -237,7 +237,7 @@ export class CompanyPage {
           }
         },
         {
-          text: 'Accept',
+          text: 'Accept Invite',
           handler: () => {
             this.claService.approveCompanyInvite(this.companyId, invite.inviteId).subscribe((response) => {
               this.getCompanyInvites();
@@ -251,7 +251,7 @@ export class CompanyPage {
 
   declineCompanyInvite(invite) {
     let alert = this.alertCtrl.create({
-      subTitle: `Reject Request - Confirmation`,
+      subTitle: `Deny Request - Confirmation`,
       message: 'This will dismiss this pending request to join the company and send the company ' +
         'employee an email indicating that their request was rejected.<br/><br/>' +
         'Are you sure?',
@@ -264,7 +264,7 @@ export class CompanyPage {
           }
         },
         {
-          text: 'Accept',
+          text: 'Deny Request',
           handler: () => {
             this.claService.rejectCompanyInvite(this.companyId, invite.inviteId).subscribe((response) => {
               this.getCompanyInvites();

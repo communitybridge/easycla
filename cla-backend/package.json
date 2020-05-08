@@ -1,6 +1,6 @@
 {
   "name": "project",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "license": "MIT",
   "author": "The Linux Foundation",
   "scripts": {
@@ -8,6 +8,7 @@
     "serve:dev": "./node_modules/serverless/bin/serverless wsgi serve -s 'dev'",
     "deploy:dev": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless deploy -s dev -r us-east-1 --verbose",
     "prune:dev": "SLS_DEBUG=* time ./node_modules/serverless/bin/serverless prune -n 10 -s dev -r us-east-1 --verbose",
+    "offline:dev": "./node_modules/serverless/bin/serverless offline -s dev -r us-east-1 start",
     "package": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless package -s dev -r us-east-1 --verbose",
     "serve:staging": "./node_modules/serverless/bin/serverless wsgi serve -s 'staging'",
     "prune:staging": "SLS_DEBUG=* time ./node_modules/serverless/bin/serverless prune -n 10 -s staging -r us-east-1 --verbose",
@@ -23,10 +24,11 @@
     "install": "^0.13.0",
     "node.extend": "^2.0.2",
     "request": "^2.88.0",
-    "serverless": "^1.54.0",
+    "serverless": "^1.69.0",
     "serverless-dynamodb-local": "^0.2.38",
     "serverless-finch": "^2.3.2",
     "serverless-layers": "^1.4.3",
+    "serverless-offline": "^6.1.5",
     "serverless-plugin-tracing": "^2.0.0",
     "serverless-prune-plugin": "^1.4.2",
     "serverless-pseudo-parameters": "^2.5.0",

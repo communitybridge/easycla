@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import json
+import os
 from http import HTTPStatus
 from unittest.mock import Mock, patch, MagicMock
 
@@ -27,15 +28,17 @@ def user_permissions():
         yield mock_permissions
 
 
+@patch.dict(cla.salesforce.os.environ,{'CLA_BUCKET_LOGO_URL':'https://s3.amazonaws.com/cla-project-logo-dev'})
 @patch("cla.salesforce.requests.get")
 def test_get_salesforce_projects(mock_get, user, user_permissions):
     """ Test getting salesforce projects via project service """
 
+    #breakpoint()
     cla.salesforce.get_access_token = Mock(return_value=("token", HTTPStatus.OK))
     sf_projects = [
         {
-            "Description": "Test Project",
-            "ID": "foo_id",
+            "Description": "Test Project 1",
+            "ID": "foo_id_1",
             "ProjectLogo": "https://s3/logo_1",
             "Name": "project_1",
         },
@@ -47,7 +50,7 @@ def test_get_salesforce_projects(mock_get, user, user_permissions):
         },
     ]
 
-    user_permissions.projects.return_value = set({"foo_id", "foo_id_2"})
+    user_permissions.projects.return_value = set({"foo_id_1", "foo_id_2"})
 
     # Fake event
     event = {"httpMethod": "GET", "path": "/v1/salesforce/projects"}
@@ -60,23 +63,25 @@ def test_get_salesforce_projects(mock_get, user, user_permissions):
     expected_response = [
         {
             "name": "project_1",
-            "id": "foo_id",
-            "description": "Test Project",
-            "logoUrl": "https://s3/logo_1",
+            "id": "foo_id_1",
+            "description": "Test Project 1",
+            "logoUrl": "https://s3.amazonaws.com/cla-project-logo-dev/foo_id_1.png"
         },
         {
             "name": "project_2",
             "id": "foo_id_2",
             "description": "Test Project 2",
-            "logoUrl": "https://s3/logo_2",
+            "logoUrl": "https://s3.amazonaws.com/cla-project-logo-dev/foo_id_2.png"
         },
     ]
     assert get_projects(event, None)["body"] == json.dumps(expected_response)
 
 
+@patch.dict(cla.salesforce.os.environ,{'CLA_BUCKET_LOGO_URL':'https://s3.amazonaws.com/cla-project-logo-dev'})
 @patch("cla.salesforce.requests.get")
 def test_get_salesforce_project_by_id(mock_get, user, user_permissions):
     """ Test getting salesforce project given id """
+
     # Fake event
     event = {
         "httpMethod": "GET",
@@ -101,6 +106,6 @@ def test_get_salesforce_project_by_id(mock_get, user, user_permissions):
         "name": "project_1",
         "id": "foo_id",
         "description": "Test Project",
-        "logoUrl": "https://s3/logo_1",
+        "logoUrl": "https://s3.amazonaws.com/cla-project-logo-dev/foo_id.png"
     }
     assert get_project(event, None)["body"] == json.dumps(expected_response)

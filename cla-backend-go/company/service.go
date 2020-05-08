@@ -264,33 +264,40 @@ func (s service) ApproveCompanyAccessRequest(companyInviteID string) (*InviteMod
 		return nil, userErr
 	}
 
+	updatedUserModel, userUpdateErr := s.userDynamoRepo.SetCompanyID(userModel.UserID, companyModel.CompanyID)
+	if userUpdateErr != nil {
+		log.Warnf("ApproveCompanyAccessRequest - unable to update user model by ID: %s, with company ID: %s error: %+v",
+			inviteModel.UserID, companyModel.CompanyID, userUpdateErr)
+		return nil, userUpdateErr
+	}
+
 	// update the company ACL
-	aclErr := s.AddUserToCompanyAccessList(inviteModel.RequestedCompanyID, userModel.LFUsername)
+	aclErr := s.AddUserToCompanyAccessList(inviteModel.RequestedCompanyID, updatedUserModel.LFUsername)
 	if aclErr != nil {
 		log.Warnf("ApproveCompanyAccessRequest - unable to add user to Company ACL, company ID: %s, user LFID: %s, error: %+v",
-			inviteModel.RequestedCompanyID, userModel.UserName, err)
+			inviteModel.RequestedCompanyID, updatedUserModel.UserName, err)
 		return nil, aclErr
 	}
 
 	// Need to determine which email...
 	var whichEmail = ""
-	if userModel.LFEmail != "" {
+	if updatedUserModel.LFEmail != "" {
 		whichEmail = userModel.LFEmail
 	}
 
 	// If no LF Email try to grab the first other email in their email list
-	if userModel.LFEmail == "" && userModel.UserEmails != nil {
-		whichEmail = userModel.UserEmails[0]
+	if updatedUserModel.LFEmail == "" && updatedUserModel.UserEmails != nil {
+		whichEmail = updatedUserModel.UserEmails[0]
 	}
 
-	s.sendRequestApprovedEmailToRecipient(companyModel, userModel.UserName, whichEmail)
+	s.sendRequestApprovedEmailToRecipient(companyModel, updatedUserModel.UserName, whichEmail)
 
 	return &InviteModel{
 		CompanyInviteID:    inviteModel.CompanyInviteID,
 		RequestedCompanyID: inviteModel.RequestedCompanyID,
 		CompanyName:        companyModel.CompanyName,
-		UserName:           userModel.UserName,
-		UserEmail:          userModel.LFEmail,
+		UserName:           updatedUserModel.UserName,
+		UserEmail:          updatedUserModel.LFEmail,
 		UserID:             inviteModel.UserID,
 		Status:             inviteModel.Status,
 		Created:            inviteModel.Created,
