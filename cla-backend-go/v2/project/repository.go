@@ -45,9 +45,10 @@ func (repo *repo) GetCCLAProjectsByExternalID(params *project.GetCCLAProjectsByE
 
 	condition := expression.Key("project_external_id").Equal(expression.Value(params.ExternalID))
 
-	filter := expression.Name("project_ccla_enabled").Equal(expression.Value(true))
+	cclaCondition := expression.Name("project_ccla_enabled").Equal(expression.Value(true))
+	iclaCondition := expression.Name("project_icla_enabled").Equal(expression.Value(true))
 
-	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithFilter(filter).WithProjection(buildProjection()).Build()
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithFilter(cclaCondition.Or(iclaCondition)).WithProjection(buildProjection()).Build()
 
 	if err != nil {
 		log.Warnf("error building expression for Project query, projectExternalID : %s, error: %s ", params.ExternalID, err)
