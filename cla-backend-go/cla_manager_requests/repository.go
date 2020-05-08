@@ -24,6 +24,7 @@ type IRepository interface { //nolint
 
 	ApproveRequest(companyID, projectID, requestID string) (*CLAManagerRequest, error)
 	DenyRequest(companyID, projectID, requestID string) (*CLAManagerRequest, error)
+	PendingRequest(companyID, projectID, requestID string) (*CLAManagerRequest, error)
 	updateRequestStatus(companyID, projectID, requestID, status string) (*CLAManagerRequest, error)
 }
 
@@ -291,6 +292,11 @@ func (repo repository) ApproveRequest(companyID, projectID, requestID string) (*
 // DenyRequest denies the specified request
 func (repo repository) DenyRequest(companyID, projectID, requestID string) (*CLAManagerRequest, error) {
 	return repo.updateRequestStatus(companyID, projectID, requestID, "denied")
+}
+
+// PendingRequest updates the status of an existing request to pending
+func (repo repository) PendingRequest(companyID, projectID, requestID string) (*CLAManagerRequest, error) {
+	return repo.updateRequestStatus(companyID, projectID, requestID, "pending")
 }
 
 // buildRequestProjection returns the database field projection for the table
