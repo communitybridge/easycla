@@ -237,7 +237,7 @@ export class CompanyPage {
           }
         },
         {
-          text: 'Accept',
+          text: 'Accept Invite',
           handler: () => {
             this.claService.approveCompanyInvite(this.companyId, invite.inviteId).subscribe((response) => {
               this.getCompanyInvites();
@@ -251,7 +251,7 @@ export class CompanyPage {
 
   declineCompanyInvite(invite) {
     let alert = this.alertCtrl.create({
-      subTitle: `Reject Request - Confirmation`,
+      subTitle: `Deny Request - Confirmation`,
       message: 'This will dismiss this pending request to join the company and send the company ' +
         'employee an email indicating that their request was rejected.<br/><br/>' +
         'Are you sure?',
@@ -264,7 +264,7 @@ export class CompanyPage {
           }
         },
         {
-          text: 'Accept',
+          text: 'Deny Request',
           handler: () => {
             this.claService.rejectCompanyInvite(this.companyId, invite.inviteId).subscribe((response) => {
               this.getCompanyInvites();
@@ -319,7 +319,7 @@ export class CompanyPage {
   }
 
 
-  claManagerRequest(companyID: string, companyName: string, projectID: string, projectName: string) {
+  claManagerRequest(companyID: string, companyName: string, projectID: string, projectName: string, index) {
     let alert = this.alertCtrl.create({
       subTitle: `CLA Manager Request - Confirmation`,
       message: `This will send an email to all the CLA Managers for ${companyName} associated with project ${projectName}.` +
@@ -341,6 +341,7 @@ export class CompanyPage {
             const userEmail = localStorage.getItem('user_email');
             const userName = localStorage.getItem('user_name');
             this.claService.createCLAManagerRequest(companyID, projectID, userName, userEmail, userId).subscribe((response) => {
+              this.rows[index].Status = 'Pending';
             });
           }
         }

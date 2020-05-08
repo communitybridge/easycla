@@ -1,12 +1,7 @@
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
 
-import os
-from unittest.mock import Mock, patch
-
-import pytest
-
-from cla.utils import assemble_cla_comment, get_comment_badge, get_comment_body, get_full_sign_url
+from cla.utils import get_comment_badge, get_comment_body
 
 SUCCESS = ":white_check_mark:"
 FAILED = ":x:"
@@ -31,14 +26,15 @@ def test_get_comment_body_no_user_id():
         [(GITHUB_FAKE_SHA, [None, "foo", "foo@bar.com"]), (GITHUB_FAKE_SHA_2, [None, "fake", "fake@gmail.com"])],
     )
     expected = (
-        f"<ul><li>"
-        + FAILED
-        + "The commit ("
-        + " ,".join([GITHUB_FAKE_SHA, GITHUB_FAKE_SHA_2])
-        + ") is missing the User's ID, preventing the EasyCLA check. [Consult GitHub Help]("
-        + GITHUB_HELP_URL
-        + ") to resolve."
-        + "</li></ul>"
+            f"<ul><li>"
+            + FAILED
+            + "The commit ("
+            + " ,".join([GITHUB_FAKE_SHA, GITHUB_FAKE_SHA_2])
+            + ") is missing the User's ID, preventing the EasyCLA check. [Consult GitHub Help]("
+            + GITHUB_HELP_URL
+            + ") to resolve. For further assistance with EasyCLA, "
+            + f"[please submit a support request ticket]({SUPPORT_URL})."
+            + "</li></ul>"
     )
     assert response == expected
 
@@ -59,27 +55,28 @@ def test_get_comment_body_cla_fail_no_user_id_and_user_id():
         ],
     )
     expected = (
-        f"<ul><li>"
-        + "["
-        + FAILED
-        + "]("
-        + SIGN_URL
-        + ")  "
-        + author_name
-        + " The commit ("
-        + " ,".join([GITHUB_FAKE_SHA])
-        + ") is not authorized under a signed CLA. "
-        + f"[Please click here to be authorized]({SIGN_URL}). For further assistance with "
-        + f"EasyCLA, [please submit a support request ticket]({SUPPORT_URL})."
-        + "</li>"
-        + "<li>"
-        + FAILED
-        + "The commit ("
-        + " ,".join([GITHUB_FAKE_SHA_2])
-        + ") is missing the User's ID, preventing the EasyCLA check. [Consult GitHub Help]("
-        + GITHUB_HELP_URL
-        + ") to resolve."
-        + "</li></ul>"
+            f"<ul><li>"
+            + "["
+            + FAILED
+            + "]("
+            + SIGN_URL
+            + ")  "
+            + author_name
+            + " The commit ("
+            + " ,".join([GITHUB_FAKE_SHA])
+            + ") is not authorized under a signed CLA. "
+            + f"[Please click here to be authorized]({SIGN_URL}). For further assistance with "
+            + f"EasyCLA, [please submit a support request ticket]({SUPPORT_URL})."
+            + "</li>"
+            + "<li>"
+            + FAILED
+            + "The commit ("
+            + " ,".join([GITHUB_FAKE_SHA_2])
+            + ") is missing the User's ID, preventing the EasyCLA check. [Consult GitHub Help]("
+            + GITHUB_HELP_URL
+            + ") to resolve. For further assistance with EasyCLA, "
+            + f"[please submit a support request ticket]({SUPPORT_URL})."
+            + "</li></ul>"
     )
 
     assert response == expected
@@ -95,18 +92,19 @@ def test_get_comment_body_whitelisted_missing_user():
     missing = [(GITHUB_FAKE_SHA, ["12", author, "foo@gmail.com", is_whitelisted])]
     response = get_comment_body("github", SIGN_URL, signed, missing)
     expected = (
-        f"<ul><li>"
-        + author
-        + "("
-        + " ,".join([GITHUB_FAKE_SHA])
-        + ") "
-        + "is authorized, but they must confirm "
-        + "their affiliation with their company. "
-        + f'[Start the authorization process by clicking here]({SIGN_URL}), click "Corporate",'
-        + "select the appropriate company from the list, then confirm "
-        + "your affiliation on the page that appears."
-        + "</li>"
-        + "</ul>"
+            f"<ul><li>"
+            + author
+            + "("
+            + " ,".join([GITHUB_FAKE_SHA])
+            + ") "
+            + "is authorized, but they must confirm "
+            + "their affiliation with their company. "
+            + f'[Start the authorization process by clicking here]({SIGN_URL}), click "Corporate",'
+            + "select the appropriate company from the list, then confirm "
+            + "your affiliation on the page that appears. For further assistance with EasyCLA, "
+            + f"[please submit a support request ticket]({SUPPORT_URL})."
+            + "</li>"
+            + "</ul>"
     )
     assert response == expected
 
