@@ -28,7 +28,15 @@ import (
 func Configure(api *operations.ClaAPI, service IService, companyService company.IService, projectService project.Service, usersService users.Service, sigService signatures.SignatureService, eventsService events.Service, corporateConsoleURL string) { // nolint
 	api.ClaManagerRequestsCreateCLAManagerRequestHandler = cla_manager_requests.CreateCLAManagerRequestHandlerFunc(func(params cla_manager_requests.CreateCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
 
-		// TODO DAD: maybe run these queries concurrently
+		existingRequests, getErr := service.GetRequests(params.CompanyID, params.ProjectID)
+		if getErr != nil {
+			msg := buildErrorMessage(params, getErr)
+			log.Warn(msg)
+			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			})
+		}
 
 		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
 		if companyErr != nil || companyModel == nil {
@@ -84,26 +92,56 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		sigModel := sigModels.Signatures[0]
 		claManagers := sigModel.SignatureACL
 
-		request, err := service.CreateRequest(&CLAManagerRequest{
-			CompanyID:         params.CompanyID,
-			CompanyExternalID: companyModel.CompanyExternalID,
-			CompanyName:       companyModel.CompanyName,
-			ProjectID:         params.ProjectID,
-			ProjectExternalID: projectModel.ProjectExternalID,
-			ProjectName:       projectModel.ProjectName,
-			UserID:            params.Body.UserLFID,
-			UserExternalID:    userModel.UserExternalID,
-			UserName:          params.Body.UserName,
-			UserEmail:         params.Body.UserEmail,
-			Status:            "pending",
-		})
-		if err != nil {
-			msg := buildErrorMessage(params, err)
-			log.Warn(msg)
-			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
+		var request *models.ClaManagerRequest
+		// If no previous requests...
+		if existingRequests == nil || existingRequests.Requests == nil {
+			var createErr error
+			request, createErr = service.CreateRequest(&CLAManagerRequest{
+				CompanyID:         params.CompanyID,
+				CompanyExternalID: companyModel.CompanyExternalID,
+				CompanyName:       companyModel.CompanyName,
+				ProjectID:         params.ProjectID,
+				ProjectExternalID: projectModel.ProjectExternalID,
+				ProjectName:       projectModel.ProjectName,
+				UserID:            params.Body.UserLFID,
+				UserExternalID:    userModel.UserExternalID,
+				UserName:          params.Body.UserName,
+				UserEmail:         params.Body.UserEmail,
+				Status:            "pending",
 			})
+			if createErr != nil {
+				msg := buildErrorMessage(params, createErr)
+				log.Warn(msg)
+				return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+					Message: msg,
+					Code:    "400",
+				})
+			}
+
+		} else {
+			// Ok - we have an existing request with some state...
+
+			// Check to see if we have an existing request in a pending or approved state - if so, don't allow
+			for _, existingRequest := range existingRequests.Requests {
+				if existingRequest.Status == "pending" || existingRequest.Status == "approved" {
+					return cla_manager_requests.NewCreateCLAManagerRequestConflict().WithPayload(&models.ErrorResponse{
+						Message: "an existing pending request exists for this user for this company and project",
+						Code:    "409",
+					})
+				}
+			}
+
+			// Ok - existing state which is either denied or approved - allow them to create another request
+			var updateErr error
+			request, updateErr = service.PendingRequest(params.CompanyID, params.ProjectID, existingRequests.Requests[0].RequestID)
+			if updateErr != nil {
+				msg := buildErrorMessage(params, updateErr)
+				log.Warn(msg)
+				return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+					Message: msg,
+					Code:    "400",
+				})
+			}
 		}
 
 		// Send an event
@@ -445,7 +483,7 @@ lists of approved contributors and CLA Managers as well.</p>
 <p>If you want to permit this, please log into the EasyCLA Corporate Console at https://%s, select your company, then
 select the %s project. From the CLA Manager requests, you can approve this user as an additional CLA Manager.</p>
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
@@ -488,7 +526,7 @@ list of company’s CLA Managers for %s.</p>
 <li>%s (%s)</li>
 </ul>
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
@@ -529,7 +567,7 @@ company’s CLA Managers for %s.</p>
 <p> To get started, please log into the EasyCLA Corporate Console at https://%s, and select your company and then the
 project %s. From here you will be able to edit the list of approved employees and CLA Managers.</p>
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
@@ -570,7 +608,7 @@ be able to maintain the list of employees allowed to contribute to %s on behalf 
 <li>%s (%s)</li>
 </ul>
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
@@ -608,7 +646,7 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 <p>You have been denied as a CLA Manager from %s for the project %s. This means that you can not maintain the
 list of employees allowed to contribute to %s on behalf of your company.</p>
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,

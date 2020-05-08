@@ -60,7 +60,9 @@ function generateCSP(env, isDevServer) {
         'img-src': [SELF, 'data:',
             'https://s3.amazonaws.com/cla-project-logo-dev/',
             'https://s3.amazonaws.com/cla-project-logo-staging/',
-            'https://s3.amazonaws.com/cla-project-logo-prod/'
+            'https://s3.amazonaws.com/cla-project-logo-prod/',
+            'https://s3.amazonaws.com/lf-master-project-logos-prod/',
+            'https://lf-master-project-logos-prod.s3.us-east-2.amazonaws.com/',
         ],
         'script-src': scriptSources,
         'style-src': styleSources, // Unfortunately using Angular basically requires inline styles.
