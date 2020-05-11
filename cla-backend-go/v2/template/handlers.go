@@ -28,7 +28,7 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
 		}
 		response := []models.Template{}
-		err = copier.Copy(response, templates)
+		err = copier.Copy(&response, templates)
 		if err != nil {
 			return template.NewGetTemplatesInternalServerError().WithPayload(errorResponse(err))
 		}

@@ -62,7 +62,7 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 				},
 			})
 			response := &models.GithubRepository{}
-			err = copier.Copy(input, result)
+			err = copier.Copy(response, result)
 			if err != nil {
 				return github_repositories.NewAddProjectGithubRepositoryInternalServerError().WithPayload(errorResponse(err))
 			}

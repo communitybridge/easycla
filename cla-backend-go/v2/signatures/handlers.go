@@ -84,7 +84,7 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 			return signatures.NewGetGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
 		}
 		response := []models.GithubOrg{}
-		err = copier.Copy(response, ghWhiteList)
+		err = copier.Copy(&response, ghWhiteList)
 		if err != nil {
 			return signatures.NewGetGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
 		}
@@ -142,7 +142,7 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 			},
 		})
 		response := []models.GithubOrg{}
-		err = copier.Copy(response, ghWhiteList)
+		err = copier.Copy(&response, ghWhiteList)
 		if err != nil {
 			return signatures.NewAddGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
 		}
@@ -199,7 +199,7 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 			},
 		})
 		response := []models.GithubOrg{}
-		err = copier.Copy(response, ghWhiteList)
+		err = copier.Copy(&response, ghWhiteList)
 		if err != nil {
 			return signatures.NewDeleteGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
 		}
