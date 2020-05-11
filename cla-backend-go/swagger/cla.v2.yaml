@@ -452,13 +452,13 @@ paths:
           schema:
             $ref: '#/definitions/projects'
         '400':
-          $ref: '#responses/invalid-request'
+          $ref: '#/responses/invalid-request'
         '401':
-          $ref: '#responses/unauthorized'
+          $ref: '#/responses/unauthorized'
         '403':
-          $ref: '#responses/forbidden'
+          $ref: '#/responses/forbidden'
         '404':
-          $ref: '#responses/not-found'
+          $ref: '#/responses/not-found'
       tags:
         - project
 
@@ -1895,6 +1895,13 @@ definitions:
       project_logo:
         type: string
         example: "http://wwwlinuxfoundation.org/logo.gif"
+        x-omitempty: false
+      cla_group_name:
+        type: string
+        example: "gRPC"
+        x-omitempty: false
+      ccla_url:
+        type: string
         x-omitempty: false
       sub_projects:
         type: array

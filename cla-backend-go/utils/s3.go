@@ -5,17 +5,22 @@ import (
 	"errors"
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+// PresignedURLValidity is time for which s3 url will remain valid
+const PresignedURLValidity = 15 * time.Minute
+
 // S3Storage provides methods to handle s3 storage
 type S3Storage interface {
 	Upload(fileContent []byte, projectID string, claType string, identifier string, signatureID string) error
 	Download(filename string) ([]byte, error)
 	Delete(filename string) error
+	GetPresignedURL(filename string) (string, error)
 }
 
 var s3Storage S3Storage
@@ -72,6 +77,19 @@ func (s3c *S3Client) Delete(filename string) error {
 	return err
 }
 
+// GetPresignedURL provided presigned url for download
+func (s3c *S3Client) GetPresignedURL(filename string) (string, error) {
+	req, _ := s3c.s3.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: &s3c.BucketName,
+		Key:    &filename,
+	})
+	url, err := req.Presign(PresignedURLValidity)
+	if err != nil {
+		return "", err
+	}
+	return url, nil
+}
+
 // UploadToS3 uploads file to s3 storage at path contract-group/<project-ID>/<claType>/<identifier>/<signatureID>.pdf
 // claType should be cla or ccla
 // identifier can be user-id or company-id
@@ -96,4 +114,12 @@ func DeleteFromS3(filename string) error {
 		return errors.New("s3Storage not set")
 	}
 	return s3Storage.Delete(filename)
+}
+
+// GetDownloadLink provides presigned s3 url
+func GetDownloadLink(filename string) (string, error) {
+	if s3Storage == nil {
+		return "", errors.New("s3Storage not set")
+	}
+	return s3Storage.GetPresignedURL(filename)
 }
