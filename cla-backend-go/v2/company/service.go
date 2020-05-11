@@ -2,6 +2,7 @@ package company
 
 import (
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -43,6 +44,10 @@ func NewService(sigRepo signatures.SignatureRepository, projectRepo ProjectRepo)
 		signatureRepo: sigRepo,
 		projectRepo:   projectRepo,
 	}
+}
+
+func signedCLAFilename(projectID string, claType string, identifier string, signatureID string) string {
+	return strings.Join([]string{"contract-group", projectID, claType, identifier, signatureID}, "/") + ".pdf"
 }
 
 func (s *service) getAllCCLASignatures(companyID string) ([]*v1Models.Signature, error) {
@@ -216,18 +221,30 @@ func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, act
 		log.Error("fillActiveCLA : unable to get project details", err)
 		return
 	}
+
 	activeCla.ProjectID = sig.ProjectID
 	activeCla.ProjectName = projectDetails.Name
 	activeCla.ProjectSfid = p.ProjectExternalID
 	activeCla.ProjectType = projectDetails.ProjectType
 	activeCla.ProjectLogo = projectDetails.ProjectLogo
 	activeCla.SignedOn = sig.SignatureCreated
+	activeCla.ClaGroupName = p.ProjectName
 	activeCla.SubProjects = make([]*models.SubProject, 0, len(projectDetails.Projects))
 
 	var subProjects []*v2ProjectServiceModels.ProjectOutput
 	var signatoryName string
 	var cwg sync.WaitGroup
-	cwg.Add(2)
+	cwg.Add(3)
+
+	var cclaURL string
+	go func() {
+		defer cwg.Done()
+		cclaURL, err = utils.GetDownloadLink(signedCLAFilename(sig.ProjectID, sig.SignatureType, sig.SignatureReferenceID, sig.SignatureID))
+		if err != nil {
+			log.Error("fillActiveCLA : unable to get ccla s3 link", err)
+			return
+		}
+	}()
 
 	go func() {
 		defer cwg.Done()
@@ -252,6 +269,7 @@ func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, act
 	cwg.Wait()
 
 	activeCla.SignatoryName = signatoryName
+	activeCla.CclaURL = cclaURL
 	for _, subProject := range subProjects {
 		sp := &models.SubProject{
 			ProjectName: subProject.Name,
