@@ -1,0 +1,18 @@
+type: object
+x-nullable: false
+title: Projects
+description: A list of projects
+properties:
+  lastKeyScanned:
+    type: string
+  pageSize:
+    type: integer
+  resultCount:
+    type: integer
+    format: int64
+    x-omitempty: false
+  projects:
+    type: array
+    x-omitempty: false
+    items:
+      $ref: '#/definitions/project'

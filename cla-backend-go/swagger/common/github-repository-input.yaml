@@ -1,0 +1,21 @@
+type: object
+required:
+  - repositoryExternalID
+  - repositoryName
+  - repositoryOrganizationName
+  - repositoryProjectID
+  - repositoryType
+  - repositoryUrl
+properties:
+  repositoryExternalID:
+    type: string
+  repositoryName:
+    type: string
+  repositoryOrganizationName:
+    type: string
+  repositoryProjectID:
+    type: string
+  repositoryType:
+    type: string
+  repositoryUrl:
+    type: string

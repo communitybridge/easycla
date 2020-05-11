@@ -1,0 +1,35 @@
+type: object
+x-nullable: false
+title: User
+description: User model
+properties:
+  userID:
+    type: string
+  userExternalID:
+    type: string
+  username:
+    type: string
+  dateCreated:
+    type: string
+  dateModified:
+    type: string
+  lfEmail:
+    type: string
+  lfUsername:
+    type: string
+  companyID:
+    type: string
+  githubID:
+    type: string
+  githubUsername:
+    type: string
+  admin:
+    type: boolean
+  version:
+    type: string
+  note:
+    type: string
+  emails:
+    type: array
+    items:
+      type: string

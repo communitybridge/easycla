@@ -1,0 +1,23 @@
+title: Field
+type: object
+properties:
+  id:
+    type: string
+  name:
+    type: string
+  anchorString:
+    type: string
+  fieldType:
+    type: string
+  isOptional:
+    type: boolean
+  isEditable:
+    type: boolean
+  width:
+    type: integer
+  height:
+    type: integer
+  offsetX:
+    type: integer
+  offsetY:
+    type: integer

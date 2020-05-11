@@ -24,9 +24,21 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// isValidUser is a helper function to determine if the user object is valid
+func isValidUser(claUser *user.CLAUser) bool {
+	return claUser != nil && claUser.UserID != "" && claUser.LFUsername != "" && claUser.LFEmail != ""
+}
+
 // Configure is the API handler routine for the CLA manager routes
 func Configure(api *operations.ClaAPI, service IService, companyService company.IService, projectService project.Service, usersService users.Service, sigService signatures.SignatureService, eventsService events.Service, corporateConsoleURL string) { // nolint
 	api.ClaManagerRequestsCreateCLAManagerRequestHandler = cla_manager_requests.CreateCLAManagerRequestHandlerFunc(func(params cla_manager_requests.CreateCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
+		if !isValidUser(claUser) {
+			return cla_manager_requests.NewCreateCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
+				Message: "unauthorized",
+				Code:    "401",
+			})
+		}
+		log.Debugf("user is valid: %+v", claUser)
 
 		existingRequests, getErr := service.GetRequests(params.CompanyID, params.ProjectID)
 		if getErr != nil {
@@ -176,6 +188,13 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 	// Get Requests
 	api.ClaManagerRequestsGetCLAManagerRequestsHandler = cla_manager_requests.GetCLAManagerRequestsHandlerFunc(func(params cla_manager_requests.GetCLAManagerRequestsParams, claUser *user.CLAUser) middleware.Responder {
+		if !isValidUser(claUser) {
+			return cla_manager_requests.NewCreateCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
+				Message: "unauthorized",
+				Code:    "401",
+			})
+		}
+		log.Debugf("user is valid: %+v", claUser)
 
 		request, err := service.GetRequests(params.CompanyID, params.ProjectID)
 		if err != nil {
@@ -192,6 +211,13 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 	// Get Request
 	api.ClaManagerRequestsGetCLAManagerRequestHandler = cla_manager_requests.GetCLAManagerRequestHandlerFunc(func(params cla_manager_requests.GetCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
+		if !isValidUser(claUser) {
+			return cla_manager_requests.NewCreateCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
+				Message: "unauthorized",
+				Code:    "401",
+			})
+		}
+		log.Debugf("user is valid: %+v", claUser)
 
 		request, err := service.GetRequest(params.RequestID)
 		if err != nil {

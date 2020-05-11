@@ -1,0 +1,5 @@
+type: object
+properties:
+  organizationName:
+    type: string
+    example: "kubernetes"
