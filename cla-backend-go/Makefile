@@ -28,7 +28,7 @@ setup_dev:
 	go get -u github.com/go-swagger/go-swagger/cmd/swagger
 	go get -u golang.org/x/tools/cmd/goimports
 	go get golang.org/x/tools/cmd/cover
-	npm install multi-file-swagger
+	npm install -g multi-file-swagger
 
 
 setup_deploy:
