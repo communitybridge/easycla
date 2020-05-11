@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-lambda-go v1.16.0
 	github.com/aws/aws-sdk-go v1.30.14
 	github.com/aymerick/raymond v2.0.2+incompatible
+	github.com/bitly/go-simplejson v0.5.0
 	github.com/bradleyfalzon/ghinstallation v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fnproject/fdk-go v0.0.2
@@ -29,6 +30,7 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lytics/logrus v0.0.0-20170528191427-4389a17ed024
+	github.com/mozillazg/request v0.8.0 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/savaki/dynastore v0.0.0-20171109173440-28d8558bb429
 	github.com/sirupsen/logrus v1.5.0
@@ -36,6 +38,7 @@ require (
 	github.com/spf13/viper v1.6.3
 	github.com/stretchr/testify v1.5.1
 	github.com/tencentyun/scf-go-lib v0.0.0-20200116145541-9a6ea1bf75b8
+	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
 	golang.org/x/net v0.0.0-20200421231249-e086a090c8fd
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 )
