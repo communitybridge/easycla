@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -28,6 +30,7 @@ type RepositoryService interface {
 	GetClaManagerCorporateClaIDs(userID string) ([]string, error)
 	GetUserCompanyIDs(userID string) ([]string, error)
 	GetUser(userID string) (User, error)
+	SetCompanyID(userID, companyID string) (*User, error)
 }
 
 // User data model
@@ -166,4 +169,49 @@ func (repo RepositoryDynamo) GetUser(userID string) (User, error) {
 	}
 
 	return user, err
+}
+
+// SetCompanyID sets the specified user's company id
+func (repo RepositoryDynamo) SetCompanyID(userID, companyID string) (*User, error) {
+	tableName := fmt.Sprintf("cla-%s-users", repo.Stage)
+
+	_, now := utils.CurrentTime()
+
+	input := &dynamodb.UpdateItemInput{
+		ExpressionAttributeNames: map[string]*string{
+			"#C": aws.String("company_id"),
+			"#M": aws.String("date_modified"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":c": {
+				S: aws.String(companyID),
+			},
+			":m": {
+				S: aws.String(now),
+			},
+		},
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"user_id": {
+				S: aws.String(userID),
+			},
+		},
+		UpdateExpression: aws.String("SET #C = :c, #M = :m"),
+	}
+
+	_, err := repo.DynamoDBClient.UpdateItem(input)
+	if err != nil {
+		log.Warnf("Error updating User: %s with Company ID: %s, error: %v",
+			userID, companyID, err)
+		return nil, err
+	}
+
+	user, getErr := repo.GetUser(userID)
+	if getErr != nil {
+		log.Warnf("Error fetching user record by ID: %s, error: %v",
+			userID, getErr)
+		return nil, err
+	}
+
+	return &user, nil
 }

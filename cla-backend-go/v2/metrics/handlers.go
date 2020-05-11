@@ -2,14 +2,26 @@ package metrics
 
 import (
 	"github.com/LF-Engineering/lfx-kit/auth"
+	v1Company "github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/company"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/metrics"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
 )
 
+func isUserAuthorizedForOrganization(user *auth.User, externalCompanyID string) bool {
+	if !user.Admin {
+		if !user.Allowed || !user.IsUserAuthorized(auth.Organization, externalCompanyID) {
+			return false
+		}
+	}
+	return true
+}
+
 // Configure setups handlers on api with service
-func Configure(api *operations.EasyclaAPI, service Service) {
+func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository) {
 	api.MetricsGetClaManagerDistributionHandler = metrics.GetClaManagerDistributionHandlerFunc(
 		func(params metrics.GetClaManagerDistributionParams, user *auth.User) middleware.Responder {
 			result, err := service.GetCLAManagerDistribution()
@@ -76,8 +88,18 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 			return metrics.NewListProjectMetricsOK().WithPayload(result)
 		})
 	api.MetricsListCompanyProjectMetricsHandler = metrics.ListCompanyProjectMetricsHandlerFunc(
-		func(params metrics.ListCompanyProjectMetricsParams, user *auth.User) middleware.Responder {
-			result, err := service.ListCompanyProjectMetrics(params.CompanyID)
+		func(params metrics.ListCompanyProjectMetricsParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+				return metrics.NewListCompanyProjectMetricsUnauthorized()
+			}
+			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
+			if err != nil {
+				if err == v1Company.ErrCompanyDoesNotExist {
+					return company.NewGetCompanyClaManagersNotFound()
+				}
+			}
+			result, err := service.ListCompanyProjectMetrics(comp.CompanyID)
 			if err != nil {
 				return metrics.NewListCompanyProjectMetricsBadRequest().WithPayload(errorResponse(err))
 			}

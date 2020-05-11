@@ -13,7 +13,7 @@ import cla.auth
 from cla.models.dynamo_models import UserPermissions
 
 stage = os.environ.get('STAGE', '')
-cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', '')
+cla_logo_url = os.environ.get('CLA_BUCKET_LOGO_URL', 'https://s3.amazonaws.com/cla-project-logo-dev')
 
 platform_gateway_url = os.environ.get('PLATFORM_GATEWAY_URL', '')
 auth0_url = os.environ.get('PLATFORM_AUTH0_URL')
@@ -54,7 +54,8 @@ def get_projects(event, context):
     """
     Gets list of all projects from Salesforce
     """
-    #cla.log.debug('event: {}'.format(event))
+    # cla.log.debug('event: {}'.format(event))
+    # cla.log.debug(f'context: {context}')
 
     try:
         auth_user = cla.auth.authenticate_user(event.get('headers'))
@@ -107,12 +108,20 @@ def get_projects(event, context):
 
     projects = []
     for project in records:
+        # use our S3 bucket Logos for now, if we want to switch to other logos
+        # we'll need to update the CORS policy
+        logo_url = None
+        project_id = project.get('ID')
+        if project_id:
+            logo_url = '{}/{}.png'.format(cla_logo_url, project_id)
+
         projects.append({
             'name': project.get('Name'),
             'id': project.get('ID'),
             'description': project.get('Description'),
-            'logoUrl': project.get('ProjectLogo')
-        })
+            'logoUrl': logo_url
+            # 'logoUrl': project.get('ProjectLogo') # SF Logo link
+    })
 
     return format_json_cors_response(status_code, projects)
 
@@ -211,11 +220,20 @@ def get_project(event, context):
     result = response['Data'][0]
     if result:
         cla.log.info(f'Found project : {result} ')
+
+        # use our S3 bucket Logos for now, if we want to switch to other logos
+        # we'll need to update the CORS policy
+        logo_url = None
+        project_id = result.get('ID')
+        if project_id:
+            logo_url = '{}/{}.png'.format(cla_logo_url, project_id)
+
         project = {
             'name': result.get('Name'),
             'id': result.get('ID'),
             'description': result.get('Description'),
-            'logoUrl': result.get('ProjectLogo')
+            'logoUrl': logo_url
+            # 'logoUrl': result.get('ProjectLogo') # SF logo link
         }
 
     return format_json_cors_response(status_code, project)

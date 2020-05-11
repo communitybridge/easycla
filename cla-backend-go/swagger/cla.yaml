@@ -1313,8 +1313,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
-        '404':
-          $ref: '#/responses/not-found'
+        '409':
+          $ref: '#/responses/conflict'
       tags:
         - cla-manager-requests
 
@@ -1385,8 +1385,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
-        '404':
-          $ref: '#/responses/not-found'
+        '409':
+          $ref: '#/responses/conflict'
       tags:
         - cla-manager-requests
 
@@ -2034,6 +2034,7 @@ definitions:
       companyName:
         type: string
         description: The company name
+        example: 'ACME, Inc.'
       projectID:
         type: string
         description: The project's ID
@@ -2043,6 +2044,7 @@ definitions:
       projectName:
         type: string
         description: The project name
+        example: CNCF
       userID:
         type: string
         description: The user's ID
@@ -2052,9 +2054,11 @@ definitions:
       userName:
         type: string
         description: The user's name
+        example: 'Sally Morris'
       userEmail:
         type: string
         description: The user's email
+        example: 'sally@us.ibm.com'
       status:
         type: string
         description: The request status - typically, one of pending, approved, denied
@@ -2356,11 +2360,11 @@ responses:
     schema:
       $ref: '#/definitions/delete-response'
   unauthorized:
-    description: Unauthorized
+    description: 'The client is not authorized to to make this API call'
     schema:
       $ref: '#/definitions/error-response'
   invalid-request:
-    description: Invalid request
+    description: 'The client has made an invalid request - usually this is due to missing or invalid parameters or body/payload'
     schema:
       $ref: '#/definitions/error-response'
   forbidden:
@@ -2368,7 +2372,7 @@ responses:
     schema:
       $ref: '#/definitions/error-response'
   not-found:
-    description: Not found
+    description: 'The requested resource was not found'
     schema:
       $ref: '#/definitions/error-response'
   conflict:

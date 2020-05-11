@@ -12,6 +12,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
+	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -57,8 +58,10 @@ func isUserAuthorizedForProject(user *auth.User, externalProjectID string) bool 
 	return true
 }
 
+const defaultPageSize int64 = 50
+
 // Configure establishes the middleware handlers for the project service
-func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsService events.Service) { //nolint
+func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service Service, eventsService events.Service) { //nolint
 	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, user *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
 		if !isUserAuthorizedForProject(user, params.Body.ProjectExternalID) {
@@ -235,6 +238,34 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, eventsServ
 		})
 
 		return project.NewDeleteProjectByIDNoContent()
+	})
+
+	// Get CCLA Projects for externalID
+	api.ProjectGetCCLAProjectsByExternalIDHandler = project.GetCCLAProjectsByExternalIDHandlerFunc(func(projectParams project.GetCCLAProjectsByExternalIDParams, user *auth.User) middleware.Responder {
+
+		log.Debugf("Project Handler - Get CCLAProjectsByExternalID - invoking service ")
+
+		if projectParams.ExternalID == "" {
+			return project.NewGetCCLAProjectsByExternalIDBadRequest()
+		}
+		// Set the default page size
+		if projectParams.PageSize == nil {
+			projectParams.PageSize = aws.Int64(defaultPageSize)
+		}
+
+		projectsModel, err := v2Service.GetCCLAProjectsByExternalID(&projectParams)
+		if err != nil {
+			return project.NewGetCCLAProjectsByExternalIDBadRequest()
+		}
+		if projectsModel == nil {
+			return project.NewGetCCLAProjectsByExternalIDNotFound()
+		}
+		result := &models.Projects{}
+		err = copier.Copy(result, projectsModel)
+		if err != nil {
+			return project.NewGetCCLAProjectsByExternalIDInternalServerError().WithPayload(errorResponse(err))
+		}
+		return project.NewGetCCLAProjectsByExternalIDOK().WithPayload(result)
 	})
 
 	// Update Project By ID

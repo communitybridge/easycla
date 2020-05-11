@@ -96,13 +96,13 @@
                           </thead>
                           <tbody>
 
-                            <tr *ngFor="let row of rows">
+                            <tr *ngFor="let row of rows;let i=index;">
                               <td class="wrap-word" data-title="Project Name">
                                 <span>{{ row.ProjectName}}</span>
                               </td>
 
                               <td data-title="Status" *ngIf="row.Status === 'Request Access'">
-                                <button clear ion-button color="secondary" (click)="claManagerRequest(this.company.company_id, this.company.company_name, row.ProjectID, row.ProjectName)">
+                                <button clear ion-button color="secondary" (click)="claManagerRequest(this.company.company_id, this.company.company_name, row.ProjectID, row.ProjectName,i)">
                                   {{ row.Status }}
                                 </button>
                               </td>

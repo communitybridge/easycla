@@ -93,7 +93,7 @@
                 <ion-row justify-content-center *ngIf="noPendingContributorRequests">
                   <h2>No Pending Contributor Requests</h2>
                 </ion-row>
-                <table class="table" *ngIf="!noPendingContributorRequests && loading.contributorRequests">
+                <table class="table" *ngIf="!noPendingContributorRequests && !loading.contributorRequests">
                   <thead>
                     <tr>
                       <th class="clickable">
@@ -195,7 +195,7 @@
 
                   <tr *ngFor="let request of pendingCLAManagerRequests">
                     <td data-title="Name">
-                      <span>{{ request.created}}</span>
+                      <span>{{ request.created | localTimeZone}}</span>
                     </td>
 
                     <td data-title="Name">
@@ -306,7 +306,7 @@
                     v{{ signature.version}}
                   </td>
                   <td data-title="Date">
-                    {{ signature.modified | date:'medium' }}
+                    {{ signature.modified | localTimeZone}}
                   </td>
                 </tr>
               </tbody>

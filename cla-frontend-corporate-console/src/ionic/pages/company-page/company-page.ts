@@ -120,13 +120,16 @@ export class CompanyPage {
         ProjectID: response.project_id,
         ProjectName: response.project_name !== undefined ? response.project_name : '',
         ProjectManagers: signature.signatureACL,
-        Status: this.getStatus(this.rows.length),
+        Status: this.getStatus(response.project_id, this.rows.length),
         PendingContributorRequests: this.getPendingContributorRequests(response.project_id, this.rows.length),
         PendingCLAManagerRequests: this.getPendingCLAManagerRequests(response.project_id, this.rows.length),
       });
-      this.rows.sort((a, b) => {
-        return a.ProjectName.toLowerCase().localeCompare(b.ProjectName.toLowerCase());
-      });
+    });
+  }
+
+  sortData() {
+    this.rows.sort((a, b) => {
+      return a.ProjectName.toLowerCase().localeCompare(b.ProjectName.toLowerCase());
     });
   }
 
@@ -149,7 +152,7 @@ export class CompanyPage {
       if (response.requests != null && response.requests.length > 0) {
         numCLAManagerRequests = response.requests.filter((req) => req.status === 'pending').length;
       }
-      this.rows[index].pendingCLAManagerRequests = numCLAManagerRequests;
+      this.rows[index].PendingCLAManagerRequests = numCLAManagerRequests;
     });
     return '-';
   }
@@ -234,7 +237,7 @@ export class CompanyPage {
           }
         },
         {
-          text: 'Accept',
+          text: 'Accept Invite',
           handler: () => {
             this.claService.approveCompanyInvite(this.companyId, invite.inviteId).subscribe((response) => {
               this.getCompanyInvites();
@@ -248,7 +251,7 @@ export class CompanyPage {
 
   declineCompanyInvite(invite) {
     let alert = this.alertCtrl.create({
-      subTitle: `Reject Request - Confirmation`,
+      subTitle: `Deny Request - Confirmation`,
       message: 'This will dismiss this pending request to join the company and send the company ' +
         'employee an email indicating that their request was rejected.<br/><br/>' +
         'Are you sure?',
@@ -261,7 +264,7 @@ export class CompanyPage {
           }
         },
         {
-          text: 'Accept',
+          text: 'Deny Request',
           handler: () => {
             this.claService.rejectCompanyInvite(this.companyId, invite.inviteId).subscribe((response) => {
               this.getCompanyInvites();
@@ -273,11 +276,13 @@ export class CompanyPage {
     alert.present();
   }
 
-  getStatus(index) {
+  getStatus(projectId, index) {
     for (let i = 0; i < this.companySignatures.length; i++) {
-      const signatureACL = this.companySignatures[i].signatureACL;
-      const projectId = this.companySignatures[i].projectID;
-      return (this.checkStatusOfSignature(signatureACL, projectId, index))
+      const currentProjectId = this.companySignatures[i].projectID;
+      if (currentProjectId === projectId) {
+        const signatureACL = this.companySignatures[i].signatureACL;
+        return (this.checkStatusOfSignature(signatureACL, projectId, index))
+      }
     }
   }
 
@@ -314,7 +319,7 @@ export class CompanyPage {
   }
 
 
-  claManagerRequest(companyID: string, companyName: string, projectID: string, projectName: string) {
+  claManagerRequest(companyID: string, companyName: string, projectID: string, projectName: string, index) {
     let alert = this.alertCtrl.create({
       subTitle: `CLA Manager Request - Confirmation`,
       message: `This will send an email to all the CLA Managers for ${companyName} associated with project ${projectName}.` +
@@ -336,6 +341,7 @@ export class CompanyPage {
             const userEmail = localStorage.getItem('user_email');
             const userName = localStorage.getItem('user_name');
             this.claService.createCLAManagerRequest(companyID, projectID, userName, userEmail, userId).subscribe((response) => {
+              this.rows[index].Status = 'Pending';
             });
           }
         }

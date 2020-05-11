@@ -872,15 +872,23 @@ def add_cla_manager_email_content(lfid, project, company, managers):
 
     manager_list = ['%s <%s>' %(mgr.get('name', ' '), mgr.get('email', ' ')) for mgr in managers]
     manager_list_str = '-'.join(manager_list) + '\n'
-    body = f""" Hello {lfid}, \n
-                \n
-                You have been granted access to the project {project.get_project_name()} for the organization: {company.get_company_name()}.\n
-                \n
-                If you have further questions, please contact one of the existing CLA Managers: \n
-                {manager_list_str}
+    body = f"""
+    html>
+    <head>
+    <style>
+    body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
+    </style>
+    </head>
+    <body>
+    <p>Hello {lfid}, </p>
+    <br>
+    <p>You have been granted access to the project {project.get_project_name()} for the organization: {company.get_company_name()}.</p>
+    <p> If you have further questions, please contact one of the existing CLA Managers: </p>
+    {manager_list_str}
 
-                - Linux Foundation EasyCLA System
-            """
+    <p> - Linux Foundation EasyCLA System </p>
+    """
+    body = '<p>' + body.replace('\n', '<br>') + '</p>'
     return subject, body, recipients
 
 def remove_cla_manager_email_content(lfid, project, company, managers):
@@ -893,17 +901,24 @@ def remove_cla_manager_email_content(lfid, project, company, managers):
 
     subject = f'CLA: Access to Corporate CLA for Project {project.get_project_name()}'
 
-    manager_list = manager_list = ['%s <%s>' %(mgr.get('name', ' '), mgr.get('email', ' ')) for mgr in managers]
+    manager_list = ['%s <%s>' %(mgr.get('name', ' '), mgr.get('email', ' ')) for mgr in managers]
     manager_list_str = '-'.join(manager_list) + '\n'
-    body = f""" Hello {lfid}, \n
-                \n
-                You have been removed as a CLA Manager from the project: {project.get_project_name()} for the organization: {company.get_company_name()}\n
-                \n
-                If you have further questions, please contact one of the existing CLA Managers: \n
-                {manager_list_str}
+    body = f"""
+    html>
+    <head>
+    <style>
+    body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
+    </style>
+    </head>
+    <p> Hello {lfid}, </p>
+    <br>
+    <p> You have been removed as a CLA Manager from the project: {project.get_project_name()} for the organization: {company.get_company_name()} </p>
+    <p> If you have further questions, please contact one of the existing CLA Managers: </p>
+    {manager_list_str}
 
-                - Linux Foundation EasyCLA System
-            """
+    - Linux Foundation EasyCLA System
+    """
+    body = '<p>' + body.replace('\n', '<br>') + '</p>'
     return subject, body, recipients
 
 def get_user_emails(lfid):
@@ -923,6 +938,7 @@ def add_cla_manager(auth_user, signature_id, lfid):
     :param lfid: the lfid (manager username) to be added to the project acl
     :type lfid: string
     """
+
     # Find project
     signature = Signature()
     try:
@@ -957,7 +973,7 @@ def add_cla_manager(auth_user, signature_id, lfid):
     # send email to newly added CLA manager
     try:
         subject, body, recipients = add_cla_manager_email_content(lfid, project, company_instance, managers)
-        get_email_service(subject, body, recipients)
+        get_email_service().send(subject, body, recipients)
     except Exception as err:
         return {'errors': {'Failed to send email for lfid: %s , %s ' % (lfid, err)}}
 
@@ -1019,7 +1035,7 @@ def remove_cla_manager(username, signature_id, lfid):
     # send email to newly added CLA manager
     try:
         subject, body, recipients = remove_cla_manager_email_content(lfid, project, company_instance, managers)
-        get_email_service(subject, body, recipients)
+        get_email_service().send(subject, body, recipients)
     except Exception as err:
         return {'errors': {'Failed to send email for lfid: %s , %s ' % (lfid, err)}}
 
