@@ -5,7 +5,7 @@ package version
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
-	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/version"
 
@@ -15,7 +15,7 @@ import (
 // Configure sets the handlers for the API
 func Configure(api *operations.EasyclaAPI, Version, Commit, Branch, BuildDate string) {
 	api.VersionGetVersionHandler = version.GetVersionHandlerFunc(func(params version.GetVersionParams) middleware.Responder {
-		return version.NewGetVersionOK().WithPayload(&v1Models.Version{
+		return version.NewGetVersionOK().WithPayload(&models.Version{
 			Version:   aws.String(Version),
 			Commit:    aws.String(Commit),
 			Branch:    aws.String(Branch),

@@ -29,6 +29,8 @@ setup_dev:
 	go get -u github.com/go-swagger/go-swagger/cmd/swagger
 	go get -u golang.org/x/tools/cmd/goimports
 	go get golang.org/x/tools/cmd/cover
+	npm install -g multi-file-swagger
+
 
 setup_deploy:
 	npm install serverless
@@ -52,9 +54,10 @@ swagger-prep:
 
 swagger-build-v1-services:
 	@echo "Generating v1 legacy API models..."
+	cd swagger; multi-file-swagger -o yaml cla.yaml > cla.compiled.yaml
 	swagger -q generate server \
 		-t gen \
-		-f swagger/cla.yaml \
+		-f swagger/cla.compiled.yaml \
 		--copyright-file=copyright-header.txt \
 		--exclude-main \
 		-A cla \
@@ -62,9 +65,10 @@ swagger-build-v1-services:
 
 swagger-build-v2-services:
 	@echo "Generating v2 API models..."
+	cd swagger; multi-file-swagger -o yaml cla.v2.yaml > cla.v2.compiled.yaml
 	swagger -q generate server \
 		-t gen \
-		-f swagger/cla.v2.yaml \
+		-f swagger/cla.v2.compiled.yaml \
 		--copyright-file=copyright-header.txt \
 		--server-package=v2/restapi \
 		--model-package=v2/models \
@@ -106,9 +110,9 @@ swagger-build: clean-swagger swagger-prep swagger-build-v1-services swagger-buil
 
 swagger-validate:
 	@echo "Validating v1 legacy API specification..."
-	swagger validate swagger/cla.yaml
+	swagger validate swagger/cla.compiled.yaml
 	@echo "Validating v2 API specification..."
-	swagger validate swagger/cla.v2.yaml
+	swagger validate swagger/cla.v2.compiled.yaml
 	@echo "Validating Project Service API specification..."
 	swagger validate swagger/project-service.yaml
 	@echo "Validating Organization Service API specification..."

@@ -10,6 +10,7 @@ import (
 	v1Gerrits "github.com/communitybridge/easycla/cla-backend-go/gerrits"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/jinzhu/copier"
 )
 
 type ProjectService interface { //nolint
@@ -93,7 +94,12 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 					GerritRepositoryName: utils.StringValue(params.AddGerritInput.GerritName),
 				},
 			})
-			return gerrits.NewAddGerritOK().WithPayload(*result)
+			var response models.Gerrit
+			err = copier.Copy(&response, result)
+			if err != nil {
+				return gerrits.NewAddGerritInternalServerError().WithPayload(errorResponse(err))
+			}
+			return gerrits.NewAddGerritOK().WithPayload(&response)
 		})
 }
 

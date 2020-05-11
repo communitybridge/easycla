@@ -112,6 +112,8 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "e9:13:85:f1:b1:a1:25:bf:f5:44:34:66:82:1e:31:59"
+      - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
+      - *install-node-12
       - run:
           name: Setup
           command: |

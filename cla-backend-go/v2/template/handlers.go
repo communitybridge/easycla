@@ -7,6 +7,7 @@ import (
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	v1Events "github.com/communitybridge/easycla/cla-backend-go/events"
+	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/template"
@@ -14,6 +15,7 @@ import (
 	v1Template "github.com/communitybridge/easycla/cla-backend-go/template"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/jinzhu/copier"
 )
 
 // Configure API call
@@ -25,12 +27,22 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 		if err != nil {
 			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
 		}
-		return template.NewGetTemplatesOK().WithPayload(templates)
+		response := []models.Template{}
+		err = copier.Copy(&response, templates)
+		if err != nil {
+			return template.NewGetTemplatesInternalServerError().WithPayload(errorResponse(err))
+		}
+		return template.NewGetTemplatesOK().WithPayload(response)
 	})
 
 	api.TemplateCreateCLAGroupTemplateHandler = template.CreateCLAGroupTemplateHandlerFunc(func(params template.CreateCLAGroupTemplateParams, user *auth.User) middleware.Responder {
-		pdfUrls, err := service.CreateCLAGroupTemplate(params.HTTPRequest.Context(), params.ClaGroupID, &params.Body)
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
+		input := &v1Models.CreateClaGroupTemplate{}
+		err := copier.Copy(input, &params.Body)
+		if err != nil {
+			return template.NewGetTemplatesInternalServerError().WithPayload(errorResponse(err))
+		}
+		pdfUrls, err := service.CreateCLAGroupTemplate(params.HTTPRequest.Context(), params.ClaGroupID, input)
 		if err != nil {
 			log.Warnf("Error generating PDFs from provided templates, error: %v", err)
 			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(err))
@@ -42,7 +54,12 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 			EventData:  &events.CLATemplateCreatedEventData{},
 		})
 
-		return template.NewCreateCLAGroupTemplateOK().WithPayload(pdfUrls)
+		response := &models.TemplatePdfs{}
+		err = copier.Copy(response, pdfUrls)
+		if err != nil {
+			return template.NewGetTemplatesInternalServerError().WithPayload(errorResponse(err))
+		}
+		return template.NewCreateCLAGroupTemplateOK().WithPayload(response)
 	})
 }
 

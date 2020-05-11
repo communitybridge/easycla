@@ -1,0 +1,41 @@
+type: object
+properties:
+  EventID:
+    type: string
+    description: unique id of the event
+  EventType:
+    type: string
+    description: type of the event
+  UserID:
+    type: string
+    description: id of the user who created this event
+  UserName:
+    type: string
+    description: name of the user
+  EventProjectID:
+    type: string
+    description: id of the SFID project
+  EventProjectName:
+    type: string
+    description: name of the project
+  EventCompanyName:
+    type: string
+    description: name of the company
+  EventCompanyID:
+    type: string
+    description: id od the organization/company
+  EventTime:
+    type: string
+    description: time of the event.
+  EventTimeEpoch:
+    type: integer
+    description: time of the event in epoch.
+  EventData:
+    type: string
+    description: data related to the event
+  EventProjectExternalID:
+    type: string
+    description: sf id of the project
+  ContainsPII:
+    type: boolean
+    description: contains personal identifiable information
