@@ -81,6 +81,22 @@ type CCLAWhitelistRequestRejectedEventData struct {
 	RequestID string
 }
 
+type CLAManagerCreatedEventData struct {
+	CompanyName string
+	ProjectName string
+	UserName    string
+	UserEmail   string
+	UserLFID    string
+}
+
+type CLAManagerDeletedEventData struct {
+	CompanyName string
+	ProjectName string
+	UserName    string
+	UserEmail   string
+	UserLFID    string
+}
+
 type CLAManagerRequestCreatedEventData struct {
 	RequestID   string
 	CompanyName string
@@ -219,6 +235,18 @@ func (ed *CCLAWhitelistRequestRejectedEventData) GetEventString(args *LogEventAr
 func (ed *CLAManagerRequestCreatedEventData) GetEventString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user [%s / %s / %s] added CLA Manager Request [%s] for Company: %s, Project: %s",
 		ed.UserLFID, ed.UserName, ed.UserEmail, ed.RequestID, ed.CompanyName, ed.ProjectName)
+	return data, true
+}
+
+func (ed *CLAManagerCreatedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s / %s / %s] was added as CLA Manager for Company: %s, Project: %s",
+		ed.UserLFID, ed.UserName, ed.UserEmail, ed.CompanyName, ed.ProjectName)
+	return data, true
+}
+
+func (ed *CLAManagerDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s / %s / %s] was removed as CLA Manager for Company: %s, Project: %s",
+		ed.UserLFID, ed.UserName, ed.UserEmail, ed.CompanyName, ed.ProjectName)
 	return data, true
 }
 

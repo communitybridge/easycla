@@ -1060,6 +1060,87 @@ paths:
       tags:
         - signatures
 
+  /company/{companyID}/project/{projectID}/cla-manager/{userLFID}:
+    delete:
+      summary: Removes CLA Manager from ACL for specified Company and Project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: deleteCLAManager
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: userLFID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signature'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - cla-manager
+
+  /company/{companyID}/project/{projectID}/cla-manager:
+    post:
+      summary: Creates a new CLA Manager  for the specified Company and Project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: createCLAManager
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/cla-manager-user'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signature'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - cla-manager
+
   /signatures/{signatureID}/gh-org-whitelist:
     get:
       summary: Signature Update
@@ -1739,6 +1820,19 @@ definitions:
         type: string
         example: "Appium"
         x-omitempty: false
+    
+  cla-manager-user:
+    type: object
+    x-nullable: false
+    title: CLA Manager User
+    description: User object used for CLA Manager requests
+    properties:
+      firstName:
+        type: string
+      lastName:
+        type: string
+      userEmail:
+        type: string
 
   active-cla-list:
     type: object

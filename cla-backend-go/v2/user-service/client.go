@@ -8,6 +8,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/token"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/user-service/client"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/user-service/client/bulk"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/user-service/client/user"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/user-service/models"
 	runtimeClient "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -72,5 +73,30 @@ func (usc *Client) GetUserByUsername(lfUsername string) (*models.User, error) {
 	if len(users) == 0 {
 		return nil, ErrUserNotFound
 	}
+	return users[0], nil
+}
+
+// SearchUsers returns a single user based on firstName, lastName and email parameters
+func (usc *Client) SearchUsers(firstName string, lastName string, email string) (*models.User, error) {
+	params := &user.SearchUsersParams{
+		Firstname: &firstName,
+		Lastname:  &lastName,
+		Email:     &email,
+	}
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	result, err := usc.cl.User.SearchUsers(params, clientAuth)
+	if err != nil {
+		return nil, err
+	}
+	users := result.Payload.Data
+
+	if len(users) == 0 {
+		return nil, ErrUserNotFound
+	}
+
 	return users[0], nil
 }
