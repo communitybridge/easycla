@@ -4,14 +4,24 @@ import (
 	"github.com/LF-Engineering/lfx-kit/auth"
 	v1Company "github.com/communitybridge/easycla/cla-backend-go/company"
 	v1Events "github.com/communitybridge/easycla/cla-backend-go/events"
+	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/company"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/events"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/jinzhu/copier"
 )
 
+func v2EventList(eventList *v1Models.EventList) (*models.EventList, error) {
+	var dst models.EventList
+	err := copier.Copy(&dst, eventList)
+	if err != nil {
+		return nil, err
+	}
+	return &dst, nil
+}
 func isUserAuthorizedForOrganization(user *auth.User, externalCompanyID string) bool {
 	if !user.Admin {
 		if !user.Allowed || !user.IsUserAuthorized(auth.Organization, externalCompanyID) {
@@ -29,7 +39,11 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			if err != nil {
 				return events.NewGetRecentEventsBadRequest().WithPayload(errorResponse(err))
 			}
-			return events.NewGetRecentEventsOK().WithPayload(*result)
+			resp, err := v2EventList(result)
+			if err != nil {
+				return events.NewGetRecentEventsInternalServerError().WithPayload(errorResponse(err))
+			}
+			return events.NewGetRecentEventsOK().WithPayload(resp)
 		})
 
 	api.EventsGetRecentCompanyProjectEventsHandler = events.GetRecentCompanyProjectEventsHandlerFunc(
@@ -46,9 +60,13 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			}
 			result, err := service.GetRecentEventsForCompanyProject(comp.CompanyID, params.ProjectSFID, params.PageSize)
 			if err != nil {
-				return events.NewGetRecentEventsBadRequest().WithPayload(errorResponse(err))
+				return events.NewGetRecentCompanyProjectEventsBadRequest().WithPayload(errorResponse(err))
 			}
-			return events.NewGetRecentEventsOK().WithPayload(*result)
+			resp, err := v2EventList(result)
+			if err != nil {
+				return events.NewGetRecentCompanyProjectEventsInternalServerError().WithPayload(errorResponse(err))
+			}
+			return events.NewGetRecentCompanyProjectEventsOK().WithPayload(resp)
 		})
 }
 

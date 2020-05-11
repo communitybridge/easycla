@@ -1,0 +1,8 @@
+title: TemplatePDFs
+type: object
+x-nullable: false
+properties:
+  individualPDFURL:
+    type: string
+  corporatePDFURL:
+    type: string

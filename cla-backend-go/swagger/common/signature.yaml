@@ -1,0 +1,60 @@
+type: object
+title: A signature model
+description: A signature - may be an ICLA or CCLA signature
+properties:
+  signatureID:
+    type: string
+  signatureCreated:
+    type: string
+  signatureModified:
+    type: string
+  signatureSigned:
+    type: boolean
+  signatureApproved:
+    type: boolean
+  signatureReferenceType:
+    type: string
+  signatureReferenceID:
+    type: string
+  signatureReferenceName:
+    type: string
+  signatureReferenceNameLower:
+    type: string
+  signatureType:
+    type: string
+  signatureACL:
+    type: array
+    items:
+      $ref: '#/definitions/user'
+  userName:
+    type: string
+  companyName:
+    type: string
+  projectID:
+    type: string
+  userGHID:
+    type: string
+  userLFID:
+    type: string
+  version:
+    type: string
+  created:
+    type: string
+  modified:
+    type: string
+  emailWhitelist:
+    type: array
+    items:
+      type: string
+  domainWhitelist:
+    type: array
+    items:
+      type: string
+  githubWhitelist:
+    type: array
+    items:
+      type: string
+  githubOrgWhitelist:
+    type: array
+    items:
+      type: string

@@ -1,0 +1,19 @@
+type: object
+title: Health
+properties:
+  TimeStamp:
+    type: string
+  Status:
+    type: string
+  Version:
+    type: string
+  Githash:
+    type: string
+  Branch:
+    type: string
+  BuildTimeStamp:
+    type: string
+  Healths:
+    type: array
+    items:
+      $ref: '#/definitions/health-status'

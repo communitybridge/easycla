@@ -1,0 +1,10 @@
+title: CreateCLAGroupTemplate
+type: object
+x-nullable: false
+properties:
+  TemplateID:
+    type: string
+  MetaFields:
+    type: array
+    items:
+      $ref: '#/definitions/meta-field'

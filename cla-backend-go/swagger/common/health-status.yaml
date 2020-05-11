@@ -1,0 +1,13 @@
+type: object
+properties:
+  Name:
+    type: string
+  Duration:
+    type: string
+  Healthy:
+    type: boolean
+  Error:
+    type: string
+  TimeStamp:
+    type: string
+title: Health Status

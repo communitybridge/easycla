@@ -1,0 +1,24 @@
+type: object
+properties:
+  dateCreated:
+    type: string
+  dateModified:
+    type: string
+  repositoryExternalID:
+    type: string
+  repositoryID:
+    type: string
+  repositoryName:
+    type: string
+  repositoryOrganizationName:
+    type: string
+  repositoryProjectID:
+    type: string
+  repositorySfdcID:
+    type: string
+  repositoryType:
+    type: string
+  repositoryUrl:
+    type: string
+  version:
+    type: string

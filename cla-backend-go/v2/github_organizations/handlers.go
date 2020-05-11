@@ -13,6 +13,7 @@ import (
 	v1GithubOrganizations "github.com/communitybridge/easycla/cla-backend-go/github_organizations"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/jinzhu/copier"
 )
 
 // Configure setups handlers on api with service
@@ -29,7 +30,12 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 			if err != nil {
 				return github_organizations.NewGetProjectGithubOrganizationsBadRequest().WithPayload(errorResponse(err))
 			}
-			return github_organizations.NewGetProjectGithubOrganizationsOK().WithPayload(*result)
+			var response models.GithubOrganizations
+			err = copier.Copy(&response, result)
+			if err != nil {
+				return github_organizations.NewGetProjectGithubOrganizationsInternalServerError().WithPayload(errorResponse(err))
+			}
+			return github_organizations.NewGetProjectGithubOrganizationsOK().WithPayload(&response)
 		})
 	api.GithubOrganizationsAddProjectGithubOrganizationHandler = github_organizations.AddProjectGithubOrganizationHandlerFunc(
 		func(params github_organizations.AddProjectGithubOrganizationParams, authUser *auth.User) middleware.Responder {
@@ -53,7 +59,13 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 					GithubOrganizationName: params.Body.OrganizationName,
 				},
 			})
-			return github_organizations.NewAddProjectGithubOrganizationOK().WithPayload(*result)
+			var response models.GithubOrganization
+			err = copier.Copy(&response, result)
+			if err != nil {
+				return github_organizations.NewAddProjectGithubOrganizationInternalServerError().WithPayload(errorResponse(err))
+			}
+
+			return github_organizations.NewAddProjectGithubOrganizationOK().WithPayload(&response)
 		})
 
 	api.GithubOrganizationsDeleteProjectGithubOrganizationHandler = github_organizations.DeleteProjectGithubOrganizationHandlerFunc(

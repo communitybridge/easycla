@@ -1,0 +1,9 @@
+type: object
+x-nullable: false
+title: Github Organization Whitelist
+description: Github Organiation Whitelist
+properties:
+  organization_id:
+    type: string
+required:
+  - organization_id

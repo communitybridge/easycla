@@ -1,0 +1,11 @@
+title: MetaField
+type: object
+properties:
+  name:
+    type: string
+  value:
+    type: string
+  description:
+    type: string
+  templateVariable:
+    type: string

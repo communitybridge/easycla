@@ -1,0 +1,70 @@
+type: object
+x-nullable: false
+title: Project
+description: Project data model
+properties:
+  projectID:
+    description: the project internal ID
+    type: string
+  projectExternalID:
+    description: the project external ID
+    type: string
+  projectName:
+    description: the project name
+    type: string
+  projectACL:
+    type: array
+    description: A list of user ID's authorized to make changes to the project
+    items:
+      type: string
+  projectCCLAEnabled:
+    description: Flag to indicate if the Corporate/Company Contributor License Agreement is enabled
+    type: boolean
+    x-omitempty: false
+  projectICLAEnabled:
+    description: Flag to indicate if the Individual Contributor License Agreement is enabled
+    type: boolean
+    x-omitempty: false
+  projectCCLARequiresICLA:
+    description: Flag to indicate if the CCLA configuration also requires an ICLA
+    type: boolean
+    x-omitempty: false
+  projectCorporateDocuments:
+    description: Project Corporate Documents
+    type: array
+    x-omitempty: false
+    items:
+      $ref: '#/definitions/project-document'
+  projectIndividualDocuments:
+    description: Project Corporate Documents
+    type: array
+    x-omitempty: false
+    items:
+      $ref: '#/definitions/project-document'
+  projectMemberDocuments:
+    description: Project Corporate Documents
+    type: array
+    x-omitempty: false
+    items:
+      $ref: '#/definitions/project-document'
+  dateCreated:
+    description: Date/time the record was created
+    type: string
+  dateModified:
+    description: Date/time the record was last modified
+    type: string
+  version:
+    description: Record version
+    type: string
+  githubRepositories:
+    description: Github repositories associated with project
+    type: array
+    x-omitempty: false
+    items:
+      $ref: '#/definitions/github-repositories-group-by-orgs'
+  gerrits:
+    description: Gerrits associated with project
+    type: array
+    x-omitempty: false
+    items:
+      $ref: '#/definitions/gerrit'

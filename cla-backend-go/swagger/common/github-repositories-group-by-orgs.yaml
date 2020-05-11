@@ -1,0 +1,8 @@
+type: object
+properties:
+  organizationName:
+    type: string
+  list:
+    type: array
+    items:
+      $ref: '#/definitions/github-repository'

@@ -9,6 +9,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/health"
 	v1Health "github.com/communitybridge/easycla/cla-backend-go/health"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/jinzhu/copier"
 )
 
 // Configure setups handlers on api with service
@@ -19,8 +20,12 @@ func Configure(api *operations.EasyclaAPI, service v1Health.Service) {
 		if err != nil {
 			return health.NewHealthCheckBadRequest().WithPayload(errorResponse(err))
 		}
-
-		return health.NewHealthCheckOK().WithPayload(result)
+		var response models.Health
+		err = copier.Copy(&response, result)
+		if err != nil {
+			return health.NewHealthCheckBadRequest().WithPayload(errorResponse(err))
+		}
+		return health.NewHealthCheckOK().WithPayload(&response)
 	})
 }
 

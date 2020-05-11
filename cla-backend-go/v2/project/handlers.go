@@ -7,12 +7,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/jinzhu/copier"
+
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
+	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	v1ProjectOps "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
@@ -28,6 +31,24 @@ var (
 	ErrProjectIDMissing    = errors.New("project id is missing")
 )
 
+func v1ProjectModel(in *models.Project) (*v1Models.Project, error) {
+	out := &v1Models.Project{}
+	err := copier.Copy(out, in)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func v2ProjectModel(in *v1Models.Project) (*models.Project, error) {
+	out := &models.Project{}
+	err := copier.Copy(out, in)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func isUserAuthorizedForProject(user *auth.User, externalProjectID string) bool {
 	if !user.Admin {
 		if !user.Allowed || !user.IsUserAuthorized(auth.Project, externalProjectID) {
@@ -40,7 +61,7 @@ func isUserAuthorizedForProject(user *auth.User, externalProjectID string) bool 
 const defaultPageSize int64 = 50
 
 // Configure establishes the middleware handlers for the project service
-func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service Service, eventsService events.Service) {
+func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service Service, eventsService events.Service) { //nolint
 	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, user *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
 		if !isUserAuthorizedForProject(user, params.Body.ProjectExternalID) {
@@ -75,8 +96,13 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			})
 		}
 
+		input, err := v1ProjectModel(&params.Body)
+		if err != nil {
+			return project.NewCreateProjectInternalServerError().WithPayload(errorResponse(err))
+		}
+
 		// Ok, safe to create now
-		projectModel, err := service.CreateProject(&params.Body)
+		projectModel, err := service.CreateProject(input)
 		if err != nil {
 			log.Warnf("Create Project Failed - %+v", err)
 			return project.NewCreateProjectBadRequest().WithPayload(errorResponse(err))
@@ -88,9 +114,14 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			EventData:    &events.ProjectCreatedEventData{},
 		})
 
+		result, err := v2ProjectModel(projectModel)
+		if err != nil {
+			return project.NewCreateProjectInternalServerError().WithPayload(errorResponse(err))
+		}
+
 		log.Infof("Create Project Succeeded, project name: %s, project external ID: %s",
 			params.Body.ProjectName, params.Body.ProjectExternalID)
-		return project.NewCreateProjectOK().WithPayload(projectModel)
+		return project.NewCreateProjectOK().WithPayload(result)
 	})
 
 	// Get Projects
@@ -107,8 +138,12 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		if err != nil {
 			return project.NewGetProjectsBadRequest().WithPayload(errorResponse(err))
 		}
-
-		return project.NewGetProjectsOK().WithPayload(projects)
+		result := &models.Projects{}
+		err = copier.Copy(result, projects)
+		if err != nil {
+			return project.NewGetProjectsInternalServerError().WithPayload(errorResponse(err))
+		}
+		return project.NewGetProjectsOK().WithPayload(result)
 	})
 
 	// Get Project By ID
@@ -123,8 +158,12 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		if !isUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
 			return project.NewGetProjectByIDUnauthorized()
 		}
+		result, err := v2ProjectModel(projectModel)
+		if err != nil {
+			return project.NewGetProjectByIDInternalServerError().WithPayload(errorResponse(err))
+		}
 
-		return project.NewGetProjectByIDOK().WithPayload(projectModel)
+		return project.NewGetProjectByIDOK().WithPayload(result)
 	})
 
 	api.ProjectGetProjectsByExternalIDHandler = project.GetProjectsByExternalIDHandlerFunc(func(projectParams project.GetProjectsByExternalIDParams, user *auth.User) middleware.Responder {
@@ -141,7 +180,12 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		if err != nil {
 			return project.NewGetProjectsByExternalIDBadRequest().WithPayload(errorResponse(err))
 		}
-		return project.NewGetProjectsByExternalIDOK().WithPayload(projectModel)
+		results := &models.Projects{}
+		err = copier.Copy(results, projectModel)
+		if err != nil {
+			return project.NewGetProjectsByExternalIDInternalServerError().WithPayload(errorResponse(err))
+		}
+		return project.NewGetProjectsByExternalIDOK().WithPayload(results)
 	})
 
 	// Get Project By Name
@@ -158,7 +202,11 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewGetProjectByNameUnauthorized()
 		}
 
-		return project.NewGetProjectByNameOK().WithPayload(projectModel)
+		result, err := v2ProjectModel(projectModel)
+		if err != nil {
+			return project.NewGetProjectByNameInternalServerError().WithPayload(errorResponse(err))
+		}
+		return project.NewGetProjectByNameOK().WithPayload(result)
 	})
 
 	// Delete Project By ID
@@ -212,8 +260,12 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		if projectsModel == nil {
 			return project.NewGetCCLAProjectsByExternalIDNotFound()
 		}
-
-		return project.NewGetCCLAProjectsByExternalIDOK().WithPayload(projectsModel)
+		result := &models.Projects{}
+		err = copier.Copy(result, projectsModel)
+		if err != nil {
+			return project.NewGetCCLAProjectsByExternalIDInternalServerError().WithPayload(errorResponse(err))
+		}
+		return project.NewGetCCLAProjectsByExternalIDOK().WithPayload(result)
 	})
 
 	// Update Project By ID
@@ -229,7 +281,11 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		if !isUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
 			return project.NewUpdateProjectUnauthorized()
 		}
-		projectModel, err = service.UpdateProject(&projectParams.Body)
+		in, err := v1ProjectModel(&projectParams.Body)
+		if err != nil {
+			return project.NewUpdateProjectInternalServerError().WithPayload(errorResponse(err))
+		}
+		projectModel, err = service.UpdateProject(in)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
 				return project.NewUpdateProjectNotFound()
@@ -243,7 +299,11 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			EventData:    &events.ProjectUpdatedEventData{},
 		})
 
-		return project.NewUpdateProjectOK().WithPayload(projectModel)
+		result, err := v2ProjectModel(projectModel)
+		if err != nil {
+			return project.NewUpdateProjectInternalServerError().WithPayload(errorResponse(err))
+		}
+		return project.NewUpdateProjectOK().WithPayload(result)
 	})
 
 }
