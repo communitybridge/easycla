@@ -3,6 +3,7 @@
 SERVICE = cla
 LAMBDA_BIN = backend-aws-lambda
 METRICS_BIN = metrics-aws-lambda
+FUNCTIONAL_TESTS_BIN = functional-tests
 BUILD_TIME=`date +%FT%T%z`
 VERSION := $(shell sh -c 'git describe --always --tags')
 BRANCH := $(shell sh -c 'git rev-parse --abbrev-ref HEAD')
@@ -156,6 +157,16 @@ build-metrics-lambda-mac: deps
 	@echo "Building a statically linked Mac OSX amd64 binary..."
 	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(METRICS_BIN)-mac cmd/metrics_lambda/main.go
 	@chmod +x $(METRICS_BIN)-mac
+
+build-functional-tests-linux: deps
+	@echo "Building Functional Tests for Linux amd64 binary..."
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(FUNCTIONAL_TESTS_BIN) cmd/functional_tests/main.go
+	@chmod +x $(FUNCTIONAL_TESTS_BIN)
+
+build-functional-tests-mac: deps
+	@echo "Building Functional Tests for OSX amd64 binary..."
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(FUNCTIONAL_TESTS_BIN)-mac cmd/functional_tests/main.go
+	@chmod +x $(FUNCTIONAL_TESTS_BIN)-mac
 
 $(LINT_TOOL):
 	@echo "Downloading golangci-lint version $(LINT_VERSION)..."
