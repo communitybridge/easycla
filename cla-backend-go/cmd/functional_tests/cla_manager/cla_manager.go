@@ -28,15 +28,17 @@ const (
 
 // TestBehaviour data model
 type TestBehaviour struct {
-	apiURL      string
-	auth0Config test_models.Auth0Config
+	apiURL           string
+	auth0User1Config test_models.Auth0Config
+	auth0User2Config test_models.Auth0Config
 }
 
 // NewTestBehaviour creates a new test behavior model
-func NewTestBehaviour(apiURL string, auth0Config test_models.Auth0Config) *TestBehaviour {
+func NewTestBehaviour(apiURL string, auth0User1Config, auth0User2Config test_models.Auth0Config) *TestBehaviour {
 	return &TestBehaviour{
 		apiURL,
-		auth0Config,
+		auth0User1Config,
+		auth0User2Config,
 	}
 }
 
@@ -45,13 +47,13 @@ func (t *TestBehaviour) RunGetCLAManagerToken() {
 	authTokenReqPayload := map[string]string{
 		"grant_type": "http://auth0.com/oauth/grant-type/password-realm",
 		"realm":      "Username-Password-Authentication",
-		"username":   t.auth0Config.Auth0UserName, // TODO - use diff creds for this person
-		"password":   t.auth0Config.Auth0Password,
-		"client_id":  t.auth0Config.Auth0ClientID,
+		"username":   t.auth0User2Config.Auth0UserName,
+		"password":   t.auth0User2Config.Auth0Password,
+		"client_id":  t.auth0User2Config.Auth0ClientID,
 		"audience":   "https://api-gw.dev.platform.linuxfoundation.org/",
 		"scope":      "access:api openid profile email",
 	}
-	frisby.Create("CLA Manager - Get Token").
+	frisby.Create("CLA Manager - Get Token - CLA Manager").
 		Post("https://linuxfoundation-dev.auth0.com/oauth/token").
 		SetJson(authTokenReqPayload).
 		Send().
@@ -83,13 +85,13 @@ func (t *TestBehaviour) RunGetCLAProspectiveManagerToken() {
 	authTokenReqPayload := map[string]string{
 		"grant_type": "http://auth0.com/oauth/grant-type/password-realm",
 		"realm":      "Username-Password-Authentication",
-		"username":   t.auth0Config.Auth0UserName, // TODO - use diff creds for this person
-		"password":   t.auth0Config.Auth0Password,
-		"client_id":  t.auth0Config.Auth0ClientID,
+		"username":   t.auth0User1Config.Auth0UserName,
+		"password":   t.auth0User1Config.Auth0Password,
+		"client_id":  t.auth0User1Config.Auth0ClientID,
 		"audience":   "https://api-gw.dev.platform.linuxfoundation.org/",
 		"scope":      "access:api openid profile email",
 	}
-	frisby.Create("CLA Manager - Get Token").
+	frisby.Create("CLA Manager - Get Token - Prospective CLA Manager").
 		Post("https://linuxfoundation-dev.auth0.com/oauth/token").
 		SetJson(authTokenReqPayload).
 		Send().
@@ -120,7 +122,6 @@ func (t *TestBehaviour) RunGetCLAProspectiveManagerToken() {
 func (t *TestBehaviour) RunCreateCLAManagerRequestNoAuth() {
 	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests",
 		t.apiURL, claManagerCompanyID, claManagerProjectID)
-	//log.Debugf("URL: %s", url)
 	frisby.Create("CLA Manager - Create CLA Manager Request - No Auth").
 		Post(url).
 		Send().
@@ -131,7 +132,6 @@ func (t *TestBehaviour) RunCreateCLAManagerRequestNoAuth() {
 func (t *TestBehaviour) RunGetCLAManagerRequestsNoAuth() {
 	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests",
 		t.apiURL, claManagerCompanyID, claManagerProjectID)
-	//log.Debugf("URL: %s", url)
 	frisby.Create("CLA Manager - Get CLA Manager Requests - No Auth").
 		Get(url).
 		Send().
@@ -142,7 +142,6 @@ func (t *TestBehaviour) RunGetCLAManagerRequestsNoAuth() {
 func (t *TestBehaviour) RunGetCLAManagerRequestNoAuth() {
 	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests/%s",
 		t.apiURL, claManagerCompanyID, claManagerProjectID, "test-request-id")
-	//log.Debugf("URL: %s", url)
 	frisby.Create("CLA Manager - Get CLA Manager Request - No Auth").
 		Get(url).
 		Send().
@@ -153,7 +152,6 @@ func (t *TestBehaviour) RunGetCLAManagerRequestNoAuth() {
 func (t *TestBehaviour) RunApproveCLAManagerRequestNoAuth() {
 	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests/%s/approve",
 		t.apiURL, claManagerCompanyID, claManagerProjectID, "test-request-id")
-	//log.Debugf("URL: %s", url)
 	frisby.Create("CLA Manager - Approve CLA Manager Request - No Auth").
 		Put(url).
 		Send().
@@ -164,9 +162,18 @@ func (t *TestBehaviour) RunApproveCLAManagerRequestNoAuth() {
 func (t *TestBehaviour) RunDenyCLAManagerRequestNoAuth() {
 	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests/%s/deny",
 		t.apiURL, claManagerCompanyID, claManagerProjectID, "test-request-id")
-	//log.Debugf("URL: %s", url)
 	frisby.Create("CLA Manager - Deny CLA Manager Request - No Auth").
 		Put(url).
+		Send().
+		ExpectStatus(401)
+}
+
+// RunDeleteCLAManagerRequestNoAuth test
+func (t *TestBehaviour) RunDeleteCLAManagerRequestNoAuth() {
+	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests/%s",
+		t.apiURL, claManagerCompanyID, claManagerProjectID, claManagerCreateRequestID)
+	frisby.Create("CLA Manager - Delete CLA Manager Requests - No Auth").
+		Delete(url).
 		Send().
 		ExpectStatus(401)
 }
@@ -175,7 +182,6 @@ func (t *TestBehaviour) RunDenyCLAManagerRequestNoAuth() {
 func (t *TestBehaviour) RunCreateCLAManagerRequestAuth() {
 	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests",
 		t.apiURL, claManagerCompanyID, claManagerProjectID)
-	//log.Debugf("URL: %s", url)
 	frisby.Create("CLA Manager - Create CLA Manager Request - Auth").
 		Post(url).
 		SetHeaders(map[string]string{
@@ -184,9 +190,9 @@ func (t *TestBehaviour) RunCreateCLAManagerRequestAuth() {
 			"Accept-Encoding": "application/json",
 		}).
 		SetJson(map[string]string{
-			"userName":  "Deal Test User",
-			"userEmail": "ddeal+test@linuxfoundation.org",
-			"userLFID":  "ddealtest",
+			"userName":  "CLA Functional Test User Linux Foundation",
+			"userEmail": "ddeal+cla+dev+functional+test+user@linuxfoundation.org",
+			"userLFID":  "cladevfunctionaltestuser",
 		}).
 		Send().
 		ExpectStatus(200).
@@ -215,11 +221,59 @@ func (t *TestBehaviour) RunCreateCLAManagerRequestAuth() {
 		})
 }
 
+// RunDeleteCLAManagerRequestUnauthorized test
+func (t *TestBehaviour) RunDeleteCLAManagerRequestUnauthorized() {
+	// ProspectiveManagerToken is not approved yet - shouldn't be able to delete requests
+	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests/%s",
+		t.apiURL, claManagerCompanyID, claManagerProjectID, claManagerCreateRequestID)
+	log.Debugf("CLA Manager - Delete Unauthorized - %s", url)
+	frisby.Create("CLA Manager - Delete CLA Manager Requests - Unauthorized").
+		Delete(url).
+		SetHeaders(map[string]string{
+			"Authorization":   "Bearer " + claProspectiveManagerToken,
+			"Content-Type":    "application/json",
+			"Accept-Encoding": "application/json",
+		}).
+		Send().
+		ExpectStatus(401)
+}
+
+// RunApproveCLAManagerRequestUnauthorized test
+func (t *TestBehaviour) RunApproveCLAManagerRequestUnauthorized() {
+	// ProspectiveManagerToken is not approved yet - shouldn't be able to approve requests
+	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests/%s/approve",
+		t.apiURL, claManagerCompanyID, claManagerProjectID, claManagerCreateRequestID)
+	frisby.Create("CLA Manager - Approve CLA Manager Requests - Unauthorized").
+		Put(url).
+		SetHeaders(map[string]string{
+			"Authorization":   "Bearer " + claProspectiveManagerToken,
+			"Content-Type":    "application/json",
+			"Accept-Encoding": "application/json",
+		}).
+		Send().
+		ExpectStatus(401)
+}
+
+// RunDenyCLAManagerRequestUnauthorized test
+func (t *TestBehaviour) RunDenyCLAManagerRequestUnauthorized() {
+	// ProspectiveManagerToken is not approved yet - shouldn't be able to deny requests
+	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests/%s/deny",
+		t.apiURL, claManagerCompanyID, claManagerProjectID, claManagerCreateRequestID)
+	frisby.Create("CLA Manager - Deny CLA Manager Requests - Unauthorized").
+		Put(url).
+		SetHeaders(map[string]string{
+			"Authorization":   "Bearer " + claProspectiveManagerToken,
+			"Content-Type":    "application/json",
+			"Accept-Encoding": "application/json",
+		}).
+		Send().
+		ExpectStatus(401)
+}
+
 // RunGetCLAManagerRequestsAuth test
 func (t *TestBehaviour) RunGetCLAManagerRequestsAuth() {
 	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests",
 		t.apiURL, claManagerCompanyID, claManagerProjectID)
-	//log.Debugf("URL: %s", url)
 	frisby.Create("CLA Manager - Get CLA Manager Requests - Auth").
 		Get(url).
 		SetHeaders(map[string]string{
@@ -235,7 +289,6 @@ func (t *TestBehaviour) RunGetCLAManagerRequestsAuth() {
 func (t *TestBehaviour) RunGetCLAManagerRequestAuth() {
 	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests/%s",
 		t.apiURL, claManagerCompanyID, claManagerProjectID, claManagerCreateRequestID)
-	//log.Debugf("URL: %s", url)
 	frisby.Create("CLA Manager - Get CLA Manager Request - Auth").
 		Get(url).
 		SetHeaders(map[string]string{
@@ -282,27 +335,10 @@ func (t *TestBehaviour) RunGetCLAManagerRequestAuth() {
 		})
 }
 
-// RunDeleteCLAManagerRequestUnauthorized test
-func (t *TestBehaviour) RunDeleteCLAManagerRequestUnauthorized() {
-	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests/%s",
-		t.apiURL, claManagerCompanyID, claManagerProjectID, claManagerCreateRequestID)
-	//log.Debugf("URL: %s", url)
-	frisby.Create("CLA Manager - Delete CLA Manager Requests - Auth").
-		Delete(url).
-		SetHeaders(map[string]string{
-			"Authorization":   "Bearer " + claManagerToken,
-			"Content-Type":    "application/json",
-			"Accept-Encoding": "application/json",
-		}).
-		Send().
-		ExpectStatus(401)
-}
-
 // RunDeleteCLAManagerRequestAuth test
 func (t *TestBehaviour) RunDeleteCLAManagerRequestAuth() {
 	url := fmt.Sprintf("%s/company/%s/project/%s/cla-manager/requests/%s",
 		t.apiURL, claManagerCompanyID, claManagerProjectID, claManagerCreateRequestID)
-	//log.Debugf("URL: %s", url)
 	frisby.Create("CLA Manager - Delete CLA Manager Requests - Auth").
 		Delete(url).
 		SetHeaders(map[string]string{
@@ -311,21 +347,28 @@ func (t *TestBehaviour) RunDeleteCLAManagerRequestAuth() {
 			"Accept-Encoding": "application/json",
 		}).
 		Send().
-		ExpectStatus(200)
+		ExpectStatus(204)
 }
 
 // RunAllTests runs all the CLA Manager tests
 func (t *TestBehaviour) RunAllTests() {
 	t.RunGetCLAManagerToken()
 	t.RunGetCLAProspectiveManagerToken()
+
+	// No Auth Tests
 	t.RunCreateCLAManagerRequestNoAuth()
 	t.RunGetCLAManagerRequestsNoAuth()
 	t.RunGetCLAManagerRequestNoAuth()
 	t.RunApproveCLAManagerRequestNoAuth()
 	t.RunDenyCLAManagerRequestNoAuth()
+	t.RunDeleteCLAManagerRequestNoAuth()
+
 	t.RunCreateCLAManagerRequestAuth()
+	t.RunDeleteCLAManagerRequestUnauthorized()
+	t.RunApproveCLAManagerRequestUnauthorized()
+	t.RunDenyCLAManagerRequestUnauthorized()
 	t.RunGetCLAManagerRequestsAuth()
 	t.RunGetCLAManagerRequestAuth()
-	t.RunDeleteCLAManagerRequestUnauthorized()
+
 	t.RunDeleteCLAManagerRequestAuth()
 }
