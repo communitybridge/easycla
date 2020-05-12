@@ -631,7 +631,7 @@ export class ClaService {
    * @param requestID the unique request id
    */
   approveCLAManagerRequest(companyID: string, projectID: string, requestID: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyID}/project/${projectID}/cla-manager/request/${requestID}/approve`);
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyID}/project/${projectID}/cla-manager/requests/${requestID}/approve`);
     return this.http.putWithCreds(url).map((res) => res.json());
   }
 
@@ -643,7 +643,7 @@ export class ClaService {
    * @param requestID the unique request id
    */
   denyCLAManagerRequest(companyID: string, projectID: string, requestID: string) {
-    const url: URL = this.getV3Endpoint(`/v3/company/${companyID}/project/${projectID}/cla-manager/request/${requestID}/deny`);
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyID}/project/${projectID}/cla-manager/requests/${requestID}/deny`);
     return this.http.putWithCreds(url).map((res) => res.json());
   }
 

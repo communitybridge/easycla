@@ -17,22 +17,24 @@ GO_PKGS=$(shell go list ./... | grep -v /vendor/ | grep -v /node_modules/)
 GO_FILES=$(shell find . -type f -name '*.go' -not -path './vendor/*')
 TEST_ENV=AWS_REGION=us-east-1 DYNAMODB_AWS_REGION=us-east-1 AWS_PROFILE=bar AWS_ACCESS_KEY_ID=foo AWS_SECRET_ACCESS_KEY=bar
 
-.PHONY: generate setup setup_dev setup_deploy clean-all clean swagger up fmt test run deps build build-mac build-aws-lambda qc lint
+.PHONY: generate setup setup-dev setup-deploy clean-all clean swagger up fmt test run deps build build-mac build-aws-lambda qc lint
 
 all: clean swagger deps fmt build-mac test lint
 
 generate: swagger
 
-setup: $(LINT_TOOL) setup_dev setup_deploy
+setup: $(LINT_TOOL) setup-dev setup-deploy
 
-setup_dev:
+setup_dev: setup-dev
+setup-dev:
 	go get -u github.com/go-swagger/go-swagger/cmd/swagger
 	go get -u golang.org/x/tools/cmd/goimports
 	go get golang.org/x/tools/cmd/cover
 	npm install -g multi-file-swagger
 
 
-setup_deploy:
+setup_deploy: setup-deploy
+setup-deploy:
 	npm install serverless
 
 clean:

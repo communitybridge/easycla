@@ -17,6 +17,7 @@ type IService interface {
 	ApproveRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error)
 	DenyRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error)
 	PendingRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error)
+	DeleteRequest(requestID string) error
 }
 
 type service struct {
@@ -90,7 +91,7 @@ func (s service) ApproveRequest(companyID, projectID, requestID string) (*models
 	return dbModelToServiceModel(request), err
 }
 
-// PendingREquest updates the specified request to the pending state
+// PendingRequest updates the specified request to the pending state
 func (s service) PendingRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error) {
 	request, err := s.repo.PendingRequest(companyID, projectID, requestID)
 	if err != nil {
@@ -111,9 +112,18 @@ func (s service) DenyRequest(companyID, projectID, requestID string) (*models.Cl
 		return nil, err
 	}
 
-	// Send email
-
 	return dbModelToServiceModel(request), err
+}
+
+// DeleteRequest deletes the request based on the specified parameters
+func (s service) DeleteRequest(requestID string) error {
+	err := s.repo.DeleteRequest(requestID)
+	if err != nil {
+		log.Warnf("problem deleting request ID: %s, error :%+v",
+			requestID, err)
+		return err
+	}
+	return nil
 }
 
 // dbModelToServiceModel converts a database model to a service model
