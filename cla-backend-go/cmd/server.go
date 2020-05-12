@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/cla_manager_add"
 	"github.com/communitybridge/easycla/cla-backend-go/cla_manager"
 	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 
@@ -63,6 +64,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/health"
 	"github.com/communitybridge/easycla/cla-backend-go/template"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
+	v2ClaManager "github.com/communitybridge/easycla/cla-backend-go/v2/cla_manager"
 	v2Company "github.com/communitybridge/easycla/cla-backend-go/v2/company"
 	v2Health "github.com/communitybridge/easycla/cla-backend-go/v2/health"
 	v2Template "github.com/communitybridge/easycla/cla-backend-go/v2/template"
@@ -229,6 +231,7 @@ func server(localMode bool) http.Handler {
 
 	v2CompanyService := v2Company.NewService(signaturesRepo, projectRepo)
 	claManagerReqService := cla_manager.NewService(claManagerReqRepo)
+	claManagerAddService := cla_manager_add.NewService(signaturesService, companyService, projectService, eventsService, usersService, configFile.CorporateConsoleURL)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
@@ -269,6 +272,8 @@ func server(localMode bool) http.Handler {
 	v2Gerrits.Configure(v2API, gerritService, projectService, eventsService)
 	v2Company.Configure(v2API, v2CompanyService, companyRepo)
 	cla_manager.Configure(api, claManagerReqService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
+	cla_manager_add.Configure(api, claManagerAddService)
+	v2ClaManager.Configure(v2API, claManagerAddService)
 
 	user_service.InitClient(configFile.APIGatewayURL)
 	project_service.InitClient(configFile.APIGatewayURL)

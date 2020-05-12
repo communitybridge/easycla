@@ -62,6 +62,9 @@ const (
 	ClaManagerAccessRequestDenied   = "cla_manager.access_request_denied"
 	ClaManagerAccessRequestDeleted  = "cla_manager.access_request_deleted"
 
+	ClaManagerCreated = "cla_manager.added"
+	ClaManagerDeleted = "cla_manager.deleted"
+
 	ProjectCreated = "project.created"
 	ProjectUpdated = "project.updated"
 	ProjectDeleted = "project.deleted"
