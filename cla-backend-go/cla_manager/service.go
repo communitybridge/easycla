@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-package cla_manager_requests
+package cla_manager
 
 import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -12,6 +12,7 @@ import (
 type IService interface {
 	CreateRequest(reqModel *CLAManagerRequest) (*models.ClaManagerRequest, error)
 	GetRequests(companyID, projectID string) (*models.ClaManagerRequestList, error)
+	GetRequestsByUserID(companyID, projectID, userID string) (*models.ClaManagerRequestList, error)
 	GetRequest(requestID string) (*models.ClaManagerRequest, error)
 
 	ApproveRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error)
@@ -49,6 +50,25 @@ func (s service) GetRequests(companyID, projectID string) (*models.ClaManagerReq
 	if err != nil {
 		log.Warnf("problem with fetching request for company ID: %s, project ID: %s, error :%+v",
 			companyID, projectID, err)
+		return nil, err
+	}
+
+	// Convert to a service response model
+	responseModel := models.ClaManagerRequestList{}
+	for _, request := range requests.Requests {
+		resp := dbModelToServiceModel(&request)
+		responseModel.Requests = append(responseModel.Requests, *resp)
+	}
+
+	return &responseModel, nil
+}
+
+// GetRequestsByUserID returns a requests object based on the specified parameters
+func (s service) GetRequestsByUserID(companyID, projectID, userID string) (*models.ClaManagerRequestList, error) {
+	requests, err := s.repo.GetRequestsByUserID(companyID, projectID, userID)
+	if err != nil {
+		log.Warnf("problem with fetching request for company ID: %s, project ID: %s, user ID: %s, error :%+v",
+			companyID, projectID, userID, err)
 		return nil, err
 	}
 
