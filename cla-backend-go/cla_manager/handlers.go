@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-package cla_manager_requests
+package cla_manager
 
 import (
 	"fmt"
@@ -39,19 +39,9 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		existingRequests, getErr := service.GetRequests(params.CompanyID, params.ProjectID)
-		if getErr != nil {
-			msg := buildErrorMessage(params, getErr)
-			log.Warn(msg)
-			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			})
-		}
-
 		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
 		if companyErr != nil || companyModel == nil {
-			msg := buildErrorMessage(params, companyErr)
+			msg := buildErrorMessage("company lookup error", params, companyErr)
 			log.Warn(msg)
 			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
@@ -61,7 +51,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
-			msg := buildErrorMessage(params, projectErr)
+			msg := buildErrorMessage("project lookup error", params, projectErr)
 			log.Warn(msg)
 			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
@@ -71,7 +61,17 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 		userModel, userErr := usersService.GetUserByLFUserName(params.Body.UserLFID)
 		if userErr != nil || userModel == nil {
-			msg := buildErrorMessage(params, userErr)
+			msg := buildErrorMessage("user lookup error", params, userErr)
+			log.Warn(msg)
+			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			})
+		}
+
+		existingRequests, getErr := service.GetRequestsByUserID(params.CompanyID, params.ProjectID, userModel.UserID)
+		if getErr != nil {
+			msg := buildErrorMessage("get existing requests", params, getErr)
 			log.Warn(msg)
 			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
@@ -88,7 +88,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			PageSize:    aws.Int64(5),
 		})
 		if sigErr != nil || sigModels == nil {
-			msg := buildErrorMessage(params, sigErr)
+			msg := buildErrorMessage("signature lookup error", params, sigErr)
 			log.Warn(msg)
 			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: "CLA Manager Create Request - error reading CCA Signatures - " + msg,
@@ -121,7 +121,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 				Status:            "pending",
 			})
 			if createErr != nil {
-				msg := buildErrorMessage(params, createErr)
+				msg := buildErrorMessage("create request error", params, createErr)
 				log.Warn(msg)
 				return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 					Message: msg,
@@ -146,7 +146,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			var updateErr error
 			request, updateErr = service.PendingRequest(params.CompanyID, params.ProjectID, existingRequests.Requests[0].RequestID)
 			if updateErr != nil {
-				msg := buildErrorMessage(params, updateErr)
+				msg := buildErrorMessage("pending request error", params, updateErr)
 				log.Warn(msg)
 				return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 					Message: msg,
@@ -557,9 +557,9 @@ func currentUserInACL(currentUser *user.CLAUser, managers []models.User) bool {
 }
 
 // buildErrorMessage helper function to build an error message
-func buildErrorMessage(params cla_manager_requests.CreateCLAManagerRequestParams, err error) string {
-	return fmt.Sprintf("problem creating new CLA Manager Request using company ID: %s, project ID: %s, user ID: %s, user name: %s, user email: %s, error: %+v",
-		params.CompanyID, params.ProjectID, params.Body.UserLFID, params.Body.UserName, params.Body.UserEmail, err)
+func buildErrorMessage(errPrefix string, params cla_manager_requests.CreateCLAManagerRequestParams, err error) string {
+	return fmt.Sprintf("%s - problem creating new CLA Manager Request using company ID: %s, project ID: %s, user ID: %s, user name: %s, user email: %s, error: %+v",
+		errPrefix, params.CompanyID, params.ProjectID, params.Body.UserLFID, params.Body.UserName, params.Body.UserEmail, err)
 }
 
 // buildErrorMessageForApprove is a helper function to build an error message

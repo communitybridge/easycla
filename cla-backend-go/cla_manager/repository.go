@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-package cla_manager_requests
+package cla_manager
 
 import (
 	"errors"
@@ -23,6 +23,7 @@ import (
 type IRepository interface { //nolint
 	CreateRequest(reqModel *CLAManagerRequest) (*CLAManagerRequest, error)
 	GetRequests(companyID, projectID string) (*CLAManagerRequests, error)
+	GetRequestsByUserID(companyID, projectID, userID string) (*CLAManagerRequests, error)
 	GetRequest(requestID string) (*CLAManagerRequest, error)
 
 	ApproveRequest(companyID, projectID, requestID string) (*CLAManagerRequest, error)
@@ -179,6 +180,60 @@ func (repo repository) GetRequests(companyID, projectID string) (*CLAManagerRequ
 	if unmarshallErr != nil {
 		log.Warnf("error converting DB model cla manager request query using company ID: %s, project ID: %s, error: %v",
 			companyID, projectID, unmarshallErr)
+		return nil, unmarshallErr
+	}
+
+	return &CLAManagerRequests{
+		Requests: requests,
+	}, nil
+}
+
+// GetRequestsByUserID returns the requests by Company ID and Project ID and User ID
+func (repo repository) GetRequestsByUserID(companyID, projectID, userID string) (*CLAManagerRequests, error) {
+	tableName := fmt.Sprintf("cla-%s-cla-manager-requests", repo.stage)
+
+	condition := expression.Key("company_id").Equal(expression.Value(companyID)).And(
+		expression.Key("project_id").Equal(expression.Value(projectID)))
+
+	filter := expression.Name("user_id").Contains(userID)
+
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().
+		WithKeyCondition(condition).
+		WithFilter(filter).
+		WithProjection(buildRequestProjection()).
+		Build()
+	if err != nil {
+		log.Warnf("error building expression for cla manager request query using company ID: %s, project ID: %s, user ID: %s, error: %v",
+			companyID, projectID, userID, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String("cla-manager-requests-company-project-index"),
+	}
+
+	results, errQuery := repo.dynamoDBClient.Query(queryInput)
+	if errQuery != nil {
+		log.Warnf("error running query for cla manager request query using company ID: %s, project ID: %s, user ID: %s, error: %v",
+			companyID, projectID, userID, err)
+		return nil, errQuery
+	}
+
+	var requests []CLAManagerRequest
+
+	// Unmarshall the DB response
+	unmarshallErr := dynamodbattribute.UnmarshalListOfMaps(results.Items, &requests)
+	if unmarshallErr != nil {
+		log.Warnf("error converting DB model cla manager request query using company ID: %s, project ID: %s, user ID: %s, error: %v",
+			companyID, projectID, userID, unmarshallErr)
 		return nil, unmarshallErr
 	}
 
