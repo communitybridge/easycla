@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/cla_manager_add"
-	"github.com/communitybridge/easycla/cla-backend-go/cla_manager_requests"
+	"github.com/communitybridge/easycla/cla-backend-go/cla_manager"
 	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 
 	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
@@ -202,7 +202,7 @@ func server(localMode bool) http.Handler {
 	eventsRepo := events.NewRepository(awsSession, stage)
 	metricsRepo := metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL)
 	githubOrganizationsRepo := github_organizations.NewRepository(awsSession, stage)
-	claManagerReqRepo := cla_manager_requests.NewRepository(awsSession, stage)
+	claManagerReqRepo := cla_manager.NewRepository(awsSession, stage)
 
 	// Our service layer handlers
 	eventsService := events.NewService(eventsRepo, combinedRepo{
@@ -230,7 +230,7 @@ func server(localMode bool) http.Handler {
 	v2ProjectService := v2Project.NewService(v2ProjectRepo)
 
 	v2CompanyService := v2Company.NewService(signaturesRepo, projectRepo)
-	claManagerReqService := cla_manager_requests.NewService(claManagerReqRepo)
+	claManagerReqService := cla_manager.NewService(claManagerReqRepo)
 	claManagerAddService := cla_manager_add.NewService(signaturesService, companyService, projectService, eventsService, usersService, configFile.CorporateConsoleURL)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
@@ -271,7 +271,7 @@ func server(localMode bool) http.Handler {
 	gerrits.Configure(api, gerritService, projectService, eventsService)
 	v2Gerrits.Configure(v2API, gerritService, projectService, eventsService)
 	v2Company.Configure(v2API, v2CompanyService, companyRepo)
-	cla_manager_requests.Configure(api, claManagerReqService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
+	cla_manager.Configure(api, claManagerReqService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 	cla_manager_add.Configure(api, claManagerAddService)
 	v2ClaManager.Configure(v2API, claManagerAddService)
 
