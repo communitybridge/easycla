@@ -118,7 +118,7 @@ jobs:
           name: Setup
           command: |
             cd cla-backend-go
-            make setup_dev
+            make setup-dev
       - run:
           name: Clean
           command: |

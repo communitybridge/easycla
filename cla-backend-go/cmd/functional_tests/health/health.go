@@ -37,7 +37,6 @@ func (t *TestBehaviour) RunAllTests() {
 		ExpectJsonType("BuildTimeStamp", reflect.String).
 		ExpectJsonType("Githash", reflect.String).
 		ExpectJsonType("Healths", reflect.Slice).
-		ExpectJson("Branch", "master").
 		AfterText(func(F *frisby.Frisby, text string, err error) {
 			var healthModel models.Health
 			unmarshallErr := json.Unmarshal([]byte(text), &healthModel)

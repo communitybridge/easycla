@@ -4,7 +4,10 @@
 package cla_manager_requests
 
 import (
+	"errors"
 	"fmt"
+
+	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -25,6 +28,7 @@ type IRepository interface { //nolint
 	ApproveRequest(companyID, projectID, requestID string) (*CLAManagerRequest, error)
 	DenyRequest(companyID, projectID, requestID string) (*CLAManagerRequest, error)
 	PendingRequest(companyID, projectID, requestID string) (*CLAManagerRequest, error)
+	DeleteRequest(requestID string) error
 	updateRequestStatus(companyID, projectID, requestID, status string) (*CLAManagerRequest, error)
 }
 
@@ -230,6 +234,29 @@ func (repo repository) GetRequest(requestID string) (*CLAManagerRequest, error) 
 	}
 
 	return &request, nil
+}
+
+// DeleteRequest deletes the request by Request ID
+func (repo repository) DeleteRequest(requestID string) error {
+	tableName := fmt.Sprintf("cla-%s-cla-manager-requests", repo.stage)
+
+	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"repository_id": {S: aws.String(requestID)},
+		},
+		TableName: aws.String(tableName),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case dynamodb.ErrCodeConditionalCheckFailedException:
+				return errors.New("request ID does not exist")
+			}
+		}
+		log.Error(fmt.Sprintf("error deleting request with id: %s", requestID), err)
+		return err
+	}
+	return nil
 }
 
 // ApproveRequest approves the specified request
