@@ -1318,7 +1318,7 @@ paths:
       tags:
         - cla-manager-requests
 
-  /company/{companyID}/project/{projectID}/cla-manager/request/{requestID}:
+  /company/{companyID}/project/{projectID}/cla-manager/requests/{requestID}:
     get:
       summary: Returns the CLA Manager request for the specified Company, Project and Request ID
       security:
@@ -1353,8 +1353,40 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - cla-manager-requests
+    delete:
+      summary: Deletes the CLA Manager request for the specified Company, Project and Request ID
+      security:
+        - OauthSecurity:
+            - user
+      operationId: deleteCLAManagerRequest
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: requestID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - cla-manager-requests
 
-  /company/{companyID}/project/{projectID}/cla-manager/request/{requestID}/approve:
+  /company/{companyID}/project/{projectID}/cla-manager/requests/{requestID}/approve:
     put:
       summary: Approves the CLA Manager request for the specified Company and Project
       security:
@@ -1390,7 +1422,7 @@ paths:
       tags:
         - cla-manager-requests
 
-  /company/{companyID}/project/{projectID}/cla-manager/request/{requestID}/deny:
+  /company/{companyID}/project/{projectID}/cla-manager/requests/{requestID}/deny:
     put:
       summary: Denies/Rejects the CLA Manager request for the specified Company and Project
       security:

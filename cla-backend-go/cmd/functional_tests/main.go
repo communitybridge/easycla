@@ -13,9 +13,9 @@ import (
 	"github.com/verdverm/frisby"
 )
 
-var (
-	// APIURL is the development API endpoint
-	APIURL = "https://api.dev.lfcla.com/v3"
+const (
+	// API_URL is the development API endpoint
+	API_URL = "https://api.dev.lfcla.com/v3" // nolint
 )
 
 func init() {
@@ -23,6 +23,11 @@ func init() {
 }
 
 func main() {
+	apiURL := os.Getenv("API_URL")
+	if apiURL == "" {
+		apiURL = API_URL
+	}
+	log.Debugf("API_URL: %s", apiURL)
 	auth0Username := os.Getenv("AUTH0_USERNAME")
 	if auth0Username == "" {
 		log.Warnf("Unable to run tests - missing AUTH0_USERNAME environment variable")
@@ -44,7 +49,7 @@ func main() {
 		Auth0ClientID: auth0ClientID,
 	}
 
-	health.NewTestBehaviour(APIURL, auth0Config).RunAllTests()
-	cla_manager.NewTestBehaviour(APIURL, auth0Config).RunAllTests()
+	health.NewTestBehaviour(apiURL, auth0Config).RunAllTests()
+	cla_manager.NewTestBehaviour(apiURL, auth0Config).RunAllTests()
 	frisby.Global.PrintReport()
 }

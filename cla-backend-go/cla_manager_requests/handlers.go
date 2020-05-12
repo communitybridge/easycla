@@ -38,7 +38,6 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 				Code:    "401",
 			})
 		}
-		log.Debugf("user is valid: %+v", claUser)
 
 		existingRequests, getErr := service.GetRequests(params.CompanyID, params.ProjectID)
 		if getErr != nil {
@@ -194,7 +193,6 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 				Code:    "401",
 			})
 		}
-		log.Debugf("user is valid: %+v", claUser)
 
 		request, err := service.GetRequests(params.CompanyID, params.ProjectID)
 		if err != nil {
@@ -217,7 +215,6 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 				Code:    "401",
 			})
 		}
-		log.Debugf("user is valid: %+v", claUser)
 
 		request, err := service.GetRequest(params.RequestID)
 		if err != nil {
@@ -438,6 +435,112 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 		return cla_manager_requests.NewCreateCLAManagerRequestOK().WithPayload(request)
 	})
+
+	// Delete Request
+	api.ClaManagerRequestsDeleteCLAManagerRequestHandler = cla_manager_requests.DeleteCLAManagerRequestHandlerFunc(func(params cla_manager_requests.DeleteCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
+
+		// Make sure the company id exists...
+		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
+		if companyErr != nil || companyModel == nil {
+			msg := buildErrorMessageForDelete(params, companyErr)
+			return cla_manager_requests.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			})
+		}
+
+		// Make sure the project id exists...
+		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		if projectErr != nil || projectModel == nil {
+			msg := buildErrorMessageForDelete(params, projectErr)
+			log.Warn(msg)
+			return cla_manager_requests.NewDenyCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			})
+		}
+
+		// Make sure the request exists...
+		request, err := service.GetRequest(params.RequestID)
+		if err != nil {
+			msg := buildErrorMessageForDelete(params, err)
+			log.Warn(msg)
+			return cla_manager_requests.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			})
+		}
+
+		if request == nil {
+			msg := buildErrorMessageForDelete(params, err)
+			log.Warn(msg)
+			return cla_manager_requests.NewDeleteCLAManagerRequestNotFound().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "404",
+			})
+		}
+
+		// Look up signature ACL to ensure the user can delete the request
+		sigModels, sigErr := sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
+			HTTPRequest: nil,
+			CompanyID:   params.CompanyID,
+			ProjectID:   params.ProjectID,
+			NextKey:     nil,
+			PageSize:    aws.Int64(5),
+		})
+		if sigErr != nil || sigModels == nil {
+			msg := buildErrorMessageForDelete(params, sigErr)
+			log.Warn(msg)
+			return cla_manager_requests.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+				Message: "CLA Manager Delete Request - error reading CCA Signatures - " + msg,
+				Code:    "400",
+			})
+		}
+		if len(sigModels.Signatures) > 1 {
+			log.Warnf("returned multiple CCLA signature models for company ID: %s, project ID: %s for request ID: %s",
+				params.CompanyID, params.ProjectID, params.RequestID)
+		}
+
+		sigModel := sigModels.Signatures[0]
+		claManagers := sigModel.SignatureACL
+		if !currentUserInACL(claUser, claManagers) {
+			return cla_manager_requests.NewDeleteCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
+				Message: fmt.Sprintf("CLA Manager %s / %s / %s not authorized to delete requests for company ID: %s, project ID: %s",
+					claUser.UserID, claUser.Name, claUser.LFEmail, params.CompanyID, params.ProjectID),
+				Code: "401",
+			})
+		}
+
+		// Delete the request
+		deleteErr := service.DeleteRequest(params.RequestID)
+		if deleteErr != nil {
+			msg := buildErrorMessageForDelete(params, deleteErr)
+			log.Warn(msg)
+			return cla_manager_requests.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			})
+		}
+
+		// Send an event
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.ClaManagerAccessRequestDeleted,
+			ProjectID: params.ProjectID,
+			CompanyID: params.CompanyID,
+			UserID:    claUser.UserID,
+			EventData: &events.CLAManagerRequestDeniedEventData{
+				RequestID:    params.RequestID,
+				CompanyName:  companyModel.CompanyName,
+				ProjectName:  projectModel.ProjectName,
+				UserName:     request.UserName,
+				UserEmail:    request.UserEmail,
+				ManagerName:  claUser.Name,    // from the request
+				ManagerEmail: claUser.LFEmail, // from the request
+			},
+		})
+
+		return cla_manager_requests.NewDeleteCLAManagerRequestOK()
+	})
 }
 
 // currentUserInACL is a helper function to determine if the current logged in user is in the CLA Manager list
@@ -468,6 +571,12 @@ func buildErrorMessageForApprove(params cla_manager_requests.ApproveCLAManagerRe
 // buildErrorMessageForDeny is a helper function to build an error message
 func buildErrorMessageForDeny(params cla_manager_requests.DenyCLAManagerRequestParams, err error) string {
 	return fmt.Sprintf("problem denying the CLA Manager Request using company ID: %s, project ID: %s, request ID: %s, error: %+v",
+		params.CompanyID, params.ProjectID, params.RequestID, err)
+}
+
+// buildErrorMessageForDelete is a helper function to build an error message
+func buildErrorMessageForDelete(params cla_manager_requests.DeleteCLAManagerRequestParams, err error) string {
+	return fmt.Sprintf("problem deleting the CLA Manager Request using company ID: %s, project ID: %s, request ID: %s, error: %+v",
 		params.CompanyID, params.ProjectID, params.RequestID, err)
 }
 

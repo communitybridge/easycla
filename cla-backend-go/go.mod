@@ -8,6 +8,7 @@ require (
 	github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
 	github.com/LF-Engineering/lfx-kit v0.1.10
 	github.com/LF-Engineering/lfx-models v0.3.9
+	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
 	github.com/aws/aws-lambda-go v1.16.0
 	github.com/aws/aws-sdk-go v1.30.14
 	github.com/aymerick/raymond v2.0.2+incompatible
@@ -22,6 +23,7 @@ require (
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-openapi/swag v0.19.9
 	github.com/go-openapi/validate v0.19.8
+	github.com/go-swagger/go-swagger v0.23.0 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
@@ -30,16 +32,22 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/jmoiron/sqlx v1.2.0
+	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/lytics/logrus v0.0.0-20170528191427-4389a17ed024
+	github.com/mitchellh/mapstructure v1.3.0 // indirect
 	github.com/mozillazg/request v0.8.0 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/savaki/dynastore v0.0.0-20171109173440-28d8558bb429
 	github.com/sirupsen/logrus v1.5.0
 	github.com/spf13/cobra v1.0.0
-	github.com/spf13/viper v1.6.3
+	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.5.1
 	github.com/tencentyun/scf-go-lib v0.0.0-20200116145541-9a6ea1bf75b8
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
-	golang.org/x/net v0.0.0-20200421231249-e086a090c8fd
+	go.mongodb.org/mongo-driver v1.3.3 // indirect
+	golang.org/x/net v0.0.0-20200506145744-7e3656a0809f
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+	golang.org/x/sys v0.0.0-20200509044756-6aff5f38e54f // indirect
+	golang.org/x/tools v0.0.0-20200511202723-1762287ae9dd // indirect
+	gopkg.in/ini.v1 v1.56.0 // indirect
 )

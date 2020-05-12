@@ -110,6 +110,16 @@ type CLAManagerRequestDeniedEventData struct {
 	ManagerEmail string
 }
 
+type CLAManagerRequestDeletedEventData struct {
+	RequestID    string
+	CompanyName  string
+	ProjectName  string
+	UserName     string
+	UserEmail    string
+	ManagerName  string
+	ManagerEmail string
+}
+
 type WhitelistGithubOrganizationAddedEventData struct {
 	GithubOrganizationName string
 }
@@ -220,6 +230,12 @@ func (ed *CLAManagerRequestApprovedEventData) GetEventString(args *LogEventArgs)
 
 func (ed *CLAManagerRequestDeniedEventData) GetEventString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("CLA Manager Request [%s] for user [%s / %s] was denied by [%s / %s] for Company: %s, Project: %s",
+		ed.RequestID, ed.UserName, ed.UserEmail, ed.ManagerName, ed.ManagerEmail, ed.CompanyName, ed.ProjectName)
+	return data, true
+}
+
+func (ed *CLAManagerRequestDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("CLA Manager Request [%s] for user [%s / %s] was deleted by [%s / %s] for Company: %s, Project: %s",
 		ed.RequestID, ed.UserName, ed.UserEmail, ed.ManagerName, ed.ManagerEmail, ed.CompanyName, ed.ProjectName)
 	return data, true
 }
