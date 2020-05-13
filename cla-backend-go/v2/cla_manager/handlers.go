@@ -8,7 +8,7 @@ import (
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
-	v1ClaManager "github.com/communitybridge/easycla/cla-backend-go/cla_manager_add"
+	v1ClaManager "github.com/communitybridge/easycla/cla-backend-go/cla_manager"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
 
@@ -23,7 +23,7 @@ import (
 	"github.com/jinzhu/copier"
 )
 
-// Configure is the API handler routune for CLA Manager routes
+// Configure is the API handler routine for CLA Manager routes
 func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService) {
 	api.ClaManagerCreateCLAManagerHandler = cla_manager.CreateCLAManagerHandlerFunc(func(params cla_manager.CreateCLAManagerParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)

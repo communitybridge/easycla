@@ -297,7 +297,7 @@ func (repo repository) DeleteRequest(requestID string) error {
 
 	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
-			"repository_id": {S: aws.String(requestID)},
+			"request_id": {S: aws.String(requestID)},
 		},
 		TableName: aws.String(tableName),
 	})
