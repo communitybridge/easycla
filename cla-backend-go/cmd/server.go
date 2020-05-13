@@ -228,7 +228,7 @@ func server(localMode bool) http.Handler {
 	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
 	v2ProjectService := v2Project.NewService(v2ProjectRepo)
 
-	v2CompanyService := v2Company.NewService(signaturesRepo, projectRepo)
+	v2CompanyService := v2Company.NewService(signaturesRepo, projectRepo, usersRepo, companyRepo)
 	claManagerService := cla_manager.NewService(claManagerReqRepo, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))

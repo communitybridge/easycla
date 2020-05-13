@@ -42,6 +42,10 @@ properties:
     type: string
   modified:
     type: string
+  signatureMajorVersion:
+    type: string
+  signatureMinorVersion:
+    type: string
   emailWhitelist:
     type: array
     items:

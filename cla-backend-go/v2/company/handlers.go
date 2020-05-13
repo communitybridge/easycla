@@ -22,6 +22,15 @@ func isUserAuthorizedForOrganization(user *auth.User, externalCompanyID string) 
 	return true
 }
 
+func isUserAuthorizedForProjectOrganization(user *auth.User, externalProjectID, externalCompanyID string) bool {
+	if !user.Admin {
+		if !user.Allowed || !user.IsUserAuthorizedByProject(externalProjectID, externalCompanyID) {
+			return false
+		}
+	}
+	return true
+}
+
 // Configure sets up the middleware handlers
 func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository) {
 	api.CompanyGetCompanyClaManagersHandler = company.GetCompanyClaManagersHandlerFunc(
@@ -60,6 +69,21 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				return company.NewGetCompanyActiveClaBadRequest().WithPayload(errorResponse(err))
 			}
 			return company.NewGetCompanyActiveClaOK().WithPayload(result)
+		})
+	api.CompanyGetCompanyProjectContributorsHandler = company.GetCompanyProjectContributorsHandlerFunc(
+		func(params company.GetCompanyProjectContributorsParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !isUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
+				return company.NewGetCompanyProjectContributorsUnauthorized()
+			}
+			result, err := service.GetCompanyProjectContributors(params.ProjectSFID, params.CompanySFID, utils.StringValue(params.SearchTerm))
+			if err != nil {
+				if err == v1Company.ErrCompanyDoesNotExist {
+					return company.NewGetCompanyProjectContributorsNotFound()
+				}
+				return company.NewGetCompanyProjectContributorsBadRequest().WithPayload(errorResponse(err))
+			}
+			return company.NewGetCompanyProjectContributorsOK().WithPayload(result)
 		})
 }
 

@@ -830,11 +830,11 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 
 	// This is the keys we want to match
-	condition := expression.Key("signature_project_id").Equal(expression.Value(params.ProjectID))
-	filter := expression.Name("signature_user_ccla_company_id").Equal(expression.Value(params.CompanyID))
+	condition := expression.Key("signature_user_ccla_company_id").Equal(expression.Value(params.CompanyID)).And(
+		expression.Key("signature_project_id").Equal(expression.Value(params.ProjectID)))
 
 	// Use the nice builder to create the expression
-	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithFilter(filter).WithProjection(buildProjection()).Build()
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
 	if err != nil {
 		log.Warnf("error building expression for project signature ID query, project: %s, error: %v",
 			params.ProjectID, err)
@@ -849,7 +849,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(tableName),
-		IndexName:                 aws.String("project-signature-index"), // Name of a secondary index to scan
+		IndexName:                 aws.String("signature-user-ccla-company-index"), // Name of a secondary index to scan
 	}
 
 	// If we have the next key, set the exclusive start key value
@@ -860,6 +860,9 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 		queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
 			"signature_id": {
 				S: params.NextKey,
+			},
+			"signature_user_ccla_company_id": {
+				S: &params.CompanyID,
 			},
 			"signature_project_id": {
 				S: &params.ProjectID,
@@ -1321,6 +1324,8 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			SignatureReferenceNameLower: dbSignature.SignatureReferenceNameLower,
 			SignatureSigned:             dbSignature.SignatureSigned,
 			SignatureApproved:           dbSignature.SignatureApproved,
+			SignatureMajorVersion:       dbSignature.SignatureDocumentMajorVersion,
+			SignatureMinorVersion:       dbSignature.SignatureDocumentMinorVersion,
 			Version:                     dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
 			SignatureReferenceType:      dbSignature.SignatureReferenceType,
 			ProjectID:                   dbSignature.SignatureProjectID,
