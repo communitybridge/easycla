@@ -1,10 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-package cla_manager_requests
+package cla_manager
 
 import (
 	"fmt"
+
+	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/cla_manager"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
@@ -16,7 +18,6 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
-	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/cla_manager_requests"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/project"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
@@ -31,29 +32,19 @@ func isValidUser(claUser *user.CLAUser) bool {
 
 // Configure is the API handler routine for the CLA manager routes
 func Configure(api *operations.ClaAPI, service IService, companyService company.IService, projectService project.Service, usersService users.Service, sigService signatures.SignatureService, eventsService events.Service, corporateConsoleURL string) { // nolint
-	api.ClaManagerRequestsCreateCLAManagerRequestHandler = cla_manager_requests.CreateCLAManagerRequestHandlerFunc(func(params cla_manager_requests.CreateCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
+	api.ClaManagerCreateCLAManagerRequestHandler = cla_manager.CreateCLAManagerRequestHandlerFunc(func(params cla_manager.CreateCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
 		if !isValidUser(claUser) {
-			return cla_manager_requests.NewCreateCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewCreateCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
 				Message: "unauthorized",
 				Code:    "401",
 			})
 		}
 
-		existingRequests, getErr := service.GetRequests(params.CompanyID, params.ProjectID)
-		if getErr != nil {
-			msg := buildErrorMessage(params, getErr)
-			log.Warn(msg)
-			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			})
-		}
-
 		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
 		if companyErr != nil || companyModel == nil {
-			msg := buildErrorMessage(params, companyErr)
+			msg := buildErrorMessage("company lookup error", params, companyErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -61,9 +52,9 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
-			msg := buildErrorMessage(params, projectErr)
+			msg := buildErrorMessage("project lookup error", params, projectErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -71,9 +62,19 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 		userModel, userErr := usersService.GetUserByLFUserName(params.Body.UserLFID)
 		if userErr != nil || userModel == nil {
-			msg := buildErrorMessage(params, userErr)
+			msg := buildErrorMessage("user lookup error", params, userErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			})
+		}
+
+		existingRequests, getErr := service.GetRequestsByUserID(params.CompanyID, params.ProjectID, userModel.UserID)
+		if getErr != nil {
+			msg := buildErrorMessage("get existing requests", params, getErr)
+			log.Warn(msg)
+			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -88,9 +89,9 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			PageSize:    aws.Int64(5),
 		})
 		if sigErr != nil || sigModels == nil {
-			msg := buildErrorMessage(params, sigErr)
+			msg := buildErrorMessage("signature lookup error", params, sigErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: "CLA Manager Create Request - error reading CCA Signatures - " + msg,
 				Code:    "400",
 			})
@@ -121,9 +122,9 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 				Status:            "pending",
 			})
 			if createErr != nil {
-				msg := buildErrorMessage(params, createErr)
+				msg := buildErrorMessage("create request error", params, createErr)
 				log.Warn(msg)
-				return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+				return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 					Message: msg,
 					Code:    "400",
 				})
@@ -135,7 +136,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			// Check to see if we have an existing request in a pending or approved state - if so, don't allow
 			for _, existingRequest := range existingRequests.Requests {
 				if existingRequest.Status == "pending" || existingRequest.Status == "approved" {
-					return cla_manager_requests.NewCreateCLAManagerRequestConflict().WithPayload(&models.ErrorResponse{
+					return cla_manager.NewCreateCLAManagerRequestConflict().WithPayload(&models.ErrorResponse{
 						Message: "an existing pending request exists for this user for this company and project",
 						Code:    "409",
 					})
@@ -146,9 +147,9 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			var updateErr error
 			request, updateErr = service.PendingRequest(params.CompanyID, params.ProjectID, existingRequests.Requests[0].RequestID)
 			if updateErr != nil {
-				msg := buildErrorMessage(params, updateErr)
+				msg := buildErrorMessage("pending request error", params, updateErr)
 				log.Warn(msg)
-				return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+				return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 					Message: msg,
 					Code:    "400",
 				})
@@ -182,13 +183,13 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 				manager.Username, manager.LfEmail, corporateConsoleURL)
 		}
 
-		return cla_manager_requests.NewCreateCLAManagerRequestOK().WithPayload(request)
+		return cla_manager.NewCreateCLAManagerRequestOK().WithPayload(request)
 	})
 
 	// Get Requests
-	api.ClaManagerRequestsGetCLAManagerRequestsHandler = cla_manager_requests.GetCLAManagerRequestsHandlerFunc(func(params cla_manager_requests.GetCLAManagerRequestsParams, claUser *user.CLAUser) middleware.Responder {
+	api.ClaManagerGetCLAManagerRequestsHandler = cla_manager.GetCLAManagerRequestsHandlerFunc(func(params cla_manager.GetCLAManagerRequestsParams, claUser *user.CLAUser) middleware.Responder {
 		if !isValidUser(claUser) {
-			return cla_manager_requests.NewCreateCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewCreateCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
 				Message: "unauthorized",
 				Code:    "401",
 			})
@@ -198,19 +199,19 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if err != nil {
 			msg := buildErrorMessageForGetRequests(params, err)
 			log.Warn(msg)
-			return cla_manager_requests.NewGetCLAManagerRequestsBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewGetCLAManagerRequestsBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
 		}
 
-		return cla_manager_requests.NewGetCLAManagerRequestsOK().WithPayload(request)
+		return cla_manager.NewGetCLAManagerRequestsOK().WithPayload(request)
 	})
 
 	// Get Request
-	api.ClaManagerRequestsGetCLAManagerRequestHandler = cla_manager_requests.GetCLAManagerRequestHandlerFunc(func(params cla_manager_requests.GetCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
+	api.ClaManagerGetCLAManagerRequestHandler = cla_manager.GetCLAManagerRequestHandlerFunc(func(params cla_manager.GetCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
 		if !isValidUser(claUser) {
-			return cla_manager_requests.NewCreateCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewCreateCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
 				Message: "unauthorized",
 				Code:    "401",
 			})
@@ -220,7 +221,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if err != nil {
 			msg := buildErrorMessageForGetRequest(params, err)
 			log.Warn(msg)
-			return cla_manager_requests.NewGetCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewGetCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -228,24 +229,24 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 		// If we didn't find it
 		if request == nil {
-			return cla_manager_requests.NewGetCLAManagerRequestNotFound().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewGetCLAManagerRequestNotFound().WithPayload(&models.ErrorResponse{
 				Message: fmt.Sprintf("request not found for Company ID: %s, Project ID: %s, Request ID: %s",
 					params.CompanyID, params.ProjectID, params.RequestID),
 				Code: "404",
 			})
 		}
 
-		return cla_manager_requests.NewGetCLAManagerRequestOK().WithPayload(request)
+		return cla_manager.NewGetCLAManagerRequestOK().WithPayload(request)
 	})
 
 	// Approve Request
-	api.ClaManagerRequestsApproveCLAManagerRequestHandler = cla_manager_requests.ApproveCLAManagerRequestHandlerFunc(func(params cla_manager_requests.ApproveCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
+	api.ClaManagerApproveCLAManagerRequestHandler = cla_manager.ApproveCLAManagerRequestHandlerFunc(func(params cla_manager.ApproveCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
 
 		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
 		if companyErr != nil || companyModel == nil {
 			msg := buildErrorMessageForApprove(params, companyErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -255,7 +256,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if projectErr != nil || projectModel == nil {
 			msg := buildErrorMessageForApprove(params, projectErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -272,7 +273,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if sigErr != nil || sigModels == nil {
 			msg := buildErrorMessageForApprove(params, sigErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewApproveCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewApproveCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: "CLA Manager Approve Request - error reading CCA Signatures - " + msg,
 				Code:    "400",
 			})
@@ -285,7 +286,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		sigModel := sigModels.Signatures[0]
 		claManagers := sigModel.SignatureACL
 		if !currentUserInACL(claUser, claManagers) {
-			return cla_manager_requests.NewApproveCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewApproveCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
 				Message: fmt.Sprintf("CLA Manager %s / %s / %s not authorized to approve request for company ID: %s, project ID: %s",
 					claUser.UserID, claUser.Name, claUser.LFEmail, params.CompanyID, params.ProjectID),
 				Code: "401",
@@ -297,7 +298,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if err != nil {
 			msg := buildErrorMessageForApprove(params, err)
 			log.Warn(msg)
-			return cla_manager_requests.NewApproveCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewApproveCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -308,7 +309,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if aclErr != nil {
 			msg := buildErrorMessageForApprove(params, aclErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewApproveCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewApproveCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -340,17 +341,17 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		// Notify the requester
 		sendRequestApprovedEmailToRequester(companyModel, projectModel, request.UserName, request.UserEmail, corporateConsoleURL)
 
-		return cla_manager_requests.NewCreateCLAManagerRequestOK().WithPayload(request)
+		return cla_manager.NewCreateCLAManagerRequestOK().WithPayload(request)
 	})
 
 	// Deny Request
-	api.ClaManagerRequestsDenyCLAManagerRequestHandler = cla_manager_requests.DenyCLAManagerRequestHandlerFunc(func(params cla_manager_requests.DenyCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
+	api.ClaManagerDenyCLAManagerRequestHandler = cla_manager.DenyCLAManagerRequestHandlerFunc(func(params cla_manager.DenyCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
 
 		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
 		if companyErr != nil || companyModel == nil {
 			msg := buildErrorMessageForDeny(params, companyErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewDenyCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewDenyCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -360,7 +361,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if projectErr != nil || projectModel == nil {
 			msg := buildErrorMessageForDeny(params, projectErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewDenyCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewDenyCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -377,7 +378,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if sigErr != nil || sigModels == nil {
 			msg := buildErrorMessageForDeny(params, sigErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewApproveCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewApproveCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: "CLA Manager Deny Request - error reading CCA Signatures - " + msg,
 				Code:    "400",
 			})
@@ -390,7 +391,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		sigModel := sigModels.Signatures[0]
 		claManagers := sigModel.SignatureACL
 		if !currentUserInACL(claUser, claManagers) {
-			return cla_manager_requests.NewApproveCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewApproveCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
 				Message: fmt.Sprintf("CLA Manager %s / %s / %s not authorized to approve request for company ID: %s, project ID: %s",
 					claUser.UserID, claUser.Name, claUser.LFEmail, params.CompanyID, params.ProjectID),
 				Code: "401",
@@ -401,7 +402,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if err != nil {
 			msg := buildErrorMessageForDeny(params, err)
 			log.Warn(msg)
-			return cla_manager_requests.NewDenyCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewDenyCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -433,17 +434,17 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		// Notify the requester
 		sendRequestDeniedEmailToRequester(companyModel, projectModel, request.UserName, request.UserEmail)
 
-		return cla_manager_requests.NewCreateCLAManagerRequestOK().WithPayload(request)
+		return cla_manager.NewCreateCLAManagerRequestOK().WithPayload(request)
 	})
 
 	// Delete Request
-	api.ClaManagerRequestsDeleteCLAManagerRequestHandler = cla_manager_requests.DeleteCLAManagerRequestHandlerFunc(func(params cla_manager_requests.DeleteCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
+	api.ClaManagerDeleteCLAManagerRequestHandler = cla_manager.DeleteCLAManagerRequestHandlerFunc(func(params cla_manager.DeleteCLAManagerRequestParams, claUser *user.CLAUser) middleware.Responder {
 
 		// Make sure the company id exists...
 		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
 		if companyErr != nil || companyModel == nil {
 			msg := buildErrorMessageForDelete(params, companyErr)
-			return cla_manager_requests.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -454,7 +455,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if projectErr != nil || projectModel == nil {
 			msg := buildErrorMessageForDelete(params, projectErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewDenyCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewDenyCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -465,7 +466,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if err != nil {
 			msg := buildErrorMessageForDelete(params, err)
 			log.Warn(msg)
-			return cla_manager_requests.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -474,7 +475,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if request == nil {
 			msg := buildErrorMessageForDelete(params, err)
 			log.Warn(msg)
-			return cla_manager_requests.NewDeleteCLAManagerRequestNotFound().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewDeleteCLAManagerRequestNotFound().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "404",
 			})
@@ -491,7 +492,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if sigErr != nil || sigModels == nil {
 			msg := buildErrorMessageForDelete(params, sigErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: "CLA Manager Delete Request - error reading CCA Signatures - " + msg,
 				Code:    "400",
 			})
@@ -504,10 +505,12 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		sigModel := sigModels.Signatures[0]
 		claManagers := sigModel.SignatureACL
 		if !currentUserInACL(claUser, claManagers) {
-			return cla_manager_requests.NewDeleteCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
-				Message: fmt.Sprintf("CLA Manager %s / %s / %s not authorized to delete requests for company ID: %s, project ID: %s",
-					claUser.UserID, claUser.Name, claUser.LFEmail, params.CompanyID, params.ProjectID),
-				Code: "401",
+			msg := fmt.Sprintf("CLA Manager %s / %s / %s not authorized to delete requests for company ID: %s, project ID: %s",
+				claUser.UserID, claUser.Name, claUser.LFEmail, params.CompanyID, params.ProjectID)
+			log.Debug(msg)
+			return cla_manager.NewDeleteCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "401",
 			})
 		}
 
@@ -516,7 +519,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		if deleteErr != nil {
 			msg := buildErrorMessageForDelete(params, deleteErr)
 			log.Warn(msg)
-			return cla_manager_requests.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
+			return cla_manager.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
@@ -539,7 +542,42 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			},
 		})
 
-		return cla_manager_requests.NewDeleteCLAManagerRequestOK()
+		log.Debug("CLA Manager Delete - Returning Success")
+		return cla_manager.NewDeleteCLAManagerRequestNoContent()
+	})
+
+	api.ClaManagerAddCLAManagerHandler = cla_manager.AddCLAManagerHandlerFunc(func(params cla_manager.AddCLAManagerParams, claUser *user.CLAUser) middleware.Responder {
+
+		signature, addErr := service.AddClaManager(params.CompanyID, params.ProjectID, params.Body.UserLFID)
+
+		if addErr != nil {
+			msg := buildErrorMessageAdd(params, addErr)
+			log.Warn(msg)
+			return cla_manager.NewAddCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			})
+		}
+
+		return cla_manager.NewAddCLAManagerOK().WithPayload(signature)
+	})
+
+	// Delete CLA Manager
+	api.ClaManagerDeleteCLAManagerHandler = cla_manager.DeleteCLAManagerHandlerFunc(func(params cla_manager.DeleteCLAManagerParams, claUser *user.CLAUser) middleware.Responder {
+
+		signature, deleteErr := service.RemoveClaManager(params.CompanyID, params.ProjectID, params.UserLFID)
+
+		if deleteErr != nil {
+			msg := buildErrorMessageDelete(params, deleteErr)
+			log.Warn(msg)
+			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			})
+		}
+
+		return cla_manager.NewDeleteCLAManagerOK().WithPayload(signature)
+
 	})
 }
 
@@ -557,39 +595,51 @@ func currentUserInACL(currentUser *user.CLAUser, managers []models.User) bool {
 }
 
 // buildErrorMessage helper function to build an error message
-func buildErrorMessage(params cla_manager_requests.CreateCLAManagerRequestParams, err error) string {
-	return fmt.Sprintf("problem creating new CLA Manager Request using company ID: %s, project ID: %s, user ID: %s, user name: %s, user email: %s, error: %+v",
-		params.CompanyID, params.ProjectID, params.Body.UserLFID, params.Body.UserName, params.Body.UserEmail, err)
+func buildErrorMessage(errPrefix string, params cla_manager.CreateCLAManagerRequestParams, err error) string {
+	return fmt.Sprintf("%s - problem creating new CLA Manager Request using company ID: %s, project ID: %s, user ID: %s, user name: %s, user email: %s, error: %+v",
+		errPrefix, params.CompanyID, params.ProjectID, params.Body.UserLFID, params.Body.UserName, params.Body.UserEmail, err)
 }
 
 // buildErrorMessageForApprove is a helper function to build an error message
-func buildErrorMessageForApprove(params cla_manager_requests.ApproveCLAManagerRequestParams, err error) string {
+func buildErrorMessageForApprove(params cla_manager.ApproveCLAManagerRequestParams, err error) string {
 	return fmt.Sprintf("problem approving the CLA Manager Request using company ID: %s, project ID: %s, request ID: %s, error: %+v",
 		params.CompanyID, params.ProjectID, params.RequestID, err)
 }
 
 // buildErrorMessageForDeny is a helper function to build an error message
-func buildErrorMessageForDeny(params cla_manager_requests.DenyCLAManagerRequestParams, err error) string {
+func buildErrorMessageForDeny(params cla_manager.DenyCLAManagerRequestParams, err error) string {
 	return fmt.Sprintf("problem denying the CLA Manager Request using company ID: %s, project ID: %s, request ID: %s, error: %+v",
 		params.CompanyID, params.ProjectID, params.RequestID, err)
 }
 
 // buildErrorMessageForDelete is a helper function to build an error message
-func buildErrorMessageForDelete(params cla_manager_requests.DeleteCLAManagerRequestParams, err error) string {
+func buildErrorMessageForDelete(params cla_manager.DeleteCLAManagerRequestParams, err error) string {
 	return fmt.Sprintf("problem deleting the CLA Manager Request using company ID: %s, project ID: %s, request ID: %s, error: %+v",
 		params.CompanyID, params.ProjectID, params.RequestID, err)
 }
 
 // buildErrorMessageForGetRequests is a helper function to build an error message
-func buildErrorMessageForGetRequests(params cla_manager_requests.GetCLAManagerRequestsParams, err error) string {
+func buildErrorMessageForGetRequests(params cla_manager.GetCLAManagerRequestsParams, err error) string {
 	return fmt.Sprintf("problem fetching the CLA Manager Requests using company ID: %s, project ID: %s, error: %+v",
 		params.CompanyID, params.ProjectID, err)
 }
 
 // buildErrorMessageForGetRequest is a helper function to build an error message
-func buildErrorMessageForGetRequest(params cla_manager_requests.GetCLAManagerRequestParams, err error) string {
+func buildErrorMessageForGetRequest(params cla_manager.GetCLAManagerRequestParams, err error) string {
 	return fmt.Sprintf("problem fetching the CLA Manager Requests using company ID: %s, project ID: %s, request ID: %s, error: %+v",
 		params.CompanyID, params.ProjectID, params.RequestID, err)
+}
+
+// buildErrorMessageAdd helper function to build an error message
+func buildErrorMessageAdd(params cla_manager.AddCLAManagerParams, err error) string {
+	return fmt.Sprintf("problem creating new CLA Manager using company ID: %s, project ID: %s, user ID: %s, user name: %s, user email: %s, error: %+v",
+		params.CompanyID, params.ProjectID, params.Body.UserLFID, params.Body.UserName, params.Body.UserEmail, err)
+}
+
+// buildErrorMessage helper function to build an error message
+func buildErrorMessageDelete(params cla_manager.DeleteCLAManagerParams, err error) string {
+	return fmt.Sprintf("problem deleting new CLA Manager Request using company ID: %s, project ID: %s, user ID: %s, error: %+v",
+		params.CompanyID, params.ProjectID, params.UserLFID, err)
 }
 
 // sendRequestAccessEmailToCLAManagers sends the request access email to the specified CLA Managers

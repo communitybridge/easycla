@@ -1,7 +1,9 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-package cla_manager_requests
+package cla_manager
+
+import "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 
 // CLAManagerRequests data model
 type CLAManagerRequests struct {
@@ -24,4 +26,24 @@ type CLAManagerRequest struct {
 	Status            string `json:"status"`
 	Created           string `json:"date_created"`
 	Updated           string `json:"date_modified"`
+}
+
+// dbModelToServiceModel converts a database model to a service model
+func dbModelToServiceModel(dbModel *CLAManagerRequest) *models.ClaManagerRequest {
+	return &models.ClaManagerRequest{
+		RequestID:         dbModel.RequestID,
+		CompanyID:         dbModel.CompanyID,
+		CompanyExternalID: dbModel.CompanyExternalID,
+		CompanyName:       dbModel.CompanyName,
+		ProjectID:         dbModel.ProjectID,
+		ProjectExternalID: dbModel.ProjectExternalID,
+		ProjectName:       dbModel.ProjectName,
+		UserID:            dbModel.UserID,
+		UserExternalID:    dbModel.UserExternalID,
+		UserName:          dbModel.UserName,
+		UserEmail:         dbModel.UserEmail,
+		Status:            dbModel.Status,
+		Created:           dbModel.Created,
+		Updated:           dbModel.Updated,
+	}
 }

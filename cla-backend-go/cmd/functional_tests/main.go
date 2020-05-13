@@ -22,34 +22,63 @@ func init() {
 	frisby.Global.PrintProgressName = true
 }
 
+func loadUser1() test_models.Auth0Config {
+	auth0Username := os.Getenv("AUTH0_USER1_USERNAME")
+	if auth0Username == "" {
+		log.Warnf("Unable to run tests - missing AUTH0_USER1_USERNAME environment variable")
+		os.Exit(1)
+	}
+	auth0Password := os.Getenv("AUTH0_USER1_PASSWORD")
+	if auth0Password == "" {
+		log.Warnf("Unable to run tests - missing AUTH0_USER1_PASSWORD environment variable")
+		os.Exit(1)
+	}
+	auth0ClientID := os.Getenv("AUTH0_USER1_CLIENT_ID")
+	if auth0ClientID == "" {
+		log.Warnf("Unable to run tests - missing AUTH0_USER1_CLIENT_ID environment variable")
+		os.Exit(1)
+	}
+
+	return test_models.Auth0Config{
+		Auth0UserName: auth0Username,
+		Auth0Password: auth0Password,
+		Auth0ClientID: auth0ClientID,
+	}
+}
+
+func loadUser2() test_models.Auth0Config {
+	auth0Username := os.Getenv("AUTH0_USER2_USERNAME")
+	if auth0Username == "" {
+		log.Warnf("Unable to run tests - missing AUTH0_USER2_USERNAME environment variable")
+		os.Exit(1)
+	}
+	auth0Password := os.Getenv("AUTH0_USER2_PASSWORD")
+	if auth0Password == "" {
+		log.Warnf("Unable to run tests - missing AUTH0_USER2_PASSWORD environment variable")
+		os.Exit(1)
+	}
+	auth0ClientID := os.Getenv("AUTH0_USER2_CLIENT_ID")
+	if auth0ClientID == "" {
+		log.Warnf("Unable to run tests - missing AUTH0_USER2_CLIENT_ID environment variable")
+		os.Exit(1)
+	}
+
+	return test_models.Auth0Config{
+		Auth0UserName: auth0Username,
+		Auth0Password: auth0Password,
+		Auth0ClientID: auth0ClientID,
+	}
+}
 func main() {
 	apiURL := os.Getenv("API_URL")
 	if apiURL == "" {
 		apiURL = API_URL
 	}
 	log.Debugf("API_URL: %s", apiURL)
-	auth0Username := os.Getenv("AUTH0_USERNAME")
-	if auth0Username == "" {
-		log.Warnf("Unable to run tests - missing AUTH0_USERNAME environment variable")
-		os.Exit(1)
-	}
-	auth0Password := os.Getenv("AUTH0_PASSWORD")
-	if auth0Password == "" {
-		log.Warnf("Unable to run tests - missing AUTH0_PASSWORD environment variable")
-		os.Exit(1)
-	}
-	auth0ClientID := os.Getenv("AUTH0_CLIENT_ID")
-	if auth0ClientID == "" {
-		log.Warnf("Unable to run tests - missing AUTH0_CLIENT_ID environment variable")
-		os.Exit(1)
-	}
-	auth0Config := test_models.Auth0Config{
-		Auth0UserName: auth0Username,
-		Auth0Password: auth0Password,
-		Auth0ClientID: auth0ClientID,
-	}
+	auth0User1Config := loadUser1()
+	auth0User2Config := loadUser2()
 
-	health.NewTestBehaviour(apiURL, auth0Config).RunAllTests()
-	cla_manager.NewTestBehaviour(apiURL, auth0Config).RunAllTests()
+	health.NewTestBehaviour(apiURL, auth0User1Config).RunAllTests()
+	cla_manager.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
 	frisby.Global.PrintReport()
 }
