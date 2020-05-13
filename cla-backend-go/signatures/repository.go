@@ -1321,6 +1321,8 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			SignatureReferenceNameLower: dbSignature.SignatureReferenceNameLower,
 			SignatureSigned:             dbSignature.SignatureSigned,
 			SignatureApproved:           dbSignature.SignatureApproved,
+			SignatureMajorVersion:       dbSignature.SignatureDocumentMajorVersion,
+			SignatureMinorVersion:       dbSignature.SignatureDocumentMinorVersion,
 			Version:                     dbSignature.SignatureDocumentMajorVersion + "." + dbSignature.SignatureDocumentMinorVersion,
 			SignatureReferenceType:      dbSignature.SignatureReferenceType,
 			ProjectID:                   dbSignature.SignatureProjectID,

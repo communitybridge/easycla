@@ -9,6 +9,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/company"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -16,6 +17,15 @@ import (
 func isUserAuthorizedForOrganization(user *auth.User, externalCompanyID string) bool {
 	if !user.Admin {
 		if !user.Allowed || !user.IsUserAuthorized(auth.Organization, externalCompanyID) {
+			return false
+		}
+	}
+	return true
+}
+
+func isUserAuthorizedForProjectOrganization(user *auth.User, externalProjectID, externalCompanyID string) bool {
+	if !user.Admin {
+		if !user.Allowed || !user.IsUserAuthorizedByProject(externalProjectID, externalCompanyID) {
 			return false
 		}
 	}
@@ -60,6 +70,25 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				return company.NewGetCompanyActiveClaBadRequest().WithPayload(errorResponse(err))
 			}
 			return company.NewGetCompanyActiveClaOK().WithPayload(result)
+		})
+	api.CompanyGetCompanyProjectContributorsHandler = company.GetCompanyProjectContributorsHandlerFunc(
+		func(params company.GetCompanyProjectContributorsParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !isUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
+				return company.NewGetCompanyProjectContributorsUnauthorized()
+			}
+			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
+			if err != nil {
+				if err == v1Company.ErrCompanyDoesNotExist {
+					return company.NewGetCompanyProjectContributorsNotFound()
+				}
+			}
+			log.WithField("company_id", comp.CompanyID).Debugf("searching corporate contributors for company")
+			result, err := service.GetCompanyProjectContributors(params.ProjectSFID, comp.CompanyID, utils.StringValue(params.SearchTerm))
+			if err != nil {
+				return company.NewGetCompanyProjectContributorsBadRequest().WithPayload(errorResponse(err))
+			}
+			return company.NewGetCompanyProjectContributorsOK().WithPayload(result)
 		})
 }
 

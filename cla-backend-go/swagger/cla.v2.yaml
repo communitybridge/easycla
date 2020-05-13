@@ -1274,6 +1274,34 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - company
+  /company/{companySFID}/project/{projectSFID}/contributors:
+    get:
+      summary: get corporate contributors for project
+      description: Returns list of corporate contributors for project
+      operationId: getCompanyProjectContributors
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-companySFID"
+        - $ref: "#/parameters/path-projectSFID"
+        - $ref: "#/parameters/searchTerm"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/corporate-contributor-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
 
 responses:
   unauthorized:
@@ -1816,6 +1844,37 @@ definitions:
         example: "http://wwwlinuxfoundation.org/logo.gif"
         x-omitempty: false
 
+  corporate-contributor-list:
+    type: object
+    title: corporate contributors list
+    properties:
+      list:
+        type: array
+        items:
+          $ref : '#/definitions/corporate-contributor'
+
+  corporate-contributor:
+    type: object
+    properties:
+      name:
+        type: string
+        example: "john doe"
+        x-omitempty: false
+      linux_foundation_id:
+        type: string
+        example: "john.doe"
+        x-omitempty: false
+      github_id:
+        type: string
+        example: "123456"
+        x-omitempty: false
+      signature_version:
+        type: string
+        example: "v1"
+        x-omitempty: false
+      timestamp:
+        type: string
+        x-omitempty: false
 
   error-response:
     type: object
