@@ -1246,10 +1246,47 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - company
-  
+
+  /company/{companyID}/project/{projectID}/cla-manager:
+    post:
+      summary: Adds a new CLA Manager to the specified Company and Project
+      security:
+        - OauthSecurity:
+            - user
+      operationId: addCLAManager
+      parameters:
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/cla-manager-user'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signature'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - cla-manager
+
   /company/{companyID}/project/{projectID}/cla-manager/{userLFID}:
     delete:
-      summary: Removes CLA Manager from ACL for specified Company and Project
+      summary: Removes the CLA Manager from ACL for specified Company and Project
       security:
         - OauthSecurity:
             - user
@@ -1281,45 +1318,7 @@ paths:
         '409':
           $ref: '#/responses/conflict'
       tags:
-        - cla-manager-add
-
-  /company/{companyID}/project/{projectID}/cla-manager:
-    post:
-      summary: Creates a new CLA Manager  for the specified Company and Project
-      security:
-        - OauthSecurity:
-            - user
-      operationId: createCLAManager
-      parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
-        - name: body
-          in: body
-          schema:
-            $ref: '#/definitions/cla-manager-user'
-          required: true
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/signature'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-        '409':
-          $ref: '#/responses/conflict'
-      tags:
-        - cla-manager-add
-
+        - cla-manager
 
   /company/{companyID}/project/{projectID}/cla-manager/requests:
     get:
@@ -1355,7 +1354,7 @@ paths:
         '404':
           $ref: '#/responses/not-found'
       tags:
-        - cla-manager-requests
+        - cla-manager
     post:
       summary: Creates a new CLA Manager request for the specified Company and Project
       security:
@@ -1390,7 +1389,7 @@ paths:
         '409':
           $ref: '#/responses/conflict'
       tags:
-        - cla-manager-requests
+        - cla-manager
 
   /company/{companyID}/project/{projectID}/cla-manager/requests/{requestID}:
     get:
@@ -1426,7 +1425,7 @@ paths:
         '404':
           $ref: '#/responses/not-found'
       tags:
-        - cla-manager-requests
+        - cla-manager
     delete:
       summary: Deletes the CLA Manager request for the specified Company, Project and Request ID
       security:
@@ -1447,8 +1446,8 @@ paths:
           type: string
           required: true
       responses:
-        '200':
-          description: 'Success'
+        '204':
+          description: 'Resource Updated Successfully'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1458,7 +1457,7 @@ paths:
         '404':
           $ref: '#/responses/not-found'
       tags:
-        - cla-manager-requests
+        - cla-manager
 
   /company/{companyID}/project/{projectID}/cla-manager/requests/{requestID}/approve:
     put:
@@ -1494,7 +1493,7 @@ paths:
         '409':
           $ref: '#/responses/conflict'
       tags:
-        - cla-manager-requests
+        - cla-manager
 
   /company/{companyID}/project/{projectID}/cla-manager/requests/{requestID}/deny:
     put:
@@ -1530,7 +1529,7 @@ paths:
         '404':
           $ref: '#/responses/not-found'
       tags:
-        - cla-manager-requests
+        - cla-manager
 
   /template:
     get:
