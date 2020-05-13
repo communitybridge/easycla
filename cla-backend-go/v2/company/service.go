@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/communitybridge/easycla/cla-backend-go/company"
+
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 	"github.com/sirupsen/logrus"
 
@@ -28,34 +30,38 @@ import (
 
 const (
 	// used when we want to query all data from dependent service.
-	HugePageSize = 10000
+	HugePageSize        = 10000
+	LoadRepoDetails     = true
+	DontLoadRepoDetails = false
 )
 
 // Service functions for company
 type Service interface {
 	GetCompanyCLAManagers(companyID string) (*models.CompanyClaManagers, error)
 	GetCompanyActiveCLAs(companyID string) (*models.ActiveClaList, error)
-	GetCompanyProjectContributors(projectSFID string, companyID string, searchTerm string) (*models.CorporateContributorList, error)
+	GetCompanyProjectContributors(projectSFID string, companySFID string, searchTerm string) (*models.CorporateContributorList, error)
 }
 
 // ProjectRepo contains project repo methods
 type ProjectRepo interface {
 	GetProjectByID(projectID string) (*v1Models.Project, error)
-	GetProjectsByExternalID(params *v1ProjectParams.GetProjectsByExternalIDParams) (*v1Models.Projects, error)
+	GetProjectsByExternalID(params *v1ProjectParams.GetProjectsByExternalIDParams, loadRepoDetails bool) (*v1Models.Projects, error)
 }
 
 type service struct {
 	signatureRepo signatures.SignatureRepository
 	projectRepo   ProjectRepo
 	userRepo      users.UserRepository
+	companyRepo   company.IRepository
 }
 
 // NewService returns instance of company service
-func NewService(sigRepo signatures.SignatureRepository, projectRepo ProjectRepo, usersRepo users.UserRepository) Service {
+func NewService(sigRepo signatures.SignatureRepository, projectRepo ProjectRepo, usersRepo users.UserRepository, companyRepo company.IRepository) Service {
 	return &service{
 		signatureRepo: sigRepo,
 		projectRepo:   projectRepo,
 		userRepo:      usersRepo,
+		companyRepo:   companyRepo,
 	}
 }
 
@@ -303,7 +309,7 @@ func (s *service) filterClaProjects(projects []*v2ProjectServiceModels.ProjectOu
 			project, err := s.projectRepo.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
 				ExternalID: projectOutput.ID,
 				PageSize:   aws.Int64(1),
-			})
+			}, DontLoadRepoDetails)
 			if err != nil {
 				log.Warnf("Unable to fetch project details for project with external id %s. error = %s", projectOutput.ID, err)
 				prChan <- nil
@@ -332,9 +338,9 @@ type SignaturesResponse struct {
 	err        error
 }
 
-func (s *service) GetCompanyProjectContributors(projectSFID string, companyID string, searchTerm string) (*models.CorporateContributorList, error) {
+func (s *service) GetCompanyProjectContributors(projectSFID string, companySFID string, searchTerm string) (*models.CorporateContributorList, error) {
 	list := make([]*models.CorporateContributor, 0)
-	sigs, err := getAllCompanyProjectEmployeeSignatures(s.projectRepo, s.signatureRepo, companyID, projectSFID)
+	sigs, err := getAllCompanyProjectEmployeeSignatures(s.projectRepo, s.signatureRepo, s.companyRepo, companySFID, projectSFID)
 	if err != nil {
 		return nil, err
 	}
@@ -395,19 +401,37 @@ func fillCorporateContributorModel(wg *sync.WaitGroup, usersRepo users.UserRepos
 	result <- &contributor
 }
 
-func getAllCompanyProjectEmployeeSignatures(projectRepo ProjectRepo, signatureRepo signatures.SignatureRepository, companyID string, projectSFID string) ([]*v1Models.Signature, error) {
-	t := time.Now()
-	projects, err := projectRepo.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
-		ExternalID: projectSFID,
-		PageSize:   aws.Int64(HugePageSize),
-	})
-	if err != nil {
-		return nil, err
+func getAllCompanyProjectEmployeeSignatures(projectRepo ProjectRepo, signatureRepo signatures.SignatureRepository, companyRepo company.IRepository, companySFID string, projectSFID string) ([]*v1Models.Signature, error) {
+	var comp *v1Models.Company
+	var companyErr, projectErr error
+	var projects *v1Models.Projects
+	// query projects and company
+	var cp sync.WaitGroup
+	cp.Add(2)
+	go func() {
+		defer cp.Done()
+		comp, companyErr = companyRepo.GetCompanyByExternalID(companySFID)
+	}()
+	go func() {
+		defer cp.Done()
+		t := time.Now()
+		projects, projectErr = projectRepo.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
+			ExternalID: projectSFID,
+			PageSize:   aws.Int64(HugePageSize),
+		}, DontLoadRepoDetails)
+		log.WithField("time_taken", time.Since(t).String()).Debugf("getting project by external id : %s completed", projectSFID)
+	}()
+	cp.Wait()
+	if companyErr != nil {
+		return nil, companyErr
+	}
+	if projectErr != nil {
+		return nil, projectErr
 	}
 	if len(projects.Projects) == 0 {
 		return nil, nil
 	}
-	log.WithField("time_taken", time.Since(t).String()).Debugf("getting project by external id : %s completed", projectSFID)
+	companyID := comp.CompanyID
 	resp := make(chan *SignaturesResponse)
 	var swg sync.WaitGroup
 	swg.Add(len(projects.Projects))

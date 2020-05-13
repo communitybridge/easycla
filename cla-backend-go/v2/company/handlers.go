@@ -9,7 +9,6 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/company"
-	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -77,15 +76,11 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			if !isUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
 				return company.NewGetCompanyProjectContributorsUnauthorized()
 			}
-			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
+			result, err := service.GetCompanyProjectContributors(params.ProjectSFID, params.CompanySFID, utils.StringValue(params.SearchTerm))
 			if err != nil {
 				if err == v1Company.ErrCompanyDoesNotExist {
 					return company.NewGetCompanyProjectContributorsNotFound()
 				}
-			}
-			log.WithField("company_id", comp.CompanyID).Debugf("searching corporate contributors for company")
-			result, err := service.GetCompanyProjectContributors(params.ProjectSFID, comp.CompanyID, utils.StringValue(params.SearchTerm))
-			if err != nil {
 				return company.NewGetCompanyProjectContributorsBadRequest().WithPayload(errorResponse(err))
 			}
 			return company.NewGetCompanyProjectContributorsOK().WithPayload(result)
