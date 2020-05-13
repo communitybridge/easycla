@@ -322,6 +322,7 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'signature-user-ccla-company-index',
           hashKey: 'signature_user_ccla_company_id',
+          rangeKey: 'signature_project_id',
           projectionType: 'ALL',
         },
         {
