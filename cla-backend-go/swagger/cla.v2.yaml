@@ -1676,6 +1676,9 @@ definitions:
       companyName:
         type: string
         x-omitempty: false
+      projectSFID:
+        type: string
+        x-omitempty: false
 
   sf-project-metric:
     type: object

@@ -28,6 +28,7 @@ import (
 	v2UserServiceModels "github.com/communitybridge/easycla/cla-backend-go/v2/user-service/models"
 )
 
+// constants
 const (
 	// used when we want to query all data from dependent service.
 	HugePageSize        = 10000
@@ -331,7 +332,7 @@ func (s *service) filterClaProjects(projects []*v2ProjectServiceModels.ProjectOu
 	return results
 }
 
-type SignaturesResponse struct {
+type signatureResponse struct {
 	companyID  string
 	projectID  string
 	signatures *v1Models.Signatures
@@ -432,7 +433,7 @@ func getAllCompanyProjectEmployeeSignatures(projectRepo ProjectRepo, signatureRe
 		return nil, nil
 	}
 	companyID := comp.CompanyID
-	resp := make(chan *SignaturesResponse)
+	resp := make(chan *signatureResponse)
 	var swg sync.WaitGroup
 	swg.Add(len(projects.Projects))
 	go func() {
@@ -456,7 +457,7 @@ func getAllCompanyProjectEmployeeSignatures(projectRepo ProjectRepo, signatureRe
 	return sigs, nil
 }
 
-func getCompanyProjectEmployeeSignatures(wg *sync.WaitGroup, signatureRepo signatures.SignatureRepository, companyID, projectID string, resp chan<- *SignaturesResponse) {
+func getCompanyProjectEmployeeSignatures(wg *sync.WaitGroup, signatureRepo signatures.SignatureRepository, companyID, projectID string, resp chan<- *signatureResponse) {
 	defer wg.Done()
 	params := v1SignatureParams.GetProjectCompanyEmployeeSignaturesParams{
 		HTTPRequest: nil,
@@ -464,7 +465,7 @@ func getCompanyProjectEmployeeSignatures(wg *sync.WaitGroup, signatureRepo signa
 		ProjectID:   projectID,
 	}
 	sigs, err := signatureRepo.GetProjectCompanyEmployeeSignatures(params, HugePageSize)
-	resp <- &SignaturesResponse{
+	resp <- &signatureResponse{
 		companyID:  companyID,
 		projectID:  projectID,
 		signatures: sigs,
