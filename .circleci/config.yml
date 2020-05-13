@@ -13,9 +13,20 @@ set_functional_test_environment: &set_functional_test_environment
 
       # Note, we place single quotes around the values to ensure any values
       # with dollar signs are not intrepreted and expanded by accident
+      # Default Functional Test User
       echo "export AUTH0_USERNAME='${!AUTH0_USERNAME_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_PASSWORD='${!AUTH0_PASSWORD_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_CLIENT_ID='${!AUTH0_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
+
+      # Prospective CLA Manager User
+      echo "export AUTH0_USER1_USERNAME='${!AUTH0_USER1_USERNAME_ENV_VAR}'" >> ${BASH_ENV}
+      echo "export AUTH0_USER1_PASSWORD='${!AUTH0_USER1_PASSWORD_ENV_VAR}'" >> ${BASH_ENV}
+      echo "export AUTH0_USER1_CLIENT_ID='${!AUTH0_USER1_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
+
+      # CLA Manager User
+      echo "export AUTH0_USER2_USERNAME='${!AUTH0_USER2_USERNAME_ENV_VAR}'" >> ${BASH_ENV}
+      echo "export AUTH0_USER2_PASSWORD='${!AUTH0_USER2_PASSWORD_ENV_VAR}'" >> ${BASH_ENV}
+      echo "export AUTH0_USER2_CLIENT_ID='${!AUTH0_USER2_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
 
 step-library:
   - &install-node-8
@@ -780,6 +791,8 @@ jobs:
     docker:
       - image: circleci/python:3.7.4-node
     steps:
+      - attach_workspace:
+          at: ~/
       - checkout
       - run:
           name: setup
@@ -803,7 +816,9 @@ jobs:
           command: |
             source ${BASH_ENV}
             echo "Running golang functional tests for stage: ${STAGE}"
-            ./cla-backend-go/functional-tests
+            echo "Home directory            : $(ls ${HOME})"
+            echo "~/cla-backend-go directory: $(ls ${HOME}/cla-backend-go)"
+            ${HOME}/cla-backend-go/functional-tests
 
   functionalTestsDev:
     <<: *functionalTests
