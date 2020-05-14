@@ -64,7 +64,7 @@ func (s service) GetProjectByID(projectID string) (*models.Project, error) {
 // GetProjectsByExternalID returns a list of projects based on the external ID parameters
 func (s service) GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error) {
 	log.Debugf("Project Service Handler - GetProjectsByExternalID")
-	projects, err := s.repo.GetProjectsByExternalID(params)
+	projects, err := s.repo.GetProjectsByExternalID(params, LoadRepoDetails)
 	if err != nil {
 		return nil, err
 	}

@@ -280,6 +280,7 @@ type CompanyProjectMetric struct {
 	CompanyName       string `json:"company_name"`
 	ClaManagersCount  int64  `json:"cla_managers_count"`
 	ContributorsCount int64  `json:"contributors_count"`
+	ProjectSFID       string `json:"project_sfid"`
 	claManagers       map[string]interface{}
 	contributors      map[string]interface{}
 }
@@ -351,6 +352,7 @@ func (cpm *CompanyProjectMetric) toModel() *models.CompanyProjectMetric {
 		ProjectID:         cpm.ProjectID,
 		ProjectName:       cpm.ProjectName,
 		CompanyName:       cpm.CompanyName,
+		ProjectSFID:       cpm.ProjectSFID,
 	}
 }
 
@@ -1063,6 +1065,7 @@ func (repo *repo) saveCompanyProjectMetrics(in *CompanyProjectMetrics, pmm map[s
 		}
 		cpm.CompanyName = cm.CompanyName
 		cpm.ProjectName = pm.ProjectName
+		cpm.ProjectSFID = pm.ExternalProjectID
 		av, err := dynamodbattribute.MarshalMap(cpm)
 		if err != nil {
 			return err

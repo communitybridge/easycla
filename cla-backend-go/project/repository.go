@@ -32,19 +32,22 @@ var (
 	ErrProjectIDMissing    = errors.New("project id is missing")
 )
 
+// constants
+const (
+	LoadRepoDetails     = true
+	DontLoadRepoDetails = false
+)
+
 // ProjectRepository defines functions of Project repository
 type ProjectRepository interface { //nolint
 	CreateProject(project *models.Project) (*models.Project, error)
 	GetProjectByID(projectID string) (*models.Project, error)
-	GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error)
+	GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams, loadRepoDetails bool) (*models.Projects, error)
 	GetProjectByName(projectName string) (*models.Project, error)
 	GetExternalProject(projectExternalID string) (*models.Project, error)
 	GetProjects(params *project.GetProjectsParams) (*models.Projects, error)
 	DeleteProject(projectID string) error
 	UpdateProject(projectModel *models.Project) (*models.Project, error)
-	buildProjectModel(dbModel DBProjectModel) *models.Project
-	buildProjectDocumentModels(dbDocumentModels []DBProjectDocumentModel) []models.ProjectDocument
-	buildProjectModels(results []map[string]*dynamodb.AttributeValue) ([]models.Project, error)
 }
 
 // NewRepository creates instance of project repository
@@ -156,11 +159,11 @@ func (repo *repo) GetProjectByID(projectID string) (*models.Project, error) {
 	}
 
 	// Convert the database model to an API response model
-	return repo.buildProjectModel(dbModel), nil
+	return repo.buildProjectModel(dbModel, LoadRepoDetails), nil
 }
 
 // GetProjectsByExternalID queries the database and returns a list of the projects
-func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error) {
+func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams, loadRepoDetails bool) (*models.Projects, error) {
 	log.Debugf("Project - Repository Service - GetProjectsByExternalID - ExternalID: %s", params.ExternalID)
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
@@ -218,7 +221,7 @@ func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalI
 		}
 
 		// Convert the list of DB models to a list of response models
-		projectList, modelErr := repo.buildProjectModels(results.Items)
+		projectList, modelErr := repo.buildProjectModels(results.Items, loadRepoDetails)
 		if modelErr != nil {
 			log.Warnf("error converting project DB model to response model, error: %v",
 				modelErr)
@@ -305,7 +308,7 @@ func (repo *repo) GetProjectByName(projectName string) (*models.Project, error) 
 	}
 
 	// Convert the database model to an API response model
-	return repo.buildProjectModel(dbModel), nil
+	return repo.buildProjectModel(dbModel, LoadRepoDetails), nil
 }
 
 // GetExternalProject returns the project model associated for the specified external project ID
@@ -358,7 +361,7 @@ func (repo *repo) GetExternalProject(projectExternalID string) (*models.Project,
 	}
 
 	// Convert the database model to an API response model
-	return repo.buildProjectModel(dbModel), nil
+	return repo.buildProjectModel(dbModel, LoadRepoDetails), nil
 }
 
 // GetProjects queries the database and returns a list of the projects
@@ -415,7 +418,7 @@ func (repo *repo) GetProjects(params *project.GetProjectsParams) (*models.Projec
 		}
 
 		// Convert the list of DB models to a list of response models
-		projectList, modelErr := repo.buildProjectModels(results.Items)
+		projectList, modelErr := repo.buildProjectModels(results.Items, LoadRepoDetails)
 		if modelErr != nil {
 			log.Warnf("error converting project DB model to response model, error: %v",
 				modelErr)
@@ -569,7 +572,7 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 }
 
 // buildProjectModels converts the database response model into an API response data model
-func (repo *repo) buildProjectModels(results []map[string]*dynamodb.AttributeValue) ([]models.Project, error) {
+func (repo *repo) buildProjectModels(results []map[string]*dynamodb.AttributeValue, loadRepoDetails bool) ([]models.Project, error) {
 	var projects []models.Project
 
 	// The DB project model
@@ -588,7 +591,7 @@ func (repo *repo) buildProjectModels(results []map[string]*dynamodb.AttributeVal
 	for _, dbProject := range dbProjects {
 		go func(dbProject DBProjectModel) {
 			// Send the results to the output channel
-			responseChannel <- repo.buildProjectModel(dbProject)
+			responseChannel <- repo.buildProjectModel(dbProject, loadRepoDetails)
 		}(dbProject)
 	}
 
@@ -601,43 +604,44 @@ func (repo *repo) buildProjectModels(results []map[string]*dynamodb.AttributeVal
 }
 
 // buildProjectModel maps the database model to the API response model
-func (repo *repo) buildProjectModel(dbModel DBProjectModel) *models.Project {
+func (repo *repo) buildProjectModel(dbModel DBProjectModel, loadRepoDetails bool) *models.Project {
 
 	var ghOrgs []*models.GithubRepositoriesGroupByOrgs
 	var gerrits []*models.Gerrit
 
-	if dbModel.ProjectID != "" {
-		var wg sync.WaitGroup
-		wg.Add(2)
-		go func() {
-			defer wg.Done()
-			var err error
-			ghOrgs, err = repo.ghRepo.GetProjectRepositoriesGroupByOrgs(dbModel.ProjectID)
-			if err != nil {
-				log.Warnf("buildProjectModel - unable to load GH organizations by project ID: %s, error: %+v",
-					dbModel.ProjectID, err)
-				// Reset to empty array
-				ghOrgs = make([]*models.GithubRepositoriesGroupByOrgs, 0)
-			}
-		}()
+	if loadRepoDetails {
+		if dbModel.ProjectID != "" {
+			var wg sync.WaitGroup
+			wg.Add(2)
+			go func() {
+				defer wg.Done()
+				var err error
+				ghOrgs, err = repo.ghRepo.GetProjectRepositoriesGroupByOrgs(dbModel.ProjectID)
+				if err != nil {
+					log.Warnf("buildProjectModel - unable to load GH organizations by project ID: %s, error: %+v",
+						dbModel.ProjectID, err)
+					// Reset to empty array
+					ghOrgs = make([]*models.GithubRepositoriesGroupByOrgs, 0)
+				}
+			}()
 
-		go func() {
-			defer wg.Done()
-			var err error
-			gerrits, err = repo.gerritRepo.GetProjectGerrits(dbModel.ProjectID)
-			if err != nil {
-				log.Warnf("buildProjectModel - unable to load Gerrit repositories by project ID: %s, error: %+v",
-					dbModel.ProjectID, err)
-				// Reset to empty array
-				gerrits = make([]*models.Gerrit, 0)
-			}
-		}()
-		wg.Wait()
-	} else {
-		log.Warnf("buildProjectModel - project ID missing for project '%s' - ID: %s - unable to load GH and Gerrit repository details",
-			dbModel.ProjectName, dbModel.ProjectID)
+			go func() {
+				defer wg.Done()
+				var err error
+				gerrits, err = repo.gerritRepo.GetProjectGerrits(dbModel.ProjectID)
+				if err != nil {
+					log.Warnf("buildProjectModel - unable to load Gerrit repositories by project ID: %s, error: %+v",
+						dbModel.ProjectID, err)
+					// Reset to empty array
+					gerrits = make([]*models.Gerrit, 0)
+				}
+			}()
+			wg.Wait()
+		} else {
+			log.Warnf("buildProjectModel - project ID missing for project '%s' - ID: %s - unable to load GH and Gerrit repository details",
+				dbModel.ProjectName, dbModel.ProjectID)
+		}
 	}
-
 	return &models.Project{
 		ProjectID:                  dbModel.ProjectID,
 		ProjectExternalID:          dbModel.ProjectExternalID,
