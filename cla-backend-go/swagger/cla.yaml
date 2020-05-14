@@ -1250,6 +1250,7 @@ paths:
   /company/{companyID}/project/{projectID}/cla-manager:
     post:
       summary: Adds a new CLA Manager to the specified Company and Project
+      description: Allows an existing CLA Manager to add another CLA Manager to the specified Company and Project.
       security:
         - OauthSecurity:
             - user
@@ -1287,6 +1288,7 @@ paths:
   /company/{companyID}/project/{projectID}/cla-manager/{userLFID}:
     delete:
       summary: Removes the CLA Manager from ACL for specified Company and Project
+      description: Allows an existing CLA Manager to remove another CLA Manager from the specified Company and Project.
       security:
         - OauthSecurity:
             - user
