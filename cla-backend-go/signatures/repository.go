@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 
@@ -434,8 +433,6 @@ const projIndexName = "project-signature-index"
 // GetProjectSignatures returns a list of signatures for the specified project
 func (repo repository) GetProjectSignatures(params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error) {
 
-	queryStartTime := time.Now()
-
 	// The table we're interested in
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 
@@ -545,9 +542,6 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 			return nil, errQuery
 		}
 
-		log.Debugf("Signature project query took: %v resulting in %d results",
-			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
-
 		// Convert the list of DB models to a list of response models
 		signatureList, modelErr := repo.buildProjectSignatureModels(results, params.ProjectID, LoadACLDetails)
 		if modelErr != nil {
@@ -601,8 +595,6 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 // GetProjectCompanySignatures returns a list of signatures for the specified project and specified company
 func (repo repository) GetProjectCompanySignatures(companyID, projectID string, nextKey *string, pageSize int64) (*models.Signatures, error) {
 
-	queryStartTime := time.Now()
-
 	// The table we're interested in
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 
@@ -651,16 +643,12 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 	// Loop until we have all the records
 	for ok := true; ok; ok = lastEvaluatedKey != "" {
 		// Make the DynamoDB Query API call
-		//log.Debugf("Running signature project company query using queryInput: %+v", queryInput)
 		results, errQuery := repo.dynamoDBClient.Query(queryInput)
 		if errQuery != nil {
 			log.Warnf("error retrieving project signature ID for project: %s with company: %s, error: %v",
 				projectID, companyID, errQuery)
 			return nil, errQuery
 		}
-
-		log.Debugf("Signature project company query took: %v resulting in %d results",
-			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
 		// Convert the list of DB models to a list of response models
 		signatureList, modelErr := repo.buildProjectSignatureModels(results, projectID, LoadACLDetails)
@@ -824,8 +812,6 @@ func (repo repository) InvalidateProjectRecord(signatureID string, projectName s
 // GetProjectCompanyEmployeeSignatures returns a list of employee signatures for the specified project and specified company
 func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams, pageSize int64) (*models.Signatures, error) {
 
-	queryStartTime := time.Now()
-
 	// The table we're interested in
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 
@@ -884,9 +870,6 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 			return nil, errQuery
 		}
 
-		log.Debugf("Signature project company employee query took: %v resulting in %d results",
-			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
-
 		// Convert the list of DB models to a list of response models
 		signatureList, modelErr := repo.buildProjectSignatureModels(results, params.ProjectID, LoadACLDetails)
 		if modelErr != nil {
@@ -939,8 +922,6 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 
 // GetCompanySignatures returns a list of company signatures for the specified company
 func (repo repository) GetCompanySignatures(params signatures.GetCompanySignaturesParams, pageSize int64, loadACL bool) (*models.Signatures, error) {
-
-	queryStartTime := time.Now()
 
 	// The table we're interested in
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
@@ -1005,9 +986,6 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 			return nil, errQuery
 		}
 
-		log.Debugf("Signature company query took: %v resulting in %d results",
-			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
-
 		// Convert the list of DB models to a list of response models
 		signatureList, modelErr := repo.buildProjectSignatureModels(results, "", loadACL)
 		if modelErr != nil {
@@ -1062,8 +1040,6 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 // GetUserSignatures returns a list of user signatures for the specified user
 func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesParams, pageSize int64) (*models.Signatures, error) {
 
-	queryStartTime := time.Now()
-
 	// The table we're interested in
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 
@@ -1117,9 +1093,6 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 				params.UserID, *params.UserName, errQuery)
 			return nil, errQuery
 		}
-
-		log.Debugf("Signature user query took: %v resulting in %d results",
-			utils.FmtDuration(time.Since(queryStartTime)), len(results.Items))
 
 		// Convert the list of DB models to a list of response models
 		signatureList, modelErr := repo.buildProjectSignatureModels(results, "", LoadACLDetails)
