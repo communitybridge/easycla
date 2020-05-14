@@ -52,6 +52,7 @@ func NewService(repo IRepository, companyService company.IService, projectServic
 		projectService:      projectService,
 		usersService:        usersService,
 		sigService:          sigService,
+		eventsService:       eventsService,
 		corporateConsoleURL: corporateConsoleURL,
 	}
 }
@@ -207,7 +208,8 @@ func (s service) AddClaManager(companyID string, projectID string, LFID string) 
 	sigModel := sigModels.Signatures[0]
 	claManagers := sigModel.SignatureACL
 
-	log.Debugf("Got Company signatures . Company : %s , Project : %s , signatureID: %s ", companyID, projectID, sigModel.SignatureID)
+	log.Debugf("Got Company signatures - Company: %s , Project: %s , signatureID: %s ",
+		companyID, projectID, sigModel.SignatureID)
 
 	// Update the signature ACL
 	addedSignature, aclErr := s.sigService.AddCLAManager(sigModel.SignatureID, LFID)
@@ -270,6 +272,8 @@ func (s service) RemoveClaManager(companyID string, projectID string, LFID strin
 		PageSize:    aws.Int64(5),
 	})
 	if sigErr != nil || sigModels == nil {
+		log.Warnf("Unable to lookup project company signature using Project ID: %s, Company ID: %s, error: %+v",
+			projectID, companyID, sigErr)
 		return nil, sigErr
 	}
 
@@ -283,7 +287,9 @@ func (s service) RemoveClaManager(companyID string, projectID string, LFID strin
 
 	// Update the signature ACL
 	updatedSignature, aclErr := s.sigService.RemoveCLAManager(sigModel.SignatureID, LFID)
-	if aclErr != nil {
+	if aclErr != nil || updatedSignature == nil {
+		log.Warnf("remove CLA Manager returned an error or empty signature model using Signature ID: %s, error: %+v",
+			sigModel.SignatureID, sigErr)
 		return nil, aclErr
 	}
 
@@ -292,6 +298,7 @@ func (s service) RemoveClaManager(companyID string, projectID string, LFID strin
 		sendClaManagerDeleteEmailToCLAManagers(companyModel, projectModel, userModel.LfUsername,
 			manager.Username, manager.LfEmail)
 	}
+
 	// Notify the removed manager
 	sendRemovedClaManagerEmailToRecipient(companyModel, projectModel, userModel.LfUsername, userModel.LfEmail, claManagers)
 
