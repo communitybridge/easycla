@@ -15,7 +15,7 @@ import (
 
 const (
 	// API_URL is the development API endpoint
-	API_URL = "https://api.dev.lfcla.com/v3" // nolint
+	API_URL = "https://api.dev.lfcla.com" // nolint
 )
 
 func init() {

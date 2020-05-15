@@ -438,17 +438,17 @@ paths:
       tags:
         - project
   
-  /project/enabled/{externalID}:
+  /project/enabled/{projectSfdcId}:
     get:
       summary: Get CLA enabled projects
-      description: Returns a list of CLA enabled projects that are enabled associated with a given company
-      operationId: getCCLAProjectsByExternalID
+      description: Returns a list of CLA enabled projects for a given foundation
+      operationId: getCLAProjectsByID
       parameters:
         - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - name: externalID
+        - name: projectSfdcId
           in: path
           type: string
           required: true
@@ -458,7 +458,7 @@ paths:
         '200':
           description: 'Success'
           schema:
-            $ref: '#/definitions/projects'
+            $ref: '#/definitions/enabled-cla-list'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1895,6 +1895,38 @@ definitions:
         type: string
       userEmail:
         type: string
+
+  enabled-cla-list:
+    type: object
+    title: Enabled CLA list
+    description: List of CLA enabled projects for specified Foundation
+    properties:
+      list:
+        type: array
+        items:
+          $ref : '#/definitions/enabled-cla'
+  
+  enabled-cla:
+    type: object
+    title: Enabled CLA
+    description: Enabled CLA detail
+    properties:
+      project_name:
+        type: string
+        example: "Appium"
+        x-omitempty: false
+      project_sfid:
+        type: string
+        example: "a2g17000000hyxNABB"
+        x-omitempty: false
+      project_type:
+        type: string
+        example: "Project"
+        x-omitempty: false
+      project_logo:
+        type: string
+        example: "http://wwwlinuxfoundation.org/logo.gif"
+        x-omitempty: false
 
   active-cla-list:
     type: object

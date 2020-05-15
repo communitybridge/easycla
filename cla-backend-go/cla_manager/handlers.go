@@ -92,7 +92,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			msg := buildErrorMessage("signature lookup error", params, sigErr)
 			log.Warn(msg)
 			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
-				Message: "CLA Manager Create Request - error reading CCA Signatures - " + msg,
+				Message: "CLA Manager Create Request - error reading CCLA Signatures - " + msg,
 				Code:    "400",
 			})
 		}
@@ -274,7 +274,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			msg := buildErrorMessageForApprove(params, sigErr)
 			log.Warn(msg)
 			return cla_manager.NewApproveCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
-				Message: "CLA Manager Approve Request - error reading CCA Signatures - " + msg,
+				Message: "CLA Manager Approve Request - error reading CCLA Signatures - " + msg,
 				Code:    "400",
 			})
 		}
@@ -379,7 +379,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			msg := buildErrorMessageForDeny(params, sigErr)
 			log.Warn(msg)
 			return cla_manager.NewApproveCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
-				Message: "CLA Manager Deny Request - error reading CCA Signatures - " + msg,
+				Message: "CLA Manager Deny Request - error reading CCLA Signatures - " + msg,
 				Code:    "400",
 			})
 		}
@@ -493,7 +493,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			msg := buildErrorMessageForDelete(params, sigErr)
 			log.Warn(msg)
 			return cla_manager.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
-				Message: "CLA Manager Delete Request - error reading CCA Signatures - " + msg,
+				Message: "CLA Manager Delete Request - error reading CCLA Signatures - " + msg,
 				Code:    "400",
 			})
 		}
@@ -548,10 +548,43 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 	api.ClaManagerAddCLAManagerHandler = cla_manager.AddCLAManagerHandlerFunc(func(params cla_manager.AddCLAManagerParams, claUser *user.CLAUser) middleware.Responder {
 
+		// Look up signature ACL to ensure the user is allowed to add CLA managers
+		sigModels, sigErr := sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
+			HTTPRequest: nil,
+			CompanyID:   params.CompanyID,
+			ProjectID:   params.ProjectID,
+			NextKey:     nil,
+			PageSize:    aws.Int64(5),
+		})
+		if sigErr != nil || sigModels == nil {
+			msg := buildErrorMessageAddManager("Add CLA Manager - signature lookup error", params, sigErr)
+			log.Warn(msg)
+			return cla_manager.NewAddCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: "Add CLA Manager - error reading CCLA Signatures - " + msg,
+				Code:    "400",
+			})
+		}
+		if len(sigModels.Signatures) > 1 {
+			log.Warnf("returned multiple CCLA signature models for company ID: %s, project ID: %s",
+				params.CompanyID, params.ProjectID)
+		}
+
+		sigModel := sigModels.Signatures[0]
+		claManagers := sigModel.SignatureACL
+		if !currentUserInACL(claUser, claManagers) {
+			msg := fmt.Sprintf("User %s / %s / %s is not authorized to add a CLA Manager for company ID: %s, project ID: %s",
+				claUser.UserID, claUser.Name, claUser.LFEmail, params.CompanyID, params.ProjectID)
+			log.Debug(msg)
+			return cla_manager.NewAddCLAManagerUnauthorized().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "401",
+			})
+		}
+
 		signature, addErr := service.AddClaManager(params.CompanyID, params.ProjectID, params.Body.UserLFID)
 
 		if addErr != nil {
-			msg := buildErrorMessageAdd(params, addErr)
+			msg := buildErrorMessageAddManager("Add CLA Manager - Service Error", params, addErr)
 			log.Warn(msg)
 			return cla_manager.NewAddCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
@@ -565,10 +598,52 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 	// Delete CLA Manager
 	api.ClaManagerDeleteCLAManagerHandler = cla_manager.DeleteCLAManagerHandlerFunc(func(params cla_manager.DeleteCLAManagerParams, claUser *user.CLAUser) middleware.Responder {
 
+		// Look up signature ACL to ensure the user is allowed to remove CLA managers
+		sigModels, sigErr := sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
+			HTTPRequest: nil,
+			CompanyID:   params.CompanyID,
+			ProjectID:   params.ProjectID,
+			NextKey:     nil,
+			PageSize:    aws.Int64(5),
+		})
+		if sigErr != nil || sigModels == nil {
+			msg := buildErrorMessageDeleteManager("Delete CLA Manager - Signature Lookup Error", params, sigErr)
+			log.Warn(msg)
+			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: "Delete CLA Manager - error reading CCLA Signatures - " + msg,
+				Code:    "400",
+			})
+		}
+		if len(sigModels.Signatures) > 1 {
+			log.Warnf("returned multiple CCLA signature models for company ID: %s, project ID: %s",
+				params.CompanyID, params.ProjectID)
+		}
+
+		sigModel := sigModels.Signatures[0]
+		claManagers := sigModel.SignatureACL
+		if !currentUserInACL(claUser, claManagers) {
+			msg := fmt.Sprintf("User %s / %s / %s is not authorized to remove a CLA Manager for company ID: %s, project ID: %s",
+				claUser.UserID, claUser.Name, claUser.LFEmail, params.CompanyID, params.ProjectID)
+			log.Debug(msg)
+			return cla_manager.NewDeleteCLAManagerUnauthorized().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "401",
+			})
+		}
+
 		signature, deleteErr := service.RemoveClaManager(params.CompanyID, params.ProjectID, params.UserLFID)
 
 		if deleteErr != nil {
-			msg := buildErrorMessageDelete(params, deleteErr)
+			msg := buildErrorMessageDeleteManager("Delete CLA Manager - Service Error", params, deleteErr)
+			log.Warn(msg)
+			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			})
+		}
+
+		if signature == nil {
+			msg := buildErrorMessageDeleteManager("Delete CLA Manager - Response Signature Missing", params, deleteErr)
 			log.Warn(msg)
 			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
@@ -577,12 +652,12 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		return cla_manager.NewDeleteCLAManagerOK().WithPayload(signature)
-
 	})
 }
 
 // currentUserInACL is a helper function to determine if the current logged in user is in the CLA Manager list
 func currentUserInACL(currentUser *user.CLAUser, managers []models.User) bool {
+	//log.Debugf("checking if user: %+v is in the Signature ACL: %+v", currentUser, managers)
 	var inACL = false
 	for _, manager := range managers {
 		if manager.UserID == currentUser.UserID {
@@ -631,15 +706,15 @@ func buildErrorMessageForGetRequest(params cla_manager.GetCLAManagerRequestParam
 }
 
 // buildErrorMessageAdd helper function to build an error message
-func buildErrorMessageAdd(params cla_manager.AddCLAManagerParams, err error) string {
-	return fmt.Sprintf("problem creating new CLA Manager using company ID: %s, project ID: %s, user ID: %s, user name: %s, user email: %s, error: %+v",
-		params.CompanyID, params.ProjectID, params.Body.UserLFID, params.Body.UserName, params.Body.UserEmail, err)
+func buildErrorMessageAddManager(errPrefix string, params cla_manager.AddCLAManagerParams, err error) string {
+	return fmt.Sprintf("%s - problem adding CLA Manager to company ID: %s, project ID: %s, user ID: %s, user name: %s, user email: %s, error: %+v",
+		errPrefix, params.CompanyID, params.ProjectID, params.Body.UserLFID, params.Body.UserName, params.Body.UserEmail, err)
 }
 
 // buildErrorMessage helper function to build an error message
-func buildErrorMessageDelete(params cla_manager.DeleteCLAManagerParams, err error) string {
-	return fmt.Sprintf("problem deleting new CLA Manager Request using company ID: %s, project ID: %s, user ID: %s, error: %+v",
-		params.CompanyID, params.ProjectID, params.UserLFID, err)
+func buildErrorMessageDeleteManager(errPrefix string, params cla_manager.DeleteCLAManagerParams, err error) string {
+	return fmt.Sprintf("%s - problem deleting CLA Manager for company ID: %s, project ID: %s, user ID: %s, error: %+v",
+		errPrefix, params.CompanyID, params.ProjectID, params.UserLFID, err)
 }
 
 // sendRequestAccessEmailToCLAManagers sends the request access email to the specified CLA Managers

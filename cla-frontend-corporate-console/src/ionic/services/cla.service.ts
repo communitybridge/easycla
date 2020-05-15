@@ -381,25 +381,29 @@ export class ClaService {
   }
 
   /**
+   * Add the specified user to the Project/Company ACL list.
    * POST /v1/signature/{signature_id}/manager
    */
-  postCLAManager(signatureId, payload) {
-    const url: URL = this.getV1Endpoint('/v1/signature/' + signatureId + '/manager');
-    return this.http
-      .post(url, { lfid: payload.managerLFID })
-      .map((res) => res.json())
-      .catch((error) => this.handleServiceError(error));
+  addCLAManager(companyID: string, projectID: string, payload) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyID}/project/${projectID}/cla-manager`);
+    let data = {
+      userName: payload.managerName,
+      userEmail: payload.managerEmail,
+      userLFID: payload.managerLFID,
+    };
+    return this.http.post(url, data).map((res) => res.json());
   }
 
   /**
-   * DELETE /signature/{signature_id}/manager/{lfid}
+   * Deletes the specified user from the Project/Company ACL list.
+   * DELETE /company/${companyID}/project/${projectID}/cla-manager/${lfid}
+   * @param companyID the company ID
+   * @param projectID the project ID
+   * @param lfid the LFID of the user to remove from the ACL
    */
-  deleteCLAManager(projectId, lfid) {
-    const url: URL = this.getV1Endpoint('/v1/signature/' + projectId + '/manager/' + lfid);
-    return this.http
-      .delete(url)
-      .map((res) => res.json())
-      .catch((error) => this.handleServiceError(error));
+  deleteCLAManager(companyID: string, projectID: string, lfid: string) {
+    const url: URL = this.getV3Endpoint(`/v3/company/${companyID}/project/${projectID}/cla-manager/${lfid}`);
+    return this.http.delete(url);
   }
 
   /**
@@ -588,12 +592,23 @@ export class ClaService {
     return this.http.getWithCreds(url).map((res) => res.json());
   }
 
+  /**
+   * Approve the company invite service method.
+   * @param companyId
+   * @param requestId
+   */
   approveCompanyInvite(companyId: string, requestId: string) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/accesslist/${requestId}/approve`);
     return this.http.putWithCreds(url);
   }
 
-  rejectCompanyInvite(companyId: string, requestId: string ) {
+  /**
+   * Reject the company invite service method.
+   *
+   * @param companyId the company ID
+   * @param requestId the request ID
+   */
+  rejectCompanyInvite(companyId: string, requestId: string) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyId}/cla/accesslist/${requestId}/reject`);
     return this.http.putWithCreds(url);
   }
@@ -618,7 +633,7 @@ export class ClaService {
    * @param companyID the company ID
    * @param projectID the project ID
    */
-  getCLAManagerRequests(companyID: string, projectID: string){
+  getCLAManagerRequests(companyID: string, projectID: string) {
     const url: URL = this.getV3Endpoint(`/v3/company/${companyID}/project/${projectID}/cla-manager/requests`);
     return this.http.getWithCreds(url).map((res) => res.json());
   }

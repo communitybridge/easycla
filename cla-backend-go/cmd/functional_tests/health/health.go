@@ -30,7 +30,7 @@ func NewTestBehaviour(apiURL string, auth0Config test_models.Auth0Config) *TestB
 // RunAllTests runs all the CLA Group tests
 func (t *TestBehaviour) RunAllTests() {
 	frisby.Create("Health and Status").
-		Get(t.apiURL+"/ops/health").
+		Get(t.apiURL+"/v3/ops/health").
 		Send().
 		ExpectStatus(200).
 		ExpectJsonType("Branch", reflect.String).
