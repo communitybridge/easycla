@@ -1383,6 +1383,32 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - company
+  /company/{companySFID}/project/{projectSFID}/cla:
+    get:
+      summary: api returns company cla for all the cla_groups present in that project
+      operationId: getCompanyProjectCla
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-companySFID"
+        - $ref: "#/parameters/path-projectSFID"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company-project-cla-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
 
 responses:
   unauthorized:
@@ -1875,6 +1901,44 @@ definitions:
         items:
           $ref : '#/definitions/active-cla'
 
+  company-project-cla-list:
+    type: object
+    properties:
+      signed_cla_list:
+        type: array
+        items:
+          $ref : '#/definitions/active-cla'
+      unsigned_project_list:
+        type: array
+        items:
+          $ref : '#/definitions/unsigned_project'
+
+  unsigned_project:
+    type: object
+    title: unsigned project
+    description: details of unsigned project
+    properties:
+      cla_group_id:
+        type: string
+        x-omitempty: false
+        example: "e1e30240-a722-4c82-a648-121681d959c7"
+      cla_group_name:
+        type: string
+        x-omitempty: false
+        example: "gRPC"
+      project_sfid:
+        type: string
+        x-omitempty: false
+        example: "a2g17000000hyxNAAA"
+      project_name:
+        type: string
+        x-omitempty: false
+        example: "Appium"
+      can_sign:
+        type: boolean
+        x-omitempty: false
+        description: if requesting user is cla-designee then this would be true
+
   active-cla:
     type: object
     title: Active cla of the company
@@ -1914,31 +1978,6 @@ definitions:
         x-omitempty: false
       ccla_url:
         type: string
-        x-omitempty: false
-      sub_projects:
-        type: array
-        items:
-          $ref: '#/definitions/sub_project'
-
-
-  sub_project:
-    type: object
-    properties:
-      project_name:
-        type: string
-        example: "Appium"
-        x-omitempty: false
-      project_sfid:
-        type: string
-        example: "a2g17000000hyxNABB"
-        x-omitempty: false
-      project_type:
-        type: string
-        example: "Project"
-        x-omitempty: false
-      project_logo:
-        type: string
-        example: "http://wwwlinuxfoundation.org/logo.gif"
         x-omitempty: false
 
   corporate-contributor-list:
