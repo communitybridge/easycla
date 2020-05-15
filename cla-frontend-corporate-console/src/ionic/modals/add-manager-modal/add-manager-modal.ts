@@ -1,11 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
-import { ViewController, IonicPage, NavParams } from 'ionic-angular';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ClaService } from '../../services/cla.service';
-import { generalConstants } from '../../constant/general';
+import {Component} from '@angular/core';
+import {IonicPage, NavParams, ViewController} from 'ionic-angular';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {ClaService} from '../../services/cla.service';
+import {generalConstants} from '../../constant/general';
 
 @IonicPage({
   segment: 'add-manager-modal'
@@ -17,7 +17,11 @@ import { generalConstants } from '../../constant/general';
 export class AddManagerModal {
   form: FormGroup;
   submitAttempt: boolean = false;
+  projectId: string;
+  companyId: string;
   signatureId: string;
+  managerName: string;
+  managerEmail: string;
   managerLFID: string;
   errorMsg: string;
   linuxFoundationIdentityURL: string = generalConstants.linuxFoundationIdentityURL;
@@ -28,9 +32,13 @@ export class AddManagerModal {
     private formBuilder: FormBuilder,
     private claService: ClaService
   ) {
+    this.projectId = this.navParams.get('projectId');
+    this.companyId = this.navParams.get('companyId');
     this.signatureId = this.navParams.get('signatureId');
     this.form = this.formBuilder.group({
-      managerLFID: [this.managerLFID, Validators.compose([Validators.required])]
+      managerName: [this.managerName, Validators.compose([Validators.required, Validators.minLength(3)])],
+      managerLFID: [this.managerLFID, Validators.compose([Validators.required])],
+      managerEmail: [this.managerEmail, Validators.compose([Validators.required, Validators.email])],
     });
   }
 
@@ -44,13 +52,12 @@ export class AddManagerModal {
   }
 
   addManager() {
-    this.claService.postCLAManager(this.signatureId, this.form.getRawValue()).subscribe((result) => {
+    this.claService.addCLAManager(this.companyId, this.projectId, this.form.getRawValue()).subscribe((result) => {
       if (result.errors) {
         this.errorMsg = result.errors[0];
       } else {
         this.dismiss(true);
       }
-
     });
   }
 
