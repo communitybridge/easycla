@@ -12,7 +12,6 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
-	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -57,8 +56,6 @@ func isUserAuthorizedForProject(user *auth.User, externalProjectID string) bool 
 	}
 	return true
 }
-
-const defaultPageSize int64 = 50
 
 // Configure establishes the middleware handlers for the project service
 func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service Service, eventsService events.Service) { //nolint
@@ -240,34 +237,6 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		return project.NewDeleteProjectByIDNoContent()
 	})
 
-	// Get CCLA Projects for externalID
-	api.ProjectGetCCLAProjectsByExternalIDHandler = project.GetCCLAProjectsByExternalIDHandlerFunc(func(projectParams project.GetCCLAProjectsByExternalIDParams, user *auth.User) middleware.Responder {
-
-		log.Debugf("Project Handler - Get CCLAProjectsByExternalID - invoking service ")
-
-		if projectParams.ExternalID == "" {
-			return project.NewGetCCLAProjectsByExternalIDBadRequest()
-		}
-		// Set the default page size
-		if projectParams.PageSize == nil {
-			projectParams.PageSize = aws.Int64(defaultPageSize)
-		}
-
-		projectsModel, err := v2Service.GetCCLAProjectsByExternalID(&projectParams)
-		if err != nil {
-			return project.NewGetCCLAProjectsByExternalIDBadRequest()
-		}
-		if projectsModel == nil {
-			return project.NewGetCCLAProjectsByExternalIDNotFound()
-		}
-		result := &models.Projects{}
-		err = copier.Copy(result, projectsModel)
-		if err != nil {
-			return project.NewGetCCLAProjectsByExternalIDInternalServerError().WithPayload(errorResponse(err))
-		}
-		return project.NewGetCCLAProjectsByExternalIDOK().WithPayload(result)
-	})
-
 	// Update Project By ID
 	api.ProjectUpdateProjectHandler = project.UpdateProjectHandlerFunc(func(projectParams project.UpdateProjectParams, user *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(user, projectParams.XUSERNAME, projectParams.XEMAIL)
@@ -304,6 +273,23 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewUpdateProjectInternalServerError().WithPayload(errorResponse(err))
 		}
 		return project.NewUpdateProjectOK().WithPayload(result)
+	})
+
+	// Get CLA enabled projects
+	api.ProjectGetCLAProjectsByIDHandler = project.GetCLAProjectsByIDHandlerFunc(func(projectParams project.GetCLAProjectsByIDParams, user *auth.User) middleware.Responder {
+
+		utils.SetAuthUserProperties(user, projectParams.XUSERNAME, projectParams.XEMAIL)
+		if !isUserAuthorizedForProject(user, projectParams.ProjectSfdcID) {
+			return project.NewGetCLAProjectsByIDUnauthorized()
+		}
+
+		claProjects, getErr := v2Service.GetCLAProjectsByID(projectParams.ProjectSfdcID)
+
+		if getErr != nil {
+			return project.NewGetCLAProjectsByIDBadRequest().WithPayload(errorResponse(getErr))
+		}
+		return project.NewGetCLAProjectsByIDOK().WithPayload(claProjects)
+
 	})
 
 }

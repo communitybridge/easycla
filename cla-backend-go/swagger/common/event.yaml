@@ -12,6 +12,9 @@ properties:
   UserName:
     type: string
     description: name of the user
+  LfUsername:
+    type: string
+    description: name of the user
   EventProjectID:
     type: string
     description: id of the SFID project
