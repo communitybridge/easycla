@@ -107,7 +107,7 @@ func (s service) GetProjectCompanyEmployeeSignatures(params signatures.GetProjec
 // GetCompanySignatures returns the list of signatures associated with the specified company
 func (s service) GetCompanySignatures(params signatures.GetCompanySignaturesParams) (*models.Signatures, error) {
 
-	const defaultPageSize int64 = 10
+	const defaultPageSize int64 = 50
 	var pageSize = defaultPageSize
 	if params.PageSize != nil {
 		pageSize = *params.PageSize
