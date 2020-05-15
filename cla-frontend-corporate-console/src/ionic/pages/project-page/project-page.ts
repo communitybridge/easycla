@@ -304,13 +304,15 @@ export class ProjectPage {
   }
 
   deleteManager(payload) {
-    this.claService.deleteCLAManager(this.cclaSignature.signatureID, payload.lfid).subscribe(() =>
+    this.claService.deleteCLAManager(this.companyId, this.projectId, payload.lfid).subscribe(() =>
       this.getCLAManagers()
     );
   }
 
   openManagerModal() {
     let modal = this.modalCtrl.create('AddManagerModal', {
+      companyId: this.companyId,
+      projectId: this.projectId,
       signatureId: this.cclaSignature.signatureID
     });
     modal.onDidDismiss((data) => {
