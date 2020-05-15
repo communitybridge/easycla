@@ -85,6 +85,24 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 			return company.NewGetCompanyProjectContributorsOK().WithPayload(result)
 		})
+	api.CompanyGetCompanyProjectClaHandler = company.GetCompanyProjectClaHandlerFunc(
+		func(params company.GetCompanyProjectClaParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+				return company.NewGetCompanyProjectClaUnauthorized()
+			}
+			result, err := service.GetCompanyProjectCLA(authUser, params.CompanySFID, params.ProjectSFID)
+			if err != nil {
+				if err == v1Company.ErrCompanyDoesNotExist {
+					return company.NewGetCompanyProjectClaNotFound().WithPayload(errorResponse(err))
+				}
+				if err == ErrProjectNotFound {
+					return company.NewGetCompanyProjectClaNotFound().WithPayload(errorResponse(err))
+				}
+				return company.NewGetCompanyProjectClaBadRequest().WithPayload(errorResponse(err))
+			}
+			return company.NewGetCompanyProjectClaOK().WithPayload(result)
+		})
 }
 
 type codedResponse interface {
