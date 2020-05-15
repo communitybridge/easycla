@@ -253,13 +253,21 @@ func (s *service) getProjects(projectIDs []string) map[string]*v1Models.Project 
 }
 
 func fillProjectInfo(claManagers []*models.CompanyClaManager, projects map[string]*v1Models.Project) {
+	projectSFIDs := utils.NewStringSet()
+	for _, project := range projects {
+		projectSFIDs.Add(project.ProjectExternalID)
+	}
+	pmap := getSFProjectDetails(projectSFIDs.List())
 	for _, claManager := range claManagers {
 		project, ok := projects[claManager.ProjectID]
 		if !ok {
 			continue
 		}
-		claManager.ProjectName = project.ProjectName
+		claManager.ClaGroupName = project.ProjectName
 		claManager.ProjectSfid = project.ProjectExternalID
+		if sfproject, ok := pmap[project.ProjectExternalID]; ok {
+			claManager.ProjectName = sfproject.Name
+		}
 	}
 }
 
@@ -591,4 +599,43 @@ func (s *service) getCompanyAndProjects(companySFID, projectSFID string) (*v1Mod
 		return nil, nil, projectErr
 	}
 	return comp, projects, nil
+}
+
+func getSFProjectDetails(sfProjectIDs []string) map[string]*v2ProjectServiceModels.ProjectOutputDetailed {
+	pmap := make(map[string]*v2ProjectServiceModels.ProjectOutputDetailed)
+	if len(sfProjectIDs) == 0 {
+		return pmap
+	}
+	psc := v2ProjectService.GetClient()
+	type sfProjectOutput struct {
+		sfProjectID    string
+		projectDetails *v2ProjectServiceModels.ProjectOutputDetailed
+		err            error
+	}
+	responseChan := make(chan *sfProjectOutput)
+	var wg sync.WaitGroup
+	wg.Add(len(sfProjectIDs))
+	go func() {
+		wg.Wait()
+		close(responseChan)
+	}()
+	for _, externalProjectID := range sfProjectIDs {
+		go func(projectSFID string) {
+			defer wg.Done()
+			projectDetails, err := psc.GetProject(projectSFID)
+			responseChan <- &sfProjectOutput{
+				sfProjectID:    projectSFID,
+				projectDetails: projectDetails,
+				err:            err,
+			}
+		}(externalProjectID)
+	}
+	for resp := range responseChan {
+		if resp.err != nil {
+			log.WithField("project_sfid", resp.sfProjectID).Error("unable to get salesforce project details", resp.err)
+			continue
+		}
+		pmap[resp.sfProjectID] = resp.projectDetails
+	}
+	return pmap
 }
