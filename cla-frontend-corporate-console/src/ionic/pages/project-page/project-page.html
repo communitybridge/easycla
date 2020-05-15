@@ -240,7 +240,7 @@
               <loading-spinner [loading]="loading.managers"></loading-spinner>
               <ion-list>
                 <ion-item *ngIf="canEdit && !loading.managers">
-                  <p>Only Company Admins can view and update this list.</p>
+                  <p>Only CLA Managers can update this list.</p>
                 </ion-item>
 
                 <ion-item *ngFor="let manager of managers">
