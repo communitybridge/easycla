@@ -203,6 +203,7 @@ func (s *service) LogEvent(args *LogEventArgs) {
 		EventType:              args.EventType,
 		UserID:                 args.UserID,
 		UserName:               args.userName,
+		LfUsername:             args.LfUsername,
 	}
 	err = s.repo.CreateEvent(&event)
 	if err != nil {
