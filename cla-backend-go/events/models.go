@@ -11,6 +11,7 @@ type Event struct {
 	EventType              string `dynamodbav:"event_type"`
 	EventUserID            string `dynamodbav:"event_user_id"`
 	EventUserName          string `dynamodbav:"event_user_name"`
+	EventLfUsername        string `dynamodbav:"event_lf_username"`
 	EventProjectID         string `dynamodbav:"event_project_id"`
 	EventProjectExternalID string `dynamodbav:"event_project_external_id"`
 	EventProjectName       string `dynamodbav:"event_project_name"`
@@ -52,6 +53,7 @@ func (e *Event) toEvent() *models.Event { //nolint
 		EventType:              e.EventType,
 		UserID:                 e.EventUserID,
 		UserName:               e.EventUserName,
+		LfUsername:             e.EventLfUsername,
 		EventTimeEpoch:         e.EventTimeEpoch,
 	}
 }
