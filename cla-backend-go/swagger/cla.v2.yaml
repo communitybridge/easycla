@@ -983,6 +983,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
         '500':
           $ref: '#/responses/internal-server-error'
       tags:
@@ -1060,49 +1062,10 @@ paths:
       tags:
         - signatures
 
-  /company/{companyID}/project/{projectID}/cla-manager/{userLFID}:
-    delete:
-      summary: Removes CLA Manager from ACL for specified Company and Project
-      security:
-        - OauthSecurity:
-            - user
-      operationId: deleteCLAManager
-      parameters:
-        - $ref: "#/parameters/x-request-id"
-        - $ref: "#/parameters/x-acl"
-        - $ref: "#/parameters/x-username"
-        - $ref: "#/parameters/x-email"
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
-        - name: userLFID
-          in: path
-          type: string
-          required: true
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/signature'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-        '409':
-          $ref: '#/responses/conflict'
-      tags:
-        - cla-manager
-
   /company/{companyID}/project/{projectID}/cla-manager:
     post:
-      summary: Creates a new CLA Manager  for the specified Company and Project
+      summary: Adds a new CLA Manager to the specified Company and Project
+      description: Allows an existing CLA Manager to add another CLA Manager to the specified Company and Project.
       security:
         - OauthSecurity:
             - user
@@ -1140,6 +1103,48 @@ paths:
           $ref: '#/responses/conflict'
       tags:
         - cla-manager
+
+  /company/{companyID}/project/{projectID}/cla-manager/{userLFID}:
+    delete:
+      summary: Removes the CLA Manager from ACL for specified Company and Project
+      description: Allows an existing CLA Manager to remove another CLA Manager from the specified Company and Project.
+      security:
+        - OauthSecurity:
+            - user
+      operationId: deleteCLAManager
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: companyID
+          in: path
+          type: string
+          required: true
+        - name: projectID
+          in: path
+          type: string
+          required: true
+        - name: userLFID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signature'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - cla-manager
+
 
   /signatures/{signatureID}/gh-org-whitelist:
     get:
