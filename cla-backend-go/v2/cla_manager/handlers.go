@@ -27,6 +27,9 @@ import (
 func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService) {
 	api.ClaManagerCreateCLAManagerHandler = cla_manager.CreateCLAManagerHandlerFunc(func(params cla_manager.CreateCLAManagerParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+		if !isUserAuthorizedForProjectOrganization(authUser, params.ProjectID, params.CompanyID){
+			return cla_manager.NewCreateCLAManagerUnauthorized()
+		}
 
 		// Get user by firstname,lastname and email parameters
 		userServiceClient := v2UserService.GetClient()
@@ -41,6 +44,8 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService)
 					Code:    "400",
 				})
 		}
+
+
 
 		signature, addErr := managerService.AddClaManager(params.CompanyID, params.ProjectID, user.Username)
 
@@ -64,7 +69,6 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService)
 
 	api.ClaManagerDeleteCLAManagerHandler = cla_manager.DeleteCLAManagerHandlerFunc(func(params cla_manager.DeleteCLAManagerParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-
 		signature, deleteErr := managerService.RemoveClaManager(params.CompanyID, params.ProjectID, params.UserLFID)
 
 		if deleteErr != nil {
@@ -125,3 +129,11 @@ func errorResponse(err error) *models.ErrorResponse {
 
 	return &e
 }
+
+func isUserAuthorizedForProjectOrganization(user *auth.User, externalProjectID, externalCompanyID string) bool {
+	if !user.Allowed || !user.IsUserAuthorizedByProject(externalProjectID, externalCompanyID) {
+		return false
+	}
+	return true
+}
+
