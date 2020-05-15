@@ -4,6 +4,7 @@
 package signatures
 
 import (
+	"github.com/communitybridge/easycla/cla-backend-go/company"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -40,8 +41,25 @@ func v2Signatures(src *v1Models.Signatures) (*models.Signatures, error) {
 	return &dst, nil
 }
 
+func v2SignaturesReplaceCompanyID(src *v1Models.Signatures, internalID, externalID string) (*models.Signatures, error) {
+	var dst models.Signatures
+	err := copier.Copy(&dst, src)
+	if err != nil {
+		return nil, err
+	}
+
+	// Resplace the internal ID with the External ID
+	for _, sig := range dst.Signatures {
+		if sig.SignatureReferenceID == internalID {
+			sig.SignatureReferenceID = externalID
+		}
+	}
+
+	return &dst, nil
+}
+
 // Configure setups handlers on api with service
-func Configure(api *operations.EasyclaAPI, service signatureService.SignatureService, sessionStore *dynastore.Store, eventsService events.Service) { //nolint
+func Configure(api *operations.EasyclaAPI, companyService company.IService, service signatureService.SignatureService, sessionStore *dynastore.Store, eventsService events.Service) { //nolint
 
 	// Get Signature
 	api.SignaturesGetSignatureHandler = signatures.GetSignatureHandlerFunc(func(params signatures.GetSignatureParams, authUser *auth.User) middleware.Responder {
@@ -57,7 +75,7 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 		}
 		resp, err := v2Signature(signature)
 		if err != nil {
-			return signatures.NewGetCompanySignaturesBadRequest()
+			return signatures.NewGetSignatureBadRequest()
 		}
 
 		return signatures.NewGetSignatureOK().WithPayload(resp)
@@ -225,7 +243,7 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 		}
 		resp, err := v2Signatures(projectSignatures)
 		if err != nil {
-			return signatures.NewGetCompanySignaturesBadRequest()
+			return signatures.NewGetProjectSignaturesBadRequest()
 		}
 
 		return signatures.NewGetProjectSignaturesOK().WithPayload(resp)
@@ -248,7 +266,7 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 
 		resp, err := v2Signatures(projectSignatures)
 		if err != nil {
-			return signatures.NewGetCompanySignaturesBadRequest()
+			return signatures.NewGetProjectCompanySignaturesBadRequest()
 		}
 		return signatures.NewGetProjectCompanySignaturesOK().WithPayload(resp)
 	})
@@ -270,28 +288,48 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 
 		resp, err := v2Signatures(projectSignatures)
 		if err != nil {
-			return signatures.NewGetCompanySignaturesBadRequest()
+			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest()
 		}
 		return signatures.NewGetProjectCompanyEmployeeSignaturesOK().WithPayload(resp)
 	})
 
 	// Get Company Signatures
 	api.SignaturesGetCompanySignaturesHandler = signatures.GetCompanySignaturesHandlerFunc(func(params signatures.GetCompanySignaturesParams, authUser *auth.User) middleware.Responder {
+		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+		if !authUser.Admin {
+			// Must be in the Organization Scope to see this
+			if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Organization, params.CompanyID) {
+				log.Warnf("user %+v is not authorized to view company signatures for company ID: %s",
+					authUser, params.CompanyID)
+				return signatures.NewGetCompanySignaturesUnauthorized()
+			}
+		}
+
+		// Lookup the internal company ID when provided the external ID via the service call
+		companyModel, compErr := companyService.GetCompanyByExternalID(params.CompanyID)
+		if compErr != nil || companyModel == nil {
+			log.Warnf("unable to locate company by external company ID: %s", params.CompanyID)
+			return signatures.NewGetCompanySignaturesNotFound()
+		}
+
 		companySignatures, err := service.GetCompanySignatures(v1Signatures.GetCompanySignaturesParams{
 			HTTPRequest:   params.HTTPRequest,
-			CompanyID:     params.CompanyID,
+			CompanyID:     companyModel.CompanyID, // need to internal company ID here
 			CompanyName:   params.CompanyName,
 			NextKey:       params.NextKey,
 			PageSize:      params.PageSize,
 			SignatureType: params.SignatureType,
 		})
 		if err != nil {
-			log.Warnf("error retrieving company signatures for companyID: %s, error: %+v", params.CompanyID, err)
+			log.Warnf("error retrieving company signatures for companyID: %s/%s, error: %+v",
+				params.CompanyID, companyModel.CompanyID, err)
 			return signatures.NewGetCompanySignaturesBadRequest().WithPayload(errorResponse(err))
 		}
 
-		resp, err := v2Signatures(companySignatures)
+		resp, err := v2SignaturesReplaceCompanyID(companySignatures, companyModel.CompanyID, companyModel.CompanyExternalID)
 		if err != nil {
+			log.Warnf("error converting company signatures for companyID: %s/%s, error: %+v",
+				params.CompanyID, companyModel.CompanyID, err)
 			return signatures.NewGetCompanySignaturesBadRequest()
 		}
 		return signatures.NewGetCompanySignaturesOK().WithPayload(resp)
@@ -313,7 +351,7 @@ func Configure(api *operations.EasyclaAPI, service signatureService.SignatureSer
 
 		resp, err := v2Signatures(userSignatures)
 		if err != nil {
-			return signatures.NewGetCompanySignaturesBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewGetUserSignaturesBadRequest().WithPayload(errorResponse(err))
 		}
 		return signatures.NewGetUserSignaturesOK().WithPayload(resp)
 	})
