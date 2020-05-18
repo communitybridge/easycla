@@ -298,7 +298,7 @@ func Configure(api *operations.EasyclaAPI, companyService company.IService, serv
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !authUser.Admin {
 			// Must be in the Organization Scope to see this
-			if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Organization, params.CompanyID) {
+			if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Organization, params.CompanyID) || !authUser.IsUserAuthorizedForOrganizationScope(params.CompanyID) {
 				log.Warnf("user %+v is not authorized to view company signatures for company ID: %s",
 					authUser, params.CompanyID)
 				return signatures.NewGetCompanySignaturesUnauthorized()
