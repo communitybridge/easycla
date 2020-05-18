@@ -4,8 +4,6 @@
 package sign
 
 import (
-	"strings"
-
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
@@ -24,9 +22,6 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 			}
 			resp, err := service.RequestCorporateSignature(params.Authorization, params.Input)
 			if err != nil {
-				if strings.Contains(err.Error(), "does not exist") {
-					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(err))
-				}
 				return sign.NewRequestCorporateSignatureBadRequest().WithPayload(errorResponse(err))
 			}
 			return sign.NewRequestCorporateSignatureOK().WithPayload(resp)

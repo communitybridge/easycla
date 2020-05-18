@@ -1,0 +1,6971 @@
+{
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "Authorization and permission layer to provide fine-grained policy base Access Control Service for the LFX platform. ...",
+    "title": "Central authorization layer for the LFX platform",
+    "termsOfService": "todo",
+    "contact": {
+      "name": "ACS API Team",
+      "url": "https://www.linuxfoundation.org/",
+      "email": "acs@linuxfoundation.com"
+    },
+    "license": {
+      "name": "TODO",
+      "url": "https://www.linuxfoundation.org/"
+    },
+    "version": "1.0"
+  },
+  "basePath": "/v1/api",
+  "paths": {
+    "/accounts": {
+      "get": {
+        "description": "List the accounts/companies. Used by `MyAccount UI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Account"
+        ],
+        "summary": "Get Organization List (PRIVATE)",
+        "operationId": "getAccountsList",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The maximum amount of account returned.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The offset from where to start looking.",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The search term to match with from the beginning",
+            "name": "search",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Account"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/accounts/{id}": {
+      "get": {
+        "description": "Get account by Salesforce ID. Used by `MyAccount UI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Account"
+        ],
+        "summary": "Get Organization (PRIVATE)",
+        "operationId": "getAccount",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The salesforce ID of account, example: 003q000000x1au8AAA",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Account"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/actions": {
+      "get": {
+        "description": "List the current actions. Used by `ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Action"
+        ],
+        "summary": "Get Action List (PRIVATE)",
+        "operationId": "getActionList",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Action"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "post": {
+        "description": "Create a new action for the resource. e.g. Create, Update, Remove. Used by `ACS-CLI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Action"
+        ],
+        "summary": "Create Action (PRIVATE)",
+        "operationId": "createAction",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "description": "The action object to create",
+            "name": "action",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateAction"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/Action"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/actions/{id}": {
+      "get": {
+        "description": "Get a single action by id. Used by `ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Action"
+        ],
+        "summary": "Get Action (PRIVATE)",
+        "operationId": "getAction",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The action id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Action"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "put": {
+        "description": "Update an existing action. Used by `ACS-CLI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Action"
+        ],
+        "summary": "Update Action (PRIVATE)",
+        "operationId": "updateAction",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The action id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The action properties to update",
+            "name": "action",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateAction"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Action"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete an existing action. Used by `ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Action"
+        ],
+        "summary": "Delete Action (PRIVATE)",
+        "operationId": "deleteAction",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The action id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/definitions/EmptyResponse"
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/api-docs": {
+      "get": {
+        "security": [],
+        "description": "The swagger API specification documentation",
+        "produces": [
+          "text/html"
+        ],
+        "tags": [
+          "Doc"
+        ],
+        "summary": "Get swagger documentation",
+        "operationId": "getDoc",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/groups": {
+      "get": {
+        "description": "List the current groups from the ACS.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Group"
+        ],
+        "summary": "Get Groups List",
+        "operationId": "getGroupsList",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/search"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Groups"
+            },
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "post": {
+        "description": "Create a new group in the ACS.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Group"
+        ],
+        "summary": "Create Group",
+        "operationId": "createGroup",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "description": "The group object to create",
+            "name": "group",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateGroup"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/Group"
+            },
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/groups/users/{username}": {
+      "get": {
+        "description": "Get all groups for a specific user",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Group"
+        ],
+        "summary": "Get User Groups",
+        "operationId": "getUserGroups",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The users username",
+            "name": "username",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "description": "A list of objects containing the group details",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Group"
+              }
+            },
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/groups/{id}": {
+      "get": {
+        "description": "Get a single group by id.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Group"
+        ],
+        "summary": "Get Group",
+        "operationId": "getGroup",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The group id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Group"
+            },
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "put": {
+        "description": "Update an existing group details.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Group"
+        ],
+        "summary": "Update Group",
+        "operationId": "updateGroup",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The group id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The group properties to update",
+            "name": "group",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateGroup"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Group"
+            },
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete an existing group",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Group"
+        ],
+        "summary": "Delete Group",
+        "operationId": "deleteGroup",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The group id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Delete Group is successful",
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/groups/{id}/roles": {
+      "get": {
+        "description": "Get list of Roles attached to the Group.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "GroupRole"
+        ],
+        "summary": "Get Group Role List",
+        "operationId": "getRolesGroupList",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The group id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GroupRoles"
+              }
+            },
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "post": {
+        "description": "Assign an existing groups to list of roles.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "GroupRole"
+        ],
+        "summary": "Create Group Role Association",
+        "operationId": "createRolesGroup",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The group id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "One more roles",
+            "name": "grant",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateGroupRole"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GroupRoles"
+              }
+            },
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      },
+      "delete": {
+        "description": "Removing all grants of specific group",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "GroupRole"
+        ],
+        "summary": "Delete Group Grants",
+        "operationId": "deleteGroupGrant",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The group id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Delete group grants is successful",
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/groups/{id}/roles/{roleId}": {
+      "get": {
+        "description": "Get the Role attached to the Group.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "GroupRole"
+        ],
+        "summary": "Get Group Role",
+        "operationId": "getRoleGroup",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The group id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The role id.",
+            "name": "roleId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/GroupRoles"
+            },
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "delete": {
+        "description": "Remove the group grant by roleID",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "GroupRole"
+        ],
+        "summary": "Delete Group role grant",
+        "operationId": "deleteGroupRoleGrant",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The group id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The role id.",
+            "name": "roleId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Delete group role grant is successful",
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/groups/{id}/users": {
+      "get": {
+        "description": "Get all users attached to a specific group",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Group"
+        ],
+        "summary": "Get Group Users",
+        "operationId": "getGroupUsers",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/search"
+          },
+          {
+            "type": "string",
+            "description": "The group ID",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/GroupUsers"
+            },
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "post": {
+        "description": "Attach users to a specific group",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Group"
+        ],
+        "summary": "Attach Users to Group",
+        "operationId": "createGroupUsers",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The group ID",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "list of usernames to attach to this group",
+            "name": "users",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AttachUserGroup"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GroupUser"
+              }
+            },
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/groups/{id}/users/{groupuserId}": {
+      "delete": {
+        "description": "Delete user from group",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Group"
+        ],
+        "summary": "Delete User from Group",
+        "operationId": "deleteUserGroup",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "group ID",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "ID unique to a specific user from a specific group",
+            "name": "groupuserId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Delete user is successful",
+            "headers": {
+              "X-REQUEST-ID": {
+                "type": "string",
+                "description": "Unique HttpRequest ID to help in tracing and debugging"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "security": [],
+        "description": "Get health status information about the ACS API",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Success getting health information about the ACS API",
+            "schema": {
+              "$ref": "#/definitions/Health"
+            }
+          }
+        }
+      }
+    },
+    "/invites": {
+      "get": {
+        "description": "Get List the user invites by Organization.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Invite"
+        ],
+        "summary": "Get User Invites List",
+        "operationId": "getInvites",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "enum": [
+              "pending",
+              "accepted",
+              "canceled"
+            ],
+            "type": "string",
+            "description": "Invite approval status. Pending - Invite is just created and its waiting for approval/cancel Accepted - Invite has been accepted Canceled - Invite has been Canceled",
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "OrganizationID (references salesforce ID)",
+            "name": "orgid",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The maximum amount of invites returned, like 100",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The offset from where to start looking, like 0.",
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Invites"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/invites/sendinvite": {
+      "post": {
+        "description": "Admins can invite users to the portal through automated email(s) created by the platform services so  that guest users can access platform resources.\n### When contact NOT exists in Salesforce:\n- Create a contact in Salesforce before sending the invite (email, org, if the name is not provided then use unknown)\n- Send an email to join LFx platform\n- On User acceptance, create record in ACS\n### When contact already exists in Salesforce and ACS:\n- Give user direct access without any email invite\n- Update user and account association in Salesforce if needed",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Invite"
+        ],
+        "summary": "Send User Invite",
+        "operationId": "createUserInvite",
+        "parameters": [
+          {
+            "description": "Send invite to user to join so that user can access platform resources.",
+            "name": "sendInvite",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateInvite"
+            }
+          },
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/Invite"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/invites/{id}": {
+      "get": {
+        "description": "Get a single invite details by invite id.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Invite"
+        ],
+        "summary": "Get User Invite",
+        "operationId": "getInvite",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The invite id (uuid)",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Invite"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "put": {
+        "description": "Update an existing invite",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Invite"
+        ],
+        "summary": "Update User Invite",
+        "operationId": "updateInvite",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "format": "uuid",
+            "description": "The Invite id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The invite properties to update",
+            "name": "updateInvite",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateInvite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Invite"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "patch": {
+        "description": "Partial update an existing invite",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Invite"
+        ],
+        "summary": "Update (partial) User Invite",
+        "operationId": "partialUpdate",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "format": "uuid",
+            "description": "The Invite id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The invite properties to update",
+            "name": "updateInvite",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateInvite"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/definitions/Invite"
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/invites/{id}/resend": {
+      "post": {
+        "description": "Admins can invite users to the portal through automated email(s) created by the platform services so  that guest users can access platform resources.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Invite"
+        ],
+        "summary": "Resend the user invite",
+        "operationId": "createResendInvite",
+        "parameters": [
+          {
+            "type": "string",
+            "format": "uuid",
+            "description": "The Invite id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "ReSend invite to user to join so that user can access platform resources.",
+            "name": "resendInvite",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateInvite"
+            }
+          },
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/Invite"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/me/contexts": {
+      "get": {
+        "description": "Get list of roles attached to context.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Me"
+        ],
+        "summary": "Get My Contexts (Removed)",
+        "operationId": "getContexts",
+        "deprecated": true,
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "Filter results based on this context",
+            "name": "name",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Contexts"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/meta": {
+      "get": {
+        "description": "Get meta information about the ACS API",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Meta"
+        ],
+        "summary": "Get Meta Information",
+        "operationId": "getMeta",
+        "responses": {
+          "200": {
+            "description": "Success getting information about the ACS API",
+            "schema": {
+              "$ref": "#/definitions/Meta"
+            }
+          }
+        }
+      }
+    },
+    "/object-types": {
+      "get": {
+        "description": "List the object types",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ObjectType"
+        ],
+        "summary": "Get ObjectType List",
+        "operationId": "getObjectTypeList",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The maximum amount of object types returned.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The offset from where to start looking.",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "term to search by",
+            "name": "search",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ObjectType"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "post": {
+        "description": "Create a new object type (Scope Type). e.g. Project, Organization, Traning. Used by `ACS-CLI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ObjectType"
+        ],
+        "summary": "Create ObjectType (PRIVATE)",
+        "operationId": "createObjectType",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "description": "The type object to create",
+            "name": "objecttype",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateObjectType"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/ObjectType"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/object-types/{id}": {
+      "get": {
+        "description": "Get object type by type id or type name",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ObjectType"
+        ],
+        "summary": "Get ObjectType",
+        "operationId": "getObjectType",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The object type id or object type name, example: 2 or organization",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ObjectType"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "put": {
+        "description": "Update an existing object type. Used by `ACS-CLI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ObjectType"
+        ],
+        "summary": "Update ObjectType (PRIVATE)",
+        "operationId": "updateObjectType",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The object type id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The object type properties to update",
+            "name": "objecttype",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateObjectType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ObjectType"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete an existing object type. Used by `ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ObjectType"
+        ],
+        "summary": "Delete ObjectType (PRIVATE)",
+        "operationId": "deleteObjectType",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "integer",
+            "description": "The object type id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/definitions/EmptyResponse"
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/policies": {
+      "get": {
+        "description": "List Access Control Policies. Used by `MyAccount UI, ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Policy"
+        ],
+        "summary": "Get Policies List (PRIVATE)",
+        "operationId": "getPoliciesList",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The search term to match with from the beginning",
+            "name": "search",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/definitions/PolicyList"
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "post": {
+        "description": "Create an Access Control Policy. A policy is an entity that, when attached to an identity or resource, defines their permissions. Used by `MyAccount UI, ACS-CLI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Policy"
+        ],
+        "summary": "Create Policy (PRIVATE)",
+        "operationId": "createPolicy",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateUpdatePolicy"
+            }
+          },
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/Policy"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/policies/{id}": {
+      "get": {
+        "description": "Get an Access Control Policy from policy id (uuid) or policy name. Used by `MyAccount UI, ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Policy"
+        ],
+        "summary": "Get Policy (PRIVATE)",
+        "operationId": "getPolicy",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The id (uuid) or name of the policy.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "policy",
+            "schema": {
+              "$ref": "#/definitions/Policy"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "put": {
+        "description": "Update an Access Control Policy",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Policy"
+        ],
+        "summary": "Update Policy (PRIVATE)",
+        "operationId": "updatePolicy",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The id of the policy.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateUpdatePolicy"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "policy",
+            "schema": {
+              "$ref": "#/definitions/Policy"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete an Access Control Policy",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Policy"
+        ],
+        "summary": "Delete Policy (PRIVATE and PRIVATE)",
+        "operationId": "deletePolicy",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The id of the policy.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/definitions/EmptyResponse"
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/policies/{policyId}/statements/": {
+      "post": {
+        "description": "Create a single statement for a specified policy. Used by `MyAccount UI, ACS-CLI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Policy"
+        ],
+        "summary": "Create Policy Statement (PRIVATE)",
+        "operationId": "createPolicyStatement",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The policy id.",
+            "name": "policyId",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateUpdateStatement"
+            }
+          },
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/Statement"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/policies/{policyId}/statements/{statementId}": {
+      "put": {
+        "description": "Update a single statement for a specified policy. Used by `MyAccount UI, ACS-CLI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Policy"
+        ],
+        "summary": "Update Policy Statement (PRIVATE)",
+        "operationId": "updatePolicyStatement",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The policy id.",
+            "name": "policyId",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The statement id.",
+            "name": "statementId",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateUpdateStatement"
+            }
+          },
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "statement",
+            "schema": {
+              "$ref": "#/definitions/Statement"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete a single statement for a specified policy. Used by `MyAccount UI, ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Policy"
+        ],
+        "summary": "Delete Policy Statement (PRIVATE)",
+        "operationId": "deletePolicyStatement",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The policy id.",
+            "name": "policyId",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The statement id.",
+            "name": "statementId",
+            "in": "path",
+            "required": true
+          },
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/definitions/EmptyResponse"
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "description": "List the projects from Project Service. Used by `MyAccount UI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Project"
+        ],
+        "summary": "Get Projects List (PRIVATE)",
+        "operationId": "getProjectList",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The maximum amount of projects returned.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The offset from where to start looking.",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The search term to match with from the beginning",
+            "name": "search",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Project"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/projects/{id}": {
+      "get": {
+        "description": "Get project by Salesforce ID. Used by `MyAccount UI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Project"
+        ],
+        "summary": "Get Project (PRIVATE)",
+        "operationId": "getProject",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The salesforce ID of project, example: 003q000000x1au8AAA",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Project"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/resources": {
+      "get": {
+        "description": "List the current resources (endpoints) from the ACS. Used by `ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resource"
+        ],
+        "summary": "Get Resource List (PRIVATE)",
+        "operationId": "getResourceList",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The maximum amount of resources returned.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The offset from where to start looking.",
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Resource"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "post": {
+        "description": "Create a new resource or register a new service endpoint in the ACS. Used by `ACS-CLI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resource"
+        ],
+        "summary": "create Resources (PRIVATE)",
+        "operationId": "createResources",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "description": "The resource object to create",
+            "name": "resource",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateResource"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/Resource"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/resources/{id}": {
+      "get": {
+        "description": "Get a single resource (endpoint) by id. Used by `ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resource"
+        ],
+        "summary": "Get Resource (PRIVATE)",
+        "operationId": "getResource",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The resource id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Resource"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "put": {
+        "description": "Update an existing resource (endpoint). Used by `ACS-CLI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resource"
+        ],
+        "summary": "Update Resource (PRIVATE)",
+        "operationId": "updateResource",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The resource id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The resource properties to update",
+            "name": "resource",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateResource"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Resource"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete an existing resource (endpoint). Used by `ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resource"
+        ],
+        "summary": "Delete Resource (PRIVATE)",
+        "operationId": "deleteResource",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The resource id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/definitions/EmptyResponse"
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/resources/{id}/actions": {
+      "get": {
+        "description": "Get list of the actions for a single resource. Used by `MyAccount UI, ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resource"
+        ],
+        "summary": "Get Resource Actions (PRIVATE)",
+        "operationId": "getResourceActions",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The resource id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ResourceAction"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "put": {
+        "description": "Create/Update an existing actions for the resource. Used by `MyAccount UI, ACS-CLI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resource"
+        ],
+        "summary": "Create/Update Resource Actions (PRIVATE)",
+        "operationId": "updateResourceActions",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The resource id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The resource properties to update",
+            "name": "resource",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateUpdateResourceAction"
+            }
+          },
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Resource"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete all the actions for an existing resource. Used by `MyAccount UI, ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Resource"
+        ],
+        "summary": "Delete Resource Actions (PRIVATE)",
+        "operationId": "deleteResourceActions",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The resource id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/definitions/EmptyResponse"
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/roles": {
+      "get": {
+        "description": "Get the role list from ACS.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Role"
+        ],
+        "summary": "Get Roles",
+        "operationId": "getRoles",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The maximum amount of roles returned, like 100",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The offset from where to start looking, like 0.",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Role name to search by",
+            "name": "search",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/RoleDetail"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "post": {
+        "description": "Create a new role in the ACS. The role is an entity that defines a set of permissions for making service requests. Used by `MyAccount UI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Role"
+        ],
+        "summary": "Create Role (PRIVATE)",
+        "operationId": "createRole",
+        "parameters": [
+          {
+            "description": "Creates a new role in the ACS.",
+            "name": "role",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RoleCommon"
+            }
+          },
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/Role"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/roles/{id}": {
+      "get": {
+        "description": "Get a role details by the id or name.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Role"
+        ],
+        "summary": "Get Role",
+        "operationId": "getRole",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The role id (uuid) or role name",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/RoleDetail"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "put": {
+        "description": "Update an existing role. Used by `MyAccount UI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Role"
+        ],
+        "summary": "Update Role (PRIVATE)",
+        "operationId": "putRole",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "format": "uuid",
+            "description": "The role id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The role properties to update",
+            "name": "role",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RoleCommon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Role"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete an existing role. Used by `MyAccount UI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Role"
+        ],
+        "summary": "Delete Role (PRIVATE)",
+        "operationId": "deleteRole",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "format": "uuid",
+            "description": "The role id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/definitions/EmptyResponse"
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/roles/{id}/members/user/{username}": {
+      "delete": {
+        "description": "Remove all user scopes associated to the role",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "UserRole"
+        ],
+        "summary": "Delete Role UserScopes",
+        "operationId": "deleteRoleUserScopes",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The role id (uuid).",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The username",
+            "name": "username",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/definitions/EmptyResponse"
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/roles/{id}/members/users": {
+      "get": {
+        "description": "Get list of users assign to the role.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "UserRole"
+        ],
+        "summary": "Get Role Users List",
+        "operationId": "getRoleUsersList",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The role id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The maximum amount of users returned.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The offset from where to start looking.",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The search term to match with from the beginning",
+            "name": "search",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserOnly"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "post": {
+        "description": "Assign a role and scope to the list of users.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "UserRole"
+        ],
+        "summary": "Assign Role to Users",
+        "operationId": "createRoleUsers",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The role id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "One more usernames",
+            "name": "grant",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateAssignUser"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserRoleScope"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/roles/{id}/members/users/{grantId}": {
+      "delete": {
+        "description": "Remove the role and scope associated to the user by grantID",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "UserRole"
+        ],
+        "summary": "Delete UserGrant",
+        "operationId": "deleteRoleUserGrant",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "integer",
+            "description": "The role id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "The grant id.",
+            "name": "grantId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/definitions/EmptyResponse"
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/roles/{id}/members/{username}/scopes": {
+      "get": {
+        "description": "Get list of scopes assigned to the user for a role.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "UserRole"
+        ],
+        "summary": "Get User RoleScopes List",
+        "operationId": "getRoleUserScopes",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The role id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The username",
+            "name": "username",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserRoleScope"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/roles/{id}/policies": {
+      "get": {
+        "description": "Get list of policies attached to the role. Used by `MyAccount UI, ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Policy"
+        ],
+        "summary": "Get Role Policy List (PRIVATE)",
+        "operationId": "getRolePolicyList",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The role id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The search term to match with from the beginning",
+            "name": "search",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AttachPolicy"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "post": {
+        "description": "Attach a policy to a role. Used by `MyAccount UI, ACS-CLI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Policy"
+        ],
+        "summary": "Create Role Policy (PRIVATE)",
+        "operationId": "createRolePolicy",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The role id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "One or more policies",
+            "name": "policy_ids",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CreateAttachPolicy"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AttachPolicy"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/roles/{id}/policies/{policyId}": {
+      "delete": {
+        "description": "Removing policy from the role. Used by `MyAccount UI, ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Policy"
+        ],
+        "summary": "Delete Role Policies (PRIVATE)",
+        "operationId": "deleteRolePolicies",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The role id.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The policy id.",
+            "name": "policyId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/definitions/EmptyResponse"
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/services": {
+      "get": {
+        "description": "List the current services. Used by `MyAccount UI, ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Service"
+        ],
+        "summary": "Get Service List (PRIVATE)",
+        "operationId": "getServiceList",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The maximum amount of services returned.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The offset from where to start looking.",
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Service"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "post": {
+        "description": "Create a new service. e.g. acs, project, organization, cla. Used by `ACS-CLI`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Service"
+        ],
+        "summary": "Create Service (PRIVATE)",
+        "operationId": "createService",
+        "parameters": [
+          {
+            "description": "The type object to create",
+            "name": "objecttype",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateService"
+            }
+          },
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/Service"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/services/{serviceId}/resource-actions": {
+      "get": {
+        "description": "Get all the resource and actions for the service. Used by `MyAccount UI, ACS-CLI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Service"
+        ],
+        "summary": "Get Service ResourceActions (PRIVATE)",
+        "operationId": "getServiceResourceActions",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The service id.",
+            "name": "serviceId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ServiceResourceAction"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "description": "List the current users from user service. Used by `MyAccount UI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get User List (PRIVATE)",
+        "operationId": "getUserList",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The maximum amount of users returned.",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The offset from where to start looking.",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The search term to match with from the beginning",
+            "name": "search",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/User"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/users/roles": {
+      "get": {
+        "description": "Get roles of username or multiple usernames (comma separated) that returns map with username as key and array of roles as value",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get User Roles",
+        "operationId": "getUserRoles",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The user name or user names as comma separated values, example: linus,npatel",
+            "name": "usernames",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/RoleOnly"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "post": {
+        "description": "Assign a User to list of roles.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Create User Roles Association",
+        "operationId": "createUserRoles",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "description": "list of role objects",
+            "name": "Array of role objects",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AssignRolesUser"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserRoleScope"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    },
+    "/users/roles/grants/{grantID}": {
+      "put": {
+        "description": "Update the user scopes by grantID",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update User RoleScope Association",
+        "operationId": "updateUserRoleScope",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "name": "grantID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "role objects",
+            "name": "role objects",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateRolesUser"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UserRoleScope"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/users/rolescopes": {
+      "get": {
+        "description": "Get role scopes of username(or multiple username, if parameter is comma separated values) that returns map with username as key and array of role and scopes",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get Users RolesScopes Association",
+        "operationId": "getUsersRolesScopes",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The user name or user names using comma separated values, example: npatel,linus",
+            "name": "usernames",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/UsernameRoleScope"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/users/rolescopes/organization": {
+      "get": {
+        "description": "Get role scopes of username(or multiple username, if parameter is comma separated values) that returns map with username as key and array of role and scopes",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get Organization User Roles Scopes",
+        "operationId": "getOrgUserRolesScopes",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "enum": [
+              "all",
+              "admin",
+              "service"
+            ],
+            "type": "string",
+            "description": "The scope type is the enum with values[all, admin, service] for getting the organization users. Admin will get the company-admin and company-owner users",
+            "name": "scopetype",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The orgid - Salesforce ID from Accounts, example: account Salesforce ID",
+            "name": "orgid",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The maximum amount of invites returned, like 100",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "The offset from where to start looking, like 0.",
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/OrgUsernameRoleScope"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/users/{username}": {
+      "get": {
+        "description": "Get a single user from user service. Used by `MyAccount UI`",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get User Details (PRIVATE)",
+        "operationId": "getUserDetail",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "description": "The user name.",
+            "name": "username",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      }
+    },
+    "/warden/subjects/authorize": {
+      "get": {
+        "description": "Get list of authorized resources.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Warden"
+        ],
+        "summary": "Get Authorize Resources List",
+        "operationId": "getWarden",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "type": "string",
+            "name": "resource",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "name": "actions",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/AuthorizationResponseList"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          }
+        }
+      },
+      "post": {
+        "description": "Checks if a subject (e.g. user ID, Client ID) is allowed to perform a certain action on a resource. Used by `LFX API Gateway`",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Warden"
+        ],
+        "summary": "Check Allowed Permission (PRIVATE)",
+        "operationId": "postWarden",
+        "parameters": [
+          {
+            "$ref": "#/parameters/x-acl"
+          },
+          {
+            "$ref": "#/parameters/x-request-id"
+          },
+          {
+            "$ref": "#/parameters/x-username"
+          },
+          {
+            "$ref": "#/parameters/x-email"
+          },
+          {
+            "description": "The AccessRequest is the warden's request object.",
+            "name": "AccessRequest",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AccessRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Permissions"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/invalid-request"
+          },
+          "401": {
+            "$ref": "#/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/not-found"
+          },
+          "409": {
+            "$ref": "#/responses/conflict"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "AccessRequest": {
+      "description": "AccessRequest is entity to represent request data to Warden to get authorization/permissions",
+      "type": "object",
+      "required": [
+        "subject",
+        "resource",
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action is the action that is requested on the resource",
+          "type": "string",
+          "example": "upload"
+        },
+        "groups": {
+          "description": "Array of group name that are requested",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "lf-admin",
+            "sys-admin",
+            "external"
+          ]
+        },
+        "resource": {
+          "description": "Resource is the resource that access is requested to.",
+          "type": "string",
+          "example": "v1/invoices"
+        },
+        "roles": {
+          "description": "Array of role name that are requested",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "member-developer",
+            "project-admin"
+          ]
+        },
+        "subject": {
+          "description": "Subject is the subject that is requesting access.",
+          "type": "string",
+          "example": "google-oauth2|108575684023089525804"
+        },
+        "username": {
+          "description": "Username is the LF-username that is requesting access.",
+          "type": "string",
+          "example": "https://sso.linuxfoundation.org/claims/username"
+        }
+      }
+    },
+    "Account": {
+      "description": "Account is entity to represent Company data as account in LFX",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "readOnly": true,
+          "example": 234
+        },
+        "name": {
+          "description": "Name of account/company",
+          "type": "string",
+          "example": "Adobe"
+        },
+        "sfid": {
+          "type": "string",
+          "readOnly": true,
+          "example": "003q000000x1au8AAA"
+        }
+      }
+    },
+    "Action": {
+      "description": "Action is entity to represent action that is available on ACS like GET, POST",
+      "type": "object",
+      "properties": {
+        "action_id": {
+          "description": "Unique ID of the Action",
+          "type": "string",
+          "readOnly": true,
+          "example": "dd24b587-c411-4c40-b33c-487ad7d07f2d"
+        },
+        "created_at": {
+          "description": "Unix timestamp when data is created",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "method": {
+          "description": "HTTP method to resource path, like GET, POST, PUT, DELETE",
+          "type": "string",
+          "example": "GET"
+        },
+        "name": {
+          "description": "Name of action",
+          "type": "string",
+          "example": "GET"
+        },
+        "updated_at": {
+          "description": "Unix timestamp when data is last updated",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        }
+      }
+    },
+    "AssignRolesUser": {
+      "description": "AssignRolesUser is entity to represent data that is used to assign roles to user",
+      "type": "object",
+      "required": [
+        "roles"
+      ],
+      "properties": {
+        "roles": {
+          "description": "array of role",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Roles"
+          }
+        },
+        "username": {
+          "description": "Username of user",
+          "type": "string",
+          "example": "npatel"
+        }
+      }
+    },
+    "AttachPolicy": {
+      "description": "AttachPolicy is entity to represent list of policies that is attached to role as response from attaching policy to role",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Unique ID of AttachPolicy",
+          "type": "string",
+          "readOnly": true,
+          "example": 1
+        },
+        "policy_id": {
+          "description": "Policy id reference",
+          "type": "string",
+          "readOnly": true,
+          "example": "8e058688-1a68-40c9-896f-4ef1ffc38026"
+        },
+        "policy_name": {
+          "description": "Policy name",
+          "type": "string",
+          "readOnly": true,
+          "example": "RoleReadOnly"
+        }
+      }
+    },
+    "AttachUserGroup": {
+      "description": "AttachUserGroup is entity to represent list of usernames that will be attached to group",
+      "type": "object",
+      "properties": {
+        "usernames": {
+          "description": "array of usernames",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "example": "npatel"
+          }
+        }
+      }
+    },
+    "AuthorizationResponseList": {
+      "description": "AuthorizationResponseList is entity to represent response that return list of Authorized Resources",
+      "type": "object",
+      "properties": {
+        "allowed": {
+          "description": "Allowed is true if the request is allowed and false otherwise.",
+          "type": "boolean"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Permissions"
+          }
+        },
+        "isAdmin": {
+          "description": "IsAdmin is true if the request is allowed and false otherwise.",
+          "type": "boolean"
+        }
+      }
+    },
+    "ContextRoles": {
+      "description": "ContextRoles is entity to represent role that belongs to Role",
+      "type": "object",
+      "properties": {
+        "context": {
+          "description": "Context name",
+          "type": "string",
+          "example": "community"
+        },
+        "role_id": {
+          "description": "ID reference to role",
+          "type": "string",
+          "example": "ccc597ba-0333-44b4-8422-eb635feac2b8"
+        },
+        "role_name": {
+          "description": "Role name",
+          "type": "string",
+          "example": "contributor"
+        }
+      }
+    },
+    "Contexts": {
+      "description": "Contexts is entity to represent group of roles.",
+      "type": "object",
+      "properties": {
+        "context": {
+          "description": "Context name",
+          "type": "string",
+          "example": "community"
+        },
+        "roles": {
+          "description": "Array of context roles belongs to context",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContextRoles"
+          }
+        }
+      }
+    },
+    "CreateAction": {
+      "description": "CreateAction is entity to represent data that is required to create action",
+      "type": "object",
+      "required": [
+        "name",
+        "method"
+      ],
+      "properties": {
+        "method": {
+          "description": "HTTP method to resource path, like GET, POST, PUT, DELETE",
+          "type": "string",
+          "example": "GET"
+        },
+        "name": {
+          "description": "Action name, restricted to alphanum and these special characters: +=,.@-_. Max Length: 128.",
+          "type": "string",
+          "pattern": "^[\\w+\\+=,\\.@\\-_]{0,128}$",
+          "example": "GET"
+        }
+      }
+    },
+    "CreateAssignUser": {
+      "description": "CreateAssignUser is entity to assign user and object id to role",
+      "type": "object",
+      "title": "Create RoleScope",
+      "required": [
+        "role_id",
+        "usernames",
+        "object_ids",
+        "object_type_id"
+      ],
+      "properties": {
+        "created_at": {
+          "description": "Unix timestamp when data is created",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "created_by": {
+          "description": "LFID/Username of entity author/creator",
+          "type": "string",
+          "readOnly": true,
+          "example": "linus"
+        },
+        "object_ids": {
+          "description": "Unique id of the object. i.e projectId, eventId, trainingId",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "f337b602-66e1-4311-8a9f-dc2bcb711d56",
+            "4400b646-fbb2-4de7-ad80-fd195a874baf"
+          ]
+        },
+        "object_type_id": {
+          "description": "Unique id of the object type",
+          "type": "integer",
+          "example": 1
+        },
+        "role_id": {
+          "description": "Unique UUID of the role",
+          "type": "string",
+          "example": "f337b602-66e1-4311-8a9f-dc2bcb711d56"
+        },
+        "updated_at": {
+          "description": "Unix timestamp when data is last updated",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "updated_by": {
+          "description": "Username/LFID of user who updated last",
+          "type": "string",
+          "readOnly": true,
+          "example": "linus"
+        },
+        "usernames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "sjohn",
+            "npatel"
+          ]
+        }
+      }
+    },
+    "CreateAttachPolicy": {
+      "description": "CreateAttachPolicy is entity to represent list of policy that is used to attach policies to role",
+      "type": "object",
+      "properties": {
+        "policy_ids": {
+          "description": "array of policy id reference",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "example": "8e058688-1a68-40c9-896f-4ef1ffc38026"
+          }
+        }
+      }
+    },
+    "CreateGroup": {
+      "description": "CreateGroup is entity to represent data that is used to create group",
+      "type": "object",
+      "required": [
+        "group_name",
+        "group_title",
+        "project_id"
+      ],
+      "properties": {
+        "description": {
+          "description": "Description of group, Max Length: 250",
+          "type": "string",
+          "example": "Legal Work Group"
+        },
+        "group_name": {
+          "description": "Name of the Group. e.g legal-group, linux_group",
+          "type": "string",
+          "pattern": "^[\\w+\\+=,\\.@\\-_]{0,128}$",
+          "example": "legal-group"
+        },
+        "group_title": {
+          "description": "Title of group, Max Length: 250",
+          "type": "string",
+          "example": "Legal Group"
+        },
+        "project_id": {
+          "description": "The project ID this group belongs to.",
+          "type": "string",
+          "example": "0014100000TdzA2AAJ"
+        }
+      }
+    },
+    "CreateGroupRole": {
+      "description": "CreateGroupRole is entity to represent data that is used to assign roles to group",
+      "type": "object",
+      "required": [
+        "role_ids"
+      ],
+      "properties": {
+        "role_ids": {
+          "description": "array of ID reference to group",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "22701cfb-30fe-4e59-8ca1-02de9dbcfb26",
+            "33701cfb-30fe-4e59-8ca1-02de9dbcfb26"
+          ]
+        }
+      }
+    },
+    "CreateInvite": {
+      "description": "Send Invite is an entity to send the invitation to the user for joining the organization with a specific role",
+      "type": "object",
+      "title": "Send Invite",
+      "required": [
+        "email"
+      ],
+      "properties": {
+        "email": {
+          "description": "The email address of the user to be invited to an LFx portal",
+          "type": "string",
+          "example": "npatel@linuxfoundation.com"
+        },
+        "first_name": {
+          "description": "The first name of the user to be invited to an LFx portal",
+          "type": "string",
+          "example": "Nirav"
+        },
+        "last_name": {
+          "description": "The last name of the user to be invited to an LFx portal",
+          "type": "string",
+          "example": "Patel"
+        },
+        "role_name": {
+          "description": "The role to be associated with the user once the user accepts the invite",
+          "type": "string",
+          "enum": [
+            "contributor",
+            "mentor",
+            "mentee",
+            "company-owner",
+            "company-alternate-owner",
+            "company-admin",
+            "contact",
+            "project-manager",
+            "cla-manager",
+            "cla-signatory",
+            "cla-manager-designee",
+            "donor",
+            "human-resources",
+            "project-maintainer",
+            "community-program-manager",
+            "lf-legal",
+            "lf-program-manager",
+            "lf-operations",
+            "lf-training",
+            "lf-events",
+            "lf-finance",
+            "lf-executive",
+            "user",
+            "system-admin"
+          ],
+          "example": "company-admin"
+        },
+        "scope": {
+          "description": "The scope name. i.e project, organization, membership, training, and certification",
+          "type": "string",
+          "enum": [
+            "project",
+            "organization",
+            "admin",
+            "membership",
+            "training",
+            "event",
+            "certification",
+            "community",
+            "aggregate",
+            "exams",
+            "project|organization",
+            "developer"
+          ],
+          "example": "organization"
+        },
+        "scope_id": {
+          "description": "The unique id based on the scope.  i.e project id, organization id etc",
+          "type": "string",
+          "example": "0014100000Te04HAAR"
+        },
+        "type": {
+          "description": "Type of invite",
+          "type": "string",
+          "enum": [
+            "userinvite"
+          ],
+          "example": "userinvite"
+        }
+      }
+    },
+    "CreateObjectType": {
+      "description": "ObjectType is entity to represent data that is needed to create object type",
+      "type": "object",
+      "title": "Create Object Type",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "description": "Restricted to alphanum and these special characters: `+=,.@-_. Max Length: 128.",
+          "type": "string",
+          "pattern": "^[\\w+\\+=,\\.@\\-_]{0,128}$",
+          "example": "project"
+        }
+      }
+    },
+    "CreateResource": {
+      "description": "CreateResource is entity to represent data that is required to create resource",
+      "type": "object",
+      "required": [
+        "name",
+        "path"
+      ],
+      "properties": {
+        "name": {
+          "description": "Restricted to alphanum and these special characters: +=,.@-_. Max Length: 128.",
+          "type": "string",
+          "pattern": "^[\\w+\\+=,\\.@\\-_]{0,128}$",
+          "example": "Users"
+        },
+        "path": {
+          "description": "API Endpoint path to resource",
+          "type": "string",
+          "example": "/api/users/*"
+        }
+      }
+    },
+    "CreateService": {
+      "description": "CreateService is entity to represent data that is required to create service",
+      "type": "object",
+      "required": [
+        "name",
+        "client_id",
+        "object_type_id"
+      ],
+      "properties": {
+        "client_id": {
+          "description": "Client/Company name",
+          "type": "string",
+          "example": "Linux Foundation"
+        },
+        "name": {
+          "description": "Service name, restricted to alphanum and these special characters: +=,.@-_. Max Length: 128.",
+          "type": "string",
+          "pattern": "^[\\w+\\+=,\\.@\\-_]{0,128}$",
+          "example": "ACS"
+        },
+        "object_type_id": {
+          "description": "Unique ID reference of the Object Type",
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
+    "CreateUpdatePolicy": {
+      "description": "CreateUpdatePolicy is entity to represent data that is required to create or update policy",
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Description of role, Max Length: 250",
+          "type": "string",
+          "example": "View all roles"
+        },
+        "policy_id": {
+          "description": "Unique ID reference of the policy",
+          "type": "string",
+          "readOnly": true
+        },
+        "policy_name": {
+          "description": "Restricted to alphanum and these special characters: +=,.@-_. Max Length: 128.",
+          "type": "string",
+          "pattern": "^[\\w+\\+=,\\.@\\-_]{0,128}$",
+          "example": "RoleReadOnly"
+        },
+        "policy_type": {
+          "description": "Policy type name",
+          "type": "string",
+          "example": "platform"
+        },
+        "statement": {
+          "description": "Array of statements that need to be added/updated in policy",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CreateUpdateStatement"
+          }
+        }
+      }
+    },
+    "CreateUpdateResourceAction": {
+      "description": "CreateUpdateResourceAction is entity to represent data that is required to create or update resource action",
+      "type": "object",
+      "properties": {
+        "action_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "description": "Resource Action name, restricted to alphanum and these special characters: +=,.@-_. Max Length: 128.",
+          "type": "string",
+          "pattern": "^[\\w+\\+=,\\.@\\-_]{0,128}$"
+        },
+        "resource_action_id": {
+          "description": "Unique ID reference of the resource action",
+          "type": "string",
+          "readOnly": true
+        },
+        "service_id": {
+          "description": "Unique ID reference of the service",
+          "type": "string"
+        }
+      }
+    },
+    "CreateUpdateStatement": {
+      "description": "CreateUpdateStatement is entity to represent data that is required to create or update Statement",
+      "type": "object",
+      "properties": {
+        "actions": {
+          "description": "array of action id reference",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "b54f7a63-1f91-4234-9a68-6be5d0c564f3",
+            "a04c291f-80bc-4cad-9fbd-90592e4dd0ea"
+          ]
+        },
+        "effect": {
+          "description": "Effect name",
+          "type": "string",
+          "example": "allow"
+        },
+        "resource_id": {
+          "description": "ID reference to resource",
+          "type": "string",
+          "example": "abcb597ba-0333-44b4-8422-eb635feac2b8"
+        },
+        "statement_id": {
+          "description": "ID reference to statement",
+          "type": "string",
+          "readOnly": true,
+          "example": "cab597ba-0333-44b4-8422-eb635feac2b8"
+        }
+      }
+    },
+    "EmptyResponse": {
+      "description": "An empty response"
+    },
+    "Group": {
+      "description": "Group is entity to group of users",
+      "type": "object",
+      "title": "Group",
+      "properties": {
+        "created_at": {
+          "description": "Unix timestamp when data is created",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "created_by": {
+          "description": "LFID/Username of entity author/creator",
+          "type": "string",
+          "example": "linus"
+        },
+        "description": {
+          "description": "Description of group",
+          "type": "string",
+          "example": "Guest Group"
+        },
+        "group_id": {
+          "description": "Unique UUID of group",
+          "type": "string",
+          "readOnly": true,
+          "example": "13d0867-fff4-4d95-8b89-75e3b4331d19"
+        },
+        "group_name": {
+          "description": "Group name",
+          "type": "string",
+          "example": "Guest"
+        },
+        "group_title": {
+          "description": "Group name",
+          "type": "string",
+          "example": "Guest"
+        },
+        "project_id": {
+          "description": "Project ID",
+          "type": "string",
+          "example": "0014100000TdzA2AAJ"
+        },
+        "project_name": {
+          "description": "Project name mapped from object_id",
+          "type": "string",
+          "example": "First Quadrant"
+        },
+        "updated_at": {
+          "description": "Unix timestamp when data is last updated",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "updated_by": {
+          "description": "Username/LFID of user who updated last",
+          "type": "string",
+          "example": "linus"
+        }
+      }
+    },
+    "GroupRoles": {
+      "description": "GroupRoles is entity to represent set of relation between group and role",
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "description": "Unix timestamp when data is created",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "created_by": {
+          "description": "LFID/Username of entity author/creator",
+          "type": "string",
+          "readOnly": true,
+          "example": "npatel"
+        },
+        "grant_id": {
+          "description": "ID reference to grant",
+          "type": "string",
+          "example": "12301cfb-30fe-4e59-8ca1-02de9dbcfb26"
+        },
+        "role_id": {
+          "description": "ID reference to role",
+          "type": "string",
+          "example": "12301cfb-30fe-4e59-8ca1-02de9dbcfb26"
+        },
+        "role_name": {
+          "description": "Name of role",
+          "type": "string",
+          "example": "contributor"
+        },
+        "updated_at": {
+          "description": "Unix timestamp when data is last updated",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "updated_by": {
+          "description": "Username/LFID of user who updated last",
+          "type": "string",
+          "readOnly": true,
+          "example": "npatel"
+        }
+      }
+    },
+    "GroupUser": {
+      "description": "Users Group is entity to represent set of relation between group, user and account",
+      "type": "object",
+      "title": "Users Group",
+      "properties": {
+        "created_at": {
+          "description": "Unix timestamp when data is created",
+          "type": "number",
+          "example": 1539962235
+        },
+        "created_by": {
+          "description": "LFID/Username of entity author/creator",
+          "type": "string",
+          "example": "npatel"
+        },
+        "group_user_id": {
+          "description": "Unique UUID of user group",
+          "type": "string"
+        },
+        "updated_at": {
+          "description": "Unix timestamp when data is last updated",
+          "type": "number",
+          "example": 1539962235
+        },
+        "updated_by": {
+          "description": "Username/LFID of user who updated last",
+          "type": "string",
+          "example": "npatel"
+        },
+        "username": {
+          "description": "Username/LFID of User that belongs to user group",
+          "type": "string",
+          "example": "npatel"
+        }
+      }
+    },
+    "GroupUsers": {
+      "description": "Group Users is entity to represent set of relation between group, users and project",
+      "type": "object",
+      "properties": {
+        "data": {
+          "description": "A list of user objects and project details",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GroupUser"
+          },
+          "x-order": 0
+        },
+        "metadata": {
+          "$ref": "#/definitions/List-Metadata"
+        }
+      }
+    },
+    "Groups": {
+      "description": "Groups is entity to represent set of Group associated to projects",
+      "type": "object",
+      "properties": {
+        "data": {
+          "description": "A list of objects containing the group details",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Group"
+          },
+          "x-order": 0
+        },
+        "metadata": {
+          "$ref": "#/definitions/List-Metadata"
+        }
+      }
+    },
+    "Health": {
+      "description": "Health is entity to represent health status information about API",
+      "type": "object",
+      "properties": {
+        "acs_database": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string",
+              "example": ""
+            },
+            "status": {
+              "type": "string",
+              "example": "Running"
+            }
+          }
+        },
+        "acs_service": {
+          "type": "string",
+          "example": "Running"
+        },
+        "dateTime": {
+          "description": "Current date time",
+          "type": "string",
+          "format": "date-time",
+          "example": "2019-06-06T09:31:13.132119+07:00"
+        },
+        "heroku_connnect_database": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string",
+              "example": ""
+            },
+            "status": {
+              "type": "string",
+              "example": "Running"
+            }
+          }
+        }
+      }
+    },
+    "Invite": {
+      "description": "Invite is entity to represent identity that has set of access and permissions",
+      "type": "object",
+      "title": "Invite",
+      "properties": {
+        "created_at": {
+          "description": "Unix timestamp when data is created",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "created_by": {
+          "description": "LFID/Username of entity author",
+          "type": "string",
+          "example": "npatel"
+        },
+        "email": {
+          "description": "The email address of the user to be invited to an LFx portal",
+          "type": "string",
+          "example": "npatel@linuxfoundation.com"
+        },
+        "first_name": {
+          "description": "The first name of the user to be invited to an LFx portal",
+          "type": "string",
+          "example": "Nirav"
+        },
+        "invite_id": {
+          "description": "The unique id (UUID) of invite in invites table",
+          "type": "string",
+          "readOnly": true,
+          "example": "e6cabae1-1b64-424d-87af-2fb9c399e875"
+        },
+        "last_name": {
+          "description": "The last name of the user to be invited to an LFx portal",
+          "type": "string",
+          "example": "Patel"
+        },
+        "recipient": {
+          "description": "LFId of the recipient to whom sending the invite",
+          "type": "string",
+          "example": "npatel"
+        },
+        "role_name": {
+          "description": "The role to be associated with the user once the user accepts the invite",
+          "type": "string",
+          "example": "company-admin"
+        },
+        "scope": {
+          "description": "The scope name. i.e project, organization, membership, training, and certification",
+          "type": "string",
+          "example": "organization"
+        },
+        "scope_id": {
+          "description": "The unique id based on the scope.  i.e project id, organization id etc",
+          "type": "string",
+          "example": "0014100000Te04HAAR"
+        },
+        "status": {
+          "description": "Invite status",
+          "type": "string",
+          "example": "pending"
+        },
+        "type": {
+          "description": "Type of invite",
+          "type": "string",
+          "example": "user invite"
+        },
+        "updated_at": {
+          "description": "Unix timestamp when data is last updated",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "updated_by": {
+          "description": "LFID/Username of entity updater",
+          "type": "string",
+          "example": "npatel"
+        }
+      }
+    },
+    "Invites": {
+      "description": "Invites is entity to represent set of invites",
+      "type": "object",
+      "properties": {
+        "data": {
+          "description": "A list of user objects containing the invite details",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Invite"
+          },
+          "x-order": 0
+        },
+        "metadata": {
+          "$ref": "#/definitions/List-Metadata"
+        }
+      }
+    },
+    "List-Metadata": {
+      "type": "object",
+      "title": "List Metadata",
+      "properties": {
+        "Offset": {
+          "description": "The page offset for fetching subsequent pages of results, value must be a non-negative integer value",
+          "type": "integer",
+          "format": "int64",
+          "x-omitempty": false,
+          "example": 2
+        },
+        "PageSize": {
+          "description": "The number of results per page, value must be a positive integer value",
+          "type": "integer",
+          "format": "int64",
+          "x-omitempty": false,
+          "example": 100
+        },
+        "TotalSize": {
+          "description": "The total number results available",
+          "type": "integer",
+          "format": "int64",
+          "x-omitempty": false,
+          "example": 357
+        }
+      }
+    },
+    "Meta": {
+      "description": "Meta is entity to represent meta information about API",
+      "type": "object",
+      "properties": {
+        "appName": {
+          "description": "Name of the API/Application",
+          "type": "string",
+          "example": "Access Control Service"
+        },
+        "commitHash": {
+          "description": "The git commit hash of deployed application",
+          "type": "string",
+          "example": "12976d5de0897fb4b5bfd9994edd37604265d211"
+        },
+        "dateTime": {
+          "description": "Current date time",
+          "type": "string",
+          "format": "date-time",
+          "example": "2019-06-06T09:31:13.132119+07:00"
+        },
+        "version": {
+          "description": "The version of deployed application",
+          "type": "string",
+          "example": "1.0"
+        }
+      }
+    },
+    "ObjectType": {
+      "description": "ObjectType is entity to represent type of object like project, account, organization, membership, etc",
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "description": "Unix timestamp when data is created",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "name": {
+          "description": "Object Type name",
+          "type": "string",
+          "example": "project"
+        },
+        "type_id": {
+          "description": "Unique ID of object type",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1
+        },
+        "updated_at": {
+          "description": "Unix timestamp when data is last updated",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        }
+      }
+    },
+    "OrgUsernameRoleScope": {
+      "description": "OrgUsernameRoleScope is entity to represent set of role_id, role_name and array of scopes",
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "$ref": "#/definitions/List-Metadata"
+        },
+        "userroles": {
+          "$ref": "#/definitions/UsernameRoleScope"
+        }
+      }
+    },
+    "Permissions": {
+      "description": "Permissions is entity to represent list of authorized resource list with specified action and scope",
+      "type": "object",
+      "properties": {
+        "actions": {
+          "description": "Array of action name that are managed by the permission",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "create",
+            "view_all"
+          ]
+        },
+        "allowed": {
+          "description": "Allowed is true if the request is allowed and false otherwise.",
+          "type": "boolean"
+        },
+        "resource": {
+          "description": "Resource name",
+          "type": "string",
+          "example": "roles"
+        },
+        "scopes": {
+          "description": "Array of scopes that are managed by the permission",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "description": "ID reference to scope",
+                "type": "string",
+                "example": "a0941000002wBynAAE"
+              },
+              "level": {
+                "description": "individual -- user is an individual contributor. member -- user works for the organization which has the valid membership. non-member -- user works for the organization who's membership is expired or doest have a valid membership. staff -- user having the email address e.g user@linuxfoundation.org",
+                "type": "string",
+                "enum": [
+                  "individual",
+                  "member",
+                  "non-member",
+                  "staff"
+                ],
+                "example": "non-member"
+              },
+              "role": {
+                "description": "Role name",
+                "type": "string",
+                "example": "project-admin"
+              },
+              "type": {
+                "description": "Scope type",
+                "type": "string",
+                "example": "admin"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Policy": {
+      "description": "Policy is entity that, when it is attached to an identity or resource, defines their permissions.",
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "description": "Unix timestamp when data is created",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "created_by": {
+          "description": "LFID/Username of entity author/creator",
+          "type": "string",
+          "example": "linus"
+        },
+        "description": {
+          "description": "Description about the Policy",
+          "type": "string"
+        },
+        "policy_id": {
+          "description": "Unique ID of the policy",
+          "type": "string",
+          "readOnly": true,
+          "example": "2bb3f18a-8e46-4b20-9d71-1d19f6577a9f"
+        },
+        "policy_name": {
+          "description": "Policy name",
+          "type": "string",
+          "example": "RoleReadOnly"
+        },
+        "policy_type": {
+          "description": "Policy Type name",
+          "type": "string",
+          "example": "platform"
+        },
+        "statement": {
+          "description": "Array of statements that belongs to policy",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Statement"
+          }
+        },
+        "updated_at": {
+          "description": "Unix timestamp when data is last updated",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "updated_by": {
+          "description": "Username/LFID of user who updated last",
+          "type": "string",
+          "example": "linus"
+        }
+      }
+    },
+    "PolicyList": {
+      "description": "List of Policy",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Policy"
+      }
+    },
+    "Project": {
+      "description": "Project is entity to represent Project data in LFX",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "readOnly": true,
+          "example": 234
+        },
+        "name": {
+          "description": "Name of project",
+          "type": "string",
+          "example": "Kinetic Open Source Project"
+        },
+        "sfid": {
+          "type": "string",
+          "readOnly": true,
+          "example": "003q000000x1au8AAA"
+        }
+      }
+    },
+    "Resource": {
+      "description": "Resource is entity to represent resource data like Group, Project, MyMembership, Contact, etc",
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "description": "Unix timestamp when data is created",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "description": {
+          "description": "Description of resource",
+          "type": "string",
+          "example": "API Endpoint to manage user resources"
+        },
+        "name": {
+          "description": "Resource name",
+          "type": "string",
+          "example": "Users"
+        },
+        "path": {
+          "description": "API path to resource",
+          "type": "string",
+          "example": "/api/users/*"
+        },
+        "resource_id": {
+          "description": "Unique ID of the resource",
+          "type": "string",
+          "readOnly": true
+        },
+        "updated_at": {
+          "description": "Unix timestamp when data is last updated",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        }
+      }
+    },
+    "ResourceAction": {
+      "description": "ResourceAction is entity to represent set of action, resource and service",
+      "type": "object",
+      "properties": {
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "action_id": {
+                "type": "string",
+                "example": "b54f7a63-1f91-4234-9a68-6be5d0c564f3"
+              },
+              "name": {
+                "type": "string",
+                "example": "GET"
+              }
+            }
+          }
+        },
+        "resource": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "description": "Resource name",
+              "type": "string",
+              "example": "Policy"
+            },
+            "path": {
+              "description": "API Endpoint Path to the resource",
+              "type": "string",
+              "example": "/api/policies/*"
+            },
+            "resource_id": {
+              "description": "Unique ID reference of the resource",
+              "type": "string",
+              "example": "a54f7a63-1f91-4234-9a68-6be5d0c564f3"
+            }
+          }
+        },
+        "service_id": {
+          "description": "Unique ID reference of the service",
+          "type": "string",
+          "example": "b54f7a63-1f91-4234-9a68-6be5d0c564f3"
+        }
+      }
+    },
+    "Role": {
+      "description": "Role is entity to represent identity that has set of access and permissions",
+      "type": "object",
+      "title": "Role",
+      "allOf": [
+        {
+          "$ref": "#/definitions/RoleCommon"
+        }
+      ],
+      "properties": {
+        "created_at": {
+          "description": "Unix timestamp when data is created",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "created_by": {
+          "description": "LFID/Username of entity author",
+          "type": "string",
+          "example": "npatel"
+        },
+        "role_id": {
+          "description": "The unique id (UUID) of role in role table",
+          "type": "string",
+          "readOnly": true,
+          "example": "dffadfaux-f151-4fadsu2-80e5-018frtxfg"
+        },
+        "updated_at": {
+          "description": "Unix timestamp when data is last updated",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "updated_by": {
+          "description": "LFID/Username of entity updater",
+          "type": "string",
+          "example": "npatel"
+        }
+      }
+    },
+    "RoleCommon": {
+      "description": "RoleCommon is entity to represent main properties/data of Role that is used to create and update Role",
+      "type": "object",
+      "title": "Role Common",
+      "required": [
+        "role_name",
+        "role_title"
+      ],
+      "properties": {
+        "category": {
+          "description": "The category of the role - internal, external and both",
+          "type": "string",
+          "enum": [
+            "internal",
+            "external",
+            "both"
+          ],
+          "example": "external - company-admin, internal - lf-program-manager"
+        },
+        "description": {
+          "description": "The description of the role",
+          "type": "string",
+          "example": "Less-experienced developer who has been selected by a project to be mentored during a term."
+        },
+        "is_admin": {
+          "description": "Boolean status whether role is for admin or not",
+          "type": "boolean",
+          "default": false
+        },
+        "role_details": {
+          "description": "The longer detail explanation of the role",
+          "type": "string",
+          "example": "Less-experienced developer who has been selected by a project to be mentored during a term."
+        },
+        "role_name": {
+          "description": "The name of the role",
+          "type": "string",
+          "example": "company-admin"
+        },
+        "role_objects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RoleObject"
+          }
+        },
+        "role_title": {
+          "description": "The title of the role",
+          "type": "string",
+          "example": "Company Admin"
+        }
+      }
+    },
+    "RoleDetail": {
+      "description": "Role Detail is extended entity of Role with additional data like number of users and number of groups which is shown on list and get role endpoint",
+      "type": "object",
+      "title": "Role Detail",
+      "allOf": [
+        {
+          "$ref": "#/definitions/Role"
+        }
+      ],
+      "properties": {
+        "number_of_groups": {
+          "type": "integer",
+          "example": 5
+        },
+        "number_of_users": {
+          "type": "integer",
+          "example": 10
+        }
+      }
+    },
+    "RoleObject": {
+      "description": "RoleObject is entity to represent objects associated with the role",
+      "type": "object",
+      "title": "Role Objects",
+      "properties": {
+        "created_at": {
+          "description": "Unix timestamp when data is created",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "created_by": {
+          "description": "LFID/Username of entity author/creator",
+          "type": "string",
+          "readOnly": true,
+          "example": "linus"
+        },
+        "object_id": {
+          "description": "The unique id for the scope type",
+          "type": "string",
+          "example": 1
+        },
+        "object_name": {
+          "description": "The scope type associated to the role",
+          "type": "string",
+          "example": "project"
+        },
+        "object_role_id": {
+          "description": "The unique id (UUID) of role_object table",
+          "type": "string",
+          "readOnly": true,
+          "example": "dffadfaux-f151-4fadsu2-80e5-018frtxfg"
+        },
+        "role_id": {
+          "description": "The unique id (UUID) of role in role table",
+          "type": "string",
+          "readOnly": true,
+          "example": "dffadfaux-f151-4fadsu2-80e5-018frtxfg"
+        }
+      }
+    },
+    "RoleOnly": {
+      "description": "RoleOnly is entity to represent minimum data of Role",
+      "properties": {
+        "role_id": {
+          "description": "ID reference to role",
+          "type": "string",
+          "example": "f337b602-66e1-4311-8a9f-dc2bcb711d56"
+        },
+        "role_name": {
+          "description": "Role name",
+          "type": "string",
+          "example": "contributor"
+        }
+      }
+    },
+    "RoleScope": {
+      "description": "RoleScope is entity to represent set of role_id, role_name and array of scopes",
+      "type": "object",
+      "properties": {
+        "role_id": {
+          "description": "ID reference to role",
+          "type": "string",
+          "example": "1230b646-fbb2-4de7-ad80-fd195a874baf"
+        },
+        "role_name": {
+          "description": "Role name",
+          "type": "string",
+          "example": "apprentice"
+        },
+        "scopes": {
+          "description": "Array of scope",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Scope"
+          }
+        }
+      }
+    },
+    "Roles": {
+      "description": "Roles is entity to represent array of data consist of role, object_ids and object_type",
+      "type": "object",
+      "properties": {
+        "object_ids": {
+          "description": "Array of id reference to object",
+          "type": "array",
+          "items": {
+            "description": "Unique id of the object. i.e projectId, eventId, trainingId",
+            "type": "string",
+            "example": [
+              "34701cfb-30fe-4e59-8ca1-02de9dbcfb26",
+              "12701cfb-30fe-4e59-8ca1-02de9dbcfb26"
+            ]
+          }
+        },
+        "object_type_id": {
+          "description": "ID reference to object type",
+          "type": "integer",
+          "example": 123
+        },
+        "role_id": {
+          "description": "ID reference to role",
+          "type": "integer",
+          "readOnly": true,
+          "example": "90701cfb-30fe-4e59-8ca1-02de9dbcfb26"
+        }
+      }
+    },
+    "Scope": {
+      "description": "Scope is entity to represent data of relation between grant and object",
+      "properties": {
+        "grant_id": {
+          "description": "ID reference to grant",
+          "type": "string",
+          "example": "2200b646-fbb2-4de7-ad80-fd195a874baf"
+        },
+        "object_id": {
+          "description": "ID reference to object (Salesforce ID)",
+          "type": "string",
+          "example": "a0941000002wBydAAE"
+        },
+        "object_name": {
+          "description": "Object name",
+          "type": "string",
+          "example": "Kinetic Open Source Project"
+        },
+        "object_type_id": {
+          "description": "ID reference to object type",
+          "type": "integer",
+          "example": 1
+        },
+        "object_type_name": {
+          "description": "Object Type name",
+          "type": "string",
+          "example": "project"
+        },
+        "scope_id": {
+          "description": "ID reference to scope",
+          "type": "string",
+          "example": "1100b646-fbb2-4de7-ad80-fd195a874baf"
+        }
+      }
+    },
+    "Service": {
+      "description": "Service is entity to represent available Service on LFX like ACS, Project-Service, Member-Service, User-Service",
+      "type": "object",
+      "properties": {
+        "client_id": {
+          "description": "Client/Company name",
+          "type": "string",
+          "example": "Linux Foundation"
+        },
+        "created_at": {
+          "description": "Unix timestamp when data is created",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "name": {
+          "description": "Name of service",
+          "type": "string",
+          "example": "Project-Service"
+        },
+        "object_type_id": {
+          "description": "Unique ID reference of the Object Type",
+          "type": "integer",
+          "example": 1
+        },
+        "service_id": {
+          "description": "Unique ID of the Service",
+          "type": "integer",
+          "readOnly": true,
+          "example": "caaa6ad5-e2e5-4d3b-acc8-ef71b5aa491c"
+        },
+        "updated_at": {
+          "description": "Unix timestamp when data is last updated",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        }
+      }
+    },
+    "ServiceAction": {
+      "description": "ServiceObj is entity to represent action as part of ServiceResourceAction",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Unique ID of Service Action",
+          "type": "string",
+          "readOnly": true,
+          "example": "55d445a6-2e25-4855-815f-2690102f2a1b"
+        },
+        "name": {
+          "description": "Service Action name",
+          "type": "string",
+          "example": "Remove"
+        }
+      }
+    },
+    "ServiceObj": {
+      "description": "ServiceObj is entity to represent object as part of ServiceResourceAction",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Unique ID of Service Object",
+          "type": "string",
+          "readOnly": true
+        },
+        "name": {
+          "description": "Service Object name",
+          "type": "string",
+          "example": "KDE Project"
+        }
+      }
+    },
+    "ServiceResource": {
+      "description": "ServiceObj is entity to represent resource as part of ServiceResourceAction",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Unique ID of Service Resource",
+          "type": "string",
+          "readOnly": true,
+          "example": "15d445a6-2e25-4855-815f-2690102f2a1b"
+        },
+        "name": {
+          "description": "Service Resource name",
+          "type": "string",
+          "example": "Users"
+        }
+      }
+    },
+    "ServiceResourceAction": {
+      "description": "ServiceResourceAction is entity to represent set of ServiceResource, ServiceAction and ServiceObj",
+      "type": "object",
+      "properties": {
+        "action": {
+          "$ref": "#/definitions/ServiceAction"
+        },
+        "id": {
+          "description": "Unique ID of Service Resource Action",
+          "type": "string",
+          "readOnly": true
+        },
+        "resource": {
+          "$ref": "#/definitions/ServiceResource"
+        },
+        "service": {
+          "$ref": "#/definitions/ServiceObj"
+        }
+      }
+    },
+    "Statement": {
+      "description": "Statement is entity to represent set of effect, resource, service and action that will be used in Policy",
+      "type": "object",
+      "properties": {
+        "actions": {
+          "description": "Array of statement action belongs to Statement",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StatementAction"
+          }
+        },
+        "effect": {
+          "description": "Effect of statement (allow, deny)",
+          "type": "string",
+          "example": "allow"
+        },
+        "resource_id": {
+          "description": "ID reference to resource",
+          "type": "string",
+          "example": "12d024f9-9aa7-4b92-809d-9bddfd86b368"
+        },
+        "resource_name": {
+          "description": "Resource name",
+          "type": "string",
+          "example": "Projects"
+        },
+        "service_id": {
+          "description": "ID reference to service",
+          "type": "string",
+          "example": "44d024f9-9aa7-4b92-809d-9bddfd86b368"
+        },
+        "service_name": {
+          "description": "Service name",
+          "type": "string",
+          "example": "Project-Service"
+        },
+        "statement_id": {
+          "description": "Unique ID of the statement",
+          "type": "string",
+          "example": "22d024f9-9aa7-4b92-809d-9bddfd86b362"
+        }
+      }
+    },
+    "StatementAction": {
+      "description": "StatementAction is entity to represent set of action_id and action name that belongs to Statement",
+      "type": "object",
+      "properties": {
+        "action_id": {
+          "description": "ID reference to action",
+          "type": "string",
+          "readOnly": true,
+          "example": "12d024f9-9aa7-4b92-809d-9bddfd86b368"
+        },
+        "name": {
+          "description": "Action name",
+          "type": "string",
+          "example": "POST"
+        }
+      }
+    },
+    "UpdateAction": {
+      "description": "UpdateAction is entity to represent data that is required to update action",
+      "type": "object",
+      "properties": {
+        "method": {
+          "description": "HTTP method to resource path, like GET, POST, PUT, DELETE",
+          "type": "string",
+          "example": "POST"
+        },
+        "name": {
+          "description": "Action name, restricted to alphanum and these special characters: +=,.@-_. Max Length: 128.",
+          "type": "string",
+          "pattern": "^[\\w+\\+=,\\.@\\-_]{0,128}$",
+          "example": "GET"
+        }
+      }
+    },
+    "UpdateGroup": {
+      "description": "UpdateGroup is entity to represent data that is used to update group",
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Guest Group, Max Length: 250",
+          "type": "string",
+          "example": "Legal Work Group"
+        },
+        "group_name": {
+          "description": "Name of the Group. e.g legal-group, linux_group",
+          "type": "string",
+          "pattern": "^[\\w+\\+=,\\.@\\-_]{0,128}$",
+          "example": "legal-group"
+        },
+        "group_title": {
+          "description": "Title of group, Max Length: 250",
+          "type": "string",
+          "example": "Legal Group"
+        },
+        "project_id": {
+          "description": "The project ID this group belongs to.",
+          "type": "string",
+          "example": "0014100000TdzA2AAJ"
+        }
+      }
+    },
+    "UpdateInvite": {
+      "description": "Update Invite",
+      "type": "object",
+      "title": "Update Invite",
+      "properties": {
+        "email": {
+          "description": "The email address of the user to be invited to an LFx portal",
+          "type": "string",
+          "example": "npatel@linuxfoundation.com"
+        },
+        "first_name": {
+          "description": "The first name of the user to be invited to an LFx portal",
+          "type": "string",
+          "example": "Nirav"
+        },
+        "last_name": {
+          "description": "The last name of the user to be invited to an LFx portal",
+          "type": "string",
+          "example": "Patel"
+        },
+        "role_name": {
+          "description": "The role to be associated with the user once the user accepts the invite",
+          "type": "string",
+          "enum": [
+            "contributor",
+            "mentor",
+            "mentee",
+            "company-owner",
+            "company-alternate-owner",
+            "company-admin",
+            "contact",
+            "project-manager",
+            "cla-manager",
+            "cla-signatory",
+            "cla-manager-designee",
+            "donor",
+            "human-resources",
+            "project-maintainer",
+            "community-program-manager",
+            "lf-legal",
+            "lf-program-manager",
+            "lf-operations",
+            "lf-training",
+            "lf-events",
+            "lf-finance",
+            "lf-executive",
+            "user",
+            "system-admin"
+          ],
+          "example": "company-admin"
+        },
+        "scope": {
+          "description": "The scope name. i.e project, organization, membership, training, and certification",
+          "type": "string",
+          "enum": [
+            "project",
+            "organization",
+            "admin",
+            "membership",
+            "training",
+            "event",
+            "certification",
+            "community",
+            "aggregate",
+            "exams",
+            "project|organization",
+            "developer"
+          ],
+          "example": "organization"
+        },
+        "scope_id": {
+          "description": "The unique id based on the scope.  i.e project id, organization id etc",
+          "type": "string",
+          "example": "0014100000Te04HAAR"
+        },
+        "status": {
+          "description": "Invite status",
+          "type": "string",
+          "enum": [
+            "accepted",
+            "canceled",
+            "pending"
+          ],
+          "example": "pending"
+        },
+        "type": {
+          "description": "Type of invite",
+          "type": "string",
+          "enum": [
+            "userinvite"
+          ],
+          "example": "userinvite"
+        }
+      }
+    },
+    "UpdateResource": {
+      "description": "UpdateResource is entity to represent data that is required to update resource",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Restricted to alphanum and these special characters: +=,.@-_. Max Length: 128.",
+          "type": "string",
+          "pattern": "^[\\w+\\+=,\\.@\\-_]{0,128}$",
+          "example": "Users"
+        },
+        "path": {
+          "description": "API Endpoint path to resource",
+          "type": "string",
+          "example": "/api/users/*"
+        }
+      }
+    },
+    "UpdateRolesUser": {
+      "description": "AssignRolesUser is entity to represent data that is used to assign roles to user",
+      "type": "object",
+      "properties": {
+        "grant_id": {
+          "description": "ID reference to grant",
+          "type": "string",
+          "example": "2200b646-fbb2-4de7-ad80-fd195a874baf"
+        },
+        "object_id": {
+          "description": "ID reference to object (Salesforce ID)",
+          "type": "string",
+          "example": "a0941000002wBydAAE"
+        },
+        "object_type_id": {
+          "description": "ID reference to object type",
+          "type": "integer",
+          "example": 1
+        },
+        "role_id": {
+          "description": "ID reference to role",
+          "type": "string",
+          "example": "f337b602-66e1-4311-8a9f-dc2bcb711d56"
+        }
+      }
+    },
+    "User": {
+      "description": "User is entity to represent LFX User",
+      "type": "object",
+      "properties": {
+        "account_name": {
+          "description": "Account Company name",
+          "type": "string",
+          "example": "Adobe"
+        },
+        "email": {
+          "description": "Email of user",
+          "type": "string",
+          "example": "npatel@linuxfoundation.org"
+        },
+        "first_name": {
+          "description": "First name of user",
+          "type": "string",
+          "example": "Nirav"
+        },
+        "id": {
+          "description": "Unique ID of user",
+          "type": "integer",
+          "readOnly": true,
+          "example": 123
+        },
+        "last_name": {
+          "description": "Last name of user",
+          "type": "string",
+          "example": "Patel"
+        },
+        "project_id": {
+          "description": "ID reference to project Salesforce",
+          "type": "string",
+          "example": "10a59ab6-71c8-4409-9bf8-1bd8a8b4f892"
+        },
+        "sf_id": {
+          "description": "Unique Salesforce ID of user",
+          "type": "string",
+          "readOnly": true,
+          "example": "20a59ab6-71d8-4409-9bf8-1bd8a8b4f892"
+        },
+        "username": {
+          "description": "Username of user",
+          "type": "string",
+          "example": "npatel"
+        }
+      }
+    },
+    "UserOnly": {
+      "description": "User is entity to represent minimum data of User",
+      "type": "object",
+      "properties": {
+        "account_name": {
+          "description": "Account Name.",
+          "type": "string",
+          "example": "Penguin Inc"
+        },
+        "email": {
+          "description": "User's email address.",
+          "type": "string",
+          "example": "rand@tworivers.faux"
+        },
+        "first_name": {
+          "description": "User's first name.",
+          "type": "string",
+          "example": "Rand"
+        },
+        "last_name": {
+          "description": "User's last name.",
+          "type": "string",
+          "example": "Al'Thor"
+        },
+        "user_id": {
+          "description": "Unique ID to identify User in salesforce",
+          "type": "string",
+          "readOnly": true,
+          "example": "00356FAUX0Ja4SmFFJ"
+        },
+        "username": {
+          "description": "Linux Foundation ID for this user.",
+          "type": "string",
+          "example": "rand12"
+        }
+      }
+    },
+    "UserRoleScope": {
+      "description": "User Role Scope is entity to represent list of relation between user and object that user has access from the role",
+      "type": "object",
+      "title": "User RoleScope",
+      "properties": {
+        "created_at": {
+          "description": "Unix timestamp when data is created",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "created_by": {
+          "description": "LFID/Username of entity author/creator",
+          "type": "string",
+          "readOnly": true,
+          "example": "linus"
+        },
+        "email": {
+          "description": "User's email address.",
+          "type": "string",
+          "example": "rand@tworivers.faux"
+        },
+        "firstname": {
+          "description": "User's first name.",
+          "type": "string",
+          "example": "Rand"
+        },
+        "grant_id": {
+          "description": "Unique Identifier for user grant.",
+          "type": "string",
+          "example": "dffadfaux-f151-4fadsu2-80e5-018frtxfg"
+        },
+        "lastname": {
+          "description": "User's last name.",
+          "type": "string",
+          "example": "Al'Thor"
+        },
+        "level": {
+          "description": "individual -- user is an individual contributor. member -- user works for the organization which has the valid membership. non-member -- user works for the organization who's membership is expired or doest have a valid membership. staff -- user having the email address e.g user@linuxfoundation.org",
+          "type": "string",
+          "enum": [
+            "individual",
+            "member",
+            "non-member",
+            "staff"
+          ],
+          "example": "staff"
+        },
+        "object_id": {
+          "description": "Unique Identifier of the object",
+          "type": "integer",
+          "example": "0014100001gmajRAAQ"
+        },
+        "object_name": {
+          "description": "The name of object",
+          "type": "string",
+          "example": "KDE Project"
+        },
+        "object_type_id": {
+          "description": "Global Identifier for a specific object (e.g. project).",
+          "type": "integer",
+          "example": 1
+        },
+        "object_type_name": {
+          "description": "String name for an object type.",
+          "type": "string",
+          "example": "project"
+        },
+        "role_id": {
+          "description": "Unique Identifier for role.",
+          "type": "string",
+          "example": "fadfaux-f151-4faux2-80e5-018faux825fg"
+        },
+        "scope_id": {
+          "description": "Unique Identifier for scope.",
+          "type": "string",
+          "example": "vghadfaux-f151-4fatyu2-80e5-018fereyfg"
+        },
+        "updated_at": {
+          "description": "Unix timestamp when data is last updated",
+          "type": "integer",
+          "readOnly": true,
+          "example": 1539962235
+        },
+        "updated_by": {
+          "description": "Username/LFID of user who updated last",
+          "type": "string",
+          "readOnly": true,
+          "example": "linus"
+        },
+        "username": {
+          "description": "Linux Foundation ID for this user.",
+          "type": "string",
+          "example": "rand12"
+        }
+      }
+    },
+    "UsernameRoleScope": {
+      "description": "UsernameRoleScope is entity to represent set of role_id, role_name and array of scopes",
+      "type": "object",
+      "properties": {
+        "username": {
+          "description": "array of username",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RoleScope"
+          }
+        }
+      }
+    },
+    "error-response": {
+      "description": "Standard error format",
+      "type": "object",
+      "title": "Error Response",
+      "properties": {
+        "Code": {
+          "description": "The code for the error response",
+          "type": "string",
+          "pattern": "^([1-9][\\d]+){1,}$",
+          "example": "403"
+        },
+        "Message": {
+          "description": "The message for the error response",
+          "type": "string",
+          "pattern": "^([\\w\\d\\s\\-\\,\\./]+){2,}$",
+          "example": "Not authorized"
+        }
+      }
+    }
+  },
+  "parameters": {
+    "limit": {
+      "type": "integer",
+      "default": 100,
+      "description": "The maximum number of results per page, value must be a positive integer value",
+      "name": "limit",
+      "in": "query"
+    },
+    "offset": {
+      "type": "integer",
+      "default": 0,
+      "description": "The page offset for fetching subsequent pages of results, value must be a non-negative integer value",
+      "name": "offset",
+      "in": "query"
+    },
+    "search": {
+      "pattern": "^[\\w\\d\\-]+$",
+      "type": "string",
+      "description": "An optional search for limiting query results",
+      "name": "search",
+      "in": "query"
+    },
+    "x-acl": {
+      "type": "string",
+      "x-example": "JImlzQWRtaW4iOiB0cnVlLAoJImFsbG93ZWQiOiB0cnVlLAoJImNvbnRleHQiOic3lzdGVtIgp9Cg==",
+      "description": "The access control list header value encoded as base64 - assigned by the API Gateway based on user/request permissions",
+      "name": "Empty-Header",
+      "in": "header",
+      "required": true
+    },
+    "x-email": {
+      "type": "string",
+      "description": "Email of the person who is requesting an access",
+      "name": "X-EMAIL",
+      "in": "header"
+    },
+    "x-request-id": {
+      "type": "string",
+      "description": "The unique request ID value - assigned/set by the API Gateway based on the login session",
+      "name": "X-REQUEST-ID",
+      "in": "header"
+    },
+    "x-username": {
+      "type": "string",
+      "description": "Username of the person who is requesting an access",
+      "name": "X-USERNAME",
+      "in": "header"
+    }
+  },
+  "responses": {
+    "conflict": {
+      "description": "Duplicate Resource",
+      "schema": {
+        "$ref": "#/definitions/error-response"
+      },
+      "headers": {
+        "X-REQUEST-ID": {
+          "type": "string",
+          "description": "Unique request ID to help in tracing and debugging"
+        }
+      }
+    },
+    "forbidden": {
+      "description": "Insufficient privilege to execute action",
+      "schema": {
+        "$ref": "#/definitions/error-response"
+      },
+      "headers": {
+        "X-REQUEST-ID": {
+          "type": "string",
+          "description": "Unique request ID to help in tracing and debugging"
+        }
+      }
+    },
+    "invalid-request": {
+      "description": "Invalid request",
+      "schema": {
+        "$ref": "#/definitions/error-response"
+      },
+      "headers": {
+        "X-REQUEST-ID": {
+          "type": "string",
+          "description": "Unique request ID to help in tracing and debugging"
+        }
+      }
+    },
+    "not-found": {
+      "description": "Not found",
+      "schema": {
+        "$ref": "#/definitions/error-response"
+      },
+      "headers": {
+        "X-REQUEST-ID": {
+          "type": "string",
+          "description": "Unique request ID to help in tracing and debugging"
+        }
+      }
+    },
+    "unauthorized": {
+      "description": "Unauthorized",
+      "schema": {
+        "$ref": "#/definitions/error-response"
+      },
+      "headers": {
+        "X-REQUEST-ID": {
+          "type": "string",
+          "description": "Unique request ID to help in tracing and debugging"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "ApiKeyAuth": {
+      "description": "For accessing the API a valid API Key must be passed in all the queries in the 'X-API-KEY' header.\n",
+      "type": "apiKey",
+      "name": "X-API-KEY",
+      "in": "header"
+    },
+    "lf-auth": {
+      "description": "Requires Empty-Header headers and bearer token",
+      "type": "apiKey",
+      "name": "Empty-Header",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": [],
+      "lf-auth": []
+    }
+  ]
+}

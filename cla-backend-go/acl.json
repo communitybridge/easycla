@@ -1,0 +1,13 @@
+  {
+      "allowed":true,
+      "isAdmin": false,
+      "resource":"create",
+      "scopes": [
+          { 
+            "type": "project|organization",
+            "id": "a092M00001IV3znQAD|0014100000TdzA7AAJ",
+            "role": "cla-manager",
+            "level": "member"
+          }
+      ]
+  }

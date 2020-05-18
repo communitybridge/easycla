@@ -11,8 +11,6 @@ import (
 	"net/http"
 	"strings"
 
-	log "github.com/communitybridge/easycla/cla-backend-go/logging"
-
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
@@ -31,21 +29,19 @@ type Service interface {
 
 // service
 type service struct {
-	ClaV1ApiURL string
 	companyRepo company.IRepository
 	projectRepo ProjectRepo
 }
 
 // NewService returns an instance of v2 project service
-func NewService(apiURL string, compRepo company.IRepository, projectRepo ProjectRepo) Service {
+func NewService(compRepo company.IRepository, projectRepo ProjectRepo) Service {
 	return &service{
-		ClaV1ApiURL: apiURL,
 		companyRepo: compRepo,
 		projectRepo: projectRepo,
 	}
 }
 
-type requestCorporateSignatureInput struct {
+type RequestCorporateSignatureInput struct {
 	ProjectID      string `json:"project_id,omitempty"`
 	CompanyID      string `json:"company_id,omitempty"`
 	SendAsEmail    bool   `json:"send_as_email,omitempty"`
@@ -54,14 +50,14 @@ type requestCorporateSignatureInput struct {
 	ReturnURL      string `json:"return_url,omitempty"`
 }
 
-type requestCorporateSignatureOutput struct {
+type RequestCorporateSignatureOutput struct {
 	ProjectID   string `json:"project_id"`
 	CompanyID   string `json:"company_id"`
 	SignatureID string `json:"signature_id"`
 	SignURL     string `json:"sign_url"`
 }
 
-func (in *requestCorporateSignatureOutput) toModel() *models.CorporateSignatureOutput {
+func (in *RequestCorporateSignatureOutput) toModel() *models.CorporateSignatureOutput {
 	return &models.CorporateSignatureOutput{
 		SignURL:     in.SignURL,
 		SignatureID: in.SignatureID,
@@ -93,7 +89,7 @@ func (s *service) RequestCorporateSignature(authorizationHeader string, input *m
 	if proj.ProjectExternalID != utils.StringValue(input.ProjectSfid) {
 		return nil, errors.New("project_sfid does not match with cla_groups project_sfid")
 	}
-	out, err := requestCorporateSignature(authorizationHeader, s.ClaV1ApiURL, &requestCorporateSignatureInput{
+	out, err := requestCorporateSignature(authorizationHeader, "https://api.dev.lfcla.com", &RequestCorporateSignatureInput{
 		ProjectID:      proj.ProjectID,
 		CompanyID:      comp.CompanyID,
 		SendAsEmail:    input.SendAsEmail,
@@ -107,13 +103,12 @@ func (s *service) RequestCorporateSignature(authorizationHeader string, input *m
 	return out.toModel(), nil
 }
 
-func requestCorporateSignature(authToken string, apiURL string, input *requestCorporateSignatureInput) (*requestCorporateSignatureOutput, error) {
+func requestCorporateSignature(authToken string, apiURL string, input *RequestCorporateSignatureInput) (*RequestCorporateSignatureOutput, error) {
 	requestBody, err := json.Marshal(input)
 	if err != nil {
 		return nil, err
 	}
 	client := http.Client{}
-	log.Debugf("requesting corporate signatures: %#v\n", string(requestBody))
 	req, err := http.NewRequest("POST", apiURL+"/v1/request-corporate-signature", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
@@ -129,12 +124,10 @@ func requestCorporateSignature(authToken string, apiURL string, input *requestCo
 	if err != nil {
 		return nil, err
 	}
-	log.Debugf("corporate signature response: %#v\n", string(responseBody))
-	log.Debugf("corporate signature response headers :%#v\n", resp.Header)
 	if strings.Contains(string(responseBody), "Company has already signed CCLA with this project") {
 		return nil, errors.New("company has already signed CCLA with this project")
 	}
-	var out requestCorporateSignatureOutput
+	var out RequestCorporateSignatureOutput
 	err = json.Unmarshal(responseBody, &out)
 	if err != nil {
 		return nil, err
