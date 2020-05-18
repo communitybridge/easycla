@@ -1415,6 +1415,39 @@ paths:
       tags:
         - company
 
+  /request-corporate-signature:
+    post:
+      summary: api generates the corporate signature which is ready to sign
+      description: Creates a new signature given project and company IDs. The manager will be redirected to the
+        return_url once signature is complete.
+      operationId: requestCorporateSignature
+      parameters:
+        - $ref: "#/parameters/authorization"
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: input
+          in: body
+          schema:
+            $ref: '#/definitions/corporate-signature-input'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/corporate-signature-output'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - sign
+
 responses:
   unauthorized:
     description: Unauthorized
@@ -1523,6 +1556,12 @@ parameters:
     type: string
     required: true
     x-example: JImlzQWRtaW4iOiB0cnVlLAoJImFsbG93ZWQiOiB0cnVlLAoJImNvbnRleHQiOic3lzdGVtIgp9Cg==
+  authorization:
+    name: Authorization
+    description: Bearer token
+    in: header
+    type: string
+    required: true
   x-username:
     name: X-USERNAME
     description: The username/LFID value - assigned/set by the API Gateway based on login credentials
@@ -2053,6 +2092,54 @@ definitions:
       timestamp:
         type: string
         x-omitempty: false
+  corporate-signature-input:
+    type: object
+    required:
+      - project_sfid
+      - cla_group_id
+      - company_sfid
+    properties:
+      project_sfid:
+        type: string
+        example: 'a0941000005ouJFAAY'
+        description: salesforce id of the project
+      cla_group_id:
+        type: string
+        example: 'c4d71673-e9e8-4e26-a035-99e8334620e5'
+        description: cla group id
+        format: uuid
+      company_sfid:
+        type: string
+        example: '0014100000Te0fMAAR'
+        description: salesforce id of the company
+      send_as_email:
+        type: boolean
+        example: 'false'
+        description: send signing request as email. This should be set to true when requestor is not signatory.
+      authority_name:
+        type: string
+        example: 'John Doe'
+        description: name of the cla signatory
+      authority_email:
+        type: string
+        example: 'john.doe@gmail.com'
+        description: email of the cla signatory
+        format: email
+      return_url:
+        type: string
+        example: 'https://corporate.dev.lfcla.com/#/company/eb4d7d71-693f-4047-bf8d-10d0e7764969'
+        description: on signing the document, page will get redirected to this url. This is valid only when send_as_email is false
+        format: uri
+
+  corporate-signature-output:
+    type: object
+    properties:
+      signature_id:
+        type: string
+        description: id of the signature
+      sign_url:
+        type: string
+        description: signing url
 
   error-response:
     type: object
