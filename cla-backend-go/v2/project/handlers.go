@@ -278,11 +278,6 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 	// Get CLA enabled projects
 	api.ProjectGetCLAProjectsByIDHandler = project.GetCLAProjectsByIDHandlerFunc(func(projectParams project.GetCLAProjectsByIDParams, user *auth.User) middleware.Responder {
 
-		utils.SetAuthUserProperties(user, projectParams.XUSERNAME, projectParams.XEMAIL)
-		if !isUserAuthorizedForProject(user, projectParams.ProjectSfdcID) {
-			return project.NewGetCLAProjectsByIDUnauthorized()
-		}
-
 		claProjects, getErr := v2Service.GetCLAProjectsByID(projectParams.ProjectSfdcID)
 
 		if getErr != nil {
