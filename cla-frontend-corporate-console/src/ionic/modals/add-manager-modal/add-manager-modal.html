@@ -88,7 +88,7 @@
       <button ion-button icon-right color="light" (click)="dismiss()">
         Cancel
       </button>
-      <button type="button" (click)="submit()" ion-button icon-right color="primary">
+      <button type="button" [disabled]="!form.valid" (click)="submit()" ion-button icon-right color="primary">
         Save
       </button>
     </ion-buttons>

@@ -1,13 +1,13 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Injectable} from '@angular/core';
-import {Http} from '@angular/http';
-import {AuthService} from './auth.service';
+import { Injectable } from '@angular/core';
+import { Http } from '@angular/http';
+import { AuthService } from './auth.service';
 
 import 'rxjs/Rx';
 import 'rxjs/add/operator/catch';
-import {Observable} from 'rxjs';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class ClaService {
@@ -391,7 +391,7 @@ export class ClaService {
       userEmail: payload.managerEmail,
       userLFID: payload.managerLFID,
     };
-    return this.http.post(url, data).map((res) => res.json());
+    return this.http.post(url, data).map((res) => res);
   }
 
   /**
