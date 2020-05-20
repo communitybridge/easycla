@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"strings"
 
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
@@ -109,6 +111,7 @@ func requestCorporateSignature(authToken string, apiURL string, input *RequestCo
 		return nil, err
 	}
 	client := http.Client{}
+	log.Debugf("requesting corporate signatures: %#v\n", string(requestBody))
 	req, err := http.NewRequest("POST", apiURL+"/v1/request-corporate-signature", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
@@ -124,6 +127,8 @@ func requestCorporateSignature(authToken string, apiURL string, input *RequestCo
 	if err != nil {
 		return nil, err
 	}
+	log.Debugf("corporate signature response: %#v\n", string(responseBody))
+	log.Debugf("corporate signature response headers :%#v\n", resp.Header)
 	if strings.Contains(string(responseBody), "Company has already signed CCLA with this project") {
 		return nil, errors.New("company has already signed CCLA with this project")
 	}
