@@ -100,3 +100,24 @@ func (usc *Client) SearchUsers(firstName string, lastName string, email string) 
 
 	return users[0], nil
 }
+
+func (usc *Client) SearchUserByEmail(email string) (*models.User, error) {
+	params := &user.SearchUsersParams{
+		Email: &email,
+	}
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	result, err := usc.cl.User.SearchUsers(params, clientAuth)
+	if err != nil {
+		return nil, err
+	}
+	users := result.Payload.Data
+
+	if len(users) == 0 {
+		return nil, ErrUserNotFound
+	}
+	return users[0], nil
+}
