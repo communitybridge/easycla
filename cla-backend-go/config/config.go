@@ -58,6 +58,9 @@ type Config struct {
 
 	// LF Group
 	LFGroup LFGroup `json:"lf_group"`
+
+	// CLAV1ApiURL is api url of v1. it is used in v2 sign service
+	ClaV1ApiURL string `json:"cla_v1_api_url"`
 }
 
 // Auth0 model
