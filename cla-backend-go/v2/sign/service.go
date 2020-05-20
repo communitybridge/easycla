@@ -31,13 +31,15 @@ type Service interface {
 
 // service
 type service struct {
+	ClaV1ApiURL string
 	companyRepo company.IRepository
 	projectRepo ProjectRepo
 }
 
 // NewService returns an instance of v2 project service
-func NewService(compRepo company.IRepository, projectRepo ProjectRepo) Service {
+func NewService(apiURL string, compRepo company.IRepository, projectRepo ProjectRepo) Service {
 	return &service{
+		ClaV1ApiURL: apiURL,
 		companyRepo: compRepo,
 		projectRepo: projectRepo,
 	}
@@ -91,7 +93,7 @@ func (s *service) RequestCorporateSignature(authorizationHeader string, input *m
 	if proj.ProjectExternalID != utils.StringValue(input.ProjectSfid) {
 		return nil, errors.New("project_sfid does not match with cla_groups project_sfid")
 	}
-	out, err := requestCorporateSignature(authorizationHeader, "https://api.dev.lfcla.com", &RequestCorporateSignatureInput{
+	out, err := requestCorporateSignature(authorizationHeader, s.ClaV1ApiURL, &RequestCorporateSignatureInput{
 		ProjectID:      proj.ProjectID,
 		CompanyID:      comp.CompanyID,
 		SendAsEmail:    input.SendAsEmail,
