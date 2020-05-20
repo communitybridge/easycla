@@ -1,11 +1,14 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {IonicPage, NavParams, ViewController} from 'ionic-angular';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {ClaService} from '../../services/cla.service';
-import {generalConstants} from '../../constant/general';
+import { Component } from '@angular/core';
+import { IonicPage, NavParams, ViewController } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ClaService } from '../../services/cla.service';
+import { generalConstants } from '../../constant/general';
+import { EmailValidator } from '../../validators/email';
+import { LFIDValidator } from '../../validators/lfid';
+import { UserNameValidator } from '../../validators/user-name';
 
 @IonicPage({
   segment: 'add-manager-modal'
@@ -36,9 +39,9 @@ export class AddManagerModal {
     this.companyId = this.navParams.get('companyId');
     this.signatureId = this.navParams.get('signatureId');
     this.form = this.formBuilder.group({
-      managerName: [this.managerName, Validators.compose([Validators.required, Validators.minLength(3)])],
-      managerLFID: [this.managerLFID, Validators.compose([Validators.required])],
-      managerEmail: [this.managerEmail, Validators.compose([Validators.required, Validators.email])],
+      managerName: [this.managerName, Validators.compose([Validators.required, Validators.minLength(3), UserNameValidator.isValid])],
+      managerLFID: [this.managerLFID, Validators.compose([Validators.required, LFIDValidator.isValid])],
+      managerEmail: [this.managerEmail, Validators.compose([Validators.required, EmailValidator.isValid])],
     });
   }
 
