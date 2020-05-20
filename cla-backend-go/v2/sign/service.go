@@ -45,7 +45,7 @@ func NewService(apiURL string, compRepo company.IRepository, projectRepo Project
 	}
 }
 
-type RequestCorporateSignatureInput struct {
+type requestCorporateSignatureInput struct {
 	ProjectID      string `json:"project_id,omitempty"`
 	CompanyID      string `json:"company_id,omitempty"`
 	SendAsEmail    bool   `json:"send_as_email,omitempty"`
@@ -54,14 +54,14 @@ type RequestCorporateSignatureInput struct {
 	ReturnURL      string `json:"return_url,omitempty"`
 }
 
-type RequestCorporateSignatureOutput struct {
+type requestCorporateSignatureOutput struct {
 	ProjectID   string `json:"project_id"`
 	CompanyID   string `json:"company_id"`
 	SignatureID string `json:"signature_id"`
 	SignURL     string `json:"sign_url"`
 }
 
-func (in *RequestCorporateSignatureOutput) toModel() *models.CorporateSignatureOutput {
+func (in *requestCorporateSignatureOutput) toModel() *models.CorporateSignatureOutput {
 	return &models.CorporateSignatureOutput{
 		SignURL:     in.SignURL,
 		SignatureID: in.SignatureID,
@@ -93,7 +93,7 @@ func (s *service) RequestCorporateSignature(authorizationHeader string, input *m
 	if proj.ProjectExternalID != utils.StringValue(input.ProjectSfid) {
 		return nil, errors.New("project_sfid does not match with cla_groups project_sfid")
 	}
-	out, err := requestCorporateSignature(authorizationHeader, s.ClaV1ApiURL, &RequestCorporateSignatureInput{
+	out, err := requestCorporateSignature(authorizationHeader, s.ClaV1ApiURL, &requestCorporateSignatureInput{
 		ProjectID:      proj.ProjectID,
 		CompanyID:      comp.CompanyID,
 		SendAsEmail:    input.SendAsEmail,
@@ -107,7 +107,7 @@ func (s *service) RequestCorporateSignature(authorizationHeader string, input *m
 	return out.toModel(), nil
 }
 
-func requestCorporateSignature(authToken string, apiURL string, input *RequestCorporateSignatureInput) (*RequestCorporateSignatureOutput, error) {
+func requestCorporateSignature(authToken string, apiURL string, input *requestCorporateSignatureInput) (*requestCorporateSignatureOutput, error) {
 	requestBody, err := json.Marshal(input)
 	if err != nil {
 		return nil, err
@@ -134,7 +134,7 @@ func requestCorporateSignature(authToken string, apiURL string, input *RequestCo
 	if strings.Contains(string(responseBody), "Company has already signed CCLA with this project") {
 		return nil, errors.New("company has already signed CCLA with this project")
 	}
-	var out RequestCorporateSignatureOutput
+	var out requestCorporateSignatureOutput
 	err = json.Unmarshal(responseBody, &out)
 	if err != nil {
 		return nil, err
