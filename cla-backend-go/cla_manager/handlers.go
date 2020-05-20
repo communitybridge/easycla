@@ -548,6 +548,35 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 	api.ClaManagerAddCLAManagerHandler = cla_manager.AddCLAManagerHandlerFunc(func(params cla_manager.AddCLAManagerParams, claUser *user.CLAUser) middleware.Responder {
 
+		userModel, userErr := usersService.GetUserByLFUserName(params.Body.UserLFID)
+		if userErr != nil || userModel == nil {
+			msg := fmt.Sprintf("User lookup for user by LFID: %s failed ", params.Body.UserLFID)
+			log.Warn(msg)
+			return cla_manager.NewAddCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: "Add CLA Manager - error getting user - " + msg,
+				Code:    "400",
+			})
+		}
+		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
+		if companyErr != nil || companyModel == nil {
+			msg := fmt.Sprintf("User lookup for company by ID: %s failed ", params.CompanyID)
+			log.Warn(msg)
+			return cla_manager.NewAddCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: "Add CLA Manager - error getting company - " + msg,
+				Code:    "400",
+			})
+		}
+
+		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		if projectErr != nil || projectModel == nil {
+			msg := fmt.Sprintf("User lookup for project by ID: %s failed ", params.ProjectID)
+			log.Warn(msg)
+			return cla_manager.NewAddCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: "Add CLA Manager - error getting project - " + msg,
+				Code:    "400",
+			})
+		}
+
 		// Look up signature ACL to ensure the user is allowed to add CLA managers
 		sigModels, sigErr := sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
 			HTTPRequest: nil,
@@ -598,6 +627,34 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 	// Delete CLA Manager
 	api.ClaManagerDeleteCLAManagerHandler = cla_manager.DeleteCLAManagerHandlerFunc(func(params cla_manager.DeleteCLAManagerParams, claUser *user.CLAUser) middleware.Responder {
 
+		userModel, userErr := usersService.GetUserByLFUserName(params.UserLFID)
+		if userErr != nil || userModel == nil {
+			msg := fmt.Sprintf("User lookup for user by LFID: %s failed ", params.UserLFID)
+			log.Warn(msg)
+			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: "Delete CLA Manager - error getting user - " + msg,
+				Code:    "400",
+			})
+		}
+		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
+		if companyErr != nil || companyModel == nil {
+			msg := fmt.Sprintf("User lookup for company by ID: %s failed ", params.CompanyID)
+			log.Warn(msg)
+			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: "Delete CLA Manager - error getting company - " + msg,
+				Code:    "400",
+			})
+		}
+
+		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		if projectErr != nil || projectModel == nil {
+			msg := fmt.Sprintf("User lookup for project by ID: %s failed ", params.ProjectID)
+			log.Warn(msg)
+			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: "Delete CLA Manager - error getting project - " + msg,
+				Code:    "400",
+			})
+		}
 		// Look up signature ACL to ensure the user is allowed to remove CLA managers
 		sigModels, sigErr := sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
 			HTTPRequest: nil,
