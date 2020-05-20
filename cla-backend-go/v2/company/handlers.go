@@ -15,16 +15,7 @@ import (
 
 func isUserAuthorizedForOrganization(user *auth.User, externalCompanyID string) bool {
 	if !user.Admin {
-		if !user.Allowed || !user.IsUserAuthorized(auth.Organization, externalCompanyID) {
-			return false
-		}
-	}
-	return true
-}
-
-func isUserAuthorizedForProjectOrganization(user *auth.User, externalProjectID, externalCompanyID string) bool {
-	if !user.Admin {
-		if !user.Allowed || !user.IsUserAuthorizedByProject(externalProjectID, externalCompanyID) {
+		if !user.Allowed || !user.IsUserAuthorizedForOrganizationScope(externalCompanyID) {
 			return false
 		}
 	}
@@ -73,7 +64,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 	api.CompanyGetCompanyProjectContributorsHandler = company.GetCompanyProjectContributorsHandlerFunc(
 		func(params company.GetCompanyProjectContributorsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !isUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
+			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
 				return company.NewGetCompanyProjectContributorsUnauthorized()
 			}
 			result, err := service.GetCompanyProjectContributors(params.ProjectSFID, params.CompanySFID, utils.StringValue(params.SearchTerm))
