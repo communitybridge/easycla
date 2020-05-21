@@ -101,6 +101,7 @@ func (usc *Client) SearchUsers(firstName string, lastName string, email string) 
 	return users[0], nil
 }
 
+// SearchUserByEmail gets a single user based on email
 func (usc *Client) SearchUserByEmail(email string) (*models.User, error) {
 	params := &user.SearchUsersParams{
 		Email: &email,
