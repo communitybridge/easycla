@@ -108,7 +108,17 @@ swagger-build-user-service:
 		-t v2/user-service \
 		-f swagger/user-service.yaml
 
-swagger-build: clean-swagger swagger-prep swagger-build-v1-services swagger-build-v2-services swagger-build-project-service swagger-build-organization-service swagger-build-user-service
+swagger-build-acs-service:
+	@echo "Generating swagger client for the acs-service..."
+	@mkdir -p v2/acs-service
+	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/acs/v1/api-docs/swagger/swagger.json --output swagger/acs-service.yaml
+	sed -i.bak 's/X-ACL/Empty-Header/g' swagger/acs-service.yaml
+	swagger -q generate client \
+		--copyright-file=copyright-header.txt \
+		-t v2/acs-service \
+		-f swagger/acs-service.yaml
+
+swagger-build: clean-swagger swagger-prep swagger-build-v1-services swagger-build-v2-services swagger-build-project-service swagger-build-organization-service swagger-build-user-service swagger-build-acs-service
 
 swagger-validate:
 	@echo "Validating v1 legacy API specification..."
