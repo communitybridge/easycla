@@ -2844,7 +2844,7 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
 
     def get_organization_by_lower_name(self, organization_name):
         org_generator = self.model.scan(organization_name_lower__eq=organization_name.lower())
-        for org_model in organization_generator:
+        for org_model in org_generator:
             org = GitHubOrg()
             org.model = org_model
             return org
