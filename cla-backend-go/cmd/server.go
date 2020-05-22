@@ -16,6 +16,8 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/cla_manager"
 	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 
+	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
+	organization_service "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
@@ -277,6 +279,8 @@ func server(localMode bool) http.Handler {
 
 	user_service.InitClient(configFile.APIGatewayURL)
 	project_service.InitClient(configFile.APIGatewayURL)
+	organization_service.InitClient(configFile.APIGatewayURL)
+	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler

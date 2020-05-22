@@ -1,6 +1,10 @@
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
 
+import os
+
+stage = os.environ.get("STAGE", "")
+
 USER_TABLE_DATA = {
     "Table": {
         "AttributeDefinitions": [
@@ -73,4 +77,12 @@ PROJECT_TABLE_DESCRIPTION = {
         "AttributeDefinitions": [{"AttributeName": "project_id", "AttributeType": "S"}],
         "KeySchema": [{"AttributeName": "project_id", "KeyType": "HASH"}],
     }
+}
+
+GH_TABLE_DESCRIPTION = {
+    "Table": {
+        "AttributeDefinitions": [{"AttributeName": "organization_name", "AttributeType": "S"}],
+        "KeySchema": [{"AttributeName": "organization_name", "KeyType": "HASH"}],
+    }, 
+    "TableName" : "cla-{}-github-orgs".format(stage)
 }
