@@ -1,6 +1,7 @@
 package user_service
 
 import (
+	"context"
 	"errors"
 	"strings"
 
@@ -99,4 +100,45 @@ func (usc *Client) SearchUsers(firstName string, lastName string, email string) 
 	}
 
 	return users[0], nil
+}
+
+// SearchUserByEmail search user by email
+func (usc *Client) SearchUserByEmail(email string) (*models.User, error) {
+	params := &user.SearchUsersParams{
+		Email:   &email,
+		Context: context.Background(),
+	}
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	result, err := usc.cl.User.SearchUsers(params, clientAuth)
+	if err != nil {
+		return nil, err
+	}
+	users := result.Payload.Data
+
+	if len(users) == 0 {
+		return nil, ErrUserNotFound
+	}
+	return users[0], nil
+}
+
+// ConvertToContact converts user to contact from lead
+func (usc *Client) ConvertToContact(userSFID string) error {
+	params := &user.ConvertToContactParams{
+		SalesforceID: userSFID,
+		Context:      context.Background(),
+	}
+	tok, err := token.GetToken()
+	if err != nil {
+		return err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	_, _, err = usc.cl.User.ConvertToContact(params, clientAuth) //nolint
+	if err != nil {
+		return err
+	}
+	return nil
 }

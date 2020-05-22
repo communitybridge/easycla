@@ -76,6 +76,7 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
 		fmt.Sprintf("cla-lf-group-client-url-%s", stage),
 		fmt.Sprintf("cla-lf-group-refresh-token-%s", stage),
 		fmt.Sprintf("cla-v1-api-url-%s", stage),
+		fmt.Sprintf("cla-acs-api-key-%s", stage),
 	}
 
 	// For each key to lookup
@@ -160,6 +161,8 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
 			config.LFGroup.RefreshToken = resp.value
 		case fmt.Sprintf("cla-v1-api-url-%s", stage):
 			config.ClaV1ApiURL = resp.value
+		case fmt.Sprintf("cla-acs-api-key-%s", stage):
+			config.AcsAPIKey = resp.value
 		}
 	}
 

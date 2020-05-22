@@ -1,8 +1,10 @@
 package organization_service
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -21,6 +23,10 @@ type Client struct {
 	cl *client.OrganziationService
 }
 
+const (
+	projectOrganization = "project|organization"
+)
+
 var (
 	organizationServiceClient *Client
 	//ErrScopeNotFound returns error when getting scopeID
@@ -33,7 +39,7 @@ func InitClient(APIGwURL string) {
 	organizationServiceClient = &Client{
 		cl: client.NewHTTPClientWithConfig(strfmt.Default, &client.TransportConfig{
 			Host:     APIGwURL,
-			BasePath: "user-service/v1",
+			BasePath: "organization-service/v1",
 			Schemes:  []string{"https"},
 		}),
 	}
@@ -54,6 +60,7 @@ func (osc *Client) CreateOrgUserRoleOrgScope(emailID string, organizationID stri
 			RoleID:       &roleID,
 		},
 		SalesforceID: organizationID,
+		Context:      context.Background(),
 	}
 	tok, err := token.GetToken()
 	if err != nil {
@@ -70,6 +77,54 @@ func (osc *Client) CreateOrgUserRoleOrgScope(emailID string, organizationID stri
 	return nil
 }
 
+// IsUserHaveRoleScope checks if user have required role and scope
+func (osc *Client) IsUserHaveRoleScope(roleID string, userSFID string, organizationID string, projectSFID string) (bool, error) {
+	objectID := fmt.Sprintf("%s|%s", projectSFID, organizationID)
+	var offset int64
+	var pageSize int64 = 1000
+	tok, err := token.GetToken()
+	if err != nil {
+		return false, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	for {
+		params := &organizations.ListOrgUsrServiceScopesParams{
+			Offset:       aws.String(strconv.FormatInt(offset, 10)),
+			PageSize:     aws.String(strconv.FormatInt(pageSize, 10)),
+			SalesforceID: organizationID,
+			Context:      context.Background(),
+		}
+		result, err := osc.cl.Organizations.ListOrgUsrServiceScopes(params, clientAuth)
+		if err != nil {
+			return false, err
+		}
+		for _, userRole := range result.Payload.Userroles {
+			// loop until we find user
+			if userRole.Contact.ID != userSFID {
+				continue
+			}
+			for _, rolescope := range userRole.RoleScopes {
+				// check only for required role
+				if rolescope.RoleID != roleID {
+					continue
+				}
+				for _, scope := range rolescope.Scopes {
+					if scope.ObjectTypeName == projectOrganization && scope.ObjectID == objectID {
+						return true, nil
+					}
+				}
+				return false, nil
+			}
+			return false, nil
+		}
+		if result.Payload.Metadata.TotalSize < offset+pageSize {
+			break
+		}
+		offset = offset + pageSize
+	}
+	return false, nil
+}
+
 // CreateOrgUserRoleOrgScopeProjectOrg assigns role scope to user
 func (osc *Client) CreateOrgUserRoleOrgScopeProjectOrg(emailID string, projectID string, organizationID string, roleID string) error {
 
@@ -81,6 +136,7 @@ func (osc *Client) CreateOrgUserRoleOrgScopeProjectOrg(emailID string, projectID
 			RoleID:       &roleID,
 		},
 		SalesforceID: organizationID,
+		Context:      context.Background(),
 	}
 	tok, err := token.GetToken()
 	if err != nil {
@@ -107,6 +163,7 @@ func (osc *Client) DeleteOrgUserRoleOrgScopeProjectOrg(organizationID string, ro
 		ScopeID:      scopeID,
 		XUSERNAME:    &userName,
 		XEMAIL:       &userEmail,
+		Context:      context.Background(),
 	}
 	tok, err := token.GetToken()
 	if err != nil {
@@ -132,6 +189,7 @@ func (osc *Client) GetScopeID(organizationID string, roleName string, objectType
 	}
 	params := &organizations.ListOrgUsrServiceScopesParams{
 		SalesforceID: organizationID,
+		Context:      context.Background(),
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
 	result, err := osc.cl.Organizations.ListOrgUsrServiceScopes(params, clientAuth)
