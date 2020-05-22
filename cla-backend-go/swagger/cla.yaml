@@ -856,6 +856,33 @@ paths:
       tags:
         - company
 
+  /organization/search:
+    get:
+      summary: Search companies from organization service
+      description: Searches for matching organization by name
+      security: []
+      operationId: searchOrganization
+      parameters:
+        - name: companyName
+          in: query
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/org-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - organization
+
   /company/{companyID}/cla/invitelist:
     get:
       summary: API to retrieve pending invite requests
@@ -2267,6 +2294,9 @@ definitions:
         description: The company name
         example: Acme, Inc.
         type: string
+      companyManagerID:
+        description: The company manager id
+        type: string
       companyACL:
         type: array
         description: A list of user ID's authorized to make changes to the company
@@ -2461,6 +2491,12 @@ definitions:
   list-github-repositories:
     $ref: './common/list-github-repositories.yaml'
 
+  org-list:
+    $ref: './common/org-list.yaml'
+
+  org:
+    $ref: './common/org.yaml'
+
 responses:
   resource-deleted:
     description: Resource Deleted
@@ -2480,6 +2516,10 @@ responses:
       $ref: '#/definitions/error-response'
   not-found:
     description: 'The requested resource was not found'
+    schema:
+      $ref: '#/definitions/error-response'
+  internal-server-error:
+    description: 'Internal server error occured'
     schema:
       $ref: '#/definitions/error-response'
   conflict:

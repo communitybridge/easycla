@@ -32,6 +32,7 @@ var (
 
 // IRepository interface methods
 type IRepository interface { //nolint
+	CreateCompany(in *models.Company) (*models.Company, error)
 	GetCompanies() (*models.Companies, error)
 	GetCompany(companyID string) (*models.Company, error)
 	GetCompanyByExternalID(companySFID string) (*models.Company, error)
@@ -83,6 +84,7 @@ func (dbCompanyModel *Company) toModel() (*models.Company, error) {
 		CompanyID:         dbCompanyModel.CompanyID,
 		CompanyName:       dbCompanyModel.CompanyName,
 		CompanyExternalID: dbCompanyModel.CompanyExternalID,
+		CompanyManagerID:  dbCompanyModel.CompanyManagerID,
 		Created:           strfmt.DateTime(createdDateTime),
 		Updated:           strfmt.DateTime(updateDateTime),
 	}, nil
@@ -938,4 +940,35 @@ func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []st
 	}
 
 	return nil
+}
+
+func (repo repository) CreateCompany(in *models.Company) (*models.Company, error) {
+	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
+	companyID, err := uuid.NewV4()
+	if err != nil {
+		log.Warnf("Unable to generate a UUID for a pending invite, error: %v", err)
+		return nil, err
+	}
+	_, now := utils.CurrentTime()
+	comp := &Company{
+		CompanyID:         companyID.String(),
+		CompanyName:       in.CompanyName,
+		CompanyACL:        in.CompanyACL,
+		CompanyExternalID: in.CompanyExternalID,
+		CompanyManagerID:  in.CompanyManagerID,
+		Created:           now,
+		Updated:           now,
+	}
+	av, err := dynamodbattribute.MarshalMap(&comp)
+	if err != nil {
+		return nil, err
+	}
+	_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(tableName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return comp.toModel()
 }

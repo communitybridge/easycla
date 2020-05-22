@@ -5,12 +5,14 @@ package company
 
 // Company data model
 type Company struct {
-	CompanyID         string   `dynamodbav:"company_id"`
-	CompanyName       string   `dynamodbav:"company_name"`
-	CompanyACL        []string `dynamodbav:"company_acl"`
-	CompanyExternalID string   `dynamodbav:"company_external_id"`
-	Created           string   `dynamodbav:"date_created"`
-	Updated           string   `dynamodbav:"date_modified"`
+	CompanyID         string   `dynamodbav:"company_id" json:"company_id"`
+	CompanyName       string   `dynamodbav:"company_name" json:"company_name"`
+	CompanyACL        []string `dynamodbav:"company_acl" json:"company_acl"`
+	CompanyExternalID string   `dynamodbav:"company_external_id" json:"company_external_id"`
+	Created           string   `dynamodbav:"date_created" json:"date_created"`
+	Updated           string   `dynamodbav:"date_modified" json:"date_modified"`
+	CompanyManagerID  string   `dynamodbav:"company_manager_id" json:"company_manager_id"`
+	Version           string   `dynamodbav:"version" json:"version"`
 }
 
 // Invite data model

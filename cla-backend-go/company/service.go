@@ -6,6 +6,8 @@ package company
 import (
 	"fmt"
 
+	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
+
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -13,6 +15,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
+	organization_service "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 )
 
 type service struct {
@@ -42,6 +45,9 @@ type IService interface { // nolint
 	AddPendingCompanyInviteRequest(companyID string, userID string) (*InviteModel, error)
 	ApproveCompanyAccessRequest(companyInviteID string) (*InviteModel, error)
 	RejectCompanyAccessRequest(companyInviteID string) (*InviteModel, error)
+
+	// calls org service
+	SearchOrganizationByName(orgName string) (*models.OrgList, error)
 
 	sendRequestAccessEmail(companyModel *models.Company, requesterName, requesterEmail, recipientName, recipientAddress string)
 	sendRequestApprovedEmailToRecipient(companyModel *models.Company, recipientName, recipientAddress string)
@@ -570,6 +576,78 @@ func (s service) getPreferredNameAndEmail(lfid string) (string, string, error) {
 }
 
 func (s service) GetCompanyByExternalID(companySFID string) (*models.Company, error) {
-	return s.repo.GetCompanyByExternalID(companySFID)
+	comp, err := s.repo.GetCompanyByExternalID(companySFID)
+	if err == nil {
+		return comp, nil
+	}
+	if err == ErrCompanyDoesNotExist {
+		comp, err = s.createOrgFromExternalID(companySFID)
+		if err != nil {
+			return comp, err
+		}
+		return comp, nil
+	}
+	return nil, err
+}
 
+func (s service) SearchOrganizationByName(orgName string) (*models.OrgList, error) {
+	osc := organization_service.GetClient()
+	orgs, err := osc.SearchOrganization(orgName)
+	if err != nil {
+		return nil, err
+	}
+	result := &models.OrgList{List: make([]*models.Org, 0, len(orgs))}
+	for _, org := range orgs {
+		result.List = append(result.List, &models.Org{
+			OrganizationID:   org.ID,
+			OrganizationName: org.Name,
+		})
+	}
+	return result, nil
+}
+
+func (s service) createOrgFromExternalID(orgID string) (*models.Company, error) {
+	osc := organization_service.GetClient()
+	org, err := osc.GetOrganization(orgID)
+	if err != nil {
+		return nil, err
+	}
+	usc := user_service.GetClient()
+	user, err := usc.GetUserByUsername(org.Owner.ID)
+	if err != nil {
+		return nil, err
+	}
+	claUser, err := s.userService.GetUserByLFUserName(user.Username)
+	if err != nil {
+		return nil, err
+	}
+	if claUser == nil {
+		var primaryEmail string
+		for _, email := range user.Emails {
+			if email.IsPrimary != nil && *email.IsPrimary && email.IsVerified != nil && *email.IsVerified {
+				primaryEmail = utils.StringValue(email.EmailAddress)
+			}
+		}
+		// create cla-user
+		claUser, err = s.userService.CreateUser(&models.User{
+			LfEmail:        primaryEmail,
+			LfUsername:     user.Username,
+			UserExternalID: user.ID,
+			Username:       user.Name,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	// create company
+	comp, err := s.repo.CreateCompany(&models.Company{
+		CompanyACL:        nil,
+		CompanyExternalID: org.ID,
+		CompanyName:       org.Name,
+		CompanyManagerID:  claUser.UserID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return comp, nil
 }

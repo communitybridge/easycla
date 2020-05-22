@@ -142,3 +142,21 @@ func (usc *Client) ConvertToContact(userSFID string) error {
 	}
 	return nil
 }
+
+// GetUser returns user from user-service
+func (usc *Client) GetUser(userSFID string) (*models.User, error) {
+	params := &user.GetUserParams{
+		SalesforceID: userSFID,
+		Context:      context.Background(),
+	}
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	result, err := usc.cl.User.GetUser(params, clientAuth)
+	if err != nil {
+		return nil, err
+	}
+	return result.Payload, nil
+}
