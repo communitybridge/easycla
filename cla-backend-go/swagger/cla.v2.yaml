@@ -1062,27 +1062,19 @@ paths:
       tags:
         - signatures
 
-  /company/{companyID}/project/{projectID}/cla-manager:
+  /company/{companySFID}/project/{projectSFID}/claGroup/{projectID}/cla-manager:
     post:
       summary: Adds a new CLA Manager to the specified Company and Project
       description: Allows an existing CLA Manager to add another CLA Manager to the specified Company and Project.
-      security:
-        - OauthSecurity:
-            - user
       operationId: createCLAManager
       parameters:
         - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectSFID"
+        - $ref: "#/parameters/path-companySFID"
+        - $ref: "#/parameters/path-projectID"
         - name: body
           in: body
           schema:
@@ -1092,7 +1084,7 @@ paths:
         '200':
           description: 'Success'
           schema:
-            $ref: '#/definitions/signature'
+            $ref: '#/definitions/company-cla-manager'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1104,31 +1096,21 @@ paths:
       tags:
         - cla-manager
 
-  /company/{companyID}/project/{projectID}/cla-manager/{userLFID}:
+  /companySF/{companySFID}/projectSF/{projectSFID}/claGroup/{projectID}/cla-manager/{userLFID}:
     delete:
       summary: Removes the CLA Manager from ACL for specified Company and Project
       description: Allows an existing CLA Manager to remove another CLA Manager from the specified Company and Project.
-      security:
-        - OauthSecurity:
-            - user
       operationId: deleteCLAManager
       parameters:
         - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
-        - name: userLFID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectSFID"
+        - $ref: "#/parameters/path-companySFID"
+        - $ref: "#/parameters/path-projectID"
+        - $ref: "#/parameters/path-userLFID"
+        
       responses:
         '200':
           description: 'Success'
@@ -1534,6 +1516,18 @@ parameters:
   path-projectSFID:
     name: projectSFID
     description: salesforce id of the project/foundation
+    in: path
+    type: string
+    required: true
+  path-projectID:
+    name: projectID
+    description: id of the CLA Group
+    in: path
+    type: string
+    required: true
+  path-userLFID:
+    name: userLFID
+    description: LFID of the user
     in: path
     type: string
     required: true

@@ -2742,6 +2742,7 @@ class GitHubOrgModel(BaseModel):
             host = "http://localhost:8000"
 
     organization_name = UnicodeAttribute(hash_key=True)
+    organization_name_lower = UnicodeAttribute(null=True)
     organization_installation_id = NumberAttribute(null=True)
     organization_sfid = UnicodeAttribute()
     organization_sfid_index = GithubOrgSFIndex()
@@ -2760,6 +2761,8 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
         super(GitHubOrg).__init__()
         self.model = GitHubOrgModel()
         self.model.organization_name = organization_name
+        if self.model.organization_name :
+            self.model.organization_name_lower = self.model.organization_name.lower()
         self.model.organization_installation_id = organization_installation_id
         self.model.organization_sfid = organization_sfid
 
@@ -2801,9 +2804,14 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
 
     def get_organization_sfid(self):
         return self.model.organization_sfid
+    
+    def get_organization_name_lower(self):
+        return self.model.organization_name_lower
 
     def set_organization_name(self, organization_name):
         self.model.organization_name = organization_name
+        if self.model.organization_name:
+            self.model.organization_name_lower = self.model.organization_name.lower()
 
     def set_organization_installation_id(self, organization_installation_id):
         self.model.organization_installation_id = organization_installation_id
@@ -2813,6 +2821,9 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
 
     def set_organization_sfid(self, organization_sfid):
         self.model.organization_sfid = organization_sfid
+    
+    def set_organization_name_lower(self, organization_name_lower):
+        self.model.organization_name_lower = organization_name_lower
 
     def get_organization_by_sfid(self, sfid):
         organization_generator = self.model.organization_sfid_index.query(sfid)
@@ -2825,6 +2836,14 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
 
     def get_organization_by_installation_id(self, installation_id):
         organization_generator = self.model.scan(organization_installation_id__eq=installation_id)
+        for org_model in organization_generator:
+            org = GitHubOrg()
+            org.model = org_model
+            return org
+        return None
+
+    def get_organization_by_lower_name(self, organization_name):
+        org_generator = self.model.scan(organization_name_lower__eq=organization_name.lower())
         for org_model in organization_generator:
             org = GitHubOrg()
             org.model = org_model

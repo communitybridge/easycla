@@ -204,7 +204,7 @@ func prepareUserForSigning(userEmail string, companySFID, projectSFID string) er
 	// make user cla-signatory
 	if !haveRole {
 		log.WithFields(f).Debugf("assigning user role of %s", role)
-		err = osc.CreateOrgUserRoleOrgScope(userEmail, companySFID, projectSFID, roleID)
+		err = osc.CreateOrgUserRoleOrgScopeProjectOrg(userEmail, companySFID, projectSFID, roleID)
 		if err != nil {
 			log.WithFields(f).Errorf("assigning user role of %s failed: %v", role, err)
 			return err

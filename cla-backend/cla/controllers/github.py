@@ -43,7 +43,7 @@ def get_organization(organization_name):
     github_organization = get_github_organization_instance()
     try:
         cla.log.debug(f'Loading GitHub by organization name: {organization_name}..')
-        github_organization.load(str(organization_name))
+        github_organization.get_organization_by_lower_name(organization_name)
         cla.log.debug(f'Loaded GitHub by organization name: {github_organization}')
     except DoesNotExist as err:
         cla.log.warning(f'organization name {organization_name} does not exist')
