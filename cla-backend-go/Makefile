@@ -112,7 +112,7 @@ swagger-build-acs-service:
 	@echo "Generating swagger client for the acs-service..."
 	@mkdir -p v2/acs-service
 	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/acs/v1/api-docs/swagger/swagger.json --output swagger/acs-service.yaml
-	sed -i.bak 's/X-ACL/Empty-Header/g' swagger/acs-service.yaml
+	sed -i.bak 's/X-ACL/X-API-KEY/g' swagger/acs-service.yaml
 	swagger -q generate client \
 		--copyright-file=copyright-header.txt \
 		-t v2/acs-service \

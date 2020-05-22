@@ -7,9 +7,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/sirupsen/logrus"
+
+	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
+
+	organization_service "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
+
+	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
@@ -93,6 +102,13 @@ func (s *service) RequestCorporateSignature(authorizationHeader string, input *m
 	if proj.ProjectExternalID != utils.StringValue(input.ProjectSfid) {
 		return nil, errors.New("project_sfid does not match with cla_groups project_sfid")
 	}
+	if input.SendAsEmail {
+		// this would be used only in case of cla-signatory
+		err = prepareUserForSigning(input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
+		if err != nil {
+			return nil, err
+		}
+	}
 	out, err := requestCorporateSignature(authorizationHeader, s.ClaV1ApiURL, &requestCorporateSignatureInput{
 		ProjectID:      proj.ProjectID,
 		CompanyID:      comp.CompanyID,
@@ -140,4 +156,59 @@ func requestCorporateSignature(authToken string, apiURL string, input *requestCo
 		return nil, err
 	}
 	return &out, nil
+}
+
+func prepareUserForSigning(userEmail string, companySFID, projectSFID string) error {
+	role := "cla-signatory"
+	f := logrus.Fields{"user_email": userEmail, "company_sfid": companySFID, "project_sfid": projectSFID}
+	log.WithFields(f).Debug("prepareUserForSigning called")
+	usc := user_service.GetClient()
+	// search user
+	log.WithFields(f).Debug("searching user by email")
+	user, err := usc.SearchUserByEmail(userEmail)
+	if err != nil {
+		log.WithFields(f).Errorf("search user by email failed: %v", err)
+		return err
+	}
+	log.WithFields(f).Debugf("user type is %s", user.Type)
+	if user.Type == "lead" {
+		// convert user to contact
+		log.WithFields(f).Debug("converting lead to contact")
+		err = usc.ConvertToContact(user.ID)
+		if err != nil {
+			log.WithFields(f).Errorf("converting lead to contact failed: %v", err)
+			return err
+		}
+	}
+	ac := acs_service.GetClient()
+	log.WithFields(f).Debugf("getting role_id for %s", role)
+	roleID, err := ac.GetRoleID(role)
+	if err != nil {
+		fmt.Println("error", err)
+		log.WithFields(f).Errorf("getting role_id for %s failed: %v", role, err.Error())
+		return err
+	}
+	log.Debugf("role %s, role_id %s", role, roleID)
+	// assign user role of cla signatory for this project
+	osc := organization_service.GetClient()
+	if err != nil {
+		return err
+	}
+	log.WithFields(f).Debugf("checking if user have role of %s", role)
+	haveRole, err := osc.IsUserHaveRoleScope(roleID, user.ID, companySFID, projectSFID)
+	if err != nil {
+		log.WithFields(f).Errorf("checking user have role of %s. failed: %v", role, err)
+		return err
+	}
+	log.WithFields(f).Debugf("user have role %s: status %v", role, haveRole)
+	// make user cla-signatory
+	if !haveRole {
+		log.WithFields(f).Debugf("assigning user role of %s", role)
+		err = osc.CreateOrgUserRoleOrgScope(userEmail, companySFID, projectSFID, roleID)
+		if err != nil {
+			log.WithFields(f).Errorf("assigning user role of %s failed: %v", role, err)
+			return err
+		}
+	}
+	return nil
 }
