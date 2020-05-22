@@ -53,6 +53,7 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 		}
 
 		// Get SFProjectModel
+		log.Debugf("Getting Project with project service for ProjectSFID: %s", params.ProjectSFID)
 		projectServiceClient := v2ProjectService.GetClient()
 		projectSF, projectSFErr := projectServiceClient.GetProject(params.ProjectSFID)
 		if projectSFErr != nil {
@@ -66,6 +67,7 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 		}
 
 		// Search for salesForce Company aka external Company
+		log.Debugf("Getting company by external ID : %s", params.CompanySFID)
 		companyModel, companyErr := companyService.GetCompanyByExternalID(params.CompanySFID)
 		if companyErr != nil || companyModel == nil {
 			msg := buildErrorMessage("company lookup error", params, companyErr)
@@ -77,21 +79,30 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 		}
 
 		// Search for projects by ProjectSFID
+		log.Debugf("Getting CLAGroups for external Project: %s ", params.ProjectSFID)
 		projects, projectErr := projectService.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
 			ProjectSFID: params.ProjectSFID,
 		})
 
+		if projectErr != nil {
+			msg := buildErrorMessage("project lookup error", params, projectErr)
+			log.Warn(msg)
+			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			})
+		}
+
 		var claGroup *v1Models.Project
 		// Get unique project by passed CLAGroup ID parameter
 		for _, proj := range projects.Projects {
+			log.Debugf("CLA Project :%s ", proj.ProjectID)
 			if proj.ProjectID == params.ProjectID {
 				claGroup = &proj
-				break
 			}
 		}
-
-		if projectErr != nil || claGroup == nil {
-			msg := buildErrorMessage("project lookup error", params, projectErr)
+		if claGroup == nil {
+			msg := fmt.Sprintf("Error getting CLA group for projectExternalID: %s, CompanyExternalID: %s , CLAGroup ID: %s", params.ProjectSFID, params.CompanySFID, params.ProjectID)
 			log.Warn(msg)
 			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
@@ -110,11 +121,11 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 				Code:    "400",
 			})
 		}
-
+		log.Warn("Getting role")
 		// Get RoleID for cla-manager
 		acsClient := v2AcsService.GetClient()
 
-		roleID, roleErr := acsClient.GetRoleID("cla-manager")
+		roleID, roleErr := acsClient.GetRoleID("company-admin")
 		if roleErr != nil {
 			msg := buildErrorMessageCreate(params, roleErr)
 			log.Warn(msg)
