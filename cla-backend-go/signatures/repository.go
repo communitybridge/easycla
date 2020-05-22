@@ -45,14 +45,18 @@ type SignatureRepository interface {
 	GetSignature(signatureID string) (*models.Signature, error)
 	GetSignatureACL(signatureID string) ([]string, error)
 	GetProjectSignatures(params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error)
-	GetProjectCompanySignatures(companyID, projectID string, nextKey *string, pageSize int64) (*models.Signatures, error)
+	GetProjectCompanySignature(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signature, error)
+	GetProjectCompanySignatures(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signatures, error)
 	GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetCompanySignatures(params signatures.GetCompanySignaturesParams, pageSize int64, loadACL bool) (*models.Signatures, error)
 	GetUserSignatures(params signatures.GetUserSignaturesParams, pageSize int64) (*models.Signatures, error)
 	ProjectSignatures(projectID string) (*models.Signatures, error)
+	UpdateApprovalList(projectID, companyID string, params *models.ApprovalList) (*models.Signature, error)
 
 	AddCLAManager(signatureID, claManagerID string) (*models.Signature, error)
 	RemoveCLAManager(signatureID, claManagerID string) (*models.Signature, error)
+
+	removeColumn(signatureID, columnName string) (*models.Signature, error)
 }
 
 // repository data model
@@ -528,7 +532,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 		}
 	}
 
-	signatures := make([]*models.Signature, 0)
+	sigs := make([]*models.Signature, 0)
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -551,7 +555,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 		}
 
 		// Add to the signatures response model to the list
-		signatures = append(signatures, signatureList...)
+		sigs = append(sigs, signatureList...)
 
 		//log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey)
 		if results.LastEvaluatedKey["signature_id"] != nil {
@@ -561,7 +565,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 			lastEvaluatedKey = ""
 		}
 
-		if int64(len(signatures)) >= pageSize {
+		if int64(len(sigs)) >= pageSize {
 			break
 		}
 	}
@@ -578,29 +582,65 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 
 	// Meta-data for the response
 	totalCount := *describeTableResult.Table.ItemCount
-	if int64(len(signatures)) > pageSize {
-		signatures = signatures[0:pageSize]
-		lastEvaluatedKey = signatures[pageSize-1].SignatureID
+	if int64(len(sigs)) > pageSize {
+		sigs = sigs[0:pageSize]
+		lastEvaluatedKey = sigs[pageSize-1].SignatureID
 	}
 
 	return &models.Signatures{
 		ProjectID:      params.ProjectID,
-		ResultCount:    int64(len(signatures)),
+		ResultCount:    int64(len(sigs)),
 		TotalCount:     totalCount,
 		LastKeyScanned: lastEvaluatedKey,
-		Signatures:     signatures,
+		Signatures:     sigs,
 	}, nil
 }
 
+// GetProjectCompanySignature returns a the signature for the specified project and specified company with the other query flags
+func (repo repository) GetProjectCompanySignature(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signature, error) {
+	sigs, getErr := repo.GetProjectCompanySignatures(companyID, projectID, signed, approved, nextKey, pageSize)
+	if getErr != nil {
+		return nil, getErr
+	}
+
+	if sigs == nil || sigs.Signatures == nil {
+		return nil, nil
+	}
+
+	if len(sigs.Signatures) > 1 {
+		log.Warnf("more than 1 project company signatures returned in result using company ID: %s, project ID: %s - will return fist record",
+			companyID, projectID)
+	}
+
+	return sigs.Signatures[0], nil
+}
+
 // GetProjectCompanySignatures returns a list of signatures for the specified project and specified company
-func (repo repository) GetProjectCompanySignatures(companyID, projectID string, nextKey *string, pageSize int64) (*models.Signatures, error) {
+func (repo repository) GetProjectCompanySignatures(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signatures, error) {
 
 	// The table we're interested in
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 
 	// These are the keys we want to match
 	condition := expression.Key("signature_project_id").Equal(expression.Value(projectID))
-	filter := expression.Name("signature_reference_id").Equal(expression.Value(companyID))
+	filter := expression.Name("signature_reference_id").Equal(expression.Value(companyID)).
+		And(expression.Name("signature_type").Equal(expression.Value("ccla"))).
+		And(expression.Name("signature_reference_type").Equal(expression.Value("company")))
+
+	// If the caller provided a signature signed value...add the appropriate filter
+	if signed != nil {
+		filter.And(expression.Name("signature_signed").Equal(expression.Value(*signed)))
+	}
+
+	// If the caller provided a signature approved value...add the appropriate filter
+	if approved != nil {
+		filter.And(expression.Name("signature_approved").Equal(expression.Value(*approved)))
+	}
+
+	limit := int64(10)
+	if pageSize != nil {
+		limit = *pageSize
+	}
 
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithFilter(filter).WithProjection(buildProjection()).Build()
@@ -619,7 +659,7 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(tableName),
 		IndexName:                 aws.String("project-signature-index"), // Name of a secondary index to scan
-		//Limit:                     aws.Int64(pageSize),                   // The maximum number of items to evaluate (not necessarily the number of matching items)
+		Limit:                     aws.Int64(limit),
 	}
 
 	// If we have the next key, set the exclusive start key value
@@ -637,7 +677,7 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 		}
 	}
 
-	var signatures []*models.Signature
+	var sigs []*models.Signature
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -659,7 +699,7 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 		}
 
 		// Add to the signatures response model to the list
-		signatures = append(signatures, signatureList...)
+		sigs = append(sigs, signatureList...)
 
 		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
@@ -676,7 +716,7 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 			lastEvaluatedKey = ""
 		}
 
-		if int64(len(signatures)) >= pageSize {
+		if int64(len(sigs)) >= limit {
 			break
 		}
 	}
@@ -696,10 +736,10 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 
 	return &models.Signatures{
 		ProjectID:      projectID,
-		ResultCount:    int64(len(signatures)),
+		ResultCount:    int64(len(sigs)),
 		TotalCount:     totalCount,
 		LastKeyScanned: lastEvaluatedKey,
-		Signatures:     signatures,
+		Signatures:     sigs,
 	}, nil
 }
 
@@ -777,7 +817,7 @@ func (repo repository) InvalidateProjectRecord(signatureID string, projectName s
 
 	expressionAttributeNames := map[string]*string{}
 	expressionAttributeValues := map[string]*dynamodb.AttributeValue{}
-	updateExpression := "SET "
+	updateExpression := "SET " // nolint
 
 	expressionAttributeNames["#A"] = aws.String("signature_approved")
 	expressionAttributeValues[":a"] = &dynamodb.AttributeValue{BOOL: aws.Bool(false)}
@@ -856,7 +896,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 		}
 	}
 
-	signatures := make([]*models.Signature, 0)
+	sigs := make([]*models.Signature, 0)
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -879,7 +919,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 		}
 
 		// Add to the signatures response model to the list
-		signatures = append(signatures, signatureList...)
+		sigs = append(sigs, signatureList...)
 
 		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
@@ -889,7 +929,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 			lastEvaluatedKey = ""
 		}
 
-		if int64(len(signatures)) >= pageSize {
+		if int64(len(sigs)) >= pageSize {
 			break
 		}
 	}
@@ -906,17 +946,17 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 
 	// Meta-data for the response
 	totalCount := *describeTableResult.Table.ItemCount
-	if int64(len(signatures)) > pageSize {
-		signatures = signatures[0:pageSize]
-		lastEvaluatedKey = signatures[pageSize-1].SignatureID
+	if int64(len(sigs)) > pageSize {
+		sigs = sigs[0:pageSize]
+		lastEvaluatedKey = sigs[pageSize-1].SignatureID
 	}
 
 	return &models.Signatures{
 		ProjectID:      params.ProjectID,
-		ResultCount:    int64(len(signatures)),
+		ResultCount:    int64(len(sigs)),
 		TotalCount:     totalCount,
 		LastKeyScanned: lastEvaluatedKey,
-		Signatures:     signatures,
+		Signatures:     sigs,
 	}, nil
 }
 
@@ -972,7 +1012,7 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 		}
 	}
 
-	signatures := make([]*models.Signature, 0)
+	sigs := make([]*models.Signature, 0)
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -995,7 +1035,7 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 		}
 
 		// Add to the signatures response model to the list
-		signatures = append(signatures, signatureList...)
+		sigs = append(sigs, signatureList...)
 
 		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
@@ -1005,7 +1045,7 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 			lastEvaluatedKey = ""
 		}
 
-		if int64(len(signatures)) >= pageSize {
+		if int64(len(sigs)) >= pageSize {
 			break
 		}
 	}
@@ -1020,9 +1060,9 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 			params.CompanyID, *params.CompanyName, err)
 		return nil, err
 	}
-	if int64(len(signatures)) > pageSize {
-		signatures = signatures[0:pageSize]
-		lastEvaluatedKey = signatures[pageSize-1].SignatureID
+	if int64(len(sigs)) > pageSize {
+		sigs = sigs[0:pageSize]
+		lastEvaluatedKey = sigs[pageSize-1].SignatureID
 	}
 
 	// Meta-data for the response
@@ -1030,10 +1070,10 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 
 	return &models.Signatures{
 		ProjectID:      "",
-		ResultCount:    int64(len(signatures)),
+		ResultCount:    int64(len(sigs)),
 		TotalCount:     totalCount,
 		LastKeyScanned: lastEvaluatedKey,
-		Signatures:     signatures,
+		Signatures:     sigs,
 	}, nil
 }
 
@@ -1081,7 +1121,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 		}
 	}
 
-	signatures := make([]*models.Signature, 0)
+	sigs := make([]*models.Signature, 0)
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -1103,7 +1143,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 		}
 
 		// Add to the signatures response model to the list
-		signatures = append(signatures, signatureList...)
+		sigs = append(sigs, signatureList...)
 
 		// log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey["signature_id"])
 		if results.LastEvaluatedKey["signature_id"] != nil {
@@ -1113,7 +1153,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 			lastEvaluatedKey = ""
 		}
 
-		if int64(len(signatures)) >= pageSize {
+		if int64(len(sigs)) >= pageSize {
 			break
 		}
 	}
@@ -1134,10 +1174,10 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 
 	return &models.Signatures{
 		ProjectID:      "",
-		ResultCount:    int64(len(signatures)),
+		ResultCount:    int64(len(sigs)),
 		TotalCount:     totalCount,
 		LastKeyScanned: lastEvaluatedKey,
-		Signatures:     signatures,
+		Signatures:     sigs,
 	}, nil
 }
 
@@ -1270,9 +1310,223 @@ func (repo repository) RemoveCLAManager(signatureID, claManagerID string) (*mode
 	return sigModel, nil
 }
 
+// UpdateApprovalList updates the specified project/company signature with the updated approval list information
+func (repo repository) UpdateApprovalList(projectID, companyID string, params *models.ApprovalList) (*models.Signature, error) { // nolint
+	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+	log.Debugf("querying database for approval list details using project ID: %s, company ID: %s", projectID, companyID)
+
+	signed, approved := true, true
+	pageSize := int64(10)
+	log.Debugf("querying database for approval list details using company ID: %s project ID: %s, type: ccla, signed: true, approved: true",
+		companyID, projectID)
+	sigs, sigErr := repo.GetProjectCompanySignatures(companyID, projectID, &signed, &approved, nil, &pageSize)
+	if sigErr != nil {
+		return nil, sigErr
+	}
+
+	if sigs == nil || sigs.Signatures == nil {
+		msg := fmt.Sprintf("unable to locate signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
+			companyID, projectID, signed, approved)
+		log.Warn(msg)
+		return nil, errors.New(msg)
+	}
+
+	if len(sigs.Signatures) > 1 {
+		log.Warnf("more than 1 CCLA signature returned for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t - expecting zero or 1 - using first record",
+			companyID, projectID, signed, approved)
+	}
+
+	// Just grab and use the first one - need to figure out conflict resolution if more than one
+	sig := sigs.Signatures[0]
+	expressionAttributeNames := map[string]*string{}
+	expressionAttributeValues := map[string]*dynamodb.AttributeValue{}
+	haveAdditions := false
+	updateExpression := ""
+
+	// If we have an add or remove email list...we need to run an update for this column
+	if params.AddEmailApprovalList != nil || params.RemoveEmailApprovalList != nil {
+		columnName := "email_whitelist"
+		attrList := buildApprovalAttributeList(sig.EmailApprovalList, params.AddEmailApprovalList, params.RemoveEmailApprovalList)
+		// If no entries after consolidating all the updates, we need to remove the column
+		if attrList == nil || attrList.L == nil {
+			var rmColErr error
+			sig, rmColErr = repo.removeColumn(sig.SignatureID, columnName)
+			if rmColErr != nil {
+				msg := fmt.Sprintf("unable to remove column %s for signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
+					columnName, companyID, projectID, signed, approved)
+				log.Warn(msg)
+				return nil, errors.New(msg)
+			}
+		} else {
+			haveAdditions = true
+			expressionAttributeNames["#E"] = aws.String("email_whitelist")
+			expressionAttributeValues[":e"] = attrList
+			updateExpression = updateExpression + " #E = :e, "
+		}
+	}
+
+	if params.AddDomainApprovalList != nil || params.RemoveDomainApprovalList != nil {
+		columnName := "domain_whitelist"
+		attrList := buildApprovalAttributeList(sig.DomainApprovalList, params.AddDomainApprovalList, params.RemoveDomainApprovalList)
+		// If no entries after consolidating all the updates, we need to remove the column
+		if attrList == nil || attrList.L == nil {
+			var rmColErr error
+			sig, rmColErr = repo.removeColumn(sig.SignatureID, columnName)
+			if rmColErr != nil {
+				msg := fmt.Sprintf("unable to remove column %s for signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
+					columnName, companyID, projectID, signed, approved)
+				log.Warn(msg)
+				return nil, errors.New(msg)
+			}
+		} else {
+			haveAdditions = true
+			expressionAttributeNames["#D"] = aws.String(columnName)
+			expressionAttributeValues[":d"] = attrList
+			updateExpression = updateExpression + " #D = :d, "
+		}
+	}
+
+	if params.AddGithubUsernameApprovalList != nil || params.RemoveGithubUsernameApprovalList != nil {
+		columnName := "github_whitelist"
+		attrList := buildApprovalAttributeList(sig.GithubUsernameApprovalList, params.AddGithubUsernameApprovalList, params.RemoveGithubUsernameApprovalList)
+		// If no entries after consolidating all the updates, we need to remove the column
+		if attrList == nil || attrList.L == nil {
+			var rmColErr error
+			sig, rmColErr = repo.removeColumn(sig.SignatureID, columnName)
+			if rmColErr != nil {
+				msg := fmt.Sprintf("unable to remove column %s for signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
+					columnName, companyID, projectID, signed, approved)
+				log.Warn(msg)
+				return nil, errors.New(msg)
+			}
+		} else {
+			haveAdditions = true
+			expressionAttributeNames["#G"] = aws.String(columnName)
+			expressionAttributeValues[":g"] = attrList
+			updateExpression = updateExpression + " #G = :g, "
+		}
+	}
+
+	if params.AddGithubOrgApprovalList != nil || params.RemoveGithubOrgApprovalList != nil {
+		columnName := "github_org_whitelist"
+		attrList := buildApprovalAttributeList(sig.GithubOrgApprovalList, params.AddGithubOrgApprovalList, params.RemoveGithubOrgApprovalList)
+		// If no entries after consolidating all the updates, we need to remove the column
+		if attrList == nil || attrList.L == nil {
+			var rmColErr error
+			sig, rmColErr = repo.removeColumn(sig.SignatureID, columnName)
+			if rmColErr != nil {
+				msg := fmt.Sprintf("unable to remove column %s for signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
+					columnName, companyID, projectID, signed, approved)
+				log.Warn(msg)
+				return nil, errors.New(msg)
+			}
+		} else {
+			haveAdditions = true
+			expressionAttributeNames["#GO"] = aws.String("github_org_whitelist")
+			expressionAttributeValues[":go"] = attrList
+			updateExpression = updateExpression + " #GO = :go, "
+		}
+	}
+
+	// Ensure at least one value is set for us to update
+	if !haveAdditions {
+		log.Debugf("no updates required to any of the approved list values company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t - expecting at least something to update",
+			companyID, projectID, signed, approved)
+		return sig, nil
+	}
+
+	// Remove trailing comma from the expression, if present
+	updateExpression = utils.TrimRemoveTrailingComma("SET " + updateExpression)
+
+	// Update dynamoDB table
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"signature_id": {
+				S: aws.String(sig.SignatureID),
+			},
+		},
+		ExpressionAttributeNames:  expressionAttributeNames,
+		ExpressionAttributeValues: expressionAttributeValues,
+		UpdateExpression:          aws.String(updateExpression), //aws.String("SET #L = :l"),
+	}
+
+	log.Debugf("updating approval list for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
+		companyID, projectID, signed, approved)
+
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Warnf("error updating approval lists for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t, error: %v",
+			companyID, projectID, signed, approved, updateErr)
+		return nil, updateErr
+	}
+
+	log.Debugf("querying database for approval list details after update using company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
+		companyID, projectID, signed, approved)
+
+	updatedSig, sigErr := repo.GetProjectCompanySignatures(companyID, projectID, &signed, &approved, nil, &pageSize)
+	if sigErr != nil {
+		return nil, sigErr
+	}
+
+	if updatedSig == nil || updatedSig.Signatures == nil {
+		msg := fmt.Sprintf("unable to locate signature after update for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
+			companyID, projectID, signed, approved)
+		log.Warn(msg)
+		return nil, errors.New(msg)
+	}
+
+	if len(updatedSig.Signatures) > 1 {
+		log.Warnf("more than 1 CCLA signature returned after update for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t - expecting zero or 1 - using first record",
+			companyID, projectID, signed, approved)
+	}
+
+	// Just grab and use the first one - need to figure out conflict resolution if more than one
+	return updatedSig.Signatures[0], nil
+}
+
+// removeColumn is a helper function to remove a given column when we need to zero out the column value - typically the approval list
+func (repo repository) removeColumn(signatureID, columnName string) (*models.Signature, error) {
+	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+	log.Debugf("removing column %s from signature ID: %s", columnName, signatureID)
+
+	// Update dynamoDB table
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"signature_id": {
+				S: aws.String(signatureID),
+			},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#" + columnName: aws.String(columnName),
+		},
+		//ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+		//	":a": {
+		//		S: aws.String("bar"),
+		//	},
+		//},
+		UpdateExpression: aws.String("REMOVE #" + columnName), //aws.String("REMOVE github_org_whitelist"),
+		ReturnValues:     aws.String(dynamodb.ReturnValueNone),
+	}
+
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Warnf("error removing approval lists column %s for signature ID: %s, error: %v", columnName, signatureID, updateErr)
+		return nil, updateErr
+	}
+
+	updatedSig, sigErr := repo.GetSignature(signatureID)
+	if sigErr != nil {
+		return nil, sigErr
+	}
+
+	return updatedSig, nil
+}
+
 // buildProjectSignatureModels converts the response model into a response data model
 func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput, projectID string, loadACLDetails bool) ([]*models.Signature, error) {
-	var signatures []*models.Signature
+	var sigs []*models.Signature
 
 	// The DB signature model
 	var dbSignatures []ItemSignature
@@ -1304,12 +1558,12 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			ProjectID:                   dbSignature.SignatureProjectID,
 			Created:                     dbSignature.DateCreated,
 			Modified:                    dbSignature.DateModified,
-			EmailWhitelist:              dbSignature.EmailWhitelist,
-			DomainWhitelist:             dbSignature.DomainWhitelist,
-			GithubWhitelist:             dbSignature.GitHubWhitelist,
-			GithubOrgWhitelist:          dbSignature.GitHubOrgWhitelist,
+			EmailApprovalList:           dbSignature.EmailWhitelist,
+			DomainApprovalList:          dbSignature.DomainWhitelist,
+			GithubUsernameApprovalList:  dbSignature.GitHubWhitelist,
+			GithubOrgApprovalList:       dbSignature.GitHubOrgWhitelist,
 		}
-		signatures = append(signatures, sig)
+		sigs = append(sigs, sig)
 		go func(sigModel *models.Signature, signatureUserCompanyID string, sigACL []string) {
 			defer wg.Done()
 			var companyName = ""
@@ -1377,7 +1631,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 		}(sig, dbSignature.SignatureUserCompanyID, dbSignature.SignatureACL)
 	}
 	wg.Wait()
-	return signatures, nil
+	return sigs, nil
 }
 
 // buildResponse is a helper function which converts a database model to a GitHub organization response model
@@ -1428,4 +1682,51 @@ func buildSignatureACLProjection() expression.ProjectionBuilder {
 		expression.Name("signature_id"),
 		expression.Name("signature_acl"),
 	)
+}
+
+// buildApprovalAttributeList builds the updated approval list based on the added and removed values
+func buildApprovalAttributeList(existingList, addEntries, removeEntries []string) *dynamodb.AttributeValue {
+	var updatedList []string
+	log.Debugf("buildApprovalAttributeList - existing: %+v, add entries: %+v, remove entries: %+v",
+		existingList, addEntries, removeEntries)
+
+	// Add the existing entries to our response
+	for _, value := range existingList {
+		// No duplicates allowed
+		if !utils.StringInSlice(value, updatedList) {
+			log.Debugf("buildApprovalAttributeList - adding existing entry: %s", value)
+			updatedList = append(updatedList, value)
+		} else {
+			log.Debugf("buildApprovalAttributeList - skiping existing entry: %s", value)
+		}
+	}
+
+	// For all the new values...
+	for _, value := range addEntries {
+		// No duplicates allowed
+		if !utils.StringInSlice(value, updatedList) {
+			log.Debugf("buildApprovalAttributeList - adding new entry: %s", value)
+			updatedList = append(updatedList, value)
+		} else {
+			log.Debugf("buildApprovalAttributeList - skipping new entry: %s", value)
+		}
+	}
+
+	// Remove the items
+	log.Debugf("buildApprovalAttributeList - before: %+v - removing entries: %+v", updatedList, removeEntries)
+	updatedList = utils.RemoveItemsFromList(updatedList, removeEntries)
+	log.Debugf("buildApprovalAttributeList - after: %+v - removing entries: %+v", updatedList, removeEntries)
+
+	// Remove any duplicates - shouldn't have any if checked before adding
+	log.Debugf("buildApprovalAttributeList - before: %+v - removing duplicates", updatedList)
+	updatedList = utils.RemoveDuplicates(updatedList)
+	log.Debugf("buildApprovalAttributeList - after: %+v - removing duplicates", updatedList)
+
+	// Convert to the response type
+	var responseList []*dynamodb.AttributeValue
+	for _, value := range updatedList {
+		responseList = append(responseList, &dynamodb.AttributeValue{S: aws.String(value)})
+	}
+
+	return &dynamodb.AttributeValue{L: responseList}
 }

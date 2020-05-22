@@ -38,7 +38,7 @@ var (
 // constants
 const (
 	// used when we want to query all data from dependent service.
-	HugePageSize        = 10000
+	HugePageSize        = int64(10000)
 	LoadRepoDetails     = true
 	DontLoadRepoDetails = false
 )
@@ -119,14 +119,16 @@ func (s *service) getCompanyProjectCCLASignatures(companyID string, projects *v1
 	for _, project := range projects.Projects {
 		go func(companyID, projectID string, responseChan chan *signatureResponse) {
 			defer wg.Done()
-			signatures, err := s.signatureRepo.GetProjectCompanySignatures(companyID, projectID, nil, HugePageSize)
+			signed, approved := true, true
+			pageSize := HugePageSize
+			sigs, err := s.signatureRepo.GetProjectCompanySignatures(companyID, projectID, &signed, &approved, nil, &pageSize)
 			if err != nil {
 				return
 			}
 			responseChan <- &signatureResponse{
 				companyID:  companyID,
 				projectID:  projectID,
-				signatures: signatures,
+				signatures: sigs,
 				err:        err,
 			}
 		}(companyID, project.ProjectID, res)
@@ -361,8 +363,8 @@ func (s *service) filterClaProjects(projects []*v2ProjectServiceModels.ProjectOu
 	for _, v := range projects {
 		go func(projectOutput *v2ProjectServiceModels.ProjectOutput) {
 			project, err := s.projectRepo.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
-				ExternalID: projectOutput.ID,
-				PageSize:   aws.Int64(1),
+				ProjectSFID: projectOutput.ID,
+				PageSize:    aws.Int64(1),
 			}, DontLoadRepoDetails)
 			if err != nil {
 				log.Warnf("Unable to fetch project details for project with external id %s. error = %s", projectOutput.ID, err)
@@ -508,7 +510,7 @@ func (s *service) GetCompanyProjectCLA(authUser *auth.User, companySFID, project
 		}
 	}
 	// get company and projects
-	company, projects, err := s.getCompanyAndProjects(companySFID, projectSFID)
+	companyModel, projects, err := s.getCompanyAndProjects(companySFID, projectSFID)
 	if err != nil {
 		return nil, err
 	}
@@ -516,7 +518,7 @@ func (s *service) GetCompanyProjectCLA(authUser *auth.User, companySFID, project
 		return nil, errors.New("project not found")
 	}
 	// get company project signatures
-	sigs, err := s.getCompanyProjectCCLASignatures(company.CompanyID, projects)
+	sigs, err := s.getCompanyProjectCCLASignatures(companyModel.CompanyID, projects)
 	if err != nil {
 		return nil, err
 	}
@@ -586,8 +588,8 @@ func (s *service) getCompanyAndProjects(companySFID, projectSFID string) (*v1Mod
 		defer cp.Done()
 		t := time.Now()
 		projects, projectErr = s.projectRepo.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
-			ExternalID: projectSFID,
-			PageSize:   aws.Int64(HugePageSize),
+			ProjectSFID: projectSFID,
+			PageSize:    aws.Int64(HugePageSize),
 		}, DontLoadRepoDetails)
 		log.WithField("time_taken", time.Since(t).String()).Debugf("getting project by external id : %s completed", projectSFID)
 	}()

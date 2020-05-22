@@ -164,11 +164,11 @@ func (repo *repo) GetProjectByID(projectID string) (*models.Project, error) {
 
 // GetProjectsByExternalID queries the database and returns a list of the projects
 func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams, loadRepoDetails bool) (*models.Projects, error) {
-	log.Debugf("Project - Repository Service - GetProjectsByExternalID - ExternalID: %s", params.ExternalID)
+	log.Debugf("Project - Repository Service - GetProjectsByExternalID - ExternalID: %s", params.ProjectSFID)
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
 	// This is the key we want to match
-	condition := expression.Key("project_external_id").Equal(expression.Value(params.ExternalID))
+	condition := expression.Key("project_external_id").Equal(expression.Value(params.ProjectSFID))
 
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
