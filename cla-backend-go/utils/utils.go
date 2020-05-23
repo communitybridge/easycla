@@ -87,6 +87,49 @@ func StringInSlice(a string, list []string) bool {
 	return false
 }
 
+// RemoveItemsFromList given a list, removes the specified entries from that list
+func RemoveItemsFromList(existingList, removeEntries []string) []string {
+	if existingList == nil {
+		return nil
+	}
+
+	if removeEntries == nil {
+		return existingList
+	}
+
+	for _, value := range removeEntries {
+		idx := -1
+		for i, item := range existingList {
+			if value == item {
+				idx = i
+				break
+			}
+		}
+		if idx != -1 {
+			existingList = append(existingList[:idx], existingList[idx+1:]...)
+		}
+	}
+
+	return existingList
+}
+
+// RemoveDuplicates removes any duplicate entries in the provided list and returns a new list
+func RemoveDuplicates(list []string) []string {
+	if list == nil {
+		return nil
+	}
+
+	var newList []string
+
+	for _, v := range list {
+		if !StringInSlice(v, newList) {
+			newList = append(newList, v)
+		}
+	}
+
+	return newList
+}
+
 // HostInSlice returns true if the specified host value exists in the slice, otherwise returns false
 func HostInSlice(a string, list []string) bool {
 	if list == nil {

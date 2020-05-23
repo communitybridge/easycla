@@ -46,19 +46,27 @@ properties:
     type: string
   signatureMinorVersion:
     type: string
-  emailWhitelist:
+  emailApprovalList:
     type: array
+    description: a list of zero or more email addresses in the approval list
+    x-nullable: true
     items:
       type: string
-  domainWhitelist:
+  domainApprovalList:
     type: array
+    description: a list of zero or more domains in the approval list
+    x-nullable: true
     items:
       type: string
-  githubWhitelist:
+  githubUsernameApprovalList:
     type: array
+    description: a list of zero or more GitHub user name values in the approval list
+    x-nullable: true
     items:
       type: string
-  githubOrgWhitelist:
+  githubOrgApprovalList:
     type: array
+    description: a list of zero or more GitHub organization values in the approval list
+    x-nullable: true
     items:
       type: string

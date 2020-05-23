@@ -105,7 +105,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 	api.ProjectGetProjectsByExternalIDHandler = project.GetProjectsByExternalIDHandlerFunc(func(projectParams project.GetProjectsByExternalIDParams, claUser *user.CLAUser) middleware.Responder {
 
 		log.Debugf("Project Handler - GetProjectsByExternalID")
-		if projectParams.ExternalID == "" {
+		if projectParams.ProjectSFID == "" {
 			return project.NewGetProjectsByExternalIDBadRequest().WithPayload(&models.ErrorResponse{
 				Code:    "400",
 				Message: "External ID is empty",

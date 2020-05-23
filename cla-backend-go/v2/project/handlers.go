@@ -170,7 +170,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 
 		projectModel, err := service.GetProjectsByExternalID(&v1ProjectOps.GetProjectsByExternalIDParams{
 			HTTPRequest: projectParams.HTTPRequest,
-			ExternalID:  projectParams.ExternalID,
+			ProjectSFID: projectParams.ExternalID,
 			NextKey:     projectParams.NextKey,
 			PageSize:    projectParams.PageSize,
 		})

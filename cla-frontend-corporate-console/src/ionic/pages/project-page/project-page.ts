@@ -142,36 +142,35 @@ export class ProjectPage {
             this.cclaSignature = cclaSignatures[0];
 
             // Sort the values
-            if (this.cclaSignature.domainWhitelist) {
-              const sortedList: string[] = this.cclaSignature.domainWhitelist.sort((a, b) => {
+            if (this.cclaSignature.domainApprovalList) {
+              const sortedList: string[] = this.cclaSignature.domainApprovalList.sort((a, b) => {
                 return a.trim().localeCompare(b.trim());
               });
               // Remove duplicates - set doesn't allow dups
-              this.cclaSignature.domainWhitelist = Array.from(new Set(sortedList));
+              this.cclaSignature.domainApprovalList = Array.from(new Set(sortedList));
             }
-            if (this.cclaSignature.emailWhitelist) {
-              const sortedList: string[] = this.cclaSignature.emailWhitelist.sort((a, b) => {
+            if (this.cclaSignature.emailApprovalList) {
+              const sortedList: string[] = this.cclaSignature.emailApprovalList.sort((a, b) => {
                 return a.trim().localeCompare(b.trim());
               });
               // Remove duplicates - set doesn't allow dups
-              this.cclaSignature.emailWhitelist = Array.from(new Set(sortedList));
+              this.cclaSignature.emailApprovalList = Array.from(new Set(sortedList));
             }
-            if (this.cclaSignature.githubWhitelist) {
-              const sortedList: string[] = this.cclaSignature.githubWhitelist.sort((a, b) => {
+            if (this.cclaSignature.githubUsernameApprovalList) {
+              const sortedList: string[] = this.cclaSignature.githubUsernameApprovalList.sort((a, b) => {
                 return a.trim().localeCompare(b.trim());
               });
               // Remove duplicates - set doesn't allow dups
-              this.cclaSignature.githubWhitelist = Array.from(new Set(sortedList));
+              this.cclaSignature.githubUsernameApprovalList = Array.from(new Set(sortedList));
             }
-            if (this.cclaSignature.githubOrgWhitelist) {
-              const sortedList: string[] = this.cclaSignature.githubOrgWhitelist.sort((a, b) => {
+            if (this.cclaSignature.githubOrgApprovalList) {
+              const sortedList: string[] = this.cclaSignature.githubOrgApprovalList.sort((a, b) => {
                 return a.trim().localeCompare(b.trim());
               });
               // Remove duplicates - set doesn't allow dups
-              this.cclaSignature.githubOrgWhitelist = Array.from(new Set(sortedList));
+              this.cclaSignature.githubOrgApprovalList = Array.from(new Set(sortedList));
             }
             this.getCLAManagers();
-            //this.getGitHubOrgWhitelist();
           }
         }
       },
@@ -217,7 +216,7 @@ export class ProjectPage {
       companyName: this.company.company_name,
       projectId: this.cclaSignature.projectID,
       signatureId: this.cclaSignature.signatureID,
-      whitelist: this.cclaSignature.domainWhitelist
+      whitelist: this.cclaSignature.domainApprovalList
     });
     modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
@@ -234,7 +233,7 @@ export class ProjectPage {
       projectId: this.cclaSignature.projectID,
       companyId: this.companyId,
       signatureId: this.cclaSignature.signatureID,
-      whitelist: this.cclaSignature.emailWhitelist
+      whitelist: this.cclaSignature.emailApprovalList
     });
     modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
@@ -250,7 +249,7 @@ export class ProjectPage {
       companyName: this.company.company_name,
       projectId: this.cclaSignature.projectID,
       signatureId: this.cclaSignature.signatureID,
-      whitelist: this.cclaSignature.githubWhitelist
+      whitelist: this.cclaSignature.githubUsernameApprovalList
     });
     modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed
@@ -266,7 +265,7 @@ export class ProjectPage {
       companyName: this.company.company_name,
       projectId: this.cclaSignature.projectID,
       signatureId: this.cclaSignature.signatureID,
-      whitelist: this.cclaSignature.githubOrgWhitelist
+      whitelist: this.cclaSignature.githubOrgApprovalList
     });
     modal.onDidDismiss((data) => {
       // A refresh of data anytime the modal is dismissed

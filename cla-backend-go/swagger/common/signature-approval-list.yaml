@@ -1,0 +1,53 @@
+type: object
+title: A signature approval list
+description: A signature approval list for a project / company
+properties:
+  AddEmailApprovalList:
+    type: array
+    description: a list of zero or more email addresses to be added to the approval list
+    x-nullable: true
+    items:
+      type: string
+  RemoveEmailApprovalList:
+    type: array
+    description: a list of zero or more email addresses to be from to the approval list
+    x-nullable: true
+    items:
+      type: string
+  AddDomainApprovalList:
+    type: array
+    description: a list of zero or more domains to be added to the approval list
+    x-nullable: true
+    items:
+      type: string
+  RemoveDomainApprovalList:
+    type: array
+    description: a list of zero or more domains to be removed from the approval list
+    x-nullable: true
+    items:
+      type: string
+  AddGithubUsernameApprovalList:
+    type: array
+    description: a list of zero or more GitHub user name values to be added to the approval list
+    x-nullable: true
+    items:
+      type: string
+  RemoveGithubUsernameApprovalList:
+    type: array
+    description: a list of zero or more GitHub user name values to be removed from the approval list
+    x-nullable: true
+    items:
+      type: string
+  AddGithubOrgApprovalList:
+    type: array
+    description: a list of zero or more GitHub organization values to be added to the approval list
+    x-nullable: true
+    items:
+      type: string
+  RemoveGithubOrgApprovalList:
+    type: array
+    description: a list of zero or more GitHub organization values to be removed from the approval list
+    x-nullable: true
+    items:
+      type: string
+

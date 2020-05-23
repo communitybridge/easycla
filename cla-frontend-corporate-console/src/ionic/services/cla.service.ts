@@ -235,7 +235,6 @@ export class ClaService {
    * @param nextKey the next key used when asking for the next page of results
    */
   getCompanyProjectSignatures(companyId, projectId, pageSize = 50, nextKey = '') {
-    //const url: URL = this.getV1Endpoint('/v1/signatures/company/' + companyId + '/project/' + projectId);
     // Leverage the new go backend v3 endpoint - note the slightly different path layout
     let path: string = '/v3/signatures/project/' + projectId + '/company/' + companyId + '?pageSize=' + pageSize;
     if (nextKey != null && nextKey !== '' && nextKey.trim().length > 0) {

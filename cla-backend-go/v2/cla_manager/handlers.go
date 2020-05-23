@@ -78,7 +78,7 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 
 		// Search for projects by ProjectSFID
 		projects, projectErr := projectService.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
-			ExternalID: params.ProjectSFID,
+			ProjectSFID: params.ProjectSFID,
 		})
 
 		var claGroup *v1Models.Project
@@ -208,7 +208,7 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 
 		// Search for projects by ProjectSFID
 		projects, projectErr := projectService.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
-			ExternalID: params.ProjectSFID,
+			ProjectSFID: params.ProjectSFID,
 		})
 
 		var claGroup *v1Models.Project

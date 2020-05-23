@@ -6,6 +6,8 @@ package main
 import (
 	"os"
 
+	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/approval_list"
+
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/signatures"
 
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/cla_manager"
@@ -83,5 +85,6 @@ func main() {
 	health.NewTestBehaviour(apiURL, auth0User1Config).RunAllTests()
 	cla_manager.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
 	signatures.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
+	approval_list.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
 	frisby.Global.PrintReport()
 }
