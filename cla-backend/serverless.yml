@@ -41,7 +41,7 @@ custom:
   # versions to avoid the "Code storage limit exceeded" error
   prune:
     automatic: true
-    number: 10
+    number: 3
 
 provider:
   name: aws

@@ -91,7 +91,9 @@ func (s service) AddCclaWhitelistRequest(companyID string, projectID string, arg
 		return "", errors.New("invalid user")
 	}
 
-	sig, sigErr := s.signatureRepo.GetProjectCompanySignatures(companyID, projectID, nil, 5)
+	signed, approved := true, true
+	pageSize := int64(5)
+	sig, sigErr := s.signatureRepo.GetProjectCompanySignatures(companyID, projectID, &signed, &approved, nil, &pageSize)
 	if sigErr != nil || sig == nil || sig.Signatures == nil {
 		log.Warnf("AddCclaWhitelistRequest - unable to lookup signature by company id: %s project id: %s - (or no managers), sig: %+v, error: %+v",
 			companyID, projectID, sig, err)
@@ -174,7 +176,9 @@ func (s service) RejectCclaWhitelistRequest(companyID, projectID, requestID stri
 		return err
 	}
 
-	sig, sigErr := s.signatureRepo.GetProjectCompanySignatures(companyID, projectID, nil, 5)
+	signed, approved := true, true
+	pageSize := int64(5)
+	sig, sigErr := s.signatureRepo.GetProjectCompanySignatures(companyID, projectID, &signed, &approved, nil, &pageSize)
 	if sigErr != nil || sig == nil || sig.Signatures == nil {
 		log.Warnf("RejectCclaWhitelistRequest - unable to lookup signature by company id: %s project id: %s - (or no managers), sig: %+v, error: %+v",
 			companyID, projectID, sig, err)

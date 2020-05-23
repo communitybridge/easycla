@@ -70,8 +70,8 @@ func (s *service) filterClaProjects(projects []*v2ProjectServiceModels.ProjectOu
 	for _, v := range projects {
 		go func(projectOutput *v2ProjectServiceModels.ProjectOutput) {
 			project, err := s.projectRepo.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
-				ExternalID: projectOutput.ID,
-				PageSize:   aws.Int64(1),
+				ProjectSFID: projectOutput.ID,
+				PageSize:    aws.Int64(1),
 			}, false)
 			if err != nil {
 				log.Warnf("Unable to fetch project details for project with external id %s. error = %s", projectOutput.ID, err)

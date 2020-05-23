@@ -21,6 +21,7 @@ import (
 type SignatureService interface {
 	GetSignature(signatureID string) (*models.Signature, error)
 	GetProjectSignatures(params signatures.GetProjectSignaturesParams) (*models.Signatures, error)
+	GetProjectCompanySignature(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signature, error)
 	GetProjectCompanySignatures(params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error)
 	GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error)
 	GetCompanySignatures(params signatures.GetCompanySignaturesParams) (*models.Signatures, error)
@@ -30,6 +31,7 @@ type SignatureService interface {
 	GetGithubOrganizationsFromWhitelist(signatureID string, githubAccessToken string) ([]models.GithubOrg, error)
 	AddGithubOrganizationToWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
 	DeleteGithubOrganizationFromWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
+	UpdateApprovalList(projectID, companyID string, params *models.ApprovalList) (*models.Signature, error)
 
 	AddCLAManager(signatureID, claManagerID string) (*models.Signature, error)
 	RemoveCLAManager(signatureID, claManagerID string) (*models.Signature, error)
@@ -70,6 +72,11 @@ func (s service) GetProjectSignatures(params signatures.GetProjectSignaturesPara
 	return projectSignatures, nil
 }
 
+// GetProjectCompanySignature returns the signature associated with the specified project and company
+func (s service) GetProjectCompanySignature(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signature, error) {
+	return s.repo.GetProjectCompanySignature(companyID, projectID, signed, approved, nextKey, pageSize)
+}
+
 // GetProjectCompanySignatures returns the list of signatures associated with the specified project
 func (s service) GetProjectCompanySignatures(params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error) {
 
@@ -79,7 +86,11 @@ func (s service) GetProjectCompanySignatures(params signatures.GetProjectCompany
 		pageSize = *params.PageSize
 	}
 
-	projectSignatures, err := s.repo.GetProjectCompanySignatures(params.CompanyID, params.ProjectID, params.NextKey, pageSize)
+	signed := true
+	approved := true
+
+	projectSignatures, err := s.repo.GetProjectCompanySignatures(
+		params.CompanyID, params.ProjectID, &signed, &approved, params.NextKey, &pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -329,6 +340,11 @@ func (s service) DeleteGithubOrganizationFromWhitelist(signatureID string, white
 	}
 
 	return gitHubWhiteList, nil
+}
+
+// UpdateApprovalList service method
+func (s service) UpdateApprovalList(projectID, companyID string, params *models.ApprovalList) (*models.Signature, error) {
+	return s.repo.UpdateApprovalList(projectID, companyID, params)
 }
 
 // Disassociate project signatures

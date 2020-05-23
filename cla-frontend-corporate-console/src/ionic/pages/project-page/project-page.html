@@ -25,7 +25,7 @@
                 </h3>
                 <div class="list-container">
                   <ion-list>
-                    <ion-item *ngFor="let domain of cclaSignature.domainWhitelist">
+                    <ion-item *ngFor="let domain of cclaSignature.domainApprovalList">
                       {{ domain }}
                     </ion-item>
                   </ion-list>
@@ -39,7 +39,7 @@
                 </h3>
                 <div class="list-container">
                   <ion-list>
-                    <ion-item *ngFor="let email of cclaSignature.emailWhitelist">
+                    <ion-item *ngFor="let email of cclaSignature.emailApprovalList">
                       {{ email }}
                     </ion-item>
                   </ion-list>
@@ -53,7 +53,7 @@
                 </h3>
                 <div class="list-container">
                   <ion-list>
-                    <ion-item *ngFor="let username of cclaSignature.githubWhitelist">
+                    <ion-item *ngFor="let username of cclaSignature.githubUsernameApprovalList">
                       {{ username }}
                     </ion-item>
                   </ion-list>
@@ -67,7 +67,7 @@
                 </h3>
                 <div class="list-container">
                   <ion-list>
-                    <ion-item *ngFor="let org of cclaSignature.githubOrgWhitelist">
+                    <ion-item *ngFor="let org of cclaSignature.githubOrgApprovalList">
                       {{ org }}
                     </ion-item>
                   </ion-list>
