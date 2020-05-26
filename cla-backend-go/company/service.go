@@ -6,6 +6,8 @@ package company
 import (
 	"fmt"
 
+	"github.com/sirupsen/logrus"
+
 	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 
 	"github.com/communitybridge/easycla/cla-backend-go/users"
@@ -607,46 +609,62 @@ func (s service) SearchOrganizationByName(orgName string) (*models.OrgList, erro
 }
 
 func (s service) createOrgFromExternalID(orgID string) (*models.Company, error) {
+	f := logrus.Fields{"orgID": orgID}
 	osc := organization_service.GetClient()
+	log.WithFields(f).Debugf("getting organization details")
 	org, err := osc.GetOrganization(orgID)
 	if err != nil {
+		log.WithFields(f).Errorf("getting organization details failed. error = %s", err.Error())
 		return nil, err
 	}
+	f["ownerID"] = org.Owner.ID
+	log.WithFields(f).Debugf("getting user information")
 	usc := user_service.GetClient()
-	user, err := usc.GetUserByUsername(org.Owner.ID)
+	//user, err := usc.GetUserByUsername(org.Owner.ID)
+	staff, err := usc.GetStaff(org.Owner.ID)
 	if err != nil {
+		log.WithFields(f).Errorf("getting user information failed. error = %s", err.Error())
 		return nil, err
 	}
-	claUser, err := s.userService.GetUserByLFUserName(user.Username)
+	if staff.LfID == nil {
+		log.WithFields(f).Errorf("getting user information failed. error = %s", err.Error())
+		return nil, err
+	}
+	f["username"] = *staff.LfID
+	log.WithFields(f).Debugf("getting user information from cla")
+	claUser, err := s.userService.GetUserByLFUserName(*staff.LfID)
 	if err != nil {
+		log.WithFields(f).Errorf("getting user information from cla failed. error = %s", err.Error())
 		return nil, err
 	}
 	if claUser == nil {
-		var primaryEmail string
-		for _, email := range user.Emails {
-			if email.IsPrimary != nil && *email.IsPrimary && email.IsVerified != nil && *email.IsVerified {
-				primaryEmail = utils.StringValue(email.EmailAddress)
-			}
+		newUser := &models.User{
+			LfEmail:        utils.StringValue(staff.Email),
+			LfUsername:     utils.StringValue(staff.LfID),
+			UserExternalID: org.Owner.ID,
+			Username:       utils.StringValue(staff.FirstName) + " " + utils.StringValue(staff.LastName),
 		}
 		// create cla-user
-		claUser, err = s.userService.CreateUser(&models.User{
-			LfEmail:        primaryEmail,
-			LfUsername:     user.Username,
-			UserExternalID: user.ID,
-			Username:       user.Name,
-		})
+		f["user"] = newUser
+		log.WithFields(f).Debugf("cla user not found. creating cla user.")
+		claUser, err = s.userService.CreateUser(newUser)
 		if err != nil {
+			log.WithFields(f).Debugf("creating cla user failed. error = %s", err.Error())
 			return nil, err
 		}
 	}
-	// create company
-	comp, err := s.repo.CreateCompany(&models.Company{
+	newComp := &models.Company{
 		CompanyACL:        nil,
 		CompanyExternalID: org.ID,
 		CompanyName:       org.Name,
 		CompanyManagerID:  claUser.UserID,
-	})
+	}
+	f["company"] = newComp
+	log.WithFields(f).Debugf("creating cla company")
+	// create company
+	comp, err := s.repo.CreateCompany(newComp)
 	if err != nil {
+		log.WithFields(f).Debugf("creating cla company failed. error = %s", err.Error())
 		return nil, err
 	}
 	return comp, nil

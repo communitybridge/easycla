@@ -762,6 +762,33 @@ paths:
       tags:
         - company
 
+  /company/external/{companySFID}:
+    get:
+      summary: Get company
+      description: Returns the company by external ID
+      security: []
+      operationId: getCompanyByExternalID
+      parameters:
+        - name: companySFID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
   /company/user/{userID}:
     get:
       summary: API to retrieve a list of companies where the user is the manager
@@ -2278,38 +2305,7 @@ definitions:
           $ref: '#/definitions/company-with-invite'
 
   company:
-    type: object
-    x-nullable: false
-    title: Company
-    description: Company Model
-    properties:
-      companyID:
-        description: The company unique ID
-        example: 13f79a8f-734d-44c1-ab03-ab98c2a1b64a
-        type: string
-      companyExternalID:
-        description: the company external ID
-        type: string
-      companyName:
-        description: The company name
-        example: Acme, Inc.
-        type: string
-      companyManagerID:
-        description: The company manager id
-        type: string
-      companyACL:
-        type: array
-        description: A list of user ID's authorized to make changes to the company
-        items:
-          type: string
-      created:
-        type: string
-        description: The company record created date/time
-        format: date-time
-      updated:
-        type: string
-        description: The company record update date/time
-        format: date-time
+    $ref: './common/company.yaml'
 
   company-with-invite:
     type: object

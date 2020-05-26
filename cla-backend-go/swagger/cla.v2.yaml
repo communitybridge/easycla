@@ -1430,6 +1430,62 @@ paths:
       tags:
         - sign
 
+  /organization/search:
+    get:
+      summary: Search companies from organization service
+      description: Searches for matching organization by name
+      security: []
+      operationId: searchOrganization
+      parameters:
+        - name: companyName
+          in: query
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/org-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - organization
+
+  /company/external/{companySFID}:
+    get:
+      summary: Get company
+      description: Returns the company by external ID
+      security: []
+      operationId: getCompanyByExternalID
+      parameters:
+        - name: companySFID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - company
+
 responses:
   unauthorized:
     description: Unauthorized
@@ -1658,6 +1714,15 @@ definitions:
 
   github-repository-info:
     $ref: './common/github-repository-info.yaml'
+
+  org-list:
+    $ref: './common/org-list.yaml'
+
+  org:
+    $ref: './common/org.yaml'
+
+  company:
+    $ref: './common/company.yaml'
 
   total-count-metrics:
     type: object

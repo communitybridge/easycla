@@ -58,6 +58,19 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 		return company.NewGetCompanyOK().WithPayload(companyModel)
 	})
 
+	api.CompanyGetCompanyByExternalIDHandler = company.GetCompanyByExternalIDHandlerFunc(func(params company.GetCompanyByExternalIDParams) middleware.Responder {
+		companyModel, err := service.GetCompanyByExternalID(params.CompanySFID)
+		if err != nil {
+			msg := fmt.Sprintf("Bad Request - unable to query company by ExternalID: %s, error: %v", params.CompanySFID, err)
+			log.Warnf(msg)
+			return company.NewGetCompanyByExternalIDBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: msg,
+			})
+		}
+		return company.NewGetCompanyByExternalIDOK().WithPayload(companyModel)
+	})
+
 	api.CompanySearchCompanyHandler = company.SearchCompanyHandlerFunc(func(params company.SearchCompanyParams, claUser *user.CLAUser) middleware.Responder {
 		var nextKey = ""
 		if params.NextKey != nil {

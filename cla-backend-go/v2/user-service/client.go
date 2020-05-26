@@ -5,6 +5,8 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/v2/user-service/client/staff"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/communitybridge/easycla/cla-backend-go/token"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/user-service/client"
@@ -155,6 +157,24 @@ func (usc *Client) GetUser(userSFID string) (*models.User, error) {
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
 	result, err := usc.cl.User.GetUser(params, clientAuth)
+	if err != nil {
+		return nil, err
+	}
+	return result.Payload, nil
+}
+
+// GetStaff returns staff details from user-service
+func (usc *Client) GetStaff(userSFID string) (*models.Staff, error) {
+	params := &staff.GetStaffParams{
+		SalesforceID: userSFID,
+		Context:      context.Background(),
+	}
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	result, err := usc.cl.Staff.GetStaff(params, clientAuth)
 	if err != nil {
 		return nil, err
 	}

@@ -227,7 +227,6 @@ func (osc *Client) SearchOrganization(orgName string) ([]*models.Organization, e
 			Name:     []string{orgName},
 			Offset:   aws.String(strconv.FormatInt(offset, 10)),
 			PageSize: aws.String(strconv.FormatInt(pageSize, 10)),
-			OrderBy:  aws.String("name"),
 			Context:  context.TODO(),
 		}
 		result, err := osc.cl.Organizations.SearchOrg(params, clientAuth)

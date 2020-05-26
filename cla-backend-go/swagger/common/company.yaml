@@ -1,0 +1,32 @@
+type: object
+x-nullable: false
+title: Company
+description: Company Model
+properties:
+  companyID:
+    description: The company unique ID
+    example: 13f79a8f-734d-44c1-ab03-ab98c2a1b64a
+    type: string
+  companyExternalID:
+    description: the company external ID
+    type: string
+  companyName:
+    description: The company name
+    example: Acme, Inc.
+    type: string
+  companyManagerID:
+    description: The company manager id
+    type: string
+  companyACL:
+    type: array
+    description: A list of user ID's authorized to make changes to the company
+    items:
+      type: string
+  created:
+    type: string
+    description: The company record created date/time
+    format: date-time
+  updated:
+    type: string
+    description: The company record update date/time
+    format: date-time
