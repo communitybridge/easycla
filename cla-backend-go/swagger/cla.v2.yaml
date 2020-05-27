@@ -1135,7 +1135,7 @@ paths:
       tags:
         - cla-manager
 
-  /companySF/{companySFID}/projectSF/{projectSFID}/claGroup/{projectID}/cla-manager/{userLFID}:
+  /company/{companySFID}/project/{projectSFID}/claGroup/{projectID}/cla-manager/{userLFID}:
     delete:
       summary: Removes the CLA Manager from ACL for specified Company and Project
       description: Allows an existing CLA Manager to remove another CLA Manager from the specified Company and Project.
