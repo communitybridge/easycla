@@ -206,6 +206,7 @@ function buildUsersTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'user_github_id', type: 'S' },
         { name: 'user_github_username', type: 'S' },
         { name: 'lf_username', type: 'S' },
+        { name: 'lf_email', type: 'S' },
         { name: 'user_external_id', type: 'S' },
       ],
       hashKey: 'user_id',
@@ -221,6 +222,13 @@ function buildUsersTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'lf-username-index',
           hashKey: 'lf_username',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity
+        },
+        {
+          name: 'lf-email-index',
+          hashKey: 'lf_email',
           projectionType: 'ALL',
           readCapacity: defaultReadCapacity,
           writeCapacity: defaultWriteCapacity

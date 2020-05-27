@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"reflect"
 
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/test_models"
@@ -15,16 +17,10 @@ import (
 )
 
 var (
-	claManagerToken            string
 	claProspectiveManagerToken string
-	authHeaders                = map[string]string{
-		"Authorization":   "Bearer " + claManagerToken,
-		"Content-Type":    "application/json",
-		"Accept-Encoding": "application/json",
-		"X-ACL":           "ewogICAgImFsbG93ZWQiOnRydWUsCiAgICAiaXNBZG1pbiI6IGZhbHNlLAogICAgInJlc291cmNlIjoiY29tcGFueV9zaWduYXR1cmVzIiwKICAgICJzY29wZXMiOiBbCiAgICAgICAgeyAidHlwZSI6ICJwcm9qZWN0fG9yZ2FuaXphdGlvbiIsCiAgICAgICAgICAiaWQiOiAiYTA5NDEwMDAwMDVvdUpGQUFZfGV4dGVybmFsLWVlOTY1ZWEyLWNhODMtNDQ4Mi04YTFiLTk0YTQ2OGQ5ZGNmYSIsCiAgICAgICAgICAicm9sZSI6ICJjbGEtbWFuYWdlciIsCiAgICAgICAgICAiY29udGV4dCI6ICJzdGFmZiIKICAgICAgICB9LAogICAgICAgIHsgInR5cGUiOiAicHJvamVjdHxvcmdhbml6YXRpb24iLAogICAgICAgICAgImlkIjogImEwOTQxMDAwMDA1b3VKRkFBWXwwMDE0MTAwMDAwVGUxQ2FBQUoiLAogICAgICAgICAgInJvbGUiOiAiY2xhLW1hbmFnZXIiLAogICAgICAgICAgImNvbnRleHQiOiAic3RhZmYiCiAgICAgICAgfSwKICAgICAgICB7ICJ0eXBlIjogInByb2plY3R8b3JnYW5pemF0aW9uIiwKICAgICAgICAgICJpZCI6ICJhMDk0MTAwMDAwNW91SkZBQVl8MDAxNDEwMDAwMFRlMDJEQUFSIiwKICAgICAgICAgICJyb2xlIjogImNsYS1tYW5hZ2VyIiwKICAgICAgICAgICJjb250ZXh0IjogInN0YWZmIgogICAgICAgIH0sCiAgICAgICAgeyAidHlwZSI6ICJwcm9qZWN0fG9yZ2FuaXphdGlvbiIsCiAgICAgICAgICAiaWQiOiAiYTA5NDEwMDAwMDVvdUpGQUFZfDAwMTJNMDAwMDJEZG85T1FBUiIsCiAgICAgICAgICAicm9sZSI6ICJjbGEtbWFuYWdlciIsCiAgICAgICAgICAiY29udGV4dCI6ICJzdGFmZiIKICAgICAgICB9CiAgICBdCn0K",
-		"X-Email":         "ddeal+cla+dev+functional+test+cla+manager+user@linuxfoundation.org",
-		"X-USERNAME":      "cladevfunctionaltestclamanageruser",
-	}
+	claManagerToken            string
+	claManagerIntelToken       string
+	claManagerATTToken         string
 )
 
 const (
@@ -33,68 +29,88 @@ const (
 	claProspectiveManagerLFID = "cladevfunctionaltestuser"
 	//claProspectiveManagerUserName = "CLA Functional Test User Linux Foundation"
 	claProspectiveManagerEmail = "ddeal+cla+dev+functional+test+user@linuxfoundation.org"
-	claProjectSFID             = "a0941000005ouJFAAY"
-	claManagerCompanySFID      = "external-ee965ea2-ca83-4482-8a1b-94a468d9dcfa"
-	claGroupID                 = "d5412846-5dda-4c58-8f62-4c111a3cd0d3"
-	testGitHubUsername         = "dealako"
-	testDomainName             = "dealako.com"
-	testGitHubOrg              = "deal-test-org"
+
+	projectSFID = "a092M00001If9v8QAB"
+	intelSFID   = "00117000015vpjXAAQ"
+	attSFID     = "0014100000Te1CaAAJ"
+	claGroupID  = "0e011a1a-a67d-498a-a698-df247481dbb6"
+
+	// test data
+	testGitHubUsername = "dealako"
+	testDomainName     = "dealako.com"
+	testGitHubOrg      = "deal-test-org"
+	// Project: Deal Project (fake): d5412846-5dda-4c58-8f62-4c111a3cd0d3 : a0941000005ouJFAAY
+	// Company: Deal Gateway : 4c96ad67-f43f-4eee-a462-f79816c2c3f2 : 0014100001b1vOqAAI
 )
 
 // TestBehaviour data model
 type TestBehaviour struct {
 	apiURL           string
-	serviceEndpoint  string
 	auth0User1Config test_models.Auth0Config
 	auth0User2Config test_models.Auth0Config
+	auth0User3Config test_models.Auth0Config
+	auth0User4Config test_models.Auth0Config
 }
 
 // NewTestBehaviour creates a new test behavior model
-func NewTestBehaviour(apiURL string, auth0User1Config, auth0User2Config test_models.Auth0Config) *TestBehaviour {
+func NewTestBehaviour(apiURL string, auth0User1Config, auth0User2Config, auth0User3Config, auth0User4Config test_models.Auth0Config) *TestBehaviour {
 	return &TestBehaviour{
-		apiURL + "/v4",
-		fmt.Sprintf("%s/signatures/project/%s/company/%s/clagroup/%s/approval-list", apiURL+"/v4", claProjectSFID, claManagerCompanySFID, claGroupID),
+		apiURL,
 		auth0User1Config,
 		auth0User2Config,
+		auth0User3Config,
+		auth0User4Config,
 	}
 }
 
-// RunGetCLAManagerToken acquires the Auth0 token
-func (t *TestBehaviour) RunGetCLAManagerToken() {
-	authTokenReqPayload := map[string]string{
-		"grant_type": "http://auth0.com/oauth/grant-type/password-realm",
-		"realm":      "Username-Password-Authentication",
-		"username":   t.auth0User2Config.Auth0UserName,
-		"password":   t.auth0User2Config.Auth0Password,
-		"client_id":  t.auth0User2Config.Auth0ClientID,
-		"audience":   "https://api-gw.dev.platform.linuxfoundation.org/",
-		"scope":      "access:api openid profile email",
+func (t *TestBehaviour) getProspectiveCLAManagerHeaders() map[string]string {
+	return map[string]string{
+		"Authorization":   "Bearer " + claProspectiveManagerToken,
+		"Content-Type":    "application/json",
+		"Accept-Encoding": "application/json",
+		"X-Email":         t.auth0User2Config.Auth0Email,
+		"X-USERNAME":      t.auth0User2Config.Auth0UserName,
 	}
-	frisby.Create(fmt.Sprintf("CLA Manager - Get Token - CLA Manager - %s", t.auth0User2Config.Auth0UserName)).
-		Post("https://linuxfoundation-dev.auth0.com/oauth/token").
-		SetJson(authTokenReqPayload).
-		Send().
-		ExpectStatus(200).
-		ExpectJsonType("access_token", reflect.String).
-		ExpectJsonType("id_token", reflect.String).
-		ExpectJsonType("scope", reflect.String).
-		ExpectJsonType("expires_in", reflect.String).
-		AfterText(func(F *frisby.Frisby, text string, err error) {
-			//log.Debugf("JSON: %+v", text)
-			var auth0Response test_models.Auth0Response
-			unmarshallErr := json.Unmarshal([]byte(text), &auth0Response)
-			if unmarshallErr != nil {
-				F.AddError(unmarshallErr.Error())
-			}
-			if &auth0Response == nil {
-				F.AddError("Auth0Response is nil")
-			}
-			if auth0Response.IDToken == "" {
-				F.AddError("Auth0Response id_token is empty")
-			}
-			claManagerToken = auth0Response.IDToken
-			//log.Debugf("ID Token is: %s", token)
-		})
+}
+
+func (t *TestBehaviour) getCLAManagerHeaders() map[string]string {
+	return map[string]string{
+		"Authorization":   "Bearer " + claManagerToken,
+		"Content-Type":    "application/json",
+		"Accept-Encoding": "application/json",
+		"X-Email":         t.auth0User1Config.Auth0Email,
+		"X-USERNAME":      t.auth0User1Config.Auth0UserName,
+	}
+}
+
+func (t *TestBehaviour) getURLApprovalListColorIOIntel() string {
+	return fmt.Sprintf("%s/v4/signatures/project/%s/company/%s/clagroup/%s/approval-list",
+		t.apiURL, projectSFID, intelSFID, claGroupID)
+}
+
+func (t *TestBehaviour) getURLApprovalListColorIOATT() string {
+	return fmt.Sprintf("%s/v4/signatures/project/%s/company/%s/clagroup/%s/approval-list",
+		t.apiURL, projectSFID, attSFID, claGroupID)
+}
+
+func (t *TestBehaviour) getCLAManagerIntelHeaders() map[string]string {
+	return map[string]string{
+		"Authorization":   "Bearer " + claManagerIntelToken,
+		"Content-Type":    "application/json",
+		"Accept-Encoding": "application/json",
+		"X-Email":         t.auth0User3Config.Auth0Email,
+		"X-USERNAME":      t.auth0User3Config.Auth0UserName,
+	}
+}
+
+func (t *TestBehaviour) getCLAManagerATTHeaders() map[string]string {
+	return map[string]string{
+		"Authorization":   "Bearer " + claManagerATTToken,
+		"Content-Type":    "application/json",
+		"Accept-Encoding": "application/json",
+		"X-Email":         t.auth0User4Config.Auth0Email,
+		"X-USERNAME":      t.auth0User4Config.Auth0UserName,
+	}
 }
 
 // RunGetCLAProspectiveManagerToken acquires the Auth0 token
@@ -136,35 +152,146 @@ func (t *TestBehaviour) RunGetCLAProspectiveManagerToken() {
 		})
 }
 
+// RunGetCLAManagerToken acquires the Auth0 token
+func (t *TestBehaviour) RunGetCLAManagerToken() {
+	authTokenReqPayload := map[string]string{
+		"grant_type": "http://auth0.com/oauth/grant-type/password-realm",
+		"realm":      "Username-Password-Authentication",
+		"username":   t.auth0User2Config.Auth0UserName,
+		"password":   t.auth0User2Config.Auth0Password,
+		"client_id":  t.auth0User2Config.Auth0ClientID,
+		"audience":   "https://api-gw.dev.platform.linuxfoundation.org/",
+		"scope":      "access:api openid profile email",
+	}
+	frisby.Create(fmt.Sprintf("CLA Manager - Get Token - CLA Manager - %s", t.auth0User2Config.Auth0UserName)).
+		Post("https://linuxfoundation-dev.auth0.com/oauth/token").
+		SetJson(authTokenReqPayload).
+		Send().
+		ExpectStatus(200).
+		ExpectJsonType("access_token", reflect.String).
+		ExpectJsonType("id_token", reflect.String).
+		ExpectJsonType("scope", reflect.String).
+		ExpectJsonType("expires_in", reflect.String).
+		AfterText(func(F *frisby.Frisby, text string, err error) {
+			//log.Debugf("JSON: %+v", text)
+			var auth0Response test_models.Auth0Response
+			unmarshallErr := json.Unmarshal([]byte(text), &auth0Response)
+			if unmarshallErr != nil {
+				F.AddError(unmarshallErr.Error())
+			}
+			if &auth0Response == nil {
+				F.AddError("Auth0Response is nil")
+			}
+			if auth0Response.IDToken == "" {
+				F.AddError("Auth0Response id_token is empty")
+			}
+			claManagerToken = auth0Response.IDToken
+			//log.Debugf("ID Token is: %s", token)
+		})
+}
+
+// RunGetCLAManagerIntelToken acquires the Auth0 token
+func (t *TestBehaviour) RunGetCLAManagerIntelToken() {
+	authTokenReqPayload := map[string]string{
+		"grant_type": "http://auth0.com/oauth/grant-type/password-realm",
+		"realm":      "Username-Password-Authentication",
+		"username":   t.auth0User3Config.Auth0UserName,
+		"password":   t.auth0User3Config.Auth0Password,
+		"client_id":  t.auth0User3Config.Auth0ClientID,
+		"audience":   "https://api-gw.dev.platform.linuxfoundation.org/",
+		"scope":      "access:api openid profile email",
+	}
+	frisby.Create(fmt.Sprintf("CLA Manager - Get Token - CLA Manager Intel - %s", t.auth0User3Config.Auth0UserName)).
+		Post("https://linuxfoundation-dev.auth0.com/oauth/token").
+		SetJson(authTokenReqPayload).
+		Send().
+		ExpectStatus(200).
+		ExpectJsonType("access_token", reflect.String).
+		ExpectJsonType("id_token", reflect.String).
+		ExpectJsonType("scope", reflect.String).
+		ExpectJsonType("expires_in", reflect.String).
+		AfterText(func(F *frisby.Frisby, text string, err error) {
+			//log.Debugf("JSON: %+v", text)
+			var auth0Response test_models.Auth0Response
+			unmarshallErr := json.Unmarshal([]byte(text), &auth0Response)
+			if unmarshallErr != nil {
+				F.AddError(unmarshallErr.Error())
+			}
+			if &auth0Response == nil {
+				F.AddError("Auth0Response is nil")
+			}
+			if auth0Response.IDToken == "" {
+				F.AddError("Auth0Response id_token is empty")
+			}
+			claManagerIntelToken = auth0Response.IDToken
+			//log.Debugf("CLA Manager Intel Token is: %s", claManagerIntelToken)
+		})
+}
+
+// RunGetCLAManagerATTToken acquires the Auth0 token
+func (t *TestBehaviour) RunGetCLAManagerATTToken() {
+	authTokenReqPayload := map[string]string{
+		"grant_type": "http://auth0.com/oauth/grant-type/password-realm",
+		"realm":      "Username-Password-Authentication",
+		"username":   t.auth0User4Config.Auth0UserName,
+		"password":   t.auth0User4Config.Auth0Password,
+		"client_id":  t.auth0User4Config.Auth0ClientID,
+		"audience":   "https://api-gw.dev.platform.linuxfoundation.org/",
+		"scope":      "access:api openid profile email",
+	}
+	frisby.Create(fmt.Sprintf("CLA Manager - Get Token - CLA Manager AT&T - %s", t.auth0User4Config.Auth0UserName)).
+		Post("https://linuxfoundation-dev.auth0.com/oauth/token").
+		SetJson(authTokenReqPayload).
+		Send().
+		ExpectStatus(200).
+		ExpectJsonType("access_token", reflect.String).
+		ExpectJsonType("id_token", reflect.String).
+		ExpectJsonType("scope", reflect.String).
+		ExpectJsonType("expires_in", reflect.String).
+		AfterText(func(F *frisby.Frisby, text string, err error) {
+			//log.Debugf("JSON: %+v", text)
+			var auth0Response test_models.Auth0Response
+			unmarshallErr := json.Unmarshal([]byte(text), &auth0Response)
+			if unmarshallErr != nil {
+				F.AddError(unmarshallErr.Error())
+			}
+			if &auth0Response == nil {
+				F.AddError("Auth0Response is nil")
+			}
+			if auth0Response.IDToken == "" {
+				F.AddError("Auth0Response id_token is empty")
+			}
+			claManagerATTToken = auth0Response.IDToken
+			//log.Debugf("CLA Manager ATT Token is: %s", claManagerATTToken)
+		})
+}
+
 // RunUpdateApprovalListNoAuth test
-func (t *TestBehaviour) RunUpdateApprovalListNoAuth() {
+func (t *TestBehaviour) RunUpdateApprovalListNoAuth(endpoint string) {
 	frisby.Create("CLA Approval List - Update Approval List - No Auth").
-		Put(t.serviceEndpoint).
+		Put(endpoint).
 		Send().
 		ExpectStatus(401)
 }
 
 // RunUpdateApprovalListUnauthorized test
-func (t *TestBehaviour) RunUpdateApprovalListUnauthorized() {
+func (t *TestBehaviour) RunUpdateApprovalListUnauthorized(endpoint string, authHeaders map[string]string) {
 	// ProspectiveManagerToken is not approved yet - shouldn't be able to approve requests
 	frisby.Create(fmt.Sprintf("CLA Approval List - Update Approval List - Unauthorized - %s", claProspectiveManagerLFID)).
-		Put(t.serviceEndpoint).
-		SetHeaders(map[string]string{
-			"Authorization":   "Bearer " + claProspectiveManagerToken,
-			"Content-Type":    "application/json",
-			"Accept-Encoding": "application/json",
-		}).
+		Put(endpoint).
+		SetHeaders(authHeaders).
 		SetJson(map[string][]string{
 			"AddEmailApprovalList": {claProspectiveManagerEmail},
 		}).
 		Send().
-		ExpectStatus(401)
+		ExpectStatus(403)
 }
 
 // RunUpdateApprovalListAddEmail test
-func (t *TestBehaviour) RunUpdateApprovalListAddEmail() {
-	frisby.Create("CLA Approval List - Update Approval List - Add Email").
-		Put(t.serviceEndpoint).
+func (t *TestBehaviour) RunUpdateApprovalListAddEmail(endpoint string, authHeaders map[string]string) {
+	log.Debugf("CLA Approval List - Update Approval List - Add Email - URL: %s", endpoint)
+	frisby.Create(fmt.Sprintf("CLA Approval List - Update Approval List - Add Email - %s", authHeaders["X-USERNAME"])).
+		Put(endpoint).
 		SetHeaders(authHeaders).
 		SetJson(map[string][]string{
 			"AddEmailApprovalList": {claProspectiveManagerEmail},
@@ -207,9 +334,9 @@ func (t *TestBehaviour) RunUpdateApprovalListAddEmail() {
 }
 
 // RunUpdateApprovalListRemoveEmail test
-func (t *TestBehaviour) RunUpdateApprovalListRemoveEmail() {
+func (t *TestBehaviour) RunUpdateApprovalListRemoveEmail(endpoint string, authHeaders map[string]string) {
 	frisby.Create("CLA Approval List - Update Approval List - Remove Email").
-		Put(t.serviceEndpoint).
+		Put(endpoint).
 		SetHeaders(authHeaders).
 		SetJson(map[string][]string{
 			"RemoveEmailApprovalList": {claProspectiveManagerEmail},
@@ -252,9 +379,9 @@ func (t *TestBehaviour) RunUpdateApprovalListRemoveEmail() {
 }
 
 // RunUpdateApprovalListAddDomain test
-func (t *TestBehaviour) RunUpdateApprovalListAddDomain() {
+func (t *TestBehaviour) RunUpdateApprovalListAddDomain(endpoint string, authHeaders map[string]string) {
 	frisby.Create("CLA Approval List - Update Approval List - Add Domain").
-		Put(t.serviceEndpoint).
+		Put(endpoint).
 		SetHeaders(authHeaders).
 		SetJson(map[string][]string{
 			"AddDomainApprovalList": {testDomainName},
@@ -297,9 +424,9 @@ func (t *TestBehaviour) RunUpdateApprovalListAddDomain() {
 }
 
 // RunUpdateApprovalListRemoveDomain test
-func (t *TestBehaviour) RunUpdateApprovalListRemoveDomain() {
+func (t *TestBehaviour) RunUpdateApprovalListRemoveDomain(endpoint string, authHeaders map[string]string) {
 	frisby.Create("CLA Approval List - Update Approval List - Remove Domain").
-		Put(t.serviceEndpoint).
+		Put(endpoint).
 		SetHeaders(authHeaders).
 		SetJson(map[string][]string{
 			"RemoveDomainApprovalList": {testDomainName},
@@ -342,9 +469,9 @@ func (t *TestBehaviour) RunUpdateApprovalListRemoveDomain() {
 }
 
 // RunUpdateApprovalListAddGitHubUsername test
-func (t *TestBehaviour) RunUpdateApprovalListAddGitHubUsername() {
+func (t *TestBehaviour) RunUpdateApprovalListAddGitHubUsername(endpoint string, authHeaders map[string]string) {
 	frisby.Create("CLA Approval List - Update Approval List - Add GitHub Username").
-		Put(t.serviceEndpoint).
+		Put(endpoint).
 		SetHeaders(authHeaders).
 		SetJson(map[string][]string{
 			"AddGithubUsernameApprovalList": {testGitHubUsername},
@@ -387,9 +514,9 @@ func (t *TestBehaviour) RunUpdateApprovalListAddGitHubUsername() {
 }
 
 // RunUpdateApprovalListRemoveGitHubUsername test
-func (t *TestBehaviour) RunUpdateApprovalListRemoveGitHubUsername() {
+func (t *TestBehaviour) RunUpdateApprovalListRemoveGitHubUsername(endpoint string, authHeaders map[string]string) {
 	frisby.Create("CLA Approval List - Update Approval List - Remove GitHub Username").
-		Put(t.serviceEndpoint).
+		Put(endpoint).
 		SetHeaders(authHeaders).
 		SetJson(map[string][]string{
 			"RemoveGithubUsernameApprovalList": {testGitHubUsername},
@@ -432,9 +559,9 @@ func (t *TestBehaviour) RunUpdateApprovalListRemoveGitHubUsername() {
 }
 
 // RunUpdateApprovalListAddGitHubOrg test
-func (t *TestBehaviour) RunUpdateApprovalListAddGitHubOrg() {
+func (t *TestBehaviour) RunUpdateApprovalListAddGitHubOrg(endpoint string, authHeaders map[string]string) {
 	frisby.Create("CLA Approval List - Update Approval List - Add GitHub Org").
-		Put(t.serviceEndpoint).
+		Put(endpoint).
 		SetHeaders(authHeaders).
 		SetJson(map[string][]string{
 			"AddGithubOrgApprovalList": {testGitHubOrg},
@@ -477,9 +604,9 @@ func (t *TestBehaviour) RunUpdateApprovalListAddGitHubOrg() {
 }
 
 // RunUpdateApprovalListRemoveGitHubOrg test
-func (t *TestBehaviour) RunUpdateApprovalListRemoveGitHubOrg() {
+func (t *TestBehaviour) RunUpdateApprovalListRemoveGitHubOrg(endpoint string, authHeaders map[string]string) {
 	frisby.Create("CLA Approval List - Update Approval List - Remove GitHub Org").
-		Put(t.serviceEndpoint).
+		Put(endpoint).
 		SetHeaders(authHeaders).
 		SetJson(map[string][]string{
 			"RemoveGithubOrgApprovalList": {testGitHubOrg},
@@ -536,21 +663,28 @@ func listContains(list []string, str string) bool {
 // RunAllTests runs all the CLA Manager tests
 func (t *TestBehaviour) RunAllTests() {
 	// Need our authentication tokens for each persona/user
-	t.RunGetCLAManagerToken()
 	t.RunGetCLAProspectiveManagerToken()
+	t.RunGetCLAManagerToken()
+	t.RunGetCLAManagerIntelToken()
+	t.RunGetCLAManagerATTToken()
 
 	// No Credentials/Auth Tests - these should return 401
-	t.RunUpdateApprovalListNoAuth()
+	t.RunUpdateApprovalListNoAuth(t.getURLApprovalListColorIOIntel())
 
 	// Shouldn't be allowed to Update the Approval List unless you are already a CLA Manager
-	t.RunUpdateApprovalListUnauthorized()
+	t.RunUpdateApprovalListUnauthorized(t.getURLApprovalListColorIOIntel(), t.getProspectiveCLAManagerHeaders())
 
-	t.RunUpdateApprovalListAddEmail()
-	t.RunUpdateApprovalListRemoveEmail()
-	t.RunUpdateApprovalListAddDomain()
-	t.RunUpdateApprovalListRemoveDomain()
-	t.RunUpdateApprovalListAddGitHubUsername()
-	t.RunUpdateApprovalListRemoveGitHubUsername()
-	t.RunUpdateApprovalListAddGitHubOrg()
-	t.RunUpdateApprovalListRemoveGitHubOrg()
+	//t.RunUpdateApprovalListAddEmail(t.getCLAManagerHeaders())
+	t.RunUpdateApprovalListAddEmail(t.getURLApprovalListColorIOIntel(), t.getCLAManagerIntelHeaders())
+	t.RunUpdateApprovalListAddEmail(t.getURLApprovalListColorIOATT(), t.getCLAManagerATTHeaders())
+	if false {
+		t.RunUpdateApprovalListRemoveEmail(t.getURLApprovalListColorIOATT(), t.getCLAManagerATTHeaders())
+		t.RunUpdateApprovalListAddDomain(t.getURLApprovalListColorIOATT(), t.getCLAManagerATTHeaders())
+		t.RunUpdateApprovalListRemoveDomain(t.getURLApprovalListColorIOATT(), t.getCLAManagerATTHeaders())
+		t.RunUpdateApprovalListAddGitHubUsername(t.getURLApprovalListColorIOATT(), t.getCLAManagerATTHeaders())
+		t.RunUpdateApprovalListRemoveGitHubUsername(t.getURLApprovalListColorIOATT(), t.getCLAManagerATTHeaders())
+		t.RunUpdateApprovalListAddGitHubOrg(t.getURLApprovalListColorIOATT(), t.getCLAManagerATTHeaders())
+		t.RunUpdateApprovalListRemoveGitHubOrg(t.getURLApprovalListColorIOATT(), t.getCLAManagerATTHeaders())
+	}
+	t.getCLAManagerHeaders()
 }

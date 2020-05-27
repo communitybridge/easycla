@@ -62,6 +62,8 @@ const (
 	ClaManagerAccessRequestDenied   = "cla_manager.access_request_denied"
 	ClaManagerAccessRequestDeleted  = "cla_manager.access_request_deleted"
 
+	ClaApprovalListUpdated = "cla_manager.approval_list_updated"
+
 	ClaManagerCreated = "cla_manager.added"
 	ClaManagerDeleted = "cla_manager.deleted"
 

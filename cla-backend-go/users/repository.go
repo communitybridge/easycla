@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-openapi/errors"
+
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/google/uuid"
 
@@ -31,6 +33,8 @@ type UserRepository interface {
 	GetUser(userID string) (*models.User, error)
 	GetUserByLFUserName(lfUserName string) (*models.User, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
+	GetUserByEmail(userEmail string) (*models.User, error)
+	GetUserByGitHubUsername(gitHubUsername string) (*models.User, error)
 	SearchUsers(searchField string, searchTerm string, fullMatch bool) (*models.Users, error)
 }
 
@@ -456,6 +460,110 @@ func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*mode
 	}
 
 	return nil, nil
+}
+
+// GetUserByEmail fetches the user record by email
+func (repo repository) GetUserByEmail(userEmail string) (*models.User, error) {
+	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
+
+	// This is the key we want to match
+	condition := expression.Key("lf_email").Equal(expression.Value(userEmail))
+
+	// These are the columns we want returned
+	projection := buildUserProjection()
+
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(projection).Build()
+	if err != nil {
+		log.Warnf("error building expression for lf_email : %s, error: %v", userEmail, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String("lf-email-index"),
+	}
+
+	// Make the DynamoDB Query API call
+	result, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.Warnf("error retrieving user by lf_email: %s, error: %+v", userEmail, err)
+		return nil, err
+	}
+
+	// The user model
+	var dbUserModels []DBUser
+
+	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &dbUserModels)
+	if err != nil {
+		log.Warnf("error unmarshalling user record from database for lf_email: %s, error: %+v", userEmail, err)
+		return nil, err
+	}
+
+	if len(dbUserModels) == 0 {
+		return nil, errors.NotFound("user not found when searching by lf_email: %s", userEmail)
+	} else if len(dbUserModels) > 1 {
+		log.Warnf("retrieved %d results for the lf_email query when we should return 0 or 1", len(dbUserModels))
+	}
+
+	return convertDBUserModel(dbUserModels[0]), nil
+}
+
+// GetUserByGitHubUsername fetches the user record by github username
+func (repo repository) GetUserByGitHubUsername(gitHubUsername string) (*models.User, error) {
+	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
+
+	// This is the key we want to match
+	condition := expression.Key("user_github_username").Equal(expression.Value(gitHubUsername))
+
+	// These are the columns we want returned
+	projection := buildUserProjection()
+
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(projection).Build()
+	if err != nil {
+		log.Warnf("error building expression for user_github_username : %s, error: %v", gitHubUsername, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String("github-username-index"),
+	}
+
+	// Make the DynamoDB Query API call
+	result, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.Warnf("error retrieving user by user_github_username: %s, error: %+v", gitHubUsername, err)
+		return nil, err
+	}
+
+	// The user model
+	var dbUserModels []DBUser
+
+	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &dbUserModels)
+	if err != nil {
+		log.Warnf("error unmarshalling user record from database for user_github_username: %s, error: %+v", gitHubUsername, err)
+		return nil, err
+	}
+
+	if len(dbUserModels) == 0 {
+		return nil, errors.NotFound("user not found when searching by user_github_username: %s", gitHubUsername)
+	} else if len(dbUserModels) > 1 {
+		log.Warnf("retrieved %d results for the user_github_username query when we should return 0 or 1", len(dbUserModels))
+	}
+
+	return convertDBUserModel(dbUserModels[0]), nil
 }
 
 func (repo repository) SearchUsers(searchField string, searchTerm string, fullMatch bool) (*models.Users, error) {
