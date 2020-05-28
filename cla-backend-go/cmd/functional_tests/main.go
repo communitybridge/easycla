@@ -79,8 +79,10 @@ func main() {
 	auth0User4Config := loadUser("AUTH0_USER4")
 
 	health.NewTestBehaviour(v2APIURL, auth0User1Config).RunAllTests()
-	cla_manager.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
-	signatures.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
+	if false {
+		cla_manager.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
+		signatures.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
+	}
 	approval_list.NewTestBehaviour(v2APIURL, auth0User1Config, auth0User2Config, auth0User3Config, auth0User4Config).RunAllTests()
 	frisby.Global.PrintReport()
 }
