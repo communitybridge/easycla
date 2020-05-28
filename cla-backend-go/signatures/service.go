@@ -443,7 +443,7 @@ func (s service) RemoveCLAManager(signatureID, claManagerID string) (*models.Sig
 func appendList(approvalList []string, message string) string {
 	approvalListSummary := ""
 
-	if approvalList != nil {
+	if len(approvalList) > 0 {
 		approvalListSummary = "<li>"
 		for _, value := range approvalList {
 			approvalListSummary += fmt.Sprintf("<li>%s %s</li>", message, value)
