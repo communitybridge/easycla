@@ -25,19 +25,19 @@ set_functional_test_environment: &set_functional_test_environment
       echo "export AUTH0_USER1_CLIENT_ID='${!AUTH0_USER1_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
 
       # CLA Manager User (functional test)
-      echo "export AUTH0_USER2_EMAIL='${!AUTH0_USER2_EMAIL_ENV_VAR} >> ${BASH_ENV}
+      echo "export AUTH0_USER2_EMAIL='${!AUTH0_USER2_EMAIL_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER2_USERNAME='${!AUTH0_USER2_USERNAME_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER2_PASSWORD='${!AUTH0_USER2_PASSWORD_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER2_CLIENT_ID='${!AUTH0_USER2_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
 
       # CLA Manager Intel (functional test)
-      echo "export AUTH0_USER3_EMAIL='${!AUTH0_USER3_EMAIL_ENV_VAR} >> ${BASH_ENV}
+      echo "export AUTH0_USER3_EMAIL='${!AUTH0_USER3_EMAIL_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER3_USERNAME='${!AUTH0_USER3_USERNAME_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER3_PASSWORD='${!AUTH0_USER3_PASSWORD_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER3_CLIENT_ID='${!AUTH0_USER3_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
 
       # CLA Manager AT&T (functional test)
-      echo "export AUTH0_USER4_EMAIL='${!AUTH0_USER4_EMAIL_ENV_VAR} >> ${BASH_ENV}
+      echo "export AUTH0_USER4_EMAIL='${!AUTH0_USER4_EMAIL_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER4_USERNAME='${!AUTH0_USER4_USERNAME_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER4_PASSWORD='${!AUTH0_USER4_PASSWORD_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER4_CLIENT_ID='${!AUTH0_USER4_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
