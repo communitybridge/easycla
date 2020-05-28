@@ -4,11 +4,10 @@
 package company
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
-
-	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 
@@ -617,44 +616,29 @@ func (s service) createOrgFromExternalID(orgID string) (*models.Company, error) 
 		log.WithFields(f).Errorf("getting organization details failed. error = %s", err.Error())
 		return nil, err
 	}
-	f["ownerID"] = org.Owner.ID
-	log.WithFields(f).Debugf("getting user information")
-	usc := user_service.GetClient()
-	//user, err := usc.GetUserByUsername(org.Owner.ID)
-	staff, err := usc.GetStaff(org.Owner.ID)
+	log.WithFields(f).Debugf("getting company-admin information")
+	companyAdmin, err := getCompanyAdmin(orgID)
 	if err != nil {
-		log.WithFields(f).Errorf("getting user information failed. error = %s", err.Error())
 		return nil, err
 	}
-	if staff.LfID == nil {
-		log.WithFields(f).Errorf("getting user information failed. error = %s", err.Error())
-		return nil, err
-	}
-	f["username"] = *staff.LfID
+	f["company-admin"] = companyAdmin
 	log.WithFields(f).Debugf("getting user information from cla")
-	claUser, err := s.userService.GetUserByLFUserName(*staff.LfID)
+	claUser, err := s.userService.GetUserByLFUserName(companyAdmin.LfUsername)
 	if err != nil {
 		log.WithFields(f).Errorf("getting user information from cla failed. error = %s", err.Error())
 		return nil, err
 	}
 	if claUser == nil {
-		newUser := &models.User{
-			LfEmail:        utils.StringValue(staff.Email),
-			LfUsername:     utils.StringValue(staff.LfID),
-			UserExternalID: org.Owner.ID,
-			Username:       utils.StringValue(staff.FirstName) + " " + utils.StringValue(staff.LastName),
-		}
 		// create cla-user
-		f["user"] = newUser
 		log.WithFields(f).Debugf("cla user not found. creating cla user.")
-		claUser, err = s.userService.CreateUser(newUser)
+		claUser, err = s.userService.CreateUser(companyAdmin)
 		if err != nil {
 			log.WithFields(f).Debugf("creating cla user failed. error = %s", err.Error())
 			return nil, err
 		}
 	}
 	newComp := &models.Company{
-		CompanyACL:        nil,
+		CompanyACL:        []string{companyAdmin.LfUsername},
 		CompanyExternalID: org.ID,
 		CompanyName:       org.Name,
 		CompanyManagerID:  claUser.UserID,
@@ -668,4 +652,30 @@ func (s service) createOrgFromExternalID(orgID string) (*models.Company, error) 
 		return nil, err
 	}
 	return comp, nil
+}
+
+// getCompanyAdmin is helper function which queries org-service to get first company-admin
+func getCompanyAdmin(companySFID string) (*models.User, error) {
+	osc := organization_service.GetClient()
+	result, err := osc.ListOrgUserAdminScopes(companySFID)
+	if err != nil {
+		log.WithField("companySFID", companySFID).Errorf("getting company-admin failed. error = %s", err.Error())
+		return nil, err
+	}
+	for _, usc := range result.Userroles {
+		for _, rs := range usc.RoleScopes {
+			if rs.RoleName == "company-admin" {
+				companyAdmin := &models.User{
+					LfEmail:        usc.Contact.EmailAddress,
+					LfUsername:     usc.Contact.Username,
+					UserExternalID: usc.Contact.ID,
+					Username:       usc.Contact.Name,
+				}
+				log.WithFields(logrus.Fields{"companySFID": companySFID, "company-admin": companyAdmin}).Debug("company-admin found")
+				return companyAdmin, nil
+			}
+		}
+	}
+	log.WithField("companySFID", companySFID).Errorf("no company-admin found. error = %s", err.Error())
+	return nil, errors.New("no company-admin found")
 }

@@ -958,6 +958,7 @@ func (repo repository) CreateCompany(in *models.Company) (*models.Company, error
 		CompanyManagerID:  in.CompanyManagerID,
 		Created:           now,
 		Updated:           now,
+		Version:           "v1",
 	}
 	av, err := dynamodbattribute.MarshalMap(&comp)
 	if err != nil {
@@ -970,5 +971,6 @@ func (repo repository) CreateCompany(in *models.Company) (*models.Company, error
 	if err != nil {
 		return nil, err
 	}
+	log.Debugf("company created %#v\n", comp)
 	return comp.toModel()
 }

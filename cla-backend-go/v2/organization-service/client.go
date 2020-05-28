@@ -260,3 +260,21 @@ func (osc *Client) GetOrganization(orgID string) (*models.Organization, error) {
 	}
 	return result.Payload, nil
 }
+
+// ListOrgUserAdminScopes returns admin role scope of organization
+func (osc *Client) ListOrgUserAdminScopes(orgID string) (*models.UserrolescopesList, error) {
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	params := &organizations.ListOrgUsrAdminScopesParams{
+		SalesforceID: orgID,
+		Context:      context.Background(),
+	}
+	result, err := osc.cl.Organizations.ListOrgUsrAdminScopes(params, clientAuth)
+	if err != nil {
+		return nil, err
+	}
+	return result.Payload, nil
+}
