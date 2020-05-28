@@ -95,14 +95,12 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		}
 
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		if !authUser.Admin {
-			// Must be in the Organization Scope to see this
-			if !authUser.Allowed || !authUser.IsUserAuthorizedByProject(params.ProjectSFID, params.CompanySFID) {
-				msg := fmt.Sprintf("user %+v is not authorized to update project company signature approval list for project ID: %s, company ID: %s",
-					authUser, params.ProjectSFID, params.CompanySFID)
-				log.Warn(msg)
-				return signatures.NewUpdateApprovalListUnauthorized().WithPayload(errorResponse(errors.New(msg)))
-			}
+		// Must be in the Organization Scope to see this
+		if !authUser.Allowed || !authUser.IsUserAuthorizedByProject(params.ProjectSFID, params.CompanySFID) {
+			msg := fmt.Sprintf("user %+v is not authorized to update project company signature approval list for project ID: %s, company ID: %s",
+				authUser, params.ProjectSFID, params.CompanySFID)
+			log.Warn(msg)
+			return signatures.NewUpdateApprovalListForbidden().WithPayload(errorResponse(errors.New(msg)))
 		}
 
 		// Lookup the internal company ID when provided the external ID via the service call
