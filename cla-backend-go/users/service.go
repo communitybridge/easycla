@@ -15,6 +15,8 @@ type Service interface {
 	GetUser(userID string) (*models.User, error)
 	GetUserByLFUserName(lfUserName string) (*models.User, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
+	GetUserByEmail(userEmail string) (*models.User, error)
+	GetUserByGitHubUsername(gitHubUsername string) (*models.User, error)
 	SearchUsers(field string, searchTerm string, fullMatch bool) (*models.Users, error)
 }
 
@@ -67,6 +69,26 @@ func (s service) GetUserByLFUserName(lfUserName string) (*models.User, error) {
 // GetUserByUserName attempts to locate the user by the user name field
 func (s service) GetUserByUserName(userName string, fullMatch bool) (*models.User, error) {
 	userModel, err := s.repo.GetUserByUserName(userName, fullMatch)
+	if err != nil {
+		return nil, err
+	}
+
+	return userModel, nil
+}
+
+// GetUserByEmail fetches the user by email
+func (s service) GetUserByEmail(userEmail string) (*models.User, error) {
+	userModel, err := s.repo.GetUserByEmail(userEmail)
+	if err != nil {
+		return nil, err
+	}
+
+	return userModel, nil
+}
+
+// GetUserByGitHubUsername fetches the user by GitHub username
+func (s service) GetUserByGitHubUsername(gitHubUsername string) (*models.User, error) {
+	userModel, err := s.repo.GetUserByGitHubUsername(gitHubUsername)
 	if err != nil {
 		return nil, err
 	}
