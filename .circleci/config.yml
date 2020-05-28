@@ -817,14 +817,6 @@ jobs:
             sudo apt-get install -y curl jq
       - *set_functional_test_environment
       - run:
-          name: functional-tests
-          halt_build_on_fail: false  # for now, we will pass all functional tests
-          command: |
-            source ${BASH_ENV}
-            echo "Running functional tests for stage: ${STAGE}"
-            cd tests/rest
-            tavern-ci test_*.tavern.yaml --alluredir=allure_result_folder -v || true
-      - run:
           name: functional-tests-go
           halt_build_on_fail: false  # for now, we will pass all functional tests
           command: |
@@ -833,6 +825,14 @@ jobs:
             echo "Home directory            : $(ls ${HOME})"
             echo "~/cla-backend-go directory: $(ls ${HOME}/cla-backend-go)"
             ${HOME}/cla-backend-go/functional-tests
+      - run:
+          name: functional-tests
+          halt_build_on_fail: false  # for now, we will pass all functional tests
+          command: |
+            source ${BASH_ENV}
+            echo "Running functional tests for stage: ${STAGE}"
+            cd tests/rest
+            tavern-ci test_*.tavern.yaml --alluredir=allure_result_folder -v || true
 
   functionalTestsDev:
     <<: *functionalTests

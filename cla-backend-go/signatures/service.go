@@ -441,11 +441,15 @@ func (s service) RemoveCLAManager(signatureID, claManagerID string) (*models.Sig
 
 // appendList is a helper function to generate the email content of the Approval List changes
 func appendList(approvalList []string, message string) string {
-	approvalListSummary := "<li>"
-	for _, value := range approvalList {
-		approvalListSummary += fmt.Sprintf("<li>%s %s</li>", message, value)
+	approvalListSummary := ""
+
+	if approvalList != nil {
+		approvalListSummary = "<li>"
+		for _, value := range approvalList {
+			approvalListSummary += fmt.Sprintf("<li>%s %s</li>", message, value)
+		}
+		approvalListSummary += "</li>"
 	}
-	approvalListSummary += "</li>"
 
 	return approvalListSummary
 }
