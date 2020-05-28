@@ -801,7 +801,7 @@ jobs:
       ROOT_DOMAIN: lfcla.platform.linuxfoundation.org
       PRODUCT_DOMAIN: lfcla.com
 
-  functionalTests: &functionalTests
+  functionalTestsTavern: &functionalTestsTavern
     docker:
       - image: circleci/python:3.7.4-node
     steps:
@@ -817,15 +817,6 @@ jobs:
             sudo apt-get install -y curl jq
       - *set_functional_test_environment
       - run:
-          name: functional-tests-go
-          halt_build_on_fail: false  # for now, we will pass all functional tests
-          command: |
-            source ${BASH_ENV}
-            echo "Running golang functional tests for stage: ${STAGE}"
-            echo "Home directory            : $(ls ${HOME})"
-            echo "~/cla-backend-go directory: $(ls ${HOME}/cla-backend-go)"
-            ${HOME}/cla-backend-go/functional-tests
-      - run:
           name: functional-tests
           halt_build_on_fail: false  # for now, we will pass all functional tests
           command: |
@@ -834,8 +825,56 @@ jobs:
             cd tests/rest
             tavern-ci test_*.tavern.yaml --alluredir=allure_result_folder -v || true
 
-  functionalTestsDev:
-    <<: *functionalTests
+  functionalTestsGo: &functionalTestsGo
+    docker:
+      - image: circleci/golang:1.14.2
+    steps:
+      - attach_workspace:
+          at: ~/
+      - checkout
+      - *set_functional_test_environment
+      - run:
+          name: functional-tests-go
+          command: |
+            source "${BASH_ENV}"
+            echo "Running golang functional tests for stage: ${STAGE}"
+            echo "Home directory            : $(ls ${HOME})"
+            echo "${HOME}/cla-backend-go directory: $(ls ${HOME}/cla-backend-go)"
+            ${HOME}/cla-backend-go/functional-tests
+
+  functionalTestsTavernDev:
+    <<: *functionalTestsTavern
+    environment:
+      # Default Functional Test User
+      AUTH0_USERNAME_ENV_VAR: AUTH0_USERNAME_DEV
+      AUTH0_PASSWORD_ENV_VAR: AUTH0_PASSWORD_DEV
+      AUTH0_CLIENT_ID_ENV_VAR: AUTH0_CLIENT_ID_DEV
+      # Prospective CLA Manager User
+      AUTH0_USER1_EMAIL_ENV_VAR: AUTH0_USER1_EMAIL_DEV
+      AUTH0_USER1_USERNAME_ENV_VAR: AUTH0_USER1_USERNAME_DEV
+      AUTH0_USER1_PASSWORD_ENV_VAR: AUTH0_USER1_PASSWORD_DEV
+      AUTH0_USER1_CLIENT_ID_ENV_VAR: AUTH0_USER1_CLIENT_ID_DEV
+      # CLA Manager User
+      AUTH0_USER2_EMAIL_ENV_VAR: AUTH0_USER2_EMAIL_DEV
+      AUTH0_USER2_USERNAME_ENV_VAR: AUTH0_USER2_USERNAME_DEV
+      AUTH0_USER2_PASSWORD_ENV_VAR: AUTH0_USER2_PASSWORD_DEV
+      AUTH0_USER2_CLIENT_ID_ENV_VAR: AUTH0_USER2_CLIENT_ID_DEV
+      # CLA Manager Intel
+      AUTH0_USER3_EMAIL_ENV_VAR: AUTH0_USER3_EMAIL_DEV
+      AUTH0_USER3_USERNAME_ENV_VAR: AUTH0_USER3_USERNAME_DEV
+      AUTH0_USER3_PASSWORD_ENV_VAR: AUTH0_USER3_PASSWORD_DEV
+      AUTH0_USER3_CLIENT_ID_ENV_VAR: AUTH0_USER3_CLIENT_ID_DEV
+      # CLA Manager AT&T
+      AUTH0_USER4_EMAIL_ENV_VAR: AUTH0_USER4_EMAIL_DEV
+      AUTH0_USER4_USERNAME_ENV_VAR: AUTH0_USER4_USERNAME_DEV
+      AUTH0_USER4_PASSWORD_ENV_VAR: AUTH0_USER4_PASSWORD_DEV
+      AUTH0_USER4_CLIENT_ID_ENV_VAR: AUTH0_USER4_CLIENT_ID_DEV
+      API_URL: 'https://api.dev.lfcla.com'
+      V2_API_URL: 'https://api-gw.dev.platform.linuxfoundation.org/cla-service'
+      STAGE: dev
+
+  functionalTestsGoDev:
+    <<: *functionalTestsGo
     environment:
       # Default Functional Test User
       AUTH0_USERNAME_ENV_VAR: AUTH0_USERNAME_DEV
@@ -929,7 +968,16 @@ workflows:
             branches:
               only:
                 - master
-      - functionalTestsDev:
+      - functionalTestsGoDev:
+          requires:
+            - deployBackendDev
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - master
+      - functionalTestsTavernDev:
           requires:
             - deployBackendDev
           filters:
