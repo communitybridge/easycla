@@ -136,6 +136,62 @@ type CLAManagerRequestDeletedEventData struct {
 	ManagerEmail string
 }
 
+type CLAApprovalListAddEmailData struct {
+	UserName          string
+	UserEmail         string
+	UserLFID          string
+	ApprovalListEmail string
+}
+
+type CLAApprovalListRemoveEmailData struct {
+	UserName          string
+	UserEmail         string
+	UserLFID          string
+	ApprovalListEmail string
+}
+
+type CLAApprovalListAddDomainData struct {
+	UserName           string
+	UserEmail          string
+	UserLFID           string
+	ApprovalListDomain string
+}
+
+type CLAApprovalListRemoveDomainData struct {
+	UserName           string
+	UserEmail          string
+	UserLFID           string
+	ApprovalListDomain string
+}
+
+type CLAApprovalListAddGitHubUsernameData struct {
+	UserName                   string
+	UserEmail                  string
+	UserLFID                   string
+	ApprovalListGitHubUsername string
+}
+
+type CLAApprovalListRemoveGitHubUsernameData struct {
+	UserName                   string
+	UserEmail                  string
+	UserLFID                   string
+	ApprovalListGitHubUsername string
+}
+
+type CLAApprovalListAddGitHubOrgData struct {
+	UserName              string
+	UserEmail             string
+	UserLFID              string
+	ApprovalListGitHubOrg string
+}
+
+type CLAApprovalListRemoveGitHubOrgData struct {
+	UserName              string
+	UserEmail             string
+	UserLFID              string
+	ApprovalListGitHubOrg string
+}
+
 type WhitelistGithubOrganizationAddedEventData struct {
 	GithubOrganizationName string
 }
@@ -265,6 +321,54 @@ func (ed *CLAManagerRequestDeniedEventData) GetEventString(args *LogEventArgs) (
 func (ed *CLAManagerRequestDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("CLA Manager Request [%s] for user [%s / %s] was deleted by [%s / %s] for Company: %s, Project: %s",
 		ed.RequestID, ed.UserName, ed.UserEmail, ed.ManagerName, ed.ManagerEmail, ed.CompanyName, ed.ProjectName)
+	return data, true
+}
+
+func (ed *CLAApprovalListAddEmailData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("CLA Manager [%s / %s / %s] added Email %s to the approval list for Company: %s, Project: %s",
+		ed.UserName, ed.UserEmail, ed.UserLFID, ed.ApprovalListEmail, args.companyName, args.projectName)
+	return data, true
+}
+
+func (ed *CLAApprovalListRemoveEmailData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("CLA Manager [%s / %s / %s] removed Email %s from the approval list for Company: %s, Project: %s",
+		ed.UserName, ed.UserEmail, ed.UserLFID, ed.ApprovalListEmail, args.companyName, args.projectName)
+	return data, true
+}
+
+func (ed *CLAApprovalListAddDomainData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("CLA Manager [%s / %s / %s] added Domain %s to the approval list for Company: %s, Project: %s",
+		ed.UserName, ed.UserEmail, ed.UserLFID, ed.ApprovalListDomain, args.companyName, args.projectName)
+	return data, true
+}
+
+func (ed *CLAApprovalListRemoveDomainData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("CLA Manager [%s / %s / %s] removed Domain %s from the approval list for Company: %s, Project: %s",
+		ed.UserName, ed.UserEmail, ed.UserLFID, ed.ApprovalListDomain, args.companyName, args.projectName)
+	return data, true
+}
+
+func (ed *CLAApprovalListAddGitHubUsernameData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("CLA Manager [%s / %s / %s] added GitHub Username %s to the approval list for Company: %s, Project: %s",
+		ed.UserName, ed.UserEmail, ed.UserLFID, ed.ApprovalListGitHubUsername, args.companyName, args.projectName)
+	return data, true
+}
+
+func (ed *CLAApprovalListRemoveGitHubUsernameData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("CLA Manager [%s / %s / %s] removed GitHub Username %s from the approval list for Company: %s, Project: %s",
+		ed.UserName, ed.UserEmail, ed.UserLFID, ed.ApprovalListGitHubUsername, args.companyName, args.projectName)
+	return data, true
+}
+
+func (ed *CLAApprovalListAddGitHubOrgData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("CLA Manager [%s / %s / %s] added GitHub Org %s to the approval list for Company: %s, Project: %s",
+		ed.UserName, ed.UserEmail, ed.UserLFID, ed.ApprovalListGitHubOrg, args.companyName, args.projectName)
+	return data, true
+}
+
+func (ed *CLAApprovalListRemoveGitHubOrgData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("CLA Manager [%s / %s / %s] removed GitHub Org %s from the approval list for Company: %s, Project: %s",
+		ed.UserName, ed.UserEmail, ed.UserLFID, ed.ApprovalListGitHubOrg, args.companyName, args.projectName)
 	return data, true
 }
 
