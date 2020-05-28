@@ -1,0 +1,8 @@
+type: object
+properties:
+  organization_id:
+    type: string
+    description: salesforce id of the organization
+  organization_name:
+    type: string
+    description: name of the organization

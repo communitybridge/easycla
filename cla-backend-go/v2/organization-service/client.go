@@ -210,3 +210,71 @@ func (osc *Client) GetScopeID(organizationID string, roleName string, objectType
 	}
 	return "", ErrScopeNotFound
 }
+
+// SearchOrganization search organization by name. It will return
+// array of organization matching with the orgName.
+func (osc *Client) SearchOrganization(orgName string) ([]*models.Organization, error) {
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	var offset int64
+	var pageSize int64 = 1000
+	clientAuth := runtimeClient.BearerToken(tok)
+	var orgs []*models.Organization
+	for {
+		params := &organizations.SearchOrgParams{
+			Name:     []string{orgName},
+			Offset:   aws.String(strconv.FormatInt(offset, 10)),
+			PageSize: aws.String(strconv.FormatInt(pageSize, 10)),
+			Context:  context.TODO(),
+		}
+		result, err := osc.cl.Organizations.SearchOrg(params, clientAuth)
+		if err != nil {
+			return nil, err
+		}
+		orgs = append(orgs, result.Payload.Data...)
+		if result.Payload.Metadata.TotalSize > offset+pageSize {
+			offset += pageSize
+		} else {
+			break
+		}
+	}
+	return orgs, nil
+}
+
+// GetOrganization gets organization from organization id
+func (osc *Client) GetOrganization(orgID string) (*models.Organization, error) {
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	params := &organizations.GetOrgParams{
+		SalesforceID: orgID,
+		Context:      context.Background(),
+	}
+	result, err := osc.cl.Organizations.GetOrg(params, clientAuth)
+	if err != nil {
+		return nil, err
+	}
+	return result.Payload, nil
+}
+
+// ListOrgUserAdminScopes returns admin role scope of organization
+func (osc *Client) ListOrgUserAdminScopes(orgID string) (*models.UserrolescopesList, error) {
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	params := &organizations.ListOrgUsrAdminScopesParams{
+		SalesforceID: orgID,
+		Context:      context.Background(),
+	}
+	result, err := osc.cl.Organizations.ListOrgUsrAdminScopes(params, clientAuth)
+	if err != nil {
+		return nil, err
+	}
+	return result.Payload, nil
+}
