@@ -4,17 +4,11 @@
 package company
 
 import (
-	"fmt"
-
-	"github.com/jinzhu/copier"
-
 	"github.com/LF-Engineering/lfx-kit/auth"
 	v1Company "github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/company"
-	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/organization"
-	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -29,7 +23,7 @@ func isUserAuthorizedForOrganization(user *auth.User, externalCompanyID string) 
 }
 
 // Configure sets up the middleware handlers
-func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository, v1CompanyService v1Company.IService) {
+func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository) {
 	api.CompanyGetCompanyClaManagersHandler = company.GetCompanyClaManagersHandlerFunc(
 		func(params company.GetCompanyClaManagersParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
@@ -100,37 +94,6 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 			return company.NewGetCompanyProjectClaOK().WithPayload(result)
 		})
-
-	api.CompanyGetCompanyByExternalIDHandler = company.GetCompanyByExternalIDHandlerFunc(func(params company.GetCompanyByExternalIDParams) middleware.Responder {
-		companyModel, err := v1CompanyService.GetCompanyByExternalID(params.CompanySFID)
-		if err != nil {
-			msg := fmt.Sprintf("Bad Request - unable to query company by ExternalID: %s, error: %v", params.CompanySFID, err)
-			log.Warnf(msg)
-			return company.NewGetCompanyByExternalIDBadRequest().WithPayload(&models.ErrorResponse{
-				Code:    "400",
-				Message: msg,
-			})
-		}
-		result := &models.Company{}
-		err = copier.Copy(result, companyModel)
-		if err != nil {
-			return company.NewGetCompanyByExternalIDInternalServerError().WithPayload(errorResponse(err))
-		}
-		return company.NewGetCompanyByExternalIDOK().WithPayload(result)
-	})
-	api.OrganizationSearchOrganizationHandler = organization.SearchOrganizationHandlerFunc(func(params organization.SearchOrganizationParams) middleware.Responder {
-		orgs, err := v1CompanyService.SearchOrganizationByName(params.CompanyName)
-		if err != nil {
-			log.Warnf("error occured while search org %s. error = %s", params.CompanyName, err.Error())
-			return organization.NewSearchOrganizationInternalServerError().WithPayload(errorResponse(err))
-		}
-		result := &models.OrgList{}
-		err = copier.Copy(result, orgs)
-		if err != nil {
-			return organization.NewSearchOrganizationInternalServerError().WithPayload(errorResponse(err))
-		}
-		return organization.NewSearchOrganizationOK().WithPayload(result)
-	})
 }
 
 type codedResponse interface {
