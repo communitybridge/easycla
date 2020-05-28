@@ -127,11 +127,7 @@ paths:
             - user
       operationId: getUser
       parameters:
-        - name: userID
-          description: the user ID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-userID"
       responses:
         '200':
           description: 'Success'
@@ -261,11 +257,7 @@ paths:
             - user
       operationId: getSignature
       parameters:
-        - name: signatureID
-          description: the signature ID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-signatureID"
       responses:
         '200':
           description: 'Success'
@@ -290,11 +282,7 @@ paths:
         - OauthSecurity: []
       operationId: getProjectSignatures
       parameters:
-        - name: projectID
-          description: the project ID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectID"
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/searchTerm'
@@ -322,16 +310,8 @@ paths:
       security: []
       operationId: getProjectCompanySignatures
       parameters:
-        - name: projectID
-          description: the project ID
-          in: path
-          type: string
-          required: true
-        - name: companyID
-          description: the company ID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectID"
+        - $ref: "#/parameters/path-companyID"
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
       responses:
@@ -356,11 +336,7 @@ paths:
         - OauthSecurity: []
       operationId: getCompanySignatures
       parameters:
-        - name: companyID
-          description: the company ID
-          in: path
-          type: string
-          required: true
+        - $ref: '#/parameters/path-companyID'
         - $ref: '#/parameters/signatureType'
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
@@ -387,11 +363,7 @@ paths:
         - OauthSecurity: []
       operationId: getUserSignatures
       parameters:
-        - name: userID
-          description: the user ID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-userID"
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/userName'
@@ -417,16 +389,8 @@ paths:
         - OauthSecurity: []
       operationId: getProjectCompanyEmployeeSignatures
       parameters:
-        - name: projectID
-          description: the project ID
-          in: path
-          type: string
-          required: true
-        - name: companyID
-          description: the company ID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectID"
+        - $ref: "#/parameters/path-companyID"
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
       responses:
@@ -440,6 +404,41 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+      tags:
+        - signatures
+
+  /signatures/project/{projectID}/company/{companyID}/clagroup/{claGroupID}/approval-list:
+    put:
+      summary: Updates the Project / Organization/Company Approval list
+      description: API to update the project and organization/company approval list.
+      security:
+        - OauthSecurity:
+            - user
+      operationId: updateApprovalList
+      parameters:
+        - $ref: "#/parameters/path-projectID"
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-claGroupID"
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/approval-list'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signature'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - signatures
 
@@ -650,15 +649,12 @@ paths:
       tags:
         - project
 
-  /project/external/{externalID}:
+  /project/external/{projectSFID}:
     get:
-      summary: Get Projects By External ID
+      summary: Get CLA Groups/Projects By External ID
       description: Returns a list of CLA groups associated with the specified external ID
       parameters:
-        - name: externalID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectSFID"
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/pageSize'
       security:
@@ -742,10 +738,7 @@ paths:
             - company
       operationId: getCompany
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
       responses:
         '200':
           description: 'Success'
@@ -797,11 +790,7 @@ paths:
             - company
       operationId: getCompaniesByUserManager
       parameters:
-        - name: userID
-          description: the user ID of the user manager
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-userID"
       responses:
         '200':
           description: 'Success'
@@ -826,11 +815,7 @@ paths:
             - company
       operationId: getCompaniesByUserManagerWithInvites
       parameters:
-        - name: userID
-          description: the user ID of the user manager
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-userID"
       responses:
         '200':
           description: 'Success'
@@ -918,10 +903,7 @@ paths:
             - company
       operationId: getCompanyInviteRequests
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
         - name: status
           in: query
           type: string
@@ -950,16 +932,8 @@ paths:
             - company
       operationId: getCompanyUserInviteRequests
       parameters:
-        - name: companyID
-          description: the company ID of the invitation
-          in: path
-          type: string
-          required: true
-        - name: userID
-          description: the user ID of the invitation
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-userID"
       responses:
         '200':
           description: 'Success'
@@ -984,10 +958,7 @@ paths:
             - company
       operationId: addUsertoCompanyAccessList
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
         - name: user
           in: body
           schema:
@@ -1014,10 +985,7 @@ paths:
             - company
       operationId: requestCompanyAccessRequest
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
         - name: user
           in: body
           schema:
@@ -1042,10 +1010,7 @@ paths:
             - company
       operationId: approveCompanyAccessRequest
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
         - name: requestID
           in: path
           type: string
@@ -1070,10 +1035,7 @@ paths:
             - company
       operationId: rejectCompanyAccessRequest
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
         - name: requestID
           in: path
           type: string
@@ -1099,14 +1061,8 @@ paths:
             - user
       operationId: listCclaWhitelistRequestsByCompanyAndProject
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
         - name: status
           in: query
           type: string
@@ -1131,14 +1087,8 @@ paths:
       security: []
       operationId: addCclaWhitelistRequest
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
         - in: body
           name: body
           schema:
@@ -1166,18 +1116,9 @@ paths:
             - user
       operationId: listCclaWhitelistRequestsByCompanyAndProjectAndUser
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
-        - name: userID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
+        - $ref: "#/parameters/path-userID"
         - name: status
           in: query
           type: string
@@ -1206,14 +1147,8 @@ paths:
             - company
       operationId: approveCclaWhitelistRequest
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
         - name: requestID
           in: path
           type: string
@@ -1240,14 +1175,8 @@ paths:
             - company
       operationId: rejectCclaWhitelistRequest
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
         - name: requestID
           in: path
           type: string
@@ -1274,13 +1203,8 @@ paths:
             - user
       operationId: listCclaWhitelistRequests
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: query
-          type: string
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/projectID"
         - name: status
           in: query
           type: string
@@ -1310,14 +1234,8 @@ paths:
             - user
       operationId: addCLAManager
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
         - name: body
           in: body
           schema:
@@ -1348,14 +1266,8 @@ paths:
             - user
       operationId: deleteCLAManager
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
         - name: userLFID
           in: path
           type: string
@@ -1384,14 +1296,8 @@ paths:
             - user
       operationId: getCLAManagerRequests
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
         - name: status
           in: query
           type: string
@@ -1418,14 +1324,8 @@ paths:
             - user
       operationId: createCLAManagerRequest
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
         - name: body
           in: body
           schema:
@@ -1455,14 +1355,8 @@ paths:
             - user
       operationId: getCLAManagerRequest
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
         - name: requestID
           in: path
           type: string
@@ -1489,14 +1383,8 @@ paths:
             - user
       operationId: deleteCLAManagerRequest
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
         - name: requestID
           in: path
           type: string
@@ -1523,14 +1411,8 @@ paths:
             - user
       operationId: approveCLAManagerRequest
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
         - name: requestID
           in: path
           type: string
@@ -1559,14 +1441,8 @@ paths:
             - user
       operationId: denyCLAManagerRequest
       parameters:
-        - name: companyID
-          in: path
-          type: string
-          required: true
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
         - name: requestID
           in: path
           type: string
@@ -1714,10 +1590,7 @@ paths:
         - OauthSecurity: []
       operationId: addProjectGithubOrganization
       parameters:
-        - name: projectSFID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectSFID"
         - in: body
           name: body
           schema:
@@ -1742,10 +1615,7 @@ paths:
         - OauthSecurity: []
       operationId: getProjectGithubOrganizations
       parameters:
-        - name: projectSFID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectSFID"
       responses:
         200:
           description: Success
@@ -1766,10 +1636,7 @@ paths:
         - OauthSecurity: []
       operationId: deleteProjectGithubOrganization
       parameters:
-        - name: projectSFID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectSFID"
         - name: orgName
           in: path
           type: string
@@ -1794,10 +1661,7 @@ paths:
             - project
       operationId: addProjectGithubRepository
       parameters:
-        - name: projectSFID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectSFID"
         - in: body
           name: github-repository-input
           schema:
@@ -1823,10 +1687,7 @@ paths:
             - project
       operationId: getProjectGithubRepositories
       parameters:
-        - name: projectSFID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectSFID"
       responses:
         200:
           description: Success
@@ -1848,10 +1709,7 @@ paths:
             - project
       operationId: deleteProjectGithubRepository
       parameters:
-        - name: projectSFID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectSFID"
         - name: repositoryID
           in: path
           type: string
@@ -1917,10 +1775,7 @@ paths:
             - project
       operationId: deleteGerrit
       parameters:
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectID"
         - name: gerritID
           in: path
           type: string
@@ -1946,10 +1801,7 @@ paths:
             - project
       operationId: addGerrit
       parameters:
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectID"
         - in: body
           name: add-gerrit-input
           schema:
@@ -2052,6 +1904,48 @@ parameters:
     description: unique id of the company
     in: query
     type: string
+  path-userID:
+    name: userID
+    description: unique id of the user
+    in: path
+    type: string
+    required: true
+  path-projectID:
+    name: projectID
+    description: unique id of the project
+    in: path
+    type: string
+    required: true
+  path-projectSFID:
+    name: projectSFID
+    description: the external ID of the CLA Group/project
+    in: path
+    type: string
+    required: true
+  path-companyID:
+    name: companyID
+    description: unique id of the company
+    in: path
+    type: string
+    required: true
+  path-companySFID:
+    name: companySFID
+    description: the external SalesForce ID of the Company/Organization
+    in: path
+    type: string
+    required: true
+  path-claGroupID:
+    name: claGroupID
+    description: the CLA Group ID
+    in: path
+    type: string
+    required: true
+  path-signatureID:
+    name: signatureID
+    description: unique id of the signature
+    in: path
+    type: string
+    required: true
   before:
     name: before
     description: return result created before this time.
@@ -2341,11 +2235,12 @@ definitions:
         description: The company record update date/time
         format: date-time
 
-
   signatures:
     $ref: './common/signatures.yaml'
   signature:
     $ref: './common/signature.yaml'
+  approval-list:
+    $ref: './common/signature-approval-list.yaml'
 
   ccla-whitelist-request-input:
     type: object
@@ -2515,7 +2410,7 @@ responses:
     schema:
       $ref: '#/definitions/error-response'
   internal-server-error:
-    description: 'Internal server error occured'
+    description: 'Internal server error'
     schema:
       $ref: '#/definitions/error-response'
   conflict:

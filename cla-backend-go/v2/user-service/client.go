@@ -91,8 +91,8 @@ func (usc *Client) SearchUsers(firstName string, lastName string, email string) 
 		return nil, err
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
-	result, err := usc.cl.User.SearchUsers(params, clientAuth)
-	if err != nil {
+	result, resultErr := usc.cl.User.SearchUsers(params, clientAuth)
+	if resultErr != nil {
 		return nil, err
 	}
 	users := result.Payload.Data

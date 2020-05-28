@@ -167,14 +167,26 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 
 	// Get Project Company Signatures
 	api.SignaturesGetProjectCompanySignaturesHandler = signatures.GetProjectCompanySignaturesHandlerFunc(func(params signatures.GetProjectCompanySignaturesParams) middleware.Responder {
-		projectSignatures, err := service.GetProjectCompanySignatures(params)
+		signed, approved := true, true
+		projectSignature, err := service.GetProjectCompanySignature(params.CompanyID, params.ProjectID, &signed, &approved, params.NextKey, params.PageSize)
 		if err != nil {
 			log.Warnf("error retrieving project signatures for project: %s, company: %s, error: %+v",
 				params.ProjectID, params.CompanyID, err)
 			return signatures.NewGetProjectCompanySignaturesBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return signatures.NewGetProjectCompanySignaturesOK().WithPayload(projectSignatures)
+		count := int64(1)
+		if projectSignature == nil {
+			count = int64(0)
+		}
+		response := models.Signatures{
+			LastKeyScanned: "",
+			ProjectID:      params.ProjectID,
+			ResultCount:    count,
+			Signatures:     []*models.Signature{projectSignature},
+			TotalCount:     count,
+		}
+		return signatures.NewGetProjectCompanySignaturesOK().WithPayload(&response)
 	})
 
 	// Get Employee Project Company Signatures

@@ -121,6 +121,28 @@ func TestStringInSlice(t *testing.T) {
 	assert.False(t, utils.StringInSlice("aaaa", []string{}))
 }
 
+func TestRemoveEntries(t *testing.T) {
+	expected := []string{"aaaa", "bbbb", "cccc"}
+	assert.Equal(t, expected, utils.RemoveItemsFromList(expected, nil))
+	assert.Equal(t, expected, utils.RemoveItemsFromList([]string{"aaaa", "bbbb", "cccc", "dddd"}, []string{"dddd"}))
+	assert.Equal(t, expected, utils.RemoveItemsFromList([]string{"aa", "aaaa", "bbbb", "cccc"}, []string{"aa"}))
+	assert.Equal(t, expected, utils.RemoveItemsFromList([]string{"aa", "aaaa", "bbbb", "cccc", "fff"}, []string{"aa", "fff"}))
+	assert.Equal(t, expected, utils.RemoveItemsFromList([]string{"aa", "aaaa", "bbbb", "cccc", "fff", "dddd"}, []string{"aa", "dddd", "fff"}))
+	assert.Equal(t, expected, utils.RemoveItemsFromList([]string{"aaaa", "bbbb", "cccc", "dddd", "eeee"}, []string{"dddd", "eeee"}))
+	assert.Nil(t, utils.RemoveItemsFromList(nil, []string{"dddd"}))
+	assert.Nil(t, utils.RemoveItemsFromList(nil, nil))
+}
+
+func TestRemoveDuplicates(t *testing.T) {
+	expected := []string{"aaaa", "bbbb", "cccc"}
+	assert.Equal(t, expected, utils.RemoveDuplicates([]string{"aaaa", "bbbb", "cccc"}))
+	assert.Equal(t, expected, utils.RemoveDuplicates([]string{"aaaa", "bbbb", "bbbb", "cccc"}))
+	assert.Equal(t, expected, utils.RemoveDuplicates([]string{"aaaa", "bbbb", "cccc", "bbbb"}))
+	assert.Equal(t, expected, utils.RemoveDuplicates([]string{"aaaa", "bbbb", "cccc", "cccc"}))
+	assert.Equal(t, expected, utils.RemoveDuplicates([]string{"aaaa", "bbbb", "cccc", "aaaa"}))
+	assert.Nil(t, utils.RemoveDuplicates(nil))
+}
+
 func TestHostInSlice(t *testing.T) {
 	mySlice := []string{"project.dev.lfcla.com", "corporate.dev.lfcla.com", "contributor.dev.lfcla.com", "api.dev.lfcla.com", "dev.lfcla.com", "localhost", "localhost:8100", "localhost:8101"}
 	assert.True(t, utils.HostInSlice("project.dev.lfcla.com", mySlice))
@@ -133,4 +155,25 @@ func TestHostInSlice(t *testing.T) {
 	assert.False(t, utils.HostInSlice("https://dev.lfcla.com", mySlice))
 	assert.True(t, utils.HostInSlice("localhost", []string{"localhost", "foo", "bar"}))
 	assert.True(t, utils.HostInSlice("localhost", []string{"foo", "localhost:8100", "localhost:8101"}))
+}
+
+func TestTrimRemoveTrailingSpace(t *testing.T) {
+	type KeyValue struct {
+		input    string
+		expected string
+	}
+	testValues := []KeyValue{
+		{"SET #A = :a,", "SET #A = :a"},
+		{"  SET #A = :a, ", "SET #A = :a"},
+		{"  SET #A = :a ", "SET #A = :a"},
+		{"SET #A = :a", "SET #A = :a"},
+		{"SET #A = :a, #B = :b,", "SET #A = :a, #B = :b"},
+		{"SET #A = :a, #B = :b, #C = :c,", "SET #A = :a, #B = :b, #C = :c"},
+		{"SET #A = :a, #B = :b, #C = :c", "SET #A = :a, #B = :b, #C = :c"},
+	}
+
+	for _, testValue := range testValues {
+		assert.Equal(t, testValue.expected, utils.TrimRemoveTrailingComma(testValue.input))
+	}
+
 }

@@ -437,7 +437,7 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - project
-  
+
   /project/enabled/{projectSfdcId}:
     get:
       summary: Get CLA enabled projects
@@ -1062,6 +1062,45 @@ paths:
       tags:
         - signatures
 
+  /signatures/project/{projectSFID}/company/{companySFID}/clagroup/{claGroupID}/approval-list:
+    put:
+      summary: Updates the Project / Organization/Company Approval list
+      description: API to update the project and organization/company approval list.
+      operationId: updateApprovalList
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-projectSFID"
+        - $ref: "#/parameters/path-companySFID"
+        - name: claGroupID
+          in: path
+          type: string
+          required: true
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/approval-list'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signature'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
+
   /company/{companySFID}/project/{projectSFID}/claGroup/{projectID}/cla-manager:
     post:
       summary: Adds a new CLA Manager to the specified Company and Project
@@ -1096,7 +1135,7 @@ paths:
       tags:
         - cla-manager
 
-  /companySF/{companySFID}/projectSF/{projectSFID}/claGroup/{projectID}/cla-manager/{userLFID}:
+  /company/{companySFID}/project/{projectSFID}/claGroup/{projectID}/cla-manager/{userLFID}:
     delete:
       summary: Removes the CLA Manager from ACL for specified Company and Project
       description: Allows an existing CLA Manager to remove another CLA Manager from the specified Company and Project.
@@ -1110,7 +1149,7 @@ paths:
         - $ref: "#/parameters/path-companySFID"
         - $ref: "#/parameters/path-projectID"
         - $ref: "#/parameters/path-userLFID"
-        
+
       responses:
         '200':
           description: 'Success'
@@ -1126,7 +1165,6 @@ paths:
           $ref: '#/responses/conflict'
       tags:
         - cla-manager
-
 
   /signatures/{signatureID}/gh-org-whitelist:
     get:
@@ -1632,6 +1670,9 @@ definitions:
   signature:
     $ref: './common/signature.yaml'
 
+  approval-list:
+    $ref: './common/signature-approval-list.yaml'
+
   github-org:
     $ref: './common/github-org.yaml'
 
@@ -1832,7 +1873,7 @@ definitions:
     type: object
     properties:
       projectExternalId:
-        type : string
+        type: string
       list:
         type: array
         items:
@@ -1945,8 +1986,8 @@ definitions:
       list:
         type: array
         items:
-          $ref : '#/definitions/enabled-cla'
-  
+          $ref: '#/definitions/enabled-cla'
+
   enabled-cla:
     type: object
     title: Enabled CLA
@@ -1977,7 +2018,7 @@ definitions:
       list:
         type: array
         items:
-          $ref : '#/definitions/active-cla'
+          $ref: '#/definitions/active-cla'
 
   company-project-cla-list:
     type: object
@@ -1985,11 +2026,11 @@ definitions:
       signed_cla_list:
         type: array
         items:
-          $ref : '#/definitions/active-cla'
+          $ref: '#/definitions/active-cla'
       unsigned_project_list:
         type: array
         items:
-          $ref : '#/definitions/unsigned_project'
+          $ref: '#/definitions/unsigned_project'
 
   unsigned_project:
     type: object
@@ -2065,7 +2106,7 @@ definitions:
       list:
         type: array
         items:
-          $ref : '#/definitions/corporate-contributor'
+          $ref: '#/definitions/corporate-contributor'
 
   corporate-contributor:
     type: object
