@@ -91,7 +91,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			msg := fmt.Sprintf("unknown user is not authorized to update project company signature approval list for project ID: %s, company ID: %s",
 				params.ProjectSFID, params.CompanySFID)
 			log.Warn(msg)
-			return signatures.NewUpdateApprovalListUnauthorized().WithPayload(errorResponse(errors.New(msg)))
+			return signatures.NewUpdateApprovalListForbidden().WithPayload(errorResponse(errors.New(msg)))
 		}
 
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
@@ -128,7 +128,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		updatedSig, updateErr := service.UpdateApprovalList(authUser, projectModel, companyModel, params.ClaGroupID, &v1ApprovalList)
 		if updateErr != nil || updatedSig == nil {
 			if err, ok := err.(*signatureService.UnauthorizedError); ok {
-				return signatures.NewUpdateApprovalListUnauthorized().WithPayload(errorResponse(err))
+				return signatures.NewUpdateApprovalListForbidden().WithPayload(errorResponse(err))
 			}
 			log.Warnf("unable to update signature approval list using CLA Group ID: %s", params.ClaGroupID)
 			return signatures.NewUpdateApprovalListBadRequest().WithPayload(errorResponse(updateErr))
