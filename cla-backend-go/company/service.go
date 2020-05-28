@@ -4,7 +4,10 @@
 package company
 
 import (
+	"errors"
 	"fmt"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 
@@ -13,6 +16,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
+	organization_service "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 )
 
 type service struct {
@@ -42,6 +46,9 @@ type IService interface { // nolint
 	AddPendingCompanyInviteRequest(companyID string, userID string) (*InviteModel, error)
 	ApproveCompanyAccessRequest(companyInviteID string) (*InviteModel, error)
 	RejectCompanyAccessRequest(companyInviteID string) (*InviteModel, error)
+
+	// calls org service
+	SearchOrganizationByName(orgName string) (*models.OrgList, error)
 
 	sendRequestAccessEmail(companyModel *models.Company, requesterName, requesterEmail, recipientName, recipientAddress string)
 	sendRequestApprovedEmailToRecipient(companyModel *models.Company, recipientName, recipientAddress string)
@@ -570,6 +577,105 @@ func (s service) getPreferredNameAndEmail(lfid string) (string, string, error) {
 }
 
 func (s service) GetCompanyByExternalID(companySFID string) (*models.Company, error) {
-	return s.repo.GetCompanyByExternalID(companySFID)
+	comp, err := s.repo.GetCompanyByExternalID(companySFID)
+	if err == nil {
+		return comp, nil
+	}
+	if err == ErrCompanyDoesNotExist {
+		comp, err = s.createOrgFromExternalID(companySFID)
+		if err != nil {
+			return comp, err
+		}
+		return comp, nil
+	}
+	return nil, err
+}
 
+func (s service) SearchOrganizationByName(orgName string) (*models.OrgList, error) {
+	osc := organization_service.GetClient()
+	orgs, err := osc.SearchOrganization(orgName)
+	if err != nil {
+		return nil, err
+	}
+	result := &models.OrgList{List: make([]*models.Org, 0, len(orgs))}
+	for _, org := range orgs {
+		result.List = append(result.List, &models.Org{
+			OrganizationID:   org.ID,
+			OrganizationName: org.Name,
+		})
+	}
+	return result, nil
+}
+
+func (s service) createOrgFromExternalID(orgID string) (*models.Company, error) {
+	f := logrus.Fields{"orgID": orgID}
+	osc := organization_service.GetClient()
+	log.WithFields(f).Debugf("getting organization details")
+	org, err := osc.GetOrganization(orgID)
+	if err != nil {
+		log.WithFields(f).Errorf("getting organization details failed. error = %s", err.Error())
+		return nil, err
+	}
+	log.WithFields(f).Debugf("getting company-admin information")
+	companyAdmin, err := getCompanyAdmin(orgID)
+	if err != nil {
+		return nil, err
+	}
+	f["company-admin"] = companyAdmin
+	log.WithFields(f).Debugf("getting user information from cla")
+	claUser, err := s.userService.GetUserByLFUserName(companyAdmin.LfUsername)
+	if err != nil {
+		log.WithFields(f).Errorf("getting user information from cla failed. error = %s", err.Error())
+		return nil, err
+	}
+	if claUser == nil {
+		// create cla-user
+		log.WithFields(f).Debugf("cla user not found. creating cla user.")
+		claUser, err = s.userService.CreateUser(companyAdmin)
+		if err != nil {
+			log.WithFields(f).Debugf("creating cla user failed. error = %s", err.Error())
+			return nil, err
+		}
+	}
+	newComp := &models.Company{
+		CompanyACL:        []string{companyAdmin.LfUsername},
+		CompanyExternalID: org.ID,
+		CompanyName:       org.Name,
+		CompanyManagerID:  claUser.UserID,
+	}
+	f["company"] = newComp
+	log.WithFields(f).Debugf("creating cla company")
+	// create company
+	comp, err := s.repo.CreateCompany(newComp)
+	if err != nil {
+		log.WithFields(f).Debugf("creating cla company failed. error = %s", err.Error())
+		return nil, err
+	}
+	return comp, nil
+}
+
+// getCompanyAdmin is helper function which queries org-service to get first company-admin
+func getCompanyAdmin(companySFID string) (*models.User, error) {
+	osc := organization_service.GetClient()
+	result, err := osc.ListOrgUserAdminScopes(companySFID)
+	if err != nil {
+		log.WithField("companySFID", companySFID).Errorf("getting company-admin failed. error = %s", err.Error())
+		return nil, err
+	}
+	for _, usc := range result.Userroles {
+		for _, rs := range usc.RoleScopes {
+			if rs.RoleName == "company-admin" {
+				companyAdmin := &models.User{
+					LfEmail:        usc.Contact.EmailAddress,
+					LfUsername:     usc.Contact.Username,
+					UserExternalID: usc.Contact.ID,
+					Username:       usc.Contact.Name,
+				}
+				log.WithFields(logrus.Fields{"companySFID": companySFID, "company-admin": companyAdmin}).Debug("company-admin found")
+				return companyAdmin, nil
+			}
+		}
+	}
+	log.WithField("companySFID", companySFID).Errorf("no company-admin found. error = %s", err.Error())
+	return nil, errors.New("no company-admin found")
 }
