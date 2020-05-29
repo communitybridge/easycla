@@ -370,7 +370,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Organization, params.CompanyID) || !authUser.IsUserAuthorizedForOrganizationScope(params.CompanyID) {
 				log.Warnf("user %+v is not authorized to view company signatures for company ID: %s",
 					authUser, params.CompanyID)
-				return signatures.NewGetCompanySignaturesUnauthorized()
+				return signatures.NewGetCompanySignaturesForbidden()
 			}
 		}
 
