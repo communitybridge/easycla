@@ -444,11 +444,9 @@ func appendList(approvalList []string, message string) string {
 	approvalListSummary := ""
 
 	if len(approvalList) > 0 {
-		approvalListSummary = "<li>"
 		for _, value := range approvalList {
 			approvalListSummary += fmt.Sprintf("<li>%s %s</li>", message, value)
 		}
-		approvalListSummary += "</li>"
 	}
 
 	return approvalListSummary
