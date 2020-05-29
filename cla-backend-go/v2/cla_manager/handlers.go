@@ -29,6 +29,9 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+// Lead representing type of user
+const Lead = "lead"
+
 // Configure is the API handler routine for CLA Manager routes
 func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService, companyService company.IService, projectService project.Service) {
 	api.ClaManagerCreateCLAManagerHandler = cla_manager.CreateCLAManagerHandlerFunc(func(params cla_manager.CreateCLAManagerParams, authUser *auth.User) middleware.Responder {
@@ -113,7 +116,7 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 		log.Debugf("Creating user role Scope for user : %s ", params.Body.UserEmail)
 
 		orgClient := v2OrgService.GetClient()
-		if user.Type == "lead" {
+		if user.Type == Lead {
 			// convert user to contact
 			log.Debug("converting lead to contact")
 			err := userServiceClient.ConvertToContact(user.ID)
@@ -266,6 +269,85 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 		return cla_manager.NewDeleteCLAManagerOK()
 
 	})
+	api.ClaManagerCreateCLAManagerDesigneeHandler = cla_manager.CreateCLAManagerDesigneeHandlerFunc(func(params cla_manager.CreateCLAManagerDesigneeParams, authUser *auth.User) middleware.Responder {
+		if !authUser.IsUserAuthorizedForOrganizationScope(params.CompanySFID) {
+			return cla_manager.NewCreateCLAManagerDesigneeUnauthorized()
+		}
+
+		claManagerDesignee, err := createCLAManagerDesignee(params.CompanySFID, params.ProjectSFID, params.Body.UserEmail)
+
+		if err != nil {
+			msg := fmt.Sprintf("Problem creating cla Manager Designee for user :%s, error: %+v ", authUser.Email, err)
+			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(
+				&models.ErrorResponse{
+					Message: msg,
+					Code:    "400",
+				})
+		}
+
+		log.Debugf("CLA Manager designee created : %+v", claManagerDesignee)
+		return cla_manager.NewCreateCLAManagerDesigneeOK().WithPayload(claManagerDesignee)
+
+	})
+}
+
+// Assign CLA Manager designee to user
+func createCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error) {
+
+	// integrate user,acs,org and project services
+	userClient := v2UserService.GetClient()
+	acServiceClient := v2AcsService.GetClient()
+	orgClient := v2OrgService.GetClient()
+	projectClient := v2ProjectService.GetClient()
+
+	user, userErr := userClient.SearchUserByEmail(userEmail)
+	if userErr != nil {
+		log.Debugf("Failed to get user by email: %s , error: %+v", userEmail, userErr)
+		return nil, userErr
+	}
+
+	if user.Type == Lead {
+		log.Debugf("Converting user: %s from lead to contact ", userEmail)
+		contactErr := userClient.ConvertToContact(user.ID)
+		if contactErr != nil {
+			log.Debugf("failed to convert user: %s to contact ", userEmail)
+			return nil, contactErr
+		}
+	}
+
+	roleID, designeeErr := acServiceClient.GetRoleID("cla-manager-designee")
+	if designeeErr != nil {
+		msg := fmt.Sprintf("Problem getting role ID for cla-manager-designee")
+		log.Warn(msg)
+		return nil, designeeErr
+	}
+
+	scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(userEmail, projectID, companyID, roleID)
+	if scopeErr != nil {
+		msg := fmt.Sprintf("Problem creating projectOrg scope for email: %s , projectID: %s, companyID: %s", userEmail, projectID, companyID)
+		log.Warn(msg)
+		return nil, scopeErr
+	}
+
+	projectSF, projectErr := projectClient.GetProject(projectID)
+	if projectErr != nil {
+		msg := fmt.Sprintf("Problem getting project :%s ", projectID)
+		log.Debug(msg)
+		return nil, projectErr
+	}
+
+	claManagerDesignee := &models.ClaManagerDesignee{
+		LfUsername:  user.Username,
+		UserSfid:    user.ID,
+		Type:        user.Type,
+		AssignedOn:  time.Now().String(),
+		Email:       userEmail,
+		ProjectSfid: projectID,
+		CompanySfid: companyID,
+		ProjectName: projectSF.Name,
+	}
+	return claManagerDesignee, nil
+
 }
 
 func getCLAGroup(projectID string, projectSFID string, projectService project.Service) (*v1Models.Project, error) {
