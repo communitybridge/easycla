@@ -1695,9 +1695,9 @@ func buildApprovalAttributeList(existingList, addEntries, removeEntries []string
 		// No duplicates allowed
 		if !utils.StringInSlice(value, updatedList) {
 			log.Debugf("buildApprovalAttributeList - adding existing entry: %s", value)
-			updatedList = append(updatedList, value)
+			updatedList = append(updatedList, strings.TrimSpace(value))
 		} else {
-			log.Debugf("buildApprovalAttributeList - skiping existing entry: %s", value)
+			log.Debugf("buildApprovalAttributeList - skipping existing entry: %s", value)
 		}
 	}
 
@@ -1706,7 +1706,7 @@ func buildApprovalAttributeList(existingList, addEntries, removeEntries []string
 		// No duplicates allowed
 		if !utils.StringInSlice(value, updatedList) {
 			log.Debugf("buildApprovalAttributeList - adding new entry: %s", value)
-			updatedList = append(updatedList, value)
+			updatedList = append(updatedList, strings.TrimSpace(value))
 		} else {
 			log.Debugf("buildApprovalAttributeList - skipping new entry: %s", value)
 		}

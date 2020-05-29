@@ -672,6 +672,106 @@ func (t *TestBehaviour) RunUpdateApprovalListRemoveGitHubOrg(testData InputTestV
 		})
 }
 
+// RunUpdateApprovalListMissingData test
+func (t *TestBehaviour) RunUpdateApprovalListMissingData(testData InputTestValues) {
+	endpoint := fmt.Sprintf("%s/v4/signatures/project/%s/company/%s/clagroup/%s/approval-list",
+		t.apiURL, testData.projectSFID, testData.orgSFID, testData.claGroupID)
+	frisby.Create(fmt.Sprintf("CLA Approval List - Update Approval List - Missing Data  - %s", testData.authHeaders["X-USERNAME"])).
+		Put(endpoint).
+		SetHeaders(testData.authHeaders).
+		SetJson(map[string][]string{}).
+		Send().
+		ExpectStatus(400)
+}
+
+// RunUpdateApprovalListInvalidEmail test
+func (t *TestBehaviour) RunUpdateApprovalListInvalidEmail(testData InputTestValues) {
+	endpoint := fmt.Sprintf("%s/v4/signatures/project/%s/company/%s/clagroup/%s/approval-list",
+		t.apiURL, testData.projectSFID, testData.orgSFID, testData.claGroupID)
+	frisby.Create(fmt.Sprintf("CLA Approval List - Update Approval List - Invalid Add Email Data  - %s", testData.authHeaders["X-USERNAME"])).
+		Put(endpoint).
+		SetHeaders(testData.authHeaders).
+		SetJson(map[string][]string{
+			"AddEmailApprovalList": {"user@linuxfoundation_org"},
+		}).
+		Send().
+		ExpectStatus(400)
+	frisby.Create(fmt.Sprintf("CLA Approval List - Update Approval List - Invalid Remove Email Data  - %s", testData.authHeaders["X-USERNAME"])).
+		Put(endpoint).
+		SetHeaders(testData.authHeaders).
+		SetJson(map[string][]string{
+			"RemoveEmailApprovalList": {"userlinuxfoundation.org"},
+		}).
+		Send().
+		ExpectStatus(400)
+}
+
+// RunUpdateApprovalListInvalidDomain test
+func (t *TestBehaviour) RunUpdateApprovalListInvalidDomain(testData InputTestValues) {
+	endpoint := fmt.Sprintf("%s/v4/signatures/project/%s/company/%s/clagroup/%s/approval-list",
+		t.apiURL, testData.projectSFID, testData.orgSFID, testData.claGroupID)
+	frisby.Create(fmt.Sprintf("CLA Approval List - Update Approval List - Invalid Add Domain Data  - %s", testData.authHeaders["X-USERNAME"])).
+		Put(endpoint).
+		SetHeaders(testData.authHeaders).
+		SetJson(map[string][]string{
+			"AddDomainApprovalList": {"linuxfoundation_org"},
+		}).
+		Send().
+		ExpectStatus(400)
+	frisby.Create(fmt.Sprintf("CLA Approval List - Update Approval List - Invalid Remove Domain Data  - %s", testData.authHeaders["X-USERNAME"])).
+		Put(endpoint).
+		SetHeaders(testData.authHeaders).
+		SetJson(map[string][]string{
+			"RemoveDomainApprovalList": {"/linuxfoundation.org"},
+		}).
+		Send().
+		ExpectStatus(400)
+}
+
+// RunUpdateApprovalListInvalidGitHubUsername test
+func (t *TestBehaviour) RunUpdateApprovalListInvalidGitHubUsername(testData InputTestValues) {
+	endpoint := fmt.Sprintf("%s/v4/signatures/project/%s/company/%s/clagroup/%s/approval-list",
+		t.apiURL, testData.projectSFID, testData.orgSFID, testData.claGroupID)
+	frisby.Create(fmt.Sprintf("CLA Approval List - Update Approval List - Invalid Add GitHub Username Data  - %s", testData.authHeaders["X-USERNAME"])).
+		Put(endpoint).
+		SetHeaders(testData.authHeaders).
+		SetJson(map[string][]string{
+			"AddGithubUsernameApprovalList": {"linuxfoundation+fun"},
+		}).
+		Send().
+		ExpectStatus(400)
+	frisby.Create(fmt.Sprintf("CLA Approval List - Update Approval List - Invalid Remove GitHub Username Data  - %s", testData.authHeaders["X-USERNAME"])).
+		Put(endpoint).
+		SetHeaders(testData.authHeaders).
+		SetJson(map[string][]string{
+			"RemoveGithubUsernameApprovalList": {"user}linuxfoundation"},
+		}).
+		Send().
+		ExpectStatus(400)
+}
+
+// RunUpdateApprovalListInvalidGitHubOrg test
+func (t *TestBehaviour) RunUpdateApprovalListInvalidGitHubOrg(testData InputTestValues) {
+	endpoint := fmt.Sprintf("%s/v4/signatures/project/%s/company/%s/clagroup/%s/approval-list",
+		t.apiURL, testData.projectSFID, testData.orgSFID, testData.claGroupID)
+	frisby.Create(fmt.Sprintf("CLA Approval List - Update Approval List - Invalid Add GitHub Org Data  - %s", testData.authHeaders["X-USERNAME"])).
+		Put(endpoint).
+		SetHeaders(testData.authHeaders).
+		SetJson(map[string][]string{
+			"AddGithubOrgApprovalList": {"user&linuxfoundation"},
+		}).
+		Send().
+		ExpectStatus(400)
+	frisby.Create(fmt.Sprintf("CLA Approval List - Update Approval List - Invalid Remove GitHub Org Data  - %s", testData.authHeaders["X-USERNAME"])).
+		Put(endpoint).
+		SetHeaders(testData.authHeaders).
+		SetJson(map[string][]string{
+			"RemoveGithubOrgApprovalList": {"user^linuxfoundation"},
+		}).
+		Send().
+		ExpectStatus(400)
+}
+
 func listContains(list []string, str string) bool {
 	retVal := false
 	for _, s := range list {
@@ -790,4 +890,15 @@ func (t *TestBehaviour) RunAllTests() {
 	t.RunUpdateApprovalListRemoveGitHubUsername(openCueATTTestValues)
 	t.RunUpdateApprovalListAddGitHubOrg(openCueATTTestValues)
 	t.RunUpdateApprovalListRemoveGitHubOrg(openCueATTTestValues)
+
+	// Invalid input data
+	t.RunUpdateApprovalListMissingData(openCueATTTestValues)
+	// Invalid email data
+	t.RunUpdateApprovalListInvalidEmail(openCueATTTestValues)
+	// Invalid domain data
+	t.RunUpdateApprovalListInvalidDomain(openCueATTTestValues)
+	// Invalid GitHub user data
+	t.RunUpdateApprovalListInvalidGitHubUsername(openCueATTTestValues)
+	// Invalid GitHub Org data
+	t.RunUpdateApprovalListInvalidGitHubOrg(openCueATTTestValues)
 }
