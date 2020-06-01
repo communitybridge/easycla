@@ -37,7 +37,7 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 	api.ClaManagerCreateCLAManagerHandler = cla_manager.CreateCLAManagerHandlerFunc(func(params cla_manager.CreateCLAManagerParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !isUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
-			return cla_manager.NewCreateCLAManagerUnauthorized()
+			return cla_manager.NewCreateCLAManagerForbidden()
 		}
 
 		// Get user by firstname,lastname and email parameters
@@ -181,7 +181,7 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 	api.ClaManagerDeleteCLAManagerHandler = cla_manager.DeleteCLAManagerHandlerFunc(func(params cla_manager.DeleteCLAManagerParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !isUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
-			return cla_manager.NewCreateCLAManagerUnauthorized()
+			return cla_manager.NewCreateCLAManagerForbidden()
 		}
 
 		// Get user by firstname,lastname and email parameters
@@ -269,9 +269,10 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 		return cla_manager.NewDeleteCLAManagerOK()
 
 	})
+
 	api.ClaManagerCreateCLAManagerDesigneeHandler = cla_manager.CreateCLAManagerDesigneeHandlerFunc(func(params cla_manager.CreateCLAManagerDesigneeParams, authUser *auth.User) middleware.Responder {
 		if !authUser.IsUserAuthorizedForOrganizationScope(params.CompanySFID) {
-			return cla_manager.NewCreateCLAManagerDesigneeUnauthorized()
+			return cla_manager.NewCreateCLAManagerDesigneeForbidden()
 		}
 
 		claManagerDesignee, err := createCLAManagerDesignee(params.CompanySFID, params.ProjectSFID, params.Body.UserEmail)

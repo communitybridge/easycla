@@ -131,17 +131,17 @@ func (t *TestBehaviour) RunGetCompanySignaturesNoAuth() {
 	frisby.Create("Signatures - Get Company Signatures - No Auth").
 		Get(url).
 		Send().
-		ExpectStatus(403)
+		ExpectStatus(401)
 }
 
-// RunGetCompanySignaturesUnauthorized test
-func (t *TestBehaviour) RunGetCompanySignaturesUnauthorized() {
+// RunGetCompanySignaturesForbidden test
+func (t *TestBehaviour) RunGetCompanySignaturesForbidden() {
 	url := fmt.Sprintf("%s/signatures/company/%s", t.apiURL, companyExternalIDGoogle)
 	xACL, xACLErr := GetXACLATT()
 	if xACLErr != nil {
 		return
 	}
-	frisby.Create("Signatures - Get Company Signatures - Unauthorized - ATT trying Google").
+	frisby.Create("Signatures - Get Company Signatures - Forbidden - ATT trying Google").
 		SetHeaders(map[string]string{
 			"Authorization":   "Bearer " + claProspectiveManagerToken,
 			"Content-Type":    "application/json",
@@ -201,9 +201,9 @@ func (t *TestBehaviour) RunAllTests() {
 	t.RunGetCLAManagerToken()
 	t.RunGetCLAProspectiveManagerToken()
 
-	// No Credentials/Auth Tests - these should return 401
+	// No Credentials/Auth Tests
 	t.RunGetCompanySignaturesNoAuth()
-	t.RunGetCompanySignaturesUnauthorized()
+	t.RunGetCompanySignaturesForbidden()
 
 	// Get
 	t.RunGetCompanySignatures()

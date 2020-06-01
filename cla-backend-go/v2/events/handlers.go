@@ -49,7 +49,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 		func(params events.GetRecentCompanyProjectEventsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return events.NewGetRecentCompanyProjectEventsUnauthorized()
+				return events.NewGetRecentCompanyProjectEventsForbidden()
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
 			if err != nil {
