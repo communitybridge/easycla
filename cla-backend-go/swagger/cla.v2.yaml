@@ -1155,8 +1155,6 @@ paths:
       responses:
         '200':
           description: 'Success'
-          schema:
-            $ref: '#/definitions/signature'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1167,6 +1165,46 @@ paths:
           $ref: '#/responses/conflict'
       tags:
         - cla-manager
+  
+  /company/{companySFID}/project/{projectSFID}/cla-manager-designee:
+    post:
+      summary: Assigns CLA Manager designee
+      description: Assigns CLA Manager designee to a given user
+      operationId: createCLAManagerDesignee
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-projectSFID"
+        - $ref: "#/parameters/path-companySFID"
+        - name: body
+          in: body
+          schema:
+            type: object
+            x-nullable: false
+            title: CLA Manager designee
+            description: User object used for CLA Manager designee
+            properties:
+              userEmail:
+                type: string
+        
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-designee'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - cla-manager
+
 
   /signatures/{signatureID}/gh-org-whitelist:
     get:
@@ -1924,6 +1962,42 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/company-cla-manager'
+
+  cla-manager-designee:
+    type: object
+    title: Company CLA Designee
+    description: CLA Manager Designee details
+    properties:
+      lf_username:
+        type: string
+        x-omitempty: false
+        example: "john.doe"
+      user_sfid:
+        type: string
+        x-omitempty: false
+      email:
+        type: string
+        x-omitempty: false
+      type:
+        type: string
+        x-omitempty: false
+        example: "contact"
+      assigned_on:
+        type: string
+        x-omitempty: false
+      company_sfid:
+        type: string
+        x-omitempty: false
+        example: ""
+      project_sfid:
+        type: string
+        x-omitempty: false
+        example: "a2g17000000hyxNAAA"
+      project_name:
+        type: string
+        description: "name of the salesforce project"
+        example: "Appium"
+        x-omitempty: false
 
   company-cla-manager:
     type: object
