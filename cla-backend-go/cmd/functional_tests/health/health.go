@@ -22,7 +22,7 @@ type TestBehaviour struct {
 // NewTestBehaviour creates a new test behavior model
 func NewTestBehaviour(apiURL string, auth0Config test_models.Auth0Config) *TestBehaviour {
 	return &TestBehaviour{
-		apiURL,
+		apiURL + "/v4",
 		auth0Config,
 	}
 }
@@ -30,7 +30,7 @@ func NewTestBehaviour(apiURL string, auth0Config test_models.Auth0Config) *TestB
 // RunAllTests runs all the CLA Group tests
 func (t *TestBehaviour) RunAllTests() {
 	frisby.Create("Health and Status").
-		Get(t.apiURL+"/v3/ops/health").
+		Get(t.apiURL+"/ops/health").
 		Send().
 		ExpectStatus(200).
 		ExpectJsonType("Branch", reflect.String).
@@ -44,9 +44,9 @@ func (t *TestBehaviour) RunAllTests() {
 				return unmarshallErr == nil, fmt.Sprintf("Success unmarshalling JSON response: %+v", unmarshallErr)
 			})
 			for _, healthItem := range healthModel.Healths {
-				F.Expect(func(F *frisby.Frisby) (bool, string) {
-					return healthItem.Healthy, fmt.Sprintf("%s is health", healthItem.Name)
-				})
+				if !healthItem.Healthy || healthItem.Error != "" {
+					F.AddError(fmt.Sprintf("%s is not health - error: %s", healthItem.Name, healthItem.Error))
+				}
 			}
 		})
 }

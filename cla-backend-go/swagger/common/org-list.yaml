@@ -1,0 +1,7 @@
+type: object
+properties:
+  list:
+    type: array
+    items:
+      type: object
+      $ref: '#/definitions/org'

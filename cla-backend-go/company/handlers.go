@@ -6,6 +6,8 @@ package company
 import (
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/organization"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 
@@ -54,6 +56,19 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 		}
 
 		return company.NewGetCompanyOK().WithPayload(companyModel)
+	})
+
+	api.CompanyGetCompanyByExternalIDHandler = company.GetCompanyByExternalIDHandlerFunc(func(params company.GetCompanyByExternalIDParams) middleware.Responder {
+		companyModel, err := service.GetCompanyByExternalID(params.CompanySFID)
+		if err != nil {
+			msg := fmt.Sprintf("Bad Request - unable to query company by ExternalID: %s, error: %v", params.CompanySFID, err)
+			log.Warnf(msg)
+			return company.NewGetCompanyByExternalIDBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: msg,
+			})
+		}
+		return company.NewGetCompanyByExternalIDOK().WithPayload(companyModel)
 	})
 
 	api.CompanySearchCompanyHandler = company.SearchCompanyHandlerFunc(func(params company.SearchCompanyParams, claUser *user.CLAUser) middleware.Responder {
@@ -252,6 +267,15 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 		})
 
 		return company.NewRejectCompanyAccessRequestOK()
+	})
+
+	api.OrganizationSearchOrganizationHandler = organization.SearchOrganizationHandlerFunc(func(params organization.SearchOrganizationParams) middleware.Responder {
+		result, err := service.SearchOrganizationByName(params.CompanyName)
+		if err != nil {
+			log.Warnf("error occured while search org %s. error = %s", params.CompanyName, err.Error())
+			return organization.NewSearchOrganizationInternalServerError().WithPayload(errorResponse(err))
+		}
+		return organization.NewSearchOrganizationOK().WithPayload(result)
 	})
 }
 
