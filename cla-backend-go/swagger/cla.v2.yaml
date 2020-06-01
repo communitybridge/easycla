@@ -915,28 +915,18 @@ paths:
       tags:
         - signatures
 
-  /signatures/project/{projectID}/company/{companyID}:
+  /signatures/project/{projectSFID}/company/{companySFID}:
     get:
-      summary: Get project company signatures
-      description: Returns a list of project signature models when provided the project ID and company ID
+      summary: Get project company ccla signatures
+      description: Returns a list of ccla signature models when provided the project ID and company ID
       operationId: getProjectCompanySignatures
       parameters:
         - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - name: projectID
-          description: the project ID
-          in: path
-          type: string
-          required: true
-        - name: companyID
-          description: the company ID
-          in: path
-          type: string
-          required: true
-        - $ref: '#/parameters/pageSize'
-        - $ref: '#/parameters/nextKey'
+        - $ref: "#/parameters/path-projectSFID"
+        - $ref: "#/parameters/path-companySFID"
       responses:
         '200':
           description: 'Success'
