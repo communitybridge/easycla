@@ -59,6 +59,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/config"
 	"github.com/communitybridge/easycla/cla-backend-go/docraptor"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	v2RestAPI "github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi"
@@ -281,32 +282,39 @@ func server(localMode bool) http.Handler {
 	organization_service.InitClient(configFile.APIGatewayURL)
 	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 
+	userCreaterMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			createUserFromRequest(authorizer, usersService, eventsService, r)
+			next.ServeHTTP(w, r)
+		})
+	}
+
+	// The middleware configuration is for the handler executors. These do not apply to the swagger.json document.
+	// The middleware executes after routing but before authentication, binding and validation
+	middlewareSetupfunc := func(handler http.Handler) http.Handler {
+		return responseLoggingMiddleware(userCreaterMiddleware(handler))
+	}
+
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler
 	if localMode {
 		apiHandler = setupCORSHandlerLocal(
 			wrapHandlers(
 				// v1 API => /v3, python side is /v1 and /v2
-				api.Serve(setupMiddlewares), swaggerSpec.BasePath(),
+				api.Serve(middlewareSetupfunc), swaggerSpec.BasePath(),
 				// v2 API => /v4
-				v2API.Serve(setupMiddlewares), v2SwaggerSpec.BasePath()))
+				v2API.Serve(middlewareSetupfunc), v2SwaggerSpec.BasePath()))
 	} else {
 		apiHandler = setupCORSHandler(
 			wrapHandlers(
 				// v1 API => /v3, python side is /v1 and /v2
-				api.Serve(setupMiddlewares), swaggerSpec.BasePath(),
+				api.Serve(middlewareSetupfunc), swaggerSpec.BasePath(),
 				// v2 API => /v4
-				v2API.Serve(setupMiddlewares), v2SwaggerSpec.BasePath()),
+				v2API.Serve(middlewareSetupfunc), v2SwaggerSpec.BasePath()),
 			configFile.AllowedOrigins)
 	}
 
 	return apiHandler
-}
-
-// setupMiddlewares The middleware configuration is for the handler executors. These do not apply to the swagger.json document.
-// The middleware executes after routing but before authentication, binding and validation
-func setupMiddlewares(handler http.Handler) http.Handler {
-	return responseLoggingMiddleware(handler)
 }
 
 // setupCORSHandler sets up the CORS logic and creates the middleware HTTP handler
@@ -424,5 +432,51 @@ func responseLoggingMiddleware(next http.Handler) http.Handler {
 		} else {
 			log.Debugf("%s %s", r.Method, r.URL.String())
 		}
+	})
+}
+
+// create user form http authorization token
+// this function creates user if user does not exist and token is valid
+func createUserFromRequest(authorizer auth.Authorizer, usersService users.Service, eventsService events.Service, r *http.Request) {
+	btoken := r.Header.Get("Authorization")
+	if btoken == "" {
+		return
+	}
+	t := strings.Split(btoken, " ")
+	if len(t) != 2 {
+		return
+	}
+	token := t[1]
+	// parse user from authtoken
+	claUser, err := authorizer.SecurityAuth(token, []string{})
+	if err != nil {
+		log.Error("createUserFromRequest: parsing failed", err)
+		return
+	}
+	// search if user exist in database
+	userModel, err := usersService.GetUserByLFUserName(claUser.LFUsername)
+	if err != nil {
+		log.Error("createUserFromRequest: searching user by lf-username failed", err)
+		return
+	}
+	if userModel != nil {
+		return
+	}
+	newUser := &models.User{
+		LfEmail:    claUser.LFEmail,
+		LfUsername: claUser.LFUsername,
+		Username:   claUser.Name,
+	}
+	log.WithField("user", newUser).Debug("creating new user")
+	userModel, err = usersService.CreateUser(newUser)
+	if err != nil {
+		log.WithField("user", newUser).Error("creating new user failed")
+		return
+	}
+	eventsService.LogEvent(&events.LogEventArgs{
+		EventType: events.UserCreated,
+		UserID:    userModel.UserID,
+		UserModel: userModel,
+		EventData: &events.UserCreatedEventData{},
 	})
 }
