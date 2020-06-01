@@ -20,7 +20,7 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !authUser.Admin {
 				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
-					return github_repositories.NewGetProjectGithubRepositoriesUnauthorized()
+					return github_repositories.NewGetProjectGithubRepositoriesForbidden()
 				}
 			}
 			result, err := service.ListProjectRepositories(params.ProjectSFID)
@@ -40,7 +40,7 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !authUser.Admin {
 				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
-					return github_repositories.NewAddProjectGithubRepositoryUnauthorized()
+					return github_repositories.NewAddProjectGithubRepositoryForbidden()
 				}
 			}
 			input := &v1Models.GithubRepositoryInput{}
@@ -74,7 +74,7 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !authUser.Admin {
 				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
-					return github_repositories.NewDeleteProjectGithubRepositoryUnauthorized()
+					return github_repositories.NewDeleteProjectGithubRepositoryForbidden()
 				}
 			}
 			ghRepo, err := service.GetGithubRepository(params.RepositoryID)

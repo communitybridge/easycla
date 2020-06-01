@@ -28,7 +28,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 		func(params company.GetCompanyProjectClaManagersParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return company.NewGetCompanyProjectClaManagersUnauthorized()
+				return company.NewGetCompanyProjectClaManagersForbidden()
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
 			if err != nil {
@@ -47,7 +47,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 		func(params company.GetCompanyProjectActiveClaParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return company.NewGetCompanyProjectActiveClaUnauthorized()
+				return company.NewGetCompanyProjectActiveClaForbidden()
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
 			if err != nil {
@@ -65,7 +65,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 		func(params company.GetCompanyProjectContributorsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return company.NewGetCompanyProjectContributorsUnauthorized()
+				return company.NewGetCompanyProjectContributorsForbidden()
 			}
 			result, err := service.GetCompanyProjectContributors(params.ProjectSFID, params.CompanySFID, utils.StringValue(params.SearchTerm))
 			if err != nil {
@@ -76,11 +76,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 			return company.NewGetCompanyProjectContributorsOK().WithPayload(result)
 		})
+
 	api.CompanyGetCompanyProjectClaHandler = company.GetCompanyProjectClaHandlerFunc(
 		func(params company.GetCompanyProjectClaParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return company.NewGetCompanyProjectClaUnauthorized()
+				return company.NewGetCompanyProjectClaForbidden()
 			}
 			result, err := service.GetCompanyProjectCLA(authUser, params.CompanySFID, params.ProjectSFID)
 			if err != nil {

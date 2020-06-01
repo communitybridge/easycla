@@ -86,11 +86,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 			return metrics.NewListProjectMetricsOK().WithPayload(result)
 		})
+
 	api.MetricsListCompanyProjectMetricsHandler = metrics.ListCompanyProjectMetricsHandlerFunc(
 		func(params metrics.ListCompanyProjectMetricsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return metrics.NewListCompanyProjectMetricsUnauthorized()
+				return metrics.NewListCompanyProjectMetricsForbidden()
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
 			if err != nil {
