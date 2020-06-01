@@ -292,6 +292,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
       tags:
         - metrics
 
@@ -1366,17 +1368,18 @@ paths:
       tags:
         - gerrits
 
-  /company/{companySFID}/cla-managers:
+  /company/{companySFID}/project/{projectSFID}/cla-managers:
     get:
-      summary: get cla manager for company
-      description: Returns list cla managers for the company
-      operationId: getCompanyClaManagers
+      summary: get cla manager of company for particular project/foundation
+      description: Returns list cla managers of the company for project/foundation
+      operationId: getCompanyProjectClaManagers
       parameters:
         - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-companySFID"
+        - $ref: "#/parameters/path-projectSFID"
       responses:
         '200':
           description: 'Success'
@@ -1392,17 +1395,18 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - company
-  /company/{companySFID}/active-cla-list:
+  /company/{companySFID}/project/{projectSFID}/active-cla-list:
     get:
-      summary: get active cla list of company
-      description: Returns list active cla of the company
-      operationId: getCompanyActiveCla
+      summary: get active cla list of company for particular project/foundation
+      description: Returns list active cla of the company under particular project/foundation
+      operationId: getCompanyProjectActiveCla
       parameters:
         - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-companySFID"
+        - $ref: "#/parameters/path-projectSFID"
       responses:
         '200':
           description: 'Success'
