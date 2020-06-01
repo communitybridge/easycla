@@ -2569,6 +2569,12 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
     def set_company_acl(self, company_acl_username):
         self.model.company_acl = set([company_acl_username])
 
+    def set_date_modified(self):
+        """
+        Updates the company modified date/time to the current time.
+        """
+        self.model.date_modified = UTCDateTimeAttribute(default=datetime.datetime.now())
+
     def add_company_acl(self, username):
         self.model.company_acl.add(username)
 
@@ -2804,7 +2810,7 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
 
     def get_organization_sfid(self):
         return self.model.organization_sfid
-    
+
     def get_organization_name_lower(self):
         return self.model.organization_name_lower
 
@@ -2821,7 +2827,7 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
 
     def set_organization_sfid(self, organization_sfid):
         self.model.organization_sfid = organization_sfid
-    
+
     def set_organization_name_lower(self, organization_name_lower):
         self.model.organization_name_lower = organization_name_lower
 
