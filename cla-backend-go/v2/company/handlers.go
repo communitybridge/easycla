@@ -24,42 +24,42 @@ func isUserAuthorizedForOrganization(user *auth.User, externalCompanyID string) 
 
 // Configure sets up the middleware handlers
 func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository) {
-	api.CompanyGetCompanyClaManagersHandler = company.GetCompanyClaManagersHandlerFunc(
-		func(params company.GetCompanyClaManagersParams, authUser *auth.User) middleware.Responder {
+	api.CompanyGetCompanyProjectClaManagersHandler = company.GetCompanyProjectClaManagersHandlerFunc(
+		func(params company.GetCompanyProjectClaManagersParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return company.NewGetCompanyClaManagersUnauthorized()
+				return company.NewGetCompanyProjectClaManagersUnauthorized()
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
 			if err != nil {
 				if err == v1Company.ErrCompanyDoesNotExist {
-					return company.NewGetCompanyClaManagersNotFound()
+					return company.NewGetCompanyProjectClaManagersNotFound()
 				}
 			}
 
-			result, err := service.GetCompanyCLAManagers(comp.CompanyID)
+			result, err := service.GetCompanyProjectCLAManagers(comp.CompanyID, params.ProjectSFID)
 			if err != nil {
-				return company.NewGetCompanyClaManagersBadRequest().WithPayload(errorResponse(err))
+				return company.NewGetCompanyProjectClaManagersBadRequest().WithPayload(errorResponse(err))
 			}
-			return company.NewGetCompanyClaManagersOK().WithPayload(result)
+			return company.NewGetCompanyProjectClaManagersOK().WithPayload(result)
 		})
-	api.CompanyGetCompanyActiveClaHandler = company.GetCompanyActiveClaHandlerFunc(
-		func(params company.GetCompanyActiveClaParams, authUser *auth.User) middleware.Responder {
+	api.CompanyGetCompanyProjectActiveClaHandler = company.GetCompanyProjectActiveClaHandlerFunc(
+		func(params company.GetCompanyProjectActiveClaParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return company.NewGetCompanyActiveClaUnauthorized()
+				return company.NewGetCompanyProjectActiveClaUnauthorized()
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
 			if err != nil {
 				if err == v1Company.ErrCompanyDoesNotExist {
-					return company.NewGetCompanyActiveClaNotFound()
+					return company.NewGetCompanyProjectActiveClaNotFound()
 				}
 			}
-			result, err := service.GetCompanyActiveCLAs(comp.CompanyID)
+			result, err := service.GetCompanyProjectActiveCLAs(comp.CompanyID, params.ProjectSFID)
 			if err != nil {
-				return company.NewGetCompanyActiveClaBadRequest().WithPayload(errorResponse(err))
+				return company.NewGetCompanyProjectActiveClaBadRequest().WithPayload(errorResponse(err))
 			}
-			return company.NewGetCompanyActiveClaOK().WithPayload(result)
+			return company.NewGetCompanyProjectActiveClaOK().WithPayload(result)
 		})
 	api.CompanyGetCompanyProjectContributorsHandler = company.GetCompanyProjectContributorsHandlerFunc(
 		func(params company.GetCompanyProjectContributorsParams, authUser *auth.User) middleware.Responder {
