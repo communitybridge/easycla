@@ -239,27 +239,6 @@ func fillUsersInfo(claManagers []*models.CompanyClaManager, usermap map[string]*
 	}
 }
 
-func (s *service) getProjects(projectIDs []string) map[string]*v1Models.Project {
-	projects := make(map[string]*v1Models.Project)
-	prChan := make(chan *v1Models.Project)
-	for _, id := range projectIDs {
-		go func(projectID string) {
-			project, err := s.projectRepo.GetProjectByID(projectID)
-			if err != nil {
-				log.Warnf("Unable to fetch project details for project %s. error = %s", projectID, err)
-			}
-			prChan <- project
-		}(id)
-	}
-	for range projectIDs {
-		project := <-prChan
-		if project != nil {
-			projects[project.ProjectID] = project
-		}
-	}
-	return projects
-}
-
 func fillProjectInfo(claManagers []*models.CompanyClaManager, projects map[string]*projectDetailedModel) {
 	projectSFIDs := utils.NewStringSet()
 	for _, project := range projects {
@@ -560,7 +539,7 @@ func (s *service) GetCompanyProjectCLA(authUser *auth.User, companySFID, project
 	}
 	// pmap will keep track of unsigned project
 	pmap := make(map[string]*projectDetailedModel)
-	for i, _ := range projects.Projects {
+	for i := range projects.Projects {
 		pmap[projects.Projects[i].ProjectID] = &projectDetailedModel{
 			v1ProjectModel:       &projects.Projects[i],
 			v2ProjectOutputModel: &pr,
@@ -625,45 +604,6 @@ func (s *service) getCompanyAndProjects(companySFID, projectSFID string) (*v1Mod
 	return comp, projects, nil
 }
 
-func getSFProjectDetails(sfProjectIDs []string) map[string]*v2ProjectServiceModels.ProjectOutputDetailed {
-	pmap := make(map[string]*v2ProjectServiceModels.ProjectOutputDetailed)
-	if len(sfProjectIDs) == 0 {
-		return pmap
-	}
-	psc := v2ProjectService.GetClient()
-	type sfProjectOutput struct {
-		sfProjectID    string
-		projectDetails *v2ProjectServiceModels.ProjectOutputDetailed
-		err            error
-	}
-	responseChan := make(chan *sfProjectOutput)
-	var wg sync.WaitGroup
-	wg.Add(len(sfProjectIDs))
-	go func() {
-		wg.Wait()
-		close(responseChan)
-	}()
-	for _, externalProjectID := range sfProjectIDs {
-		go func(projectSFID string) {
-			defer wg.Done()
-			projectDetails, err := psc.GetProject(projectSFID)
-			responseChan <- &sfProjectOutput{
-				sfProjectID:    projectSFID,
-				projectDetails: projectDetails,
-				err:            err,
-			}
-		}(externalProjectID)
-	}
-	for resp := range responseChan {
-		if resp.err != nil {
-			log.WithField("project_sfid", resp.sfProjectID).Error("unable to get salesforce project details", resp.err)
-			continue
-		}
-		pmap[resp.sfProjectID] = resp.projectDetails
-	}
-	return pmap
-}
-
 type projectDetailedModel struct {
 	v1ProjectModel       *v1Models.Project
 	v2ProjectOutputModel *v2ProjectServiceModels.ProjectOutput
@@ -717,7 +657,7 @@ func (s *service) getAllClaGroupsUnderProjectOrFoundation(id string) (map[string
 	}
 	for p := range prChan {
 		if p != nil {
-			for i, _ := range p.Projects {
+			for i := range p.Projects {
 				result[p.Projects[i].ProjectID] = &projectDetailedModel{
 					v1ProjectModel:       &p.Projects[i],
 					v2ProjectOutputModel: epmap[p.Projects[i].ProjectExternalID],
