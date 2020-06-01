@@ -103,6 +103,12 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			return signatures.NewUpdateApprovalListForbidden().WithPayload(errorResponse(errors.New(msg)))
 		}
 
+		// Valid the payload input - the validator will return a middleware.Responder response/error type
+		validationError := validateApprovalListInput(params)
+		if validationError != nil {
+			return validationError
+		}
+
 		// Lookup the internal company ID when provided the external ID via the service call
 		companyModel, compErr := companyService.GetCompanyByExternalID(params.CompanySFID)
 		if compErr != nil || companyModel == nil {
@@ -279,7 +285,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
-		response := []models.GithubOrg{}
+		var response []models.GithubOrg
 		err = copier.Copy(&response, ghWhiteList)
 		if err != nil {
 			return signatures.NewDeleteGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
@@ -364,7 +370,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Organization, params.CompanyID) || !authUser.IsUserAuthorizedForOrganizationScope(params.CompanyID) {
 				log.Warnf("user %+v is not authorized to view company signatures for company ID: %s",
 					authUser, params.CompanyID)
-				return signatures.NewGetCompanySignaturesUnauthorized()
+				return signatures.NewGetCompanySignaturesForbidden()
 			}
 		}
 

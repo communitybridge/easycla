@@ -131,7 +131,7 @@ func (t *TestBehaviour) RunGetCompanySignaturesNoAuth() {
 	frisby.Create("Signatures - Get Company Signatures - No Auth").
 		Get(url).
 		Send().
-		ExpectStatus(401)
+		ExpectStatus(403)
 }
 
 // RunGetCompanySignaturesUnauthorized test
@@ -152,7 +152,7 @@ func (t *TestBehaviour) RunGetCompanySignaturesUnauthorized() {
 		}).
 		Get(url).
 		Send().
-		ExpectStatus(401)
+		ExpectStatus(403)
 }
 
 // RunGetCompanySignatures test
