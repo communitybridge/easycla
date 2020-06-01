@@ -23,3 +23,9 @@ func (ss *StringSet) List() []string {
 	}
 	return list
 }
+
+// Include check is string is present in set or not
+func (ss *StringSet) Include(k string) bool {
+	_, ok := ss.set[k]
+	return ok
+}
