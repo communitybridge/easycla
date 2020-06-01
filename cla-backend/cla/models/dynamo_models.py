@@ -2573,7 +2573,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         """
         Updates the company modified date/time to the current time.
         """
-        self.model.date_modified = UTCDateTimeAttribute(default=datetime.datetime.now())
+        self.model.date_modified = datetime.datetime.now()
 
     def add_company_acl(self, username):
         self.model.company_acl.add(username)
