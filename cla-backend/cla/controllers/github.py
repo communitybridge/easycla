@@ -43,17 +43,15 @@ def get_organization(organization_name):
     github_organization = get_github_organization_instance()
     try:
         cla.log.debug(f'Loading GitHub by organization name: {organization_name}..')
-        github_organization.get_organization_by_lower_name(organization_name)
-        cla.log.debug(f'Loaded GitHub by organization name: {github_organization}')
+        org = github_organization.get_organization_by_lower_name(organization_name)
+        cla.log.debug(f'Loaded GitHub by organization name: {org}')
     except DoesNotExist as err:
         cla.log.warning(f'organization name {organization_name} does not exist')
         return {'errors': {'organization_name': str(err)}}
-    return github_organization.to_dict()
+    return org.to_dict()
 
 
-def create_organization(auth_user,
-                        organization_name,
-                        organization_sfid):
+def create_organization(auth_user, organization_name, organization_sfid):
     """
     Creates a github organization and returns the newly created github organization in dict format.
 

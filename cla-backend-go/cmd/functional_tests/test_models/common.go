@@ -5,6 +5,7 @@ package test_models
 
 // Auth0Config is the configuration for Auth0
 type Auth0Config struct {
+	Auth0Email    string
 	Auth0UserName string
 	Auth0Password string
 	Auth0ClientID string

@@ -7,10 +7,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/project"
+
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
-	"github.com/communitybridge/easycla/cla-backend-go/project"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
@@ -90,18 +91,22 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			msg := fmt.Sprintf("unknown user is not authorized to update project company signature approval list for project ID: %s, company ID: %s",
 				params.ProjectSFID, params.CompanySFID)
 			log.Warn(msg)
-			return signatures.NewUpdateApprovalListUnauthorized().WithPayload(errorResponse(errors.New(msg)))
+			return signatures.NewUpdateApprovalListForbidden().WithPayload(errorResponse(errors.New(msg)))
 		}
 
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		if !authUser.Admin {
-			// Must be in the Organization Scope to see this
-			if !authUser.Allowed || !authUser.IsUserAuthorizedByProject(params.ProjectSFID, params.CompanySFID) || !authUser.IsUserAuthorizedForOrganizationScope(params.CompanySFID) {
-				msg := fmt.Sprintf("user %+v is not authorized to update project company signature approval list for project ID: %s, company ID: %s",
-					authUser, params.ProjectSFID, params.CompanySFID)
-				log.Warn(msg)
-				return signatures.NewUpdateApprovalListUnauthorized().WithPayload(errorResponse(errors.New(msg)))
-			}
+		// Must be in the Organization Scope to see this
+		if !authUser.Allowed || !authUser.IsUserAuthorizedByProject(params.ProjectSFID, params.CompanySFID) {
+			msg := fmt.Sprintf("user %+v is not authorized to update project company signature approval list for project ID: %s, company ID: %s",
+				authUser, params.ProjectSFID, params.CompanySFID)
+			log.Warn(msg)
+			return signatures.NewUpdateApprovalListForbidden().WithPayload(errorResponse(errors.New(msg)))
+		}
+
+		// Valid the payload input - the validator will return a middleware.Responder response/error type
+		validationError := validateApprovalListInput(params)
+		if validationError != nil {
+			return validationError
 		}
 
 		// Lookup the internal company ID when provided the external ID via the service call
@@ -118,31 +123,6 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			return signatures.NewUpdateApprovalListNotFound().WithPayload(errorResponse(projErr))
 		}
 
-		pageSize := int64(1)
-		signed, approved := true, true
-		sigModel, sigErr := service.GetProjectCompanySignature(companyModel.CompanyID, projectModel.ProjectID, &signed, &approved, nil, &pageSize)
-		if sigErr != nil {
-			return signatures.NewUpdateApprovalListBadRequest().WithPayload(errorResponse(sigErr))
-		}
-		if sigModel == nil {
-			msg := fmt.Sprintf("unable to locate signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
-				companyModel.CompanyID, projectModel.ProjectID, signed, approved)
-			log.Warn(msg)
-			return signatures.NewUpdateApprovalListNotFound().WithPayload(errorResponse(fmt.Errorf(msg)))
-		}
-
-		// Ensure current user is in the Signature ACL
-		claManagers := sigModel.SignatureACL
-		if !currentUserInACL(authUser, claManagers) {
-			return signatures.NewUpdateApprovalListUnauthorized().WithPayload(&models.ErrorResponse{
-				Message: fmt.Sprintf("CLA Manager %s / %s is not authorized to approve request for company ID: %s / %s / %s, project ID: %s / %s / %s",
-					authUser.UserName, authUser.Email,
-					companyModel.CompanyName, params.CompanySFID, companyModel.CompanyID,
-					projectModel.ProjectName, params.ProjectSFID, projectModel.ProjectID),
-				Code: "401",
-			})
-		}
-
 		// Convert the v2 input parameters to a v1 model
 		v1ApprovalList := v1Models.ApprovalList{}
 		err := copier.Copy(&v1ApprovalList, params.Body)
@@ -151,10 +131,13 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		}
 
 		// Invoke the update service function
-		updatedSig, updateErr := service.UpdateApprovalList(projectModel.ProjectID, companyModel.CompanyID, &v1ApprovalList)
+		updatedSig, updateErr := service.UpdateApprovalList(authUser, projectModel, companyModel, params.ClaGroupID, &v1ApprovalList)
 		if updateErr != nil || updatedSig == nil {
+			if err, ok := err.(*signatureService.UnauthorizedError); ok {
+				return signatures.NewUpdateApprovalListForbidden().WithPayload(errorResponse(err))
+			}
 			log.Warnf("unable to update signature approval list using CLA Group ID: %s", params.ClaGroupID)
-			return signatures.NewUpdateApprovalListBadRequest().WithPayload(errorResponse(projErr))
+			return signatures.NewUpdateApprovalListBadRequest().WithPayload(errorResponse(updateErr))
 		}
 
 		// Convert the v1 output model to a v2 response model
@@ -302,7 +285,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
-		response := []models.GithubOrg{}
+		var response []models.GithubOrg
 		err = copier.Copy(&response, ghWhiteList)
 		if err != nil {
 			return signatures.NewDeleteGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
@@ -387,7 +370,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Organization, params.CompanyID) || !authUser.IsUserAuthorizedForOrganizationScope(params.CompanyID) {
 				log.Warnf("user %+v is not authorized to view company signatures for company ID: %s",
 					authUser, params.CompanyID)
-				return signatures.NewGetCompanySignaturesUnauthorized()
+				return signatures.NewGetCompanySignaturesForbidden()
 			}
 		}
 
@@ -459,18 +442,4 @@ func errorResponse(err error) *models.ErrorResponse {
 	}
 
 	return &e
-}
-
-// currentUserInACL is a helper function to determine if the current logged in user is in the specified CLA Manager list
-func currentUserInACL(authUser *auth.User, managers []v1Models.User) bool {
-	log.Debugf("checking if user: %+v is in the Signature ACL: %+v", authUser, managers)
-	var inACL = false
-	for _, manager := range managers {
-		if manager.LfUsername == authUser.UserName {
-			inACL = true
-			break
-		}
-	}
-
-	return inACL
 }

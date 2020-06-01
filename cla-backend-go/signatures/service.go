@@ -8,6 +8,14 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/events"
+
+	"github.com/communitybridge/easycla/cla-backend-go/users"
+
+	"github.com/LF-Engineering/lfx-kit/auth"
+	"github.com/communitybridge/easycla/cla-backend-go/company"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -31,7 +39,7 @@ type SignatureService interface {
 	GetGithubOrganizationsFromWhitelist(signatureID string, githubAccessToken string) ([]models.GithubOrg, error)
 	AddGithubOrganizationToWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
 	DeleteGithubOrganizationFromWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
-	UpdateApprovalList(projectID, companyID string, params *models.ApprovalList) (*models.Signature, error)
+	UpdateApprovalList(authUser *auth.User, projectModel *models.Project, companyModel *models.Company, claGroupID string, params *models.ApprovalList) (*models.Signature, error)
 
 	AddCLAManager(signatureID, claManagerID string) (*models.Signature, error)
 	RemoveCLAManager(signatureID, claManagerID string) (*models.Signature, error)
@@ -39,13 +47,19 @@ type SignatureService interface {
 
 type service struct {
 	repo                SignatureRepository
+	companyService      company.IService
+	usersService        users.Service
+	eventsService       events.Service
 	githubOrgValidation bool
 }
 
 // NewService creates a new whitelist service
-func NewService(repo SignatureRepository, githubOrgValidation bool) SignatureService {
+func NewService(repo SignatureRepository, companyService company.IService, usersService users.Service, eventsService events.Service, githubOrgValidation bool) SignatureService {
 	return service{
 		repo,
+		companyService,
+		usersService,
+		eventsService,
 		githubOrgValidation,
 	}
 }
@@ -343,8 +357,57 @@ func (s service) DeleteGithubOrganizationFromWhitelist(signatureID string, white
 }
 
 // UpdateApprovalList service method
-func (s service) UpdateApprovalList(projectID, companyID string, params *models.ApprovalList) (*models.Signature, error) {
-	return s.repo.UpdateApprovalList(projectID, companyID, params)
+func (s service) UpdateApprovalList(authUser *auth.User, projectModel *models.Project, companyModel *models.Company, claGroupID string, params *models.ApprovalList) (*models.Signature, error) {
+	pageSize := int64(1)
+	signed, approved := true, true
+	sigModel, sigErr := s.GetProjectCompanySignature(companyModel.CompanyID, claGroupID, &signed, &approved, nil, &pageSize)
+	if sigErr != nil {
+		msg := fmt.Sprintf("unable to locate project company signature by Company ID: %s, Project ID: %s, CLA Group ID: %s, error: %+v",
+			companyModel.CompanyID, projectModel.ProjectID, claGroupID, sigErr)
+		log.Warn(msg)
+		return nil, NewBadRequestError(msg)
+	}
+	if sigModel == nil {
+		msg := fmt.Sprintf("unable to locate signature for company ID: %s CLA Group ID: %s, type: ccla, signed: %t, approved: %t",
+			companyModel.CompanyID, claGroupID, signed, approved)
+		log.Warn(msg)
+		return nil, NewBadRequestError(msg)
+	}
+
+	// Ensure current user is in the Signature ACL
+	claManagers := sigModel.SignatureACL
+	if !utils.CurrentUserInACL(authUser, claManagers) {
+		msg := fmt.Sprintf("CLA Manager %s / %s is not authorized to approve request for company ID: %s / %s / %s, project ID: %s / %s / %s",
+			authUser.UserName, authUser.Email,
+			companyModel.CompanyName, companyModel.CompanyExternalID, companyModel.CompanyID,
+			projectModel.ProjectName, projectModel.ProjectExternalID, projectModel.ProjectID)
+		return nil, NewUnauthorizedError(msg)
+	}
+
+	// Lookup the user making the request
+	userModel, userErr := s.usersService.GetUserByUserName(authUser.UserName, true)
+	if userErr != nil {
+		return nil, userErr
+	}
+
+	updatedSig, err := s.repo.UpdateApprovalList(projectModel.ProjectID, companyModel.CompanyID, params)
+	if err != nil {
+		return updatedSig, err
+	}
+
+	// Log Events
+	s.createEventLogEntries(companyModel, projectModel, userModel, params)
+
+	// Send an email to the CLA Managers
+	for _, claManager := range claManagers {
+		claManagerEmail := getBestEmail(&claManager)
+		s.sendApprovalListUpdateEmailToCLAManagers(companyModel, projectModel, claManager.Username, claManagerEmail, params)
+	}
+
+	// Send emails to contributors if email or GH username as added/removed
+	s.sendRequestAccessEmailToContributors(companyModel, projectModel, params)
+
+	return updatedSig, nil
 }
 
 // Disassociate project signatures
@@ -374,4 +437,371 @@ func (s service) AddCLAManager(signatureID, claManagerID string) (*models.Signat
 // RemoveCLAManager removes the specified manager from the signature ACL list
 func (s service) RemoveCLAManager(signatureID, claManagerID string) (*models.Signature, error) {
 	return s.repo.RemoveCLAManager(signatureID, claManagerID)
+}
+
+// appendList is a helper function to generate the email content of the Approval List changes
+func appendList(approvalList []string, message string) string {
+	approvalListSummary := ""
+
+	if len(approvalList) > 0 {
+		for _, value := range approvalList {
+			approvalListSummary += fmt.Sprintf("<li>%s %s</li>", message, value)
+		}
+	}
+
+	return approvalListSummary
+}
+
+// buildApprovalListSummary is a helper function to generate the email content of the Approval List changes
+func buildApprovalListSummary(approvalListChanges *models.ApprovalList) string {
+	approvalListSummary := "<ul>"
+	approvalListSummary += appendList(approvalListChanges.AddEmailApprovalList, "Added Email:")
+	approvalListSummary += appendList(approvalListChanges.RemoveEmailApprovalList, "Removed Email:")
+	approvalListSummary += appendList(approvalListChanges.AddDomainApprovalList, "Added Domain:")
+	approvalListSummary += appendList(approvalListChanges.RemoveDomainApprovalList, "Removed Domain:")
+	approvalListSummary += appendList(approvalListChanges.AddGithubUsernameApprovalList, "Added GithHub User:")
+	approvalListSummary += appendList(approvalListChanges.RemoveGithubUsernameApprovalList, "Removed GitHub User:")
+	approvalListSummary += appendList(approvalListChanges.AddGithubOrgApprovalList, "Added GithHub Organization:")
+	approvalListSummary += appendList(approvalListChanges.RemoveGithubOrgApprovalList, "Removed GitHub Organization:")
+	approvalListSummary += "</ul>"
+	return approvalListSummary
+}
+
+// sendRequestAccessEmailToCLAManagers sends the request access email to the specified CLA Managers
+func (s service) sendApprovalListUpdateEmailToCLAManagers(companyModel *models.Company, projectModel *models.Project, recipientName, recipientAddress string, approvalListChanges *models.ApprovalList) {
+	companyName := companyModel.CompanyName
+	projectName := projectModel.ProjectName
+
+	// subject string, body string, recipients []string
+	subject := fmt.Sprintf("EasyCLA: Approval List Update for %s on %s", companyName, projectName)
+	recipients := []string{recipientAddress}
+	body := fmt.Sprintf(`
+<html>
+<head>
+<style>
+body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
+</style>
+</head>
+<body>
+<p>Hello %s,</p>
+<p>This is a notification email from EasyCLA regarding the project %s.</p>
+<p>The EasyCLA approval list for %s for project %s was modified.</p>
+<p>The modification was as follows:
+%s
+<p>Contributors with previously failed pull requests to %s can close and re-open the pull request to force a recheck by
+the EasyCLA system.</p>
+<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
+<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+support</a>.</p>
+<p>Thanks,
+<p>EasyCLA support team</p>
+</body>
+</html>`, recipientName, projectName, companyName, projectName, buildApprovalListSummary(approvalListChanges), projectName)
+
+	err := utils.SendEmail(subject, body, recipients)
+	if err != nil {
+		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+	} else {
+		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	}
+}
+
+// getAddEmailContributors is a helper function to lookup the contributors impacted by the Approval List update
+func (s service) getAddEmailContributors(approvalList *models.ApprovalList) []*models.User {
+	var userModelList []*models.User
+	for _, value := range approvalList.AddEmailApprovalList {
+		userModel, err := s.usersService.GetUserByEmail(value)
+		if err != nil {
+			log.Warnf("unable to lookup user by LF email: %s, error: %+v", value, err)
+		} else {
+			userModelList = append(userModelList, userModel)
+		}
+	}
+
+	return userModelList
+}
+
+// getRemoveEmailContributors is a helper function to lookup the contributors impacted by the Approval List update
+func (s service) getRemoveEmailContributors(approvalList *models.ApprovalList) []*models.User {
+	var userModelList []*models.User
+	for _, value := range approvalList.RemoveEmailApprovalList {
+		userModel, err := s.usersService.GetUserByEmail(value)
+		if err != nil {
+			log.Warnf("unable to lookup user by LF email: %s, error: %+v", value, err)
+		} else {
+			userModelList = append(userModelList, userModel)
+		}
+	}
+
+	return userModelList
+}
+
+// getAddGitHubContributors is a helper function to lookup the contributors impacted by the Approval List update
+func (s service) getAddGitHubContributors(approvalList *models.ApprovalList) []*models.User {
+	var userModelList []*models.User
+	for _, value := range approvalList.AddGithubUsernameApprovalList {
+		userModel, err := s.usersService.GetUserByGitHubUsername(value)
+		if err != nil {
+			log.Warnf("unable to lookup user by GitHub username: %s, error: %+v", value, err)
+		} else {
+			userModelList = append(userModelList, userModel)
+		}
+	}
+
+	return userModelList
+}
+
+// getRemoveGitHubContributors is a helper function to lookup the contributors impacted by the Approval List update
+func (s service) getRemoveGitHubContributors(approvalList *models.ApprovalList) []*models.User {
+	var userModelList []*models.User
+	for _, value := range approvalList.RemoveGithubUsernameApprovalList {
+		userModel, err := s.usersService.GetUserByGitHubUsername(value)
+		if err != nil {
+			log.Warnf("unable to lookup user by GitHub username: %s, error: %+v", value, err)
+		} else {
+			userModelList = append(userModelList, userModel)
+		}
+	}
+
+	return userModelList
+}
+func (s service) sendRequestAccessEmailToContributors(companyModel *models.Company, projectModel *models.Project, approvalList *models.ApprovalList) {
+	addEmailUsers := s.getAddEmailContributors(approvalList)
+	for _, user := range addEmailUsers {
+		sendRequestAccessEmailToContributorRecipient(companyModel, projectModel, user.Username, user.LfEmail, "added", "to", "you are authorized to contribute to")
+	}
+	removeEmailUsers := s.getRemoveEmailContributors(approvalList)
+	for _, user := range removeEmailUsers {
+		sendRequestAccessEmailToContributorRecipient(companyModel, projectModel, user.Username, user.LfEmail, "removed", "from", "you are no longer authorized to contribute to")
+	}
+	addGitHubUsers := s.getAddGitHubContributors(approvalList)
+	for _, user := range addGitHubUsers {
+		sendRequestAccessEmailToContributorRecipient(companyModel, projectModel, user.Username, user.LfEmail, "added", "to", "you are authorized to contribute to")
+	}
+	removeGitHubUsers := s.getRemoveGitHubContributors(approvalList)
+	for _, user := range removeGitHubUsers {
+		sendRequestAccessEmailToContributorRecipient(companyModel, projectModel, user.Username, user.LfEmail, "removed", "from", "you are no longer authorized to contribute to")
+	}
+}
+
+func (s service) createEventLogEntries(companyModel *models.Company, projectModel *models.Project, userModel *models.User, approvalList *models.ApprovalList) {
+	for _, value := range approvalList.AddEmailApprovalList {
+		// Send an event
+		s.eventsService.LogEvent(&events.LogEventArgs{
+			EventType:         events.ClaApprovalListUpdated,
+			ProjectID:         projectModel.ProjectID,
+			ProjectModel:      projectModel,
+			CompanyID:         companyModel.CompanyID,
+			CompanyModel:      companyModel,
+			LfUsername:        userModel.LfUsername,
+			UserID:            userModel.UserID,
+			UserModel:         userModel,
+			ExternalProjectID: projectModel.ProjectExternalID,
+			EventData: &events.CLAApprovalListAddEmailData{
+				UserName:          userModel.LfUsername,
+				UserEmail:         userModel.LfEmail,
+				UserLFID:          userModel.UserID,
+				ApprovalListEmail: value,
+			},
+		})
+	}
+	for _, value := range approvalList.RemoveEmailApprovalList {
+		// Send an event
+		s.eventsService.LogEvent(&events.LogEventArgs{
+			EventType:         events.ClaApprovalListUpdated,
+			ProjectID:         projectModel.ProjectID,
+			ProjectModel:      projectModel,
+			CompanyID:         companyModel.CompanyID,
+			CompanyModel:      companyModel,
+			LfUsername:        userModel.LfUsername,
+			UserID:            userModel.UserID,
+			UserModel:         userModel,
+			ExternalProjectID: projectModel.ProjectExternalID,
+			EventData: &events.CLAApprovalListRemoveEmailData{
+				UserName:          userModel.LfUsername,
+				UserEmail:         userModel.LfEmail,
+				UserLFID:          userModel.UserID,
+				ApprovalListEmail: value,
+			},
+		})
+	}
+	for _, value := range approvalList.AddDomainApprovalList {
+		// Send an event
+		s.eventsService.LogEvent(&events.LogEventArgs{
+			EventType:         events.ClaApprovalListUpdated,
+			ProjectID:         projectModel.ProjectID,
+			ProjectModel:      projectModel,
+			CompanyID:         companyModel.CompanyID,
+			CompanyModel:      companyModel,
+			LfUsername:        userModel.LfUsername,
+			UserID:            userModel.UserID,
+			UserModel:         userModel,
+			ExternalProjectID: projectModel.ProjectExternalID,
+			EventData: &events.CLAApprovalListAddDomainData{
+				UserName:           userModel.LfUsername,
+				UserEmail:          userModel.LfEmail,
+				UserLFID:           userModel.UserID,
+				ApprovalListDomain: value,
+			},
+		})
+	}
+	for _, value := range approvalList.RemoveDomainApprovalList {
+		// Send an event
+		s.eventsService.LogEvent(&events.LogEventArgs{
+			EventType:         events.ClaApprovalListUpdated,
+			ProjectID:         projectModel.ProjectID,
+			ProjectModel:      projectModel,
+			CompanyID:         companyModel.CompanyID,
+			CompanyModel:      companyModel,
+			LfUsername:        userModel.LfUsername,
+			UserID:            userModel.UserID,
+			UserModel:         userModel,
+			ExternalProjectID: projectModel.ProjectExternalID,
+			EventData: &events.CLAApprovalListRemoveDomainData{
+				UserName:           userModel.LfUsername,
+				UserEmail:          userModel.LfEmail,
+				UserLFID:           userModel.UserID,
+				ApprovalListDomain: value,
+			},
+		})
+	}
+	for _, value := range approvalList.AddGithubUsernameApprovalList {
+		// Send an event
+		s.eventsService.LogEvent(&events.LogEventArgs{
+			EventType:         events.ClaApprovalListUpdated,
+			ProjectID:         projectModel.ProjectID,
+			ProjectModel:      projectModel,
+			CompanyID:         companyModel.CompanyID,
+			CompanyModel:      companyModel,
+			LfUsername:        userModel.LfUsername,
+			UserID:            userModel.UserID,
+			UserModel:         userModel,
+			ExternalProjectID: projectModel.ProjectExternalID,
+			EventData: &events.CLAApprovalListAddGitHubUsernameData{
+				UserName:                   userModel.LfUsername,
+				UserEmail:                  userModel.LfEmail,
+				UserLFID:                   userModel.UserID,
+				ApprovalListGitHubUsername: value,
+			},
+		})
+	}
+	for _, value := range approvalList.RemoveGithubUsernameApprovalList {
+		// Send an event
+		s.eventsService.LogEvent(&events.LogEventArgs{
+			EventType:         events.ClaApprovalListUpdated,
+			ProjectID:         projectModel.ProjectID,
+			ProjectModel:      projectModel,
+			CompanyID:         companyModel.CompanyID,
+			CompanyModel:      companyModel,
+			LfUsername:        userModel.LfUsername,
+			UserID:            userModel.UserID,
+			UserModel:         userModel,
+			ExternalProjectID: projectModel.ProjectExternalID,
+			EventData: &events.CLAApprovalListRemoveGitHubUsernameData{
+				UserName:                   userModel.LfUsername,
+				UserEmail:                  userModel.LfEmail,
+				UserLFID:                   userModel.UserID,
+				ApprovalListGitHubUsername: value,
+			},
+		})
+	}
+	for _, value := range approvalList.AddGithubOrgApprovalList {
+		// Send an event
+		s.eventsService.LogEvent(&events.LogEventArgs{
+			EventType:         events.ClaApprovalListUpdated,
+			ProjectID:         projectModel.ProjectID,
+			ProjectModel:      projectModel,
+			CompanyID:         companyModel.CompanyID,
+			CompanyModel:      companyModel,
+			LfUsername:        userModel.LfUsername,
+			UserID:            userModel.UserID,
+			UserModel:         userModel,
+			ExternalProjectID: projectModel.ProjectExternalID,
+			EventData: &events.CLAApprovalListAddGitHubOrgData{
+				UserName:              userModel.LfUsername,
+				UserEmail:             userModel.LfEmail,
+				UserLFID:              userModel.UserID,
+				ApprovalListGitHubOrg: value,
+			},
+		})
+	}
+	for _, value := range approvalList.RemoveGithubOrgApprovalList {
+		// Send an event
+		s.eventsService.LogEvent(&events.LogEventArgs{
+			EventType:         events.ClaApprovalListUpdated,
+			ProjectID:         projectModel.ProjectID,
+			ProjectModel:      projectModel,
+			CompanyID:         companyModel.CompanyID,
+			CompanyModel:      companyModel,
+			LfUsername:        userModel.LfUsername,
+			UserID:            userModel.UserID,
+			UserModel:         userModel,
+			ExternalProjectID: projectModel.ProjectExternalID,
+			EventData: &events.CLAApprovalListRemoveGitHubOrgData{
+				UserName:              userModel.LfUsername,
+				UserEmail:             userModel.LfEmail,
+				UserLFID:              userModel.UserID,
+				ApprovalListGitHubOrg: value,
+			},
+		})
+	}
+}
+
+// sendRequestAccessEmailToContributors sends the request access email to the specified contributors
+func sendRequestAccessEmailToContributorRecipient(companyModel *models.Company, projectModel *models.Project, recipientName, recipientAddress, addRemove, toFrom, authorizedString string) {
+	companyName := companyModel.CompanyName
+	projectName := projectModel.ProjectName
+
+	// subject string, body string, recipients []string
+	subject := fmt.Sprintf("EasyCLA: Approval List Update for %s on %s", companyName, projectName)
+	recipients := []string{recipientAddress}
+	body := fmt.Sprintf(`
+<html>
+<head>
+<style>
+body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
+</style>
+</head>
+<body>
+<p>Hello %s,</p>
+<p>This is a notification email from EasyCLA regarding the project %s.</p>
+<p>You have been %s %s the Approval List of %s for %s by CLA Manager %s. This means that %s on behalf of %s.</p>
+<p>If you had previously submitted one or more pull requests to %s that had failed, you should 
+close and re-open the pull request to force a recheck by the EasyCLA system.</p>
+<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
+<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+support</a>.</p>
+<p>Thanks,
+<p>EasyCLA support team</p>
+</body>
+</html>`, recipientName, projectName, addRemove, toFrom,
+		companyName, projectName, "claManagerName", authorizedString, projectName, projectName)
+
+	err := utils.SendEmail(subject, body, recipients)
+	if err != nil {
+		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+	} else {
+		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	}
+}
+
+// getBestEmail is a helper function to return the best email address for the user model
+func getBestEmail(claManager *models.User) string {
+	if claManager == nil {
+		return ""
+	}
+
+	if claManager.LfEmail != "" {
+		return claManager.LfEmail
+	}
+
+	for _, email := range claManager.Emails {
+		if email != "" {
+			return email
+		}
+	}
+
+	return ""
 }
