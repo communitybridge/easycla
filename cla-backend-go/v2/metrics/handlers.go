@@ -5,7 +5,6 @@ import (
 	v1Company "github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
-	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/company"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/metrics"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
@@ -87,16 +86,17 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 			return metrics.NewListProjectMetricsOK().WithPayload(result)
 		})
+
 	api.MetricsListCompanyProjectMetricsHandler = metrics.ListCompanyProjectMetricsHandlerFunc(
 		func(params metrics.ListCompanyProjectMetricsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return metrics.NewListCompanyProjectMetricsUnauthorized()
+				return metrics.NewListCompanyProjectMetricsForbidden()
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
 			if err != nil {
 				if err == v1Company.ErrCompanyDoesNotExist {
-					return company.NewGetCompanyClaManagersNotFound()
+					return metrics.NewListCompanyProjectMetricsNotFound()
 				}
 			}
 			result, err := service.ListCompanyProjectMetrics(comp.CompanyID)

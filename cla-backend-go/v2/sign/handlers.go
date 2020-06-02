@@ -20,7 +20,7 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 	api.SignRequestCorporateSignatureHandler = sign.RequestCorporateSignatureHandlerFunc(
 		func(params sign.RequestCorporateSignatureParams, user *auth.User) middleware.Responder {
 			if !user.IsUserAuthorizedByProject(utils.StringValue(params.Input.ProjectSfid), utils.StringValue(params.Input.CompanySfid)) {
-				return sign.NewRequestCorporateSignatureUnauthorized()
+				return sign.NewRequestCorporateSignatureForbidden()
 			}
 			resp, err := service.RequestCorporateSignature(params.Authorization, params.Input)
 			if err != nil {
