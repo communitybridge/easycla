@@ -323,9 +323,13 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		if !authUser.Admin {
 			// Must be in the Organization Scope to see this
 			if !authUser.Allowed || !authUser.IsUserAuthorizedForOrganizationScope(params.CompanySFID) {
-				log.Warnf("user %+v is not authorized to view company signatures for companySFID: %s",
-					authUser, params.CompanySFID)
-				return signatures.NewGetProjectCompanySignaturesUnauthorized()
+				msg := fmt.Sprintf("user %s is not authorized to view project company signatures for companySFID: %s",
+					utils.StringValue(params.XUSERNAME), params.CompanySFID)
+				log.Warn(msg)
+				return signatures.NewGetProjectCompanySignaturesForbidden().WithPayload(&models.ErrorResponse{
+					Code:    "403",
+					Message: msg,
+				})
 			}
 		}
 		projectSignatures, err := v2service.GetProjectCompanySignatures(params.CompanySFID, params.ProjectSFID)
