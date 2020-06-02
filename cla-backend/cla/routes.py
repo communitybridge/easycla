@@ -35,9 +35,6 @@ from cla.utils import (
 # Middleware
 #
 
-# Session Middleware
-# hug.API('cla/routes').http.add_middleware(get_session_middleware())
-
 # CORS Middleware
 @hug.response_middleware()
 def process_data(request, response, resource):
@@ -46,18 +43,6 @@ def process_data(request, response, resource):
     response.set_header("Access-Control-Allow-Credentials", "true")
     response.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
     response.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-
-# Here we comment out the custom 404. Make it back to Hug default 404 behaviour
-# Custom 404.
-#
-# @hug.not_found()
-# def not_found():
-#     """Custom 404 handler to hide the default hug behaviour of displaying all available routes."""
-#     return {'error': {'status': status.HTTP_NOT_FOUND,
-#                       'description': 'URL is invalid.'
-#                      }
-#            }
 
 
 @hug.directive()
@@ -91,15 +76,6 @@ def get_health(request):
 #
 # User routes.
 #
-# @hug.get('/user', versions=1)
-# def get_users():
-#     """
-#     GET: /user
-
-#     Returns all CLA users.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.user.get_users()
 
 
 @hug.get("/user/{user_id}", versions=2)
@@ -120,19 +96,6 @@ def get_user(request, user_id: hug.types.uuid):
     return cla.controllers.user.get_user(user_id=user_id)
 
 
-# @hug.get('/user/email/{user_email}', versions=1)
-# def get_user_email(user_email: cla.hug_types.email, auth_user: check_auth):
-#     """
-#     GET: /user/email/{user_email}
-
-#     Returns the requested user data based on user email.
-
-#     TODO: Need to look into whether this has to be locked down more (by staff maybe?). Would that
-#     break the user flow from GitHub?
-#     """
-#     return cla.controllers.user.get_user(user_email=user_email)
-
-
 @hug.post("/user/gerrit", versions=1)
 def post_or_get_user_gerrit(auth_user: check_auth):
     """
@@ -142,71 +105,6 @@ def post_or_get_user_gerrit(auth_user: check_auth):
     An endpoint to get a userId for gerrit, or create and retrieve the userId if not existent.
     """
     return cla.controllers.user.get_or_create_user(auth_user).to_dict()
-
-
-# @hug.get('/user/github/{user_github_id}', versions=1)
-# def get_user_github(user_github_id: hug.types.number, user: cla_user):
-#     """
-#     GET: /user/github/{user_github_id}
-
-#     Returns the requested user data based on user GitHub ID.
-
-#     TODO: Should this be locked down more? Staff only?
-#     """
-#     return cla.controllers.user.get_user(user_github_id=user_github_id)
-
-
-# @hug.post('/user', versions=1,
-#           examples=" - {'user_email': 'user@email.com', 'user_name': 'User Name', \
-#                    'user_company_id': '<org-id>', 'user_github_id': 12345)")
-# def post_user(user: cla_user, user_email: cla.hug_types.email, user_name=None,
-#               user_company_id=None, user_github_id=None):
-#     """
-#     POST: /user
-
-#     DATA: {'user_email': 'user@email.com', 'user_name': 'User Name',
-#            'user_company_id': '<org-id>', 'user_github_id': 12345}
-
-#     Returns the data of the newly created user.
-#     """
-#     # staff_verify(user) # Only staff can create users.
-#     return cla.controllers.user.create_user(user_email=user_email,
-#                                             user_name=user_name,
-#                                             user_company_id=user_company_id,
-#                                             user_github_id=user_github_id)
-
-
-# @hug.put('/user', versions=1,
-#          examples=" - {'user_id': '<user-id>', 'user_github_id': 23456)")
-# def put_user(user: cla_user, user_id: hug.types.uuid, user_email=None, user_name=None,
-#              user_company_id=None, user_github_id=None):
-#     """
-#     PUT: /user
-
-#     DATA: {'user_id': '<user-id>', 'user_github_id': 23456}
-
-#     Supports all the same fields as the POST equivalent.
-
-#     Returns the data of the updated user.
-
-#     TODO: Should the user be able to update their own CLA data?
-#     """
-#     return cla.controllers.user.update_user(user_id,
-#                                             user_email=user_email,
-#                                             user_name=user_name,
-#                                             user_company_id=user_company_id,
-#                                             user_github_id=user_github_id)
-
-
-# @hug.delete('/user/{user_id}', versions=1)
-# def delete_user(user: cla_user, user_id: hug.types.uuid):
-#     """
-#     DELETE: /user/{user_id}
-
-#     Deletes the specified user.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.user.delete_user(user_id)
 
 
 @hug.get("/user/{user_id}/signatures", versions=1)
@@ -347,20 +245,6 @@ def get_user_project_company_last_signature(
     Returns the user's latest employee signature for the project and company specified.
     """
     return cla.controllers.user.get_user_project_company_last_signature(user_id, project_id, company_id)
-
-
-# #
-# # Signature Routes.
-# #
-# @hug.get('/signature', versions=1)
-# def get_signatures(auth_user: check_auth):
-#     """
-#     GET: /signature
-
-#     Returns all CLA signatures.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.signature.get_signatures()
 
 
 @hug.get("/signature/{signature_id}", versions=1)
@@ -590,20 +474,6 @@ def remove_cla_manager(auth_user: check_auth, signature_id: hug.types.uuid, lfid
     Removes a CLA Manager from a CCLA's signature ACL and returns the modified list of CLA Managers.
     """
     return cla.controllers.signature.remove_cla_manager(auth_user.username, signature_id, lfid)
-
-
-#
-# Repository Routes.
-#
-# @hug.get('/repository', versions=1)
-# def get_repositories(auth_user: check_auth):
-#     """
-#     GET: /repository
-
-#     Returns all CLA repositories.
-#     """
-#     # staff_verify(user)
-#     return cla.controllers.repository.get_repositories()
 
 
 @hug.get("/repository/{repository_id}", versions=1)

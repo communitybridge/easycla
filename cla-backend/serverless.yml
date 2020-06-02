@@ -242,7 +242,7 @@ functions:
           method: ANY
           path: v1/{proxy+}
           cors: true
-          authorizer: ${file(./serverless-authorizer.yml)}
+          # authorizer: ${file(./serverless-authorizer.yml)} - disabled as python already checks via
 
   apiv2:
     handler: wsgi_handler.handler
