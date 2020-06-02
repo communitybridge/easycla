@@ -20,12 +20,6 @@ func (ss *StringSet) Length() int {
 	return len(ss.set)
 }
 
-// Include tells if the string to string set
-func (ss *StringSet) Include(v string) bool {
-	_, ok := ss.set[v]
-	return ok
-}
-
 // List returns list of strings in StringSet
 func (ss *StringSet) List() []string {
 	var list []string
@@ -33,4 +27,10 @@ func (ss *StringSet) List() []string {
 		list = append(list, k)
 	}
 	return list
+}
+
+// Include check is string is present in set or not
+func (ss *StringSet) Include(k string) bool {
+	_, ok := ss.set[k]
+	return ok
 }
