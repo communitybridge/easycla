@@ -2,7 +2,11 @@ package user_service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/v2/user-service/client/staff"
@@ -24,7 +28,9 @@ var (
 
 // Client is client for user_service
 type Client struct {
-	cl *client.UserService
+	cl       *client.UserService
+	apiKey   string
+	apiGwURL string
 }
 
 var (
@@ -32,9 +38,11 @@ var (
 )
 
 // InitClient initializes the user_service client
-func InitClient(APIGwURL string) {
+func InitClient(APIGwURL string, apiKey string) {
 	APIGwURL = strings.ReplaceAll(APIGwURL, "https://", "")
 	userServiceClient = &Client{
+		apiKey:   apiKey,
+		apiGwURL: APIGwURL,
 		cl: client.NewHTTPClientWithConfig(strfmt.Default, &client.TransportConfig{
 			Host:     APIGwURL,
 			BasePath: "user-service/v1",
@@ -81,27 +89,57 @@ func (usc *Client) GetUserByUsername(lfUsername string) (*models.User, error) {
 
 // SearchUsers returns a single user based on firstName, lastName and email parameters
 func (usc *Client) SearchUsers(firstName string, lastName string, email string) (*models.User, error) {
-	params := &user.SearchUsersParams{
-		Firstname: &firstName,
-		Lastname:  &lastName,
-		Email:     &email,
-	}
+
+	query := fmt.Sprintf("email=%s&firstname=%s&lastname=%s", email, firstName, lastName)
+	url := fmt.Sprintf("https://%s/user-service/v1/users/search?%s", usc.apiGwURL, query)
 	tok, err := token.GetToken()
 	if err != nil {
 		return nil, err
 	}
-	clientAuth := runtimeClient.BearerToken(tok)
-	result, resultErr := usc.cl.User.SearchUsers(params, clientAuth)
-	if resultErr != nil {
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
 		return nil, err
 	}
-	users := result.Payload.Data
 
-	if len(users) == 0 {
-		return nil, ErrUserNotFound
+	request.Header.Set("X-API-KEY", usc.apiKey)
+	request.Header.Set("Authorization", "Bearer "+tok)
+	request.Header.Set("Content-Type", "application/json")
+
+	response, err := http.DefaultClient.Do(request)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return users[0], nil
+	defer response.Body.Close()
+	data, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+	userList, err := getUsers(data)
+	if err != nil {
+		return nil, err
+	}
+	for _, userItem := range userList {
+		for _, userEmail := range userItem.Emails {
+			if *userEmail.EmailAddress == email {
+				if userItem.FirstName == firstName && userItem.LastName == lastName {
+					return userItem, nil
+				}
+			}
+		}
+	}
+
+	return nil, errors.New("user not found")
+}
+
+func getUsers(body []byte) ([]*models.User, error) {
+	var users = new(models.UserList)
+	err := json.Unmarshal(body, &users)
+	if err != nil {
+		return nil, err
+	}
+	return users.Data, err
 }
 
 // SearchUserByEmail search user by email

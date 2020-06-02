@@ -1143,7 +1143,7 @@ paths:
         - $ref: "#/parameters/path-userLFID"
 
       responses:
-        '200':
+        '204':
           description: 'Success'
         '400':
           $ref: '#/responses/invalid-request'
@@ -2005,9 +2005,6 @@ definitions:
       user_sfid:
         type: string
         x-omitempty: false
-      logo_url:
-        type: string
-        x-omitempty: false
       email:
         type: string
         x-omitempty: false
@@ -2032,9 +2029,22 @@ definitions:
         type: string
         description: "name of the cla group"
         x-omitempty: false
+      organization_name:
+        type: string
+        description: "name of salesforce organization"
+        x-omitempty: false
+        example: "Intel Corporation"
+      organization_sfid:
+        type: string
+        x-omitempty: false
+        example: "00117000015vpjXAAQ"
 
   cla-manager-user:
     type: object
+    required:
+      - firstName
+      - lastName
+      - userEmail
     x-nullable: false
     title: CLA Manager User
     description: User object used for CLA Manager requests
