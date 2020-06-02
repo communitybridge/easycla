@@ -23,7 +23,7 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !authUser.Admin {
 				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
-					return github_organizations.NewGetProjectGithubOrganizationsUnauthorized()
+					return github_organizations.NewGetProjectGithubOrganizationsForbidden()
 				}
 			}
 			result, err := service.GetGithubOrganizations(params.ProjectSFID)
@@ -42,7 +42,7 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !authUser.Admin {
 				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
-					return github_organizations.NewAddProjectGithubOrganizationUnauthorized()
+					return github_organizations.NewAddProjectGithubOrganizationForbidden()
 				}
 			}
 			result, err := service.AddGithubOrganization(params.ProjectSFID, &v1Models.CreateGithubOrganization{
@@ -73,7 +73,7 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !authUser.Admin {
 				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
-					return github_organizations.NewDeleteProjectGithubOrganizationUnauthorized()
+					return github_organizations.NewDeleteProjectGithubOrganizationForbidden()
 				}
 			}
 			err := service.DeleteGithubOrganization(params.ProjectSFID, params.OrgName)

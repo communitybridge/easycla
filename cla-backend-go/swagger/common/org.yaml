@@ -6,3 +6,6 @@ properties:
   organization_name:
     type: string
     description: name of the organization
+  organization_website:
+    type: string
+    description: website of the organization
