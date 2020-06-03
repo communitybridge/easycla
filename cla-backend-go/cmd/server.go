@@ -15,10 +15,10 @@ import (
 
 	"github.com/communitybridge/easycla/cla-backend-go/cla_manager"
 	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
+	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 
 	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
 	organization_service "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
-	userService "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
 	v2GithubOrganizations "github.com/communitybridge/easycla/cla-backend-go/v2/github_organizations"
@@ -277,7 +277,7 @@ func server(localMode bool) http.Handler {
 	v2ClaManager.Configure(v2API, claManagerService, companyService, projectService)
 	sign.Configure(v2API, v2SignService)
 
-	userService.InitClient(configFile.APIGatewayURL)
+	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	project_service.InitClient(configFile.APIGatewayURL)
 	organization_service.InitClient(configFile.APIGatewayURL)
 	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
