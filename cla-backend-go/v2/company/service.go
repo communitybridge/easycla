@@ -227,7 +227,7 @@ func fillUsersInfo(claManagers []*models.CompanyClaManager, usermap map[string]*
 			continue
 		}
 		cm.Name = user.Name
-		cm.LogoURL = user.LogoURL
+		// cm.LogoURL = user.LogoURL
 		cm.UserSfid = user.ID
 		if user.Email != nil {
 			cm.Email = *user.Email

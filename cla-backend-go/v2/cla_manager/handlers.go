@@ -40,20 +40,13 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 			return cla_manager.NewCreateCLAManagerForbidden()
 		}
 
-		// Get user by firstname,lastname and email parameters
-		userServiceClient := v2UserService.GetClient()
-		// user, userErr := userServiceClient.SearchUsers(params.Body.FirstName, params.Body.LastName, params.Body.UserEmail)
-		user, userErr := userServiceClient.SearchUserByEmail(params.Body.UserEmail)
-
-		if userErr != nil || user == nil {
-			msg := fmt.Sprintf("Failed to get user when searching by firstname : %s, lastname: %s , email: %s , error: %v ",
-				params.Body.FirstName, params.Body.LastName, params.Body.UserEmail, userErr)
+		if *params.Body.FirstName == "" || *params.Body.LastName == "" || *params.Body.UserEmail == "" {
+			msg := fmt.Sprintf("firstName, lastName and UserEmail cannot be empty")
 			log.Warn(msg)
-			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(
-				&models.ErrorResponse{
-					Message: msg,
-					Code:    "400",
-				})
+			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			})
 		}
 
 		// Search for salesForce Company aka external Company
@@ -68,13 +61,30 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 			})
 		}
 		claGroup, err := getCLAGroup(params.ProjectID, params.ProjectSFID, projectService)
-		if err != nil {
-			msg := buildErrorMessage("project cla	 lookup error", params, err)
+		if err != nil || claGroup == nil {
+			msg := buildErrorMessage("project cla lookup failure or project doesnt have CCLA", params, err)
 			log.Warn(msg)
 			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			})
+		}
+		// Get user by firstname,lastname and email parameters
+		userServiceClient := v2UserService.GetClient()
+		user, userErr := userServiceClient.SearchUsers(*params.Body.FirstName, *params.Body.LastName, *params.Body.UserEmail)
+
+		if userErr != nil {
+			designeeName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
+			log.Debugf("LFID not existing for %s", designeeName)
+			sendEmailToUserWithNoLFID(claGroup, authUser.Email, designeeName, *params.Body.UserEmail)
+			msg := fmt.Sprintf("Failed search for User with firstname : %s, lastname: %s , email: %s , error: %v ",
+				*params.Body.FirstName, *params.Body.LastName, *params.Body.UserEmail, userErr)
+			log.Warn(msg)
+			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(
+				&models.ErrorResponse{
+					Message: msg,
+					Code:    "400",
+				})
 		}
 		// GetSFProject
 		ps := v2ProjectService.GetClient()
@@ -87,17 +97,7 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 				Code:    "400",
 			})
 		}
-		// Send Email if LFID doesnt exist
-		if authUser.UserName == "" {
-			designeeName := fmt.Sprintf("%s %s", params.Body.FirstName, params.Body.LastName)
-			log.Debugf("LFID not existing for %s", designeeName)
-			sendEmailToUserWithNoLFID(claGroup, authUser.Email, designeeName, params.Body.UserEmail)
-			msg := fmt.Sprintf("%s does not have LFID ", designeeName)
-			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			})
-		}
+
 		log.Warn("Getting role")
 		// Get RoleID for cla-manager
 		acsClient := v2AcsService.GetClient()
@@ -113,9 +113,40 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 				})
 		}
 		log.Debugf("Role ID for cla-manager-role : %s", roleID)
-		log.Debugf("Creating user role Scope for user : %s ", params.Body.UserEmail)
+		log.Debugf("Creating user role Scope for user : %s ", *params.Body.UserEmail)
 
 		orgClient := v2OrgService.GetClient()
+		hasScope, err := orgClient.IsUserHaveRoleScope(roleID, user.ID, params.CompanySFID, params.ProjectSFID)
+		if err != nil {
+			msg := buildErrorMessageCreate(params, err)
+			log.Warn(msg)
+			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(
+				&models.ErrorResponse{
+					Message: msg,
+					Code:    "400",
+				})
+		}
+		if hasScope {
+			msg := fmt.Sprintf("User %s is already cla-manager for Company: %s and Project: %s", user.Username, params.CompanySFID, params.ProjectSFID)
+			log.Warn(msg)
+			return cla_manager.NewCreateCLAManagerConflict().WithPayload(
+				&models.ErrorResponse{
+					Message: msg,
+					Code:    "409",
+				})
+		}
+
+		scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(*params.Body.UserEmail, params.ProjectSFID, params.CompanySFID, roleID)
+		if scopeErr != nil {
+			msg := buildErrorMessageCreate(params, scopeErr)
+			log.Warn(msg)
+			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(
+				&models.ErrorResponse{
+					Message: msg,
+					Code:    "400",
+				})
+		}
+
 		if user.Type == Lead {
 			// convert user to contact
 			log.Debug("converting lead to contact")
@@ -129,17 +160,6 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 						Code:    "400",
 					})
 			}
-		}
-
-		scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(params.Body.UserEmail, params.ProjectSFID, params.CompanySFID, roleID)
-		if scopeErr != nil {
-			msg := buildErrorMessageCreate(params, scopeErr)
-			log.Warn(msg)
-			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(
-				&models.ErrorResponse{
-					Message: msg,
-					Code:    "400",
-				})
 		}
 
 		// Add CLA Manager to Database
@@ -164,24 +184,27 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 		}
 
 		claCompanyManager := &models.CompanyClaManager{
-			LfUsername:   user.Username,
-			LogoURL:      user.LogoURL,
-			Email:        params.Body.UserEmail,
-			UserSfid:     user.ID,
-			ApprovedOn:   time.Now().String(),
-			ProjectSfid:  params.ProjectSFID,
-			ClaGroupName: claGroup.ProjectName,
-			ProjectID:    claGroup.ProjectID,
-			ProjectName:  projectSF.Name,
+			LfUsername:       user.Username,
+			Email:            *params.Body.UserEmail,
+			UserSfid:         user.ID,
+			ApprovedOn:       time.Now().String(),
+			ProjectSfid:      params.ProjectSFID,
+			ClaGroupName:     claGroup.ProjectName,
+			ProjectID:        claGroup.ProjectID,
+			ProjectName:      projectSF.Name,
+			OrganizationName: companyModel.CompanyName,
+			OrganizationSfid: params.CompanySFID,
+			Name:             fmt.Sprintf("%s %s", user.FirstName, user.LastName),
 		}
 		return cla_manager.NewCreateCLAManagerOK().WithPayload(claCompanyManager)
 
 	})
 
 	api.ClaManagerDeleteCLAManagerHandler = cla_manager.DeleteCLAManagerHandlerFunc(func(params cla_manager.DeleteCLAManagerParams, authUser *auth.User) middleware.Responder {
+
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !isUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
-			return cla_manager.NewCreateCLAManagerForbidden()
+			return cla_manager.NewDeleteCLAManagerForbidden()
 		}
 
 		// Get user by firstname,lastname and email parameters
@@ -224,7 +247,7 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 
 		// Get Scope ID
 		orgClient := v2OrgService.GetClient()
-		scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, "cla-manager", "project|organization")
+		scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, "cla-manager", "project|organization", params.UserLFID)
 		if scopeErr != nil {
 			msg := buildErrorMessageDelete(params, scopeErr)
 			log.Warn(msg)
@@ -266,7 +289,7 @@ func Configure(api *operations.EasyclaAPI, managerService v1ClaManager.IService,
 					Code:    "400",
 				})
 		}
-		return cla_manager.NewDeleteCLAManagerOK()
+		return cla_manager.NewDeleteCLAManagerNoContent()
 
 	})
 
@@ -359,7 +382,7 @@ func getCLAGroup(projectID string, projectSFID string, projectService project.Se
 	})
 	// Get unique project by passed CLAGroup ID parameter
 	for _, proj := range projects.Projects {
-		if proj.ProjectID == projectID {
+		if proj.ProjectID == projectID && proj.ProjectCCLAEnabled {
 			claGroup = &proj
 			break
 		}
@@ -375,7 +398,7 @@ func getCLAGroup(projectID string, projectSFID string, projectService project.Se
 // buildErrorMessageCreate helper function to build an error message
 func buildErrorMessageCreate(params cla_manager.CreateCLAManagerParams, err error) string {
 	return fmt.Sprintf("problem creating new CLA Manager using company SFID: %s, project SFID: %s, firstName: %s, lastName: %s, user email: %s, error: %+v",
-		params.CompanySFID, params.ProjectSFID, params.Body.FirstName, params.Body.LastName, params.Body.UserEmail, err)
+		params.CompanySFID, params.ProjectSFID, *params.Body.FirstName, *params.Body.LastName, *params.Body.UserEmail, err)
 }
 
 // buildErrorMessage helper function to build an error message
@@ -394,7 +417,7 @@ func isUserAuthorizedForProjectOrganization(user *auth.User, externalProjectID, 
 // buildErrorMessage helper function to build an error message
 func buildErrorMessage(errPrefix string, params cla_manager.CreateCLAManagerParams, err error) string {
 	return fmt.Sprintf("%s - problem creating new CLA Manager Request using company SFID: %s, project ID: %s, first name: %s, last name: %s, user email: %s, error: %+v",
-		errPrefix, params.CompanySFID, params.ProjectID, params.Body.FirstName, params.Body.LastName, params.Body.UserEmail, err)
+		errPrefix, params.CompanySFID, params.ProjectID, *params.Body.FirstName, *params.Body.LastName, *params.Body.UserEmail, err)
 }
 
 func sendEmailToUserWithNoLFID(projectModel *v1Models.Project, managerEmail string, designeeName string, designeeEmail string) {
