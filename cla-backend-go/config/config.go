@@ -64,6 +64,9 @@ type Config struct {
 
 	// AcsAPIKey is api key of the acs
 	AcsAPIKey string `json:"acs_api_key"`
+
+	// LFXPortalURL is url of the LFX UI for the particular environment
+	LFXPortalURL string `json:"lfx_portal_url"`
 }
 
 // Auth0 model
