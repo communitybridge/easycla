@@ -550,8 +550,6 @@ func (s *service) GetCompanyProjectCLA(authUser *auth.User, companySFID, project
 	wg.Add(len(sigs))
 	for _, sig := range sigs {
 		activeCla := &models.ActiveCla{}
-		// delete it from unsigned project
-		delete(pmap, sig.ProjectID)
 
 		resp.SignedClaList = append(resp.SignedClaList, activeCla)
 		go func(swg *sync.WaitGroup, signature *v1Models.Signature, acla *models.ActiveCla) {
@@ -559,6 +557,10 @@ func (s *service) GetCompanyProjectCLA(authUser *auth.User, companySFID, project
 		}(&wg, sig, activeCla)
 	}
 	wg.Wait()
+	for _, sig := range sigs {
+		// delete projects from pmap for which we have signature
+		delete(pmap, sig.ProjectID)
+	}
 	// fill details for not signed cla
 	for _, project := range pmap {
 		unsignedProject := &models.UnsignedProject{
