@@ -7,7 +7,6 @@ import (
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
-	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/company"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/events"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
@@ -50,12 +49,12 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 		func(params events.GetRecentCompanyProjectEventsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return events.NewGetRecentCompanyProjectEventsUnauthorized()
+				return events.NewGetRecentCompanyProjectEventsForbidden()
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
 			if err != nil {
 				if err == v1Company.ErrCompanyDoesNotExist {
-					return company.NewGetCompanyClaManagersNotFound()
+					return events.NewGetRecentCompanyProjectEventsNotFound()
 				}
 			}
 			result, err := service.GetRecentEventsForCompanyProject(comp.CompanyID, params.ProjectSFID, params.PageSize)

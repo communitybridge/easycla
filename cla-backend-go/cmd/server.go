@@ -15,10 +15,10 @@ import (
 
 	"github.com/communitybridge/easycla/cla-backend-go/cla_manager"
 	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
+	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 
 	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
 	organization_service "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
-	userService "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
 	v2GithubOrganizations "github.com/communitybridge/easycla/cla-backend-go/v2/github_organizations"
@@ -222,6 +222,7 @@ func server(localMode bool) http.Handler {
 	v2CompanyService := v2Company.NewService(signaturesRepo, projectRepo, usersRepo, companyRepo)
 	v2SignService := sign.NewService(configFile.ClaV1ApiURL, companyRepo, projectRepo)
 	signaturesService := signatures.NewService(signaturesRepo, companyService, usersService, eventsService, githubOrgValidation)
+	v2SignatureService := v2Signatures.NewService(projectService, companyService, signaturesService)
 	claManagerService := cla_manager.NewService(claManagerReqRepo, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, signaturesRepo, configFile.CorporateConsoleURL, http.DefaultClient)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
@@ -256,7 +257,7 @@ func server(localMode bool) http.Handler {
 	v2Template.Configure(v2API, templateService, eventsService)
 	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, configFile.Github.AccessToken, sessionStore)
 	signatures.Configure(api, signaturesService, sessionStore, eventsService)
-	v2Signatures.Configure(v2API, projectService, companyService, signaturesService, sessionStore, eventsService)
+	v2Signatures.Configure(v2API, projectService, companyService, signaturesService, sessionStore, eventsService, v2SignatureService)
 	whitelist.Configure(api, whitelistService, sessionStore, signaturesService, eventsService)
 	company.Configure(api, companyService, usersService, companyUserValidation, eventsService)
 	docs.Configure(api)
@@ -277,7 +278,7 @@ func server(localMode bool) http.Handler {
 	v2ClaManager.Configure(v2API, claManagerService, companyService, projectService)
 	sign.Configure(v2API, v2SignService)
 
-	userService.InitClient(configFile.APIGatewayURL)
+	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	project_service.InitClient(configFile.APIGatewayURL)
 	organization_service.InitClient(configFile.APIGatewayURL)
 	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)

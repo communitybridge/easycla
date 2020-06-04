@@ -278,15 +278,15 @@ func (t *TestBehaviour) RunUpdateApprovalListNoAuth(testData InputTestValues) {
 	frisby.Create("CLA Approval List - Update Approval List - No Auth").
 		Put(endpoint).
 		Send().
-		ExpectStatus(401)
+		ExpectStatus(401) // Error returned by ACS with no creds
 }
 
-// RunUpdateApprovalListUnauthorized test
-func (t *TestBehaviour) RunUpdateApprovalListUnauthorized(testData InputTestValues) {
+// RunUpdateApprovalListForbidden test
+func (t *TestBehaviour) RunUpdateApprovalListForbidden(testData InputTestValues) {
 	// ProspectiveManagerToken is not approved yet - shouldn't be able to approve requests
 	endpoint := fmt.Sprintf("%s/v4/signatures/project/%s/company/%s/clagroup/%s/approval-list",
 		t.apiURL, testData.projectSFID, testData.orgSFID, testData.claGroupID)
-	frisby.Create(fmt.Sprintf("CLA Approval List - Update Approval List - Unauthorized - %s", claProspectiveManagerLFID)).
+	frisby.Create(fmt.Sprintf("CLA Approval List - Update Approval List - Forbidden - %s", claProspectiveManagerLFID)).
 		Put(endpoint).
 		SetHeaders(testData.authHeaders).
 		SetJson(map[string][]string{
@@ -809,23 +809,23 @@ func (t *TestBehaviour) RunAllTests() {
 	}
 	t.RunUpdateApprovalListNoAuth(openColorIOATTNoAuthTestValues)
 
-	// Shouldn't be allowed to Update the Approval List unless you are already a CLA Manager
-	openColorIOIntelUnauthorizedTestValues := InputTestValues{
+	// Shouldn't be allowed to Update the Approval List unless you are already a CLA Manager - should return 403 forbidden
+	openColorIOIntelForbiddenTestValues := InputTestValues{
 		projectSFID: openColorIOProjectSFID,
 		orgSFID:     intelSFID,
 		claGroupID:  openColorIOCLAGroupID,
 		authHeaders: t.getProspectiveCLAManagerHeaders(),
 	}
-	t.RunUpdateApprovalListUnauthorized(openColorIOIntelUnauthorizedTestValues)
+	t.RunUpdateApprovalListForbidden(openColorIOIntelForbiddenTestValues)
 
-	// Shouldn't be allowed to Update the Approval List unless you are already a CLA Manager
-	openColorIOATTUnauthorizedTestValues := InputTestValues{
+	// Shouldn't be allowed to Update the Approval List unless you are already a CLA Manager - should return 403 forbidden
+	openColorIOATTForbiddenTestValues := InputTestValues{
 		projectSFID: openColorIOProjectSFID,
 		orgSFID:     attSFID,
 		claGroupID:  openColorIOCLAGroupID,
 		authHeaders: t.getCLAManagerHeaders(),
 	}
-	t.RunUpdateApprovalListUnauthorized(openColorIOATTUnauthorizedTestValues)
+	t.RunUpdateApprovalListForbidden(openColorIOATTForbiddenTestValues)
 
 	// OpenColorIO + Intel
 	openColorIOIntelTestValues := InputTestValues{

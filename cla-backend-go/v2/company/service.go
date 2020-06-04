@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jinzhu/copier"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 
@@ -45,8 +47,8 @@ const (
 
 // Service functions for company
 type Service interface {
-	GetCompanyCLAManagers(companyID string) (*models.CompanyClaManagers, error)
-	GetCompanyActiveCLAs(companyID string) (*models.ActiveClaList, error)
+	GetCompanyProjectCLAManagers(companyID string, projectSFID string) (*models.CompanyClaManagers, error)
+	GetCompanyProjectActiveCLAs(companyID string, projectSFID string) (*models.ActiveClaList, error)
 	GetCompanyProjectContributors(projectSFID string, companySFID string, searchTerm string) (*models.CorporateContributorList, error)
 	GetCompanyProjectCLA(authUser *auth.User, companySFID, projectSFID string) (*models.CompanyProjectClaList, error)
 }
@@ -93,7 +95,7 @@ func (s *service) getAllCCLASignatures(companyID string) ([]*v1Models.Signature,
 			CompanyID:     companyID,
 			SignatureType: aws.String("ccla"),
 			NextKey:       lastScannedKey,
-		}, 1000, signatures.DontLoadACLDetails)
+		}, HugePageSize, signatures.DontLoadACLDetails)
 		if err != nil {
 			return nil, err
 		}
@@ -151,16 +153,29 @@ func (s *service) getCompanyProjectCCLASignatures(companyID string, projects *v1
 	return sigs, nil
 }
 
-func (s *service) GetCompanyCLAManagers(companyID string) (*models.CompanyClaManagers, error) {
+func (s *service) GetCompanyProjectCLAManagers(companyID string, projectSFID string) (*models.CompanyClaManagers, error) {
+	var projects map[string]*projectDetailedModel
+	var err error
+	projectIDs := utils.NewStringSet()
+	projects, err = s.getAllClaGroupsUnderProjectOrFoundation(projectSFID)
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range projects {
+		projectIDs.Add(p.v1ProjectModel.ProjectID)
+	}
+
 	sigs, err := s.getAllCCLASignatures(companyID)
 	if err != nil {
 		return nil, err
 	}
-	var claManagers []*models.CompanyClaManager
+	claManagers := make([]*models.CompanyClaManager, 0)
 	lfUsernames := utils.NewStringSet()
-	projectIDs := utils.NewStringSet()
 	// Get CLA managers
 	for _, sig := range sigs {
+		if !projectIDs.Include(sig.ProjectID) {
+			continue
+		}
 		for _, user := range sig.SignatureACL {
 			claManagers = append(claManagers, &models.CompanyClaManager{
 				// DB doesn't have approved_on value
@@ -169,23 +184,11 @@ func (s *service) GetCompanyCLAManagers(companyID string) (*models.CompanyClaMan
 				ProjectID:  sig.ProjectID,
 			})
 			lfUsernames.Add(user.LfUsername)
-			projectIDs.Add(sig.ProjectID)
 		}
 	}
 	// get userinfo and project info
 	var usermap map[string]*v2UserServiceModels.User
-	var projects map[string]*v1Models.Project
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		usermap, err = getUsersInfo(lfUsernames.List())
-	}()
-	go func() {
-		defer wg.Done()
-		projects = s.getProjects(projectIDs.List())
-	}()
-	wg.Wait()
+	usermap, err = getUsersInfo(lfUsernames.List())
 	if err != nil {
 		return nil, err
 	}
@@ -201,12 +204,15 @@ func (s *service) GetCompanyCLAManagers(companyID string) (*models.CompanyClaMan
 }
 
 func getUsersInfo(lfUsernames []string) (map[string]*v2UserServiceModels.User, error) {
+	usermap := make(map[string]*v2UserServiceModels.User)
+	if len(lfUsernames) == 0 {
+		return usermap, nil
+	}
 	userServiceClient := v2UserService.GetClient()
 	users, err := userServiceClient.GetUsersByUsernames(lfUsernames)
 	if err != nil {
 		return nil, err
 	}
-	usermap := make(map[string]*v2UserServiceModels.User)
 	for _, user := range users {
 		usermap[user.Username] = user
 	}
@@ -221,7 +227,7 @@ func fillUsersInfo(claManagers []*models.CompanyClaManager, usermap map[string]*
 			continue
 		}
 		cm.Name = user.Name
-		cm.LogoURL = user.LogoURL
+		// cm.LogoURL = user.LogoURL
 		cm.UserSfid = user.ID
 		if user.Email != nil {
 			cm.Email = *user.Email
@@ -233,47 +239,35 @@ func fillUsersInfo(claManagers []*models.CompanyClaManager, usermap map[string]*
 	}
 }
 
-func (s *service) getProjects(projectIDs []string) map[string]*v1Models.Project {
-	projects := make(map[string]*v1Models.Project)
-	prChan := make(chan *v1Models.Project)
-	for _, id := range projectIDs {
-		go func(projectID string) {
-			project, err := s.projectRepo.GetProjectByID(projectID)
-			if err != nil {
-				log.Warnf("Unable to fetch project details for project %s. error = %s", projectID, err)
-			}
-			prChan <- project
-		}(id)
-	}
-	for range projectIDs {
-		project := <-prChan
-		if project != nil {
-			projects[project.ProjectID] = project
-		}
-	}
-	return projects
-}
-
-func fillProjectInfo(claManagers []*models.CompanyClaManager, projects map[string]*v1Models.Project) {
+func fillProjectInfo(claManagers []*models.CompanyClaManager, projects map[string]*projectDetailedModel) {
 	projectSFIDs := utils.NewStringSet()
 	for _, project := range projects {
-		projectSFIDs.Add(project.ProjectExternalID)
+		projectSFIDs.Add(project.v1ProjectModel.ProjectExternalID)
 	}
-	pmap := getSFProjectDetails(projectSFIDs.List())
 	for _, claManager := range claManagers {
 		project, ok := projects[claManager.ProjectID]
 		if !ok {
 			continue
 		}
-		claManager.ClaGroupName = project.ProjectName
-		claManager.ProjectSfid = project.ProjectExternalID
-		if sfproject, ok := pmap[project.ProjectExternalID]; ok {
-			claManager.ProjectName = sfproject.Name
+		claManager.ClaGroupName = project.v1ProjectModel.ProjectName
+		claManager.ProjectSfid = project.v1ProjectModel.ProjectExternalID
+		if sfproject, ok := projects[project.v1ProjectModel.ProjectID]; ok {
+			claManager.ProjectName = sfproject.v2ProjectOutputModel.Name
 		}
 	}
 }
 
-func (s *service) GetCompanyActiveCLAs(companyID string) (*models.ActiveClaList, error) {
+func (s *service) GetCompanyProjectActiveCLAs(companyID string, projectSFID string) (*models.ActiveClaList, error) {
+	var projects map[string]*projectDetailedModel
+	var err error
+	projectIDs := utils.NewStringSet()
+	projects, err = s.getAllClaGroupsUnderProjectOrFoundation(projectSFID)
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range projects {
+		projectIDs.Add(p.v1ProjectModel.ProjectID)
+	}
 	var out models.ActiveClaList
 	sigs, err := s.getAllCCLASignatures(companyID)
 	if err != nil {
@@ -286,29 +280,34 @@ func (s *service) GetCompanyActiveCLAs(companyID string) (*models.ActiveClaList,
 	var wg sync.WaitGroup
 	wg.Add(len(sigs))
 	for _, sig := range sigs {
+		if !projectIDs.Include(sig.ProjectID) {
+			// skip the cla_group which are not under current foundation/project
+			wg.Done()
+			continue
+		}
 		activeCla := &models.ActiveCla{}
 		out.List = append(out.List, activeCla)
 		go func(swg *sync.WaitGroup, signature *v1Models.Signature, acla *models.ActiveCla) {
-			s.fillActiveCLA(swg, signature, acla)
+			s.fillActiveCLA(swg, signature, acla, projects)
 		}(&wg, sig, activeCla)
 	}
 	wg.Wait()
 	return &out, nil
 }
 
-func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, activeCla *models.ActiveCla) {
+func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, activeCla *models.ActiveCla, projects map[string]*projectDetailedModel) {
 	defer wg.Done()
 	p, err := s.projectRepo.GetProjectByID(sig.ProjectID)
 	if err != nil {
 		log.Error("fillActiveCLA : unable to get project", err)
 		return
 	}
-	psc := v2ProjectService.GetClient()
-	projectDetails, err := psc.GetProject(p.ProjectExternalID)
-	if err != nil {
-		log.Error("fillActiveCLA : unable to get project details", err)
+	pr, ok := projects[sig.ProjectID]
+	if !ok {
+		log.Error("unable to get project details", err)
 		return
 	}
+	projectDetails := pr.v2ProjectOutputModel
 
 	// fill details from dynamodb
 	activeCla.ProjectID = sig.ProjectID
@@ -522,50 +521,54 @@ func (s *service) GetCompanyProjectCLA(authUser *auth.User, companySFID, project
 	if err != nil {
 		return nil, err
 	}
-	var projectName string
 
 	resp := &models.CompanyProjectClaList{
 		SignedClaList:       make([]*models.ActiveCla, 0),
 		UnsignedProjectList: make([]*models.UnsignedProject, 0),
 	}
+	psc := v2ProjectService.GetClient()
+	projectDetails, err := psc.GetProject(projectSFID)
+	if err != nil {
+		log.Error("GetCompanyProjectCLAStatus : unable to get project details", err)
+		return nil, err
+	}
+	var pr v2ProjectServiceModels.ProjectOutput
+	err = copier.Copy(&pr, projectDetails)
+	if err != nil {
+		return nil, err
+	}
 	// pmap will keep track of unsigned project
-	pmap := make(map[string]v1Models.Project)
-	for _, project := range projects.Projects {
-		pmap[project.ProjectID] = project
+	pmap := make(map[string]*projectDetailedModel)
+	for i := range projects.Projects {
+		pmap[projects.Projects[i].ProjectID] = &projectDetailedModel{
+			v1ProjectModel:       &projects.Projects[i],
+			v2ProjectOutputModel: &pr,
+		}
 	}
 	// fill details for signed cla
 	var wg sync.WaitGroup
 	wg.Add(len(sigs))
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		psc := v2ProjectService.GetClient()
-		projectDetails, err := psc.GetProject(projectSFID)
-		if err != nil {
-			log.Error("GetCompanyProjectCLAStatus : unable to get project details", err)
-		} else {
-			projectName = projectDetails.Name
-		}
-	}()
 	for _, sig := range sigs {
 		activeCla := &models.ActiveCla{}
-		// delete it from unsigned project
-		delete(pmap, sig.ProjectID)
 
 		resp.SignedClaList = append(resp.SignedClaList, activeCla)
 		go func(swg *sync.WaitGroup, signature *v1Models.Signature, acla *models.ActiveCla) {
-			s.fillActiveCLA(swg, signature, acla)
+			s.fillActiveCLA(swg, signature, acla, pmap)
 		}(&wg, sig, activeCla)
 	}
 	wg.Wait()
+	for _, sig := range sigs {
+		// delete projects from pmap for which we have signature
+		delete(pmap, sig.ProjectID)
+	}
 	// fill details for not signed cla
 	for _, project := range pmap {
 		unsignedProject := &models.UnsignedProject{
 			CanSign:      canSign,
-			ClaGroupID:   project.ProjectID,
-			ClaGroupName: project.ProjectName,
-			ProjectName:  projectName,
-			ProjectSfid:  project.ProjectExternalID,
+			ClaGroupID:   project.v1ProjectModel.ProjectID,
+			ClaGroupName: project.v1ProjectModel.ProjectName,
+			ProjectName:  project.v2ProjectOutputModel.Name,
+			ProjectSfid:  project.v1ProjectModel.ProjectExternalID,
 		}
 		resp.UnsignedProjectList = append(resp.UnsignedProjectList, unsignedProject)
 	}
@@ -603,41 +606,66 @@ func (s *service) getCompanyAndProjects(companySFID, projectSFID string) (*v1Mod
 	return comp, projects, nil
 }
 
-func getSFProjectDetails(sfProjectIDs []string) map[string]*v2ProjectServiceModels.ProjectOutputDetailed {
-	pmap := make(map[string]*v2ProjectServiceModels.ProjectOutputDetailed)
-	if len(sfProjectIDs) == 0 {
-		return pmap
-	}
+type projectDetailedModel struct {
+	v1ProjectModel       *v1Models.Project
+	v2ProjectOutputModel *v2ProjectServiceModels.ProjectOutput
+}
+
+func (s *service) getAllClaGroupsUnderProjectOrFoundation(id string) (map[string]*projectDetailedModel, error) {
+	result := make(map[string]*projectDetailedModel)                // key cla_group_id
+	epmap := make(map[string]*v2ProjectServiceModels.ProjectOutput) // key project_sfid
 	psc := v2ProjectService.GetClient()
-	type sfProjectOutput struct {
-		sfProjectID    string
-		projectDetails *v2ProjectServiceModels.ProjectOutputDetailed
-		err            error
+	projectSFIDs := utils.NewStringSet()
+	projectSFIDs.Add(id)
+	projectDetails, err := psc.GetProject(id)
+	prChan := make(chan *v1Models.Projects)
+	if err != nil {
+		return nil, err
 	}
-	responseChan := make(chan *sfProjectOutput)
+	var pr v2ProjectServiceModels.ProjectOutput
+	err = copier.Copy(&pr, projectDetails)
+	if err != nil {
+		return nil, err
+	}
+	epmap[projectDetails.ID] = &pr
+	for _, p := range projectDetails.Projects {
+		epmap[p.ID] = p
+		projectSFIDs.Add(p.ID)
+	}
 	var wg sync.WaitGroup
-	wg.Add(len(sfProjectIDs))
+	wg.Add(projectSFIDs.Length())
 	go func() {
 		wg.Wait()
-		close(responseChan)
+		close(prChan)
 	}()
-	for _, externalProjectID := range sfProjectIDs {
-		go func(projectSFID string) {
+	for _, projectSFID := range projectSFIDs.List() {
+		go func(pid string) {
 			defer wg.Done()
-			projectDetails, err := psc.GetProject(projectSFID)
-			responseChan <- &sfProjectOutput{
-				sfProjectID:    projectSFID,
-				projectDetails: projectDetails,
-				err:            err,
+			projects, err := s.projectRepo.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
+				ProjectSFID: pid,
+				PageSize:    aws.Int64(HugePageSize),
+			}, DontLoadRepoDetails)
+			if err != nil {
+				log.Warnf("Unable to fetch project details for project with external id %s. error = %s", pid, err)
+				prChan <- nil
+				return
 			}
-		}(externalProjectID)
+			if projects.ResultCount == 0 {
+				prChan <- nil
+				return
+			}
+			prChan <- projects
+		}(projectSFID)
 	}
-	for resp := range responseChan {
-		if resp.err != nil {
-			log.WithField("project_sfid", resp.sfProjectID).Error("unable to get salesforce project details", resp.err)
-			continue
+	for p := range prChan {
+		if p != nil {
+			for i := range p.Projects {
+				result[p.Projects[i].ProjectID] = &projectDetailedModel{
+					v1ProjectModel:       &p.Projects[i],
+					v2ProjectOutputModel: epmap[p.Projects[i].ProjectExternalID],
+				}
+			}
 		}
-		pmap[resp.sfProjectID] = resp.projectDetails
 	}
-	return pmap
+	return result, nil
 }

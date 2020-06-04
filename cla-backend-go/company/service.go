@@ -600,8 +600,9 @@ func (s service) SearchOrganizationByName(orgName string) (*models.OrgList, erro
 	result := &models.OrgList{List: make([]*models.Org, 0, len(orgs))}
 	for _, org := range orgs {
 		result.List = append(result.List, &models.Org{
-			OrganizationID:   org.ID,
-			OrganizationName: org.Name,
+			OrganizationID:      org.ID,
+			OrganizationName:    org.Name,
+			OrganizationWebsite: org.Link,
 		})
 	}
 	return result, nil

@@ -62,7 +62,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, user *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
 		if !isUserAuthorizedForProject(user, params.Body.ProjectExternalID) {
-			return project.NewCreateProjectUnauthorized()
+			return project.NewCreateProjectForbidden()
 		}
 		if params.Body.ProjectName == "" || params.Body.ProjectACL == nil {
 			msg := "Missing Project Name or Project ACL parameter."
@@ -153,7 +153,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewGetProjectByIDNotFound()
 		}
 		if !isUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
-			return project.NewGetProjectByIDUnauthorized()
+			return project.NewGetProjectByIDForbidden()
 		}
 		result, err := v2ProjectModel(projectModel)
 		if err != nil {
@@ -165,7 +165,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 
 	api.ProjectGetProjectsByExternalIDHandler = project.GetProjectsByExternalIDHandlerFunc(func(projectParams project.GetProjectsByExternalIDParams, user *auth.User) middleware.Responder {
 		if !isUserAuthorizedForProject(user, projectParams.ExternalID) {
-			return project.NewGetProjectsByExternalIDUnauthorized()
+			return project.NewGetProjectsByExternalIDForbidden()
 		}
 
 		projectModel, err := service.GetProjectsByExternalID(&v1ProjectOps.GetProjectsByExternalIDParams{
@@ -196,7 +196,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewGetProjectByNameNotFound()
 		}
 		if !isUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
-			return project.NewGetProjectByNameUnauthorized()
+			return project.NewGetProjectByNameForbidden()
 		}
 
 		result, err := v2ProjectModel(projectModel)
@@ -218,7 +218,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
 		if !isUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
-			return project.NewDeleteProjectByIDUnauthorized()
+			return project.NewDeleteProjectByIDForbidden()
 		}
 		err = service.DeleteProject(projectParams.ProjectSfdcID)
 		if err != nil {
@@ -248,7 +248,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewUpdateProjectNotFound().WithPayload(errorResponse(err))
 		}
 		if !isUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
-			return project.NewUpdateProjectUnauthorized()
+			return project.NewUpdateProjectForbidden()
 		}
 		in, err := v1ProjectModel(&projectParams.Body)
 		if err != nil {

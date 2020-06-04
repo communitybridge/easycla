@@ -144,9 +144,9 @@ export class ProjectClaTemplatePage {
         this.events.publish('reloadProjectCla');
       }
       this.navCtrl.pop();
-      return;
+    } else {
+      this.events.publish('reloadProjectCla');
     }
-    this.navCtrl.push('AllProjectsPage');
   }
 
   setLoadingSpinner(value: boolean) {
