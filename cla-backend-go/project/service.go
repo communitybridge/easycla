@@ -19,6 +19,7 @@ type Service interface {
 	CreateProject(project *models.Project) (*models.Project, error)
 	GetProjects(params *project.GetProjectsParams) (*models.Projects, error)
 	GetProjectByID(projectID string) (*models.Project, error)
+	GetProjectsByExternalSFID(projectSFID string) (*models.Projects, error)
 	GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error)
 	GetProjectByName(projectName string) (*models.Project, error)
 	DeleteProject(projectID string) error
@@ -59,6 +60,16 @@ func (s service) GetProjectByID(projectID string) (*models.Project, error) {
 	}
 	s.fillRepoInfo(project)
 	return project, nil
+}
+
+// GetProjectsByExternalSFID returns a list of projects based on the external SFID parameter
+func (s service) GetProjectsByExternalSFID(projectSFID string) (*models.Projects, error) {
+	return s.GetProjectsByExternalID(&project.GetProjectsByExternalIDParams{
+		HTTPRequest: nil,
+		NextKey:     nil,
+		PageSize:    nil,
+		ProjectSFID: projectSFID,
+	})
 }
 
 // GetProjectsByExternalID returns a list of projects based on the external ID parameters

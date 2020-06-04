@@ -1,7 +1,7 @@
 type: object
 x-nullable: false
 title: Project Summary
-description: A summary of Foundations and Projects with CLAs enabled.
+description: A summary of Foundations and Projects that have CLA enabled.
 properties:
   summary:
     type: array
@@ -24,6 +24,9 @@ properties:
           description: The CLA Group ID for this foundation
           type: string
           x-omitempty: true
+        permissionToAccess:
+          description: Indicates if the user has access to view the foundation dashboard
+          type: boolean
         projects:
           type: array
           items:
@@ -42,3 +45,6 @@ properties:
               claGroupID:
                 type: string
                 description: The CLA Group ID for this project
+              permissionToAccess:
+                description: Indicates if the user has access to view the project dashboard
+                type: boolean

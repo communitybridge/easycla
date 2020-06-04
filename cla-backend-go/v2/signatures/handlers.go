@@ -116,6 +116,12 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			return signatures.NewUpdateApprovalListNotFound().WithPayload(errorResponse(compErr))
 		}
 
+		projectModels, projsErr := projectService.GetProjectsByExternalSFID(params.ProjectSFID)
+		if projsErr != nil || projectModels == nil {
+			log.Warnf("unable to locate projects by Project SFID: %s", params.ProjectSFID)
+			return signatures.NewUpdateApprovalListNotFound().WithPayload(errorResponse(projsErr))
+		}
+
 		// Lookup the internal project ID when provided the external ID via the v1SignatureService call
 		projectModel, projErr := projectService.GetProjectByID(params.ClaGroupID)
 		if projErr != nil || projectModel == nil {
@@ -150,7 +156,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		return signatures.NewUpdateApprovalListOK().WithPayload(&v2Sig)
 	})
 
-	// Retrieve GitHub Whitelist Entries
+	// Retrieve GitHub Approval Entries
 	api.SignaturesGetGitHubOrgWhitelistHandler = signatures.GetGitHubOrgWhitelistHandlerFunc(func(params signatures.GetGitHubOrgWhitelistParams, authUser *auth.User) middleware.Responder {
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
@@ -178,7 +184,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		return signatures.NewGetGitHubOrgWhitelistOK().WithPayload(response)
 	})
 
-	// Add GitHub Whitelist Entries
+	// Add GitHub Approval Entries
 	api.SignaturesAddGitHubOrgWhitelistHandler = signatures.AddGitHubOrgWhitelistHandlerFunc(func(params signatures.AddGitHubOrgWhitelistParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
