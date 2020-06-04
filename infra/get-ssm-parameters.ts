@@ -58,6 +58,7 @@ const parameters = [
   `cla-lf-group-client-url-${program.stage}`,
   `cla-sns-event-topic-arn-${program.stage}`,
   `docraptor-test-mode-${program.stage}`,
+  `cla-lfx-portal-url-${program.stage}`
 ];
 
 const ssm = new SSM();
