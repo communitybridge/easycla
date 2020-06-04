@@ -78,7 +78,7 @@ func (osc *Client) CreateOrgUserRoleOrgScope(emailID string, organizationID stri
 }
 
 // IsUserHaveRoleScope checks if user have required role and scope
-func (osc *Client) IsUserHaveRoleScope(roleID string, userSFID string, organizationID string, projectSFID string) (bool, error) {
+func (osc *Client) IsUserHaveRoleScope(rolename string, userSFID string, organizationID string, projectSFID string) (bool, error) {
 	objectID := fmt.Sprintf("%s|%s", projectSFID, organizationID)
 	var offset int64
 	var pageSize int64 = 1000
@@ -92,6 +92,7 @@ func (osc *Client) IsUserHaveRoleScope(roleID string, userSFID string, organizat
 			Offset:       aws.String(strconv.FormatInt(offset, 10)),
 			PageSize:     aws.String(strconv.FormatInt(pageSize, 10)),
 			SalesforceID: organizationID,
+			Rolename:     []string{rolename},
 			Context:      context.Background(),
 		}
 		result, err := osc.cl.Organizations.ListOrgUsrServiceScopes(params, clientAuth)
@@ -104,10 +105,6 @@ func (osc *Client) IsUserHaveRoleScope(roleID string, userSFID string, organizat
 				continue
 			}
 			for _, rolescope := range userRole.RoleScopes {
-				// check only for required role
-				if rolescope.RoleID != roleID {
-					continue
-				}
 				for _, scope := range rolescope.Scopes {
 					if scope.ObjectTypeName == projectOrganization && scope.ObjectID == objectID {
 						return true, nil
