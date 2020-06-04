@@ -224,6 +224,7 @@ func server(localMode bool) http.Handler {
 	signaturesService := signatures.NewService(signaturesRepo, companyService, usersService, eventsService, githubOrgValidation)
 	v2SignatureService := v2Signatures.NewService(projectService, companyService, signaturesService)
 	claManagerService := cla_manager.NewService(claManagerReqRepo, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
+	v2ClaManagerService := v2ClaManager.NewService(companyService, projectService, claManagerService)
 	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, signaturesRepo, configFile.CorporateConsoleURL, http.DefaultClient)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 	v2MetricsService := metrics.NewService(metricsRepo)
@@ -275,7 +276,7 @@ func server(localMode bool) http.Handler {
 	v2Gerrits.Configure(v2API, gerritService, projectService, eventsService)
 	v2Company.Configure(v2API, v2CompanyService, companyRepo)
 	cla_manager.Configure(api, claManagerService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
-	v2ClaManager.Configure(v2API, claManagerService, companyService, projectService)
+	v2ClaManager.Configure(v2API, v2ClaManagerService, configFile.LFXPortalURL)
 	sign.Configure(v2API, v2SignService)
 
 	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
