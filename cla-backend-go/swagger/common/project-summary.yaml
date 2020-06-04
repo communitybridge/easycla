@@ -1,0 +1,44 @@
+type: object
+x-nullable: false
+title: Project Summary
+description: A summary of Foundations and Projects with CLAs enabled.
+properties:
+  summary:
+    type: array
+    x-omitempty: false
+    items:
+      title: Foundation
+      description: Foundations
+      properties:
+        name:
+          description: The Foundation Name
+          type: string
+        id:
+          description: The SFID of the foundation
+          type: string
+        claGroupName:
+          description: The CLA Group Name for this foundation
+          type: string
+          x-omitempty: true
+        claGroupID:
+          description: The CLA Group ID for this foundation
+          type: string
+          x-omitempty: true
+        projects:
+          type: array
+          items:
+            title: Projects
+            description: A list of projects under this foundation
+            properties:
+              name:
+                type: string
+                description: The project name
+              id:
+                type: string
+                description: The project SFID associated with this project
+              claGroupName:
+                type: string
+                description: The CLA Group name for this project
+              claGroupID:
+                type: string
+                description: The CLA Group ID for this project
