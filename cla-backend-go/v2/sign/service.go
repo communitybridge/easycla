@@ -195,7 +195,7 @@ func prepareUserForSigning(userEmail string, companySFID, projectSFID string) er
 		return err
 	}
 	log.WithFields(f).Debugf("checking if user have role of %s", role)
-	haveRole, err := osc.IsUserHaveRoleScope(roleID, user.ID, companySFID, projectSFID)
+	haveRole, err := osc.IsUserHaveRoleScope(role, user.ID, companySFID, projectSFID)
 	if err != nil {
 		log.WithFields(f).Errorf("checking user have role of %s. failed: %v", role, err)
 		return err
