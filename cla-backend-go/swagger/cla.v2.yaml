@@ -444,7 +444,7 @@ paths:
     # API to support the Member Portal Dashboard Summary View
     # See: https://confluence.linuxfoundation.org/pages/viewpage.action?pageId=49907240
     get:
-      summary: Returns a short summary of Foundations and Projects which have CLAs enabled
+      summary: Get Projet Summary
       description: Returns a of Foundations and their child projects where CLAs are enabled
       operationId: getProjectSummary
       parameters:
