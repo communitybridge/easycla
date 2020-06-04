@@ -440,6 +440,36 @@ paths:
       tags:
         - project
 
+  /project/summary:
+    # API to support the Member Portal Dashboard Summary View
+    # See: https://confluence.linuxfoundation.org/pages/viewpage.action?pageId=49907240
+    get:
+      summary: Returns a short summary of Foundations and Projects which have CLAs enabled
+      description: Returns a of Foundations and their child projects where CLAs are enabled
+      operationId: getProjectSummary
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/project-summary'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - project
+
   /project/enabled/{projectSfdcId}:
     get:
       summary: Get CLA enabled projects
@@ -1674,6 +1704,9 @@ definitions:
 
   project:
     $ref: './common/project.yaml'
+
+  project-summary:
+    $ref: './common/project-summary.yaml'
 
   template:
     $ref: './common/template.yaml'
