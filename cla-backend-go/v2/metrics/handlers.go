@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"fmt"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	v1Company "github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
@@ -9,15 +11,6 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
 )
-
-func isUserAuthorizedForOrganization(user *auth.User, externalCompanyID string) bool {
-	if !user.Admin {
-		if !user.Allowed || !user.IsUserAuthorized(auth.Organization, externalCompanyID) {
-			return false
-		}
-	}
-	return true
-}
 
 // Configure setups handlers on api with service
 func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository) {
@@ -90,8 +83,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 	api.MetricsListCompanyProjectMetricsHandler = metrics.ListCompanyProjectMetricsHandlerFunc(
 		func(params metrics.ListCompanyProjectMetricsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return metrics.NewListCompanyProjectMetricsForbidden()
+			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+				return metrics.NewListCompanyProjectMetricsForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to List Company Project Metrics with Organization scope of %s",
+						authUser.UserName, params.CompanySFID),
+				})
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
 			if err != nil {
