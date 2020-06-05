@@ -83,28 +83,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string)
 		if !isUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
 			return cla_manager.NewCreateCLAManagerRequestForbidden()
 		}
-		claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, params.ProjectSFID, params.Body.UserEmail)
-
-		if err != nil {
-			msg := fmt.Sprintf("Problem creating cla Manager Designee for user :%s, error: %+v ", authUser.Email, err)
-			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(
-				&models.ErrorResponse{
-					Message: msg,
-					Code:    "400",
-				})
-		}
-
-		// Search for salesForce Company aka external Company
 		orgService := v2OrgService.GetClient()
-		companyModel, companyErr := orgService.GetOrganization(params.CompanySFID)
-		if companyErr != nil || companyModel == nil {
-			msg := fmt.Sprintf("Problem getting company by SFID: %s", params.CompanySFID)
-			log.Warn(msg)
-			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			})
-		}
 
 		// GetSFProject
 		ps := v2ProjectService.GetClient()
@@ -132,8 +111,8 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string)
 		// Check if sending cla manager request to company admin
 		if params.Body.ContactAdmin {
 			log.Debugf("Sending email to company Admin")
-			scopes, err := orgService.ListOrgUserAdminScopes(params.CompanySFID)
-			if err != nil {
+			scopes, listScopeErr := orgService.ListOrgUserAdminScopes(params.CompanySFID)
+			if listScopeErr != nil {
 				msg := fmt.Sprintf("Admin lookup error for organisation SFID: %s ", params.CompanySFID)
 				return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(
 					&models.ErrorResponse{
@@ -144,7 +123,29 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string)
 			for _, admin := range scopes.Userroles {
 				sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, projectSF.Name, authUser.Email, authUser.UserName, LfxPortalURL)
 			}
-			return cla_manager.NewCreateCLAManagerRequestOK().WithPayload(claManagerDesignee)
+			return cla_manager.NewCreateCLAManagerRequestNoContent()
+		}
+
+		claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, params.ProjectSFID, params.Body.UserEmail)
+
+		if err != nil {
+			msg := fmt.Sprintf("Problem creating cla Manager Designee for user :%s, error: %+v ", params.Body.UserEmail, err)
+			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(
+				&models.ErrorResponse{
+					Message: msg,
+					Code:    "400",
+				})
+		}
+
+		// Search for salesForce Company aka external Company
+		companyModel, companyErr := orgService.GetOrganization(params.CompanySFID)
+		if companyErr != nil || companyModel == nil {
+			msg := fmt.Sprintf("Problem getting company by SFID: %s", params.CompanySFID)
+			log.Warn(msg)
+			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			})
 		}
 
 		log.Debugf("Sending Email to CLA Manager Designee email: %s ", params.Body.UserEmail)
