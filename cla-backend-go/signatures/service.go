@@ -377,11 +377,11 @@ func (s service) UpdateApprovalList(authUser *auth.User, projectModel *models.Pr
 	// Ensure current user is in the Signature ACL
 	claManagers := sigModel.SignatureACL
 	if !utils.CurrentUserInACL(authUser, claManagers) {
-		msg := fmt.Sprintf("CLA Manager %s / %s is not authorized to approve request for company ID: %s / %s / %s, project ID: %s / %s / %s",
+		msg := fmt.Sprintf("EasyCLA - 403 Forbidden - CLA Manager %s / %s is not authorized to approve request for company ID: %s / %s / %s, project ID: %s / %s / %s",
 			authUser.UserName, authUser.Email,
 			companyModel.CompanyName, companyModel.CompanyExternalID, companyModel.CompanyID,
 			projectModel.ProjectName, projectModel.ProjectExternalID, projectModel.ProjectID)
-		return nil, NewUnauthorizedError(msg)
+		return nil, NewForbiddenError(msg)
 	}
 
 	// Lookup the user making the request

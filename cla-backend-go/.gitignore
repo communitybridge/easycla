@@ -44,6 +44,8 @@ gen/
 cover.out
 
 # Ignore build-time swagger files
+swagger/acs-service.yaml
+swagger/acs-service.yaml.bak
 swagger/project-service.yaml
 swagger/project-service.yaml.bak
 swagger/user-service.yaml

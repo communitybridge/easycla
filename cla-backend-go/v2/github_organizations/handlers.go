@@ -4,6 +4,8 @@
 package github_organizations
 
 import (
+	"fmt"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -21,10 +23,12 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 	api.GithubOrganizationsGetProjectGithubOrganizationsHandler = github_organizations.GetProjectGithubOrganizationsHandlerFunc(
 		func(params github_organizations.GetProjectGithubOrganizationsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !authUser.Admin {
-				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
-					return github_organizations.NewGetProjectGithubOrganizationsForbidden()
-				}
+			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+				return github_organizations.NewGetProjectGithubOrganizationsForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to GetProjectGitHub Organizations with Project scope of %s",
+						authUser.UserName, params.ProjectSFID),
+				})
 			}
 			result, err := service.GetGithubOrganizations(params.ProjectSFID)
 			if err != nil {
@@ -40,17 +44,21 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 	api.GithubOrganizationsAddProjectGithubOrganizationHandler = github_organizations.AddProjectGithubOrganizationHandlerFunc(
 		func(params github_organizations.AddProjectGithubOrganizationParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !authUser.Admin {
-				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
-					return github_organizations.NewAddProjectGithubOrganizationForbidden()
-				}
+			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+				return github_organizations.NewAddProjectGithubOrganizationForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Add Project GitHub Organizations with Project scope of %s",
+						authUser.UserName, params.ProjectSFID),
+				})
 			}
+
 			result, err := service.AddGithubOrganization(params.ProjectSFID, &v1Models.CreateGithubOrganization{
 				OrganizationName: params.Body.OrganizationName,
 			})
 			if err != nil {
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
+
 			eventService.LogEvent(&events.LogEventArgs{
 				LfUsername:        authUser.UserName,
 				EventType:         events.GithubOrganizationAdded,
@@ -59,6 +67,7 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 					GithubOrganizationName: params.Body.OrganizationName,
 				},
 			})
+
 			var response models.GithubOrganization
 			err = copier.Copy(&response, result)
 			if err != nil {
@@ -71,15 +80,19 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 	api.GithubOrganizationsDeleteProjectGithubOrganizationHandler = github_organizations.DeleteProjectGithubOrganizationHandlerFunc(
 		func(params github_organizations.DeleteProjectGithubOrganizationParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !authUser.Admin {
-				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
-					return github_organizations.NewDeleteProjectGithubOrganizationForbidden()
-				}
+			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+				return github_organizations.NewDeleteProjectGithubOrganizationForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Delete Project GitHub Organizations with Project scope of %s",
+						authUser.UserName, params.ProjectSFID),
+				})
 			}
+
 			err := service.DeleteGithubOrganization(params.ProjectSFID, params.OrgName)
 			if err != nil {
 				return github_organizations.NewDeleteProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
+
 			eventService.LogEvent(&events.LogEventArgs{
 				LfUsername:        authUser.UserName,
 				EventType:         events.GithubOrganizationDeleted,
