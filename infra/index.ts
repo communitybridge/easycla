@@ -62,7 +62,7 @@ const sessionStoreTable = buildSessionStoreTable(importResources);
 const eventsTable = buildEventsTable(importResources);
 const cclaWhitelistRequestsTable = buildCclaWhitelistRequestsTable(importResources);
 const metricsTable = buildMetricsTable(importResources);
-
+const projectsClaGroupsTable = buildProjectsClaGroupsTable(importResources);
 /**
  * Build the Logo S3 Bucket.
  *
@@ -799,6 +799,36 @@ function buildMetricsTable(importResources: boolean): aws.dynamodb.Table {
   );
 }
 
+/**
+ * ProjectsClaGroups Table
+ *
+ * @param importResources flag to indicate if we should import the resources
+ * into our stack from the provider (rather than creating it for the first
+ * time).
+ */
+function buildProjectsClaGroupsTable(importResources: boolean): aws.dynamodb.Table {
+  return new aws.dynamodb.Table(
+    'cla-' + stage + 'projects-cla-groups',
+    {
+      name: 'cla-' + stage + '-projects-cla-groups',
+      attributes: [
+        { name: 'project_sfid', type: 'S' },
+        { name: 'cla_group_id', type: 'S' },
+      ],
+      hashKey: 'project_sfid',
+      rangeKey: "cla_group_id",
+      readCapacity: defaultReadCapacity,
+      writeCapacity: 1,
+      globalSecondaryIndexes: [],
+      pointInTimeRecovery: {
+        enabled: pointInTimeRecoveryEnabled,
+      },
+      tags: defaultTags,
+    },
+    importResources ? { import: 'cla-' + stage + '-projects-cla-groups' } : {},
+  );
+}
+
 // Export the name of the bucket
 export const logoBucketARN = logoBucket.arn;
 export const logoBucketName = logoBucket.bucket;
@@ -835,3 +865,5 @@ export const cclaWhitelistRequestsTableName = cclaWhitelistRequestsTable.name;
 export const cclaWhitelistRequestsTableARN = cclaWhitelistRequestsTable.arn;
 export const metricsTableName = metricsTable.name;
 export const metricsTableARN = metricsTable.arn;
+export const projectsClaGroupsTableName =  projectsClaGroupsTable.name
+export const projectsClaGroupsTableARN =  projectsClaGroupsTable.arn
