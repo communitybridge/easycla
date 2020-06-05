@@ -1123,7 +1123,7 @@ paths:
       tags:
         - signatures
 
-  /company/{companySFID}/project/{projectSFID}/claGroup/{projectID}/cla-manager/requests:
+  /company/{companySFID}/project/{projectSFID}/cla-manager/requests:
     post:
       summary: Adds a CLA Manager Designee to the specified Company and Project
       description: User proposes a CLA Manager making the proposed user CLA Manager Designee
@@ -1135,7 +1135,6 @@ paths:
         - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-companySFID"
         - $ref: "#/parameters/path-projectSFID"
-        - $ref: "#/parameters/path-projectID"
         - name: body
           in: body
           schema:
@@ -1153,6 +1152,8 @@ paths:
           description: 'Success'
           schema:
             $ref: "#/definitions/cla-manager-designee"
+        '204':
+          description: 'Success'
         '400':
           $ref: '#/responses/invalid-request'
         '403':
