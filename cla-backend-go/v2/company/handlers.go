@@ -4,6 +4,8 @@
 package company
 
 import (
+	"fmt"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	v1Company "github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
@@ -13,22 +15,17 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-func isUserAuthorizedForOrganization(user *auth.User, externalCompanyID string) bool {
-	if !user.Admin {
-		if !user.Allowed || !user.IsUserAuthorizedForOrganizationScope(externalCompanyID) {
-			return false
-		}
-	}
-	return true
-}
-
 // Configure sets up the middleware handlers
 func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository) {
 	api.CompanyGetCompanyProjectClaManagersHandler = company.GetCompanyProjectClaManagersHandlerFunc(
 		func(params company.GetCompanyProjectClaManagersParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return company.NewGetCompanyProjectClaManagersForbidden()
+			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+				return company.NewGetCompanyProjectClaManagersForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Company Project CLA Managers with Organization scope of %s",
+						authUser.UserName, params.CompanySFID),
+				})
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
 			if err != nil {
@@ -46,8 +43,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 	api.CompanyGetCompanyProjectActiveClaHandler = company.GetCompanyProjectActiveClaHandlerFunc(
 		func(params company.GetCompanyProjectActiveClaParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return company.NewGetCompanyProjectActiveClaForbidden()
+			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+				return company.NewGetCompanyProjectActiveClaForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAManager with Project|Organization scope of %s | %s",
+						authUser.UserName, params.ProjectSFID, params.CompanySFID),
+				})
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
 			if err != nil {
@@ -64,8 +65,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 	api.CompanyGetCompanyProjectContributorsHandler = company.GetCompanyProjectContributorsHandlerFunc(
 		func(params company.GetCompanyProjectContributorsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return company.NewGetCompanyProjectContributorsForbidden()
+			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+				return company.NewGetCompanyProjectContributorsForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAManager with Project|Organization scope of %s | %s",
+						authUser.UserName, params.ProjectSFID, params.CompanySFID),
+				})
 			}
 			result, err := service.GetCompanyProjectContributors(params.ProjectSFID, params.CompanySFID, utils.StringValue(params.SearchTerm))
 			if err != nil {
@@ -80,8 +85,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 	api.CompanyGetCompanyProjectClaHandler = company.GetCompanyProjectClaHandlerFunc(
 		func(params company.GetCompanyProjectClaParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return company.NewGetCompanyProjectClaForbidden()
+			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+				return company.NewGetCompanyProjectClaForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAManager with Project|Organization scope of %s | %s",
+						authUser.UserName, params.ProjectSFID, params.CompanySFID),
+				})
 			}
 			result, err := service.GetCompanyProjectCLA(authUser, params.CompanySFID, params.ProjectSFID)
 			if err != nil {

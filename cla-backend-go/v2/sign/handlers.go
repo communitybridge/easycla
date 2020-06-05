@@ -4,6 +4,7 @@
 package sign
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
@@ -19,9 +20,15 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 	// Retrieve a list of available templates
 	api.SignRequestCorporateSignatureHandler = sign.RequestCorporateSignatureHandlerFunc(
 		func(params sign.RequestCorporateSignatureParams, user *auth.User) middleware.Responder {
-			if !user.IsUserAuthorizedByProject(utils.StringValue(params.Input.ProjectSfid), utils.StringValue(params.Input.CompanySfid)) {
-				return sign.NewRequestCorporateSignatureForbidden()
+			utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
+			if !utils.IsUserAuthorizedForProjectOrganization(user, utils.StringValue(params.Input.ProjectSfid), utils.StringValue(params.Input.CompanySfid)) {
+				return sign.NewRequestCorporateSignatureForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Request Corporate Signature with Project|Organization scope of %s | %s",
+						user.UserName, utils.StringValue(params.Input.ProjectSfid), utils.StringValue(params.Input.CompanySfid)),
+				})
 			}
+
 			resp, err := service.RequestCorporateSignature(params.Authorization, params.Input)
 			if err != nil {
 				if strings.Contains(err.Error(), "does not exist") {

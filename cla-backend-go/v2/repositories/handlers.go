@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -18,11 +20,14 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 	api.GithubRepositoriesGetProjectGithubRepositoriesHandler = github_repositories.GetProjectGithubRepositoriesHandlerFunc(
 		func(params github_repositories.GetProjectGithubRepositoriesParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !authUser.Admin {
-				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
-					return github_repositories.NewGetProjectGithubRepositoriesForbidden()
-				}
+			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+				return github_repositories.NewGetProjectGithubRepositoriesForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get GitHub Repositories with Project scope of %s",
+						authUser.UserName, params.ProjectSFID),
+				})
 			}
+
 			result, err := service.ListProjectRepositories(params.ProjectSFID)
 			if err != nil {
 				return github_repositories.NewGetProjectGithubRepositoriesBadRequest().WithPayload(errorResponse(err))
@@ -38,20 +43,25 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 	api.GithubRepositoriesAddProjectGithubRepositoryHandler = github_repositories.AddProjectGithubRepositoryHandlerFunc(
 		func(params github_repositories.AddProjectGithubRepositoryParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !authUser.Admin {
-				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
-					return github_repositories.NewAddProjectGithubRepositoryForbidden()
-				}
+			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+				return github_repositories.NewAddProjectGithubRepositoryForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Add GitHub Repository with Project scope of %s",
+						authUser.UserName, params.ProjectSFID),
+				})
 			}
+
 			input := &v1Models.GithubRepositoryInput{}
 			err := copier.Copy(input, &params.GithubRepositoryInput)
 			if err != nil {
 				return github_repositories.NewAddProjectGithubRepositoryInternalServerError().WithPayload(errorResponse(err))
 			}
+
 			result, err := service.AddGithubRepository(params.ProjectSFID, input)
 			if err != nil {
 				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
+
 			eventService.LogEvent(&events.LogEventArgs{
 				EventType:         events.GithubRepositoryAdded,
 				ProjectID:         utils.StringValue(params.GithubRepositoryInput.RepositoryProjectID),
@@ -61,22 +71,27 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 					RepositoryName: utils.StringValue(params.GithubRepositoryInput.RepositoryName),
 				},
 			})
+
 			response := &models.GithubRepository{}
 			err = copier.Copy(response, result)
 			if err != nil {
 				return github_repositories.NewAddProjectGithubRepositoryInternalServerError().WithPayload(errorResponse(err))
 			}
+
 			return github_repositories.NewAddProjectGithubRepositoryOK().WithPayload(response)
 		})
 
 	api.GithubRepositoriesDeleteProjectGithubRepositoryHandler = github_repositories.DeleteProjectGithubRepositoryHandlerFunc(
 		func(params github_repositories.DeleteProjectGithubRepositoryParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !authUser.Admin {
-				if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Project, params.ProjectSFID) {
-					return github_repositories.NewDeleteProjectGithubRepositoryForbidden()
-				}
+			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+				return github_repositories.NewDeleteProjectGithubRepositoryForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Delete GitHub Repository with Project scope of %s",
+						authUser.UserName, params.ProjectSFID),
+				})
 			}
+
 			ghRepo, err := service.GetGithubRepository(params.RepositoryID)
 			if err != nil {
 				if err == repositories.ErrGithubRepositoryNotFound {
@@ -84,10 +99,12 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 				}
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
+
 			err = service.DeleteGithubRepository(params.ProjectSFID, params.RepositoryID)
 			if err != nil {
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
+
 			eventService.LogEvent(&events.LogEventArgs{
 				EventType:         events.GithubRepositoryDeleted,
 				ExternalProjectID: params.ProjectSFID,
@@ -97,6 +114,7 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 					RepositoryName: ghRepo.RepositoryName,
 				},
 			})
+
 			return github_repositories.NewDeleteProjectGithubRepositoryOK()
 		})
 }

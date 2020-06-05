@@ -48,22 +48,18 @@ func v2ProjectModel(in *v1Models.Project) (*models.Project, error) {
 	return out, nil
 }
 
-func isUserAuthorizedForProject(user *auth.User, externalProjectID string) bool {
-	if !user.Admin {
-		if !user.Allowed || !user.IsUserAuthorized(auth.Project, externalProjectID) {
-			return false
-		}
-	}
-	return true
-}
-
 // Configure establishes the middleware handlers for the project service
 func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service Service, eventsService events.Service) { //nolint
 	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, user *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
-		if !isUserAuthorizedForProject(user, params.Body.ProjectExternalID) {
-			return project.NewCreateProjectForbidden()
+		if !utils.IsUserAuthorizedForProject(user, params.Body.ProjectExternalID) {
+			return project.NewCreateProjectForbidden().WithPayload(&models.ErrorResponse{
+				Code: "403",
+				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Create CLA Group with Project scope of %s",
+					user.UserName, params.Body.ProjectExternalID),
+			})
 		}
+
 		if params.Body.ProjectName == "" || params.Body.ProjectACL == nil {
 			msg := "Missing Project Name or Project ACL parameter."
 			log.Warnf("Create Project Failed - %s", msg)
@@ -124,6 +120,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 	// Get Projects
 	api.ProjectGetProjectsHandler = project.GetProjectsHandlerFunc(func(params project.GetProjectsParams, user *auth.User) middleware.Responder {
 
+		// No auth checks - anyone can request the list of projects
 		projects, err := service.GetProjects(&v1ProjectOps.GetProjectsParams{
 			HTTPRequest: params.HTTPRequest,
 			FullMatch:   params.FullMatch,
@@ -135,6 +132,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		if err != nil {
 			return project.NewGetProjectsBadRequest().WithPayload(errorResponse(err))
 		}
+
 		result := &models.Projects{}
 		err = copier.Copy(result, projects)
 		if err != nil {
@@ -144,17 +142,25 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 	})
 
 	// Get Project By ID
-	api.ProjectGetProjectByIDHandler = project.GetProjectByIDHandlerFunc(func(projectParams project.GetProjectByIDParams, user *auth.User) middleware.Responder {
-		projectModel, err := service.GetProjectByID(projectParams.ProjectSfdcID)
+	api.ProjectGetProjectByIDHandler = project.GetProjectByIDHandlerFunc(func(params project.GetProjectByIDParams, user *auth.User) middleware.Responder {
+		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
+		projectModel, err := service.GetProjectByID(params.ProjectSfdcID)
 		if err != nil {
 			return project.NewGetProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
+
 		if projectModel == nil {
 			return project.NewGetProjectByIDNotFound()
 		}
-		if !isUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
-			return project.NewGetProjectByIDForbidden()
+
+		if !utils.IsUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
+			return project.NewGetProjectByIDForbidden().WithPayload(&models.ErrorResponse{
+				Code: "403",
+				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project By ID with Project scope of %s",
+					user.UserName, projectModel.ProjectExternalID),
+			})
 		}
+
 		result, err := v2ProjectModel(projectModel)
 		if err != nil {
 			return project.NewGetProjectByIDInternalServerError().WithPayload(errorResponse(err))
@@ -163,20 +169,26 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		return project.NewGetProjectByIDOK().WithPayload(result)
 	})
 
-	api.ProjectGetProjectsByExternalIDHandler = project.GetProjectsByExternalIDHandlerFunc(func(projectParams project.GetProjectsByExternalIDParams, user *auth.User) middleware.Responder {
-		if !isUserAuthorizedForProject(user, projectParams.ExternalID) {
-			return project.NewGetProjectsByExternalIDForbidden()
+	api.ProjectGetProjectsByExternalIDHandler = project.GetProjectsByExternalIDHandlerFunc(func(params project.GetProjectsByExternalIDParams, user *auth.User) middleware.Responder {
+		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
+		if !utils.IsUserAuthorizedForProject(user, params.ExternalID) {
+			return project.NewGetProjectsByExternalIDForbidden().WithPayload(&models.ErrorResponse{
+				Code: "403",
+				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Projects By External ID with Project scope of %s",
+					user.UserName, params.ExternalID),
+			})
 		}
 
 		projectModel, err := service.GetProjectsByExternalID(&v1ProjectOps.GetProjectsByExternalIDParams{
-			HTTPRequest: projectParams.HTTPRequest,
-			ProjectSFID: projectParams.ExternalID,
-			NextKey:     projectParams.NextKey,
-			PageSize:    projectParams.PageSize,
+			HTTPRequest: params.HTTPRequest,
+			ProjectSFID: params.ExternalID,
+			NextKey:     params.NextKey,
+			PageSize:    params.PageSize,
 		})
 		if err != nil {
 			return project.NewGetProjectsByExternalIDBadRequest().WithPayload(errorResponse(err))
 		}
+
 		results := &models.Projects{}
 		err = copier.Copy(results, projectModel)
 		if err != nil {
@@ -186,17 +198,23 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 	})
 
 	// Get Project By Name
-	api.ProjectGetProjectByNameHandler = project.GetProjectByNameHandlerFunc(func(projectParams project.GetProjectByNameParams, user *auth.User) middleware.Responder {
+	api.ProjectGetProjectByNameHandler = project.GetProjectByNameHandlerFunc(func(params project.GetProjectByNameParams, user *auth.User) middleware.Responder {
+		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
 
-		projectModel, err := service.GetProjectByName(projectParams.ProjectName)
+		projectModel, err := service.GetProjectByName(params.ProjectName)
 		if err != nil {
 			return project.NewGetProjectByNameBadRequest().WithPayload(errorResponse(err))
 		}
 		if projectModel == nil {
 			return project.NewGetProjectByNameNotFound()
 		}
-		if !isUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
-			return project.NewGetProjectByNameForbidden()
+
+		if !utils.IsUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
+			return project.NewGetProjectByNameForbidden().WithPayload(&models.ErrorResponse{
+				Code: "403",
+				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project By Name with Project scope of %s",
+					user.UserName, projectModel.ProjectExternalID),
+			})
 		}
 
 		result, err := v2ProjectModel(projectModel)
@@ -217,9 +235,15 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			}
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
-		if !isUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
-			return project.NewDeleteProjectByIDForbidden()
+
+		if !utils.IsUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
+			return project.NewDeleteProjectByIDForbidden().WithPayload(&models.ErrorResponse{
+				Code: "403",
+				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Delete Project By ID with Project scope of %s",
+					user.UserName, projectModel.ProjectExternalID),
+			})
 		}
+
 		err = service.DeleteProject(projectParams.ProjectSfdcID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
@@ -247,13 +271,19 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			}
 			return project.NewUpdateProjectNotFound().WithPayload(errorResponse(err))
 		}
-		if !isUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
-			return project.NewUpdateProjectForbidden()
+		if !utils.IsUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
+			return project.NewUpdateProjectForbidden().WithPayload(&models.ErrorResponse{
+				Code: "403",
+				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Update Project By ID with Project scope of %s",
+					user.UserName, projectModel.ProjectExternalID),
+			})
 		}
+
 		in, err := v1ProjectModel(&projectParams.Body)
 		if err != nil {
 			return project.NewUpdateProjectInternalServerError().WithPayload(errorResponse(err))
 		}
+
 		projectModel, err = service.UpdateProject(in)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
@@ -261,6 +291,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			}
 			return project.NewUpdateProjectBadRequest().WithPayload(errorResponse(err))
 		}
+
 		eventsService.LogEvent(&events.LogEventArgs{
 			EventType:    events.ProjectUpdated,
 			ProjectModel: projectModel,
@@ -277,16 +308,14 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 
 	// Get CLA enabled projects
 	api.ProjectGetCLAProjectsByIDHandler = project.GetCLAProjectsByIDHandlerFunc(func(projectParams project.GetCLAProjectsByIDParams, user *auth.User) middleware.Responder {
-
+		// No auth checks - anyone including contributors can request
 		claProjects, getErr := v2Service.GetCLAProjectsByID(projectParams.ProjectSfdcID)
-
 		if getErr != nil {
 			return project.NewGetCLAProjectsByIDBadRequest().WithPayload(errorResponse(getErr))
 		}
+
 		return project.NewGetCLAProjectsByIDOK().WithPayload(claProjects)
-
 	})
-
 }
 
 // codedResponse interface

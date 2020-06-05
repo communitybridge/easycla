@@ -18,17 +18,17 @@ func (e BadRequestError) Error() string {
 	return e.s
 }
 
-// NewUnauthorizedError returns an error that formats as the given text.
-func NewUnauthorizedError(text string) error {
-	return &UnauthorizedError{text}
+// NewForbiddenError returns an error that formats as the given text.
+func NewForbiddenError(text string) error {
+	return &ForbiddenError{text}
 }
 
-// UnauthorizedError is a trivial implementation of error.
-type UnauthorizedError struct {
+// ForbiddenError is a trivial implementation of error.
+type ForbiddenError struct {
 	s string
 }
 
 // Error is the to string method for an error
-func (e UnauthorizedError) Error() string {
+func (e ForbiddenError) Error() string {
 	return e.s
 }
