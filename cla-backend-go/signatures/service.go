@@ -405,7 +405,7 @@ func (s service) UpdateApprovalList(authUser *auth.User, projectModel *models.Pr
 	}
 
 	// Send emails to contributors if email or GH username as added/removed
-	s.sendRequestAccessEmailToContributors(companyModel, projectModel, params)
+	s.sendRequestAccessEmailToContributors(authUser, companyModel, projectModel, params)
 
 	return updatedSig, nil
 }
@@ -566,22 +566,22 @@ func (s service) getRemoveGitHubContributors(approvalList *models.ApprovalList) 
 
 	return userModelList
 }
-func (s service) sendRequestAccessEmailToContributors(companyModel *models.Company, projectModel *models.Project, approvalList *models.ApprovalList) {
+func (s service) sendRequestAccessEmailToContributors(authUser *auth.User, companyModel *models.Company, projectModel *models.Project, approvalList *models.ApprovalList) {
 	addEmailUsers := s.getAddEmailContributors(approvalList)
 	for _, user := range addEmailUsers {
-		sendRequestAccessEmailToContributorRecipient(companyModel, projectModel, user.Username, user.LfEmail, "added", "to", "you are authorized to contribute to")
+		sendRequestAccessEmailToContributorRecipient(authUser, companyModel, projectModel, user.Username, user.LfEmail, "added", "to", "you are authorized to contribute to")
 	}
 	removeEmailUsers := s.getRemoveEmailContributors(approvalList)
 	for _, user := range removeEmailUsers {
-		sendRequestAccessEmailToContributorRecipient(companyModel, projectModel, user.Username, user.LfEmail, "removed", "from", "you are no longer authorized to contribute to")
+		sendRequestAccessEmailToContributorRecipient(authUser, companyModel, projectModel, user.Username, user.LfEmail, "removed", "from", "you are no longer authorized to contribute to")
 	}
 	addGitHubUsers := s.getAddGitHubContributors(approvalList)
 	for _, user := range addGitHubUsers {
-		sendRequestAccessEmailToContributorRecipient(companyModel, projectModel, user.Username, user.LfEmail, "added", "to", "you are authorized to contribute to")
+		sendRequestAccessEmailToContributorRecipient(authUser, companyModel, projectModel, user.Username, user.LfEmail, "added", "to", "you are authorized to contribute to")
 	}
 	removeGitHubUsers := s.getRemoveGitHubContributors(approvalList)
 	for _, user := range removeGitHubUsers {
-		sendRequestAccessEmailToContributorRecipient(companyModel, projectModel, user.Username, user.LfEmail, "removed", "from", "you are no longer authorized to contribute to")
+		sendRequestAccessEmailToContributorRecipient(authUser, companyModel, projectModel, user.Username, user.LfEmail, "removed", "from", "you are no longer authorized to contribute to")
 	}
 }
 
@@ -749,7 +749,7 @@ func (s service) createEventLogEntries(companyModel *models.Company, projectMode
 }
 
 // sendRequestAccessEmailToContributors sends the request access email to the specified contributors
-func sendRequestAccessEmailToContributorRecipient(companyModel *models.Company, projectModel *models.Project, recipientName, recipientAddress, addRemove, toFrom, authorizedString string) {
+func sendRequestAccessEmailToContributorRecipient(authUser *auth.User, companyModel *models.Company, projectModel *models.Project, recipientName, recipientAddress, addRemove, toFrom, authorizedString string) {
 	companyName := companyModel.CompanyName
 	projectName := projectModel.ProjectName
 
@@ -777,7 +777,7 @@ support</a>.</p>
 <p>EasyCLA support team</p>
 </body>
 </html>`, recipientName, projectName, addRemove, toFrom,
-		companyName, projectName, "claManagerName", authorizedString, projectName, projectName)
+		companyName, projectName, authUser.UserName, authorizedString, projectName, projectName)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
