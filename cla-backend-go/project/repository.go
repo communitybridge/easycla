@@ -344,13 +344,14 @@ func (repo *repo) GetClaGroupsByProjectSFID(projectSFID string, loadRepoDetails 
 		close(rchan)
 	}()
 	for _, cgp := range claGroupProjects {
-		go func(claGroupID string, respChan chan *gpresponse) {
+		go func(swg *sync.WaitGroup, claGroupID string, respChan chan *gpresponse) {
+			defer swg.Done()
 			claGroup, err := repo.getProjectByID(claGroupID, loadRepoDetails)
 			respChan <- &gpresponse{
 				project: claGroup,
 				err:     err,
 			}
-		}(cgp.ClaGroupID, rchan)
+		}(&wg, cgp.ClaGroupID, rchan)
 	}
 	var errors []string
 	for resp := range rchan {
