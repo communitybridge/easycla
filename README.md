@@ -23,7 +23,10 @@ The CLA project has two backend projects.
 
 The majority of the backend APIs are implemented in python, and can be found in the `cla-backend` directory.
 
-Recent backend development was implemented in Golang, and can be found in the `cla-backend-go` directory. In particular, this backend contains APIs powering Automated Templates, GitHub Whitelists, and Duplicate Company handling in the Corporate Console.
+Recent backend development was implemented in Golang, and can be found in the
+`cla-backend-go` directory. In particular, this backend contains APIs powering
+Automated Templates, GitHub Approval Lists, and Duplicate Company handling in the
+Corporate Console.
 
 ## CLA Frontend
 

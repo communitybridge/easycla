@@ -26,11 +26,11 @@ func Configure(api *operations.ClaAPI, service IService, sessionStore *dynastore
 			}
 
 			eventsService.LogEvent(&events.LogEventArgs{
-				EventType: events.CCLAWhitelistRequestCreated,
+				EventType: events.CCLAApprovalListRequestCreated,
 				ProjectID: params.ProjectID,
 				CompanyID: params.CompanyID,
 				UserID:    params.Body.ContributorID,
-				EventData: &events.CCLAWhitelistRequestCreatedEventData{RequestID: requestID},
+				EventData: &events.CCLAApprovalListRequestCreatedEventData{RequestID: requestID},
 			})
 
 			return company.NewAddCclaWhitelistRequestOK()
@@ -44,11 +44,11 @@ func Configure(api *operations.ClaAPI, service IService, sessionStore *dynastore
 			}
 
 			eventsService.LogEvent(&events.LogEventArgs{
-				EventType: events.CCLAWhitelistRequestApproved,
+				EventType: events.CCLAApprovalListRequestApproved,
 				ProjectID: params.ProjectID,
 				CompanyID: params.CompanyID,
 				UserID:    claUser.UserID,
-				EventData: &events.CCLAWhitelistRequestApprovedEventData{RequestID: params.RequestID},
+				EventData: &events.CCLAApprovalListRequestApprovedEventData{RequestID: params.RequestID},
 			})
 
 			return company.NewRejectCclaWhitelistRequestOK()
@@ -62,11 +62,11 @@ func Configure(api *operations.ClaAPI, service IService, sessionStore *dynastore
 			}
 
 			eventsService.LogEvent(&events.LogEventArgs{
-				EventType: events.CCLAWhitelistRequestRejected,
+				EventType: events.CCLAApprovalListRequestRejected,
 				ProjectID: params.ProjectID,
 				CompanyID: params.CompanyID,
 				UserID:    claUser.UserID,
-				EventData: &events.CCLAWhitelistRequestRejectedEventData{RequestID: params.RequestID},
+				EventData: &events.CCLAApprovalListRequestRejectedEventData{RequestID: params.RequestID},
 			})
 
 			return company.NewRejectCclaWhitelistRequestOK()

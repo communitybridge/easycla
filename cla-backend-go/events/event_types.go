@@ -14,10 +14,10 @@ const (
 	// DeleteGithubOrgFromWL event type
 	DeleteGithubOrgFromWL = "Delete GH Org From WL"
 
-	// CreateCCLAWhitelistRequest event type
-	CreateCCLAWhitelistRequest = "Create CCLA WL Request"
-	// DeleteCCLAWhitelistRequest event type
-	DeleteCCLAWhitelistRequest = "Delete CCLA WL Request"
+	// CreateCCLAApprovalListRequest event type
+	CreateCCLAApprovalListRequest = "Create CCLA Approval List Request"
+	// DeleteCCLAApprovalListRequest event type
+	DeleteCCLAApprovalListRequest = "Delete CCLA Approval List Request"
 
 	// AddUserToCompanyACL event type
 	// DeleteUserFromCompanyACL event type
@@ -50,12 +50,12 @@ const (
 	CompanyACLRequestApproved = "company_acl.request_approved"
 	CompanyACLRequestDenied   = "company_acl.request_denied"
 
-	CCLAWhitelistRequestCreated  = "ccla_whitelist_request.created"
-	CCLAWhitelistRequestApproved = "ccla_whitelist_request.approved"
-	CCLAWhitelistRequestRejected = "ccla_whitelist_request.rejected"
+	CCLAApprovalListRequestCreated  = "ccla_approval_list_request.created"
+	CCLAApprovalListRequestApproved = "ccla_approval_list_request.approved"
+	CCLAApprovalListRequestRejected = "ccla_approval_list_request.rejected"
 
-	WhitelistGithubOrganizationAdded   = "whitelist.github_organization_added"
-	WhitelistGithubOrganizationDeleted = "whitelist.github_organization_deleted"
+	ApprovalListGithubOrganizationAdded   = "approval_list.github_organization_added"
+	ApprovalListGithubOrganizationDeleted = "approval_list.github_organization_deleted"
 
 	ClaManagerAccessRequestCreated  = "cla_manager.access_request_created"
 	ClaManagerAccessRequestApproved = "cla_manager.access_request_approved"

@@ -253,7 +253,7 @@ func (s service) sendRequestEmailToRecipient(companyModel *models.Company, proje
 	}
 
 	// subject string, body string, recipients []string
-	subject := fmt.Sprintf("EasyCLA: Request to authorize %s for %s", contributorName, projectName)
+	subject := fmt.Sprintf("EasyCLA: Request to Authorize %s for %s", contributorName, projectName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
 <html>
@@ -272,7 +272,7 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 <p>If you want to add them to the Allow List, please
 <a href="https://%s#/company/%s" target="_blank">log into the EasyCLA Corporate
 Console</a>, where you can approve this user's request by selecting the 'Manage Approved List' and adding the
-contributor's email, the contributor's entire email domain, their github ID or the entire GitHub Organization for the
+contributor's email, the contributor's entire email domain, their GitHub ID or the entire GitHub Organization for the
 repository. This will permit them to begin contributing to %s on behalf of %s.</p>
 <p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p>
 <p>If you need help or have questions about EasyCLA, you can

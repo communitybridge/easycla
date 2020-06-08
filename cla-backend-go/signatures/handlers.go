@@ -35,7 +35,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		return signatures.NewGetSignatureOK().WithPayload(signature)
 	})
 
-	// Retrieve GitHub Whitelist Entries
+	// Retrieve GitHub Approval List Entries
 	api.SignaturesGetGitHubOrgWhitelistHandler = signatures.GetGitHubOrgWhitelistHandlerFunc(func(params signatures.GetGitHubOrgWhitelistParams, claUser *user.CLAUser) middleware.Responder {
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
@@ -49,17 +49,17 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			githubAccessToken = ""
 		}
 
-		ghWhiteList, err := service.GetGithubOrganizationsFromWhitelist(params.SignatureID, githubAccessToken)
+		ghApprovalList, err := service.GetGithubOrganizationsFromWhitelist(params.SignatureID, githubAccessToken)
 		if err != nil {
-			log.Warnf("error fetching github organization whitelist entries v using signature_id: %s, error: %+v",
+			log.Warnf("error fetching github organization approval list entries v using signature_id: %s, error: %+v",
 				params.SignatureID, err)
 			return signatures.NewGetGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return signatures.NewGetGitHubOrgWhitelistOK().WithPayload(ghWhiteList)
+		return signatures.NewGetGitHubOrgWhitelistOK().WithPayload(ghApprovalList)
 	})
 
-	// Add GitHub Whitelist Entries
+	// Add GitHub Approval List Entries
 	api.SignaturesAddGitHubOrgWhitelistHandler = signatures.AddGitHubOrgWhitelistHandlerFunc(func(params signatures.AddGitHubOrgWhitelistParams, claUser *user.CLAUser) middleware.Responder {
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
@@ -73,7 +73,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			githubAccessToken = ""
 		}
 
-		ghWhiteList, err := service.AddGithubOrganizationToWhitelist(params.SignatureID, params.Body, githubAccessToken)
+		ghApprovalList, err := service.AddGithubOrganizationToWhitelist(params.SignatureID, params.Body, githubAccessToken)
 		if err != nil {
 			log.Warnf("error adding github organization %s using signature_id: %s to the whitelist, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
@@ -93,19 +93,19 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			companyID = signatureModel.SignatureReferenceID
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType: events.WhitelistGithubOrganizationAdded,
+			EventType: events.ApprovalListGithubOrganizationAdded,
 			ProjectID: projectID,
 			CompanyID: companyID,
 			UserID:    claUser.UserID,
-			EventData: &events.WhitelistGithubOrganizationAddedEventData{
+			EventData: &events.ApprovalListGithubOrganizationAddedEventData{
 				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
 
-		return signatures.NewAddGitHubOrgWhitelistOK().WithPayload(ghWhiteList)
+		return signatures.NewAddGitHubOrgWhitelistOK().WithPayload(ghApprovalList)
 	})
 
-	// Delete GitHub Whitelist Entries
+	// Delete GitHub Approval List Entries
 	api.SignaturesDeleteGitHubOrgWhitelistHandler = signatures.DeleteGitHubOrgWhitelistHandlerFunc(func(params signatures.DeleteGitHubOrgWhitelistParams, claUser *user.CLAUser) middleware.Responder {
 
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
@@ -120,7 +120,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			githubAccessToken = ""
 		}
 
-		ghWhiteList, err := service.DeleteGithubOrganizationFromWhitelist(params.SignatureID, params.Body, githubAccessToken)
+		ghApprovalList, err := service.DeleteGithubOrganizationFromWhitelist(params.SignatureID, params.Body, githubAccessToken)
 		if err != nil {
 			log.Warnf("error deleting github organization %s using signature_id: %s from the whitelist, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
@@ -141,16 +141,16 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType: events.WhitelistGithubOrganizationDeleted,
+			EventType: events.ApprovalListGithubOrganizationDeleted,
 			ProjectID: projectID,
 			CompanyID: companyID,
 			UserID:    claUser.UserID,
-			EventData: &events.WhitelistGithubOrganizationDeletedEventData{
+			EventData: &events.ApprovalListGithubOrganizationDeletedEventData{
 				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
 
-		return signatures.NewDeleteGitHubOrgWhitelistNoContent().WithPayload(ghWhiteList)
+		return signatures.NewDeleteGitHubOrgWhitelistNoContent().WithPayload(ghApprovalList)
 	})
 
 	// Get Project Signatures
