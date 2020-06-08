@@ -12,13 +12,16 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
+// ProjectClaGroup is database model for projects_cla_group table
 type ProjectClaGroup struct {
 	ProjectSFID string `json:"project_sfid"`
 	ClaGroupID  string `json:"cla_group_id"`
 }
 
+// Repository provides interface for interacting with project_cla_groups table
 type Repository interface {
 	GetClaGroupsIdsForProject(projectSFID string) ([]*ProjectClaGroup, error)
+	AssociateClaGroupWithProject(claGroupID string, projectSFID string) error
 }
 
 type repo struct {
@@ -26,6 +29,7 @@ type repo struct {
 	dynamoDBClient *dynamodb.DynamoDB
 }
 
+// NewRepository provides implementation of projects_cla_group repository
 func NewRepository(awsSession *session.Session, stage string) Repository {
 	return &repo{
 		tableName:      fmt.Sprintf("cla-%s-projects-cla-groups", stage),
@@ -74,4 +78,26 @@ func (repo *repo) GetClaGroupsIdsForProject(projectSFID string) ([]*ProjectClaGr
 		}
 	}
 	return projectClaGroups, nil
+}
+
+// AssociateClaGroupWithProject creates entry in db to track cla_group association with project/foundation
+func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID string) error {
+	input := &ProjectClaGroup{
+		ProjectSFID: projectSFID,
+		ClaGroupID:  claGroupID,
+	}
+	av, err := dynamodbattribute.MarshalMap(input)
+	if err != nil {
+		return err
+	}
+	_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(repo.tableName),
+	})
+	if err != nil {
+		log.Errorf("cannot put association entry of cla_group_id: %s, project_sfid: %s in dynamodb. error = %s",
+			claGroupID, projectSFID, err)
+		return err
+	}
+	return nil
 }

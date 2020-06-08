@@ -265,7 +265,7 @@ func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalI
 	}, nil
 }
 
-// GetProjectsByFoundationID queries the database and returns a list of the projects
+// GetClaGroupsByFoundationID queries the database and returns a list of all cla_groups associated with foundation
 func (repo *repo) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error) {
 	log.Debugf("Project - Repository Service - GetClaGroupsByFoundationSFID - FoundationSFID: %s", foundationSFID)
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
@@ -321,6 +321,8 @@ func (repo *repo) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDe
 	}, nil
 }
 
+// GetClaGroupsByProjectSFID returns cla_groups created at projectSFID level
+// projectSFID can be project SFID or foundation SFID.
 func (repo *repo) GetClaGroupsByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Projects, error) {
 	claGroupProjects, err := repo.projectClaGroupRepo.GetClaGroupsIdsForProject(projectSFID)
 	if err != nil {
