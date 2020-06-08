@@ -100,8 +100,8 @@ export class ClaGerritCorporatePage {
           this.openClaSendClaManagerEmailModal(company);
         }
 
-        if (response.errors.hasOwnProperty('ccla_whitelist')) {
-          // When the user is not whitelisted with the company: return {'errors': {'ccla_whitelist': 'No user email whitelisted for this ccla'}}
+        if (response.errors.hasOwnProperty('ccla_approval_list')) {
+          // When the user is not whitelisted with the company: return {'errors': {'ccla_approval_list': 'No user email authorized for this ccla'}}
           this.openClaEmployeeCompanyTroubleshootPage(company);
           return;
         }

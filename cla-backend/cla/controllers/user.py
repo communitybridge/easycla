@@ -93,24 +93,24 @@ def request_company_whitelist(user_id: str, company_id: str, user_name: str, use
                               message: str = None, recipient_name: str = None, recipient_email: str = None):
     """
     Sends email to the specified company manager notifying them that a user has requested to be
-    added to their whitelist.
+    added to their approval list.
 
-    :param user_id: The ID of the user requesting to be added to the company's whitelist.
+    :param user_id: The ID of the user requesting to be added to the company's approval list.
     :type user_id: string
     :param company_id: The ID of the company that the request is going to.
     :type company_id: string
-    :param user_name: The name hat this user wants to be whitelisted
+    :param user_name: The name hat this user wants to be approved
     :type user_name: string
-    :param user_email: The email address that this user wants to be whitelisted. Must exist in the
+    :param user_email: The email address that this user wants to be approved. Must exist in the
         user's list of emails.
     :type user_email: string
     :param project_id: The ID of the project that the request is going to.
     :type project_id: string
     :param message: A custom message to add to the email sent out to the manager.
     :type message: string
-    :param recipient_name: An optional recipient name for requesting the company whitelist
+    :param recipient_name: An optional recipient name for requesting the company approval list
     :type recipient_name: string
-    :param recipient_email: An optional recipient email for requesting the company whitelist
+    :param recipient_email: An optional recipient email for requesting the company approval list
     :type recipient_email: string
     """
     if project_id is None:
@@ -159,7 +159,7 @@ def request_company_whitelist(user_id: str, company_id: str, user_name: str, use
         msg += f'<p>{user_name} included the following message in the request:</p>'
         msg += f'<p>{message}</p>'
 
-    subject = f'EasyCLA: Request to authorize {user_name} for {project_name}'
+    subject = f'EasyCLA: Request to Authorize {user_name} for {project_name}'
     body = f'''
 <html>
 <head>
@@ -176,8 +176,9 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 {msg}
 <p>If you want to add them to the Allow List, please
 <a href="https://{cla.conf['CORPORATE_BASE_URL']}#/company/{company_id}" target="_blank">log into the EasyCLA Corporate
-Console</a>, where you can approve this user's request by…. This will permit them to begin contributing to
-{project_name} on behalf of {company}.</p>
+Console</a>, where you can approve this user's request by selecting the 'Manage Approved List' and adding the
+contributor's email, the contributor's entire email domain, their GitHub ID or the entire GitHub Organization for the
+repository. This will permit them to begin contributing to {project_name} on behalf of {company}.</p>
 <p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p>
 <p>If you need help or have questions about EasyCLA, you can
 <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
@@ -189,7 +190,7 @@ support</a>.</p>
 </html>
 '''
 
-    cla.log.debug(f'request_company_whitelist - sending email '
+    cla.log.debug(f'request_company_approval_list - sending email '
                   f'to recipient {recipient_name}/{recipient_email} '
                   f'for user {user_name}/{user_email} '
                   f'for project {project_name} '
@@ -304,8 +305,8 @@ def send_email_to_cla_manager(contributor_name, contributor_email, cla_manager_n
     Helper function to send an email to a prospective CLA Manager.
 
     :param contributor_name: The name of the user sending the email.
-    :param contributor_email: The email address that this user wants to be whitelisted. Must exist in the user's list
-           of emails.
+    :param contributor_email: The email address that this user wants to be added to the approval list. Must exist in the
+           user's list of emails.
     :param cla_manager_name: The name of the CLA manager
     :param cla_manager_email: The email address of the CLA manager
     :param project_name: The name of the project
