@@ -9,7 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
-	"github.com/labstack/gommon/log"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+)
+
+// constants
+const (
+	CLAGroupIDIndex = "cla-group-id-index"
 )
 
 // ProjectClaGroup is database model for projects_cla_group table
@@ -21,6 +26,7 @@ type ProjectClaGroup struct {
 // Repository provides interface for interacting with project_cla_groups table
 type Repository interface {
 	GetClaGroupsIdsForProject(projectSFID string) ([]*ProjectClaGroup, error)
+	GetProjectsIdsForClaGroup(claGroupID string) ([]*ProjectClaGroup, error)
 	AssociateClaGroupWithProject(claGroupID string, projectSFID string) error
 }
 
@@ -37,9 +43,7 @@ func NewRepository(awsSession *session.Session, stage string) Repository {
 	}
 }
 
-func (repo *repo) GetClaGroupsIdsForProject(projectSFID string) ([]*ProjectClaGroup, error) {
-	keyCondition := expression.Key("project_sfid").Equal(expression.Value(projectSFID))
-
+func (repo *repo) queryClaGroupsProjects(keyCondition expression.KeyConditionBuilder, indexName *string) ([]*ProjectClaGroup, error) {
 	expr, err := expression.NewBuilder().WithKeyCondition(keyCondition).Build()
 	if err != nil {
 		log.Warnf("error building expression for project cla groups, error: %v", err)
@@ -52,6 +56,7 @@ func (repo *repo) GetClaGroupsIdsForProject(projectSFID string) ([]*ProjectClaGr
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
 		TableName:                 aws.String(repo.tableName),
+		IndexName:                 indexName,
 	}
 
 	var projectClaGroups []*ProjectClaGroup
@@ -80,6 +85,16 @@ func (repo *repo) GetClaGroupsIdsForProject(projectSFID string) ([]*ProjectClaGr
 	return projectClaGroups, nil
 }
 
+func (repo *repo) GetClaGroupsIdsForProject(projectSFID string) ([]*ProjectClaGroup, error) {
+	keyCondition := expression.Key("project_sfid").Equal(expression.Value(projectSFID))
+	return repo.queryClaGroupsProjects(keyCondition, nil)
+}
+
+func (repo *repo) GetProjectsIdsForClaGroup(claGroupID string) ([]*ProjectClaGroup, error) {
+	keyCondition := expression.Key("cla_group_id").Equal(expression.Value(claGroupID))
+	return repo.queryClaGroupsProjects(keyCondition, aws.String(CLAGroupIDIndex))
+}
+
 // AssociateClaGroupWithProject creates entry in db to track cla_group association with project/foundation
 func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID string) error {
 	input := &ProjectClaGroup{
@@ -95,8 +110,8 @@ func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID st
 		TableName: aws.String(repo.tableName),
 	})
 	if err != nil {
-		log.Errorf("cannot put association entry of cla_group_id: %s, project_sfid: %s in dynamodb. error = %s",
-			claGroupID, projectSFID, err)
+		log.Error(fmt.Sprintf("cannot put association entry of cla_group_id: %s, project_sfid: %s in dynamodb",
+			claGroupID, projectSFID), err)
 		return err
 	}
 	return nil

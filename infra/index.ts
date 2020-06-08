@@ -826,7 +826,15 @@ function buildProjectsClaGroupsTable(importResources: boolean): aws.dynamodb.Tab
       rangeKey: "cla_group_id",
       readCapacity: defaultReadCapacity,
       writeCapacity: 1,
-      globalSecondaryIndexes: [],
+      globalSecondaryIndexes: [
+        {
+          name: 'cla-group-id-index',
+          hashKey: 'cla_group_id',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: 1
+        },
+      ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,
       },
