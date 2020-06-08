@@ -50,8 +50,8 @@ type ProjectRepository interface { //nolint
 	DeleteProject(projectID string) error
 	UpdateProject(projectModel *models.Project) (*models.Project, error)
 
-	GetProjectsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error)
-	GetProjectsByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Projects, error)
+	GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error)
+	GetClaGroupsByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Projects, error)
 }
 
 // NewRepository creates instance of project repository
@@ -266,8 +266,8 @@ func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalI
 }
 
 // GetProjectsByFoundationID queries the database and returns a list of the projects
-func (repo *repo) GetProjectsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error) {
-	log.Debugf("Project - Repository Service - GetProjectsByFoundationSFID - FoundationSFID: %s", foundationSFID)
+func (repo *repo) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error) {
+	log.Debugf("Project - Repository Service - GetClaGroupsByFoundationSFID - FoundationSFID: %s", foundationSFID)
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
 	// This is the key we want to match
@@ -321,7 +321,7 @@ func (repo *repo) GetProjectsByFoundationSFID(foundationSFID string, loadRepoDet
 	}, nil
 }
 
-func (repo *repo) GetProjectsByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Projects, error) {
+func (repo *repo) GetClaGroupsByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Projects, error) {
 	claGroupProjects, err := repo.projectClaGroupRepo.GetClaGroupsIdsForProject(projectSFID)
 	if err != nil {
 		return nil, err
@@ -362,7 +362,7 @@ func (repo *repo) GetProjectsByProjectSFID(projectSFID string, loadRepoDetails b
 	}
 	if len(errors) != 0 {
 		err := fmt.Errorf("internal server error. unable to fetch cla groups for projectSFID: %s. errors %v", projectSFID, errors)
-		log.Error("GetProjectsByProjectSFID failed", err)
+		log.Error("GetClaGroupsByProjectSFID failed", err)
 		return nil, err
 	}
 	return &models.Projects{
