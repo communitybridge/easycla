@@ -210,9 +210,9 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			return signatures.NewAddGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
 		}
 
-		ghWhiteList, err := v1SignatureService.AddGithubOrganizationToWhitelist(params.SignatureID, input, githubAccessToken)
+		ghApprovalList, err := v1SignatureService.AddGithubOrganizationToWhitelist(params.SignatureID, input, githubAccessToken)
 		if err != nil {
-			log.Warnf("error adding github organization %s using signature_id: %s to the whitelist, error: %+v",
+			log.Warnf("error adding github organization %s using signature_id: %s to the approval list, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
 			return signatures.NewAddGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
 		}
@@ -231,23 +231,23 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:  events.WhitelistGithubOrganizationAdded,
+			EventType:  events.ApprovalListGithubOrganizationAdded,
 			ProjectID:  projectID,
 			CompanyID:  companyID,
 			LfUsername: authUser.UserName,
-			EventData: &events.WhitelistGithubOrganizationAddedEventData{
+			EventData: &events.ApprovalListGithubOrganizationAddedEventData{
 				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
 		response := []models.GithubOrg{}
-		err = copier.Copy(&response, ghWhiteList)
+		err = copier.Copy(&response, ghApprovalList)
 		if err != nil {
 			return signatures.NewAddGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
 		}
 		return signatures.NewAddGitHubOrgWhitelistOK().WithPayload(response)
 	})
 
-	// Delete GitHub Whitelist Entries
+	// Delete GitHub Approval List Entries
 	api.SignaturesDeleteGitHubOrgWhitelistHandler = signatures.DeleteGitHubOrgWhitelistHandlerFunc(func(params signatures.DeleteGitHubOrgWhitelistParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
@@ -268,9 +268,9 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			return signatures.NewDeleteGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
 		}
 
-		ghWhiteList, err := v1SignatureService.DeleteGithubOrganizationFromWhitelist(params.SignatureID, input, githubAccessToken)
+		ghApprovalList, err := v1SignatureService.DeleteGithubOrganizationFromWhitelist(params.SignatureID, input, githubAccessToken)
 		if err != nil {
-			log.Warnf("error deleting github organization %s using signature_id: %s from the whitelist, error: %+v",
+			log.Warnf("error deleting github organization %s using signature_id: %s from the approval list, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
 			return signatures.NewDeleteGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
 		}
@@ -288,16 +288,16 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			companyID = signatureModel.SignatureReferenceID
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:  events.WhitelistGithubOrganizationDeleted,
+			EventType:  events.ApprovalListGithubOrganizationDeleted,
 			ProjectID:  projectID,
 			CompanyID:  companyID,
 			LfUsername: authUser.UserName,
-			EventData: &events.WhitelistGithubOrganizationDeletedEventData{
+			EventData: &events.ApprovalListGithubOrganizationDeletedEventData{
 				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
 		var response []models.GithubOrg
-		err = copier.Copy(&response, ghWhiteList)
+		err = copier.Copy(&response, ghApprovalList)
 		if err != nil {
 			return signatures.NewDeleteGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
 		}
