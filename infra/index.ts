@@ -160,6 +160,7 @@ function buildProjectsTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'project_external_id', type: 'S' },
         { name: 'project_name', type: 'S' },
         { name: 'project_name_lower', type: 'S' },
+        { name: 'foundation_sfid', type: 'S' },
       ],
       hashKey: 'project_id',
       billingMode: 'PAY_PER_REQUEST',
@@ -177,6 +178,12 @@ function buildProjectsTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'project-name-lower-search-index',
           hashKey: 'project_name_lower',
+          projectionType: 'ALL',
+        },
+        {
+          name: 'foundation-sfid-project-name-index',
+          hashKey: 'foundation_sfid',
+          rangeKey: 'project_name',
           projectionType: 'ALL',
         },
       ],
