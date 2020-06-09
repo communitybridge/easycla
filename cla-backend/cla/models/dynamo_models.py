@@ -412,6 +412,24 @@ class BaseModel(Model):
             else:
                 yield name, attr.serialize(getattr(self, name))
 
+    def get_version(self):
+        return self.version
+
+    def get_date_created(self):
+        return self.date_created
+
+    def get_date_modified(self):
+        return self.date_modified
+
+    def set_version(self, version):
+        self.version = version
+
+    def set_date_created(self, date_created):
+        self.date_created = date_created
+
+    def set_date_modified(self, date_modified):
+        self.date_modified = date_modified
+
 
 class DocumentTabModel(MapAttribute):
     """
@@ -810,6 +828,8 @@ class ProjectModel(BaseModel):
     project_ccla_requires_icla_signature = BooleanAttribute(default=False)
     project_external_id_index = ExternalProjectIndex()
     project_acl = UnicodeSetAttribute(default=set())
+    # Default is v1 for all of our models - override for this model so that we can redirect to new UI when ready
+    #version = UnicodeAttribute(default="v2")  # Schema version is v2 for Project Models
 
 
 class Project(model_interfaces.Project):  # pylint: disable=too-many-public-methods
