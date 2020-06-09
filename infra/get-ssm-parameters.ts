@@ -47,6 +47,7 @@ const parameters = [
   `cla-docusign-integrator-key-${program.stage}`,
   `cla-api-base-${program.stage}`,
   `cla-contributor-base-${program.stage}`,
+  `cla-contributor-v2-base-${program.stage}`,
   `cla-corporate-base-${program.stage}`,
   `cla-landing-page-${program.stage}`,
   `cla-signature-files-bucket-${program.stage}`,

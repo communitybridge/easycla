@@ -27,6 +27,7 @@ API_BASE_URL = os.environ.get('CLA_API_BASE', '')
 
 # Contributor Console base URL
 CONTRIBUTOR_BASE_URL = os.environ.get('CLA_CONTRIBUTOR_BASE', '')
+CONTRIBUTOR_V2_BASE_URL = os.environ.get('CLA_CONTRIBUTOR_V2_BASE', '')
 
 # Corporate Console base URL
 CORPORATE_BASE_URL = os.environ.get('CLA_CORPORATE_BASE', '')
