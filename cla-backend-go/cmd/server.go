@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+
 	"github.com/communitybridge/easycla/cla-backend-go/v2/sign"
 
 	"github.com/communitybridge/easycla/cla-backend-go/cla_manager"
@@ -201,7 +203,8 @@ func server(localMode bool) http.Handler {
 	whitelistRepo := whitelist.NewRepository(awsSession, stage)
 	companyRepo := company.NewRepository(awsSession, stage)
 	signaturesRepo := signatures.NewRepository(awsSession, stage, companyRepo, usersRepo)
-	projectRepo := project.NewRepository(awsSession, stage, repositoriesRepo, gerritRepo)
+	projectClaGroupRepo := projects_cla_groups.NewRepository(awsSession, stage)
+	projectRepo := project.NewRepository(awsSession, stage, repositoriesRepo, gerritRepo, projectClaGroupRepo)
 	eventsRepo := events.NewRepository(awsSession, stage)
 	metricsRepo := metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL)
 	githubOrganizationsRepo := github_organizations.NewRepository(awsSession, stage)
