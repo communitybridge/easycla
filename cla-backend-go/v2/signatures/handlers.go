@@ -88,19 +88,23 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 
 	api.SignaturesUpdateApprovalListHandler = signatures.UpdateApprovalListHandlerFunc(func(params signatures.UpdateApprovalListParams, authUser *auth.User) middleware.Responder {
 		if params.XEMAIL == nil || params.XUSERNAME == nil || params.XACL == "" {
-			msg := fmt.Sprintf("unknown user is not authorized to update project company signature approval list for project ID: %s, company ID: %s",
+			msg := fmt.Sprintf("EasyCLA - 403 Forbidden - unknown user is not authorized to update project company signature approval list for project ID: %s, company ID: %s",
 				params.ProjectSFID, params.CompanySFID)
 			log.Warn(msg)
 			return signatures.NewUpdateApprovalListForbidden().WithPayload(errorResponse(errors.New(msg)))
 		}
 
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		// Must be in the Organization Scope to see this
-		if !authUser.Allowed || !authUser.IsUserAuthorizedByProject(params.ProjectSFID, params.CompanySFID) {
-			msg := fmt.Sprintf("user %+v is not authorized to update project company signature approval list for project ID: %s, company ID: %s",
-				authUser, params.ProjectSFID, params.CompanySFID)
+
+		// Must be in the Project|Organization Scope to see this
+		if !utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
+			msg := fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to update Project Company Approval List with Project|Organization scope of %s | %s",
+				authUser.UserName, params.ProjectSFID, params.CompanySFID)
 			log.Warn(msg)
-			return signatures.NewUpdateApprovalListForbidden().WithPayload(errorResponse(errors.New(msg)))
+			return signatures.NewUpdateApprovalListForbidden().WithPayload(&models.ErrorResponse{
+				Code:    "403",
+				Message: msg,
+			})
 		}
 
 		// Valid the payload input - the validator will return a middleware.Responder response/error type
@@ -139,9 +143,10 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		// Invoke the update v1SignatureService function
 		updatedSig, updateErr := v1SignatureService.UpdateApprovalList(authUser, projectModel, companyModel, params.ClaGroupID, &v1ApprovalList)
 		if updateErr != nil || updatedSig == nil {
-			if err, ok := err.(*signatureService.UnauthorizedError); ok {
+			if err, ok := err.(*signatureService.ForbiddenError); ok {
 				return signatures.NewUpdateApprovalListForbidden().WithPayload(errorResponse(err))
 			}
+
 			log.Warnf("unable to update signature approval list using CLA Group ID: %s", params.ClaGroupID)
 			return signatures.NewUpdateApprovalListBadRequest().WithPayload(errorResponse(updateErr))
 		}
@@ -205,9 +210,9 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			return signatures.NewAddGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
 		}
 
-		ghWhiteList, err := v1SignatureService.AddGithubOrganizationToWhitelist(params.SignatureID, input, githubAccessToken)
+		ghApprovalList, err := v1SignatureService.AddGithubOrganizationToWhitelist(params.SignatureID, input, githubAccessToken)
 		if err != nil {
-			log.Warnf("error adding github organization %s using signature_id: %s to the whitelist, error: %+v",
+			log.Warnf("error adding github organization %s using signature_id: %s to the approval list, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
 			return signatures.NewAddGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
 		}
@@ -226,23 +231,23 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:  events.WhitelistGithubOrganizationAdded,
+			EventType:  events.ApprovalListGithubOrganizationAdded,
 			ProjectID:  projectID,
 			CompanyID:  companyID,
 			LfUsername: authUser.UserName,
-			EventData: &events.WhitelistGithubOrganizationAddedEventData{
+			EventData: &events.ApprovalListGithubOrganizationAddedEventData{
 				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
 		response := []models.GithubOrg{}
-		err = copier.Copy(&response, ghWhiteList)
+		err = copier.Copy(&response, ghApprovalList)
 		if err != nil {
 			return signatures.NewAddGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
 		}
 		return signatures.NewAddGitHubOrgWhitelistOK().WithPayload(response)
 	})
 
-	// Delete GitHub Whitelist Entries
+	// Delete GitHub Approval List Entries
 	api.SignaturesDeleteGitHubOrgWhitelistHandler = signatures.DeleteGitHubOrgWhitelistHandlerFunc(func(params signatures.DeleteGitHubOrgWhitelistParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
@@ -263,9 +268,9 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			return signatures.NewDeleteGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
 		}
 
-		ghWhiteList, err := v1SignatureService.DeleteGithubOrganizationFromWhitelist(params.SignatureID, input, githubAccessToken)
+		ghApprovalList, err := v1SignatureService.DeleteGithubOrganizationFromWhitelist(params.SignatureID, input, githubAccessToken)
 		if err != nil {
-			log.Warnf("error deleting github organization %s using signature_id: %s from the whitelist, error: %+v",
+			log.Warnf("error deleting github organization %s using signature_id: %s from the approval list, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
 			return signatures.NewDeleteGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
 		}
@@ -283,16 +288,16 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			companyID = signatureModel.SignatureReferenceID
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:  events.WhitelistGithubOrganizationDeleted,
+			EventType:  events.ApprovalListGithubOrganizationDeleted,
 			ProjectID:  projectID,
 			CompanyID:  companyID,
 			LfUsername: authUser.UserName,
-			EventData: &events.WhitelistGithubOrganizationDeletedEventData{
+			EventData: &events.ApprovalListGithubOrganizationDeletedEventData{
 				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
 		var response []models.GithubOrg
-		err = copier.Copy(&response, ghWhiteList)
+		err = copier.Copy(&response, ghApprovalList)
 		if err != nil {
 			return signatures.NewDeleteGitHubOrgWhitelistInternalServerError().WithPayload(errorResponse(err))
 		}
@@ -326,18 +331,17 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 
 	// Get Project Company Signatures
 	api.SignaturesGetProjectCompanySignaturesHandler = signatures.GetProjectCompanySignaturesHandlerFunc(func(params signatures.GetProjectCompanySignaturesParams, authUser *auth.User) middleware.Responder {
-		if !authUser.Admin {
-			// Must be in the Organization Scope to see this
-			if !authUser.Allowed || !authUser.IsUserAuthorizedForOrganizationScope(params.CompanySFID) {
-				msg := fmt.Sprintf("user %s is not authorized to view project company signatures for companySFID: %s",
-					utils.StringValue(params.XUSERNAME), params.CompanySFID)
-				log.Warn(msg)
-				return signatures.NewGetProjectCompanySignaturesForbidden().WithPayload(&models.ErrorResponse{
-					Code:    "403",
-					Message: msg,
-				})
-			}
+		// Must be in the Organization Scope to see this
+		if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+			msg := fmt.Sprintf("EasyCLA - 403 Forbidden - user %s is not authorized to view project company signatures with Organization scope: %s",
+				authUser.UserName, params.CompanySFID)
+			log.Warn(msg)
+			return signatures.NewGetProjectCompanySignaturesForbidden().WithPayload(&models.ErrorResponse{
+				Code:    "403",
+				Message: msg,
+			})
 		}
+
 		projectSignatures, err := v2service.GetProjectCompanySignatures(params.CompanySFID, params.ProjectSFID)
 		if err != nil {
 			log.Warnf("error retrieving project signatures for project: %s, company: %s, error: %+v",
@@ -372,13 +376,14 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 	// Get Company Signatures
 	api.SignaturesGetCompanySignaturesHandler = signatures.GetCompanySignaturesHandlerFunc(func(params signatures.GetCompanySignaturesParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		if !authUser.Admin {
-			// Must be in the Organization Scope to see this
-			if !authUser.Allowed || !authUser.IsUserAuthorized(auth.Organization, params.CompanyID) || !authUser.IsUserAuthorizedForOrganizationScope(params.CompanyID) {
-				log.Warnf("user %+v is not authorized to view company signatures for company ID: %s",
-					authUser, params.CompanyID)
-				return signatures.NewGetCompanySignaturesForbidden()
-			}
+		if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanyID) {
+			msg := fmt.Sprintf("EasyCLA - 403 Forbidden - user %s is not authorized to view company signatures with Organization scope: %s",
+				authUser.UserName, params.CompanyID)
+			log.Warn(msg)
+			return signatures.NewGetProjectCompanySignaturesForbidden().WithPayload(&models.ErrorResponse{
+				Code:    "403",
+				Message: msg,
+			})
 		}
 
 		// Lookup the internal company ID when provided the external ID via the v1SignatureService call

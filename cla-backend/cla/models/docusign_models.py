@@ -404,8 +404,8 @@ class DocuSign(signing_service_interface.SigningService):
         # Ensure user is whitelisted for this company.
         if not user.is_whitelisted(ccla_signature):
             # TODO: DAD - update this warning message
-            cla.log.warning('No user email whitelisted for this CCLA: {}'.format(request_info))
-            return {'errors': {'ccla_whitelist': 'user not whitelisted for this ccla'}}
+            cla.log.warning('No user email authorized for this CCLA: {}'.format(request_info))
+            return {'errors': {'ccla_approval_list': 'user not authorized for this ccla'}}
 
         cla.log.info(f'User is whitelisted for this CCLA: {request_info}')
 

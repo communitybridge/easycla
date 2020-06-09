@@ -1,6 +1,8 @@
 package events
 
 import (
+	"fmt"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	v1Company "github.com/communitybridge/easycla/cla-backend-go/company"
 	v1Events "github.com/communitybridge/easycla/cla-backend-go/events"
@@ -21,19 +23,12 @@ func v2EventList(eventList *v1Models.EventList) (*models.EventList, error) {
 	}
 	return &dst, nil
 }
-func isUserAuthorizedForOrganization(user *auth.User, externalCompanyID string) bool {
-	if !user.Admin {
-		if !user.Allowed || !user.IsUserAuthorized(auth.Organization, externalCompanyID) {
-			return false
-		}
-	}
-	return true
-}
 
 // Configure setups handlers on api with service
 func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRepo v1Company.IRepository) {
 	api.EventsGetRecentEventsHandler = events.GetRecentEventsHandlerFunc(
-		func(params events.GetRecentEventsParams, user *auth.User) middleware.Responder {
+		func(params events.GetRecentEventsParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			result, err := service.GetRecentEvents(params.PageSize)
 			if err != nil {
 				return events.NewGetRecentEventsBadRequest().WithPayload(errorResponse(err))
@@ -48,19 +43,26 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 	api.EventsGetRecentCompanyProjectEventsHandler = events.GetRecentCompanyProjectEventsHandlerFunc(
 		func(params events.GetRecentCompanyProjectEventsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !isUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return events.NewGetRecentCompanyProjectEventsForbidden()
+			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+				return events.NewGetRecentCompanyProjectEventsForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to GetRecentCompanyProject Events with Organization scope of %s",
+						authUser.UserName, params.CompanySFID),
+				})
 			}
+
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
 			if err != nil {
 				if err == v1Company.ErrCompanyDoesNotExist {
 					return events.NewGetRecentCompanyProjectEventsNotFound()
 				}
 			}
+
 			result, err := service.GetRecentEventsForCompanyProject(comp.CompanyID, params.ProjectSFID, params.PageSize)
 			if err != nil {
 				return events.NewGetRecentCompanyProjectEventsBadRequest().WithPayload(errorResponse(err))
 			}
+
 			resp, err := v2EventList(result)
 			if err != nil {
 				return events.NewGetRecentCompanyProjectEventsInternalServerError().WithPayload(errorResponse(err))

@@ -341,8 +341,8 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 	return claManagerDesignee, nil
 }
 
-func sendEmailToOrgAdmin(adminEmail string, admin string, project string, contributorEmail string, contributorName string, corporateConsole string) {
-	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the {Company Name} Corporate CLA and add to approved list <contributor emailid> ")
+func sendEmailToOrgAdmin(adminEmail string, admin string, company string, project string, contributorEmail string, contributorName string, corporateConsole string) {
+	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorEmail)
 	recipients := []string{adminEmail}
 	body := fmt.Sprintf(`
 <html>
@@ -381,8 +381,8 @@ support</a>.</p>
 	}
 }
 
-func sendEmailToCLAManagerDesignee(corporateConsole string, project string, designeeEmail string, designeeName string, contributorEmail string, contributorName string) {
-	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the {Company Name} Corporate CLA and add to approved list <contributor emailid> ")
+func sendEmailToCLAManagerDesignee(corporateConsole string, company string, project string, designeeEmail string, designeeName string, contributorEmail string, contributorName string) {
+	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorEmail)
 	recipients := []string{designeeEmail}
 	body := fmt.Sprintf(`
 <html>
