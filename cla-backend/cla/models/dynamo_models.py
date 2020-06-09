@@ -253,6 +253,61 @@ class ExternalProjectIndex(GlobalSecondaryIndex):
     project_external_id = UnicodeAttribute(hash_key=True)
 
 
+class ProjectNameIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying projects by name.
+    """
+
+    class Meta:
+        """Meta class for external ID project index."""
+
+        index_name = "project-name-search-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        # All attributes are projected - not sure if this is necessary.
+        projection = AllProjection()
+
+    # This attribute is the hash key for the index.
+    project_name = UnicodeAttribute(hash_key=True)
+
+
+class ProjectNameLowerIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying projects by name.
+    """
+
+    class Meta:
+        """Meta class for external ID project index."""
+
+        index_name = "project-name-lower-search-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        # All attributes are projected - not sure if this is necessary.
+        projection = AllProjection()
+
+    # This attribute is the hash key for the index.
+    project_name_lower = UnicodeAttribute(hash_key=True)
+
+
+class ProjectFoundationIDIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying projects by name.
+    """
+
+    class Meta:
+        """Meta class for external ID project index."""
+
+        index_name = "foundation-sfid-project-name-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        # All attributes are projected - not sure if this is necessary.
+        projection = AllProjection()
+
+    # This attribute is the hash key for the index.
+    foundation_sfid = UnicodeAttribute(hash_key=True)
+    project_name = UnicodeAttribute(range_key=True)
+
+
 class ExternalCompanyIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying companies by external ID.
@@ -826,7 +881,12 @@ class ProjectModel(BaseModel):
     project_icla_enabled = BooleanAttribute(default=True)
     project_ccla_enabled = BooleanAttribute(default=True)
     project_ccla_requires_icla_signature = BooleanAttribute(default=False)
+    # Indexes
     project_external_id_index = ExternalProjectIndex()
+    project_name_search_index = ProjectNameIndex()
+    project_name_lower_search_index = ProjectNameLowerIndex()
+    foundation_sfid_project_name_index = ProjectFoundationIDIndex()
+
     project_acl = UnicodeSetAttribute(default=set())
     # Default is v1 for all of our models - override for this model so that we can redirect to new UI when ready
     #version = UnicodeAttribute(default="v2")  # Schema version is v2 for Project Models
@@ -1027,6 +1087,15 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
     def get_project_acl(self):
         return self.model.project_acl
 
+    def get_version(self):
+        return self.model.version
+
+    def get_date_created(self):
+        return self.model.date_created
+
+    def get_date_modified(self):
+        return self.model.date_modified
+
     def set_project_id(self, project_id):
         self.model.project_id = str(project_id)
 
@@ -1125,6 +1194,12 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
                     )
                 managers.append(users[0])
         return managers
+
+    def set_version(self, version):
+        self.model.version = version
+
+    def set_date_modified(self, date_modified):
+        self.model.date_modified = date_modified
 
     def all(self, project_ids=None):
         if project_ids is None:
