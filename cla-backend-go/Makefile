@@ -125,12 +125,6 @@ swagger-validate:
 	swagger validate swagger/cla.compiled.yaml
 	@echo "Validating v2 API specification..."
 	swagger validate swagger/cla.v2.compiled.yaml
-	@echo "Validating Project Service API specification..."
-	swagger validate swagger/project-service.yaml
-	@echo "Validating Organization Service API specification..."
-	swagger validate swagger/organization-service.yaml
-	@echo "Validating User Service API specification..."
-	swagger validate swagger/user-service.yaml
 
 fmt:
 	@gofmt -w -l -s $(GO_FILES)
