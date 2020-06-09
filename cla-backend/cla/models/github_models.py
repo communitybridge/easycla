@@ -201,7 +201,7 @@ class GitHub(repository_service_interface.RepositoryService):
 
         try:
             project = get_project_instance()
-            project_model = project.load(str(project_id))
+            project.load(str(project_id))
         except DoesNotExist as err:
             return {'errors': {'project_id': str(err)}}
 
@@ -226,7 +226,7 @@ class GitHub(repository_service_interface.RepositoryService):
         console_url = ''
 
         # Temporary condition until all CLA Groups are ready for the v2 Contributor Console
-        if project_model.get_version() == 'v2':
+        if project.get_version() == 'v2':
             # Generate url for the v2 console
             console_url = 'https://' + console_v2_endpoint + \
                           '/#/cla/project/' + project_id + \
