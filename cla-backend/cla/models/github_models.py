@@ -198,6 +198,12 @@ class GitHub(repository_service_interface.RepositoryService):
         # Get project ID from this repository
         project_id = repository.get_repository_project_id()
 
+        try:
+            project = get_project_instance()
+            project_model = project.load(str(project_id))
+        except DoesNotExist as err:
+            return {'errors': {'project_id': str(err)}}
+
         user = self.get_or_create_user(request)
         # Ensure user actually requires a signature for this project.
         # TODO: Skipping this for now - we can do this for ICLAs but there's no easy way of doing
@@ -215,11 +221,20 @@ class GitHub(repository_service_interface.RepositoryService):
         # return cla.utils.redirect_user_by_signature(user, signature)
         # Store repository and PR info so we can redirect the user back later.
         cla.utils.set_active_signature_metadata(user.get_user_id(), project_id, repository_id, pull_request_id)
-        # Generate console URL
-        console_url = 'https://' + console_endpoint + \
-                      '/#/cla/project/' + project_id + \
-                      '/user/' + user.get_user_id() + \
-                      '?redirect=' + redirect
+        console_url = ''
+        if project_model.version == 'v2':
+            # Generate v2 console URL
+            console_url = 'https://easycla.dev.communitybridge.org' + \
+                          '/#/cla/project/' + project_id + \
+                          '/user/' + user.get_user_id() + \
+                          '?redirect=' + redirect
+        else:
+            # Generate v1 console URL
+            console_url = 'https://' + console_endpoint + \
+                          '/#/cla/project/' + project_id + \
+                          '/user/' + user.get_user_id() + \
+                          '?redirect=' + redirect
+
         raise falcon.HTTPFound(console_url)
 
     def _fetch_token(self, client_id, state, token_url, client_secret,
