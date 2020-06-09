@@ -6,6 +6,8 @@ package cla_manager
 import (
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
@@ -23,7 +25,7 @@ import (
 )
 
 // Configure is the API handler routine for CLA Manager routes
-func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string) {
+func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string, projectClaGroupRepo projects_cla_groups.Repository) {
 	api.ClaManagerCreateCLAManagerHandler = cla_manager.CreateCLAManagerHandlerFunc(func(params cla_manager.CreateCLAManagerParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
@@ -33,8 +35,20 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string)
 					authUser.UserName, params.ProjectSFID, params.CompanySFID),
 			})
 		}
-
-		compCLAManager, errorResponse := service.CreateCLAManager(params, authUser.Email)
+		cginfo, err := projectClaGroupRepo.GetClaGroupIDForProject(params.ProjectSFID)
+		if err != nil {
+			if err == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
+				return cla_manager.NewCreateCLAManagerInternalServerError().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: fmt.Sprintf("EasyCLA - Bad Request. error = %s", "No cla group is associated with this project"),
+				})
+			}
+			return cla_manager.NewCreateCLAManagerInternalServerError().WithPayload(&models.ErrorResponse{
+				Code:    "500",
+				Message: fmt.Sprintf("EasyCLA - 500 Internal server error. error = %s", err.Error()),
+			})
+		}
+		compCLAManager, errorResponse := service.CreateCLAManager(cginfo.ClaGroupID, params, authUser.Email)
 		if errorResponse != nil {
 			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(errorResponse)
 		}

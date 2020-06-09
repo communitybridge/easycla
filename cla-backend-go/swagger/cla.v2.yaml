@@ -1164,7 +1164,7 @@ paths:
         - cla-manager
             
 
-  /company/{companySFID}/project/{projectSFID}/claGroup/{projectID}/cla-manager:
+  /company/{companySFID}/project/{projectSFID}/cla-manager:
     post:
       summary: Adds a new CLA Manager to the specified Company and Project
       description: Allows an existing CLA Manager to add another CLA Manager to the specified Company and Project.
@@ -1176,7 +1176,6 @@ paths:
         - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-projectSFID"
         - $ref: "#/parameters/path-companySFID"
-        - $ref: "#/parameters/path-projectID"
         - name: body
           in: body
           schema:
@@ -1195,6 +1194,8 @@ paths:
           $ref: '#/responses/forbidden'
         '409':
           $ref: '#/responses/conflict'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - cla-manager
 

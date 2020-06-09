@@ -35,7 +35,7 @@ type service struct {
 
 // Service interface
 type Service interface {
-	CreateCLAManager(params cla_manager.CreateCLAManagerParams, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse)
+	CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse)
 	DeleteCLAManager(params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
 }
@@ -50,7 +50,7 @@ func NewService(compService company.IService, projService project.Service, mgrSe
 }
 
 // CreateCLAManager creates Cla Manager
-func (s *service) CreateCLAManager(params cla_manager.CreateCLAManagerParams, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse) {
+func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse) {
 	if *params.Body.FirstName == "" || *params.Body.LastName == "" || *params.Body.UserEmail == "" {
 		msg := fmt.Sprintf("firstName, lastName and UserEmail cannot be empty")
 		log.Warn(msg)
@@ -64,7 +64,7 @@ func (s *service) CreateCLAManager(params cla_manager.CreateCLAManagerParams, au
 	log.Debugf("Getting company by external ID : %s", params.CompanySFID)
 	companyModel, companyErr := s.companyService.GetCompanyByExternalID(params.CompanySFID)
 	if companyErr != nil || companyModel == nil {
-		msg := buildErrorMessage("company lookup error", params, companyErr)
+		msg := buildErrorMessage("company lookup error", claGroupID, params, companyErr)
 		log.Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
@@ -72,9 +72,9 @@ func (s *service) CreateCLAManager(params cla_manager.CreateCLAManagerParams, au
 		}
 	}
 
-	claGroup, err := getCLAGroup(params.ProjectID, params.ProjectSFID, s.projectService)
+	claGroup, err := getCLAGroup(claGroupID, params.ProjectSFID, s.projectService)
 	if err != nil || claGroup == nil {
-		msg := buildErrorMessage("project cla lookup failure or project doesnt have CCLA", params, err)
+		msg := buildErrorMessage("project cla lookup failure or project doesnt have CCLA", claGroupID, params, err)
 		log.Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
@@ -101,7 +101,7 @@ func (s *service) CreateCLAManager(params cla_manager.CreateCLAManagerParams, au
 	ps := v2ProjectService.GetClient()
 	projectSF, projectErr := ps.GetProject(params.ProjectSFID)
 	if projectErr != nil {
-		msg := buildErrorMessage("project service lookup error", params, projectErr)
+		msg := buildErrorMessage("project service lookup error", claGroupID, params, projectErr)
 		log.Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
@@ -179,7 +179,7 @@ func (s *service) CreateCLAManager(params cla_manager.CreateCLAManagerParams, au
 		}
 	}
 	if signature == nil {
-		sigMsg := fmt.Sprintf("Signature not found for project: %s and company: %s ", params.ProjectID, companyModel.CompanyID)
+		sigMsg := fmt.Sprintf("Signature not found for project: %s and company: %s ", claGroupID, companyModel.CompanyID)
 		log.Warn(sigMsg)
 		return nil, &models.ErrorResponse{
 			Message: sigMsg,
@@ -422,9 +422,9 @@ support</a>.</p>
 }
 
 // buildErrorMessage helper function to build an error message
-func buildErrorMessage(errPrefix string, params cla_manager.CreateCLAManagerParams, err error) string {
+func buildErrorMessage(errPrefix string, claGroupID string, params cla_manager.CreateCLAManagerParams, err error) string {
 	return fmt.Sprintf("%s - problem creating new CLA Manager Request using company SFID: %s, project ID: %s, first name: %s, last name: %s, user email: %s, error: %+v",
-		errPrefix, params.CompanySFID, params.ProjectID, *params.Body.FirstName, *params.Body.LastName, *params.Body.UserEmail, err)
+		errPrefix, params.CompanySFID, claGroupID, *params.Body.FirstName, *params.Body.LastName, *params.Body.UserEmail, err)
 }
 
 func getCLAGroup(projectID string, projectSFID string, projectService project.Service) (*v1Models.Project, error) {
