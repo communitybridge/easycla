@@ -189,6 +189,7 @@ class GitHub(repository_service_interface.RepositoryService):
 
     def redirect_to_console(self, installation_id, repository_id, pull_request_id, redirect, request):
         console_endpoint = cla.conf['CONTRIBUTOR_BASE_URL']
+        console_v2_endpoint = cla.conf['CONTRIBUTOR_V2_BASE_URL']
         # Get repository using github's repository ID.
         repository = Repository().get_repository_by_external_id(repository_id, "github")
         if repository is None:
@@ -221,15 +222,18 @@ class GitHub(repository_service_interface.RepositoryService):
         # return cla.utils.redirect_user_by_signature(user, signature)
         # Store repository and PR info so we can redirect the user back later.
         cla.utils.set_active_signature_metadata(user.get_user_id(), project_id, repository_id, pull_request_id)
+
         console_url = ''
-        if project_model.version == 'v2':
-            # Generate v2 console URL
-            console_url = 'https://easycla.dev.communitybridge.org' + \
+
+        # Temporary condition until all CLA Groups are ready for the v2 Contributor Console
+        if project_model.get_version() == 'v2':
+            # Generate url for the v2 console
+            console_url = 'https://' + console_v2_endpoint + \
                           '/#/cla/project/' + project_id + \
                           '/user/' + user.get_user_id() + \
                           '?redirect=' + redirect
         else:
-            # Generate v1 console URL
+            # Generate url for the v1 contributor console
             console_url = 'https://' + console_endpoint + \
                           '/#/cla/project/' + project_id + \
                           '/user/' + user.get_user_id() + \
