@@ -51,7 +51,7 @@ type ProjectRepository interface { //nolint
 	UpdateProject(projectModel *models.Project) (*models.Project, error)
 
 	GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error)
-	GetClaGroupsByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Projects, error)
+	GetClaGroupByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Project, error)
 }
 
 // NewRepository creates instance of project repository
@@ -321,57 +321,13 @@ func (repo *repo) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDe
 	}, nil
 }
 
-// GetClaGroupsByProjectSFID returns cla_groups created at projectSFID level
-// projectSFID can be project SFID or foundation SFID.
-func (repo *repo) GetClaGroupsByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Projects, error) {
-	claGroupProjects, err := repo.projectClaGroupRepo.GetClaGroupsIdsForProject(projectSFID)
+// GetClaGroupsByProjectSFID returns cla_group associated with project
+func (repo *repo) GetClaGroupByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Project, error) {
+	claGroupProject, err := repo.projectClaGroupRepo.GetClaGroupIDForProject(projectSFID)
 	if err != nil {
 		return nil, err
 	}
-	projects := make([]models.Project, 0, len(claGroupProjects))
-	if len(claGroupProjects) == 0 {
-		return &models.Projects{
-			Projects: projects,
-		}, nil
-	}
-	type gpresponse struct {
-		project *models.Project
-		err     error
-	}
-	var wg sync.WaitGroup
-	rchan := make(chan *gpresponse)
-	wg.Add(len(claGroupProjects))
-	go func() {
-		wg.Wait()
-		close(rchan)
-	}()
-	for _, cgp := range claGroupProjects {
-		go func(swg *sync.WaitGroup, claGroupID string, respChan chan *gpresponse) {
-			defer swg.Done()
-			claGroup, err := repo.getProjectByID(claGroupID, loadRepoDetails)
-			respChan <- &gpresponse{
-				project: claGroup,
-				err:     err,
-			}
-		}(&wg, cgp.ClaGroupID, rchan)
-	}
-	var errors []string
-	for resp := range rchan {
-		if resp.err != nil {
-			errors = append(errors, resp.err.Error())
-			continue
-		}
-		projects = append(projects, *resp.project)
-	}
-	if len(errors) != 0 {
-		err := fmt.Errorf("internal server error. unable to fetch cla groups for projectSFID: %s. errors %v", projectSFID, errors)
-		log.Error("GetClaGroupsByProjectSFID failed", err)
-		return nil, err
-	}
-	return &models.Projects{
-		Projects:    projects,
-		ResultCount: int64(len(projects)),
-	}, nil
+	return repo.getProjectByID(claGroupProject.ClaGroupID, loadRepoDetails)
 }
 
 // GetProjectByName returns the project model associated for the specified project name

@@ -823,7 +823,6 @@ function buildProjectsClaGroupsTable(importResources: boolean): aws.dynamodb.Tab
         { name: 'cla_group_id', type: 'S' },
       ],
       hashKey: 'project_sfid',
-      rangeKey: "cla_group_id",
       readCapacity: defaultReadCapacity,
       writeCapacity: 1,
       globalSecondaryIndexes: [
