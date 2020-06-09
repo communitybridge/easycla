@@ -6,6 +6,9 @@ properties:
   projectID:
     description: the project internal ID
     type: string
+  foundationSFID:
+    description: the foundation sfid of the project
+    type: string
   projectExternalID:
     description: the project external ID
     type: string
