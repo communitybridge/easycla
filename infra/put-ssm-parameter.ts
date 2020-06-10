@@ -25,21 +25,32 @@ if (program.desc === undefined) {
 AWS.config.update({ region: program.region });
 
 console.log(`Adding SSM Parameter: ${program.parameter} in region ${program.region}...`);
-const query = {
-  "Name": program.parameter,
-  "Value": program.value,
-  "Description": program.desc,
-  "Type": (program.securestring ? "SecureString" : "String"),
-  "Overwrite": (program.overwrite ? true : false),
-  "Tags": [
-    { "Key": "Name", "Value": "EasyCLA" },
-    { "Key": "ServiceType", "Value": "Product" },
-    { "Key": "Service", "Value": "EasyCLA" },
-    { "Key": "ServiceRole", "Value": "Backend" },
-    { "Key": "ProgrammingPlatform", "Value": "Go" },
-    { "Key": "Owner", "Value": "David Deal" },
-  ],
-};
+let query = {}
+if (program.overwrite) {
+  query = {
+    "Name": program.parameter,
+    "Value": program.value,
+    "Description": program.desc,
+    "Type": (program.securestring ? "SecureString" : "String"),
+    "Overwrite": (program.overwrite ? true : false),
+  };
+} else {
+  query = {
+    "Name": program.parameter,
+    "Value": program.value,
+    "Description": program.desc,
+    "Type": (program.securestring ? "SecureString" : "String"),
+    "Overwrite": (program.overwrite ? true : false),
+    "Tags": [
+      { "Key": "Name", "Value": "EasyCLA" },
+      { "Key": "ServiceType", "Value": "Product" },
+      { "Key": "Service", "Value": "EasyCLA" },
+      { "Key": "ServiceRole", "Value": "Backend" },
+      { "Key": "ProgrammingPlatform", "Value": "Go" },
+      { "Key": "Owner", "Value": "David Deal" },
+    ],
+  };
+}
 
 const ssm = new SSM();
 let param = ssm.putParameter(query, (err, data) => {
