@@ -9,5 +9,5 @@ export const generalConstants = {
     linuxFoundationIdentityURL: 'https://identity.linuxfoundation.org/',
     createTicketURL: 'https://jira.linuxfoundation.org/servicedesk/customer/portal/4',
     easyCLAHelpURL: 'https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/easycla-faqs',
-    getAccessURL: 'https://jira.linuxfoundation.org/servicedesk/customer/portal/4',
+    getAccessURL: 'https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla/getting-started/get-access-to-easycla',
 }
