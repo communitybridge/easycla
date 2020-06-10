@@ -53,6 +53,7 @@ const parameters = [
   `cla-signature-files-bucket-${program.stage}`,
   `cla-cla-logo-s3-url-${program.stage}`,
   `cla-ses-sender-email-address-${program.stage}`,
+  `cla-allowed-origins-${program.stage}`,
   `cla-lf-group-client-id-${program.stage}`,
   `cla-lf-group-client-secret-${program.stage}`,
   `cla-lf-group-refresh-token-${program.stage}`,
