@@ -159,17 +159,9 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.debug('Individual Signature - loaded latest individual document for project: {}'.
                       format(project))
 
-        if latest_signature is not None and \
-                last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
-            cla.log.debug('Individual Signature - user already has a signatures with this project: {}'.
-                          format(latest_signature.get_signature_id()))
-            return {'user_id': user_id,
-                    'project_id': project_id,
-                    'signature_id': latest_signature.get_signature_id(),
-                    'sign_url': latest_signature.get_signature_sign_url()}
-        else:
-            cla.log.debug('Individual Signature - user does NOT have a signatures with this project: {}'.
-                          format(project))
+        cla.log.debug('Individual Signature - creating default individual values for user: {}'.format(user))
+        default_cla_values = create_default_individual_values(user)
+        cla.log.debug('Individual Signature - created default individual values: {}'.format(default_cla_values))
 
         # Generate signature callback url
         cla.log.debug('Individual Signature - get active signature metadata')
@@ -179,6 +171,22 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.debug('Individual Signature - get individual signature callback url')
         callback_url = cla.utils.get_individual_signature_callback_url(user_id, signature_metadata)
         cla.log.debug('Individual Signature - get individual signature callback url: {}'.format(callback_url))
+
+        if latest_signature is not None and \
+                last_document.get_document_major_version() == latest_signature.get_signature_document_major_version():
+            cla.log.debug('Individual Signature - user already has a signatures with this project: {}'.
+                          format(latest_signature.get_signature_id()))
+
+            # Re-generate and set the signing url - this will update the signature record
+            self.populate_sign_url(latest_signature, callback_url, default_values=default_cla_values)
+
+            return {'user_id': user_id,
+                    'project_id': project_id,
+                    'signature_id': latest_signature.get_signature_id(),
+                    'sign_url': latest_signature.get_signature_sign_url()}
+        else:
+            cla.log.debug('Individual Signature - user does NOT have a signatures with this project: {}'.
+                          format(project))
 
         # Get signature return URL
         if return_url is None:
@@ -208,10 +216,6 @@ class DocuSign(signing_service_interface.SigningService):
         # return an error
         if not document:
             return {'errors': {'project_id': project_id, 'message': 'missing template document'}}
-
-        cla.log.debug('Individual Signature - creating default individual values for user: {}'.format(user))
-        default_cla_values = create_default_individual_values(user)
-        cla.log.debug('Individual Signature - created default individual values: {}'.format(default_cla_values))
 
         # Create new Signature object
         cla.log.debug('Individual Signature - creating new signature document '

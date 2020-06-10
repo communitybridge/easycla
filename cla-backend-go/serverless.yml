@@ -178,6 +178,7 @@ provider:
     DOCUSIGN_INTEGRATOR_KEY: ${file(./env.json):docusign-integrator-key, ssm:/cla-docusign-integrator-key-${opt:stage}}
     CLA_API_BASE: ${file(./env.json):cla-api-base, ssm:/cla-api-base-${opt:stage}}
     CLA_CONTRIBUTOR_BASE: ${file(./env.json):cla-contributor-base, ssm:/cla-contributor-base-${opt:stage}}
+    CLA_CONTRIBUTOR_V2_BASE: ${file(./env.json):cla-contributor-v2-base, ssm:/cla-contributor-v2-base-${opt:stage}}
     CLA_CORPORATE_BASE: ${file(./env.json):cla-corporate-base, ssm:/cla-corporate-base-${opt:stage}}
     CLA_LANDING_PAGE: ${file(./env.json):cla-landing-page, ssm:/cla-landing-page-${opt:stage}}
     CLA_SIGNATURE_FILES_BUCKET: ${file(./env.json):cla-signature-files-bucket, ssm:/cla-signature-files-bucket-${opt:stage}~true}

@@ -155,6 +155,13 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 						Code:    "400",
 					})
 			}
+			if len(scopes.Userroles) == 0 {
+				return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(
+					&models.ErrorResponse{
+						Message: fmt.Sprintf("No admins for organisation SFID : %s ", params.CompanySFID),
+						Code:    "400",
+					})
+			}
 			for _, admin := range scopes.Userroles {
 				sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, companyModel.Name, projectSF.Name, authUser.Email, authUser.UserName, LfxPortalURL)
 			}

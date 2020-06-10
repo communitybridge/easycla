@@ -140,6 +140,7 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/external-project-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/project-name-search-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/project-name-lower-search-index"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/foundation-sfid-project-name-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/project-repository-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/external-repository-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/sfdc-repository-index"
@@ -150,6 +151,7 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-events/index/company-id-external-project-id-event-epoch-time-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-cla-manager-requests/index/cla-manager-requests-company-project-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-cla-manager-requests/index/cla-manager-requests-external-company-project-index"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects-cla-groups/index/cla-group-id-index"
 
 
   environment:
@@ -181,6 +183,7 @@ provider:
     DOCUSIGN_INTEGRATOR_KEY: ${file(./env.json):docusign-integrator-key, ssm:/cla-docusign-integrator-key-${opt:stage}}
     CLA_API_BASE: ${file(./env.json):cla-api-base, ssm:/cla-api-base-${opt:stage}}
     CLA_CONTRIBUTOR_BASE: ${file(./env.json):cla-contributor-base, ssm:/cla-contributor-base-${opt:stage}}
+    CLA_CONTRIBUTOR_V2_BASE: ${file(./env.json):cla-contributor-v2-base, ssm:/cla-contributor-v2-base-${opt:stage}}
     CLA_CORPORATE_BASE: ${file(./env.json):cla-corporate-base, ssm:/cla-corporate-base-${opt:stage}}
     CLA_LANDING_PAGE: ${file(./env.json):cla-landing-page, ssm:/cla-landing-page-${opt:stage}}
     CLA_SIGNATURE_FILES_BUCKET: ${file(./env.json):cla-signature-files-bucket, ssm:/cla-signature-files-bucket-${opt:stage}~true}
