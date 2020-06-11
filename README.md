@@ -8,6 +8,12 @@ This repository contains both the backend and front-end UI for supporting and ma
 
 This platform supports both GitHub and Gerrit source code repositories. Additional information can be found in the [Getting Started Guide](getting-started/).
 
+## Announcements
+
+- 06/10/2020 - We will be replacing code references from whitelist to Approval
+  List in the coming sprints.  This includes package names, code comments,
+  swagger specifications, API endpoints, variable names and UI components.
+
 ## Third-party Services
 
 [EasyCLA](./#easycla-architechture)
