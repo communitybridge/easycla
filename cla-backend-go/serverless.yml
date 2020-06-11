@@ -147,6 +147,7 @@ provider:
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-cla-manager-requests/index/cla-manager-requests-company-project-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-cla-manager-requests/index/cla-manager-requests-external-company-project-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects-cla-groups/index/cla-group-id-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects-cla-groups/index/foundation-sfid-index"
 
   environment:
     STAGE: ${self:provider.stage}

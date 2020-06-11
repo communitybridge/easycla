@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/v2/cla_groups"
+
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 
 	"github.com/communitybridge/easycla/cla-backend-go/v2/sign"
@@ -239,6 +241,7 @@ func server(localMode bool) http.Handler {
 		ClientSecret: configFile.LFGroup.ClientSecret,
 		RefreshToken: configFile.LFGroup.RefreshToken,
 	})
+	v2ClaGroupService := cla_groups.NewService(projectService, templateService, projectClaGroupRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
@@ -281,6 +284,7 @@ func server(localMode bool) http.Handler {
 	cla_manager.Configure(api, claManagerService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 	v2ClaManager.Configure(v2API, v2ClaManagerService, configFile.LFXPortalURL, projectClaGroupRepo)
 	sign.Configure(v2API, v2SignService)
+	cla_groups.Configure(v2API, v2ClaGroupService)
 
 	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	project_service.InitClient(configFile.APIGatewayURL)
