@@ -200,6 +200,8 @@ provider:
     PLATFORM_AUTH0_CLIENT_SECRET: ${file(./env.json):cla-auth0-platform-client-secret, ssm:/cla-auth0-platform-client-secret-${opt:stage}}
     PLATFORM_AUTH0_AUDIENCE: ${file(./env.json):cla-auth0-platform-audience, ssm:/cla-auth0-platform-audience-${opt:stage}}
     PLATFORM_GATEWAY_URL: ${file(./env.json):platform-gateway-url, ssm:/cla-auth0-platform-api-gw-${opt:stage}}
+    # Enable API Debugging for Core Platform Services
+    DEBUG: true
 
 plugins:
   - serverless-python-requirements
