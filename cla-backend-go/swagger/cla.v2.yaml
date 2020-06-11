@@ -1159,6 +1159,49 @@ paths:
           $ref: '#/responses/internal-server-error'
       tags:
         - signatures
+  
+  /user/{userLFID}/invite-company-admin:
+    post:
+      summary: Invite Manager 
+      security: []
+      description: Invite Company Admin based on user request to sign CLA 
+      operationId: inviteCompanyAdmin
+      parameters:
+        - $ref: "#/parameters/path-userLFID"
+        - name: body
+          in: body
+          schema:
+            type: object
+            x-nullable: false
+            title: CLA Manager Designee
+            properties:
+              contactAdmin:
+                description: flag checking whether to contact company admin
+                type: boolean 
+              companySFID:
+                description: CompanySFID of contributor inviting CLA Manager
+                type: string
+              projectSFID:
+                description: project SFID to be signed
+                type: string
+              userEmail:
+                description: Proposed CLA Manager email
+                type: string
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: "#/definitions/cla-manager-designee"
+        '204':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - cla-manager
 
   /company/{companySFID}/project/{projectSFID}/cla-manager/requests:
     post:

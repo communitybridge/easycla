@@ -37,6 +37,7 @@ type service struct {
 type Service interface {
 	CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse)
 	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
+	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributorEmail string, contributorName string, lFxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse)
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
 }
 
@@ -339,6 +340,76 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 		ProjectName: projectSF.Name,
 	}
 	return claManagerDesignee, nil
+}
+
+func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributorEmail string, contributorName string, LfxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse) {
+	orgService := v2OrgService.GetClient()
+	projectService := v2ProjectService.GetClient()
+	userService := v2UserService.GetClient()
+
+	project, projectErr := projectService.GetProject(projectID)
+	if projectErr != nil {
+		msg := fmt.Sprintf("Problem getting project by ID: %s ", projectID)
+		log.Warn(msg)
+		return nil, &models.ErrorResponse{
+			Code:    "400",
+			Message: msg,
+		}
+	}
+	organization, orgErr := orgService.GetOrganization(companyID)
+	if orgErr != nil {
+		msg := fmt.Sprintf("Problem getting company by ID: %s ", companyID)
+		log.Warn(msg)
+		return nil, &models.ErrorResponse{
+			Code:    "400",
+			Message: msg,
+		}
+	}
+
+	user, userErr := userService.SearchUserByEmail(userEmail)
+	if userErr != nil {
+		msg := fmt.Sprintf("Problem getting user for userEmail: %s , error: %+v", userEmail, userErr)
+		log.Warn(msg)
+		return nil, &models.ErrorResponse{
+			Code:    "400",
+			Message: msg,
+		}
+	}
+
+	// Check if sending cla manager request to company admin
+	if contactAdmin {
+		log.Debugf("Sending email to company Admin")
+		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyID)
+		if listScopeErr != nil {
+			msg := fmt.Sprintf("Admin lookup error for organisation SFID: %s ", companyID)
+			return nil, &models.ErrorResponse{
+				Code:    "400",
+				Message: msg,
+			}
+		}
+		for _, admin := range scopes.Userroles {
+			sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, organization.Name, project.Name, contributorEmail, contributorName, LfxPortalURL)
+		}
+		return nil, nil
+	}
+
+	claManagerDesignee, err := s.CreateCLAManagerDesignee(companyID, projectID, userEmail)
+
+	if err != nil {
+		msg := fmt.Sprintf("Problem creating cla Manager Designee for user :%s, error: %+v ", userEmail, err)
+		return nil, &models.ErrorResponse{
+			Code:    "400",
+			Message: msg,
+		}
+	}
+
+	log.Debugf("Sending Email to CLA Manager Designee email: %s ", userEmail)
+
+	sendEmailToCLAManagerDesignee(LfxPortalURL, organization.Name, project.Name, userEmail, user.Name, contributorEmail, contributorName)
+
+	log.Debugf("CLA Manager designee created : %+v", claManagerDesignee)
+	return claManagerDesignee, nil
+
 }
 
 func sendEmailToOrgAdmin(adminEmail string, admin string, company string, project string, contributorEmail string, contributorName string, corporateConsole string) {
