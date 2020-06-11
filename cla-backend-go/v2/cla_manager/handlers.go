@@ -65,8 +65,15 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 					authUser.UserName, params.ProjectSFID, params.CompanySFID),
 			})
 		}
+		cginfo, err := projectClaGroupRepo.GetClaGroupIDForProject(params.ProjectSFID)
+		if err != nil {
+			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: fmt.Sprintf("EasyCLA - Bad Request. No Cla Group associated with ProjectSFID: %s ", params.ProjectSFID),
+			})
+		}
 
-		errResponse := service.DeleteCLAManager(params)
+		errResponse := service.DeleteCLAManager(cginfo.ClaGroupID, params)
 		if errResponse != nil {
 			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(errResponse)
 		}

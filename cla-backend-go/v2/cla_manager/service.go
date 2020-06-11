@@ -36,7 +36,7 @@ type service struct {
 // Service interface
 type Service interface {
 	CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse)
-	DeleteCLAManager(params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
+	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
 }
 
@@ -203,7 +203,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	return claCompanyManager, nil
 }
 
-func (s *service) DeleteCLAManager(params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse {
+func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse {
 	// Get user by firstname,lastname and email parameters
 	userServiceClient := v2UserService.GetClient()
 	user, userErr := userServiceClient.GetUserByUsername(params.UserLFID)
@@ -262,7 +262,7 @@ func (s *service) DeleteCLAManager(params cla_manager.DeleteCLAManagerParams) *m
 		}
 	}
 
-	signature, deleteErr := s.managerService.RemoveClaManager(companyModel.CompanyID, params.ProjectID, params.UserLFID)
+	signature, deleteErr := s.managerService.RemoveClaManager(companyModel.CompanyID, claGroupID, params.UserLFID)
 
 	if deleteErr != nil {
 		msg := buildErrorMessageDelete(params, deleteErr)
@@ -273,7 +273,7 @@ func (s *service) DeleteCLAManager(params cla_manager.DeleteCLAManagerParams) *m
 		}
 	}
 	if signature == nil {
-		msg := fmt.Sprintf("Not found signature for project: %s and company: %s ", params.ProjectID, companyModel.CompanyID)
+		msg := fmt.Sprintf("Not found signature for project: %s and company: %s ", claGroupID, companyModel.CompanyID)
 		log.Warn(msg)
 		return &models.ErrorResponse{
 			Message: msg,
