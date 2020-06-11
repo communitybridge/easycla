@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
@@ -24,6 +25,7 @@ import (
 type Service interface {
 	GetTemplates(ctx context.Context) ([]models.Template, error)
 	CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaGroupTemplate) (models.TemplatePdfs, error)
+	CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemplate, templateFor string) ([]byte, error)
 }
 
 type service struct {
@@ -58,6 +60,50 @@ func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
 	}
 
 	return templates, nil
+}
+
+func (s service) CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemplate, templateFor string) ([]byte, error) {
+	var template models.Template
+	var err error
+	if claGroupFields.TemplateID != "" {
+		// Get Template
+		template, err = s.templateRepo.GetTemplate(claGroupFields.TemplateID)
+		if err != nil {
+			log.Warnf("Unable to fetch template fields: %s, error: %v",
+				claGroupFields.TemplateID, err)
+			return nil, err
+		}
+	} else {
+		// use default Apache template if template_id is not provided
+		template, err = s.templateRepo.GetTemplate(ApacheStyleTemplateID)
+		if err != nil {
+			log.Warnf("Unable to fetch default template fields: %s, error: %v",
+				claGroupFields.TemplateID, err)
+			return nil, err
+		}
+	}
+
+	// Apply template fields
+	iclaTemplateHTML, cclaTemplateHTML, err := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
+	if err != nil {
+		log.Warnf("Unable to inject metadata details into template, error: %v", err)
+		return nil, err
+	}
+	var templateHTML string
+	switch templateFor {
+	case "icla":
+		templateHTML = iclaTemplateHTML
+	case "ccla":
+		templateHTML = cclaTemplateHTML
+	default:
+		return nil, errors.New("invalid value of template_for")
+	}
+	pdf, err := s.docraptorClient.CreatePDF(templateHTML)
+	if err != nil {
+		return nil, err
+	}
+	defer pdf.Close()
+	return ioutil.ReadAll(pdf)
 }
 
 // CreateCLAGroupTemplate
