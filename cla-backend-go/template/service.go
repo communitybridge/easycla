@@ -63,12 +63,24 @@ func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
 }
 
 func (s service) CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemplate, templateFor string) ([]byte, error) {
-	// Get Template
-	template, err := s.templateRepo.GetTemplate(claGroupFields.TemplateID)
-	if err != nil {
-		log.Warnf("Unable to fetch template fields: %s, error: %v",
-			claGroupFields.TemplateID, err)
-		return nil, err
+	var template models.Template
+	var err error
+	if claGroupFields.TemplateID != "" {
+		// Get Template
+		template, err = s.templateRepo.GetTemplate(claGroupFields.TemplateID)
+		if err != nil {
+			log.Warnf("Unable to fetch template fields: %s, error: %v",
+				claGroupFields.TemplateID, err)
+			return nil, err
+		}
+	} else {
+		// use default Apache template if template_id is not provided
+		template, err = s.templateRepo.GetTemplate(ApacheStyleTemplateID)
+		if err != nil {
+			log.Warnf("Unable to fetch default template fields: %s, error: %v",
+				claGroupFields.TemplateID, err)
+			return nil, err
+		}
 	}
 
 	// Apply template fields

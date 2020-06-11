@@ -78,7 +78,10 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 		}
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
 			rw.WriteHeader(http.StatusOK)
-			rw.Write(pdf)
+			_, err := rw.Write(pdf)
+			if err != nil {
+				log.Warnf("Error writing pdf, error: %v", err)
+			}
 		})
 	})
 }

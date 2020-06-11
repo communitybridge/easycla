@@ -24,6 +24,11 @@ var (
 	ErrTemplateNotFound = errors.New("template not found")
 )
 
+var (
+	// ApacheStyleTemplateID is template ID of the Apache Style
+	ApacheStyleTemplateID = "fb4cc144-a76c-4c17-8a52-c648f158fded"
+)
+
 // Repository interface functions
 type Repository interface {
 	GetTemplates() ([]models.Template, error)
@@ -321,8 +326,8 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 
 // templateMap contains a list of our template models
 var templateMap = map[string]models.Template{
-	"fb4cc144-a76c-4c17-8a52-c648f158fded": {
-		ID:          "fb4cc144-a76c-4c17-8a52-c648f158fded",
+	ApacheStyleTemplateID: {
+		ID:          ApacheStyleTemplateID,
 		Name:        "Apache Style",
 		Description: "For use of projects under the Apache style of CLA.",
 		MetaFields: []*models.MetaField{
