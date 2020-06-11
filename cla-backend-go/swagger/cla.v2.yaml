@@ -696,6 +696,43 @@ paths:
       tags:
         - template
 
+  /template/preview:
+    post:
+      summary: Create contract template for CLA Group
+      operationId: templatePreview
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - in: query
+          type: string
+          name: template_for
+          required: true
+          enum:
+            - icla
+            - ccla
+        - in: body
+          name: templatePreviewInput
+          schema:
+            $ref: '#/definitions/create-cla-group-template'
+          required: true
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          description: A PDF file
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - template
+
   /project/{projectSFID}/github/organizations:
     post:
       summary: API to add new gitHub oranization in the project

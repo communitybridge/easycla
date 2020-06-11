@@ -4,6 +4,8 @@
 package template
 
 import (
+	"net/http"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	v1Events "github.com/communitybridge/easycla/cla-backend-go/events"
@@ -14,6 +16,7 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	v1Template "github.com/communitybridge/easycla/cla-backend-go/template"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/jinzhu/copier"
 )
@@ -60,6 +63,26 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 			return template.NewGetTemplatesInternalServerError().WithPayload(errorResponse(err))
 		}
 		return template.NewCreateCLAGroupTemplateOK().WithPayload(response)
+	})
+
+	api.TemplateTemplatePreviewHandler = template.TemplatePreviewHandlerFunc(func(params template.TemplatePreviewParams, user *auth.User) middleware.Responder {
+		var param v1Models.CreateClaGroupTemplate
+		err := copier.Copy(&param, &params.TemplatePreviewInput)
+		if err != nil {
+			return template.NewTemplatePreviewInternalServerError().WithPayload(errorResponse(err))
+		}
+		pdf, err := service.CreateTemplatePreview(&param, params.TemplateFor)
+		if err != nil {
+			log.Warnf("Error generating PDFs from provided templates, error: %v", err)
+			return template.NewTemplatePreviewBadRequest().WithPayload(errorResponse(err))
+		}
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+			rw.WriteHeader(http.StatusOK)
+			_, err := rw.Write(pdf)
+			if err != nil {
+				log.Warnf("Error writing pdf, error: %v", err)
+			}
+		})
 	})
 }
 
