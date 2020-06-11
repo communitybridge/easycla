@@ -98,6 +98,35 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		return cla_manager.NewCreateCLAManagerDesigneeOK().WithPayload(claManagerDesignee)
 	})
 
+	api.ClaManagerInviteCompanyAdminHandler = cla_manager.InviteCompanyAdminHandlerFunc(func(params cla_manager.InviteCompanyAdminParams) middleware.Responder {
+
+		// Get Contributor details
+		usc := v2UserService.GetClient()
+		user, userErr := usc.GetUserByUsername(params.UserLFID)
+
+		if userErr != nil {
+			msg := fmt.Sprintf("Problem getting user by LFID : %s, error: %+v ", params.UserLFID, userErr)
+			return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(
+				&models.ErrorResponse{
+					Code:    "400",
+					Message: msg,
+				})
+		}
+
+		claManagerDesignee, err := service.InviteCompanyAdmin(params.Body.ContactAdmin, params.Body.CompanySFID, params.Body.ProjectSFID, params.Body.UserEmail, *user.Emails[0].EmailAddress, user.Name, LfxPortalURL)
+
+		if err != nil {
+			return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(err)
+		}
+		// Check if admins succcessfully sent email
+		if claManagerDesignee == nil && err == nil {
+			return cla_manager.NewInviteCompanyAdminNoContent()
+		}
+
+		// successfully created cla manager designee and sent invite
+		return cla_manager.NewInviteCompanyAdminOK().WithPayload(claManagerDesignee)
+	})
+
 	api.ClaManagerCreateCLAManagerRequestHandler = cla_manager.CreateCLAManagerRequestHandlerFunc(func(params cla_manager.CreateCLAManagerRequestParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
