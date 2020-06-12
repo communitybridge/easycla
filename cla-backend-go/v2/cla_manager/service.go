@@ -18,6 +18,7 @@ import (
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	v1ProjectParams "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	v1User "github.com/communitybridge/easycla/cla-backend-go/user"
 	v2AcsService "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
 	v2OrgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
@@ -37,7 +38,7 @@ type service struct {
 type Service interface {
 	CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse)
 	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
-	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributorEmail string, contributorName string, lFxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse)
+	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributor *v1User.User, lFxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse)
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
 }
 
@@ -342,7 +343,7 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 	return claManagerDesignee, nil
 }
 
-func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributorEmail string, contributorName string, LfxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse) {
+func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributor *v1User.User, LfxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse) {
 	orgService := v2OrgService.GetClient()
 	projectService := v2ProjectService.GetClient()
 	userService := v2UserService.GetClient()
@@ -356,6 +357,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 			Message: msg,
 		}
 	}
+
 	organization, orgErr := orgService.GetOrganization(companyID)
 	if orgErr != nil {
 		msg := fmt.Sprintf("Problem getting company by ID: %s ", companyID)
@@ -366,6 +368,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 		}
 	}
 
+	// Get suggested CLA Manager user details
 	user, userErr := userService.SearchUserByEmail(userEmail)
 	if userErr != nil {
 		msg := fmt.Sprintf("Problem getting user for userEmail: %s , error: %+v", userEmail, userErr)
@@ -388,7 +391,13 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 			}
 		}
 		for _, admin := range scopes.Userroles {
-			sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, organization.Name, project.Name, contributorEmail, contributorName, LfxPortalURL)
+			// Check if is Gerrit User or GH User
+			if contributor.LFUsername != "" && contributor.LFEmail != "" {
+				sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, organization.Name, project.Name, contributor.LFEmail, contributor.LFUsername, LfxPortalURL)
+			} else {
+				sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, organization.Name, project.Name, contributor.UserGithubID, contributor.UserGithubUsername, LfxPortalURL)
+			}
+
 		}
 		return nil, nil
 	}
@@ -405,15 +414,19 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 
 	log.Debugf("Sending Email to CLA Manager Designee email: %s ", userEmail)
 
-	sendEmailToCLAManagerDesignee(LfxPortalURL, organization.Name, project.Name, userEmail, user.Name, contributorEmail, contributorName)
+	if contributor.LFUsername != "" && contributor.LFEmail != "" {
+		sendEmailToCLAManagerDesignee(LfxPortalURL, organization.Name, project.Name, userEmail, user.Name, contributor.LFEmail, contributor.LFUsername)
+	} else {
+		sendEmailToCLAManagerDesignee(LfxPortalURL, organization.Name, project.Name, userEmail, user.Name, contributor.UserGithubID, contributor.UserGithubUsername)
+	}
 
 	log.Debugf("CLA Manager designee created : %+v", claManagerDesignee)
 	return claManagerDesignee, nil
 
 }
 
-func sendEmailToOrgAdmin(adminEmail string, admin string, company string, project string, contributorEmail string, contributorName string, corporateConsole string) {
-	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorEmail)
+func sendEmailToOrgAdmin(adminEmail string, admin string, company string, project string, contributorID string, contributorName string, corporateConsole string) {
+	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorID)
 	recipients := []string{adminEmail}
 	body := fmt.Sprintf(`
 <html>
@@ -442,7 +455,7 @@ support</a>.</p>
 </body>
 </html>
 	
-	`, admin, project, project, contributorName, contributorEmail, corporateConsole, project)
+	`, admin, project, project, contributorName, contributorID, corporateConsole, project)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -452,8 +465,8 @@ support</a>.</p>
 	}
 }
 
-func sendEmailToCLAManagerDesignee(corporateConsole string, company string, project string, designeeEmail string, designeeName string, contributorEmail string, contributorName string) {
-	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorEmail)
+func sendEmailToCLAManagerDesignee(corporateConsole string, company string, project string, designeeEmail string, designeeName string, contributorID string, contributorName string) {
+	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorID)
 	recipients := []string{designeeEmail}
 	body := fmt.Sprintf(`
 <html>
@@ -482,7 +495,7 @@ support</a>.</p>
 </body>
 </html>
 	
-	`, designeeName, project, project, contributorName, contributorEmail, corporateConsole, project)
+	`, designeeName, project, project, contributorName, contributorID, corporateConsole, project)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

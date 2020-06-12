@@ -16,6 +16,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/cla_manager"
+	v1User "github.com/communitybridge/easycla/cla-backend-go/user"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	v2OrgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
@@ -25,7 +26,7 @@ import (
 )
 
 // Configure is the API handler routine for CLA Manager routes
-func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string, projectClaGroupRepo projects_cla_groups.Repository) {
+func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string, projectClaGroupRepo projects_cla_groups.Repository, easyCLAUserRepo v1User.RepositoryService) {
 	api.ClaManagerCreateCLAManagerHandler = cla_manager.CreateCLAManagerHandlerFunc(func(params cla_manager.CreateCLAManagerParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
@@ -108,11 +109,10 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 	api.ClaManagerInviteCompanyAdminHandler = cla_manager.InviteCompanyAdminHandlerFunc(func(params cla_manager.InviteCompanyAdminParams) middleware.Responder {
 
 		// Get Contributor details
-		usc := v2UserService.GetClient()
-		user, userErr := usc.GetUserByUsername(params.UserLFID)
+		user, userErr := easyCLAUserRepo.GetUser(params.UserID)
 
 		if userErr != nil {
-			msg := fmt.Sprintf("Problem getting user by LFID : %s, error: %+v ", params.UserLFID, userErr)
+			msg := fmt.Sprintf("Problem getting user by ID : %s, error: %+v ", params.UserID, userErr)
 			return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(
 				&models.ErrorResponse{
 					Code:    "400",
@@ -120,7 +120,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				})
 		}
 
-		claManagerDesignee, err := service.InviteCompanyAdmin(params.Body.ContactAdmin, params.Body.CompanySFID, params.Body.ProjectSFID, params.Body.UserEmail, *user.Emails[0].EmailAddress, user.Name, LfxPortalURL)
+		claManagerDesignee, err := service.InviteCompanyAdmin(params.Body.ContactAdmin, params.Body.CompanySFID, params.Body.ProjectSFID, params.Body.UserEmail, &user, LfxPortalURL)
 
 		if err != nil {
 			return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(err)

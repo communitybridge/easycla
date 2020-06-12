@@ -1160,14 +1160,14 @@ paths:
       tags:
         - signatures
   
-  /user/{userLFID}/invite-company-admin:
+  /user/{userID}/invite-company-admin:
     post:
       summary: Invite Manager 
       security: []
       description: Invite Company Admin based on user request to sign CLA 
       operationId: inviteCompanyAdmin
       parameters:
-        - $ref: "#/parameters/path-userLFID"
+        - $ref: "#/parameters/path-userID"
         - name: body
           in: body
           schema:
@@ -1743,6 +1743,12 @@ parameters:
   path-projectID:
     name: projectID
     description: id of the CLA Group
+    in: path
+    type: string
+    required: true
+  path-userID:
+    name: userID
+    description: v1 EasyCLA user Admin ID
     in: path
     type: string
     required: true
