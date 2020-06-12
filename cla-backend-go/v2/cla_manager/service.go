@@ -128,7 +128,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	log.Debugf("Creating user role Scope for user : %s ", *params.Body.UserEmail)
 
 	orgClient := v2OrgService.GetClient()
-	hasScope, err := orgClient.IsUserHaveRoleScope(roleID, user.ID, params.CompanySFID, params.ProjectSFID)
+	hasScope, err := orgClient.IsUserHaveRoleScope("cla-manager", user.ID, params.CompanySFID, params.ProjectSFID)
 	if err != nil {
 		msg := buildErrorMessageCreate(params, err)
 		log.Warn(msg)
