@@ -11,7 +11,7 @@ function splitAssignmentPair(assignment) {
   const parts = assignment.split('=').map(value => value.trim());
 
   const obj = {};
-  if (parts.length == 1) {
+  if (parts.length === 1) {
     obj[parts[0]] = true;
   } else {
     obj[parts[0]] = parts[1];
@@ -20,7 +20,7 @@ function splitAssignmentPair(assignment) {
 }
 
 /**
- * Splits a comma seperated header into a list of key-value pairs.
+ * Splits a comma separated header into a list of key-value pairs.
  * @param {string} headerValue
  */
 function splitHeaderValue(headerValue) {

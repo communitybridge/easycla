@@ -738,16 +738,41 @@ jobs:
       - run:
           name: Deploy
           command: |
+            echo "Node version is: $(node --version)"
             echo "Using AWS profile: ${AWS_PROFILE}"
             echo "Stage is: ${STAGE}"
             echo "PROJECT_DIR=${PROJECT_DIR}"
+
+            echo "Building edge..."
+            pushd $PROJECT_DIR/edge
+            echo "Current directory is: `pwd`"
+            echo "Running install: 'yarn install'..."
+            yarn install
+            echo "Running build: 'yarn build'..."
+            yarn build
+            popd
+
             # Run the deploy scripts
             pushd ${PROJECT_DIR}
             echo "Current directory is: `pwd`"
+
             echo "Running pre-fetch config: `yarn prebuild:${STAGE}`..."
             yarn prebuild:${STAGE}
-            echo "Running: 'yarn deploy -s ${STAGE} -r ${AWS_REGION} -c' in folder: `pwd`"
-            yarn deploy -s ${STAGE} -r ${AWS_REGION} -c
+            echo "Running build..."
+            yarn build
+            echo "Running export..."
+            yarn export
+
+            echo "Running deploy in folder: `pwd`"
+            SLS_DEBUG=* ../node_modules/serverless/bin/serverless deploy -s ${STAGE} -r ${AWS_REGION} --verbose
+
+            echo "Running client deploy in folder: `pwd`"
+            SLS_DEBUG=* ../node_modules/serverless/bin/serverless client deploy -s ${STAGE} -r ${AWS_REGION} --cloudfront=true --no-confirm --no-policy-change --no-config-change
+
+            echo "Invalidating Cloudfront caches in folder: `pwd`"
+            SLS_DEBUG=* ../node_modules/serverless/bin/serverless cloudfrontInvalidate -s ${STAGE} -r ${AWS_REGION} --cloudfront=true
+
+            popd
 
           no_output_timeout: 1.5h
 
