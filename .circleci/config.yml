@@ -756,7 +756,9 @@ jobs:
             pushd ${PROJECT_DIR}
             echo "Current directory is: `pwd`"
 
-            echo "Running pre-fetch config: `yarn prebuild:${STAGE}`..."
+            echo "Running install 'yarn install'..."
+            yarn install
+            echo "Running pre-fetch config: 'yarn prebuild:${STAGE}'..."
             yarn prebuild:${STAGE}
             echo "Running build..."
             yarn build
