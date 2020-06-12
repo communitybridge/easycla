@@ -3329,6 +3329,9 @@ class Event(model_interfaces.Event):
     def get_event_data(self):
         return self.model.event_data
 
+    def get_event_date(self):
+        return self.model.event_date
+
     def get_event_id(self):
         return self.model.event_id
 
