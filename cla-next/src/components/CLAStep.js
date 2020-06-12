@@ -88,9 +88,7 @@ class CLAStep extends Component {
                 <ul>
                   <li className="cla-list">Approved developers based on email, domain, GitHub handle, or GitHub organization</li>
                   <li className="cla-list">Enable your signatories and contributors to sign CLAs using DocuSign&reg; electronic signatures</li>
-                  <li className="cla-list">
-                    <span>Enforce signing of the Corporate CLA by your developers without slowing them down with manual bureaucracy</span>
-                  </li>
+                  <li className="cla-list">Enforce signing of the Corporate CLA by your developers without slowing them down with manual bureaucracy</li>
                 </ul>
                 <div className="center-item">
                   <Link href={this.setLink('corp-console-link')}>
