@@ -86,8 +86,8 @@ paths:
 
   /metrics/cla-manager-distribution:
     get:
-      summary: Get cla manager distribution for easycla
-      description: Returns cla manager distribution
+      summary: Get CLA manager distribution for EasyCLA
+      description: Returns CLA manager distribution
       operationId: getClaManagerDistribution
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -506,8 +506,8 @@ paths:
 
   /project/external/{externalID}:
     get:
-      summary: Get Projects By External ID
-      description: Returns a list of CLA groups associated with the specified external ID
+      summary: Get CLA Groups By SFDC ID
+      description: Returns a list of CLA groups associated with the specified SFID ID
       operationId: getProjectsByExternalID
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -957,11 +957,7 @@ paths:
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - name: projectID
-          description: the project ID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectID"
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/searchTerm'
@@ -973,6 +969,206 @@ paths:
           description: 'Success'
           schema:
             $ref: '#/definitions/signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
+
+  # --------------------------------------------------------
+  # Individual CLA Endpoints - PDF, CSV, Zip Download
+  # --------------------------------------------------------
+  /signatures/project/{claGroupID}/icla/pdfs:
+    get:
+      summary: Downloads all ICLAs for this project
+      description: Downloads the ICLAs for this project
+      operationId: downloadProjectSignatureICLAs
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+      produces:
+        - application/zip
+      responses:
+        '200':
+          description: The CLA Group ICLAs as a zip file
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
+
+  /signatures/project/{claGroupID}/icla/csv:
+    get:
+      summary: Downloads all ICLA information as a CSV document for this project
+      description: Downloads the ICLA information as a CSV document for this project
+      operationId: downloadProjectSignatureICLAAsCSV
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+      produces:
+        - text/csv
+      responses:
+        '200':
+          description: The CLA Group ICLAs as a CSV file
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
+
+  /signatures/project/{claGroupID}/icla/{signatureID}/pdf:
+    get:
+      summary: Downloads the user's ICLA for this project
+      description: Downloads the user's ICLA for this project
+      operationId: downloadProjectSignatureICLA
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+        - $ref: "#/parameters/path-signatureID"
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          description: The user's ICLA as a PDF document
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
+
+  # --------------------------------------------------------
+  # Corporate CLA Endpoints - PDF, CSV, Zip Download
+  # --------------------------------------------------------
+  /signatures/project/{claGroupID}/ccla/pdfs:
+    get:
+      summary: Downloads all corporate CLAs for this project
+      description: Downloads the corporate CLAs for this project
+      operationId: downloadProjectSignatureCCLAs
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+      produces:
+        - application/zip
+      responses:
+        '200':
+          description: The CLA Group coporate CLAs as a zip file
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
+
+  /signatures/project/{claGroupID}/ccla/csv:
+    get:
+      summary: Downloads all coporate CLA information as a CSV document for this project
+      description: Downloads the corporate CLA information as a CSV document for this project
+      operationId: downloadProjectSignatureCCLAAsCSV
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+      produces:
+        - text/csv
+      responses:
+        '200':
+          description: The CLA Group corporate CLAs as a CSV file
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
+
+  /signatures/project/{claGroupID}/ccla/{signatureID}/pdf:
+    get:
+      summary: Downloads the corporate CLA for this project
+      description: Downloads the corporate CLA for this project
+      operationId: downloadProjectSignatureCorporateCLA
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+        - $ref: "#/parameters/path-signatureID"
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          description: The corporate CLA as a PDF document
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
+
+  # --------------------------------------------------------
+  # Employee CLA Endpoints - CSV Report Download
+  # --------------------------------------------------------
+  /signatures/project/{claGroupID}/employee/csv:
+    get:
+      summary: Downloads all employee CLA information as a CSV document for this project
+      description: Downloads the employee CLA information as a CSV document for this project
+      operationId: downloadProjectSignatureEmployeeAsCSV
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+      produces:
+        - text/csv
+      responses:
+        '200':
+          description: The CLA Group employee CLA's as a CSV file
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1740,6 +1936,12 @@ parameters:
     in: path
     type: string
     required: true
+  path-claGroupID:
+    name: claGroupID
+    description: ID of the CLA Group
+    in: path
+    type: string
+    required: true
   path-projectID:
     name: projectID
     description: id of the CLA Group
@@ -1767,6 +1969,12 @@ parameters:
   path-companySFID:
     name: companySFID
     description: salesforce id of the company
+    in: path
+    type: string
+    required: true
+  path-signatureID:
+    name: signatureID
+    description: id of the CLA signature
     in: path
     type: string
     required: true
