@@ -92,6 +92,8 @@ func (repo *repo) CreateProject(projectModel *models.Project) (*models.Project, 
 	//var corporateDocs []*dynamodb.AttributeValue
 	addStringAttribute(input.Item, "project_id", projectID.String())
 	addStringAttribute(input.Item, "project_external_id", projectModel.ProjectExternalID)
+	addStringAttribute(input.Item, "foundation_sfid", projectModel.FoundationSFID)
+	addStringAttribute(input.Item, "project_description", projectModel.ProjectDescription)
 	addStringAttribute(input.Item, "project_name", projectModel.ProjectName)
 	addStringAttribute(input.Item, "project_name_lower", strings.ToLower(projectModel.ProjectName))
 	addStringSliceAttribute(input.Item, "project_acl", projectModel.ProjectACL)
@@ -106,7 +108,11 @@ func (repo *repo) CreateProject(projectModel *models.Project) (*models.Project, 
 
 	addStringAttribute(input.Item, "date_created", currentTimeString)
 	addStringAttribute(input.Item, "date_modified", currentTimeString)
-	addStringAttribute(input.Item, "version", "v1")
+	if projectModel.Version == "" {
+		addStringAttribute(input.Item, "version", "v1")
+	} else {
+		addStringAttribute(input.Item, "version", projectModel.Version)
+	}
 
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
@@ -720,6 +726,7 @@ func (repo *repo) buildProjectModel(dbModel DBProjectModel, loadRepoDetails bool
 	return &models.Project{
 		ProjectID:                  dbModel.ProjectID,
 		FoundationSFID:             dbModel.FoundationSFID,
+		ProjectDescription:         dbModel.ProjectDescription,
 		ProjectExternalID:          dbModel.ProjectExternalID,
 		ProjectName:                dbModel.ProjectName,
 		ProjectACL:                 dbModel.ProjectACL,
@@ -770,6 +777,7 @@ func buildProjection() expression.ProjectionBuilder {
 	return expression.NamesList(
 		expression.Name("project_id"),
 		expression.Name("foundation_sfid"),
+		expression.Name("project_description"),
 		expression.Name("project_external_id"),
 		expression.Name("project_name"),
 		expression.Name("project_name_lower"),

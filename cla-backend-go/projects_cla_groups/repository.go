@@ -3,6 +3,9 @@ package projects_cla_groups
 import (
 	"errors"
 	"fmt"
+	"strings"
+
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -16,7 +19,8 @@ import (
 
 // constants
 const (
-	CLAGroupIDIndex = "cla-group-id-index"
+	CLAGroupIDIndex     = "cla-group-id-index"
+	FoundationSFIDIndex = "foundtion-sfid-index"
 )
 
 // errors
@@ -27,15 +31,18 @@ var (
 
 // ProjectClaGroup is database model for projects_cla_group table
 type ProjectClaGroup struct {
-	ProjectSFID string `json:"project_sfid"`
-	ClaGroupID  string `json:"cla_group_id"`
+	ProjectSFID    string `json:"project_sfid"`
+	ClaGroupID     string `json:"cla_group_id"`
+	FoundationSFID string `json:"foundation_sfid"`
 }
 
 // Repository provides interface for interacting with project_cla_groups table
 type Repository interface {
 	GetClaGroupIDForProject(projectSFID string) (*ProjectClaGroup, error)
 	GetProjectsIdsForClaGroup(claGroupID string) ([]*ProjectClaGroup, error)
-	AssociateClaGroupWithProject(claGroupID string, projectSFID string) error
+	GetProjectsIdsForFoundation(foundationSFID string) ([]*ProjectClaGroup, error)
+	AssociateClaGroupWithProject(claGroupID string, projectSFID string, foundationSFID string) error
+	RemoveProjectAssociatedWithClaGroup(claGroupID string, projectSFIDList []string, all bool) error
 }
 
 type repo struct {
@@ -121,11 +128,17 @@ func (repo *repo) GetProjectsIdsForClaGroup(claGroupID string) ([]*ProjectClaGro
 	return repo.queryClaGroupsProjects(keyCondition, aws.String(CLAGroupIDIndex))
 }
 
+func (repo *repo) GetProjectsIdsForFoundation(foundationSFID string) ([]*ProjectClaGroup, error) {
+	keyCondition := expression.Key("foundation_sfid").Equal(expression.Value(foundationSFID))
+	return repo.queryClaGroupsProjects(keyCondition, aws.String(FoundationSFIDIndex))
+}
+
 // AssociateClaGroupWithProject creates entry in db to track cla_group association with project/foundation
-func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID string) error {
+func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID string, foundationSFID string) error {
 	input := &ProjectClaGroup{
-		ProjectSFID: projectSFID,
-		ClaGroupID:  claGroupID,
+		ProjectSFID:    projectSFID,
+		ClaGroupID:     claGroupID,
+		FoundationSFID: foundationSFID,
 	}
 	av, err := dynamodbattribute.MarshalMap(input)
 	if err != nil {
@@ -146,6 +159,39 @@ func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID st
 			}
 			return err
 		}
+	}
+	return nil
+}
+
+// RemoveProjectAssociatedWithClaGroup removes all associated project with cla_group
+func (repo *repo) RemoveProjectAssociatedWithClaGroup(claGroupID string, projectSFIDList []string, all bool) error {
+	list, err := repo.GetProjectsIdsForClaGroup(claGroupID)
+	if err != nil {
+		return err
+	}
+	var projectFilter *utils.StringSet
+	if !all {
+		projectFilter = utils.NewStringSetFromStringArray(projectSFIDList)
+	}
+	var errs []string
+	for _, pr := range list {
+		if !all && !projectFilter.Include(pr.ProjectSFID) {
+			// ignore project not present in projectSFIDList
+			continue
+		}
+		_, err = repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
+			Key: map[string]*dynamodb.AttributeValue{
+				"project_sfid": {S: aws.String(pr.ProjectSFID)},
+			},
+			TableName: aws.String(repo.tableName),
+		})
+		if err != nil {
+			log.Warnf("unable to delete cla_group_association cla_group_id:%s project_sfid:%s", claGroupID, pr.ProjectSFID)
+			errs = append(errs, err.Error())
+		}
+	}
+	if len(errs) != 0 {
+		return errors.New(strings.Join(errs, ","))
 	}
 	return nil
 }

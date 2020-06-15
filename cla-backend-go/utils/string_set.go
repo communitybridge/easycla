@@ -10,6 +10,15 @@ func NewStringSet() *StringSet {
 	return &StringSet{set: make(map[string]interface{})}
 }
 
+// NewStringSetFromStringArray create string set from string array
+func NewStringSetFromStringArray(in []string) *StringSet {
+	s := &StringSet{set: make(map[string]interface{})}
+	for _, str := range in {
+		s.Add(str)
+	}
+	return s
+}
+
 // Add adds the string to string set
 func (ss *StringSet) Add(v string) {
 	ss.set[v] = nil
