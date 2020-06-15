@@ -18,6 +18,7 @@ import (
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	v1ProjectParams "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	v1User "github.com/communitybridge/easycla/cla-backend-go/user"
 	v2AcsService "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
 	v2OrgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
@@ -36,7 +37,8 @@ type service struct {
 // Service interface
 type Service interface {
 	CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse)
-	DeleteCLAManager(params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
+	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
+	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributor *v1User.User, lFxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse)
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
 }
 
@@ -126,7 +128,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	log.Debugf("Creating user role Scope for user : %s ", *params.Body.UserEmail)
 
 	orgClient := v2OrgService.GetClient()
-	hasScope, err := orgClient.IsUserHaveRoleScope(roleID, user.ID, params.CompanySFID, params.ProjectSFID)
+	hasScope, err := orgClient.IsUserHaveRoleScope("cla-manager", user.ID, params.CompanySFID, params.ProjectSFID)
 	if err != nil {
 		msg := buildErrorMessageCreate(params, err)
 		log.Warn(msg)
@@ -203,7 +205,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	return claCompanyManager, nil
 }
 
-func (s *service) DeleteCLAManager(params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse {
+func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse {
 	// Get user by firstname,lastname and email parameters
 	userServiceClient := v2UserService.GetClient()
 	user, userErr := userServiceClient.GetUserByUsername(params.UserLFID)
@@ -262,7 +264,7 @@ func (s *service) DeleteCLAManager(params cla_manager.DeleteCLAManagerParams) *m
 		}
 	}
 
-	signature, deleteErr := s.managerService.RemoveClaManager(companyModel.CompanyID, params.ProjectID, params.UserLFID)
+	signature, deleteErr := s.managerService.RemoveClaManager(companyModel.CompanyID, claGroupID, params.UserLFID)
 
 	if deleteErr != nil {
 		msg := buildErrorMessageDelete(params, deleteErr)
@@ -273,7 +275,7 @@ func (s *service) DeleteCLAManager(params cla_manager.DeleteCLAManagerParams) *m
 		}
 	}
 	if signature == nil {
-		msg := fmt.Sprintf("Not found signature for project: %s and company: %s ", params.ProjectID, companyModel.CompanyID)
+		msg := fmt.Sprintf("Not found signature for project: %s and company: %s ", claGroupID, companyModel.CompanyID)
 		log.Warn(msg)
 		return &models.ErrorResponse{
 			Message: msg,
@@ -341,8 +343,90 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 	return claManagerDesignee, nil
 }
 
-func sendEmailToOrgAdmin(adminEmail string, admin string, company string, project string, contributorEmail string, contributorName string, corporateConsole string) {
-	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorEmail)
+func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributor *v1User.User, LfxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse) {
+	orgService := v2OrgService.GetClient()
+	projectService := v2ProjectService.GetClient()
+	userService := v2UserService.GetClient()
+
+	project, projectErr := projectService.GetProject(projectID)
+	if projectErr != nil {
+		msg := fmt.Sprintf("Problem getting project by ID: %s ", projectID)
+		log.Warn(msg)
+		return nil, &models.ErrorResponse{
+			Code:    "400",
+			Message: msg,
+		}
+	}
+
+	organization, orgErr := orgService.GetOrganization(companyID)
+	if orgErr != nil {
+		msg := fmt.Sprintf("Problem getting company by ID: %s ", companyID)
+		log.Warn(msg)
+		return nil, &models.ErrorResponse{
+			Code:    "400",
+			Message: msg,
+		}
+	}
+
+	// Get suggested CLA Manager user details
+	user, userErr := userService.SearchUserByEmail(userEmail)
+	if userErr != nil {
+		msg := fmt.Sprintf("Problem getting user for userEmail: %s , error: %+v", userEmail, userErr)
+		log.Warn(msg)
+		return nil, &models.ErrorResponse{
+			Code:    "400",
+			Message: msg,
+		}
+	}
+
+	// Check if sending cla manager request to company admin
+	if contactAdmin {
+		log.Debugf("Sending email to company Admin")
+		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyID)
+		if listScopeErr != nil {
+			msg := fmt.Sprintf("Admin lookup error for organisation SFID: %s ", companyID)
+			return nil, &models.ErrorResponse{
+				Code:    "400",
+				Message: msg,
+			}
+		}
+		for _, admin := range scopes.Userroles {
+			// Check if is Gerrit User or GH User
+			if contributor.LFUsername != "" && contributor.LFEmail != "" {
+				sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, organization.Name, project.Name, contributor.LFEmail, contributor.LFUsername, LfxPortalURL)
+			} else {
+				sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, organization.Name, project.Name, contributor.UserGithubID, contributor.UserGithubUsername, LfxPortalURL)
+			}
+
+		}
+		return nil, nil
+	}
+
+	claManagerDesignee, err := s.CreateCLAManagerDesignee(companyID, projectID, userEmail)
+
+	if err != nil {
+		msg := fmt.Sprintf("Problem creating cla Manager Designee for user :%s, error: %+v ", userEmail, err)
+		return nil, &models.ErrorResponse{
+			Code:    "400",
+			Message: msg,
+		}
+	}
+
+	log.Debugf("Sending Email to CLA Manager Designee email: %s ", userEmail)
+
+	if contributor.LFUsername != "" && contributor.LFEmail != "" {
+		sendEmailToCLAManagerDesignee(LfxPortalURL, organization.Name, project.Name, userEmail, user.Name, contributor.LFEmail, contributor.LFUsername)
+	} else {
+		sendEmailToCLAManagerDesignee(LfxPortalURL, organization.Name, project.Name, userEmail, user.Name, contributor.UserGithubID, contributor.UserGithubUsername)
+	}
+
+	log.Debugf("CLA Manager designee created : %+v", claManagerDesignee)
+	return claManagerDesignee, nil
+
+}
+
+func sendEmailToOrgAdmin(adminEmail string, admin string, company string, project string, contributorID string, contributorName string, corporateConsole string) {
+	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorID)
 	recipients := []string{adminEmail}
 	body := fmt.Sprintf(`
 <html>
@@ -371,7 +455,7 @@ support</a>.</p>
 </body>
 </html>
 	
-	`, admin, project, project, contributorName, contributorEmail, corporateConsole, project)
+	`, admin, project, project, contributorName, contributorID, corporateConsole, project)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -381,8 +465,8 @@ support</a>.</p>
 	}
 }
 
-func sendEmailToCLAManagerDesignee(corporateConsole string, company string, project string, designeeEmail string, designeeName string, contributorEmail string, contributorName string) {
-	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorEmail)
+func sendEmailToCLAManagerDesignee(corporateConsole string, company string, project string, designeeEmail string, designeeName string, contributorID string, contributorName string) {
+	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorID)
 	recipients := []string{designeeEmail}
 	body := fmt.Sprintf(`
 <html>
@@ -411,7 +495,7 @@ support</a>.</p>
 </body>
 </html>
 	
-	`, designeeName, project, project, contributorName, contributorEmail, corporateConsole, project)
+	`, designeeName, project, project, contributorName, contributorID, corporateConsole, project)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

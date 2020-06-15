@@ -16,6 +16,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/cla_manager"
+	v1User "github.com/communitybridge/easycla/cla-backend-go/user"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	v2OrgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
@@ -25,7 +26,7 @@ import (
 )
 
 // Configure is the API handler routine for CLA Manager routes
-func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string, projectClaGroupRepo projects_cla_groups.Repository) {
+func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string, projectClaGroupRepo projects_cla_groups.Repository, easyCLAUserRepo v1User.RepositoryService) {
 	api.ClaManagerCreateCLAManagerHandler = cla_manager.CreateCLAManagerHandlerFunc(func(params cla_manager.CreateCLAManagerParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
@@ -65,8 +66,15 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 					authUser.UserName, params.ProjectSFID, params.CompanySFID),
 			})
 		}
+		cginfo, err := projectClaGroupRepo.GetClaGroupIDForProject(params.ProjectSFID)
+		if err != nil {
+			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: fmt.Sprintf("EasyCLA - Bad Request. No Cla Group associated with ProjectSFID: %s ", params.ProjectSFID),
+			})
+		}
 
-		errResponse := service.DeleteCLAManager(params)
+		errResponse := service.DeleteCLAManager(cginfo.ClaGroupID, params)
 		if errResponse != nil {
 			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(errResponse)
 		}
@@ -98,9 +106,37 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		return cla_manager.NewCreateCLAManagerDesigneeOK().WithPayload(claManagerDesignee)
 	})
 
+	api.ClaManagerInviteCompanyAdminHandler = cla_manager.InviteCompanyAdminHandlerFunc(func(params cla_manager.InviteCompanyAdminParams) middleware.Responder {
+
+		// Get Contributor details
+		user, userErr := easyCLAUserRepo.GetUser(params.UserID)
+
+		if userErr != nil {
+			msg := fmt.Sprintf("Problem getting user by ID : %s, error: %+v ", params.UserID, userErr)
+			return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(
+				&models.ErrorResponse{
+					Code:    "400",
+					Message: msg,
+				})
+		}
+
+		claManagerDesignee, err := service.InviteCompanyAdmin(params.Body.ContactAdmin, params.Body.CompanySFID, params.Body.ProjectSFID, params.Body.UserEmail, &user, LfxPortalURL)
+
+		if err != nil {
+			return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(err)
+		}
+		// Check if admins succcessfully sent email
+		if claManagerDesignee == nil && err == nil {
+			return cla_manager.NewInviteCompanyAdminNoContent()
+		}
+
+		// successfully created cla manager designee and sent invite
+		return cla_manager.NewInviteCompanyAdminOK().WithPayload(claManagerDesignee)
+	})
+
 	api.ClaManagerCreateCLAManagerRequestHandler = cla_manager.CreateCLAManagerRequestHandlerFunc(func(params cla_manager.CreateCLAManagerRequestParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		if !utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
+		if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
 			return cla_manager.NewCreateCLAManagerRequestForbidden().WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAManagerRequest with Project|Organization scope of %s | %s",

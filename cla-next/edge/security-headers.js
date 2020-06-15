@@ -34,7 +34,6 @@ function generateCSP(env, isDevServer) {
         'https://sso.linuxfoundation.org/',
         'https://api.staging.lfcla.com/',
         'https://api.dev.lfcla.com/',
-        'https://api.test.lfcla.com/',
         'https://api.lfcla.com/',
         'https://communitybridge.org'
     ];
@@ -56,7 +55,6 @@ function generateCSP(env, isDevServer) {
         'default-src': [NONE],
         'img-src': [SELF, 'data:',
             'https://s3.amazonaws.com/cla-project-logo-dev/',
-            'https://s3.amazonaws.com/cla-project-logo-test/',
             'https://s3.amazonaws.com/cla-project-logo-staging/',
             'https://s3.amazonaws.com/cla-project-logo-prod/'
         ],
@@ -70,7 +68,6 @@ function generateCSP(env, isDevServer) {
         'base-uri': [SELF],
         // frame-src restricts what iframe's you can put on your website
         'frame-src': [SELF, 'data:',
-            'https://drive.google.com/', // allow the google drive PDF viewer
             'https://cla-signature-files-dev.s3.amazonaws.com/',
             'https://s3.amazonaws.com/cla-project-logo-dev/',
             'https://cla-signature-files-test.s3.amazonaws.com/',

@@ -10,7 +10,7 @@ exports.handler = (event, context, callback) => {
   const headers = HEADERS;
   const resourcesNotToCache = ['/index.html', '/'];
   const resource = event.Records[0].cf.request.uri;
-  const timeToLive = 60 * 60 * 24 * 365;
+  const timeToLive = 60 * 15; // 15min
   const modifiedHeaders = setCacheControl.setCacheControl(headers, resource, resourcesNotToCache, timeToLive);
   const response = addHeaders.addHeaders(event, modifiedHeaders);
   callback(null, response);
