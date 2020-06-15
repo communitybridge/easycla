@@ -142,8 +142,7 @@ jobs:
       - run:
           name: Setup
           command: |
-            cd cla-backend-go
-            make setup-dev
+            make -f cla-backend-go/Makefile setup-dev
       - run:
           name: Clean
           command: |
