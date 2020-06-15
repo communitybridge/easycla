@@ -821,6 +821,7 @@ function buildProjectsClaGroupsTable(importResources: boolean): aws.dynamodb.Tab
       attributes: [
         { name: 'project_sfid', type: 'S' },
         { name: 'cla_group_id', type: 'S' },
+        { name: 'foundation_sfid', type: 'S' },
       ],
       hashKey: 'project_sfid',
       readCapacity: defaultReadCapacity,
@@ -829,6 +830,13 @@ function buildProjectsClaGroupsTable(importResources: boolean): aws.dynamodb.Tab
         {
           name: 'cla-group-id-index',
           hashKey: 'cla_group_id',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: 1
+        },
+        {
+          name: 'foundation-sfid-index',
+          hashKey: 'foundation_sfid',
           projectionType: 'ALL',
           readCapacity: defaultReadCapacity,
           writeCapacity: 1

@@ -10,6 +10,7 @@ type DBProjectModel struct {
 	ProjectExternalID                string                   `dynamodbav:"project_external_id"`
 	ProjectID                        string                   `dynamodbav:"project_id"`
 	FoundationSFID                   string                   `dynamodbav:"foundation_sfid"`
+	ProjectDescription               string                   `dynamodbav:"project_description"`
 	ProjectName                      string                   `dynamodbav:"project_name"`
 	ProjectNameLower                 string                   `dynamodbav:"project_name_lower"`
 	Version                          string                   `dynamodbav:"version"`

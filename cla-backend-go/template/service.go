@@ -223,11 +223,14 @@ func (s service) InjectProjectInformationIntoTemplate(template models.Template, 
 		}
 
 		if val.Name == metaField.Name && val.TemplateVariable == metaField.TemplateVariable {
+			if metaField.Value == "" {
+				return "", "", fmt.Errorf("bad request: template field value of variable %s cannot be empty", metaField.TemplateVariable)
+			}
 			metaFieldsMap[metaField.TemplateVariable] = metaField.Value
 		}
 	}
 	if len(template.MetaFields) != len(metaFieldsMap) {
-		return "", "", errors.New("required fields for template were not found")
+		return "", "", errors.New("bad request: required fields for template were not found")
 	}
 
 	iclaTemplateHTML, err := raymond.Render(template.IclaHTMLBody, metaFieldsMap)
