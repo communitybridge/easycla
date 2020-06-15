@@ -27,7 +27,8 @@ setup: $(LINT_TOOL) setup-dev setup-deploy
 
 setup_dev: setup-dev
 setup-dev:
-	go get -u github.com/go-swagger/go-swagger/cmd/swagger
+	# DD - updated to fix mismatch between generated code and errors API - TODO - replace the master/head reference below when a new release is made
+	go get -u github.com/go-swagger/go-swagger/cmd/swagger@13907db9c48050fe92ba5fd497a6c816c9dd90fb
 	go get -u golang.org/x/tools/cmd/goimports
 	go get golang.org/x/tools/cmd/cover
 	npm install -g multi-file-swagger
