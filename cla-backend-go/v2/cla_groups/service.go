@@ -3,6 +3,7 @@ package cla_groups
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
@@ -18,6 +19,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// constants
+const (
+	DontLoadDetails = false
+	LoadDetails     = true
+)
+
 type service struct {
 	v1ProjectService      v1Project.Service
 	v1TemplateService     v1Template.Service
@@ -27,6 +34,9 @@ type service struct {
 // Service interface
 type Service interface {
 	CreateCLAGroup(input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error)
+	EnrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error
+	DeleteCLAGroup(claGroupID string) error
+	ListClaGroupsUnderFoundation(foundationSFID string) (*models.ClaGroupList, error)
 }
 
 // NewService returns instance of CLA group service
@@ -198,4 +208,107 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 		IclaPdfURL:          pdfUrls.IndividualPDFURL,
 		ProjectSfidList:     input.ProjectSfidList,
 	}, nil
+}
+
+func (s *service) EnrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error {
+	f := logrus.Fields{"cla_group_id": claGroupID, "foundation_sfid": foundationSFID, "project_sfid_list": projectSFIDList}
+	log.WithFields(f).Debug("validating enroll project input")
+	err := s.validateEnrollProjectsInput(foundationSFID, projectSFIDList)
+	if err != nil {
+		log.WithFields(f).Errorf("validating enroll project input failed. error = %s", err)
+		return err
+	}
+	log.WithFields(f).Debug("validating enroll project input passed")
+	log.WithFields(f).Debug("enrolling projects in cla_group")
+	err = s.enrollProjects(claGroupID, foundationSFID, projectSFIDList)
+	if err != nil {
+		log.WithFields(f).Errorf("enrolling projects in cla_group failed. error = %s", err)
+		return err
+	}
+	log.WithFields(f).Debug("projects enrolled successfully in cla_group")
+	return nil
+}
+
+func (s *service) DeleteCLAGroup(claGroupID string) error {
+	f := logrus.Fields{"cla_group_id": claGroupID}
+	log.WithFields(f).Debug("deleting cla_group")
+	log.WithFields(f).Debug("deleting cla_group project association")
+	err := s.projectsClaGroupsRepo.RemoveProjectAssociatedWithClaGroup(claGroupID, []string{}, true)
+	if err != nil {
+		return nil
+	}
+	log.WithFields(f).Debug("deleting cla_group from dynamodb")
+	err = s.v1ProjectService.DeleteProject(claGroupID)
+	if err != nil {
+		log.WithFields(f).Errorf("deleting cla_group from dynamodb failed. error = %s", err.Error())
+		return err
+	}
+	return nil
+}
+
+func getS3Url(claGroupID string, docs []v1Models.ProjectDocument) string {
+	if len(docs) == 0 {
+		return ""
+	}
+	var version int64
+	var url string
+	for _, doc := range docs {
+		maj, err := strconv.Atoi(doc.DocumentMajorVersion)
+		if err != nil {
+			log.WithField("cla_group_id", claGroupID).Error("invalid major number in cla_group")
+			continue
+		}
+		min, err := strconv.Atoi(doc.DocumentMinorVersion)
+		if err != nil {
+			log.WithField("cla_group_id", claGroupID).Error("invalid minor number in cla_group")
+			continue
+		}
+		docVersion := int64(maj)<<32 | int64(min)
+		if docVersion > version {
+			url = doc.DocumentS3URL
+		}
+	}
+	return url
+}
+
+func (s *service) ListClaGroupsUnderFoundation(foundationSFID string) (*models.ClaGroupList, error) {
+	out := &models.ClaGroupList{List: make([]*models.ClaGroup, 0)}
+	v1ClaGroups, err := s.v1ProjectService.GetClaGroupsByFoundationSFID(foundationSFID, DontLoadDetails)
+	if err != nil {
+		return nil, err
+	}
+	m := make(map[string]*models.ClaGroup)
+	for _, v1ClaGroup := range v1ClaGroups.Projects {
+		cg := &models.ClaGroup{
+			CclaEnabled:         v1ClaGroup.ProjectCCLAEnabled,
+			CclaRequiresIcla:    v1ClaGroup.ProjectCCLARequiresICLA,
+			ClaGroupDescription: v1ClaGroup.ProjectDescription,
+			ClaGroupID:          v1ClaGroup.ProjectID,
+			ClaGroupName:        v1ClaGroup.ProjectName,
+			FoundationSfid:      v1ClaGroup.FoundationSFID,
+			IclaEnabled:         v1ClaGroup.ProjectICLAEnabled,
+			CclaPdfURL:          getS3Url(v1ClaGroup.ProjectID, v1ClaGroup.ProjectCorporateDocuments),
+			IclaPdfURL:          getS3Url(v1ClaGroup.ProjectID, v1ClaGroup.ProjectIndividualDocuments),
+			ProjectSfidList:     make([]string, 0),
+		}
+		m[cg.ClaGroupID] = cg
+	}
+	// Fill projectSFID list in cla group
+	cgprojects, err := s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(foundationSFID)
+	if err != nil {
+		return nil, err
+	}
+	for _, cgproject := range cgprojects {
+		cg, ok := m[cgproject.ClaGroupID]
+		if !ok {
+			log.Warnf("stale data present in cla-group-projects table. cla_group_id : %s", cgproject.ClaGroupID)
+			continue
+		}
+		cg.ProjectSfidList = append(cg.ProjectSfidList, cgproject.ProjectSFID)
+	}
+	// now build output array
+	for _, cg := range m {
+		out.List = append(out.List, cg)
+	}
+	return out, nil
 }
