@@ -26,6 +26,7 @@ import (
 	v1SignatureParams "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
+	orgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 	v2ProjectServiceModels "github.com/communitybridge/easycla/cla-backend-go/v2/project-service/models"
 	v2UserService "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
@@ -51,6 +52,7 @@ type Service interface {
 	GetCompanyProjectActiveCLAs(companyID string, projectSFID string) (*models.ActiveClaList, error)
 	GetCompanyProjectContributors(projectSFID string, companySFID string, searchTerm string) (*models.CorporateContributorList, error)
 	GetCompanyProjectCLA(authUser *auth.User, companySFID, projectSFID string) (*models.CompanyProjectClaList, error)
+	CreateCompany(companyName string, companyWebsite string, userID string) (*models.CompanyOutput, error)
 }
 
 // ProjectRepo contains project repo methods
@@ -64,6 +66,7 @@ type service struct {
 	projectRepo   ProjectRepo
 	userRepo      users.UserRepository
 	companyRepo   company.IRepository
+	repo          IRepository
 }
 
 type signatureResponse struct {
@@ -74,12 +77,13 @@ type signatureResponse struct {
 }
 
 // NewService returns instance of company service
-func NewService(sigRepo signatures.SignatureRepository, projectRepo ProjectRepo, usersRepo users.UserRepository, companyRepo company.IRepository) Service {
+func NewService(sigRepo signatures.SignatureRepository, projectRepo ProjectRepo, usersRepo users.UserRepository, companyRepo company.IRepository, v2CompanyRepo IRepository) Service {
 	return &service{
 		signatureRepo: sigRepo,
 		projectRepo:   projectRepo,
 		userRepo:      usersRepo,
 		companyRepo:   companyRepo,
+		repo:          v2CompanyRepo,
 	}
 }
 
@@ -496,6 +500,31 @@ func getCompanyProjectEmployeeSignatures(wg *sync.WaitGroup, signatureRepo signa
 		signatures: sigs,
 		err:        err,
 	}
+}
+
+func (s *service) CreateCompany(companyName string, companyWebsite string, userID string) (*models.CompanyOutput, error) {
+
+	// Create Sales Force company
+	orgClient := orgService.GetClient()
+	log.Debugf("Creating Organization : %s Website: %s", companyName, companyWebsite)
+	org, err := orgClient.CreateOrg(companyName, companyWebsite)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create Easy CLA Company
+	log.Debugf("Creating EasyCLA company : %s ", companyName)
+	err = s.repo.CreateCompany(companyName, org.ID, userID)
+	if err != nil {
+		log.Warnf("Failed to create EasyCLA company for company: %s ", companyName)
+		return nil, err
+	}
+	return &models.CompanyOutput{
+		CompanyName:    org.Name,
+		CompanyWebsite: companyWebsite,
+		LogoURL:        org.LogoURL,
+	}, nil
+
 }
 
 func (s *service) GetCompanyProjectCLA(authUser *auth.User, companySFID, projectSFID string) (*models.CompanyProjectClaList, error) {
