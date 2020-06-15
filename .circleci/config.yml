@@ -139,6 +139,7 @@ jobs:
             - "e9:13:85:f1:b1:a1:25:bf:f5:44:34:66:82:1e:31:59"
       - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
       - *install-node-12
+      - run: echo 'export GO111MODULE=on' >> $BASH_ENV
       - run:
           name: Setup
           command: |
@@ -158,11 +159,6 @@ jobs:
           command: |
             cd cla-backend-go
             make swagger
-      - run:
-          name: Validate Swagger
-          command: |
-            cd cla-backend-go
-            make swagger-validate
       - run:
           name: Build
           command: |

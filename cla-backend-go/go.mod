@@ -12,18 +12,20 @@ require (
 	github.com/aws/aws-lambda-go v1.16.0
 	github.com/aws/aws-sdk-go v1.30.14
 	github.com/aymerick/raymond v2.0.2+incompatible
-	github.com/bitly/go-simplejson v0.5.0
+	github.com/bitly/go-simplejson v0.5.0 // indirect
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/bradleyfalzon/ghinstallation v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fnproject/fdk-go v0.0.2
-	github.com/go-openapi/errors v0.19.4
+	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/go-openapi/errors v0.19.6
 	github.com/go-openapi/loads v0.19.5
-	github.com/go-openapi/runtime v0.19.15
-	github.com/go-openapi/spec v0.19.7
+	github.com/go-openapi/runtime v0.19.16
+	github.com/go-openapi/spec v0.19.8
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-openapi/swag v0.19.9
-	github.com/go-openapi/validate v0.19.8
-	github.com/go-swagger/go-swagger v0.23.0 // indirect
+	github.com/go-openapi/validate v0.19.10
+	github.com/go-swagger/go-swagger v0.23.1-0.20200615161556-13907db9c480 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
@@ -32,22 +34,27 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/jmoiron/sqlx v1.2.0
-	github.com/json-iterator/go v1.1.9 // indirect
+	github.com/kr/pretty v0.2.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/lytics/logrus v0.0.0-20170528191427-4389a17ed024
-	github.com/mitchellh/mapstructure v1.3.0 // indirect
 	github.com/mozillazg/request v0.8.0 // indirect
+	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/savaki/dynastore v0.0.0-20171109173440-28d8558bb429
 	github.com/sirupsen/logrus v1.5.0
+	github.com/spf13/afero v1.2.2 // indirect
+	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.0.0
+	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.0
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	github.com/tencentyun/scf-go-lib v0.0.0-20200116145541-9a6ea1bf75b8
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
-	go.mongodb.org/mongo-driver v1.3.3 // indirect
-	golang.org/x/net v0.0.0-20200506145744-7e3656a0809f
+	golang.org/x/mod v0.3.0 // indirect
+	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200509044756-6aff5f38e54f // indirect
-	golang.org/x/tools v0.0.0-20200511202723-1762287ae9dd // indirect
-	gopkg.in/ini.v1 v1.56.0 // indirect
+	golang.org/x/sys v0.0.0-20200615190026-2780627062e0 // indirect
+	golang.org/x/tools v0.0.0-20200615190835-a2fa627c4bf4 // indirect
+	gopkg.in/ini.v1 v1.57.0 // indirect
 )
