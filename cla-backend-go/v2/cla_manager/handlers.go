@@ -49,7 +49,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				Message: fmt.Sprintf("EasyCLA - 500 Internal server error. error = %s", err.Error()),
 			})
 		}
-		compCLAManager, errorResponse := service.CreateCLAManager(cginfo.ClaGroupID, params, authUser.Email)
+		compCLAManager, errorResponse := service.CreateCLAManager(cginfo.ClaGroupID, params, authUser.UserName, authUser.Email)
 		if errorResponse != nil {
 			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(errorResponse)
 		}
@@ -236,11 +236,12 @@ func buildErrorMessageDelete(params cla_manager.DeleteCLAManagerParams, err erro
 		params.CompanySFID, params.ProjectSFID, params.UserLFID, err)
 }
 
-func sendEmailToUserWithNoLFID(projectModel *v1Models.Project, managerEmail string, designeeName string, designeeEmail string) {
+// sendEmailToUserWithNoLFID helper function to send email to a given user with no LFID
+func sendEmailToUserWithNoLFID(projectModel *v1Models.Project, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail string) {
 	projectName := projectModel.ProjectName
 	// subject string, body string, recipients []string
 	subject := fmt.Sprint("EasyCLA: Invitation to create LFID and complete process of becoming CLA Manager")
-	recipients := []string{designeeEmail}
+	recipients := []string{userWithNoLFIDEmail}
 	body := fmt.Sprintf(`
 <html>
 <head>
@@ -251,10 +252,10 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 <body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the Project %s in the EasyCLA system.</p>
-<p>User %s was trying to add you as a CLA Manager for Project %s in the EasyCLA system </p>
-<p>In order to become CLA Manager, you will need to create a LFID </p>
-<p>Please create a LFID by following this link <a href="https://identity.linuxfoundation.org/" target="_blank"> and let the user <emailid> know your new LFID %s </p>
-<p>Then user %s will be able to add you as a CLA Manager.</p>
+<p>User %s (%s) was trying to add you as a CLA Manager for Project %s but was unable to identify your account details in
+the EasyCLA system. In order to become a CLA Manager for Project %s, you will need to create a LFID by 
+<a href="https://identity.linuxfoundation.org/" target="_blank">following this link</a> and establishing an account.
+Once complete, notify the user %s and they will be able to add you as a CLA Manager.</p>
 <p>If you need help or have questions about EasyCLA, you can
 <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
@@ -262,7 +263,9 @@ support</a>.</p>
 <p>Thanks,
 <p>EasyCLA support team</p>
 </body>
-</html>`, designeeName, projectName, managerEmail, projectName, managerEmail, managerEmail)
+</html>`, userWithNoLFIDName, projectName,
+		requesterUsername, requesterEmail, projectName, projectName,
+		requesterUsername)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

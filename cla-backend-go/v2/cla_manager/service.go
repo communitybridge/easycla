@@ -36,7 +36,7 @@ type service struct {
 
 // Service interface
 type Service interface {
-	CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse)
+	CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse)
 	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
 	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributor *v1User.User, lFxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse)
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
@@ -52,7 +52,7 @@ func NewService(compService company.IService, projService project.Service, mgrSe
 }
 
 // CreateCLAManager creates Cla Manager
-func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse) {
+func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse) {
 	if *params.Body.FirstName == "" || *params.Body.LastName == "" || *params.Body.UserEmail == "" {
 		msg := fmt.Sprintf("firstName, lastName and UserEmail cannot be empty")
 		log.Warn(msg)
@@ -89,8 +89,9 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 
 	if userErr != nil {
 		designeeName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
+		designeeEmail := *params.Body.UserEmail
 		log.Debugf("LFID not existing for %s", designeeName)
-		sendEmailToUserWithNoLFID(claGroup, authEmail, designeeName, *params.Body.UserEmail)
+		sendEmailToUserWithNoLFID(claGroup, authUsername, authEmail, designeeName, designeeEmail)
 		msg := fmt.Sprintf("Failed search for User with firstname : %s, lastname: %s , email: %s , error: %v ",
 			*params.Body.FirstName, *params.Body.LastName, *params.Body.UserEmail, userErr)
 		log.Warn(msg)
