@@ -4,6 +4,11 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"sync"
+
+	"github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
+
+	"errors"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
@@ -29,6 +34,7 @@ type service struct {
 	v1ProjectService      v1Project.Service
 	v1TemplateService     v1Template.Service
 	projectsClaGroupsRepo projects_cla_groups.Repository
+	metricsRepo           metrics.Repository
 }
 
 // Service interface
@@ -40,11 +46,12 @@ type Service interface {
 }
 
 // NewService returns instance of CLA group service
-func NewService(projectService v1Project.Service, templateService v1Template.Service, projectsClaGroupsRepo projects_cla_groups.Repository) Service {
+func NewService(projectService v1Project.Service, templateService v1Template.Service, projectsClaGroupsRepo projects_cla_groups.Repository, metricsRepo metrics.Repository) Service {
 	return &service{
 		v1ProjectService:      projectService, // aka cla_group service of v1
 		v1TemplateService:     templateService,
 		projectsClaGroupsRepo: projectsClaGroupsRepo,
+		metricsRepo:           metricsRepo,
 	}
 }
 
@@ -64,15 +71,19 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) error
 	if claGroupModel != nil {
 		return fmt.Errorf("bad request: cla_group with name %s already exist", input.ClaGroupName)
 	}
-	err = s.validateEnrollProjectsInput(input.FoundationSfid, input.ProjectSfidList)
+	err = s.validateEnrollProjectsInput(input.FoundationSfid, "", input.ProjectSfidList)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFIDList []string) error {
+func (s *service) validateEnrollProjectsInput(foundationSFID string, claGroupID string, projectSFIDList []string) error {
 	psc := v2ProjectService.GetClient()
+
+	if len(projectSFIDList) == 0 {
+		return fmt.Errorf("bad request: there should be at least one subproject associated")
+	}
 
 	// fetch foundation and its sub projects
 	foundationProjectDetails, err := psc.GetProject(foundationSFID)
@@ -101,14 +112,91 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFID
 	if err != nil {
 		return err
 	}
+	cgmap := make(map[string]int) // key cla-group-id, value: no of projects
 	enabledProjectList := utils.NewStringSet()
 	for _, pr := range enabledProjects {
 		enabledProjectList.Add(pr.ProjectSFID)
+		count, ok := cgmap[pr.ClaGroupID]
+		if !ok {
+			cgmap[pr.ClaGroupID] = 1
+		} else {
+			cgmap[pr.ClaGroupID] = count + 1
+		}
 	}
 	for _, projectSFID := range projectSFIDList {
 		if enabledProjectList.Include(projectSFID) {
-			return fmt.Errorf("bad request: invalid project_sfid passed : %s. This project is already part of another cla_group", projectSFID)
+			return fmt.Errorf("bad request: invalid project_sfid passed : %s. This project is already enrolled in one of the cla_group", projectSFID)
 		}
+	}
+
+	// check conditional validity that foundation has either one foundation level cla-group
+	// or multiple project level cla-group
+	err = validateEnrollProject(cgmap, claGroupID, projectSFIDList)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// validateEnrollProject ensures that foundation has either one foundation level cla-group
+// or multiple project-level cla-group. any other combination is invalid
+// cla-group is considered foundation level only if it has multiple projects present in it
+func validateEnrollProject(cgmap map[string]int, claGroupID string, projectSFIDList []string) error {
+	var foundationLevelClaPresent, projectLevelClaPresent bool
+	for _, count := range cgmap {
+		if count > 1 {
+			foundationLevelClaPresent = true
+		} else {
+			projectLevelClaPresent = true
+		}
+	}
+	var err error
+	if claGroupID == "" {
+		// new cla-group
+		isNewClaGroupLevelFoundation := len(projectSFIDList) > 1
+		err = validateEnrollProjectsForNewClaGroup(foundationLevelClaPresent, projectLevelClaPresent, isNewClaGroupLevelFoundation)
+	} else {
+		haveMultipleProjectLevelCla := len(cgmap) > 1
+		var existingClaGroupIsFoundationLevel bool
+		count, ok := cgmap[claGroupID]
+		if !ok {
+			existingClaGroupIsFoundationLevel = false
+		} else {
+			existingClaGroupIsFoundationLevel = count > 1
+		}
+		err = validateEnrollProjectsForAlreadyPresentClaGroup(haveMultipleProjectLevelCla, existingClaGroupIsFoundationLevel)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateEnrollProjectsForNewClaGroup(foundationLevelClaPresent, projectLevelClaPresent bool, isNewClaGroupLevelFoundation bool) error {
+	if foundationLevelClaPresent {
+		// foundation level cla is already present
+		return errors.New("bad request: foundation level cla group is already present. Can not create new cla group")
+	}
+	if !projectLevelClaPresent {
+		// there is not any cla present in system
+		return nil
+	}
+	if projectLevelClaPresent && isNewClaGroupLevelFoundation {
+		// project level cla is present and new cla group is foundation level
+		return errors.New("bad request: project level cla group is present. Can not create new cla group with foundation level")
+	}
+	return nil
+}
+
+func validateEnrollProjectsForAlreadyPresentClaGroup(haveMultipleProjectLevelCla bool, existingClaGroupIsFoundationLevel bool) error {
+	if existingClaGroupIsFoundationLevel {
+		// adding projects to foundation level cla-group
+		return nil
+	}
+	// existing cla group is project level
+	// this case is of upgrade cla-group from project-level to cla-group level
+	if haveMultipleProjectLevelCla {
+		return errors.New("cannot enroll projects to this cla-group because another project level cla is already present in system")
 	}
 	return nil
 }
@@ -196,6 +284,13 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 		return nil, err
 	}
 
+	projectList := make([]*models.ClaGroupProject, 0)
+	for _, p := range input.ProjectSfidList {
+		projectList = append(projectList, &models.ClaGroupProject{
+			ProjectSfid: p,
+		})
+	}
+
 	return &models.ClaGroup{
 		CclaEnabled:         claGroup.ProjectCCLAEnabled,
 		CclaPdfURL:          pdfUrls.CorporatePDFURL,
@@ -206,14 +301,14 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 		FoundationSfid:      claGroup.FoundationSFID,
 		IclaEnabled:         claGroup.ProjectICLAEnabled,
 		IclaPdfURL:          pdfUrls.IndividualPDFURL,
-		ProjectSfidList:     input.ProjectSfidList,
+		ProjectList:         projectList,
 	}, nil
 }
 
 func (s *service) EnrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error {
 	f := logrus.Fields{"cla_group_id": claGroupID, "foundation_sfid": foundationSFID, "project_sfid_list": projectSFIDList}
 	log.WithFields(f).Debug("validating enroll project input")
-	err := s.validateEnrollProjectsInput(foundationSFID, projectSFIDList)
+	err := s.validateEnrollProjectsInput(foundationSFID, claGroupID, projectSFIDList)
 	if err != nil {
 		log.WithFields(f).Errorf("validating enroll project input failed. error = %s", err)
 		return err
@@ -278,6 +373,7 @@ func (s *service) ListClaGroupsUnderFoundation(foundationSFID string) (*models.C
 		return nil, err
 	}
 	m := make(map[string]*models.ClaGroup)
+	claGroupIDList := utils.NewStringSet()
 	for _, v1ClaGroup := range v1ClaGroups.Projects {
 		cg := &models.ClaGroup{
 			CclaEnabled:         v1ClaGroup.ProjectCCLAEnabled,
@@ -289,8 +385,9 @@ func (s *service) ListClaGroupsUnderFoundation(foundationSFID string) (*models.C
 			IclaEnabled:         v1ClaGroup.ProjectICLAEnabled,
 			CclaPdfURL:          getS3Url(v1ClaGroup.ProjectID, v1ClaGroup.ProjectCorporateDocuments),
 			IclaPdfURL:          getS3Url(v1ClaGroup.ProjectID, v1ClaGroup.ProjectIndividualDocuments),
-			ProjectSfidList:     make([]string, 0),
+			ProjectList:         make([]*models.ClaGroupProject, 0),
 		}
+		claGroupIDList.Add(cg.ClaGroupID)
 		m[cg.ClaGroupID] = cg
 	}
 	// Fill projectSFID list in cla group
@@ -304,11 +401,56 @@ func (s *service) ListClaGroupsUnderFoundation(foundationSFID string) (*models.C
 			log.Warnf("stale data present in cla-group-projects table. cla_group_id : %s", cgproject.ClaGroupID)
 			continue
 		}
-		cg.ProjectSfidList = append(cg.ProjectSfidList, cgproject.ProjectSFID)
+		cg.ProjectList = append(cg.ProjectList, &models.ClaGroupProject{
+			ProjectSfid:       cgproject.ProjectSFID,
+			RepositoriesCount: cgproject.RepositoriesCount,
+		})
+		cg.RepositoriesCount += cgproject.RepositoriesCount
 	}
+	cgmetrics := s.getMetrics(claGroupIDList.List())
+
 	// now build output array
 	for _, cg := range m {
+		pm, ok := cgmetrics[cg.ClaGroupID]
+		if ok {
+			cg.TotalSignatures = pm.CorporateContributorsCount + pm.IndividualContributorsCount
+		}
 		out.List = append(out.List, cg)
 	}
 	return out, nil
+}
+
+func (s *service) getMetrics(claGroupIDList []string) map[string]*metrics.ProjectMetric {
+	m := make(map[string]*metrics.ProjectMetric)
+	type result struct {
+		claGroupID string
+		metric     *metrics.ProjectMetric
+		err        error
+	}
+	rchan := make(chan *result)
+	var wg sync.WaitGroup
+	wg.Add(len(claGroupIDList))
+	go func() {
+		wg.Wait()
+		close(rchan)
+	}()
+	for _, cgid := range claGroupIDList {
+		go func(swg *sync.WaitGroup, claGroupID string, resultChan chan *result) {
+			defer swg.Done()
+			metric, err := s.metricsRepo.GetProjectMetric(claGroupID)
+			resultChan <- &result{
+				claGroupID: claGroupID,
+				metric:     metric,
+				err:        err,
+			}
+		}(&wg, cgid, rchan)
+	}
+	for r := range rchan {
+		if r.err != nil {
+			log.WithField("cla_group_id", r.claGroupID).Error("unable to get cla_group metrics")
+			continue
+		}
+		m[r.claGroupID] = r.metric
+	}
+	return m
 }

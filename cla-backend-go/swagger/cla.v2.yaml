@@ -2855,13 +2855,20 @@ definitions:
         example: 'a09410000182dD2AAI'
         description: foundation sfid under which this cla group is created
         x-omitempty: false
-      project_sfid_list:
+      repositories_count:
+        type: integer
+        description: total repositories under this cla-group
+        x-omitempty: false
+      total_signatures:
+        type: integer
+        description: aggregate count of ICLA and CCLA contributors within this CLA Group
+        x-omitempty: false
+      project_list:
         x-omitempty: false
         description: list of projects under foundation for which this cla group is created
         type: array
         items:
-          type: string
-          example: 'a092M00001IV3znQAD'
+          $ref: '#/definitions/cla-group-project'
       icla_pdf_url:
         description: template url for icla document
         type: string
@@ -2871,6 +2878,19 @@ definitions:
         description: template url for ccla document
         type: string
         example: 'https://cla-signature-files-dev.s3.amazonaws.com/contract-group/b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f/template/ccla.pdf'
+        x-omitempty: false
+
+  cla-group-project:
+    type: object
+    properties:
+      project_sfid:
+        type: string
+        description: salesforce id of the project in cla-group
+        example: 'a092M00001IV3znQAD'
+        x-omitempty: false
+      repositories_count:
+        description: repositories added from this project into cla-group
+        type: integer
         x-omitempty: false
 
   error-response:
