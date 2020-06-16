@@ -54,7 +54,7 @@ require (
 	golang.org/x/mod v0.3.0 // indirect
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200615190026-2780627062e0 // indirect
-	golang.org/x/tools v0.0.0-20200615190835-a2fa627c4bf4 // indirect
+	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
+	golang.org/x/tools v0.0.0-20200615222825-6aa8f57aacd9 // indirect
 	gopkg.in/ini.v1 v1.57.0 // indirect
 )

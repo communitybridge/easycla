@@ -41,6 +41,8 @@ type Repository interface {
 	SearchEvents(params *eventOps.SearchEventsParams, pageSize int64) (*models.EventList, error)
 	GetRecentEvents(pageSize int64) (*models.EventList, error)
 	GetRecentEventsForCompanyProject(companyID, projectID string, pageSize int64) (*models.EventList, error)
+	GetFoundationSFDCEvents(foundationSFDC string, paramPageSize *int64) (*models.EventList, error)
+	GetProjectSFDCEvents(projectSFDC string, paramPageSize *int64) (*models.EventList, error)
 }
 
 // repository data model
@@ -281,6 +283,16 @@ func (repo *repository) SearchEvents(params *eventOps.SearchEventsParams, pageSi
 		Events:  events,
 		NextKey: lastEvaluatedKey,
 	}, nil
+}
+
+// GetFoundationSFDCEvents returns the list of foundation events
+func (repo *repository) GetFoundationSFDCEvents(foundationSFDC string, paramPageSize *int64) (*models.EventList, error) {
+	return nil, nil
+}
+
+// GetProjectSFDCEvents returns the list of project events
+func (repo *repository) GetProjectSFDCEvents(projectSFDC string, paramPageSize *int64) (*models.EventList, error) {
+	return nil, nil
 }
 
 // toString encodes the map as a string

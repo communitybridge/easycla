@@ -18,6 +18,8 @@ type Service interface {
 	SearchEvents(params *eventOps.SearchEventsParams) (*models.EventList, error)
 	GetRecentEvents(paramPageSize *int64) (*models.EventList, error)
 	GetRecentEventsForCompanyProject(companyID, projectSFID string, pageSize *int64) (*models.EventList, error)
+	GetFoundationSFDCEvents(foundationSFDC string, paramPageSize *int64) (*models.EventList, error)
+	GetProjectSFDCEvents(projectSFDC string, paramPageSize *int64) (*models.EventList, error)
 }
 
 // CombinedRepo contains the various methods of other repositories
@@ -71,6 +73,16 @@ func (s *service) GetRecentEventsForCompanyProject(companyID, projectSFID string
 		pageSize = *paramPageSize
 	}
 	return s.repo.GetRecentEventsForCompanyProject(companyID, projectSFID, pageSize)
+}
+
+// GetFoundationSFDCEvents returns the list of foundation events
+func (s *service) GetFoundationSFDCEvents(foundationSFDC string, paramPageSize *int64) (*models.EventList, error) {
+	return s.repo.GetFoundationSFDCEvents(foundationSFDC, paramPageSize)
+}
+
+// GetProjectSFDCEvents returns the list of project events
+func (s *service) GetProjectSFDCEvents(projectSFDC string, paramPageSize *int64) (*models.EventList, error) {
+	return s.repo.GetProjectSFDCEvents(projectSFDC, paramPageSize)
 }
 
 // LogEventArgs is argument to LogEvent function

@@ -130,7 +130,7 @@ jobs:
 
   buildGoBackend: &buildGoBackendAnchor
     docker:
-      - image: circleci/golang:1.14.2
+      - image: circleci/golang:1.14.4
     working_directory: /go/src/github.com/communitybridge/easycla/
     steps:
       - checkout
@@ -849,7 +849,7 @@ jobs:
 
   functionalTestsGo: &functionalTestsGo
     docker:
-      - image: circleci/golang:1.14.2
+      - image: circleci/golang:1.14.4
     steps:
       - attach_workspace:
           at: ~/

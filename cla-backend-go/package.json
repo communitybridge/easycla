@@ -19,7 +19,7 @@
     "install": "^0.13.0",
     "node.extend": "^2.0.2",
     "request": "^2.88.0",
-    "serverless": "^1.69.0",
+    "serverless": "^1.72.0",
     "serverless-finch": "^2.3.2",
     "serverless-layers": "^1.4.3",
     "serverless-plugin-tracing": "^2.0.0",
