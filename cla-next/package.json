@@ -5,7 +5,7 @@
     "dev": "node server.js",
     "build": "pushd node_modules/next/dist && ./bin/next build ../../../src && popd",
     "start": "NODE_ENV=production yarn dev",
-    "export": "pushd node_modules/next/dist && ./bin/next export ../../../src && popd",
+    "export": "cd node_modules/next/dist && ./bin/next export ../../../src",
     "prebuild:qa": "STAGE_ENV=qa node ./src/config/scripts/prefetch-ssm.js",
     "prebuild:dev": "STAGE_ENV=dev node ./src/config/scripts/prefetch-ssm.js",
     "prebuild:staging": "STAGE_ENV=staging node ./src/config/scripts/prefetch-ssm.js",
