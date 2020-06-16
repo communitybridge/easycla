@@ -1871,6 +1871,31 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - company
+  
+  /user/{userID}/company:
+    post:
+      summary: api that creates salesforce company
+      security: []
+      description: Creates a Company for an individual contributor that fails to get a company during the signing getProjectSignatures
+      operationId: createCompany
+      parameters:
+        - $ref: "#/parameters/path-userID"
+        - name: input
+          in: body
+          schema:
+            $ref: '#/definitions/company-input'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema: 
+            $ref: '#/definitions/company-output'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - company
 
   /request-corporate-signature:
     post:
@@ -2270,7 +2295,28 @@ definitions:
       createdAt:
         type: string
     title: Company metrics
+  
+  company-input:
+    type: object
+    required:
+      - companyName
+      - companyWebsite
+    properties:
+      companyName:
+        type: string
+      companyWebsite:
+        type: string
 
+  company-output:
+    type: object
+    properties:
+      companyName:
+        type: string
+      companyWebsite:
+        type: string
+      logoURL:
+        type: string
+  
   cla-manager-distribution:
     type: object
     properties:
