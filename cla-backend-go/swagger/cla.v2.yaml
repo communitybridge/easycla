@@ -574,8 +574,8 @@ paths:
 
   /events/recent:
     get:
-      summary: search events
-      description: Returns list of events matching with search criteria
+      summary: List recent events - requires Admin-level access
+      description: Returns list of recent events
       operationId: getRecentEvents
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -590,6 +590,66 @@ paths:
           description: Success
           schema:
             $ref: '#/definitions/event-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - events
+
+  /events/foundation/{foundationSFID}/csv:
+    get:
+      summary: Download all the events for the foundation as a CSV document
+      description: Download all the events for the foundation as a CSV document
+      operationId: getFoundationEventsAsCSV
+      parameters:
+        - $ref: "#/parameters/path-foundationSFID"
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: '#/parameters/pageSize'
+      produces:
+        - text/csv
+      responses:
+        '200':
+          description: The events for the SFDC foundation as a CSV document
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - events
+
+  /events/project/{projectSFID}/csv:
+    get:
+      summary: Download all the events for the project as a CSV document
+      description: Download all the events for the project as a CSV document
+      operationId: getProjectEventsAsCSV
+      parameters:
+        - $ref: "#/parameters/path-projectSFID"
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: '#/parameters/pageSize'
+      produces:
+        - text/csv
+      responses:
+        '200':
+          description: The events for the SFDC project as a CSV document
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -663,16 +723,12 @@ paths:
       tags:
         - template
 
-  /clagroup/{claGroupId}/template:
-    parameters:
-      - name: claGroupId
-        in: path
-        type: string
-        required: true
+  /clagroup/{claGroupID}/template:
     post:
       summary: Create contract template for CLA Group
       operationId: createCLAGroupTemplate
       parameters:
+        - $ref: "#/parameters/path-claGroupID"
         - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
@@ -1932,15 +1988,21 @@ parameters:
     type: string
     required: false
     enum: [ccla,cla]
-  path-projectSFID:
-    name: projectSFID
-    description: salesforce id of the project/foundation
-    in: path
-    type: string
-    required: true
   path-claGroupID:
     name: claGroupID
     description: ID of the CLA Group
+    in: path
+    type: string
+    required: true
+  path-foundationSFID:
+    name: foundationSFID
+    description: the Salesforce ID of the Foundation
+    in: path
+    type: string
+    required: true
+  path-projectSFID:
+    name: projectSFID
+    description: the Salesforce ID of the project
     in: path
     type: string
     required: true
