@@ -3,9 +3,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "node server.js",
-    "build": "cd node_modules/next/dist && ./bin/next build ../../../src",
+    "build": "pushd node_modules/next/dist && ./bin/next build ../../../src && popd",
     "start": "NODE_ENV=production yarn dev",
-    "export": "cd node_modules/next/dist && ./bin/next export ../../../src",
+    "export": "pushd node_modules/next/dist && ./bin/next export ../../../src && popd",
     "prebuild:qa": "STAGE_ENV=qa node ./src/config/scripts/prefetch-ssm.js",
     "prebuild:dev": "STAGE_ENV=dev node ./src/config/scripts/prefetch-ssm.js",
     "prebuild:staging": "STAGE_ENV=staging node ./src/config/scripts/prefetch-ssm.js",
@@ -15,9 +15,9 @@
     "preserve:dev": "STAGE_ENV=dev node ./src/config/scripts/prefetch-ssm.js",
     "preserve:prod": "STAGE_ENV=prod node ./src/config/scripts/prefetch-ssm.js",
     "sls": "../node_modules/serverless/bin/serverless",
-    "deploy:dev": "SLS_DEBUG=* ../node_modules/serverless/bin/serverless deploy -s dev -r us-east-1 --verbose --cloudfront=true && echo 'Running client deploy...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless client deploy -s dev -r us-east-1 --cloudfront=true --no-confirm --no-policy-change --no-config-change && echo 'Invalidating cloudfront cache...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless cloudfrontInvalidate -s dev -r us-east-1 --cloudfront=true",
-    "deploy:staging": "SLS_DEBUG=* ../node_modules/serverless/bin/serverless deploy -s staging -r us-east-1 --verbose --cloudfront=true && echo 'Running client deploy...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless client deploy -s staging -r us-east-1 --cloudfront=true --no-confirm --no-policy-change --no-config-change && echo 'Invalidating cloudfront cache...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless cloudfrontInvalidate -s staging -r us-east-1 --cloudfront=true",
-    "deploy:prod": "SLS_DEBUG=* ../node_modules/serverless/bin/serverless deploy -s prod -r us-east-1 --verbose --cloudfront=true && echo 'Running client deploy...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless client deploy -s prod -r us-east-1 --cloudfront=true --no-confirm --no-policy-change --no-config-change && echo 'Invalidating cloudfront cache...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless cloudfrontInvalidate -s prod -r us-east-1 --cloudfront=true",
+    "deploy:dev": "STAGE_ENV=dev node ./src/config/scripts/prefetch-ssm.js && pushd node_modules/next/dist && ./bin/next build ../../../src && popd && pushd node_modules/next/dist && ./bin/next export ../../../src && popd && echo 'Deploying...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless deploy -s dev -r us-east-1 --verbose --cloudfront=true && echo 'Running client deploy...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless client deploy -s dev -r us-east-1 --cloudfront=true --no-confirm --no-policy-change --no-config-change && echo 'Invalidating cloudfront cache...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless cloudfrontInvalidate -s dev -r us-east-1 --cloudfront=true",
+    "deploy:staging": "STAGE_ENV=staging node ./src/config/scripts/prefetch-ssm.js && pushd node_modules/next/dist && ./bin/next build ../../../src && popd && pushd node_modules/next/dist && ./bin/next export ../../../src && popd && echo 'Deploying...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless deploy -s staging -r us-east-1 --verbose --cloudfront=true && echo 'Running client deploy...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless client deploy -s staging -r us-east-1 --cloudfront=true --no-confirm --no-policy-change --no-config-change && echo 'Invalidating cloudfront cache...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless cloudfrontInvalidate -s staging -r us-east-1 --cloudfront=true",
+    "deploy:prod": "STAGE_ENV=prod node ./src/config/scripts/prefetch-ssm.js && pushd node_modules/next/dist && ./bin/next build ../../../src && popd && pushd node_modules/next/dist && ./bin/next export ../../../src && popd && echo 'Deploying...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless deploy -s prod -r us-east-1 --verbose --cloudfront=true && echo 'Running client deploy...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless client deploy -s prod -r us-east-1 --cloudfront=true --no-confirm --no-policy-change --no-config-change && echo 'Invalidating cloudfront cache...' && SLS_DEBUG=* ../node_modules/serverless/bin/serverless cloudfrontInvalidate -s prod -r us-east-1 --cloudfront=true",
     "test": "jest"
   },
   "dependencies": {

@@ -53,6 +53,16 @@ func (repo *mockRepository) SearchEvents(params *eventOps.SearchEventsParams, pa
 	return eventList, nil
 }
 
+// GetFoundationSFDCEvents returns the list of foundation events
+func (repo *mockRepository) GetFoundationSFDCEvents(foundationSFDC string, paramPageSize *int64) (*models.EventList, error) {
+	return nil, nil
+}
+
+// GetProjectSFDCEvents returns the list of project events
+func (repo *mockRepository) GetProjectSFDCEvents(projectSFDC string, paramPageSize *int64) (*models.EventList, error) {
+	return nil, nil
+}
+
 func eventInList(eventList []*models.Event, event *models.Event) bool {
 	var retVal = false
 	for _, theEvent := range eventList {

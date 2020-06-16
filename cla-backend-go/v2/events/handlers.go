@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 package events
 
 import (
@@ -29,15 +32,67 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 	api.EventsGetRecentEventsHandler = events.GetRecentEventsHandlerFunc(
 		func(params events.GetRecentEventsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !utils.IsUserAdmin(authUser) {
+				return events.NewGetRecentEventsForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Recent Events - only Admins allowed to see all events.",
+						authUser.UserName),
+				})
+			}
+
 			result, err := service.GetRecentEvents(params.PageSize)
 			if err != nil {
 				return events.NewGetRecentEventsBadRequest().WithPayload(errorResponse(err))
 			}
+
 			resp, err := v2EventList(result)
 			if err != nil {
 				return events.NewGetRecentEventsInternalServerError().WithPayload(errorResponse(err))
 			}
+
 			return events.NewGetRecentEventsOK().WithPayload(resp)
+		})
+
+	api.EventsGetFoundationEventsAsCSVHandler = events.GetFoundationEventsAsCSVHandlerFunc(
+		func(params events.GetFoundationEventsAsCSVParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !utils.IsUserAuthorizedForProject(authUser, params.FoundationSFID) {
+				return events.NewGetRecentEventsForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Foundation Events for foundation %s.",
+						authUser.UserName, params.FoundationSFID),
+				})
+			}
+
+			result, err := service.GetFoundationSFDCEvents(params.FoundationSFID, params.PageSize)
+			if err != nil {
+				return events.NewGetFoundationEventsAsCSVBadRequest().WithPayload(errorResponse(err))
+			}
+
+			filename := fmt.Sprintf("foundation-events-%s.csv", params.FoundationSFID)
+			csvResponder := CSVEventsResponse(filename, result)
+			return csvResponder
+		})
+
+	api.EventsGetProjectEventsAsCSVHandler = events.GetProjectEventsAsCSVHandlerFunc(
+		func(params events.GetProjectEventsAsCSVParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+				return events.NewGetRecentEventsForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project Events for project %s.",
+						authUser.UserName, params.ProjectSFID),
+				})
+			}
+
+			result, err := service.GetProjectSFDCEvents(params.ProjectSFID, params.PageSize)
+			if err != nil {
+				return events.NewGetProjectEventsAsCSVBadRequest().WithPayload(errorResponse(err))
+			}
+
+			filename := fmt.Sprintf("project-events-%s.csv", params.ProjectSFID)
+			csvResponder := CSVEventsResponse(filename, result)
+			return csvResponder
 		})
 
 	api.EventsGetRecentCompanyProjectEventsHandler = events.GetRecentCompanyProjectEventsHandlerFunc(
