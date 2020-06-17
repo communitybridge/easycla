@@ -3001,8 +3001,8 @@ definitions:
         type: boolean
         example: 'true'
         description: returns true if the CLA Group validates, false otherwise
-        x-omitempty: true
-      validation-errors:
+        x-omitempty: false
+      validation_errors:
         x-omitempty: true
         description: list of CLA Group validation errors
         type: array

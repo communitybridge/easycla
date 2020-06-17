@@ -18,29 +18,35 @@ set_functional_test_environment: &set_functional_test_environment
       echo "export AUTH0_PASSWORD='${!AUTH0_PASSWORD_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_CLIENT_ID='${!AUTH0_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
 
-      # Prospective CLA Manager User (functional test)
+      # Prospective CLA Manager User (for functional tests)
       echo "export AUTH0_USER1_EMAIL='${!AUTH0_USER1_EMAIL_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER1_USERNAME='${!AUTH0_USER1_USERNAME_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER1_PASSWORD='${!AUTH0_USER1_PASSWORD_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER1_CLIENT_ID='${!AUTH0_USER1_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
 
-      # CLA Manager User (functional test)
+      # CLA Manager User (for functional tests)
       echo "export AUTH0_USER2_EMAIL='${!AUTH0_USER2_EMAIL_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER2_USERNAME='${!AUTH0_USER2_USERNAME_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER2_PASSWORD='${!AUTH0_USER2_PASSWORD_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER2_CLIENT_ID='${!AUTH0_USER2_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
 
-      # CLA Manager Intel (functional test)
+      # CLA Manager Intel (for functional tests)
       echo "export AUTH0_USER3_EMAIL='${!AUTH0_USER3_EMAIL_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER3_USERNAME='${!AUTH0_USER3_USERNAME_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER3_PASSWORD='${!AUTH0_USER3_PASSWORD_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER3_CLIENT_ID='${!AUTH0_USER3_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
 
-      # CLA Manager AT&T (functional test)
+      # CLA Manager AT&T (for functional tests)
       echo "export AUTH0_USER4_EMAIL='${!AUTH0_USER4_EMAIL_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER4_USERNAME='${!AUTH0_USER4_USERNAME_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER4_PASSWORD='${!AUTH0_USER4_PASSWORD_ENV_VAR}'" >> ${BASH_ENV}
       echo "export AUTH0_USER4_CLIENT_ID='${!AUTH0_USER4_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
+
+      # Project Manager (for functional tests)
+      echo "export AUTH0_USER5_EMAIL='${!AUTH0_USER5_EMAIL_ENV_VAR}'" >> ${BASH_ENV}
+      echo "export AUTH0_USER5_USERNAME='${!AUTH0_USER5_USERNAME_ENV_VAR}'" >> ${BASH_ENV}
+      echo "export AUTH0_USER5_PASSWORD='${!AUTH0_USER5_PASSWORD_ENV_VAR}'" >> ${BASH_ENV}
+      echo "export AUTH0_USER5_CLIENT_ID='${!AUTH0_USER5_CLIENT_ID_ENV_VAR}'" >> ${BASH_ENV}
 
 step-library:
   - &install-node-8

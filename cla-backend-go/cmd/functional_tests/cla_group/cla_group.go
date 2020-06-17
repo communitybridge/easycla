@@ -53,6 +53,7 @@ func (t *TestBehaviour) RunGetCLAProjectManagerToken() {
 		ExpectJsonType("scope", reflect.String).
 		ExpectJsonType("expires_in", reflect.String).
 		AfterText(func(F *frisby.Frisby, text string, err error) {
+			// log.Debugf("response: %s", text)
 			var auth0Response test_models.Auth0Response
 			unmarshallErr := json.Unmarshal([]byte(text), &auth0Response)
 			if unmarshallErr != nil {
@@ -82,7 +83,7 @@ func (t *TestBehaviour) getCLAProjectManagerHeaders() map[string]string {
 
 // RunValidateCLAGroupValid runs a validation test against the specified parameters - expecting a successful validation
 func (t *TestBehaviour) RunValidateCLAGroupValid(claGroupName, claGroupDescription string) {
-	endpoint := fmt.Sprintf("%s/v4/clagroup/validate", t.apiURL)
+	endpoint := fmt.Sprintf("%s/v4/cla-group/validate", t.apiURL)
 	frisby.Create(fmt.Sprintf("CLA Group Validate - Valid Input - CLA Group Name: %s, Description: %s", claGroupName, claGroupDescription)).
 		Post(endpoint).
 		SetHeaders(t.getCLAProjectManagerHeaders()).
@@ -109,10 +110,26 @@ func (t *TestBehaviour) RunValidateCLAGroupValid(claGroupName, claGroupDescripti
 		})
 }
 
-// RunValidateCLAGroupInvalid runs a validation test against the specified parameters - expecting a unsuccessful validation
-func (t *TestBehaviour) RunValidateCLAGroupInvalid(claGroupName, claGroupDescription string) {
-	endpoint := fmt.Sprintf("%s/v4/clagroup/validate", t.apiURL)
-	frisby.Create(fmt.Sprintf("CLA Group Validate - Invalid Input - CLA Group Name: %s, Description: %s", claGroupName, claGroupDescription)).
+// RunValidateCLAGroupInvalidMinMax runs a validation test against the specified parameters - expecting a unsuccessful validation
+func (t *TestBehaviour) RunValidateCLAGroupInvalidMinMax(claGroupName, claGroupDescription string) {
+	endpoint := fmt.Sprintf("%s/v4/cla-group/validate", t.apiURL)
+	frisby.Create(fmt.Sprintf("CLA Group Validate - Invalid Input Min/Max - CLA Group Name: %s, Description: %s", claGroupName, claGroupDescription)).
+		Post(endpoint).
+		SetHeaders(t.getCLAProjectManagerHeaders()).
+		SetJson(map[string]string{
+			"cla_group_name":        claGroupName,
+			"cla_group_description": claGroupDescription,
+		}).
+		Send().
+		ExpectStatus(422).
+		// ExpectJsonType("code", reflect.String). // type seems to be json.Number ?
+		ExpectJsonType("message", reflect.String)
+}
+
+// RunValidateCLAGroupInvalidDuplicate runs a validation test against the specified parameters - expecting a unsuccessful validation
+func (t *TestBehaviour) RunValidateCLAGroupInvalidDuplicate(claGroupName, claGroupDescription string) {
+	endpoint := fmt.Sprintf("%s/v4/cla-group/validate", t.apiURL)
+	frisby.Create(fmt.Sprintf("CLA Group Validate - Invalid Input Duplicate - CLA Group Name: %s, Description: %s", claGroupName, claGroupDescription)).
 		Post(endpoint).
 		SetHeaders(t.getCLAProjectManagerHeaders()).
 		SetJson(map[string]string{
@@ -122,6 +139,7 @@ func (t *TestBehaviour) RunValidateCLAGroupInvalid(claGroupName, claGroupDescrip
 		Send().
 		ExpectStatus(200).
 		ExpectJsonType("valid", reflect.Bool).
+		// ExpectJsonType("validation_errors", reflect.String). // map[string]interface{}
 		AfterText(func(F *frisby.Frisby, text string, err error) {
 			var response models.ClaGroupValidationResponse
 			unmarshallErr := json.Unmarshal([]byte(text), &response)
@@ -147,6 +165,8 @@ func (t *TestBehaviour) RunAllTests() {
 	// Need our authentication tokens for each persona/user
 	t.RunGetCLAProjectManagerToken()
 	t.RunValidateCLAGroupValid("functional-test", "functional test description")
-	t.RunValidateCLAGroupInvalid("fu", "functional test description")
-	t.RunValidateCLAGroupInvalid("functional-test", "fu")
+	t.RunValidateCLAGroupInvalidMinMax("fu", "functional test description")
+	t.RunValidateCLAGroupInvalidMinMax("functional-test", "fu")
+	// This CLA Group name is already in the DB - should trigger a duplicate violation
+	t.RunValidateCLAGroupInvalidDuplicate("CLA group name QA", "doesn't matter")
 }
