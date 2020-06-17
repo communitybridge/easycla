@@ -330,6 +330,38 @@ paths:
       tags:
         - cla-group
 
+  /cla-group/validate:
+    post:
+      summary: Validates the CLA Group
+      description: Validates the CLA Group provided input parameters
+      operationId: validateClaGroup
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: validationInputRequest
+          in: body
+          schema:
+            $ref: '#/definitions/cla-group-validation-request'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-group-validation-response'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - cla-group
+
   /project:
     put:
       summary: Update Project by ID
@@ -2389,7 +2421,6 @@ definitions:
         items:
           $ref: '#/definitions/project-metric'
 
-
   project-metric:
     type: object
     properties:
@@ -2779,55 +2810,95 @@ definitions:
       cla_group_id:
         type: string
         example: 'b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f'
-        description: id of the cla group
+        description: id of the CLA group
         x-omitempty: false
       cla_group_name:
         type: string
         example: 'OpenCue'
-        description: name of the cla group
+        description: name of the CLA group
         x-omitempty: false
+        minLength: 3
+        maxLength: 256
       cla_group_description:
         type: string
-        example: 'cla group created for OpenCue project'
-        description: description of the cla group
+        example: 'CLA group created for OpenCue project'
+        description: description of the CLA group
         x-omitempty: false
+        minLength: 3
+        maxLength: 256
       ccla_enabled:
         type: boolean
         example: true
-        description: flag to indicate if ccla is enabled
+        description: flag to indicate if CCLA is enabled
         x-omitempty: false
       ccla_requires_icla:
         type: boolean
         example: true
-        description: flag to indicate if corporate contributors requires to sign icla
+        description: flag to indicate if corporate contributors requires to sign ICLA
         x-omitempty: false
       icla_enabled:
         type: boolean
         example: true
-        description: flag to indicate if icla is enabled
+        description: flag to indicate if ICLA is enabled
         x-omitempty: false
       foundation_sfid:
         type: string
         example: 'a09410000182dD2AAI'
-        description: foundation sfid under which this cla group is created
+        description: foundation sfid under which this CLA group is created
         x-omitempty: false
       project_sfid_list:
         x-omitempty: false
-        description: list of projects under foundation for which this cla group is created
+        description: list of projects under foundation for which this CLA group is created
         type: array
         items:
           type: string
           example: 'a092M00001IV3znQAD'
       icla_pdf_url:
-        description: template url for icla document
+        description: template URL for ICLA document
         type: string
         example: 'https://cla-signature-files-dev.s3.amazonaws.com/contract-group/b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f/template/icla.pdf'
         x-omitempty: false
       ccla_pdf_url:
-        description: template url for ccla document
+        description: template URL for CCLA document
         type: string
         example: 'https://cla-signature-files-dev.s3.amazonaws.com/contract-group/b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f/template/ccla.pdf'
         x-omitempty: false
+
+  cla-group-validation-request:
+    type: object
+    properties:
+      cla_group_name:
+        type: string
+        example: 'OpenCue'
+        description: name of the CLA group
+        x-omitempty: true
+        x-nullable: true
+        minLength: 3
+        maxLength: 256
+      cla_group_description:
+        type: string
+        example: 'CLA group created for OpenCue project'
+        description: description of the CLA group
+        x-omitempty: true
+        x-nullable: true
+        minLength: 3
+        maxLength: 256
+
+  cla-group-validation-response:
+    type: object
+    properties:
+      valid:
+        type: boolean
+        example: 'true'
+        description: returns true if the CLA Group validates, false otherwise
+        x-omitempty: true
+      validation-errors:
+        x-omitempty: true
+        description: list of CLA Group validation errors
+        type: array
+        items:
+          type: string
+          example: 'duplicate CLA Group name'
 
   error-response:
     type: object
