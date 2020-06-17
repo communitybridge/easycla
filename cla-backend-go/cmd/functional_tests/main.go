@@ -66,14 +66,15 @@ func main() {
 	if apiURL == "" {
 		apiURL = API_URL
 	}
-	log.Debugf("API_URL    : %s", apiURL)
 
 	// V2 API URL goes through the API-GW and ACS
 	v2APIURL := os.Getenv("V2_API_URL")
 	if v2APIURL == "" {
 		v2APIURL = V2_API_URL
 	}
-	log.Debugf("v2_API_URL : %s", v2APIURL)
+
+	log.Debugf("API_URL                 : %s", apiURL)
+	log.Debugf("v2_API_URL              : %s", v2APIURL)
 
 	// Used as Prospective CLA Manager for Deal Project, Deal Company
 	auth0User1Config := loadUser("AUTH0_USER1")
