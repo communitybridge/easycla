@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 package cla_groups
 
 import (
@@ -27,6 +30,7 @@ type service struct {
 // Service interface
 type Service interface {
 	CreateCLAGroup(input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error)
+	ValidateCLAGroup(input *models.ClaGroupValidationRequest) (bool, []string)
 }
 
 // NewService returns instance of CLA group service
@@ -36,6 +40,127 @@ func NewService(projectService v1Project.Service, templateService v1Template.Ser
 		v1TemplateService:     templateService,
 		projectsClaGroupsRepo: projectsClaGroupsRepo,
 	}
+}
+
+// CreateCLAGroup is the service handler for creating a new CLA Group
+func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error) {
+	f := logrus.Fields{"function": "CreateCLAGroup"}
+	// Validate the input
+	log.WithFields(f).WithField("input", input).Debugf("validating create cla group input")
+	err := s.validateClaGroupInput(input)
+	if err != nil {
+		log.WithFields(f).Warnf("validation of create cla group input failed")
+		return nil, err
+	}
+
+	// Create cla group
+	log.WithFields(f).WithField("input", input).Debugf("creating cla group")
+	claGroup, err := s.v1ProjectService.CreateProject(&v1Models.Project{
+		FoundationSFID:          input.FoundationSfid,
+		ProjectDescription:      input.ClaGroupDescription,
+		ProjectCCLAEnabled:      input.CclaEnabled,
+		ProjectCCLARequiresICLA: input.CclaRequiresIcla,
+		ProjectExternalID:       input.FoundationSfid,
+		ProjectACL:              []string{projectManagerLFID},
+		ProjectICLAEnabled:      input.IclaEnabled,
+		ProjectName:             input.ClaGroupName,
+		Version:                 "v2",
+	})
+	if err != nil {
+		log.WithFields(f).Errorf("creating cla group failed. error = %s", err.Error())
+		return nil, err
+	}
+	log.WithFields(f).WithField("cla_group", claGroup).Debugf("cla group created")
+	f["cla_group_id"] = claGroup.ProjectID
+
+	// Attach template with cla group
+	var templateFields v1Models.CreateClaGroupTemplate
+	err = copier.Copy(&templateFields, &input.TemplateFields)
+	if err != nil {
+		log.WithFields(f).Error("unable to create v1 create cla group template model", err)
+		return nil, err
+	}
+	log.WithFields(f).Debug("attaching cla_group_template")
+	if templateFields.TemplateID == "" {
+		log.WithFields(f).Debug("using apache style template as template_id is not passed")
+		templateFields.TemplateID = v1Template.ApacheStyleTemplateID
+	}
+	pdfUrls, err := s.v1TemplateService.CreateCLAGroupTemplate(context.Background(), claGroup.ProjectID, &templateFields)
+	if err != nil {
+		log.WithFields(f).Error("attaching cla_group_template failed", err)
+		log.WithFields(f).Debug("deleting created cla group")
+		deleteErr := s.v1ProjectService.DeleteProject(claGroup.ProjectID)
+		if deleteErr != nil {
+			log.WithFields(f).Error("deleting created cla group failed.", deleteErr)
+		}
+		return nil, err
+	}
+	log.WithFields(f).Debug("cla_group_template attached", pdfUrls)
+
+	// Associate projects with cla group
+	err = s.enrollProjects(claGroup.ProjectID, input.FoundationSfid, input.ProjectSfidList)
+	if err != nil {
+		log.WithFields(f).Debug("deleting created cla group")
+		deleteErr := s.v1ProjectService.DeleteProject(claGroup.ProjectID)
+		if deleteErr != nil {
+			log.WithFields(f).Error("deleting created cla group failed.", deleteErr)
+		}
+		return nil, err
+	}
+
+	return &models.ClaGroup{
+		CclaEnabled:         claGroup.ProjectCCLAEnabled,
+		CclaPdfURL:          pdfUrls.CorporatePDFURL,
+		CclaRequiresIcla:    claGroup.ProjectCCLARequiresICLA,
+		ClaGroupDescription: claGroup.ProjectDescription,
+		ClaGroupID:          claGroup.ProjectID,
+		ClaGroupName:        claGroup.ProjectName,
+		FoundationSfid:      claGroup.FoundationSFID,
+		IclaEnabled:         claGroup.ProjectICLAEnabled,
+		IclaPdfURL:          pdfUrls.IndividualPDFURL,
+		ProjectSfidList:     input.ProjectSfidList,
+	}, nil
+}
+
+// ValidateCLAGroup is the service handler for validating a CLA Group
+func (s *service) ValidateCLAGroup(input *models.ClaGroupValidationRequest) (bool, []string) {
+
+	var valid = true
+	var validationErrors []string
+
+	if input.ClaGroupName != nil {
+		claGroupModel, err := s.v1ProjectService.GetProjectByName(*input.ClaGroupName)
+		if err != nil {
+			valid = false
+			validationErrors = append(validationErrors, fmt.Sprintf("unable to query project service - error: %+v", err))
+		}
+		if claGroupModel != nil {
+			valid = false
+			validationErrors = append(validationErrors, fmt.Sprintf("CLA Group with name %s already exist", *input.ClaGroupName))
+		}
+
+		if len(*input.ClaGroupName) < 3 {
+			valid = false
+			validationErrors = append(validationErrors, "CLA Group name should be at least 3 characters")
+		}
+		if len(*input.ClaGroupName) > 256 {
+			valid = false
+			validationErrors = append(validationErrors, "description maximum length of the CLA Group name is 256 characters")
+		}
+	}
+
+	if input.ClaGroupDescription != nil {
+		if len(*input.ClaGroupDescription) < 3 {
+			valid = false
+			validationErrors = append(validationErrors, "description should be at least 3 characters")
+		}
+		if len(*input.ClaGroupDescription) > 256 {
+			valid = false
+			validationErrors = append(validationErrors, "description maximum length of the description is 256 characters")
+		}
+	}
+
+	return valid, validationErrors
 }
 
 func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) error {
@@ -119,83 +244,4 @@ func (s *service) enrollProjects(claGroupID string, foundationSFID string, proje
 		}
 	}
 	return nil
-}
-
-func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error) {
-	f := logrus.Fields{"function": "CreateCLAGroup"}
-	// Validate the input
-	log.WithFields(f).WithField("input", input).Debugf("validating create cla group input")
-	err := s.validateClaGroupInput(input)
-	if err != nil {
-		log.WithFields(f).Warnf("validation of create cla group input failed")
-		return nil, err
-	}
-
-	// Create cla group
-	log.WithFields(f).WithField("input", input).Debugf("creating cla group")
-	claGroup, err := s.v1ProjectService.CreateProject(&v1Models.Project{
-		FoundationSFID:          input.FoundationSfid,
-		ProjectDescription:      input.ClaGroupDescription,
-		ProjectCCLAEnabled:      input.CclaEnabled,
-		ProjectCCLARequiresICLA: input.CclaRequiresIcla,
-		ProjectExternalID:       input.FoundationSfid,
-		ProjectACL:              []string{projectManagerLFID},
-		ProjectICLAEnabled:      input.IclaEnabled,
-		ProjectName:             input.ClaGroupName,
-		Version:                 "v2",
-	})
-	if err != nil {
-		log.WithFields(f).Errorf("creating cla group failed. error = %s", err.Error())
-		return nil, err
-	}
-	log.WithFields(f).WithField("cla_group", claGroup).Debugf("cla group created")
-	f["cla_group_id"] = claGroup.ProjectID
-
-	// Attach template with cla group
-	var templateFields v1Models.CreateClaGroupTemplate
-	err = copier.Copy(&templateFields, &input.TemplateFields)
-	if err != nil {
-		log.WithFields(f).Error("unable to create v1 create cla group template model", err)
-		return nil, err
-	}
-	log.WithFields(f).Debug("attaching cla_group_template")
-	if templateFields.TemplateID == "" {
-		log.WithFields(f).Debug("using apache style template as template_id is not passed")
-		templateFields.TemplateID = v1Template.ApacheStyleTemplateID
-	}
-	pdfUrls, err := s.v1TemplateService.CreateCLAGroupTemplate(context.Background(), claGroup.ProjectID, &templateFields)
-	if err != nil {
-		log.WithFields(f).Error("attaching cla_group_template failed", err)
-		log.WithFields(f).Debug("deleting created cla group")
-		deleteErr := s.v1ProjectService.DeleteProject(claGroup.ProjectID)
-		if deleteErr != nil {
-			log.WithFields(f).Error("deleting created cla group failed.", deleteErr)
-		}
-		return nil, err
-	}
-	log.WithFields(f).Debug("cla_group_template attached", pdfUrls)
-
-	// Associate projects with cla group
-	err = s.enrollProjects(claGroup.ProjectID, input.FoundationSfid, input.ProjectSfidList)
-	if err != nil {
-		log.WithFields(f).Debug("deleting created cla group")
-		deleteErr := s.v1ProjectService.DeleteProject(claGroup.ProjectID)
-		if deleteErr != nil {
-			log.WithFields(f).Error("deleting created cla group failed.", deleteErr)
-		}
-		return nil, err
-	}
-
-	return &models.ClaGroup{
-		CclaEnabled:         claGroup.ProjectCCLAEnabled,
-		CclaPdfURL:          pdfUrls.CorporatePDFURL,
-		CclaRequiresIcla:    claGroup.ProjectCCLARequiresICLA,
-		ClaGroupDescription: claGroup.ProjectDescription,
-		ClaGroupID:          claGroup.ProjectID,
-		ClaGroupName:        claGroup.ProjectName,
-		FoundationSfid:      claGroup.FoundationSFID,
-		IclaEnabled:         claGroup.ProjectICLAEnabled,
-		IclaPdfURL:          pdfUrls.IndividualPDFURL,
-		ProjectSfidList:     input.ProjectSfidList,
-	}, nil
 }
