@@ -24,6 +24,7 @@ type Service interface {
 	GetProjectByName(projectName string) (*models.Project, error)
 	DeleteProject(projectID string) error
 	UpdateProject(projectModel *models.Project) (*models.Project, error)
+	GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error)
 }
 
 // service
@@ -137,4 +138,9 @@ func (s service) DeleteProject(projectID string) error {
 // UpdateProject service method
 func (s service) UpdateProject(projectModel *models.Project) (*models.Project, error) {
 	return s.repo.UpdateProject(projectModel)
+}
+
+// GetClaGroupsByFoundationSFID service method
+func (s service) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error) {
+	return s.repo.GetClaGroupsByFoundationSFID(foundationSFID, loadRepoDetails)
 }

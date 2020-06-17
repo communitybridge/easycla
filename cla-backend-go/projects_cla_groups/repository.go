@@ -31,9 +31,10 @@ var (
 
 // ProjectClaGroup is database model for projects_cla_group table
 type ProjectClaGroup struct {
-	ProjectSFID    string `json:"project_sfid"`
-	ClaGroupID     string `json:"cla_group_id"`
-	FoundationSFID string `json:"foundation_sfid"`
+	ProjectSFID       string `json:"project_sfid"`
+	ClaGroupID        string `json:"cla_group_id"`
+	FoundationSFID    string `json:"foundation_sfid"`
+	RepositoriesCount int64  `json:"repositories_count"`
 }
 
 // Repository provides interface for interacting with project_cla_groups table
