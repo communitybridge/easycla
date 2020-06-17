@@ -48,7 +48,7 @@ func CreateEventWrapper(eventType string) *event.Event {
 	}
 }
 
-// ToEmailEvent converts an organization model into a create org event model
+// ToEmailEvent creates an email event model from the email details
 func ToEmailEvent(sender *string, recipients []string, subject *string, emailBody *string) *emailevent.EmailEvent {
 
 	// Convert the string array to an array of strfmt email recipients
@@ -57,7 +57,8 @@ func ToEmailEvent(sender *string, recipients []string, subject *string, emailBod
 		emailRecipients[i] = strfmt.Email(recipient)
 	}
 
-	log.Debug("Generating email event")
+	log.Debug("Generating email event...")
+	_, nowAsString := CurrentTime()
 	from := strfmt.Email(*sender)
 	return &emailevent.EmailEvent{
 		From:       &from,
@@ -65,6 +66,31 @@ func ToEmailEvent(sender *string, recipients []string, subject *string, emailBod
 		Subject:    subject,
 		Body:       emailBody,
 		Type:       "cla-email-event",
+		CreatedOn:  nowAsString,
+	}
+}
+
+// ToEmailTemplateEvent creates an email event model from the email details
+func ToEmailTemplateEvent(sender *string, recipients []string, subject *string, emailBody *string, templateName string) *emailevent.EmailEvent {
+
+	// Convert the string array to an array of strfmt email recipients
+	var emailRecipients = make([]strfmt.Email, len(recipients))
+	for i, recipient := range recipients {
+		emailRecipients[i] = strfmt.Email(recipient)
+	}
+
+	log.Debug("Generating email template event...")
+	_, nowAsString := CurrentTime()
+	from := strfmt.Email(*sender)
+	return &emailevent.EmailEvent{
+		From:         &from,
+		Recipients:   emailRecipients,
+		Subject:      subject,
+		Body:         emailBody,
+		Type:         "cla-email-event",
+		Parameters:   map[string]interface{}{"BODY": emailBody},
+		TemplateName: templateName,
+		CreatedOn:    nowAsString,
 	}
 }
 

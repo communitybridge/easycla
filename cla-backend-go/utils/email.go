@@ -43,7 +43,7 @@ func (s *snsEmail) SendEmail(subject string, body string, recipients []string) e
 	}
 
 	event := CreateEventWrapper("cla-email-event")
-	event.Data = ToEmailEvent(&s.senderEmailAddress, recipients, &subject, &body)
+	event.Data = ToEmailTemplateEvent(&s.senderEmailAddress, recipients, &subject, &body, "EasyCLA System Email Template")
 
 	b, err := event.MarshalBinary()
 	if err != nil {
