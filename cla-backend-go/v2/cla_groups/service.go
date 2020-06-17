@@ -141,6 +141,9 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, claGroupID 
 // validateEnrollProject ensures that foundation has either one foundation level cla-group
 // or multiple project-level cla-group. any other combination is invalid
 // cla-group is considered foundation level only if it has multiple projects present in it
+// cgmap input should contain map of cla_group_id and count of projects inside it
+// claGroupID should be empty if you are calling validation function for creating new cla group
+// projectSFID list should projects list that we are enrolling inside cla group
 func validateEnrollProject(cgmap map[string]int, claGroupID string, projectSFIDList []string) error {
 	var foundationLevelClaPresent, projectLevelClaPresent bool
 	for _, count := range cgmap {
