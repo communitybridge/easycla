@@ -6,6 +6,8 @@ package main
 import (
 	"os"
 
+	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/cla_group"
+
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/cla_manager"
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/health"
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/signatures"
@@ -73,14 +75,21 @@ func main() {
 	}
 	log.Debugf("v2_API_URL : %s", v2APIURL)
 
+	// Used as Prospective CLA Manager for Deal Project, Deal Company
 	auth0User1Config := loadUser("AUTH0_USER1")
+	// Used as CLA Manager for Deal Project, Deal Company
 	auth0User2Config := loadUser("AUTH0_USER2")
+	// Used as CLA Manager for ColorIO Project - Intel Corp
 	auth0User3Config := loadUser("AUTH0_USER3")
+	// Used as CLA Manager for ColorIO Project - AT&T
 	auth0User4Config := loadUser("AUTH0_USER4")
+	// Project Manager
+	auth0User5Config := loadUser("AUTH0_USER5")
 
 	health.NewTestBehaviour(v2APIURL, auth0User1Config).RunAllTests()
 	cla_manager.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
 	signatures.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
 	approval_list.NewTestBehaviour(v2APIURL, auth0User1Config, auth0User2Config, auth0User3Config, auth0User4Config).RunAllTests()
+	cla_group.NewTestBehaviour(v2APIURL, auth0User5Config).RunAllTests()
 	frisby.Global.PrintReport()
 }

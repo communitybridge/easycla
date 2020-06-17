@@ -23,6 +23,7 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 					authUser.UserName, params.ClaGroupInput.FoundationSfid),
 			})
 		}
+
 		claGroup, err := service.CreateCLAGroup(params.ClaGroupInput, utils.StringValue(params.XUSERNAME))
 		if err != nil {
 			if strings.Contains(err.Error(), "bad request") {
@@ -36,6 +37,19 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
 			})
 		}
+
 		return cla_group.NewCreateClaGroupOK().WithPayload(claGroup)
+	})
+
+	api.ClaGroupValidateClaGroupHandler = cla_group.ValidateClaGroupHandlerFunc(func(params cla_group.ValidateClaGroupParams, authUser *auth.User) middleware.Responder {
+		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+
+		// No API user validation - anyone can confirm or use the validate API endpoint
+
+		valid, validationErrors := service.ValidateCLAGroup(params.ValidationInputRequest)
+		return cla_group.NewValidateClaGroupOK().WithPayload(&models.ClaGroupValidationResponse{
+			Valid:            valid,
+			ValidationErrors: validationErrors,
+		})
 	})
 }
