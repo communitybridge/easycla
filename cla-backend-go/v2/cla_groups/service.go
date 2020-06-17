@@ -245,7 +245,7 @@ func validateEnrollProjectsForAlreadyPresentClaGroup(haveMultipleProjectLevelCla
 	// existing cla group is project level
 	// this case is of upgrade cla-group from project-level to cla-group level
 	if haveMultipleProjectLevelCla {
-		return errors.New("cannot enroll projects to this cla-group because another project level cla is already present in system")
+		return errors.New("bad request: cannot enroll projects to this cla-group because another project level cla is already present in system")
 	}
 	return nil
 }

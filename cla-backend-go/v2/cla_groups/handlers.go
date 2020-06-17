@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/events"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
@@ -14,7 +16,7 @@ import (
 )
 
 // Configure configures the cla group api
-func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1Project.Service) {
+func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1Project.Service, eventsService events.Service) {
 	api.ClaGroupCreateClaGroupHandler = cla_group.CreateClaGroupHandlerFunc(func(params cla_group.CreateClaGroupParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !utils.IsUserAuthorizedForProject(authUser, params.ClaGroupInput.FoundationSfid) {
@@ -39,6 +41,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			})
 		}
 
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:  events.ProjectCreated,
+			ProjectID:  claGroup.ClaGroupID,
+			LfUsername: authUser.UserName,
+			EventData:  &events.ProjectCreatedEventData{},
+		})
 		return cla_group.NewCreateClaGroupOK().WithPayload(claGroup)
 	})
 
@@ -73,6 +81,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
 			})
 		}
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.ProjectDeleted,
+			ProjectModel: cg,
+			LfUsername:   authUser.UserName,
+			EventData:    &events.ProjectDeletedEventData{},
+		})
 		return cla_group.NewDeleteClaGroupOK()
 	})
 	api.ClaGroupEnrollProjectsHandler = cla_group.EnrollProjectsHandlerFunc(func(params cla_group.EnrollProjectsParams, authUser *auth.User) middleware.Responder {
@@ -112,6 +126,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
 			})
 		}
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.ProjectUpdated,
+			ProjectModel: cg,
+			LfUsername:   authUser.UserName,
+			EventData:    &events.ProjectUpdatedEventData{},
+		})
 		return cla_group.NewEnrollProjectsOK()
 	})
 	api.ClaGroupListClaGroupsUnderFoundationHandler = cla_group.ListClaGroupsUnderFoundationHandlerFunc(func(params cla_group.ListClaGroupsUnderFoundationParams, authUser *auth.User) middleware.Responder {
