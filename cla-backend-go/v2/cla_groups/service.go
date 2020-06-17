@@ -190,6 +190,7 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, claGroupID 
 // claGroupID should be empty if you are calling validation function for creating new cla group
 // projectSFID list should projects list that we are enrolling inside cla group
 func validateEnrollProject(cgmap map[string]int, claGroupID string, projectSFIDList []string) error {
+	log.WithFields(logrus.Fields{"cla_group_project_counts": cgmap, "cla_group_id": claGroupID, "project_sfid_list": projectSFIDList}).Debug("validateEnrollProject called")
 	var foundationLevelClaPresent, projectLevelClaPresent bool
 	for _, count := range cgmap {
 		if count > 1 {
