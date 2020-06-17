@@ -65,6 +65,11 @@ func (s *service) ValidateCLAGroup(input *models.ClaGroupValidationRequest) (boo
 	var valid = true
 	var validationErrors []string
 
+	// All parameters are optional - caller can specify which fields they want to validate based on what they provide
+	// in the request payload.  If the value is there, we will attempt to validate it.  Note: some validation
+	// happens at the Swagger API specification level (and rejected) before our API handler will be invoked.
+
+	// Note: CLA Group Name Min/Max Character Length validated via Swagger Spec restrictions
 	if input.ClaGroupName != nil {
 		claGroupModel, err := s.v1ProjectService.GetProjectByName(*input.ClaGroupName)
 		if err != nil {
@@ -75,27 +80,11 @@ func (s *service) ValidateCLAGroup(input *models.ClaGroupValidationRequest) (boo
 			valid = false
 			validationErrors = append(validationErrors, fmt.Sprintf("CLA Group with name %s already exist", *input.ClaGroupName))
 		}
-
-		if len(*input.ClaGroupName) < 3 {
-			valid = false
-			validationErrors = append(validationErrors, "CLA Group name should be at least 3 characters")
-		}
-		if len(*input.ClaGroupName) > 256 {
-			valid = false
-			validationErrors = append(validationErrors, "description maximum length of the CLA Group name is 256 characters")
-		}
 	}
 
-	if input.ClaGroupDescription != nil {
-		if len(*input.ClaGroupDescription) < 3 {
-			valid = false
-			validationErrors = append(validationErrors, "description should be at least 3 characters")
-		}
-		if len(*input.ClaGroupDescription) > 256 {
-			valid = false
-			validationErrors = append(validationErrors, "description maximum length of the description is 256 characters")
-		}
-	}
+	// Note: CLA Group Description Min/Max Character Length validated via Swagger Spec restrictions
+
+	// Optional - we can expand this API logic to validate other fields if needed.
 
 	return valid, validationErrors
 }
