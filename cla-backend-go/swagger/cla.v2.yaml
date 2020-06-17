@@ -412,6 +412,38 @@ paths:
       tags:
         - cla-group
 
+  /cla-group/validate:
+    post:
+      summary: Validates the CLA Group
+      description: Validates the CLA Group provided input parameters
+      operationId: validateClaGroup
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: validationInputRequest
+          in: body
+          schema:
+            $ref: '#/definitions/cla-group-validation-request'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-group-validation-response'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - cla-group
+
   /project:
     put:
       summary: Update Project by ID
@@ -1953,6 +1985,31 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - company
+  
+  /user/{userID}/company:
+    post:
+      summary: api that creates salesforce company
+      security: []
+      description: Creates a Company for an individual contributor that fails to get a company during the signing getProjectSignatures
+      operationId: createCompany
+      parameters:
+        - $ref: "#/parameters/path-userID"
+        - name: input
+          in: body
+          schema:
+            $ref: '#/definitions/company-input'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema: 
+            $ref: '#/definitions/company-output'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - company
 
   /request-corporate-signature:
     post:
@@ -2352,7 +2409,28 @@ definitions:
       createdAt:
         type: string
     title: Company metrics
+  
+  company-input:
+    type: object
+    required:
+      - companyName
+      - companyWebsite
+    properties:
+      companyName:
+        type: string
+      companyWebsite:
+        type: string
 
+  company-output:
+    type: object
+    properties:
+      companyName:
+        type: string
+      companyWebsite:
+        type: string
+      logoURL:
+        type: string
+  
   cla-manager-distribution:
     type: object
     properties:
@@ -2424,7 +2502,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/project-metric'
-
 
   project-metric:
     type: object
@@ -2823,37 +2900,41 @@ definitions:
       cla_group_id:
         type: string
         example: 'b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f'
-        description: id of the cla group
+        description: id of the CLA group
         x-omitempty: false
       cla_group_name:
         type: string
         example: 'OpenCue'
-        description: name of the cla group
+        description: name of the CLA group
         x-omitempty: false
+        minLength: 3
+        maxLength: 256
       cla_group_description:
         type: string
-        example: 'cla group created for OpenCue project'
-        description: description of the cla group
+        example: 'CLA group created for OpenCue project'
+        description: description of the CLA group
         x-omitempty: false
+        minLength: 3
+        maxLength: 256
       ccla_enabled:
         type: boolean
         example: true
-        description: flag to indicate if ccla is enabled
+        description: flag to indicate if CCLA is enabled
         x-omitempty: false
       ccla_requires_icla:
         type: boolean
         example: true
-        description: flag to indicate if corporate contributors requires to sign icla
+        description: flag to indicate if corporate contributors requires to sign ICLA
         x-omitempty: false
       icla_enabled:
         type: boolean
         example: true
-        description: flag to indicate if icla is enabled
+        description: flag to indicate if ICLA is enabled
         x-omitempty: false
       foundation_sfid:
         type: string
         example: 'a09410000182dD2AAI'
-        description: foundation sfid under which this cla group is created
+        description: foundation sfid under which this CLA group is created
         x-omitempty: false
       repositories_count:
         type: integer
@@ -2865,17 +2946,17 @@ definitions:
         x-omitempty: false
       project_list:
         x-omitempty: false
-        description: list of projects under foundation for which this cla group is created
+        description: list of projects under foundation for which this CLA group is created
         type: array
         items:
           $ref: '#/definitions/cla-group-project'
       icla_pdf_url:
-        description: template url for icla document
+        description: template URL for ICLA document
         type: string
         example: 'https://cla-signature-files-dev.s3.amazonaws.com/contract-group/b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f/template/icla.pdf'
         x-omitempty: false
       ccla_pdf_url:
-        description: template url for ccla document
+        description: template URL for CCLA document
         type: string
         example: 'https://cla-signature-files-dev.s3.amazonaws.com/contract-group/b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f/template/ccla.pdf'
         x-omitempty: false
@@ -2892,6 +2973,42 @@ definitions:
         description: repositories added from this project into cla-group
         type: integer
         x-omitempty: false
+
+  cla-group-validation-request:
+    type: object
+    properties:
+      cla_group_name:
+        type: string
+        example: 'OpenCue'
+        description: name of the CLA group
+        x-omitempty: true
+        x-nullable: true
+        minLength: 3
+        maxLength: 256
+      cla_group_description:
+        type: string
+        example: 'CLA group created for OpenCue project'
+        description: description of the CLA group
+        x-omitempty: true
+        x-nullable: true
+        minLength: 3
+        maxLength: 256
+
+  cla-group-validation-response:
+    type: object
+    properties:
+      valid:
+        type: boolean
+        example: 'true'
+        description: returns true if the CLA Group validates, false otherwise
+        x-omitempty: true
+      validation-errors:
+        x-omitempty: true
+        description: list of CLA Group validation errors
+        type: array
+        items:
+          type: string
+          example: 'duplicate CLA Group name'
 
   error-response:
     type: object

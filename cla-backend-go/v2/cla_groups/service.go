@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 package cla_groups
 
 import (
@@ -43,6 +46,7 @@ type Service interface {
 	EnrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error
 	DeleteCLAGroup(claGroupID string) error
 	ListClaGroupsUnderFoundation(foundationSFID string) (*models.ClaGroupList, error)
+	ValidateCLAGroup(input *models.ClaGroupValidationRequest) (bool, []string)
 }
 
 // NewService returns instance of CLA group service
@@ -53,6 +57,47 @@ func NewService(projectService v1Project.Service, templateService v1Template.Ser
 		projectsClaGroupsRepo: projectsClaGroupsRepo,
 		metricsRepo:           metricsRepo,
 	}
+}
+
+// ValidateCLAGroup is the service handler for validating a CLA Group
+func (s *service) ValidateCLAGroup(input *models.ClaGroupValidationRequest) (bool, []string) {
+
+	var valid = true
+	var validationErrors []string
+
+	if input.ClaGroupName != nil {
+		claGroupModel, err := s.v1ProjectService.GetProjectByName(*input.ClaGroupName)
+		if err != nil {
+			valid = false
+			validationErrors = append(validationErrors, fmt.Sprintf("unable to query project service - error: %+v", err))
+		}
+		if claGroupModel != nil {
+			valid = false
+			validationErrors = append(validationErrors, fmt.Sprintf("CLA Group with name %s already exist", *input.ClaGroupName))
+		}
+
+		if len(*input.ClaGroupName) < 3 {
+			valid = false
+			validationErrors = append(validationErrors, "CLA Group name should be at least 3 characters")
+		}
+		if len(*input.ClaGroupName) > 256 {
+			valid = false
+			validationErrors = append(validationErrors, "description maximum length of the CLA Group name is 256 characters")
+		}
+	}
+
+	if input.ClaGroupDescription != nil {
+		if len(*input.ClaGroupDescription) < 3 {
+			valid = false
+			validationErrors = append(validationErrors, "description should be at least 3 characters")
+		}
+		if len(*input.ClaGroupDescription) > 256 {
+			valid = false
+			validationErrors = append(validationErrors, "description maximum length of the description is 256 characters")
+		}
+	}
+
+	return valid, validationErrors
 }
 
 func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) error {

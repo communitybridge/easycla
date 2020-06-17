@@ -278,3 +278,46 @@ func (osc *Client) ListOrgUserAdminScopes(orgID string) (*models.UserrolescopesL
 	}
 	return result.Payload, nil
 }
+
+// CreateOrg creates company based on name and website with additional data for required fields
+func (osc *Client) CreateOrg(companyName string, companyWebsite string) (*models.Organization, error) {
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	// use linux foundation logo as default
+	linuxFoundation, err := osc.SearchOrganization("Linux Foundation")
+	if err != nil {
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	description := "No Description"
+	companyType := "No Type"
+	companySource := "No Source"
+	industry := "No Industry"
+	logoURL := linuxFoundation[0].LogoURL
+
+	org := models.CreateOrg{
+		Description: &description,
+		Name:        &companyName,
+		Website:     &companyWebsite,
+		Industry:    &industry,
+		Source:      &companySource,
+		Type:        &companyType,
+		LogoURL:     &logoURL,
+	}
+
+	params := &organizations.CreateOrgParams{
+		Org:     &org,
+		Context: context.Background(),
+	}
+
+	result, err := osc.cl.Organizations.CreateOrg(params, clientAuth)
+
+	if err != nil {
+		log.Warnf("Failed to create salesforce Company :%s , err: %+v ", companyName, err)
+		return nil, err
+	}
+
+	return result.Payload, err
+}

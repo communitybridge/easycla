@@ -104,6 +104,18 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 			return company.NewGetCompanyProjectClaOK().WithPayload(result)
 		})
+
+	api.CompanyCreateCompanyHandler = company.CreateCompanyHandlerFunc(
+		func(params company.CreateCompanyParams) middleware.Responder {
+			companyModel, err := service.CreateCompany(*params.Input.CompanyName, *params.Input.CompanyWebsite, params.UserID)
+			if err != nil {
+				if err == ErrDuplicateCompany {
+					return company.NewCreateCompanyConflict().WithPayload(errorResponse(err))
+				}
+				return company.NewCreateCompanyBadRequest().WithPayload(errorResponse(err))
+			}
+			return company.NewCreateCompanyOK().WithPayload(companyModel)
+		})
 }
 
 type codedResponse interface {
