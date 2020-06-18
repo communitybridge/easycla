@@ -36,6 +36,7 @@ func SetSnsEmailSender(awsSession *session.Session, snsEventTopicARN string, sen
 	}
 }
 
+// SendEmail sends an email to the specified recipients
 func (s *snsEmail) SendEmail(subject string, body string, recipients []string) error {
 	var awsRecipients = make([]*string, len(recipients))
 	for i, recipient := range recipients {

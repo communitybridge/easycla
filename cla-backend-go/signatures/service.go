@@ -476,13 +476,6 @@ func (s service) sendApprovalListUpdateEmailToCLAManagers(companyModel *models.C
 	subject := fmt.Sprintf("EasyCLA: Approval List Update for %s on %s", companyName, projectName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>The EasyCLA approval list for %s for project %s was modified.</p>
@@ -495,9 +488,8 @@ the EasyCLA system.</p>
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
-<p>EasyCLA support team</p>
-</body>
-</html>`, recipientName, projectName, companyName, projectName, buildApprovalListSummary(approvalListChanges), projectName)
+<p>EasyCLA support team</p>`,
+		recipientName, projectName, companyName, projectName, buildApprovalListSummary(approvalListChanges), projectName)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -757,13 +749,6 @@ func sendRequestAccessEmailToContributorRecipient(authUser *auth.User, companyMo
 	subject := fmt.Sprintf("EasyCLA: Approval List Update for %s on %s", companyName, projectName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>You have been %s %s the Approval List of %s for %s by CLA Manager %s. This means that %s on behalf of %s.</p>
@@ -774,9 +759,8 @@ close and re-open the pull request to force a recheck by the EasyCLA system.</p>
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
-<p>EasyCLA support team</p>
-</body>
-</html>`, recipientName, projectName, addRemove, toFrom,
+<p>EasyCLA support team</p>`,
+		recipientName, projectName, addRemove, toFrom,
 		companyName, projectName, authUser.UserName, authorizedString, projectName, projectName)
 
 	err := utils.SendEmail(subject, body, recipients)
