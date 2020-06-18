@@ -25,6 +25,13 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+const (
+	//BadRequest error Response code
+	BadRequest = "400"
+	//Conflict error Response code
+	Conflict = "409"
+)
+
 // Configure is the API handler routine for CLA Manager routes
 func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string, projectClaGroupRepo projects_cla_groups.Repository, easyCLAUserRepo v1User.RepositoryService) {
 	api.ClaManagerCreateCLAManagerHandler = cla_manager.CreateCLAManagerHandlerFunc(func(params cla_manager.CreateCLAManagerParams, authUser *auth.User) middleware.Responder {
@@ -51,7 +58,11 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		}
 		compCLAManager, errorResponse := service.CreateCLAManager(cginfo.ClaGroupID, params, authUser.UserName, authUser.Email)
 		if errorResponse != nil {
-			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(errorResponse)
+			if errorResponse.Code == BadRequest {
+				return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(errorResponse)
+			} else if errorResponse.Code == Conflict {
+				return cla_manager.NewCreateCLAManagerConflict().WithPayload(errorResponse)
+			}
 		}
 
 		return cla_manager.NewCreateCLAManagerOK().WithPayload(compCLAManager)

@@ -246,6 +246,29 @@ func (s service) AddClaManager(companyID string, projectID string, LFID string) 
 	return addedSignature, nil
 }
 
+// Utility function that returns company signature
+func (s service) getCompanySignature(companyID string, projectID string) (*models.Signature, error) {
+	// Look up signature ACL to ensure the user can remove given cla manager
+	sigModels, sigErr := s.sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
+		HTTPRequest: nil,
+		CompanyID:   companyID,
+		ProjectID:   projectID,
+		NextKey:     nil,
+		PageSize:    aws.Int64(5),
+	})
+	if sigErr != nil || sigModels == nil {
+		log.Warnf("Unable to lookup project company signature using Project ID: %s, Company ID: %s, error: %+v",
+			projectID, companyID, sigErr)
+		return nil, sigErr
+	}
+
+	if len(sigModels.Signatures) > 1 {
+		log.Warnf("returned multiple CCLA signature models for company ID: %s, project ID: %s",
+			companyID, projectID)
+	}
+	return sigModels.Signatures[0], nil
+}
+
 // RemoveClaManager removes lfid from signature acl with given company and project
 func (s service) RemoveClaManager(companyID string, projectID string, LFID string) (*models.Signature, error) {
 
@@ -282,8 +305,10 @@ func (s service) RemoveClaManager(companyID string, projectID string, LFID strin
 			companyID, projectID)
 	}
 
-	sigModel := sigModels.Signatures[0]
-	claManagers := sigModel.SignatureACL
+	sigModel, sigErr := s.getCompanySignature(companyID, projectID)
+	if sigErr != nil {
+		return nil, sigErr
+	}
 
 	// Update the signature ACL
 	updatedSignature, aclErr := s.sigService.RemoveCLAManager(sigModel.SignatureID, LFID)
@@ -293,6 +318,12 @@ func (s service) RemoveClaManager(companyID string, projectID string, LFID strin
 		return nil, aclErr
 	}
 
+	// Get Updated cla manager list with removed manager for email purporses
+	sigModel, sigErr = s.getCompanySignature(companyID, projectID)
+	if sigErr != nil {
+		return nil, sigErr
+	}
+	claManagers := sigModel.SignatureACL
 	// Notify CLA Managers - send email to each manager
 	for _, manager := range claManagers {
 		sendClaManagerDeleteEmailToCLAManagers(companyModel, projectModel, userModel.LfUsername,
