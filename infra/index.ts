@@ -137,6 +137,16 @@ function buildSignatureFilesBucket(importResources: boolean): aws.s3.Bucket {
     {
       bucket: 'cla-signature-files-' + stage,
       acl: PrivateAcl,
+      region: region,
+      corsRules: [
+        {
+          allowedHeaders: ['*'],
+          allowedMethods: ['GET'],
+          allowedOrigins: ['*'],
+          exposeHeaders: ['ETag'],
+          maxAgeSeconds: 3000,
+        },
+      ],
       tags: defaultTags,
     },
     importResources ? { import: 'cla-signature-files-' + stage } : {},
