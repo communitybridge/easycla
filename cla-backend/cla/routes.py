@@ -1312,6 +1312,8 @@ def sign_request(
     """
     GET: /repository-provider/{provider}/sign/{installation_id}/{repository_id}/{change_request_id}
 
+    Example: https://api.dev.lfcla.com/v2/repository-provider/github/sign/1973025/198682561/35
+
     The endpoint that will initiate a CLA signature for the user.
     """
     return cla.controllers.repository_service.sign_request(
