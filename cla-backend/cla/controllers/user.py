@@ -161,13 +161,6 @@ def request_company_whitelist(user_id: str, company_id: str, user_name: str, use
 
     subject = f'EasyCLA: Request to Authorize {user_name} for {project_name}'
     body = f'''
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello {recipient_name},</p>
 <p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
 <p>{user_name} ({user_email}) has requested to be added to the Allow List as an authorized contributor from
@@ -181,13 +174,11 @@ contributor's email, the contributor's entire email domain, their GitHub ID or t
 repository. This will permit them to begin contributing to {project_name} on behalf of {company}.</p>
 <p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p>
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the
+documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143"
+target="_blank">reach out to us for support</a>.</p>
+<p>Thanks,</p>
 <p>EasyCLA support team</p>
-</body>
-</html>
 '''
 
     cla.log.debug(f'request_company_approval_list - sending email '
@@ -320,13 +311,6 @@ def send_email_to_cla_manager(contributor_name, contributor_email, cla_manager_n
     # the Corporate Console.
     subject = f'EasyCLA: Request to start CLA signature process for {project_name}'
     body = f'''
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello {cla_manager_name},</p>
 <p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
 <p>{project_name} uses EasyCLA to ensure that before a contribution is accepted, the contributor is covered under a
@@ -343,11 +327,8 @@ authorized to sign the CLA.</p>
 <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
-
 <p>Thanks,</p>
 <p>EasyCLA support team</p>
-</body>
-</html>
 '''
     recipient = cla_manager_email
     email_service = get_email_service()
@@ -480,23 +461,22 @@ def request_company_admin_access(user_id, company_id):
     for admin in company.get_managers():
         # TODO: Review this - need to load project
         body = f'''
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
-<p>Hello {admin.get_user_name()},
-<p>This is a notification email from EasyCLA regarding the project {project}.
-<p>You are currently listed as a CLA Manager from {company.get_company_name()} for the project {project}. This means that you are able to maintain the list of employees allowed to contribute to {project} on behalf of your company, as well as the list of your company’s CLA Managers for {project}.
-<p>{user_name} ({user.get_user_email}) has requested to be added as another CLA Manager from {company.get_company_name()} for {project}. This would permit them to maintain the lists of approved contributors and CLA Managers as well.
-<p>If you want to permit this, please log into the EasyCLA Corporate Console at https://{corporate_console_url}, where you can approve this user as an additional CLA Manager.
-<p>If you need help or have questions about EasyCLA, you can <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for support</a>.</p>
-<p>Thanks,
+<p>Hello {admin.get_user_name()},</p>
+<p>This is a notification email from EasyCLA regarding the project {project}.</p>
+<p>You are currently listed as a CLA Manager from {company.get_company_name()} for the project {project}.
+This means that you are able to maintain the list of employees allowed to contribute to {project} on behalf of your
+company, as well as the list of your company’s CLA Managers for {project}.</p>
+<p>{user_name} ({user.get_user_email}) has requested to be added as another CLA Manager from
+{company.get_company_name()} for {project}. This would permit them to maintain the lists of approved contributors and
+CLA Managers as well.</p>
+<p>If you want to permit this, please log into the EasyCLA Corporate Console at https://{corporate_console_url}, where
+you can approve this user as an additional CLA Manager.</p>
+<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the
+documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143"
+target="_blank">reach out to us for support</a>.</p>
+<p>Thanks,</p>
 <p>EasyCLA support team</p>
-</body>
-</html>
 '''
         recipient = admin.get_lf_email()
         email_service = get_email_service()

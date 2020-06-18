@@ -413,13 +413,6 @@ def get_contributor_whitelist_update_email_content(action, company_name, project
     if action == 'deleted':
         preposition = 'from'
     body = f"""
-html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello,</p>
 <p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
 <p>You have been {action} {preposition} the Allow List of {company_name} for {project_name} by
@@ -431,7 +424,7 @@ close and re-open the pull request to force a recheck by the EasyCLA system.</p>
 <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
-<p>Thanks,
+<p>Thanks,</p>
 <p>EasyCLA support team</p>
     """
     body = '<p>' + body.replace('\n', '<br>') + '</p>'
@@ -444,13 +437,6 @@ def whitelist_change_email_content(company_name, project_name, cla_managers, cha
     subject = f'EasyCLA: Allow List Update for {project_name}'
     change_string = "\n".join(changes)
     body = f"""
-html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello,</p>
 <p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
 <p>The EasyCLA approval list for {company_name} for project {project_name} was modified.</p>
@@ -461,10 +447,10 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 <p>Contributors with previously failed pull requests to {project_name} can close
 and re-open the pull request to force a recheck by the EasyCLA system.</p>
 <p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the
+documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143"
+target="_blank">reach out to us for support</a>.</p>
+<p>Thanks,</p>
 <p>EasyCLA support team</p>
 """
     body = '<p>' + body.replace('\n', '<br>')+ '</p>'
@@ -873,20 +859,20 @@ def add_cla_manager_email_content(lfid, project, company, managers):
     manager_list = ['%s <%s>' %(mgr.get('name', ' '), mgr.get('email', ' ')) for mgr in managers]
     manager_list_str = '-'.join(manager_list) + '\n'
     body = f"""
-    html>
-    <head>
-    <style>
-    body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-    </style>
-    </head>
-    <body>
     <p>Hello {lfid}, </p>
-    <br>
-    <p>You have been granted access to the project {project.get_project_name()} for the organization: {company.get_company_name()}.</p>
+    <p>This is a notification email from EasyCLA regarding the project {project.get_project_name()}.</p>
+    <p>You have been granted access to the project {project.get_project_name()} for the organization 
+       {company.get_company_name()}.</p>
     <p> If you have further questions, please contact one of the existing CLA Managers: </p>
     {manager_list_str}
 
-    <p> - Linux Foundation EasyCLA System </p>
+    <p>If you need help or have questions about EasyCLA, you can
+    <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the 
+    documentation</a> or 
+    <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us
+    for support</a>.</p>
+    <p>Thanks,</p>
+    <p>EasyCLA support team</p>
     """
     body = '<p>' + body.replace('\n', '<br>') + '</p>'
     return subject, body, recipients
@@ -904,19 +890,19 @@ def remove_cla_manager_email_content(lfid, project, company, managers):
     manager_list = ['%s <%s>' %(mgr.get('name', ' '), mgr.get('email', ' ')) for mgr in managers]
     manager_list_str = '-'.join(manager_list) + '\n'
     body = f"""
-    html>
-    <head>
-    <style>
-    body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-    </style>
-    </head>
     <p> Hello {lfid}, </p>
-    <br>
-    <p> You have been removed as a CLA Manager from the project: {project.get_project_name()} for the organization: {company.get_company_name()} </p>
+    <p>This is a notification email from EasyCLA regarding the project {project.get_project_name()}.</p>
+    <p>You have been removed as a CLA Manager from the project: {project.get_project_name()} for the organization 
+       {company.get_company_name()} </p>
     <p> If you have further questions, please contact one of the existing CLA Managers: </p>
     {manager_list_str}
-
-    - Linux Foundation EasyCLA System
+    <p>If you need help or have questions about EasyCLA, you can
+    <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the 
+    documentation</a> or 
+    <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us
+    for support</a>.</p>
+    <p>Thanks,</p>
+    <p>EasyCLA support team</p>
     """
     body = '<p>' + body.replace('\n', '<br>') + '</p>'
     return subject, body, recipients
