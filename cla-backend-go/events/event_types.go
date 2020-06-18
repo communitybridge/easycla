@@ -72,4 +72,6 @@ const (
 	ProjectDeleted = "project.deleted"
 
 	InvalidatedSignature = "signature.invalidated"
+
+	ContributorNotifyCompanyAdmin = "contributor.notify_company_admin"
 )
