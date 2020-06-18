@@ -90,8 +90,17 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	if userErr != nil {
 		designeeName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
 		designeeEmail := *params.Body.UserEmail
-		log.Debugf("LFID not existing for %s", designeeName)
-		sendEmailToUserWithNoLFID(claGroup, authUsername, authEmail, designeeName, designeeEmail)
+		lfxUser, lfxUserErr := userServiceClient.SearchUserByEmail(designeeEmail)
+		if lfxUserErr != nil || lfxUser == nil {
+			msg := fmt.Sprintf("LFID not existing for %s", designeeName)
+			log.Warn(msg)
+			sendEmailToUserWithNoLFID(claGroup, authUsername, authEmail, designeeName, designeeEmail)
+			return nil, &models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			}
+		}
+
 		msg := fmt.Sprintf("Failed search for User with firstname : %s, lastname: %s , email: %s , error: %v ",
 			*params.Body.FirstName, *params.Body.LastName, *params.Body.UserEmail, userErr)
 		log.Warn(msg)
@@ -143,7 +152,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		log.Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
-			Code:    "400",
+			Code:    "409",
 		}
 	}
 
