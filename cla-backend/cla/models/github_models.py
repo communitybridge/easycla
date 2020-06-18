@@ -865,6 +865,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
         }
         client.create_check_run(repository_name, json.dumps(payload))
 
+    # Update the comment
     if both or notification == 'comment':
         body = cla.utils.assemble_cla_comment('github', installation_id, github_repository_id, pull_request.number,
                                               signed, missing)
@@ -886,23 +887,34 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
         if context_name is None:
             context_name = 'communitybridge/cla'
 
-        for commit, author_name in missing:
+        # if we have ANY committers who have failed the check - update the status with overall failure
+        if missing is not None and len(missing) > 0:
             state = 'failure'
             # For status, we change the context from author_name to 'communitybridge/cla' or the
             # specified default value per issue #166
             context, body = cla.utils.assemble_cla_status(context_name, signed=False)
             sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
-            cla.log.debug('Creating new CLA status on commit %s: %s', commit, state)
+            cla.log.debug(f'Creating new CLA {state} status - {len(signed)} passed, {missing}, signing url: {sign_url}')
             create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
-
-        for commit, author_name in signed:
+        elif signed is not None and len(signed) > 0:
             state = 'success'
             # For status, we change the context from author_name to 'communitybridge/cla' or the
             # specified default value per issue #166
             context, body = cla.utils.assemble_cla_status(context_name, signed=True)
-            # sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
-            cla.log.debug('Creating new CLA status on commit %s: %s', commit, state)
             sign_url = "https://lfcla.com"  # Remove this once signature detail page ready.
+            cla.log.debug(f'Creating new CLA {state} status - {len(signed)} passed, {missing}, signing url: {sign_url}')
+            create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
+        else:
+            # error condition - should have a least one committer and they would be in one of the above
+            # lists: missing or signed
+            state = 'failure'
+            # For status, we change the context from author_name to 'communitybridge/cla' or the
+            # specified default value per issue #166
+            context, body = cla.utils.assemble_cla_status(context_name, signed=False)
+            sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
+            cla.log.debug(f'Creating new CLA {state} status - {len(signed)} passed, {missing}, signing url: {sign_url}')
+            cla.log.warning('This is an error condition - should have at least one committer in one of these lists: '
+                            f'{len(signed)} passed, {missing}')
             create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
 
 
