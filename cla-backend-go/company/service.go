@@ -405,13 +405,6 @@ func (s service) sendRequestAccessEmail(companyModel *models.Company, requesterN
 	subject := fmt.Sprintf("EasyCLA: New Company Manager Access Request for %s", companyName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the company %s.</p>
 <p>The following user has requested to join %s as a Company Manager. 
@@ -428,9 +421,8 @@ for CLA Manager status.
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
-<p>EasyCLA support team</p>
-</body>
-</html>`, recipientName, companyName, companyName, requestedUserInfo, s.corporateConsoleURL)
+<p>EasyCLA support team</p>`,
+		recipientName, companyName, companyName, requestedUserInfo, s.corporateConsoleURL)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -448,13 +440,6 @@ func (s service) sendRequestApprovedEmailToRecipient(companyModel *models.Compan
 	subject := fmt.Sprintf("EasyCLA: Company Manager Access Approved for %s", companyName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the company %s.</p>
 <p>You have now been approved as a Company Manager for %s.
@@ -471,9 +456,8 @@ for CLA Manager status.
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
-<p>EasyCLA support team</p>
-</body>
-</html>`, recipientName, companyName, companyName, s.corporateConsoleURL)
+<p>EasyCLA support team</p>`,
+		recipientName, companyName, companyName, s.corporateConsoleURL)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -523,13 +507,6 @@ func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Compan
 	subject := fmt.Sprintf("EasyCLA: CLA Manager Access Denied for %s", companyName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the company %s.</p>
 <p>Your request to become a Company Manager was denied by one of the existing Company Managers.
@@ -541,9 +518,8 @@ If you have further questions about this denial, please contact one of the exist
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
-<p>EasyCLA support team</p>
-</body>
-</html>`, recipientName, companyName, companyName, companyManagerText)
+<p>EasyCLA support team</p>`,
+		recipientName, companyName, companyName, companyManagerText)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
