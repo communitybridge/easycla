@@ -256,13 +256,6 @@ func (s service) sendRequestEmailToRecipient(companyModel *models.Company, proje
 	subject := fmt.Sprintf("EasyCLA: Request to Authorize %s for %s", contributorName, projectName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>%s (%s) has requested to be added to the Allow List as an authorized contributor from
@@ -279,10 +272,9 @@ repository. This will permit them to begin contributing to %s on behalf of %s.</
 <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>
-</body>
-</html>`, recipientName, projectName, contributorName, contributorEmail,
+<p>Thanks,</p>
+<p>EasyCLA support team</p>`,
+		recipientName, projectName, contributorName, contributorEmail,
 		companyName, projectName, companyName, projectName,
 		optionalMessage, s.corpConsoleURL,
 		companyModel.CompanyID, projectName, companyName)
@@ -304,13 +296,6 @@ func (s service) sendRequestApprovedEmailToRecipient(companyModel *models.Compan
 	subject := fmt.Sprintf("EasyCLA: CLA Manager Access Approved for %s", projectName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>You have now been approved as a CLA Manager from %s for the project %s.
@@ -325,10 +310,9 @@ be able to edit the list of approved employees and CLA Managers.
 <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>
-</body>
-</html>`, recipientName, projectName,
+<p>Thanks,</p>
+<p>EasyCLA support team</p>`,
+		recipientName, projectName,
 		companyName, projectName, projectName, projectName,
 		s.corpConsoleURL, projectName)
 
@@ -373,13 +357,6 @@ func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Compan
 	subject := fmt.Sprintf("EasyCLA: CLA Manager Access Denied for Project %s", projectName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>Your request to become a CLA Manager from %s for %s was denied by one of the existing CLA Managers.
@@ -390,10 +367,9 @@ If you have further questions about this denial, please contact one of the exist
 <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>
-</body>
-</html>`, recipientName, projectName,
+<p>Thanks,</p>
+<p>EasyCLA support team</p>`,
+		recipientName, projectName,
 		companyName, projectName, companyName, projectName,
 		claManagerText)
 

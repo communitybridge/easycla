@@ -333,13 +333,6 @@ func sendClaManagerAddedEmailToUser(companyModel *models.Company, projectModel *
 	subject := fmt.Sprintf("EasyCLA: Added as CLA Manager for Project :%s", projectName)
 	recipients := []string{requesterEmail}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>You have been added as a CLA Manager from %s for the project %s.  This means that you can now maintain the
@@ -352,9 +345,8 @@ project %s. From here you will be able to edit the list of approved employees an
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
-<p>EasyCLA support team</p>
-</body>
-</html>`, requesterName, projectName,
+<p>EasyCLA support team</p>`,
+		requesterName, projectName,
 		companyName, projectName, projectName, projectName,
 		corporateConsoleURL, projectName)
 
@@ -374,13 +366,6 @@ func sendClaManagerAddedEmailToCLAManagers(companyModel *models.Company, project
 	subject := fmt.Sprintf("EasyCLA: CLA Manager Added Notice for %s", projectName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>The following user has been added as a CLA Manager from %s for the project %s. This means that they can now
@@ -394,9 +379,8 @@ list of company’s CLA Managers for %s.</p>
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
-<p>EasyCLA support team</p>
-</body>
-</html>`, recipientName, projectName,
+<p>EasyCLA support team</p>`,
+		recipientName, projectName,
 		companyName, projectName, projectName, projectName,
 		name, email)
 
@@ -443,17 +427,10 @@ func sendRemovedClaManagerEmailToRecipient(companyModel *models.Company, project
 	subject := fmt.Sprintf("EasyCLA: Removed as CLA Manager for Project %s", projectName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
+<p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>You have been removed as a CLA Manager from %s for the project %s.</p>
-
-If you have further questions about this, please contact one of the existing managers from
+<p>If you have further questions about this, please contact one of the existing managers from
 %s:</p>
 %s
 <p>If you need help or have questions about EasyCLA, you can
@@ -461,9 +438,8 @@ If you have further questions about this, please contact one of the existing man
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
-<p>EasyCLA support team</p>
-</body>
-</html>`, recipientName, companyName, projectName, companyName, companyManagerText)
+<p>EasyCLA support team</p>`,
+		recipientName, projectName, companyName, projectName, companyName, companyManagerText)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -481,24 +457,15 @@ func sendClaManagerDeleteEmailToCLAManagers(companyModel *models.Company, projec
 	subject := fmt.Sprintf("EasyCLA: CLA Manager Removed Notice for %s", projectName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
-<p> %s has been removed as a CLA Manager from %s for the project %s.</p>
-
+<p>This is a notification email from EasyCLA regarding the project %s.</p>
+<p>%s has been removed as a CLA Manager from %s for the project %s.</p>
 <p>If you need help or have questions about EasyCLA, you can
 <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
-<p>EasyCLA support team</p>
-</body>
-</html>`, recipientName, name, companyName, projectName)
+<p>EasyCLA support team</p>`, recipientName, projectName, name, companyName, projectName)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

@@ -243,13 +243,6 @@ func sendEmailToUserWithNoLFID(projectModel *v1Models.Project, requesterUsername
 	subject := fmt.Sprint("EasyCLA: Invitation to create LFID and complete process of becoming CLA Manager")
 	recipients := []string{userWithNoLFIDEmail}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the Project %s in the EasyCLA system.</p>
 <p>User %s (%s) was trying to add you as a CLA Manager for Project %s but was unable to identify your account details in
@@ -261,9 +254,8 @@ Once complete, notify the user %s and they will be able to add you as a CLA Mana
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
 <p>Thanks,
-<p>EasyCLA support team</p>
-</body>
-</html>`, userWithNoLFIDName, projectName,
+<p>EasyCLA support team</p>`,
+		userWithNoLFIDName, projectName,
 		requesterUsername, requesterEmail, projectName, projectName,
 		requesterUsername)
 

@@ -430,13 +430,6 @@ func sendEmailToOrgAdmin(adminEmail string, admin string, company string, projec
 	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorID)
 	recipients := []string{adminEmail}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>The following contributor would like to submit a contribution to %s 
@@ -449,14 +442,9 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
-
-<p>Thanks,
-
-<p>EasyCLA support team </p>
-</body>
-</html>
-	
-	`, admin, project, project, contributorName, contributorID, corporateConsole, project)
+<p>Thanks,</p>
+<p>EasyCLA support team </p>`,
+		admin, project, project, contributorName, contributorID, corporateConsole, project)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -470,13 +458,6 @@ func sendEmailToCLAManagerDesignee(corporateConsole string, company string, proj
 	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorID)
 	recipients := []string{designeeEmail}
 	body := fmt.Sprintf(`
-<html>
-<head>
-<style>
-body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
-</style>
-</head>
-<body>
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>The following contributor would like to submit a contribution to %s 
@@ -489,14 +470,9 @@ body {{font-family: Arial, Helvetica, sans-serif; font-size: 1.2em;}}
 <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
-
-<p>Thanks,
-
-<p>EasyCLA support team </p>
-</body>
-</html>
-	
-	`, designeeName, project, project, contributorName, contributorID, corporateConsole, project)
+<p>Thanks,</p>
+<p>EasyCLA support team </p>`,
+		designeeName, project, project, contributorName, contributorID, corporateConsole, project)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
