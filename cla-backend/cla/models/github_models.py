@@ -834,7 +834,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
             if authors[1][0] is None:
                 help_url = "https://help.github.com/en/github/committing-changes-to-your-project/why-are-my-commits-linked-to-the-wrong-user"
             else:
-                help_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id,
+                help_url = cla.utils.get_full_sign_url('github', str(installation_id), github_repository_id,
                                                        pull_request.number)
             client = GitHubInstallation(installation_id)
             # check if unsigned user is whitelisted
@@ -867,7 +867,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
 
     # Update the comment
     if both or notification == 'comment':
-        body = cla.utils.assemble_cla_comment('github', installation_id, github_repository_id, pull_request.number,
+        body = cla.utils.assemble_cla_comment('github', str(installation_id), github_repository_id, pull_request.number,
                                               signed, missing)
         if not missing:
             # After Issue #167 wsa in place, they decided via Issue #289 that we
@@ -893,7 +893,8 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
             # For status, we change the context from author_name to 'communitybridge/cla' or the
             # specified default value per issue #166
             context, body = cla.utils.assemble_cla_status(context_name, signed=False)
-            sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
+            sign_url = cla.utils.get_full_sign_url(
+                'github', str(installation_id), github_repository_id, pull_request.number)
             cla.log.debug(f'Creating new CLA {state} status - {len(signed)} passed, {missing}, signing url: {sign_url}')
             create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
         elif signed is not None and len(signed) > 0:
@@ -911,7 +912,8 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
             # For status, we change the context from author_name to 'communitybridge/cla' or the
             # specified default value per issue #166
             context, body = cla.utils.assemble_cla_status(context_name, signed=False)
-            sign_url = cla.utils.get_full_sign_url('github', installation_id, github_repository_id, pull_request.number)
+            sign_url = cla.utils.get_full_sign_url(
+                'github', str(installation_id), github_repository_id, pull_request.number)
             cla.log.debug(f'Creating new CLA {state} status - {len(signed)} passed, {missing}, signing url: {sign_url}')
             cla.log.warning('This is an error condition - should have at least one committer in one of these lists: '
                             f'{len(signed)} passed, {missing}')
@@ -940,28 +942,19 @@ def create_commit_status(pull_request, commit_hash, state, sign_url, body, conte
                 commit_obj = commit
                 break
         if commit_obj is None:
-            cla.log.error(
-                'Could not post status on PR %s: Commit %s not found',
-                pull_request.number,
-                commit_hash,
-            )
+            cla.log.error(f'Could not post status {state} on '
+                          f'PR: {pull_request.number}, '
+                          f'Commit: {commit_hash} not found')
             return
         # context is a string label to differentiate one signer status from another signer status.
         # committer name is used as context label
         commit_obj.create_status(state, sign_url, body, context)
-        cla.log.info(
-            'Successfully posted status on PR %s: Commit %s',
-            pull_request.number,
-            commit_hash,
-        )
+        cla.log.info(f'Successfully posted status {state} on PR {pull_request.number}: Commit {commit_hash}')
     except GithubException as exc:
-        cla.log.error(
-            'Could not post status on PR %s: Commit %s : Response Code: %s: Mesage: %s',
-            pull_request.number,
-            commit_hash,
-            exc.status,
-            exc.data,
-        )
+        cla.log.error(f'Could not post status {state} on PR: {pull_request.number}, '
+                      f'Commit: {commit_hash}, '
+                      f'Response Code: {exc.status}, '
+                      f'Message: {exc.data}')
 
 
 def update_cla_comment(pull_request, body):

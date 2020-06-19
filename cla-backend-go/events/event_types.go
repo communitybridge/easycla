@@ -73,5 +73,7 @@ const (
 
 	InvalidatedSignature = "signature.invalidated"
 
-	ContributorNotifyCompanyAdmin = "contributor.notify_company_admin"
+	ContributorNotifyCompanyAdminType = "contributor.notify_company_admin"
+	ContributorNotifyCLADesigneeType  = "contributor.notify_cla_designee"
+	ContributorAssignCLADesigneeType  = "contributor.assign_designee"
 )
