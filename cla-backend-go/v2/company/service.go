@@ -233,11 +233,10 @@ func fillUsersInfo(claManagers []*models.CompanyClaManager, usermap map[string]*
 		cm.Name = user.Name
 		// cm.LogoURL = user.LogoURL
 		cm.UserSfid = user.ID
-		if user.Email != nil {
-			cm.Email = *user.Email
-		} else {
-			if len(user.Emails) > 0 {
-				cm.Email = utils.StringValue(user.Emails[0].EmailAddress)
+		for _, email := range user.Emails {
+			if email != nil && email.IsPrimary != nil && *email.IsPrimary {
+				cm.Email = utils.StringValue(email.EmailAddress)
+				break
 			}
 		}
 	}
