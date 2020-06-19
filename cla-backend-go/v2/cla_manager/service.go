@@ -19,6 +19,7 @@ import (
 	v1ProjectParams "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	v1User "github.com/communitybridge/easycla/cla-backend-go/user"
+	easyCLAUser "github.com/communitybridge/easycla/cla-backend-go/users"
 	v2AcsService "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
 	v2OrgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
@@ -29,9 +30,10 @@ import (
 const Lead = "lead"
 
 type service struct {
-	companyService company.IService
-	projectService project.Service
-	managerService v1ClaManager.IService
+	companyService     company.IService
+	projectService     project.Service
+	managerService     v1ClaManager.IService
+	easyCLAUserService easyCLAUser.Service
 }
 
 // Service interface
@@ -43,11 +45,12 @@ type Service interface {
 }
 
 // NewService returns instance of CLA Manager service
-func NewService(compService company.IService, projService project.Service, mgrService v1ClaManager.IService) Service {
+func NewService(compService company.IService, projService project.Service, mgrService v1ClaManager.IService, claUserService easyCLAUser.Service) Service {
 	return &service{
-		companyService: compService,
-		projectService: projService,
-		managerService: mgrService,
+		companyService:     compService,
+		projectService:     projService,
+		managerService:     mgrService,
+		easyCLAUserService: claUserService,
 	}
 }
 
@@ -109,6 +112,45 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 			Code:    "400",
 		}
 	}
+	// Check if user exists in easyCLA DB, if not add User
+	log.Debugf("Checking user: %s in easyCLA records", user.Username)
+	claUser, claUserErr := s.easyCLAUserService.GetUserByLFUserName(user.Username)
+	if claUserErr != nil {
+		msg := fmt.Sprintf("Problem getting claUser by :%s, error: %+v ", user.Username, claUserErr)
+		log.Warn(msg)
+		return nil, &models.ErrorResponse{
+			Message: msg,
+			Code:    "400",
+		}
+	}
+
+	if claUser == nil {
+		msg := fmt.Sprintf("User not found when searching by LFID: %s and shall be created", user.Username)
+		log.Debug(msg)
+		userName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
+		_, currentTimeString := utils.CurrentTime()
+		claUserModel := &v1Models.User{
+			UserExternalID: params.CompanySFID,
+			LfEmail:        *user.Emails[0].EmailAddress,
+			Admin:          true,
+			LfUsername:     user.Username,
+			DateCreated:    currentTimeString,
+			DateModified:   currentTimeString,
+			Username:       userName,
+			Version:        "v1",
+		}
+		newUserModel, userModelErr := s.easyCLAUserService.CreateUser(claUserModel)
+		if userModelErr != nil {
+			msg := fmt.Sprintf("Failed to create user : %+v", claUserModel)
+			log.Warn(msg)
+			return nil, &models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			}
+		}
+		log.Debugf("Created easyCLAUser %+v ", newUserModel)
+	}
+
 	// GetSFProject
 	ps := v2ProjectService.GetClient()
 	projectSF, projectErr := ps.GetProject(params.ProjectSFID)
