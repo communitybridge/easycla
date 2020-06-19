@@ -20,7 +20,7 @@ import (
 // constants
 const (
 	CLAGroupIDIndex     = "cla-group-id-index"
-	FoundationSFIDIndex = "foundtion-sfid-index"
+	FoundationSFIDIndex = "foundation-sfid-index"
 )
 
 // errors

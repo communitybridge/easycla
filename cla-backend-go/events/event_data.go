@@ -210,6 +210,10 @@ type ProjectCreatedEventData struct{}
 type ProjectUpdatedEventData struct{}
 type ProjectDeletedEventData struct{}
 
+type ContributorNotifyCompanyAdminData struct {
+	Email string
+}
+
 func (ed *GithubRepositoryAddedEventData) GetEventString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user [%s] added github repository [%s] to project [%s]", args.userName, ed.RepositoryName, args.projectName)
 	return data, true
@@ -447,5 +451,10 @@ func (ed *GithubProjectDeletedEventData) GetEventString(args *LogEventArgs) (str
 func (ed *SignatureProjectInvalidatedEventData) GetEventString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("Signature invalidated (approved set to false) due to CLA Group/Project: [%s] deletion",
 		args.projectName)
+	return data, true
+}
+
+func (ed *ContributorNotifyCompanyAdminData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] notified company admin by email: %s for company [%s / %s]", args.userName, ed.Email, args.companyName, args.CompanyID)
 	return data, true
 }
