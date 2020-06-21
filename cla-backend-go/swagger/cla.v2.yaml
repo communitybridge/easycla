@@ -1546,11 +1546,11 @@ paths:
               contactAdmin:
                 description: flag checking whether to contact company admin
                 type: boolean 
-              companySFID:
-                description: CompanySFID of contributor inviting CLA Manager
+              companyID:
+                description: EasyCLA companyID of contributor inviting CLA Manager
                 type: string
-              projectSFID:
-                description: project SFID to be signed
+              claGroupID:
+                description: claGroupID to be signed
                 type: string
               userEmail:
                 description: Proposed CLA Manager email
