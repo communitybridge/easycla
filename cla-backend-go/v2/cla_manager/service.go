@@ -60,7 +60,7 @@ func NewService(compService company.IService, projService project.Service, mgrSe
 // CreateCLAManager creates Cla Manager
 func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse) {
 	if *params.Body.FirstName == "" || *params.Body.LastName == "" || *params.Body.UserEmail == "" {
-		msg := fmt.Sprintf("firstName, lastName and UserEmail cannot be empty")
+		msg := "firstName, lastName and UserEmail cannot be empty"
 		log.Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
@@ -366,7 +366,7 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 
 	roleID, designeeErr := acServiceClient.GetRoleID("cla-manager-designee")
 	if designeeErr != nil {
-		msg := fmt.Sprintf("Problem getting role ID for cla-manager-designee")
+		msg := "Problem getting role ID for cla-manager-designee"
 		log.Warn(msg)
 		return nil, designeeErr
 	}
@@ -567,7 +567,7 @@ func buildErrorMessage(errPrefix string, claGroupID string, params cla_manager.C
 }
 
 func getCLAGroup(projectID string, projectSFID string, projectService project.Service) (*v1Models.Project, error) {
-	var claGroup *v1Models.Project
+	var claGroup v1Models.Project
 	// Search for projects by ProjectSFID
 	projects, projectErr := projectService.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
 		ProjectSFID: projectSFID,
@@ -575,7 +575,7 @@ func getCLAGroup(projectID string, projectSFID string, projectService project.Se
 	// Get unique project by passed CLAGroup ID parameter
 	for _, proj := range projects.Projects {
 		if proj.ProjectID == projectID && proj.ProjectCCLAEnabled {
-			claGroup = &proj
+			claGroup = proj
 			break
 		}
 	}
@@ -584,5 +584,5 @@ func getCLAGroup(projectID string, projectSFID string, projectService project.Se
 		return nil, projectErr
 	}
 
-	return claGroup, nil
+	return &claGroup, nil
 }

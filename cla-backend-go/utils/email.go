@@ -38,11 +38,6 @@ func SetSnsEmailSender(awsSession *session.Session, snsEventTopicARN string, sen
 
 // SendEmail sends an email to the specified recipients
 func (s *snsEmail) SendEmail(subject string, body string, recipients []string) error {
-	var awsRecipients = make([]*string, len(recipients))
-	for i, recipient := range recipients {
-		awsRecipients[i] = &recipient
-	}
-
 	event := CreateEventWrapper("cla-email-event")
 	event.Data = ToEmailTemplateEvent(&s.senderEmailAddress, recipients, &subject, &body, "EasyCLA System Email Template")
 

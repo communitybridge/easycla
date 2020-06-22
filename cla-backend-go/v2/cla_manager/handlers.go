@@ -294,7 +294,7 @@ func buildErrorMessageDelete(params cla_manager.DeleteCLAManagerParams, err erro
 func sendEmailToUserWithNoLFID(projectModel *v1Models.Project, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail string) {
 	projectName := projectModel.ProjectName
 	// subject string, body string, recipients []string
-	subject := fmt.Sprint("EasyCLA: Invitation to create LFID and complete process of becoming CLA Manager")
+	subject := "EasyCLA: Invitation to create LFID and complete process of becoming CLA Manager"
 	recipients := []string{userWithNoLFIDEmail}
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>

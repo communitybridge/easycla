@@ -29,8 +29,8 @@ type CLAManagerRequest struct {
 }
 
 // dbModelToServiceModel converts a database model to a service model
-func dbModelToServiceModel(dbModel *CLAManagerRequest) *models.ClaManagerRequest {
-	return &models.ClaManagerRequest{
+func dbModelToServiceModel(dbModel CLAManagerRequest) models.ClaManagerRequest {
+	return models.ClaManagerRequest{
 		RequestID:         dbModel.RequestID,
 		CompanyID:         dbModel.CompanyID,
 		CompanyExternalID: dbModel.CompanyExternalID,

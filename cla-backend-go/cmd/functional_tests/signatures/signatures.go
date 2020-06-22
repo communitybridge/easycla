@@ -75,9 +75,6 @@ func (t *TestBehaviour) RunGetCLAManagerToken() {
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
 			}
-			if &auth0Response == nil {
-				F.AddError("Auth0Response is nil")
-			}
 			if auth0Response.IDToken == "" {
 				F.AddError("Auth0Response id_token is empty")
 			}
@@ -113,9 +110,6 @@ func (t *TestBehaviour) RunGetCLAProspectiveManagerToken() {
 			unmarshallErr := json.Unmarshal([]byte(text), &auth0Response)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
-			}
-			if &auth0Response == nil {
-				F.AddError("Auth0Response is nil")
 			}
 			if auth0Response.IDToken == "" {
 				F.AddError("Auth0Response id_token is empty")
@@ -179,9 +173,6 @@ func (t *TestBehaviour) RunGetCompanySignatures() {
 			unmarshallErr := json.Unmarshal([]byte(text), &signatures)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
-			}
-			if &signatures == nil {
-				F.AddError("Signatures - Get Company Signatures - Google - Response is nil")
 			}
 			if signatures.Signatures == nil || len(signatures.Signatures) == 0 {
 				F.AddError("Signatures - Get Company Signatures - Google - Expecting at least one signature in response")

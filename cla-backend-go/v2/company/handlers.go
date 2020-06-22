@@ -12,6 +12,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/company"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	v2OrgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -109,9 +110,11 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 		func(params company.CreateCompanyParams) middleware.Responder {
 			companyModel, err := service.CreateCompany(*params.Input.CompanyName, *params.Input.CompanyWebsite, params.UserID)
 			if err != nil {
-				if err == ErrDuplicateCompany {
+				// If EasyCLA company conflict/duplicate or Platform Org Service conflict/duplicate
+				if err == ErrDuplicateCompany || err == v2OrgService.ErrConflict {
 					return company.NewCreateCompanyConflict().WithPayload(errorResponse(err))
 				}
+
 				return company.NewCreateCompanyBadRequest().WithPayload(errorResponse(err))
 			}
 			return company.NewCreateCompanyOK().WithPayload(companyModel)
