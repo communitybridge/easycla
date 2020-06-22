@@ -70,9 +70,6 @@ func (t *TestBehaviour) RunGetCLAManagerToken() {
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
 			}
-			if &auth0Response == nil {
-				F.AddError("Auth0Response is nil")
-			}
 			if auth0Response.IDToken == "" {
 				F.AddError("Auth0Response id_token is empty")
 			}
@@ -108,9 +105,6 @@ func (t *TestBehaviour) RunGetCLAProspectiveManagerToken() {
 			unmarshallErr := json.Unmarshal([]byte(text), &auth0Response)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
-			}
-			if &auth0Response == nil {
-				F.AddError("Auth0Response is nil")
 			}
 			if auth0Response.IDToken == "" {
 				F.AddError("Auth0Response id_token is empty")
@@ -215,9 +209,6 @@ func (t *TestBehaviour) RunCreateCLAManagerRequest() {
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
 			}
-			if &claManagerResp == nil {
-				F.AddError("CLA Manager Response is nil")
-			}
 			claManagerCreateRequestID = claManagerResp.RequestID
 			//log.Debugf("Saved CLA Manager request ID: %s", claManagerCreateRequestID)
 		})
@@ -290,9 +281,6 @@ func (t *TestBehaviour) RunGetCLAManagerRequests() {
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
 			}
-			if &requests == nil {
-				F.AddError("GET CLA Manager Requests - Response is nil")
-			}
 			if requests.Requests == nil || len(requests.Requests) == 0 {
 				F.AddError("GET CLA Manager Requests - Expecting at least one request in response")
 			}
@@ -346,9 +334,6 @@ func (t *TestBehaviour) RunGetCLAManagerRequest() {
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
 			}
-			if &claManagerResp == nil {
-				F.AddError("GET CLA Manager Request - Response is nil")
-			}
 			if claManagerResp.CompanyID != claManagerCompanyID {
 				F.AddError(fmt.Sprintf("GET CLA Manager Request - Company ID's do not match: %s vs %s",
 					claManagerResp.CompanyID, claManagerCompanyID))
@@ -393,9 +378,6 @@ func (t *TestBehaviour) RunApproveCLAManagerRequest() {
 			unmarshallErr := json.Unmarshal([]byte(text), &claManagerResp)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
-			}
-			if &claManagerResp == nil {
-				F.AddError("Approve CLA Manager Request - Response is nil")
 			}
 			if claManagerResp.CompanyID != claManagerCompanyID {
 				F.AddError(fmt.Sprintf("Approve CLA Manager Request - Company ID's do not match: %s vs %s",
@@ -501,9 +483,6 @@ func (t *TestBehaviour) RunAddCLAManager() {
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
 			}
-			if &signature == nil {
-				F.AddError("Add CLA Manager - Signature Response is nil")
-			}
 			var containsEntry = false
 			for _, aclEntry := range signature.SignatureACL {
 				if aclEntry.LfUsername == claProspectiveManagerLFID {
@@ -571,9 +550,6 @@ func (t *TestBehaviour) RunRemoveCLAManager() {
 			unmarshallErr := json.Unmarshal([]byte(text), &signature)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
-			}
-			if &signature == nil {
-				F.AddError("Remove CLA Manager - Signature Response is nil")
 			}
 			var containsEntry = false
 			for _, aclEntry := range signature.SignatureACL {
