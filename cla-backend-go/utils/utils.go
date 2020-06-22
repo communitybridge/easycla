@@ -195,7 +195,7 @@ func ValidDomain(domain string) (string, bool) {
 	// check top level domain validity
 	switch {
 	case l == len(domain):
-		return fmt.Sprintf("missing top level domain, domain can't end with a period"), false
+		return "missing top level domain, domain can't end with a period", false
 	case len(domain)-l > 63:
 		return fmt.Sprintf("byte length of top level domain '%s' is %d, can't exceed 63", domain[l:], len(domain)-l), false
 	case domain[l] == '-':

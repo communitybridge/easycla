@@ -59,9 +59,6 @@ func (t *TestBehaviour) RunGetCLAProjectManagerToken() {
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
 			}
-			if &auth0Response == nil {
-				F.AddError("Auth0Response is nil")
-			}
 			if auth0Response.IDToken == "" {
 				F.AddError("Auth0Response id_token is empty")
 			}
@@ -99,9 +96,6 @@ func (t *TestBehaviour) RunValidateCLAGroupValid(claGroupName, claGroupDescripti
 			unmarshallErr := json.Unmarshal([]byte(text), &response)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
-			}
-			if &response == nil {
-				F.AddError("CLA Group Validate - Response is nil")
 			}
 			if !response.Valid {
 				F.AddError(fmt.Sprintf("CLA Group Validate - Valid Input Expected - CLA Group Name: %s, Description: %s failed: %+v",
@@ -145,9 +139,6 @@ func (t *TestBehaviour) RunValidateCLAGroupInvalidDuplicate(claGroupName, claGro
 			unmarshallErr := json.Unmarshal([]byte(text), &response)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
-			}
-			if &response == nil {
-				F.AddError("CLA Group Validate - Response is nil")
 			}
 			if response.Valid {
 				F.AddError(fmt.Sprintf("CLA Group Validate - Invalid Input Expected - CLA Group Name: %s, Description: %s failed: %+v",

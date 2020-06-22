@@ -66,7 +66,9 @@ func (s service) CreateRequest(reqModel *CLAManagerRequest) (*models.ClaManagerR
 		return nil, err
 	}
 
-	return dbModelToServiceModel(request), err
+	respModel := dbModelToServiceModel(*request)
+
+	return &respModel, err
 }
 
 // GetRequests returns a requests object based on the specified parameters
@@ -81,8 +83,7 @@ func (s service) GetRequests(companyID, projectID string) (*models.ClaManagerReq
 	// Convert to a service response model
 	responseModel := models.ClaManagerRequestList{}
 	for _, request := range requests.Requests {
-		resp := dbModelToServiceModel(&request)
-		responseModel.Requests = append(responseModel.Requests, *resp)
+		responseModel.Requests = append(responseModel.Requests, dbModelToServiceModel(request))
 	}
 
 	return &responseModel, nil
@@ -100,8 +101,7 @@ func (s service) GetRequestsByUserID(companyID, projectID, userID string) (*mode
 	// Convert to a service response model
 	responseModel := models.ClaManagerRequestList{}
 	for _, request := range requests.Requests {
-		resp := dbModelToServiceModel(&request)
-		responseModel.Requests = append(responseModel.Requests, *resp)
+		responseModel.Requests = append(responseModel.Requests, dbModelToServiceModel(request))
 	}
 
 	return &responseModel, nil
@@ -121,7 +121,9 @@ func (s service) GetRequest(requestID string) (*models.ClaManagerRequest, error)
 		return nil, nil
 	}
 
-	return dbModelToServiceModel(request), err
+	respModel := dbModelToServiceModel(*request)
+
+	return &respModel, err
 }
 
 // ApproveRequest approves the request based on the specified parameters
@@ -133,7 +135,9 @@ func (s service) ApproveRequest(companyID, projectID, requestID string) (*models
 		return nil, err
 	}
 
-	return dbModelToServiceModel(request), err
+	respModel := dbModelToServiceModel(*request)
+
+	return &respModel, err
 }
 
 // PendingRequest updates the specified request to the pending state
@@ -145,7 +149,9 @@ func (s service) PendingRequest(companyID, projectID, requestID string) (*models
 		return nil, err
 	}
 
-	return dbModelToServiceModel(request), err
+	respModel := dbModelToServiceModel(*request)
+
+	return &respModel, err
 }
 
 // DenyRequest denies the request based on the specified parameters
@@ -157,7 +163,9 @@ func (s service) DenyRequest(companyID, projectID, requestID string) (*models.Cl
 		return nil, err
 	}
 
-	return dbModelToServiceModel(request), err
+	respModel := dbModelToServiceModel(*request)
+
+	return &respModel, err
 }
 
 // DeleteRequest deletes the request based on the specified parameters
