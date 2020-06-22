@@ -15,6 +15,7 @@ type Service interface {
 	ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error)
 	GetGithubRepository(repositoryID string) (*models.GithubRepository, error)
 	DeleteProject(projectID string) error
+	GetGithubRepositoryByCLAGroup(claGroupID string) (*models.GithubRepository, error)
 }
 
 type service struct {
@@ -61,4 +62,8 @@ func (s *service) DeleteProject(projectID string) error {
 		}
 	}
 	return nil
+}
+
+func (s *service) GetGithubRepositoryByCLAGroup(claGroupID string) (*models.GithubRepository, error) {
+	return s.repo.GetGithubRepositoryByCLAGroup(claGroupID)
 }

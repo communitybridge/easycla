@@ -13,6 +13,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/cla_manager"
 	"github.com/communitybridge/easycla/cla-backend-go/project"
+	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 
 	v1ClaManager "github.com/communitybridge/easycla/cla-backend-go/cla_manager"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -30,10 +31,11 @@ import (
 const Lead = "lead"
 
 type service struct {
-	companyService     company.IService
-	projectService     project.Service
-	managerService     v1ClaManager.IService
-	easyCLAUserService easyCLAUser.Service
+	companyService      company.IService
+	projectService      project.Service
+	repositoriesService repositories.Service
+	managerService      v1ClaManager.IService
+	easyCLAUserService  easyCLAUser.Service
 }
 
 // Service interface
@@ -45,12 +47,13 @@ type Service interface {
 }
 
 // NewService returns instance of CLA Manager service
-func NewService(compService company.IService, projService project.Service, mgrService v1ClaManager.IService, claUserService easyCLAUser.Service) Service {
+func NewService(compService company.IService, projService project.Service, mgrService v1ClaManager.IService, claUserService easyCLAUser.Service, repoService repositories.Service) Service {
 	return &service{
-		companyService:     compService,
-		projectService:     projService,
-		managerService:     mgrService,
-		easyCLAUserService: claUserService,
+		companyService:      compService,
+		projectService:      projService,
+		repositoriesService: repoService,
+		managerService:      mgrService,
+		easyCLAUserService:  claUserService,
 	}
 }
 
@@ -400,7 +403,31 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	projectService := v2ProjectService.GetClient()
 	userService := v2UserService.GetClient()
 
-	project, projectErr := projectService.GetProject(projectID)
+	// Get repo instance (assist in getting salesforce project)
+	log.Debugf("Get salesforce project by claGroupID: %s ", projectID)
+	ghRepoModel, ghRepoErr := s.repositoriesService.GetGithubRepositoryByCLAGroup(projectID)
+	if ghRepoErr != nil || ghRepoModel.RepositorySfdcID == "" {
+		msg := fmt.Sprintf("Problem getting salesforce project by claGroupID : %s ", projectID)
+		log.Warn(msg)
+		return nil, &models.ErrorResponse{
+			Code:    "404",
+			Message: msg,
+		}
+	}
+
+	// Get company
+	log.Debugf("Get company for companyID: %s ", companyID)
+	companyModel, companyErr := s.companyService.GetCompany(companyID)
+	if companyErr != nil || companyModel.CompanyExternalID == "" {
+		msg := fmt.Sprintf("Problem getting company for companyID: %s ", companyID)
+		log.Warn(msg)
+		return nil, &models.ErrorResponse{
+			Code:    "404",
+			Message: msg,
+		}
+	}
+
+	project, projectErr := projectService.GetProject(ghRepoModel.RepositorySfdcID)
 	if projectErr != nil {
 		msg := fmt.Sprintf("Problem getting project by ID: %s ", projectID)
 		log.Warn(msg)
@@ -410,7 +437,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 		}
 	}
 
-	organization, orgErr := orgService.GetOrganization(companyID)
+	organization, orgErr := orgService.GetOrganization(companyModel.CompanyExternalID)
 	if orgErr != nil {
 		msg := fmt.Sprintf("Problem getting company by ID: %s ", companyID)
 		log.Warn(msg)
@@ -454,7 +481,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 		return nil, nil
 	}
 
-	claManagerDesignee, err := s.CreateCLAManagerDesignee(companyID, projectID, userEmail)
+	claManagerDesignee, err := s.CreateCLAManagerDesignee(organization.ID, project.ID, userEmail)
 
 	if err != nil {
 		msg := fmt.Sprintf("Problem creating cla Manager Designee for user :%s, error: %+v ", userEmail, err)
