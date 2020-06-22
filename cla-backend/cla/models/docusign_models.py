@@ -17,8 +17,10 @@ import xml.etree.ElementTree as ET
 from typing import Dict, Any, Optional
 from urllib.parse import urlparse
 
-import cla
 import pydocusign  # type: ignore
+from pydocusign.exceptions import DocuSignException  # type: ignore
+
+import cla
 from cla.controllers.lf_group import LFGroup
 from cla.models import signing_service_interface, DoesNotExist
 from cla.models.dynamo_models import Signature, User, \
@@ -26,7 +28,6 @@ from cla.models.dynamo_models import Signature, User, \
     Document, Event
 from cla.models.event_types import EventType
 from cla.models.s3_storage import S3Storage
-from pydocusign.exceptions import DocuSignException  # type: ignore
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
@@ -837,7 +838,6 @@ class DocuSign(signing_service_interface.SigningService):
             signatory_name=signatory_name, signatory_email=signatory_email,
             send_as_email=send_as_email, return_url_type=return_url_type, return_url=return_url)
 
-
     def populate_sign_url(self, signature, callback_url=None,
                           authority_or_signatory_name=None,
                           authority_or_signatory_email=None,
@@ -854,8 +854,9 @@ class DocuSign(signing_service_interface.SigningService):
                       f'with cla manager name: {cla_manager_name} '
                       f'with cla manager email: {cla_manager_email} '
                       f'send as email: {send_as_email} '
-                      f' reference type: {sig_type}')
+                      f'reference type: {sig_type}')
 
+        # Depending on the signature type - we'll need either the company or the user record
         company = Company()
         user = User()
 
@@ -863,93 +864,106 @@ class DocuSign(signing_service_interface.SigningService):
         user_signature_name = 'Unknown'
         user_signature_email = 'Unknown'
 
-        # Assume the company manager is signing the CCLA
-        cla.log.debug('populate_sign_url - processing {} signature...'.format(sig_type))
+        cla.log.debug(f'populate_sign_url - {sig_type} - processing signing request...')
 
         if sig_type == 'company':
+            # For CCLA - use provided CLA Manager information
+            user_signature_name = cla_manager_name
+            user_signature_email = cla_manager_email
+            cla.log.debug(f'populate_sign_url - {sig_type} - user_signature name/email will be CLA Manager name/info: '
+                          f'{user_signature_name} / {user_signature_email}...')
+
             try:
                 # Grab the company id from the signature
-                cla.log.debug(f'populate_sign_url - Loading company id: {signature.get_signature_reference_id()}')
+                cla.log.debug('populate_sign_url - CCLA - '
+                              f'Loading company id: {signature.get_signature_reference_id()}')
                 company.load(signature.get_signature_reference_id())
-                cla.log.debug(f'populate_sign_url - Loaded company: {company}')
-
-                # Grab the company manager id (id of the user)
-                cla.log.debug(f'populate_sign_url - Loading user manager id: {company.get_company_manager_id()}')
-                user.load(company.get_company_manager_id())
-                cla.log.debug(f'populate_sign_url - Loaded user: {user}')
-
-                user_signature_name = user.get_user_name()
-                user_signature_email = user.get_lf_email()
+                cla.log.debug(f'populate_sign_url - {sig_type} - loaded company: {company}')
             except DoesNotExist:
-                cla.log.warning('populate_sign_url - No CLA manager associated with this company - can not sign CCLA')
+                cla.log.warning(f'populate_sign_url - {sig_type} - '
+                                'No CLA manager associated with this company - can not sign CCLA')
                 return
             except Exception as e:
-                cla.log.warning('populate_sign_url - No CLA manager lookup error: '.format(e))
+                cla.log.warning(f'populate_sign_url - {sig_type} - No CLA manager lookup error: {e}')
                 return
         elif sig_type == 'user':
             if not send_as_email:
                 try:
-                    cla.log.debug('populate_sign_url - Loading user by id: {}'.
-                                  format(signature.get_signature_reference_id()))
+                    cla.log.debug(f'populate_sign_url - {sig_type} - '
+                                  f'loading user by reference id: {signature.get_signature_reference_id()}')
                     user.load(signature.get_signature_reference_id())
-                    cla.log.debug('populate_sign_url - Loaded user by id: {} - name: {}, email: {}'.
-                                  format(user.get_user_id(), user.get_user_name(), user.get_user_email()))
+                    cla.log.debug(f'populate_sign_url - {sig_type} - loaded user by '
+                                  f'id: {user.get_user_id()}, '
+                                  f'name: {user.get_user_name()}, '
+                                  f'email: {user.get_user_email()}')
                     if not user.get_user_name() is None:
                         user_signature_name = user.get_user_name()
                     if not user.get_user_email() is None:
                         user_signature_email = user.get_user_email()
                 except DoesNotExist:
-                    cla.log.warning('populate_sign_url - no user associated with this signature '
-                                    'id: {} - can not sign CCLA'.
-                                    format(signature.get_signature_reference_id()))
+                    cla.log.warning(f'populate_sign_url - {sig_type} - no user associated with this signature '
+                                    f'id: {signature.get_signature_reference_id()} - can not sign ICLA')
                     return
                 except Exception as e:
-                    cla.log.warning('populate_sign_url - no user associated with this signature id: {}, error: {}'.
-                                    format(signature.get_signature_reference_id(), e))
+                    cla.log.warning(f'populate_sign_url - {sig_type} - no user associated with this signature - '
+                                    f'id: {signature.get_signature_reference_id()}, '
+                                    f'error: {e}')
                     return
+
+                cla.log.debug(
+                    f'populate_sign_url - {sig_type} - user_signature name/email will be user from signature: '
+                    f'{user_signature_name} / {user_signature_email}...')
         else:
-            cla.log.warning('populate_sign_url - unsupported signature type: {}'.format(sig_type))
+            cla.log.warning(f'populate_sign_url - unsupported signature type: {sig_type}')
             return
 
-        # Fetch the document to sign.
-        cla.log.debug('populate_sign_url - Loading project by id: {}'.format(signature.get_signature_project_id()))
+        # Fetch the document template to sign.
         project = Project()
+        cla.log.debug(f'populate_sign_url - {sig_type} - '
+                      f'loading project by id: {signature.get_signature_project_id()}')
         project.load(signature.get_signature_project_id())
-        cla.log.debug('populate_sign_url - Loaded project by id: {} - project: {}'.
-                      format(signature.get_signature_project_id(), project))
+        cla.log.debug(f'populate_sign_url - {sig_type} - '
+                      f'loaded project by id: {signature.get_signature_project_id()} - '
+                      f'project: {project}')
 
         # Load the appropriate document
         if sig_type == 'company':
+            cla.log.debug(f'populate_sign_url - {sig_type} - loading project_corporate_document...')
             document = project.get_project_corporate_document()
             if document is None:
-                cla.log.error('populate_sign_url - could not get sign url for project: {}. '
-                              'Project has no corporate CLA document set'.format(project))
+                cla.log.error(f'populate_sign_url - {sig_type} - Could not get sign url for project: {project}. '
+                              'Project has no corporate CLA document set. Returning...')
                 return
+            cla.log.debug(f'populate_sign_url - {sig_type} - loaded project_corporate_document...')
         else:  # sig_type == 'user'
+            cla.log.debug(f'populate_sign_url - {sig_type} - loading project_individual_document...')
             document = project.get_project_individual_document()
             if document is None:
-                cla.log.error('populate_sign_url - Could not get sign url for project {}. '
-                              'Project has no individual CLA document set', project)
+                cla.log.error(f'populate_sign_url - {sig_type} - Could not get sign url for project: {project}. '
+                              'Project has no individual CLA document set. Returning...')
                 return
+            cla.log.debug(f'populate_sign_url - {sig_type} - loaded project_individual_document...')
 
         # Void the existing envelope to prevent multiple envelopes pending for a signer. 
         envelope_id = signature.get_signature_envelope_id()
         if envelope_id is not None:
             try:
-                message = 'You are getting this message because your DocuSign Session ' \
-                          'for project {} expired. A new session will be in place for ' \
-                          'your signing process.'.format(project.get_project_name())
+                message = ('You are getting this message because your DocuSign Session '
+                           f'for project {project.get_project_name()} expired. A new session will be in place for '
+                           'your signing process.')
                 cla.log.debug(message)
                 self.client.void_envelope(envelope_id, message)
             except Exception as e:
-                cla.log.warning('populate_sign_url - DocuSign error while voiding the envelope - '
-                                'regardless, continuing on..., error: {}'.format(e))
+                cla.log.warning(f'populate_sign_url - {sig_type} - DocuSign error while voiding the envelope - '
+                                f'regardless, continuing on..., error: {e}')
 
         # Not sure what should be put in as documentId.
         document_id = uuid.uuid4().int & (1 << 16) - 1  # Random 16bit integer -.pylint: disable=no-member
         tabs = get_docusign_tabs_from_document(document, document_id, default_values=default_values)
 
         if send_as_email:
+            cla.log.warning(f'populate_sign_url - {sig_type} - assigning signatory name/email: '
+                            f'{authority_or_signatory_name} / {authority_or_signatory_email}')
             # Sending email to authority
             signatory_email = authority_or_signatory_email
             signatory_name = authority_or_signatory_name
@@ -958,24 +972,35 @@ class DocuSign(signing_service_interface.SigningService):
             project_name = project.get_project_name()
             company_name = company.get_company_name()
 
-            cla.log.debug('populate_sign_url - Sending document as email with name: {}, email: {} '
-                          'project name: {}, company: {}'.
-                          format(signatory_name, signatory_email, project_name, company_name))
+            cla.log.debug(f'populate_sign_url - {sig_type} - sending document as email with '
+                          f'name: {signatory_name}, email: {signatory_email} '
+                          f'project name: {project_name}, company: {company_name}')
 
-            email_subject = 'CLA Sign Request for {}'.format(project_name)
-            email_body = '''{cla_manager_name} has designated you as being an authorized signatory for {company_name}. In order for employees of your company to contribute to the open source project {project_name}, they must do so under a Contributor License Agreement signed by someone with authority to sign on behalf of your company.
-
-After you sign, {cla_manager_name} (as the initial CLA Manager for your company) will be able to maintain the list of specific employees authorized to contribute to the project under this signed CLA.
-
-If you have questions, or if you are not an authorized signatory of this company, please contact the requester at {cla_manager_email}.
-
-            '''.format(cla_manager_name=cla_manager_name,
-                       company_name=company_name,
-                       project_name=project_name,
-                       cla_manager_email=cla_manager_email)
-
-            cla.log.debug('populate_sign_url - Generating a docusign signer object form email with name: {}, email: {}'.
-                          format(signatory_name, signatory_email))
+            email_subject = f'EasyCLA: CLA Signature Request for {project_name}'
+            email_body = f'''
+            <p>Hello {signatory_name},</p>
+            <p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
+            <p>{cla_manager_name} has designated you as being an authorized signatory for {company_name}.
+               In order for employees of your company to contribute to the open source project {project_name}, 
+               they must do so under a Contributor License Agreement signed by someone with authority to sign on
+               behalf of your company.<p>
+            <p>After you sign, {cla_manager_name} (as the initial CLA Manager for your company) will be able to
+               maintain the list of specific employees authorized to contribute to the project under this signed
+               CLA.</p>
+            <p>If you are authorized to sign on your company’s behalf, and if you approve {cla_manager_name} as
+               your initial CLA Manager for {project_name}, please click the link below to review and sign the CLA.</p>
+            <p>If you have questions, or if you are not an authorized signatory of this company, please contact
+               the requester at {cla_manager_email}.</p>
+            <p>If you need help or have questions about EasyCLA, you can
+               <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">
+               read the documentation</a> or
+               <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach
+               out to us for support</a>.</p>
+            <p>Thanks,</p>
+            <p>EasyCLA support team</p>
+            '''
+            cla.log.debug(f'populate_sign_url - {sig_type} - generating a docusign signer object form email with'
+                          f'name: {signatory_name}, email: {signatory_email}, subject: {email_subject}')
             signer = pydocusign.Signer(email=signatory_email,
                                        name=signatory_name,
                                        recipientId=1,
@@ -993,12 +1018,12 @@ If you have questions, or if you are not an authorized signatory of this company
             # It assumes that the user handles the communication with the client. 
             # In this case, the user opened the docusign document to manually sign it. 
             # Thus the email does not need to be sent.
-            cla.log.debug('populate_sign_url - Generating a docusign signer object with name: {}, email: {}'.
-                          format(signatory_name, signatory_email))
+            cla.log.debug(f'populate_sign_url - {sig_type} - generating a docusign signer object with'
+                          f'name: {signatory_name}, email: {signatory_email}')
             signer = pydocusign.Signer(email=signatory_email, name=signatory_name,
                                        recipientId=1, clientUserId=signature.get_signature_id(),
                                        tabs=tabs,
-                                       emailSubject='CLA Sign Request',
+                                       emailSubject=f'EasyCLA: CLA Signature Request for {project.get_project_name()}',
                                        emailBody='CLA Sign Request for {}'.format(user.get_user_email()),
                                        supportedLanguage='en',
                                        )
@@ -1014,8 +1039,8 @@ If you have questions, or if you are not an authorized signatory of this company
             pdf = io.BytesIO(content)
 
         doc_name = document.get_document_name()
-        cla.log.debug('populate_sign_url - Docusign document name: {}, id: {}, content type: {}'.
-                      format(doc_name, document_id, content_type))
+        cla.log.debug(f'populate_sign_url - {sig_type} - docusign document '
+                      f'name: {doc_name}, id: {document_id}, content type: {content_type}')
         document = pydocusign.Document(name=doc_name, documentId=document_id, data=pdf)
 
         if callback_url is not None:
@@ -1026,18 +1051,20 @@ If you have questions, or if you are not an authorized signatory of this company
             event_notification = pydocusign.EventNotification(url=callback_url,
                                                               loggingEnabled=True,
                                                               recipientEvents=recipient_events)
-            envelope = pydocusign.Envelope(documents=[document],
-                                           emailSubject='CLA Sign Request',
-                                           emailBlurb='CLA Sign Request',
-                                           eventNotification=event_notification,
-                                           status=pydocusign.Envelope.STATUS_SENT,
-                                           recipients=[signer])
+            envelope = pydocusign.Envelope(
+                documents=[document],
+                emailSubject=f'EasyCLA: CLA Signature Request for {project.get_project_name()}',
+                emailBlurb='CLA Sign Request',
+                eventNotification=event_notification,
+                status=pydocusign.Envelope.STATUS_SENT,
+                recipients=[signer])
         else:
-            envelope = pydocusign.Envelope(documents=[document],
-                                           emailSubject='CLA Sign Request',
-                                           emailBlurb='CLA Sign Request',
-                                           status=pydocusign.Envelope.STATUS_SENT,
-                                           recipients=[signer])
+            envelope = pydocusign.Envelope(
+                documents=[document],
+                emailSubject=f'EasyCLA: CLA Signature Request for {project.get_project_name()}',
+                emailBlurb='CLA Sign Request',
+                status=pydocusign.Envelope.STATUS_SENT,
+                recipients=[signer])
 
         envelope = self.prepare_sign_request(envelope)
 
@@ -1048,23 +1075,24 @@ If you have questions, or if you are not an authorized signatory of this company
             # This route will be in charge of extracting the signature's return_url and redirecting.
             return_url = os.path.join(api_base_url, 'v2/return-url', str(recipient.clientUserId))
 
-            cla.log.debug("populate_sign_url - generating signature sign_url, using return-url as: {}".
-                          format(return_url))
+            cla.log.debug(f'populate_sign_url - {sig_type} - generating signature sign_url, '
+                          f'using return-url as: {return_url}')
             sign_url = self.get_sign_url(envelope, recipient, return_url)
-            cla.log.debug('populate_sign_url - setting signature sign_url as: {}'.format(sign_url))
+            cla.log.debug(f'populate_sign_url - {sig_type} - setting signature sign_url as: {sign_url}')
             signature.set_signature_sign_url(sign_url)
 
         # Save Envelope ID in signature.
-        cla.log.debug('populate_sign_url - saving signature to database...')
+        cla.log.debug(f'populate_sign_url - {sig_type} - saving signature to database...')
         signature.set_signature_envelope_id(envelope.envelopeId)
         signature.save()
+        cla.log.debug(f'populate_sign_url - {sig_type} - complete')
 
     def signed_individual_callback(self, content, installation_id, github_repository_id, change_request_id):
         """
         Will be called on ICLA signature callback, but also when a document has been
         opened by a user - no action required then.
         """
-        cla.log.debug('Docusign ICLA signed callback POST data: {}'.format(content))
+        cla.log.debug(f'signed_individual_callback - Docusign ICLA signed callback POST data: {content}')
         tree = ET.fromstring(content)
         # Get envelope ID.
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
@@ -1074,16 +1102,16 @@ If you have questions, or if you are not an authorized signatory of this company
         try:
             signature.load(signature_id)
         except DoesNotExist:
-            cla.log.error('DocuSign ICLA callback returned signed info on invalid signature: %s',
-                          content)
+            cla.log.error('signed_individual_callback - DocuSign ICLA callback returned signed info on '
+                          f'invalid signature: {content}')
             return
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
                          '/' + self.TAGS['recipient_status'])
         status = elem.find(self.TAGS['status']).text
         if status == 'Completed' and not signature.get_signature_signed():
-            cla.log.info('ICLA signature signed (%s) - Notifying repository service provider',
-                         signature_id)
+            cla.log.info(f'signed_individual_callback - ICLA signature signed ({signature_id}) - '
+                         'Notifying repository service provider')
             signature.set_signature_signed(True)
             # Save signature
             signature.save()
@@ -1100,6 +1128,8 @@ If you have questions, or if you are not an authorized signatory of this company
             # Verify user id exist for saving on storage
             user_id = user.get_user_id()
             if user_id is None:
+                cla.log.warning('signed_individual_callback - '
+                                'Missing user_id on ICLA for saving signed file on s3 storage.')
                 raise SigningError('Missing user_id on ICLA for saving signed file on s3 storage.')
 
             # Store document on S3
@@ -1110,7 +1140,7 @@ If you have questions, or if you are not an authorized signatory of this company
             update_repository_provider(installation_id, github_repository_id, change_request_id)
 
     def signed_individual_callback_gerrit(self, content, user_id):
-        cla.log.debug('Docusign Gerrit ICLA signed callback POST data: %s', content)
+        cla.log.debug(f'signed_individual_callback_gerrit - Docusign Gerrit ICLA signed callback POST data: {content}')
         tree = ET.fromstring(content)
         # Get envelope ID.
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
@@ -1120,23 +1150,24 @@ If you have questions, or if you are not an authorized signatory of this company
         try:
             signature.load(signature_id)
         except DoesNotExist:
-            cla.log.error('DocuSign Gerrit ICLA callback returned signed info on invalid signature: %s',
-                          content)
+            cla.log.error('signed_individual_callback_gerrit - DocuSign Gerrit ICLA callback returned signed info '
+                          f'on invalid signature: {content}')
             return
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
                          '/' + self.TAGS['recipient_status'])
         status = elem.find(self.TAGS['status']).text
         if status == 'Completed' and not signature.get_signature_signed():
-            cla.log.info('ICLA signature signed (%s) - Notifying repository service provider',
-                         signature_id)
+            cla.log.info(f'signed_individual_callback_gerrit - ICLA signature signed ({signature_id}) - '
+                         'Notifying repository service provider')
             # Get User
             user = cla.utils.get_user_instance()
             user.load(user_id)
 
+            cla.log.debug('signed_individual_callback_gerrit - updating signature in database - '
+                          'setting signed=true...')
             # Save signature before adding user to LDAP Groups.
             signature.set_signature_signed(True)
-            # Save signature
             signature.save()
 
             gerrits = Gerrit().get_gerrit_by_project_id(signature.get_signature_project_id())
@@ -1151,7 +1182,8 @@ If you have questions, or if you are not an authorized signatory of this company
                     try:
                         lf_group.add_user_to_group(group_id, lf_username)
                     except Exception as e:
-                        cla.log.error('Failed in adding user to the LDAP group: %s', e)
+                        cla.log.error('signed_individual_callback_gerrit - '
+                                      f'Failed in adding user to the LDAP group: {e}')
                         return
 
             # Get signed document
@@ -1161,18 +1193,21 @@ If you have questions, or if you are not an authorized signatory of this company
 
             # Verify user id exist for saving on storage
             if user_id is None:
+                cla.log.warning('signed_individual_callback_gerrit - '
+                                'Missing user_id on ICLA for saving signed file on s3 storage')
                 raise SigningError('Missing user_id on ICLA for saving signed file on s3 storage.')
 
             # Store document on S3
             project_id = signature.get_signature_project_id()
             self.send_to_s3(document_data, project_id, signature_id, 'icla', user_id)
+            cla.log.debug('signed_individual_callback_gerrit - uploaded ICLA document to s3')
 
     def signed_corporate_callback(self, content, project_id, company_id):
         """
         Will be called on CCLA signature callback, but also when a document has been
         opened by a user - no action required then.
         """
-        cla.log.debug('Docusign CCLA signed callback POST data: %s', content)
+        cla.log.debug(f'signed_corporate_callback - DocuSign CCLA signed callback POST data: {content}')
         tree = ET.fromstring(content)
         # Get envelope ID.
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
@@ -1182,7 +1217,9 @@ If you have questions, or if you are not an authorized signatory of this company
         try:
             company.load(str(company_id))
         except DoesNotExist as err:
-            return {'errors': {'Docusign callback failed: Invalid company_id {}'.format(company_id): str(err)}}
+            return {'errors':
+                        {f'Docusign callback failed: invalid company_id {company_id}': f'{err}'}
+                    }
 
         # Assume only one signature per signature.
         client_user_id = tree.find('.//' + self.TAGS['client_user_id'])
@@ -1192,8 +1229,8 @@ If you have questions, or if you are not an authorized signatory of this company
             try:
                 signature.load(signature_id)
             except DoesNotExist:
-                cla.log.error('DocuSign callback returned signed info on invalid signature: %s',
-                              content)
+                cla.log.error('signed_corporate_callback - DocuSign callback returned signed info on '
+                              f'invalid signature: {content}')
                 return
         else:
             # If client_user_id is None, the callback came from the email that finished signing. 
@@ -1204,26 +1241,24 @@ If you have questions, or if you are not an authorized signatory of this company
         # Get User
         user = cla.utils.get_user_instance()
         if signature.get_signature_reference_type() == 'user':
+            cla.log.debug(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
+                          f'loading user by id: {signature.get_signature_reference_id()}')
             user.load(signature.get_signature_reference_id())
         elif signature.get_signature_reference_type() == 'company':
-            # Get company manager if reference id is of a company's ID. 
+            cla.log.debug(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
+                          f'loading user by id: {company.get_company_manager_id()}')
+            # Get company manager if reference id is of a company's ID.
             user.load(company.get_company_manager_id())
 
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
                          '/' + self.TAGS['recipient_status'])
         status = elem.find(self.TAGS['status']).text
-        company = Company()
-        try:
-            company.load(str(company_id))
-        except DoesNotExist:
-            cla.log.error('Received CCLA signed callback from signing service provider for an unknown company: %s',
-                          company_id)
-            return
+
         if status == 'Completed' and not signature.get_signature_signed():
-            cla.log.info('CCLA signature signed (%s)', signature_id)
+            cla.log.info(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
+                         f'CCLA signature signed ({signature_id}) - setting signature signed attribute to true')
             signature.set_signature_signed(True)
-            # Save signature
             signature.save()
 
             # Check if the callback is for a Gerrit Instance
@@ -1244,7 +1279,8 @@ If you have questions, or if you are not an authorized signatory of this company
                     try:
                         lf_group.add_user_to_group(group_id, lf_username)
                     except Exception as e:
-                        cla.log.error('Failed in adding user to the LDAP group: %s', e)
+                        cla.log.error(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
+                                      f'Failed in adding user to the LDAP group: {e}')
                         return
 
             # Send manager their signed document.
@@ -1257,43 +1293,50 @@ If you have questions, or if you are not an authorized signatory of this company
 
             # verify company_id is not none
             if company_id is None:
+                cla.log.warning('signed_corporate_callback - '
+                                'Missing company_id on CCLA for saving signed file on s3 storage')
                 raise SigningError('Missing company_id on CCLA for saving signed file on s3 storage.')
 
             # Store document on S3
             self.send_to_s3(document_data, project_id, signature_id, 'ccla', company_id)
+            cla.log.debug('signed_corporate_callback - uploaded CCLA document to s3')
 
     def get_signed_document(self, envelope_id, user):
         """Helper method to get the signed document from DocuSign."""
 
-        cla.log.debug('Fetching signed CLA document for envelope: %s', envelope_id)
+        cla.log.debug(f'get_signed_document - fetching signed CLA document for envelope: {envelope_id}')
         envelope = pydocusign.Envelope()
         envelope.envelopeId = envelope_id
+
         try:
             documents = envelope.get_document_list(self.client)
         except Exception as err:
-            cla.log.error('Unknown error when trying to load signed document: %s', str(err))
+            cla.log.error('get_signed_document - unknown error when trying to load signed document: %s', str(err))
             return
+
         if documents is None or len(documents) < 1:
-            cla.log.error('Could not find signed document envelope %s and user %s',
-                          envelope_id, user.get_user_email())
+            cla.log.error(f'get_signed_document - could not find signed document'
+                          f'envelope {envelope_id} and user {user.get_user_email()}')
             return
+
         document = documents[0]
         if 'documentId' not in document:
-            cla.log.error('Not document ID found in document response: %s', str(document))
+            cla.log.error(f'get_signed_document - not document ID found in document response: {document}')
             return
+
         try:
             # TODO: Also send the signature certificate? envelope.get_certificate()
             document_file = envelope.get_document(document['documentId'], self.client)
+            return document_file.read()
         except Exception as err:
-            cla.log.error('Unknown error when trying to fetch signed document content ' + \
-                          'for document ID %s: %s', document['documentId'], str(err))
+            cla.log.error('get_signed_document - unknown error when trying to fetch signed document content '
+                          f'for document ID {document["documentId"]}, error: {err}')
             return
-        return document_file.read()
 
     def send_signed_document(self, document_data, user, icla=True):
         """Helper method to send the user their signed document."""
 
-        subject = 'CLA Signed Document'
+        subject = 'EasyCLA: Signed Document'
         body = 'Thank you for signing the CLA! Your signed document is attached to this email.'
 
         recipient = user.get_user_email()
@@ -1303,7 +1346,7 @@ If you have questions, or if you are not an authorized signatory of this company
                       'content-type': 'application/pdf',
                       'filename': filename}
         # Third, send the email.
-        cla.log.info('Sending signed CLA document to %s', recipient)
+        cla.log.info(f'Sending signed CLA document to {recipient} with subject: {subject}')
         cla.utils.get_email_service().send(subject, body, recipient, attachment)
 
     def send_to_s3(self, document_data, project_id, signature_id, cla_type, identifier):
@@ -1311,6 +1354,7 @@ If you have questions, or if you are not an authorized signatory of this company
         # identifier could be: user_id or company_id
         filename = str.join('/',
                             ('contract-group', str(project_id), cla_type, str(identifier), str(signature_id) + '.pdf'))
+        cla.log.debug(f'send_to_s3 - uploading document with filename: {filename}')
         self.s3storage.store(filename, document_data)
 
     def get_document_resource(self, url):  # pylint: disable=no-self-use
@@ -1338,7 +1382,7 @@ If you have questions, or if you are not an authorized signatory of this company
             envelope.get_recipients()
             return envelope
         except DocuSignException as err:
-            cla.log.error('Error while fetching DocuSign envelope recipients: %s', str(err))
+            cla.log.error(f'prepare_sign_request - error while fetching DocuSign envelope recipients: {err}')
 
     def get_sign_url(self, envelope, recipient, return_url):  # pylint:disable=no-self-use
         """
