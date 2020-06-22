@@ -57,6 +57,9 @@ type SignatureRepository interface {
 	RemoveCLAManager(signatureID, claManagerID string) (*models.Signature, error)
 
 	removeColumn(signatureID, columnName string) (*models.Signature, error)
+
+	AddSigTypeSignedApprovedID(signatureID string, sigType string, signed, approved bool, id string) error
+	AddUsersDetails(signatureID string, userID string) error
 }
 
 // repository data model
@@ -1522,6 +1525,87 @@ func (repo repository) removeColumn(signatureID, columnName string) (*models.Sig
 	}
 
 	return updatedSig, nil
+}
+
+func (repo repository) AddSigTypeSignedApprovedID(signatureID string, sigType string, signed, approved bool, id string) error {
+	val := fmt.Sprintf("%s#%v#%v#%s", sigType, signed, approved, id)
+	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"signature_id": {
+				S: aws.String(signatureID),
+			},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#signature_project_id_skey": aws.String("sigtype_signed_approved_id"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":val": {
+				S: aws.String(val),
+			},
+		},
+		UpdateExpression: aws.String("SET #signature_project_id_skey = :val"),
+	}
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Warnf("unable to update sigtype_signed_approved_id for signature_id : %s", signatureID)
+		return updateErr
+	}
+	return nil
+}
+func (repo repository) AddUsersDetails(signatureID string, userID string) error {
+	userModel, err := repo.usersRepo.GetUser(userID)
+	if err != nil {
+		return err
+	}
+	var email string
+	if userModel.LfEmail != "" {
+		email = userModel.LfEmail
+	} else {
+		if len(userModel.Emails) > 0 {
+			email = userModel.Emails[0]
+		}
+	}
+
+	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"signature_id": {
+				S: aws.String(signatureID),
+			},
+		},
+	}
+	ue := utils.NewDynamoUpdateExpression()
+	ue.AddAttributeName("#gh_username", "user_github_username", userModel.GithubUsername != "")
+	ue.AddAttributeName("#lf_username", "user_lf_username", userModel.LfUsername != "")
+	ue.AddAttributeName("#name", "user_name", userModel.Username != "")
+	ue.AddAttributeName("#email", "user_email", email != "")
+
+	ue.AddAttributeValue(":gh_username", &dynamodb.AttributeValue{S: aws.String(userModel.GithubUsername)}, userModel.GithubUsername != "")
+	ue.AddAttributeValue(":lf_username", &dynamodb.AttributeValue{S: aws.String(userModel.LfUsername)}, userModel.LfUsername != "")
+	ue.AddAttributeValue(":name", &dynamodb.AttributeValue{S: aws.String(userModel.Username)}, userModel.Username != "")
+	ue.AddAttributeValue(":email", &dynamodb.AttributeValue{S: aws.String(email)}, email != "")
+
+	ue.Add("#gh_username = :gh_username", userModel.GithubUsername != "")
+	ue.Add("#lf_username = :lf_username", userModel.LfUsername != "")
+	ue.Add("#name = :name", userModel.Username != "")
+	ue.Add("#email = :email", email != "")
+	if ue.Expression == "" {
+		// nothing to update
+		return nil
+	}
+	input.UpdateExpression = aws.String(ue.Expression)
+	input.ExpressionAttributeNames = ue.ExpressionAttributeNames
+	input.ExpressionAttributeValues = ue.ExpressionAttributeValues
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Debugf("update input: %v", input)
+		log.Warnf("unable to add users details to : %s . error = %s", signatureID, updateErr.Error())
+		return updateErr
+	}
+	return nil
 }
 
 // buildProjectSignatureModels converts the response model into a response data model

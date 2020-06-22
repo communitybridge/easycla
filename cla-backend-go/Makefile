@@ -3,6 +3,7 @@
 SERVICE = cla
 LAMBDA_BIN = backend-aws-lambda
 METRICS_BIN = metrics-aws-lambda
+DYNAMO_EVENTS_BIN = dynamo-events-lambda
 FUNCTIONAL_TESTS_BIN = functional-tests
 BUILD_TIME=`date +%FT%T%z`
 VERSION := $(shell sh -c 'git describe --always --tags')
@@ -168,6 +169,16 @@ build-metrics-lambda-mac: deps
 	@echo "Building a statically linked Mac OSX amd64 binary..."
 	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(METRICS_BIN)-mac cmd/metrics_lambda/main.go
 	@chmod +x $(METRICS_BIN)-mac
+
+build-dynamo-events-lambda: deps
+	@echo "Building a statically linked Linux amd64 binary..."
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(DYNAMO_EVENTS_BIN) cmd/dynamo_events_lambda/main.go
+	@chmod +x $(DYNAMO_EVENTS_BIN)
+
+build-dynamo-events-lambda-mac: deps
+	@echo "Building a statically linked Mac OSX amd64 binary..."
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(DYNAMO_EVENTS_BIN)-mac cmd/dynamo_events_lambda/main.go
+	@chmod +x $(DYNAMO_EVENTS_BIN)-mac
 
 build-functional-tests-linux: deps
 	@echo "Building Functional Tests for Linux amd64 binary..."

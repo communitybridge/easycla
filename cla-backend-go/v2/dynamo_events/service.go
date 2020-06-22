@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/signatures"
+
 	"github.com/sirupsen/logrus"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -24,6 +26,8 @@ type EventHandlerFunc func(event events.DynamoDBEventRecord) error
 type service struct {
 	// key : tablename:action
 	functions map[string][]EventHandlerFunc
+
+	signatureRepo signatures.SignatureRepository
 }
 
 // Service implements DynamoDB stream event handler service
@@ -31,12 +35,16 @@ type Service interface {
 	ProcessEvents(event events.DynamoDBEvent)
 }
 
-func NewService(stage string) Service {
+func NewService(stage string, signatureRepo signatures.SignatureRepository) Service {
 	SignaturesTable := fmt.Sprintf("cla-%s-signatures", stage)
 	s := &service{
-		functions: make(map[string][]EventHandlerFunc),
+		functions:     make(map[string][]EventHandlerFunc),
+		signatureRepo: signatureRepo,
 	}
-	s.registerCallback(SignaturesTable, Modify, s.CCLASignedEvent)
+	s.registerCallback(SignaturesTable, Modify, s.SignatureSignedEvent)
+	s.registerCallback(SignaturesTable, Modify, s.SignatureAddSigTypeSignedApprovedID)
+	s.registerCallback(SignaturesTable, Insert, s.SignatureAddSigTypeSignedApprovedID)
+	s.registerCallback(SignaturesTable, Insert, s.SignatureAddUsersDetails)
 	return s
 }
 
@@ -54,9 +62,11 @@ func (s *service) ProcessEvents(events events.DynamoDBEvent) {
 			"table_name": tableName,
 			"event":      event.EventName,
 		}
+		b, _ := json.Marshal(events)
+		fields["events_data"] = string(b)
+		log.WithFields(fields).Debug("Processing event")
 		key := fmt.Sprintf("%s:%s", tableName, event.EventName)
 		for _, f := range s.functions[key] {
-			log.WithFields(fields).Debug("Processing event")
 			err := f(event)
 			if err != nil {
 				log.WithFields(fields).WithField("event", event).Error("unable to process event", err)
