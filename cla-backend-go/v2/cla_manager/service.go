@@ -4,6 +4,7 @@
 package cla_manager
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	v1User "github.com/communitybridge/easycla/cla-backend-go/user"
 	easyCLAUser "github.com/communitybridge/easycla/cla-backend-go/users"
 	v2AcsService "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
+	v2Company "github.com/communitybridge/easycla/cla-backend-go/v2/company"
 	v2OrgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 	v2UserService "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
@@ -30,12 +32,26 @@ import (
 // Lead representing type of user
 const Lead = "lead"
 
+var (
+	//ErrSalesForceProjectNotFound returned error if salesForce Project not found
+	ErrSalesForceProjectNotFound = errors.New("salesforce Project not found")
+	//ErrCLACompanyNotFound returned if EasyCLA company not found
+	ErrCLACompanyNotFound = errors.New("company not found")
+	//ErrGitHubRepoNotFound returned if GH Repos is not found
+	ErrGitHubRepoNotFound = errors.New("gH Repo not found")
+	//ErrCLAUserNotFound returned if EasyCLA User is not found
+	ErrCLAUserNotFound = errors.New("cLA User not found")
+	//ErrCLAManagersNotFound when cla managers arent found for given  project and company
+	ErrCLAManagersNotFound = errors.New("cla Managers not found")
+)
+
 type service struct {
 	companyService      company.IService
 	projectService      project.Service
 	repositoriesService repositories.Service
 	managerService      v1ClaManager.IService
 	easyCLAUserService  easyCLAUser.Service
+	v2CompanyService    v2Company.Service
 }
 
 // Service interface
@@ -44,16 +60,18 @@ type Service interface {
 	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
 	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributor *v1User.User, lFxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse)
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
+	CLAManagersRequest(companyID string, projectID string, userID string) error
 }
 
 // NewService returns instance of CLA Manager service
-func NewService(compService company.IService, projService project.Service, mgrService v1ClaManager.IService, claUserService easyCLAUser.Service, repoService repositories.Service) Service {
+func NewService(compService company.IService, projService project.Service, mgrService v1ClaManager.IService, claUserService easyCLAUser.Service, repoService repositories.Service, v2CompService v2Company.Service) Service {
 	return &service{
 		companyService:      compService,
 		projectService:      projService,
 		repositoriesService: repoService,
 		managerService:      mgrService,
 		easyCLAUserService:  claUserService,
+		v2CompanyService:    v2CompService,
 	}
 }
 
@@ -502,6 +520,80 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	log.Debugf("CLA Manager designee created : %+v", claManagerDesignee)
 	return claManagerDesignee, nil
 
+}
+
+func (s *service) CLAManagersRequest(companyID string, projectID string, userID string) error {
+	projectService := v2ProjectService.GetClient()
+	//Get EasyCLA Company
+	company, companyErr := s.companyService.GetCompany(companyID)
+	if companyErr != nil {
+		msg := fmt.Sprintf("EasyCLA Bad Request- Problem getting company :%s ", companyID)
+		log.Warn(msg)
+		return ErrCLACompanyNotFound
+	}
+
+	ghRepoModel, ghRepoErr := s.repositoriesService.GetGithubRepositoryByCLAGroup(projectID)
+	if ghRepoErr != nil || ghRepoModel.RepositorySfdcID == "" {
+		msg := fmt.Sprintf("Problem getting salesforce project by claGroupID : %s ", projectID)
+		log.Warn(msg)
+		return ErrGitHubRepoNotFound
+	}
+
+	project, projectErr := projectService.GetProject(ghRepoModel.RepositorySfdcID)
+	if projectErr != nil {
+		msg := fmt.Sprintf("Problem getting salesforce project for given repository association :%+v ", projectErr)
+		log.Warn(msg)
+		return ErrSalesForceProjectNotFound
+	}
+
+	// Search for Easy CLA User
+	log.Debugf("Getting user by ID: %s", userID)
+	userModel, userErr := s.easyCLAUserService.GetUser(userID)
+	if userErr != nil {
+		msg := fmt.Sprintf("Problem getting user by ID: %s ", userID)
+		log.Warn(msg)
+		return ErrCLAUserNotFound
+	}
+
+	// Get CLA Managers
+	claManagers, managersErr := s.v2CompanyService.GetCompanyProjectCLAManagers(company.CompanyExternalID, ghRepoModel.RepositorySfdcID)
+	if managersErr != nil || len(claManagers.List) == 0 {
+		msg := fmt.Sprintf("Problem getting salesforce Company for for easyCLA company: %s ", company.CompanyName)
+		log.Warn(msg)
+		return ErrCLAManagersNotFound
+	}
+
+	// Send Emails to respective CLA Managers
+	for _, claManager := range claManagers.List {
+		sendEmailToCLAManager(claManager.Name, claManager.Email, userModel.GithubUsername, company.CompanyName, project.Name)
+	}
+
+	return nil
+}
+
+func sendEmailToCLAManager(manager string, managerEmail string, contributorName string, company string, project string) {
+	subject := fmt.Sprintf("EasyCLA: Approval Request for contributor: %s  ", contributorName)
+	recipients := []string{managerEmail}
+	body := fmt.Sprintf(`
+	<p>Hello %s,</p>
+	<p>This is a notification email from EasyCLA regarding the organization %s.</p>
+	<p>The following contributor would like to submit a contribution to %s 
+	   and is requesting to be approved as a contributor for your organization: </p>
+	<p> %s </p>
+	<p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
+	<p>If you need help or have questions about EasyCLA, you can
+	<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
+	<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+	support</a>.</p>
+	<p>Thanks,</p>
+	<p>EasyCLA support team </p>`,
+		manager, company, project, company)
+	err := utils.SendEmail(subject, body, recipients)
+	if err != nil {
+		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+	} else {
+		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	}
 }
 
 func sendEmailToOrgAdmin(adminEmail string, admin string, company string, project string, contributorID string, contributorName string, corporateConsole string) {
