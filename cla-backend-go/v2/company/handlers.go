@@ -110,6 +110,14 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 
 	api.CompanyCreateCompanyHandler = company.CreateCompanyHandlerFunc(
 		func(params company.CreateCompanyParams) middleware.Responder {
+			// Quick validation of the input parameters
+			if !utils.ValidCompanyName(*params.Input.CompanyName) {
+				return company.NewCreateCompanyBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA - 400 Bad Request - Company Name is not valid",
+				})
+			}
+
 			companyModel, err := service.CreateCompany(*params.Input.CompanyName, *params.Input.CompanyWebsite, params.UserID)
 			if err != nil {
 				log.Warnf("error returned from create company api: %+v", err)
