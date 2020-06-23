@@ -6,13 +6,15 @@ package company
 import (
 	"fmt"
 
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	v1Company "github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/company"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
-	v2OrgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -110,8 +112,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 		func(params company.CreateCompanyParams) middleware.Responder {
 			companyModel, err := service.CreateCompany(*params.Input.CompanyName, *params.Input.CompanyWebsite, params.UserID)
 			if err != nil {
+				log.Warnf("error returned from create company api: %+v", err)
 				// If EasyCLA company conflict/duplicate or Platform Org Service conflict/duplicate
-				if err == ErrDuplicateCompany || err == v2OrgService.ErrConflict {
+				if err == ErrDuplicateCompany || err == err.(*organizations.CreateOrgConflict) {
 					return company.NewCreateCompanyConflict().WithPayload(errorResponse(err))
 				}
 
