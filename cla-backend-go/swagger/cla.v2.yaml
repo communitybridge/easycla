@@ -1528,6 +1528,35 @@ paths:
       tags:
         - signatures
   
+  /company/{companyID}/project/{projectID}/cla-managers-request:
+    post:
+      summary: Send CLA Manager Requests
+      security: []
+      description: Send Company CLA Managers contributor request 
+      operationId: claManagersRequest
+      parameters:
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-projectID"
+        - name: body
+          in: body
+          schema:
+            type: object
+            x-nullable: false
+            title: Contributor EasyCLA User
+            properties:
+              userID:
+                description: UserID of contributor 
+                type: string
+      responses:
+        '204':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - cla-manager
+
   /user/{userID}/invite-company-admin:
     post:
       summary: Invite Manager 

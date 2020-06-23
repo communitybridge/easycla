@@ -276,6 +276,28 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		log.Debugf("CLA Manager designee created : %+v", claManagerDesignee)
 		return cla_manager.NewCreateCLAManagerRequestOK().WithPayload(claManagerDesignee)
 	})
+
+	api.ClaManagerClaManagersRequestHandler = cla_manager.ClaManagersRequestHandlerFunc(
+		func(params cla_manager.ClaManagersRequestParams) middleware.Responder {
+			err := service.CLAManagersRequest(params.CompanyID, params.ProjectID, params.Body.UserID)
+			if err != nil {
+				if err == ErrCLAManagersNotFound {
+					msg := fmt.Sprintf("EasyCLA - 404 Not Found - Project: %s ,Company: %s ,error: %s", params.ProjectID, params.CompanyID, err)
+					return cla_manager.NewClaManagersRequestNotFound().WithPayload(
+						&models.ErrorResponse{
+							Message: msg,
+							Code:    "404",
+						})
+				}
+				msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project: %s , Company: %s , error: %s", params.ProjectID, params.CompanyID, err)
+				return cla_manager.NewClaManagersRequestBadRequest().WithPayload(
+					&models.ErrorResponse{
+						Message: msg,
+						Code:    "400",
+					})
+			}
+			return cla_manager.NewClaManagersRequestNoContent()
+		})
 }
 
 // buildErrorMessageCreate helper function to build an error message
