@@ -228,3 +228,11 @@ functions:
       individually: true
       include:
         - ./backend-aws-lambda
+  dynamo-events:
+    description: "EasyCLA dynamodb events handler"
+    runtime: go1.x
+    handler: dynamo-events-lambda
+    package:
+      individually: true
+      include:
+        - ./dynamo-events-lambda
