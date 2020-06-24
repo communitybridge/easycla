@@ -2388,6 +2388,12 @@ definitions:
   org:
     $ref: './common/org.yaml'
 
+  icla-signatures:
+    $ref: './common/icla-signatures.yaml'
+
+  icla-signature:
+    $ref: './common/icla-signature.yaml'
+
 responses:
   resource-deleted:
     description: Resource Deleted

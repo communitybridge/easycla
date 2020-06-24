@@ -1085,6 +1085,34 @@ paths:
       tags:
         - github-repositories
 
+  /cla-group/{claGroupID}/icla/signatures:
+    get:
+      summary: List icla signatures for cla group
+      description: Return list of icla signatures for cla group
+      operationId: listClaGroupIclaSignature
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+        - $ref: '#/parameters/searchTerm'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/icla-signatures'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
+
   /signatures/id/{signatureID}:
     get:
       summary: Get the signature by ID
@@ -1194,6 +1222,7 @@ paths:
         - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-claGroupID"
       produces:
+        - text/json
         - text/csv
       responses:
         '200':
@@ -1204,6 +1233,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
         '500':
           $ref: '#/responses/internal-server-error'
       tags:
@@ -2332,6 +2363,12 @@ definitions:
 
   signature:
     $ref: './common/signature.yaml'
+
+  icla-signatures:
+    $ref: './common/icla-signatures.yaml'
+
+  icla-signature:
+    $ref: './common/icla-signature.yaml'
 
   approval-list:
     $ref: './common/signature-approval-list.yaml'
