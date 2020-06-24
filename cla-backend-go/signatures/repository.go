@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -68,6 +70,8 @@ type SignatureRepository interface {
 
 	AddSigTypeSignedApprovedID(signatureID string, sigType string, signed, approved bool, id string) error
 	AddUsersDetails(signatureID string, userID string) error
+	AddSignedOn(signatureID string) error
+
 	GetClaGroupICLASignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
 }
 
@@ -1568,6 +1572,10 @@ func (repo repository) AddUsersDetails(signatureID string, userID string) error 
 	if err != nil {
 		return err
 	}
+	if userModel == nil {
+		log.WithFields(logrus.Fields{"user_id": userID, "signature_id": signatureID}).Error("invalid user_id")
+		return fmt.Errorf("invalid user id : %s for signature : %s", userID, signatureID)
+	}
 	var email string
 	if userModel.LfEmail != "" {
 		email = userModel.LfEmail
@@ -1617,6 +1625,35 @@ func (repo repository) AddUsersDetails(signatureID string, userID string) error 
 	return nil
 }
 
+func (repo repository) AddSignedOn(signatureID string) error {
+	_, currentTime := utils.CurrentTime()
+	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"signature_id": {
+				S: aws.String(signatureID),
+			},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#signed_on": aws.String("signed_on"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":current_time": {
+				S: aws.String(currentTime),
+			},
+		},
+		UpdateExpression: aws.String("SET #signed_on = :current_time"),
+	}
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Debugf("update input: %v", input)
+		log.Warnf("unable to signed_on to : %s . error = %s", signatureID, updateErr.Error())
+		return updateErr
+	}
+	return nil
+}
+
 // buildProjectSignatureModels converts the response model into a response data model
 func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput, projectID string, loadACLDetails bool) ([]*models.Signature, error) {
 	var sigs []*models.Signature
@@ -1655,6 +1692,9 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			DomainApprovalList:          dbSignature.DomainWhitelist,
 			GithubUsernameApprovalList:  dbSignature.GitHubWhitelist,
 			GithubOrgApprovalList:       dbSignature.GitHubOrgWhitelist,
+			UserName:                    dbSignature.UserName,
+			UserLFID:                    dbSignature.UserLFUsername,
+			UserGHID:                    dbSignature.UserGithubUsername,
 		}
 		sigs = append(sigs, sig)
 		go func(sigModel *models.Signature, signatureUserCompanyID string, sigACL []string) {

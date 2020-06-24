@@ -441,6 +441,21 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 	})
 	api.SignaturesDownloadProjectSignatureICLAAsCSVHandler = signatures.DownloadProjectSignatureICLAAsCSVHandlerFunc(
 		func(params signatures.DownloadProjectSignatureICLAAsCSVParams, authUser *auth.User) middleware.Responder {
+			claGroupModel, err := projectService.GetProjectByID(params.ClaGroupID)
+			if err != nil {
+				if err == project.ErrProjectDoesNotExist {
+					return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithPayload(errorResponse(err))
+				}
+				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithPayload(errorResponse(err))
+			}
+			if !utils.IsUserAuthorizedForProject(authUser, claGroupModel.FoundationSFID) {
+				return signatures.NewDownloadProjectSignatureICLAAsCSVForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DownloadProjectSignatureICLAAsCSV with project scope of %s",
+						authUser.UserName, claGroupModel.FoundationSFID),
+				})
+			}
+
 			result, err := v2service.GetProjectIclaSignaturesCsv(params.ClaGroupID)
 			if err != nil {
 				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithPayload(errorResponse(err))
@@ -455,6 +470,20 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		})
 	api.SignaturesListClaGroupIclaSignatureHandler = signatures.ListClaGroupIclaSignatureHandlerFunc(
 		func(params signatures.ListClaGroupIclaSignatureParams, authUser *auth.User) middleware.Responder {
+			claGroupModel, err := projectService.GetProjectByID(params.ClaGroupID)
+			if err != nil {
+				if err == project.ErrProjectDoesNotExist {
+					return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithPayload(errorResponse(err))
+				}
+				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithPayload(errorResponse(err))
+			}
+			if !utils.IsUserAuthorizedForProject(authUser, claGroupModel.FoundationSFID) {
+				return signatures.NewDownloadProjectSignatureICLAAsCSVForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DownloadProjectSignatureICLAAsCSV with project scope of %s",
+						authUser.UserName, claGroupModel.FoundationSFID),
+				})
+			}
 			result, err := v2service.GetProjectIclaSignatures(params.ClaGroupID, params.SearchTerm)
 			if err != nil {
 				return signatures.NewListClaGroupIclaSignatureInternalServerError().WithPayload(errorResponse(err))

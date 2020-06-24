@@ -28,6 +28,11 @@ type Signature struct {
 	GitHubOrgWhitelist            []string `json:"github_org_whitelist"`
 	SignatureACL                  []string `json:"signature_acl"`
 	SigtypeSignedApprovedID       string   `json:"sigtype_signed_approved_id"`
+	UserGithubUsername            string   `json:"user_github_username"`
+	UserLFUsername                string   `json:"user_lf_username"`
+	UserName                      string   `json:"user_name"`
+	UserEmail                     string   `json:"user_email"`
+	SignedOn                      string   `json:"signed_on"`
 }
 
 // should be called when we modify signature
@@ -43,7 +48,10 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 	}
 	// check if signature signed event is received
 	if oldSignature.SignatureSigned == false && newSignature.SignatureSigned == true {
-
+		err = s.signatureRepo.AddSignedOn(newSignature.SignatureID)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -88,7 +96,7 @@ func (s *service) SignatureAddUsersDetails(event events.DynamoDBEventRecord) err
 	if err != nil {
 		return err
 	}
-	if newSig.SignatureReferenceType == "user" {
+	if newSig.SignatureReferenceType == "user" && newSig.UserLFUsername == "" && newSig.UserGithubUsername == "" {
 		log.Debugf("adding users details in signature: %s", newSig.SignatureID)
 		err = s.signatureRepo.AddUsersDetails(newSig.SignatureID, newSig.SignatureReferenceID)
 		if err != nil {
