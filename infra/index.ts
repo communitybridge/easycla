@@ -63,6 +63,7 @@ const eventsTable = buildEventsTable(importResources);
 const cclaWhitelistRequestsTable = buildCclaWhitelistRequestsTable(importResources);
 const metricsTable = buildMetricsTable(importResources);
 const projectsClaGroupsTable = buildProjectsClaGroupsTable(importResources);
+
 /**
  * Build the Logo S3 Bucket.
  *
@@ -871,8 +872,9 @@ function buildProjectsClaGroupsTable(importResources: boolean): aws.dynamodb.Tab
 }
 
 // dynamodb events handler func
-const dynamoEventsHandlerFunc = aws.lambda.Function.get("dynamoEventsHandler", "cla-backend-go-"+stage+"-dynamo-events");
-signaturesTable.onEvent("signatureStreamEvents",dynamoEventsHandlerFunc)
+signaturesTable.onEvent("signatureStreamEvents",
+  aws.lambda.Function.get("dynamoEventsHandler", "cla-backend-go-" + stage + "-dynamo-events"),
+  { startingPosition: "LATEST" });
 
 // Export the name of the bucket
 export const logoBucketARN = logoBucket.arn;
@@ -910,5 +912,5 @@ export const cclaWhitelistRequestsTableName = cclaWhitelistRequestsTable.name;
 export const cclaWhitelistRequestsTableARN = cclaWhitelistRequestsTable.arn;
 export const metricsTableName = metricsTable.name;
 export const metricsTableARN = metricsTable.arn;
-export const projectsClaGroupsTableName =  projectsClaGroupsTable.name
-export const projectsClaGroupsTableARN =  projectsClaGroupsTable.arn
+export const projectsClaGroupsTableName = projectsClaGroupsTable.name
+export const projectsClaGroupsTableARN = projectsClaGroupsTable.arn
