@@ -7,6 +7,16 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
+// constants
+const (
+	CLASignatureType  = "cla"
+	CCLASignatureType = "ccla"
+
+	ICLASignatureType = "icla"
+	ECLASignatureType = "ecla"
+)
+
+// Signature database model
 type Signature struct {
 	SignatureID                   string   `json:"signature_id"`
 	DateCreated                   string   `json:"date_created"`
@@ -47,12 +57,12 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 		return err
 	}
 	// check if signature signed event is received
-	if oldSignature.SignatureSigned == false && newSignature.SignatureSigned == true {
+	if !oldSignature.SignatureSigned && newSignature.SignatureSigned {
 		err = s.signatureRepo.AddSignedOn(newSignature.SignatureID)
 		if err != nil {
 			log.WithField("signature_id", newSignature.SignatureID).Warnf("failed to add signed_on on signature")
 		}
-		if newSignature.SignatureType == "ccla" {
+		if newSignature.SignatureType == CCLASignatureType {
 			err = s.SetInitialCLAManagerACSPermissions(newSignature.SignatureID)
 			if err != nil {
 				log.WithField("signature_id", newSignature.SignatureID).Warnf("failed to set initial cla manager")
@@ -76,14 +86,14 @@ func (s *service) SignatureAddSigTypeSignedApprovedID(event events.DynamoDBEvent
 	}
 	log.Debugf("setting sigtype_signed_approved_id for signature: %s", newSig.SignatureID)
 	switch {
-	case newSig.SignatureType == "ccla":
-		sigType = "ccla"
+	case newSig.SignatureType == CCLASignatureType:
+		sigType = CCLASignatureType
 		id = newSig.SignatureReferenceID
-	case newSig.SignatureType == "cla" && newSig.SignatureUserCompanyID == "":
-		sigType = "icla"
+	case newSig.SignatureType == CLASignatureType && newSig.SignatureUserCompanyID == "":
+		sigType = ICLASignatureType
 		id = newSig.SignatureReferenceID
-	case newSig.SignatureType == "cla" && newSig.SignatureUserCompanyID != "":
-		sigType = "ecla"
+	case newSig.SignatureType == CLASignatureType && newSig.SignatureUserCompanyID != "":
+		sigType = ECLASignatureType
 		id = newSig.SignatureUserCompanyID
 	default:
 		log.Warnf("setting sigtype_signed_approved_id for signature: %s failed", newSig.SignatureID)

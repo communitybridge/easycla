@@ -13,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// constants
 const (
 	RoleCLAManager         = "cla-manager"
 	RoleCLAManagerDesignee = "cla-manager-designee"
@@ -23,8 +24,8 @@ func (s *service) SetInitialCLAManagerACSPermissions(signatureID string) error {
 	if err != nil {
 		return err
 	}
-	if sig.SignatureType != "ccla" {
-		return fmt.Errorf("Invalid signature set initial cla manager request. %s", signatureID)
+	if sig.SignatureType != CCLASignatureType {
+		return fmt.Errorf("invalid signature set initial cla manager request. %s", signatureID)
 	}
 	if len(sig.SignatureACL) == 0 {
 		return errors.New("initial cla manager details not found")

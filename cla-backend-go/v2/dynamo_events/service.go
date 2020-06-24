@@ -20,11 +20,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
+// constants
 const (
 	Insert = "INSERT"
 	Modify = "MODIFY"
 )
 
+// EventHandlerFunc is type for dynamoDB event handler function
 type EventHandlerFunc func(event events.DynamoDBEventRecord) error
 
 type service struct {
@@ -40,6 +42,7 @@ type Service interface {
 	ProcessEvents(event events.DynamoDBEvent)
 }
 
+// NewService creates DynamoDB stream event handler service
 func NewService(stage string, signatureRepo signatures.SignatureRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository) Service {
 	SignaturesTable := fmt.Sprintf("cla-%s-signatures", stage)
 	s := &service{
@@ -69,7 +72,7 @@ func (s *service) ProcessEvents(events events.DynamoDBEvent) {
 			"table_name": tableName,
 			"event":      event.EventName,
 		}
-		b, _ := json.Marshal(events)
+		b, _ := json.Marshal(events) // nolint
 		fields["events_data"] = string(b)
 		log.WithFields(fields).Debug("Processing event")
 		key := fmt.Sprintf("%s:%s", tableName, event.EventName)
@@ -91,7 +94,10 @@ func unmarshalStreamImage(attribute map[string]events.DynamoDBAttributeValue, ou
 		if marshalErr != nil {
 			return marshalErr
 		}
-		json.Unmarshal(bytes, &dbAttr)
+		err := json.Unmarshal(bytes, &dbAttr)
+		if err != nil {
+			return err
+		}
 		dbAttrMap[k] = &dbAttr
 	}
 	return dynamodbattribute.UnmarshalMap(dbAttrMap, out)

@@ -12,6 +12,7 @@ type DynamoUpdateExpression struct {
 	ExpressionAttributeValues map[string]*dynamodb.AttributeValue
 }
 
+// NewDynamoUpdateExpression create DynamoUpdateExpression builder
 func NewDynamoUpdateExpression() *DynamoUpdateExpression {
 	return &DynamoUpdateExpression{
 		Expression:                "",
@@ -20,7 +21,8 @@ func NewDynamoUpdateExpression() *DynamoUpdateExpression {
 	}
 }
 
-func (d *DynamoUpdateExpression) Add(columnUpdateExp string, condition bool) {
+// AddUpdateExpression the update expression if condition satisfied
+func (d *DynamoUpdateExpression) AddUpdateExpression(columnUpdateExp string, condition bool) {
 	if condition {
 		if d.Expression == "" {
 			d.Expression = "SET " + columnUpdateExp
@@ -30,12 +32,14 @@ func (d *DynamoUpdateExpression) Add(columnUpdateExp string, condition bool) {
 	}
 }
 
+// AddAttributeName adds the attribute if condition satisfied
 func (d *DynamoUpdateExpression) AddAttributeName(name, columName string, condition bool) {
 	if condition {
 		d.ExpressionAttributeNames[name] = aws.String(columName)
 	}
 }
 
+// AddAttributeValue adds the attribute value if condition satisfied
 func (d *DynamoUpdateExpression) AddAttributeValue(name string, val *dynamodb.AttributeValue, condition bool) {
 	if condition {
 		d.ExpressionAttributeValues[name] = val

@@ -317,7 +317,6 @@ func server(localMode bool) http.Handler {
 		default:
 			return errors.New("invalid value to CSV producer")
 		}
-		return nil
 	})
 
 	v2API.TextJSONProducer = openapi_runtime.ProducerFunc(func(w io.Writer, data interface{}) error {

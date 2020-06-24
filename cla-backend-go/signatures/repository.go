@@ -1605,10 +1605,10 @@ func (repo repository) AddUsersDetails(signatureID string, userID string) error 
 	ue.AddAttributeValue(":name", &dynamodb.AttributeValue{S: aws.String(userModel.Username)}, userModel.Username != "")
 	ue.AddAttributeValue(":email", &dynamodb.AttributeValue{S: aws.String(email)}, email != "")
 
-	ue.Add("#gh_username = :gh_username", userModel.GithubUsername != "")
-	ue.Add("#lf_username = :lf_username", userModel.LfUsername != "")
-	ue.Add("#name = :name", userModel.Username != "")
-	ue.Add("#email = :email", email != "")
+	ue.AddUpdateExpression("#gh_username = :gh_username", userModel.GithubUsername != "")
+	ue.AddUpdateExpression("#lf_username = :lf_username", userModel.LfUsername != "")
+	ue.AddUpdateExpression("#name = :name", userModel.Username != "")
+	ue.AddUpdateExpression("#email = :email", email != "")
 	if ue.Expression == "" {
 		// nothing to update
 		return nil

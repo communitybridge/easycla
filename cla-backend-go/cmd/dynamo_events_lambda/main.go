@@ -52,8 +52,7 @@ var dynamoEventsService dynamo_events.Service
 
 func init() {
 	var awsSession = session.Must(session.NewSession(&aws.Config{}))
-	var stage string
-	stage = os.Getenv("STAGE")
+	stage := os.Getenv("STAGE")
 	if stage == "" {
 		log.Fatal("stage not set")
 	}
