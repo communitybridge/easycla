@@ -211,7 +211,18 @@ type ProjectUpdatedEventData struct{}
 type ProjectDeletedEventData struct{}
 
 type ContributorNotifyCompanyAdminData struct {
-	Email string
+	AdminName  string
+	AdminEmail string
+}
+
+type ContributorNotifyCLADesignee struct {
+	DesigneeName  string
+	DesigneeEmail string
+}
+
+type ContributorAssignCLADesignee struct {
+	DesigneeName  string
+	DesigneeEmail string
 }
 
 func (ed *GithubRepositoryAddedEventData) GetEventString(args *LogEventArgs) (string, bool) {
@@ -455,6 +466,23 @@ func (ed *SignatureProjectInvalidatedEventData) GetEventString(args *LogEventArg
 }
 
 func (ed *ContributorNotifyCompanyAdminData) GetEventString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user [%s] notified company admin by email: %s for company [%s / %s]", args.userName, ed.Email, args.companyName, args.CompanyID)
+	data := fmt.Sprintf("user [%s] notified company admin by email: %s %s for company [%s / %s]",
+		args.userName, ed.AdminName, ed.AdminEmail, args.companyName, args.CompanyID)
+	return data, true
+}
+
+func (ed *ContributorNotifyCLADesignee) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] notified CLA Designee by email: %s %s for project [%s / %s] company [%s / %s]",
+		args.userName, ed.DesigneeName, ed.DesigneeEmail,
+		args.projectName, args.ExternalProjectID,
+		args.companyName, args.CompanyID)
+	return data, true
+}
+
+func (ed *ContributorAssignCLADesignee) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] assigned user: [%s / %s] as CLA Manager Designee for project [%s / %s] company [%s / %s]",
+		args.userName, ed.DesigneeName, ed.DesigneeEmail,
+		args.projectName, args.ExternalProjectID,
+		args.companyName, args.CompanyID)
 	return data, true
 }

@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 package company
 
 import (
@@ -53,27 +56,13 @@ type Service interface {
 	GetCompanyProjectContributors(projectSFID string, companySFID string, searchTerm string) (*models.CorporateContributorList, error)
 	GetCompanyProjectCLA(authUser *auth.User, companySFID, projectSFID string) (*models.CompanyProjectClaList, error)
 	CreateCompany(companyName string, companyWebsite string, userID string) (*models.CompanyOutput, error)
+	GetCompanyCLAGroupManagers(companyID, claGroupID string) (*models.CompanyClaManagers, error)
 }
 
 // ProjectRepo contains project repo methods
 type ProjectRepo interface {
 	GetProjectByID(projectID string) (*v1Models.Project, error)
 	GetProjectsByExternalID(params *v1ProjectParams.GetProjectsByExternalIDParams, loadRepoDetails bool) (*v1Models.Projects, error)
-}
-
-type service struct {
-	signatureRepo signatures.SignatureRepository
-	projectRepo   ProjectRepo
-	userRepo      users.UserRepository
-	companyRepo   company.IRepository
-	repo          IRepository
-}
-
-type signatureResponse struct {
-	companyID  string
-	projectID  string
-	signatures *v1Models.Signatures
-	err        error
 }
 
 // NewService returns instance of company service
@@ -85,76 +74,6 @@ func NewService(sigRepo signatures.SignatureRepository, projectRepo ProjectRepo,
 		companyRepo:   companyRepo,
 		repo:          v2CompanyRepo,
 	}
-}
-
-func signedCLAFilename(projectID string, claType string, identifier string, signatureID string) string {
-	return strings.Join([]string{"contract-group", projectID, claType, identifier, signatureID}, "/") + ".pdf"
-}
-
-func (s *service) getAllCCLASignatures(companyID string) ([]*v1Models.Signature, error) {
-	var sigs []*v1Models.Signature
-	var lastScannedKey *string
-	for {
-		signatures, err := s.signatureRepo.GetCompanySignatures(v1SignatureParams.GetCompanySignaturesParams{
-			CompanyID:     companyID,
-			SignatureType: aws.String("ccla"),
-			NextKey:       lastScannedKey,
-		}, HugePageSize, signatures.DontLoadACLDetails)
-		if err != nil {
-			return nil, err
-		}
-		sigs = append(sigs, signatures.Signatures...)
-		if signatures.LastKeyScanned == "" {
-			break
-		}
-		lastScannedKey = aws.String(signatures.LastKeyScanned)
-	}
-	return sigs, nil
-}
-
-// return list of all signature of the company for the projects
-func (s *service) getCompanyProjectCCLASignatures(companyID string, projects *v1Models.Projects) ([]*v1Models.Signature, error) {
-	var sigs []*v1Models.Signature
-	res := make(chan *signatureResponse)
-	var wg sync.WaitGroup
-	wg.Add(len(projects.Projects))
-	go func() {
-		wg.Wait()
-		close(res)
-	}()
-	for _, project := range projects.Projects {
-		go func(companyID, projectID string, responseChan chan *signatureResponse) {
-			defer wg.Done()
-			signed, approved := true, true
-			pageSize := HugePageSize
-			sigs, err := s.signatureRepo.GetProjectCompanySignatures(companyID, projectID, &signed, &approved, nil, &pageSize)
-			if err != nil {
-				return
-			}
-			responseChan <- &signatureResponse{
-				companyID:  companyID,
-				projectID:  projectID,
-				signatures: sigs,
-				err:        err,
-			}
-		}(companyID, project.ProjectID, res)
-	}
-	var sigErr error
-	for sigResp := range res {
-		if sigResp.err != nil {
-			log.WithFields(logrus.Fields{
-				"project_id": sigResp.projectID,
-				"company_id": sigResp.companyID,
-			}).Error("unable to fetch ccla signatures for project")
-			sigErr = sigResp.err
-			continue
-		}
-		sigs = append(sigs, sigResp.signatures.Signatures...)
-	}
-	if sigErr != nil {
-		return nil, sigErr
-	}
-	return sigs, nil
 }
 
 func (s *service) GetCompanyProjectCLAManagers(companyID string, projectSFID string) (*models.CompanyClaManagers, error) {
@@ -207,60 +126,6 @@ func (s *service) GetCompanyProjectCLAManagers(companyID string, projectSFID str
 	return &models.CompanyClaManagers{List: claManagers}, nil
 }
 
-func getUsersInfo(lfUsernames []string) (map[string]*v2UserServiceModels.User, error) {
-	usermap := make(map[string]*v2UserServiceModels.User)
-	if len(lfUsernames) == 0 {
-		return usermap, nil
-	}
-	userServiceClient := v2UserService.GetClient()
-	users, err := userServiceClient.GetUsersByUsernames(lfUsernames)
-	if err != nil {
-		return nil, err
-	}
-	for _, user := range users {
-		usermap[user.Username] = user
-	}
-	return usermap, nil
-}
-
-func fillUsersInfo(claManagers []*models.CompanyClaManager, usermap map[string]*v2UserServiceModels.User) {
-	for _, cm := range claManagers {
-		user, ok := usermap[cm.LfUsername]
-		if !ok {
-			logging.Warnf("Unable to get user with username %s", cm.LfUsername)
-			continue
-		}
-		cm.Name = user.Name
-		// cm.LogoURL = user.LogoURL
-		cm.UserSfid = user.ID
-		if user.Email != nil {
-			cm.Email = *user.Email
-		} else {
-			if len(user.Emails) > 0 {
-				cm.Email = utils.StringValue(user.Emails[0].EmailAddress)
-			}
-		}
-	}
-}
-
-func fillProjectInfo(claManagers []*models.CompanyClaManager, projects map[string]*projectDetailedModel) {
-	projectSFIDs := utils.NewStringSet()
-	for _, project := range projects {
-		projectSFIDs.Add(project.v1ProjectModel.ProjectExternalID)
-	}
-	for _, claManager := range claManagers {
-		project, ok := projects[claManager.ProjectID]
-		if !ok {
-			continue
-		}
-		claManager.ClaGroupName = project.v1ProjectModel.ProjectName
-		claManager.ProjectSfid = project.v1ProjectModel.ProjectExternalID
-		if sfproject, ok := projects[project.v1ProjectModel.ProjectID]; ok {
-			claManager.ProjectName = sfproject.v2ProjectOutputModel.Name
-		}
-	}
-}
-
 func (s *service) GetCompanyProjectActiveCLAs(companyID string, projectSFID string) (*models.ActiveClaList, error) {
 	var projects map[string]*projectDetailedModel
 	var err error
@@ -299,97 +164,6 @@ func (s *service) GetCompanyProjectActiveCLAs(companyID string, projectSFID stri
 	return &out, nil
 }
 
-func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, activeCla *models.ActiveCla, projects map[string]*projectDetailedModel) {
-	defer wg.Done()
-	p, err := s.projectRepo.GetProjectByID(sig.ProjectID)
-	if err != nil {
-		log.Error("fillActiveCLA : unable to get project", err)
-		return
-	}
-	pr, ok := projects[sig.ProjectID]
-	if !ok {
-		log.Error("unable to get project details", err)
-		return
-	}
-	projectDetails := pr.v2ProjectOutputModel
-
-	// fill details from dynamodb
-	activeCla.ProjectID = sig.ProjectID
-	activeCla.SignedOn = sig.SignatureCreated
-	activeCla.ClaGroupName = p.ProjectName
-
-	// fill details from project service
-	activeCla.ProjectName = projectDetails.Name
-	activeCla.ProjectSfid = p.ProjectExternalID
-	activeCla.ProjectType = projectDetails.ProjectType
-	activeCla.ProjectLogo = projectDetails.ProjectLogo
-	var signatoryName string
-	var cwg sync.WaitGroup
-	cwg.Add(2)
-
-	var cclaURL string
-	go func() {
-		defer cwg.Done()
-		cclaURL, err = utils.GetDownloadLink(signedCLAFilename(sig.ProjectID, sig.SignatureType, sig.SignatureReferenceID, sig.SignatureID))
-		if err != nil {
-			log.Error("fillActiveCLA : unable to get ccla s3 link", err)
-			return
-		}
-	}()
-
-	go func() {
-		defer cwg.Done()
-		usc := v2UserService.GetClient()
-		if len(sig.SignatureACL) == 0 {
-			log.Warnf("signature : %s have empty signature_acl", sig.SignatureID)
-			return
-		}
-		lfUsername := sig.SignatureACL[0].LfUsername
-		user, err := usc.GetUserByUsername(lfUsername)
-		if err != nil {
-			log.Warnf("unable to get user with lf username : %s", lfUsername)
-			return
-		}
-		signatoryName = user.Name
-	}()
-
-	cwg.Wait()
-
-	activeCla.SignatoryName = signatoryName
-	activeCla.CclaURL = cclaURL
-}
-
-// return projects output for which cla_group is present in cla
-func (s *service) filterClaProjects(projects []*v2ProjectServiceModels.ProjectOutput) []*v2ProjectServiceModels.ProjectOutput { //nolint
-	results := make([]*v2ProjectServiceModels.ProjectOutput, 0)
-	prChan := make(chan *v2ProjectServiceModels.ProjectOutput)
-	for _, v := range projects {
-		go func(projectOutput *v2ProjectServiceModels.ProjectOutput) {
-			project, err := s.projectRepo.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
-				ProjectSFID: projectOutput.ID,
-				PageSize:    aws.Int64(1),
-			}, DontLoadRepoDetails)
-			if err != nil {
-				log.Warnf("Unable to fetch project details for project with external id %s. error = %s", projectOutput.ID, err)
-				prChan <- nil
-				return
-			}
-			if project.ResultCount == 0 {
-				prChan <- nil
-				return
-			}
-			prChan <- projectOutput
-		}(v)
-	}
-	for range projects {
-		project := <-prChan
-		if project != nil {
-			results = append(results, project)
-		}
-	}
-	return results
-}
-
 func (s *service) GetCompanyProjectContributors(projectSFID string, companySFID string, searchTerm string) (*models.CorporateContributorList, error) {
 	list := make([]*models.CorporateContributor, 0)
 	sigs, err := s.getAllCompanyProjectEmployeeSignatures(companySFID, projectSFID)
@@ -420,86 +194,6 @@ func (s *service) GetCompanyProjectContributors(projectSFID string, companySFID 
 	return &models.CorporateContributorList{
 		List: list,
 	}, nil
-}
-
-func fillCorporateContributorModel(wg *sync.WaitGroup, usersRepo users.UserRepository, sig *v1Models.Signature, result chan *models.CorporateContributor, searchTerm string) {
-	defer wg.Done()
-	user, err := usersRepo.GetUser(sig.SignatureReferenceID)
-	if err != nil {
-		log.Error("fillCorporateContributorModel: unable to get user info", err)
-		return
-	}
-	if searchTerm != "" {
-		ls := strings.ToLower(searchTerm)
-		if !(strings.Contains(strings.ToLower(user.Username), ls) || strings.Contains(strings.ToLower(user.LfUsername), ls)) {
-			return
-		}
-	}
-	var contributor models.CorporateContributor
-	var sigSignedTime = sig.SignatureCreated
-	contributor.GithubID = user.GithubID
-	contributor.LinuxFoundationID = user.LfUsername
-	contributor.Name = user.Username
-	t, err := utils.ParseDateTime(sig.SignatureCreated)
-	if err != nil {
-		log.Error("fillCorporateContributorModel: unable to parse time", err)
-	} else {
-		sigSignedTime = utils.TimeToString(t)
-	}
-	contributor.Timestamp = sigSignedTime
-	contributor.SignatureVersion = fmt.Sprintf("v%s.%s", sig.SignatureMajorVersion, sig.SignatureMinorVersion)
-
-	// send contributor struct on result channel
-	result <- &contributor
-}
-
-func (s *service) getAllCompanyProjectEmployeeSignatures(companySFID string, projectSFID string) ([]*v1Models.Signature, error) {
-	comp, projects, err := s.getCompanyAndProjects(companySFID, projectSFID)
-	if err != nil {
-		return nil, err
-	}
-	if len(projects.Projects) == 0 {
-		return nil, nil
-	}
-	companyID := comp.CompanyID
-	resp := make(chan *signatureResponse)
-	var swg sync.WaitGroup
-	swg.Add(len(projects.Projects))
-	go func() {
-		swg.Wait()
-		close(resp)
-	}()
-	for _, project := range projects.Projects {
-		go getCompanyProjectEmployeeSignatures(&swg, s.signatureRepo, companyID, project.ProjectID, resp)
-	}
-	var sigs []*v1Models.Signature
-	for res := range resp {
-		if res.err != nil {
-			log.WithFields(logrus.Fields{
-				"company_id": res.companyID,
-				"project_id": res.projectID,
-			}).Error("unable to get company project signatures", res.err)
-			continue
-		}
-		sigs = append(sigs, res.signatures.Signatures...)
-	}
-	return sigs, nil
-}
-
-func getCompanyProjectEmployeeSignatures(wg *sync.WaitGroup, signatureRepo signatures.SignatureRepository, companyID, projectID string, resp chan<- *signatureResponse) {
-	defer wg.Done()
-	params := v1SignatureParams.GetProjectCompanyEmployeeSignaturesParams{
-		HTTPRequest: nil,
-		CompanyID:   companyID,
-		ProjectID:   projectID,
-	}
-	sigs, err := signatureRepo.GetProjectCompanyEmployeeSignatures(params, HugePageSize)
-	resp <- &signatureResponse{
-		companyID:  companyID,
-		projectID:  projectID,
-		signatures: sigs,
-		err:        err,
-	}
 }
 
 func (s *service) CreateCompany(companyName string, companyWebsite string, userID string) (*models.CompanyOutput, error) {
@@ -604,40 +298,64 @@ func (s *service) GetCompanyProjectCLA(authUser *auth.User, companySFID, project
 	return resp, nil
 }
 
-// get company and project parallely
-func (s *service) getCompanyAndProjects(companySFID, projectSFID string) (*v1Models.Company, *v1Models.Projects, error) {
-	var comp *v1Models.Company
-	var companyErr, projectErr error
-	var projects *v1Models.Projects
-	// query projects and company
-	var cp sync.WaitGroup
-	cp.Add(2)
-	go func() {
-		defer cp.Done()
-		comp, companyErr = s.companyRepo.GetCompanyByExternalID(companySFID)
-	}()
-	go func() {
-		defer cp.Done()
-		t := time.Now()
-		projects, projectErr = s.projectRepo.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
-			ProjectSFID: projectSFID,
-			PageSize:    aws.Int64(HugePageSize),
-		}, DontLoadRepoDetails)
-		log.WithField("time_taken", time.Since(t).String()).Debugf("getting project by external id : %s completed", projectSFID)
-	}()
-	cp.Wait()
-	if companyErr != nil {
-		return nil, nil, companyErr
+// GetCompanyCLAGroupManagers when provided the internal company ID and CLA Groups ID, this routine returns the list of
+// corresponding CLA managers
+func (s *service) GetCompanyCLAGroupManagers(companyID, claGroupID string) (*models.CompanyClaManagers, error) {
+	signed, approved := true, true
+	pageSize := int64(10)
+	sigModel, err := s.signatureRepo.GetProjectCompanySignature(companyID, claGroupID, &signed, &approved, nil, &pageSize)
+	if err != nil {
+		log.Warnf("unable to query CCLA signature using Company ID: %s and CLA Group ID: %s, signed: true, approved: true, error: %+v",
+			companyID, claGroupID, err)
+		return nil, err
 	}
-	if projectErr != nil {
-		return nil, nil, projectErr
-	}
-	return comp, projects, nil
-}
 
-type projectDetailedModel struct {
-	v1ProjectModel       *v1Models.Project
-	v2ProjectOutputModel *v2ProjectServiceModels.ProjectOutput
+	if sigModel == nil {
+		log.Warnf("unable to query CCLA signature using Company ID: %s and CLA Group ID: %s, signed: true, approved: true - no signature found",
+			companyID, claGroupID)
+		return nil, nil
+	}
+
+	projectModel, projErr := s.projectRepo.GetProjectByID(claGroupID)
+	if projErr != nil {
+		log.Warnf("unable to query CLA Group ID: %s, error: %+v", claGroupID, err)
+		return nil, err
+	}
+
+	if projectModel == nil {
+		log.Warnf("unable to query CLA Group ID: %s - no CLA Group found", claGroupID)
+		return nil, nil
+	}
+
+	companyModel, companyErr := s.companyRepo.GetCompany(companyID)
+	if companyErr != nil {
+		log.Warnf("unable to query Company ID: %s, error: %+v", companyID, companyErr)
+		return nil, err
+	}
+
+	if companyModel == nil {
+		log.Warnf("unable to query Company ID: %s - no company by ID found", companyID)
+		return nil, nil
+	}
+
+	claManagers := make([]*models.CompanyClaManager, 0)
+	for _, user := range sigModel.SignatureACL {
+		claManagers = append(claManagers, &models.CompanyClaManager{
+			// DB doesn't have approved_on value - just use sig created date/time
+			ApprovedOn:       sigModel.SignatureCreated,
+			LfUsername:       user.LfUsername,
+			Email:            user.LfEmail,
+			Name:             user.Username,
+			UserSfid:         user.UserExternalID,
+			ProjectID:        sigModel.ProjectID,
+			ProjectName:      projectModel.ProjectName,
+			ClaGroupName:     projectModel.ProjectName,
+			OrganizationName: companyModel.CompanyName,
+			OrganizationSfid: companyModel.CompanyExternalID,
+		})
+	}
+
+	return &models.CompanyClaManagers{List: claManagers}, nil
 }
 
 func (s *service) getAllClaGroupsUnderProjectOrFoundation(id string) (map[string]*projectDetailedModel, error) {
@@ -697,4 +415,328 @@ func (s *service) getAllClaGroupsUnderProjectOrFoundation(id string) (map[string
 		}
 	}
 	return result, nil
+}
+
+func (s *service) getAllCCLASignatures(companyID string) ([]*v1Models.Signature, error) {
+	var sigs []*v1Models.Signature
+	var lastScannedKey *string
+	for {
+		signatures, err := s.signatureRepo.GetCompanySignatures(v1SignatureParams.GetCompanySignaturesParams{
+			CompanyID:     companyID,
+			SignatureType: aws.String("ccla"),
+			NextKey:       lastScannedKey,
+		}, HugePageSize, signatures.DontLoadACLDetails)
+		if err != nil {
+			return nil, err
+		}
+		sigs = append(sigs, signatures.Signatures...)
+		if signatures.LastKeyScanned == "" {
+			break
+		}
+		lastScannedKey = aws.String(signatures.LastKeyScanned)
+	}
+	return sigs, nil
+}
+
+// return list of all signature of the company for the projects
+func (s *service) getCompanyProjectCCLASignatures(companyID string, projects *v1Models.Projects) ([]*v1Models.Signature, error) {
+	var sigs []*v1Models.Signature
+	res := make(chan *signatureResponse)
+	var wg sync.WaitGroup
+	wg.Add(len(projects.Projects))
+	go func() {
+		wg.Wait()
+		close(res)
+	}()
+	for _, project := range projects.Projects {
+		go func(companyID, projectID string, responseChan chan *signatureResponse) {
+			defer wg.Done()
+			signed, approved := true, true
+			pageSize := HugePageSize
+			sigs, err := s.signatureRepo.GetProjectCompanySignatures(companyID, projectID, &signed, &approved, nil, &pageSize)
+			if err != nil {
+				return
+			}
+			responseChan <- &signatureResponse{
+				companyID:  companyID,
+				projectID:  projectID,
+				signatures: sigs,
+				err:        err,
+			}
+		}(companyID, project.ProjectID, res)
+	}
+	var sigErr error
+	for sigResp := range res {
+		if sigResp.err != nil {
+			log.WithFields(logrus.Fields{
+				"project_id": sigResp.projectID,
+				"company_id": sigResp.companyID,
+			}).Error("unable to fetch ccla signatures for project")
+			sigErr = sigResp.err
+			continue
+		}
+		sigs = append(sigs, sigResp.signatures.Signatures...)
+	}
+	if sigErr != nil {
+		return nil, sigErr
+	}
+	return sigs, nil
+}
+
+func getUsersInfo(lfUsernames []string) (map[string]*v2UserServiceModels.User, error) {
+	usermap := make(map[string]*v2UserServiceModels.User)
+	if len(lfUsernames) == 0 {
+		return usermap, nil
+	}
+	userServiceClient := v2UserService.GetClient()
+	users, err := userServiceClient.GetUsersByUsernames(lfUsernames)
+	if err != nil {
+		return nil, err
+	}
+	for _, user := range users {
+		usermap[user.Username] = user
+	}
+	return usermap, nil
+}
+
+func fillUsersInfo(claManagers []*models.CompanyClaManager, usermap map[string]*v2UserServiceModels.User) {
+	for _, cm := range claManagers {
+		user, ok := usermap[cm.LfUsername]
+		if !ok {
+			logging.Warnf("Unable to get user with username %s", cm.LfUsername)
+			continue
+		}
+		cm.Name = user.Name
+		// cm.LogoURL = user.LogoURL
+		cm.UserSfid = user.ID
+		for _, email := range user.Emails {
+			if email != nil && email.IsPrimary != nil && *email.IsPrimary {
+				cm.Email = utils.StringValue(email.EmailAddress)
+				break
+			}
+		}
+	}
+}
+
+func fillProjectInfo(claManagers []*models.CompanyClaManager, projects map[string]*projectDetailedModel) {
+	projectSFIDs := utils.NewStringSet()
+	for _, project := range projects {
+		projectSFIDs.Add(project.v1ProjectModel.ProjectExternalID)
+	}
+	for _, claManager := range claManagers {
+		project, ok := projects[claManager.ProjectID]
+		if !ok {
+			continue
+		}
+		claManager.ClaGroupName = project.v1ProjectModel.ProjectName
+		claManager.ProjectSfid = project.v1ProjectModel.ProjectExternalID
+		if sfproject, ok := projects[project.v1ProjectModel.ProjectID]; ok {
+			claManager.ProjectName = sfproject.v2ProjectOutputModel.Name
+		}
+	}
+}
+
+func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, activeCla *models.ActiveCla, projects map[string]*projectDetailedModel) {
+	defer wg.Done()
+	p, err := s.projectRepo.GetProjectByID(sig.ProjectID)
+	if err != nil {
+		log.Error("fillActiveCLA : unable to get project", err)
+		return
+	}
+	pr, ok := projects[sig.ProjectID]
+	if !ok {
+		log.Error("unable to get project details", err)
+		return
+	}
+	projectDetails := pr.v2ProjectOutputModel
+
+	// fill details from dynamodb
+	activeCla.ProjectID = sig.ProjectID
+	activeCla.SignedOn = sig.SignatureCreated
+	activeCla.ClaGroupName = p.ProjectName
+
+	// fill details from project service
+	activeCla.ProjectName = projectDetails.Name
+	activeCla.ProjectSfid = p.ProjectExternalID
+	activeCla.ProjectType = projectDetails.ProjectType
+	activeCla.ProjectLogo = projectDetails.ProjectLogo
+	var signatoryName string
+	var cwg sync.WaitGroup
+	cwg.Add(2)
+
+	var cclaURL string
+	go func() {
+		defer cwg.Done()
+		cclaURL, err = utils.GetDownloadLink(signedCLAFilename(sig.ProjectID, sig.SignatureType, sig.SignatureReferenceID, sig.SignatureID))
+		if err != nil {
+			log.Error("fillActiveCLA : unable to get ccla s3 link", err)
+			return
+		}
+	}()
+
+	go func() {
+		defer cwg.Done()
+		usc := v2UserService.GetClient()
+		if len(sig.SignatureACL) == 0 {
+			log.Warnf("signature : %s have empty signature_acl", sig.SignatureID)
+			return
+		}
+		lfUsername := sig.SignatureACL[0].LfUsername
+		user, err := usc.GetUserByUsername(lfUsername)
+		if err != nil {
+			log.Warnf("unable to get user with lf username : %s", lfUsername)
+			return
+		}
+		signatoryName = user.Name
+	}()
+
+	cwg.Wait()
+
+	activeCla.SignatoryName = signatoryName
+	activeCla.CclaURL = cclaURL
+}
+
+// return projects output for which cla_group is present in cla
+func (s *service) filterClaProjects(projects []*v2ProjectServiceModels.ProjectOutput) []*v2ProjectServiceModels.ProjectOutput { //nolint
+	results := make([]*v2ProjectServiceModels.ProjectOutput, 0)
+	prChan := make(chan *v2ProjectServiceModels.ProjectOutput)
+	for _, v := range projects {
+		go func(projectOutput *v2ProjectServiceModels.ProjectOutput) {
+			project, err := s.projectRepo.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
+				ProjectSFID: projectOutput.ID,
+				PageSize:    aws.Int64(1),
+			}, DontLoadRepoDetails)
+			if err != nil {
+				log.Warnf("Unable to fetch project details for project with external id %s. error = %s", projectOutput.ID, err)
+				prChan <- nil
+				return
+			}
+			if project.ResultCount == 0 {
+				prChan <- nil
+				return
+			}
+			prChan <- projectOutput
+		}(v)
+	}
+	for range projects {
+		project := <-prChan
+		if project != nil {
+			results = append(results, project)
+		}
+	}
+	return results
+}
+
+func fillCorporateContributorModel(wg *sync.WaitGroup, usersRepo users.UserRepository, sig *v1Models.Signature, result chan *models.CorporateContributor, searchTerm string) {
+	defer wg.Done()
+	user, err := usersRepo.GetUser(sig.SignatureReferenceID)
+	if err != nil {
+		log.Error("fillCorporateContributorModel: unable to get user info", err)
+		return
+	}
+	if searchTerm != "" {
+		ls := strings.ToLower(searchTerm)
+		if !(strings.Contains(strings.ToLower(user.Username), ls) || strings.Contains(strings.ToLower(user.LfUsername), ls)) {
+			return
+		}
+	}
+	var contributor models.CorporateContributor
+	var sigSignedTime = sig.SignatureCreated
+	contributor.GithubID = user.GithubID
+	contributor.LinuxFoundationID = user.LfUsername
+	contributor.Name = user.Username
+	t, err := utils.ParseDateTime(sig.SignatureCreated)
+	if err != nil {
+		log.Error("fillCorporateContributorModel: unable to parse time", err)
+	} else {
+		sigSignedTime = utils.TimeToString(t)
+	}
+	contributor.Timestamp = sigSignedTime
+	contributor.SignatureVersion = fmt.Sprintf("v%s.%s", sig.SignatureMajorVersion, sig.SignatureMinorVersion)
+
+	// send contributor struct on result channel
+	result <- &contributor
+}
+
+func (s *service) getAllCompanyProjectEmployeeSignatures(companySFID string, projectSFID string) ([]*v1Models.Signature, error) {
+	comp, projects, err := s.getCompanyAndProjects(companySFID, projectSFID)
+	if err != nil {
+		return nil, err
+	}
+	if len(projects.Projects) == 0 {
+		return nil, nil
+	}
+	companyID := comp.CompanyID
+	resp := make(chan *signatureResponse)
+	var swg sync.WaitGroup
+	swg.Add(len(projects.Projects))
+	go func() {
+		swg.Wait()
+		close(resp)
+	}()
+	for _, project := range projects.Projects {
+		go getCompanyProjectEmployeeSignatures(&swg, s.signatureRepo, companyID, project.ProjectID, resp)
+	}
+	var sigs []*v1Models.Signature
+	for res := range resp {
+		if res.err != nil {
+			log.WithFields(logrus.Fields{
+				"company_id": res.companyID,
+				"project_id": res.projectID,
+			}).Error("unable to get company project signatures", res.err)
+			continue
+		}
+		sigs = append(sigs, res.signatures.Signatures...)
+	}
+	return sigs, nil
+}
+
+func getCompanyProjectEmployeeSignatures(wg *sync.WaitGroup, signatureRepo signatures.SignatureRepository, companyID, projectID string, resp chan<- *signatureResponse) {
+	defer wg.Done()
+	params := v1SignatureParams.GetProjectCompanyEmployeeSignaturesParams{
+		HTTPRequest: nil,
+		CompanyID:   companyID,
+		ProjectID:   projectID,
+	}
+	sigs, err := signatureRepo.GetProjectCompanyEmployeeSignatures(params, HugePageSize)
+	resp <- &signatureResponse{
+		companyID:  companyID,
+		projectID:  projectID,
+		signatures: sigs,
+		err:        err,
+	}
+}
+
+// get company and project parallely
+func (s *service) getCompanyAndProjects(companySFID, projectSFID string) (*v1Models.Company, *v1Models.Projects, error) {
+	var comp *v1Models.Company
+	var companyErr, projectErr error
+	var projects *v1Models.Projects
+	// query projects and company
+	var cp sync.WaitGroup
+	cp.Add(2)
+	go func() {
+		defer cp.Done()
+		comp, companyErr = s.companyRepo.GetCompanyByExternalID(companySFID)
+	}()
+	go func() {
+		defer cp.Done()
+		t := time.Now()
+		projects, projectErr = s.projectRepo.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
+			ProjectSFID: projectSFID,
+			PageSize:    aws.Int64(HugePageSize),
+		}, DontLoadRepoDetails)
+		log.WithField("time_taken", time.Since(t).String()).Debugf("getting project by external id : %s completed", projectSFID)
+	}()
+	cp.Wait()
+	if companyErr != nil {
+		return nil, nil, companyErr
+	}
+	if projectErr != nil {
+		return nil, nil, projectErr
+	}
+	return comp, projects, nil
+}
+func signedCLAFilename(projectID string, claType string, identifier string, signatureID string) string {
+	return strings.Join([]string{"contract-group", projectID, claType, identifier, signatureID}, "/") + ".pdf"
 }

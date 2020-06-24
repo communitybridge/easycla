@@ -133,7 +133,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				})
 		}
 
-		claManagerDesignee, err := service.InviteCompanyAdmin(params.Body.ContactAdmin, params.Body.CompanySFID, params.Body.ProjectSFID, params.Body.UserEmail, &user, LfxPortalURL)
+		claManagerDesignee, err := service.InviteCompanyAdmin(params.Body.ContactAdmin, params.Body.CompanyID, params.Body.ClaGroupID, params.Body.UserEmail, &user, LfxPortalURL)
 
 		if err != nil {
 			return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(err)
@@ -220,12 +220,16 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 
 			for _, admin := range scopes.Userroles {
 				sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, companyModel.Name, projectSF.Name, authUser.Email, authUser.UserName, LfxPortalURL)
+				// Make a note in the event log
 				eventsService.LogEvent(&events.LogEventArgs{
-					EventType:         events.ContributorNotifyCompanyAdmin,
+					EventType:         events.ContributorNotifyCompanyAdminType,
 					LfUsername:        authUser.UserName,
 					ExternalProjectID: params.ProjectSFID,
 					CompanyID:         companyModel.ID,
-					EventData:         &events.ContributorNotifyCompanyAdminData{Email: params.Body.UserEmail},
+					EventData: &events.ContributorNotifyCompanyAdminData{
+						AdminName:  admin.Contact.Name,
+						AdminEmail: admin.Contact.EmailAddress,
+					},
 				})
 			}
 
@@ -243,13 +247,48 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				})
 		}
 
-		log.Debugf("Sending Email to CLA Manager Designee email: %s ", params.Body.UserEmail)
+		// Make a note in the event log
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:         events.ContributorAssignCLADesigneeType,
+			LfUsername:        authUser.UserName,
+			ExternalProjectID: params.ProjectSFID,
+			CompanyID:         companyModel.ID,
+			EventData: &events.ContributorAssignCLADesignee{
+				DesigneeName:  claManagerDesignee.LfUsername,
+				DesigneeEmail: claManagerDesignee.Email,
+			},
+		})
 
+		log.Debugf("Sending Email to CLA Manager Designee email: %s ", params.Body.UserEmail)
 		sendEmailToCLAManagerDesignee(LfxPortalURL, companyModel.Name, projectSF.Name, params.Body.UserEmail, user.Name, authUser.Email, authUser.UserName)
+		// Make a note in the event log
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:         events.ContributorNotifyCLADesigneeType,
+			LfUsername:        authUser.UserName,
+			ExternalProjectID: params.ProjectSFID,
+			CompanyID:         companyModel.ID,
+			EventData: &events.ContributorNotifyCLADesignee{
+				DesigneeName:  claManagerDesignee.LfUsername,
+				DesigneeEmail: claManagerDesignee.Email,
+			},
+		})
 
 		log.Debugf("CLA Manager designee created : %+v", claManagerDesignee)
 		return cla_manager.NewCreateCLAManagerRequestOK().WithPayload(claManagerDesignee)
 	})
+
+	api.ClaManagerNotifyCLAManagersHandler = cla_manager.NotifyCLAManagersHandlerFunc(
+		func(params cla_manager.NotifyCLAManagersParams) middleware.Responder {
+			err := service.NotifyCLAManagers(params.Body)
+			if err != nil {
+				if err == ErrCLAUserNotFound {
+					return cla_manager.NewNotifyCLAManagersNotFound()
+				}
+				return cla_manager.NewNotifyCLAManagersBadRequest()
+			}
+			return cla_manager.NewNotifyCLAManagersNoContent()
+		})
+
 }
 
 // buildErrorMessageCreate helper function to build an error message
@@ -268,7 +307,7 @@ func buildErrorMessageDelete(params cla_manager.DeleteCLAManagerParams, err erro
 func sendEmailToUserWithNoLFID(projectModel *v1Models.Project, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail string) {
 	projectName := projectModel.ProjectName
 	// subject string, body string, recipients []string
-	subject := fmt.Sprint("EasyCLA: Invitation to create LFID and complete process of becoming CLA Manager")
+	subject := "EasyCLA: Invitation to create LFID and complete process of becoming CLA Manager"
 	recipients := []string{userWithNoLFIDEmail}
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>

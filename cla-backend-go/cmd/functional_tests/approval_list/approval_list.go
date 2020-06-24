@@ -146,9 +146,6 @@ func (t *TestBehaviour) RunGetCLAProspectiveManagerToken() {
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
 			}
-			if &auth0Response == nil {
-				F.AddError("Auth0Response is nil")
-			}
 			if auth0Response.IDToken == "" {
 				F.AddError("Auth0Response id_token is empty")
 			}
@@ -183,9 +180,6 @@ func (t *TestBehaviour) RunGetCLAManagerToken() {
 			unmarshallErr := json.Unmarshal([]byte(text), &auth0Response)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
-			}
-			if &auth0Response == nil {
-				F.AddError("Auth0Response is nil")
 			}
 			if auth0Response.IDToken == "" {
 				F.AddError("Auth0Response id_token is empty")
@@ -222,9 +216,6 @@ func (t *TestBehaviour) RunGetCLAManagerIntelToken() {
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
 			}
-			if &auth0Response == nil {
-				F.AddError("Auth0Response is nil")
-			}
 			if auth0Response.IDToken == "" {
 				F.AddError("Auth0Response id_token is empty")
 			}
@@ -259,9 +250,6 @@ func (t *TestBehaviour) RunGetCLAManagerATTToken() {
 			unmarshallErr := json.Unmarshal([]byte(text), &auth0Response)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
-			}
-			if &auth0Response == nil {
-				F.AddError("Auth0Response is nil")
 			}
 			if auth0Response.IDToken == "" {
 				F.AddError("Auth0Response id_token is empty")
@@ -329,9 +317,6 @@ func (t *TestBehaviour) RunUpdateApprovalListAddEmail(testData InputTestValues) 
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
 			}
-			if &sig == nil {
-				F.AddError("CLA Approval List - Update Approval List - Response is nil")
-			}
 			if sig.ProjectID != testData.claGroupID {
 				F.AddError(fmt.Sprintf("CLA Approval List - Update Approval List - CLA Group ID's do not match: %s vs %s",
 					sig.ProjectID, testData.claGroupID))
@@ -375,9 +360,6 @@ func (t *TestBehaviour) RunUpdateApprovalListRemoveEmail(testData InputTestValue
 			unmarshallErr := json.Unmarshal([]byte(text), &sig)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
-			}
-			if &sig == nil {
-				F.AddError("CLA Approval List - Update Approval List - Response is nil")
 			}
 			if sig.ProjectID != testData.claGroupID {
 				F.AddError(fmt.Sprintf("CLA Approval List - Update Approval List - CLA Group ID's do not match: %s vs %s",
@@ -423,9 +405,6 @@ func (t *TestBehaviour) RunUpdateApprovalListAddDomain(testData InputTestValues)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
 			}
-			if &sig == nil {
-				F.AddError("CLA Approval List - Update Approval List - Response is nil")
-			}
 			if sig.ProjectID != testData.claGroupID {
 				F.AddError(fmt.Sprintf("CLA Approval List - Update Approval List - CLA Group ID's do not match: %s vs %s",
 					sig.ProjectID, testData.claGroupID))
@@ -469,9 +448,6 @@ func (t *TestBehaviour) RunUpdateApprovalListRemoveDomain(testData InputTestValu
 			unmarshallErr := json.Unmarshal([]byte(text), &sig)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
-			}
-			if &sig == nil {
-				F.AddError("CLA Approval List - Update Approval List - Response is nil")
 			}
 			if sig.ProjectID != testData.claGroupID {
 				F.AddError(fmt.Sprintf("CLA Approval List - Update Approval List - CLA Group ID's do not match: %s vs %s",
@@ -517,9 +493,6 @@ func (t *TestBehaviour) RunUpdateApprovalListAddGitHubUsername(testData InputTes
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
 			}
-			if &sig == nil {
-				F.AddError("CLA Approval List - Update Approval List - Response is nil")
-			}
 			if sig.ProjectID != testData.claGroupID {
 				F.AddError(fmt.Sprintf("CLA Approval List - Update Approval List - CLA Group ID's do not match: %s vs %s",
 					sig.ProjectID, testData.claGroupID))
@@ -563,9 +536,6 @@ func (t *TestBehaviour) RunUpdateApprovalListRemoveGitHubUsername(testData Input
 			unmarshallErr := json.Unmarshal([]byte(text), &sig)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
-			}
-			if &sig == nil {
-				F.AddError("CLA Approval List - Update Approval List - Response is nil")
 			}
 			if sig.ProjectID != testData.claGroupID {
 				F.AddError(fmt.Sprintf("CLA Approval List - Update Approval List - CLA Group ID's do not match: %s vs %s",
@@ -611,9 +581,6 @@ func (t *TestBehaviour) RunUpdateApprovalListAddGitHubOrg(testData InputTestValu
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
 			}
-			if &sig == nil {
-				F.AddError("CLA Approval List - Update Approval List - Response is nil")
-			}
 			if sig.ProjectID != testData.claGroupID {
 				F.AddError(fmt.Sprintf("CLA Approval List - Update Approval List - CLA Group ID's do not match: %s vs %s",
 					sig.ProjectID, testData.claGroupID))
@@ -657,9 +624,6 @@ func (t *TestBehaviour) RunUpdateApprovalListRemoveGitHubOrg(testData InputTestV
 			unmarshallErr := json.Unmarshal([]byte(text), &sig)
 			if unmarshallErr != nil {
 				F.AddError(unmarshallErr.Error())
-			}
-			if &sig == nil {
-				F.AddError("CLA Approval List - Update Approval List - Response is nil")
 			}
 			if sig.ProjectID != testData.claGroupID {
 				F.AddError(fmt.Sprintf("CLA Approval List - Update Approval List - CLA Group ID's do not match: %s vs %s",

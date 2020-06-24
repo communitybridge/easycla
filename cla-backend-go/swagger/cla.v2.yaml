@@ -1559,6 +1559,28 @@ paths:
       tags:
         - signatures
   
+  /notify-cla-managers:
+    post:
+      summary: Send Notification to CLA Managaers
+      security: []
+      description: Send Notification to selected list of CLA Managers
+      operationId: notifyCLAManagers
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/notify-cla-manager-list'
+          required: true
+      responses:
+        '204':
+          description: 'Success'
+        '404':
+          $ref: '#/responses/not-found'
+        '400':
+          $ref: '#resonses/invalid-request'
+      tags:
+        - cla-manager
+
   /user/{userID}/invite-company-admin:
     post:
       summary: Invite Manager 
@@ -1577,11 +1599,11 @@ paths:
               contactAdmin:
                 description: flag checking whether to contact company admin
                 type: boolean 
-              companySFID:
-                description: CompanySFID of contributor inviting CLA Manager
+              companyID:
+                description: EasyCLA companyID of contributor inviting CLA Manager
                 type: string
-              projectSFID:
-                description: project SFID to be signed
+              claGroupID:
+                description: claGroupID to be signed
                 type: string
               userEmail:
                 description: Proposed CLA Manager email
@@ -1935,6 +1957,32 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - company
+
+  /company/{companyID}/cla-group/{claGroupID}/cla-managers:
+    get:
+      summary: Get list of CLA managers based on the CLA Group and v1 Company ID
+      description: Returns a list of current CLA managers based on the CLA Group ID and the v1 Company ID
+      operationId: getCompanyCLAGroupManagers
+      security: []
+      parameters:
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-claGroupID"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company-cla-managers'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
   /company/{companySFID}/project/{projectSFID}/active-cla-list:
     get:
       summary: get active cla list of company for particular project/foundation
@@ -2191,6 +2239,18 @@ parameters:
   path-userLFID:
     name: userLFID
     description: LFID of the user
+    in: path
+    type: string
+    required: true
+  path-companyName:
+    name: companyName
+    description: name of the Company
+    in: path
+    type: string
+    required: true
+  path-projectName:
+    name: projectName
+    description: name of EasyCLA Group 
     in: path
     type: string
     required: true
@@ -2725,7 +2785,31 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/active-cla'
+  
+  notify-cla-manager-list:
+    type: object
+    title: Cla Manager list and contributor userID for given company and Project
+    description: list of CLA Manager emails and contributor userID
+    properties:
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/notify-cla-manager'
+      userID:
+        type: string
+      companyName:
+        type: string
+      projectName:
+        type: string
 
+  notify-cla-manager:
+    type: object
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+  
   company-project-cla-list:
     type: object
     properties:

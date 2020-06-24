@@ -44,6 +44,7 @@ type Repository interface {
 	ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error)
 	GetGithubRepository(repositoryID string) (*models.GithubRepository, error)
 	DeleteProject(projectID string) error
+	GetGithubRepositoryByCLAGroup(claGroup string) (*models.GithubRepository, error)
 }
 
 // NewRepository create new Repository
@@ -383,4 +384,45 @@ func (repo *repo) DeleteProject(repositoryID string) error {
 	}
 
 	return nil
+}
+
+// GetGithubRepositoryByCLAGroup gets GHRepo by project|ClaGroup ID
+func (repo *repo) GetGithubRepositoryByCLAGroup(claGroupID string) (*models.GithubRepository, error) {
+	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
+	builder := expression.NewBuilder()
+	condition := expression.Key("repository_project_id").Equal(expression.Value(claGroupID))
+
+	builder = builder.WithKeyCondition(condition)
+
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String(ProjectRepositoryIndex),
+	}
+
+	results, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.Warnf("unable to get project github repositories. error = %s", err.Error())
+		return nil, err
+	}
+
+	var result *GithubRepository
+	if len(results.Items) == 0 {
+		return nil, ErrGithubRepositoryNotFound
+	}
+	err = dynamodbattribute.UnmarshalMap(results.Items[0], &result)
+	if err != nil {
+		return nil, err
+	}
+	return result.toModel(), nil
+
 }

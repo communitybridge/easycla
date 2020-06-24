@@ -6,6 +6,9 @@ package company
 import (
 	"fmt"
 
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	v1Company "github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
@@ -17,6 +20,7 @@ import (
 
 // Configure sets up the middleware handlers
 func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository) {
+
 	api.CompanyGetCompanyProjectClaManagersHandler = company.GetCompanyProjectClaManagersHandlerFunc(
 		func(params company.GetCompanyProjectClaManagersParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
@@ -40,6 +44,20 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 			return company.NewGetCompanyProjectClaManagersOK().WithPayload(result)
 		})
+
+	api.CompanyGetCompanyCLAGroupManagersHandler = company.GetCompanyCLAGroupManagersHandlerFunc(
+		// No auth - invoked from Contributor Console
+		func(params company.GetCompanyCLAGroupManagersParams) middleware.Responder {
+			result, err := service.GetCompanyCLAGroupManagers(params.CompanyID, params.ClaGroupID)
+			if err != nil {
+				if err == v1Company.ErrCompanyDoesNotExist {
+					return company.NewGetCompanyCLAGroupManagersNotFound().WithPayload(errorResponse(err))
+				}
+			}
+
+			return company.NewGetCompanyCLAGroupManagersOK().WithPayload(result)
+		})
+
 	api.CompanyGetCompanyProjectActiveClaHandler = company.GetCompanyProjectActiveClaHandlerFunc(
 		func(params company.GetCompanyProjectActiveClaParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
@@ -62,6 +80,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 			return company.NewGetCompanyProjectActiveClaOK().WithPayload(result)
 		})
+
 	api.CompanyGetCompanyProjectContributorsHandler = company.GetCompanyProjectContributorsHandlerFunc(
 		func(params company.GetCompanyProjectContributorsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
@@ -107,11 +126,22 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 
 	api.CompanyCreateCompanyHandler = company.CreateCompanyHandlerFunc(
 		func(params company.CreateCompanyParams) middleware.Responder {
+			// Quick validation of the input parameters
+			if !utils.ValidCompanyName(*params.Input.CompanyName) {
+				return company.NewCreateCompanyBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA - 400 Bad Request - Company Name is not valid",
+				})
+			}
+
 			companyModel, err := service.CreateCompany(*params.Input.CompanyName, *params.Input.CompanyWebsite, params.UserID)
 			if err != nil {
-				if err == ErrDuplicateCompany {
+				log.Warnf("error returned from create company api: %+v", err)
+				// If EasyCLA company conflict/duplicate or Platform Org Service conflict/duplicate
+				if err == ErrDuplicateCompany || err == err.(*organizations.CreateOrgConflict) {
 					return company.NewCreateCompanyConflict().WithPayload(errorResponse(err))
 				}
+
 				return company.NewCreateCompanyBadRequest().WithPayload(errorResponse(err))
 			}
 			return company.NewCreateCompanyOK().WithPayload(companyModel)

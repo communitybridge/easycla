@@ -7,7 +7,7 @@ replace github.com/awslabs/aws-lambda-go-api-proxy => github.com/LF-Engineering/
 require (
 	github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
 	github.com/LF-Engineering/lfx-kit v0.1.10
-	github.com/LF-Engineering/lfx-models v0.3.9
+	github.com/LF-Engineering/lfx-models v0.6.2
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
 	github.com/aws/aws-lambda-go v1.16.0
 	github.com/aws/aws-sdk-go v1.30.14
@@ -20,7 +20,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-openapi/errors v0.19.6
 	github.com/go-openapi/loads v0.19.5
-	github.com/go-openapi/runtime v0.19.16
+	github.com/go-openapi/runtime v0.19.19
 	github.com/go-openapi/spec v0.19.8
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-openapi/swag v0.19.9
@@ -42,7 +42,7 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/savaki/dynastore v0.0.0-20171109173440-28d8558bb429
 	github.com/sirupsen/logrus v1.5.0
-	github.com/spf13/afero v1.2.2 // indirect
+	github.com/spf13/afero v1.3.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
@@ -54,7 +54,8 @@ require (
 	golang.org/x/mod v0.3.0 // indirect
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
-	golang.org/x/tools v0.0.0-20200615222825-6aa8f57aacd9 // indirect
+	golang.org/x/sys v0.0.0-20200622182413-4b0db7f3f76b // indirect
+	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/tools v0.0.0-20200622203043-20e05c1c8ffa // indirect
 	gopkg.in/ini.v1 v1.57.0 // indirect
 )

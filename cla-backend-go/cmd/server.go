@@ -234,12 +234,12 @@ func server(localMode bool) http.Handler {
 	signaturesService := signatures.NewService(signaturesRepo, companyService, usersService, eventsService, githubOrgValidation)
 	v2SignatureService := v2Signatures.NewService(projectService, companyService, signaturesService)
 	claManagerService := cla_manager.NewService(claManagerReqRepo, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
-	v2ClaManagerService := v2ClaManager.NewService(companyService, projectService, claManagerService)
+	repositoriesService := repositories.NewService(repositoriesRepo)
+	v2ClaManagerService := v2ClaManager.NewService(companyService, projectService, claManagerService, usersService, repositoriesService, v2CompanyService)
 	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, signaturesRepo, configFile.CorporateConsoleURL, http.DefaultClient)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 	v2MetricsService := metrics.NewService(metricsRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
-	repositoriesService := repositories.NewService(repositoriesRepo)
 	gerritService := gerrits.NewService(gerritRepo, &gerrits.LFGroup{
 		LfBaseURL:    configFile.LFGroup.ClientURL,
 		ClientID:     configFile.LFGroup.ClientID,

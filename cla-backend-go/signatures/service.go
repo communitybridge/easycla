@@ -402,7 +402,7 @@ func (s service) UpdateApprovalList(authUser *auth.User, projectModel *models.Pr
 
 	// Send an email to the CLA Managers
 	for _, claManager := range claManagers {
-		claManagerEmail := getBestEmail(&claManager)
+		claManagerEmail := getBestEmail(claManager)
 		s.sendApprovalListUpdateEmailToCLAManagers(companyModel, projectModel, claManager.Username, claManagerEmail, params)
 	}
 
@@ -778,11 +778,7 @@ support</a>.</p>
 }
 
 // getBestEmail is a helper function to return the best email address for the user model
-func getBestEmail(claManager *models.User) string {
-	if claManager == nil {
-		return ""
-	}
-
+func getBestEmail(claManager models.User) string {
 	if claManager.LfEmail != "" {
 		return claManager.LfEmail
 	}
