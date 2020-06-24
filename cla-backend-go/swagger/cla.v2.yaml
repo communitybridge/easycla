@@ -1528,32 +1528,25 @@ paths:
       tags:
         - signatures
   
-  /company/{companyID}/project/{projectID}/cla-managers-request:
+  /notify-cla-managers:
     post:
-      summary: Send CLA Manager Requests
+      summary: Send Notification to CLA Managaers
       security: []
-      description: Send Company CLA Managers contributor request 
-      operationId: claManagersRequest
+      description: Send Notification to selected list of CLA Managers
+      operationId: notifyCLAManagers
       parameters:
-        - $ref: "#/parameters/path-companyID"
-        - $ref: "#/parameters/path-projectID"
         - name: body
           in: body
           schema:
-            type: object
-            x-nullable: false
-            title: Contributor EasyCLA User
-            properties:
-              userID:
-                description: UserID of contributor 
-                type: string
+            $ref: '#/definitions/notify-cla-manager-list'
+          required: true
       responses:
         '204':
           description: 'Success'
-        '400':
-          $ref: '#/responses/invalid-request'
         '404':
           $ref: '#/responses/not-found'
+        '400':
+          $ref: '#resonses/invalid-request'
       tags:
         - cla-manager
 
@@ -2218,6 +2211,18 @@ parameters:
     in: path
     type: string
     required: true
+  path-companyName:
+    name: companyName
+    description: name of the Company
+    in: path
+    type: string
+    required: true
+  path-projectName:
+    name: projectName
+    description: name of EasyCLA Group 
+    in: path
+    type: string
+    required: true
   path-companyID:
     name: companyID
     description: id of the company
@@ -2743,7 +2748,31 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/active-cla'
+  
+  notify-cla-manager-list:
+    type: object
+    title: Cla Manager list and contributor userID for given company and Project
+    description: list of CLA Manager emails and contributor userID
+    properties:
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/notify-cla-manager'
+      userID:
+        type: string
+      companyName:
+        type: string
+      projectName:
+        type: string
 
+  notify-cla-manager:
+    type: object
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+  
   company-project-cla-list:
     type: object
     properties:
