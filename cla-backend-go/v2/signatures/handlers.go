@@ -6,6 +6,9 @@ package signatures
 import (
 	"errors"
 	"fmt"
+	"net/http"
+
+	"github.com/go-openapi/runtime"
 
 	"github.com/communitybridge/easycla/cla-backend-go/project"
 
@@ -436,6 +439,28 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		}
 		return signatures.NewGetUserSignaturesOK().WithPayload(resp)
 	})
+	api.SignaturesDownloadProjectSignatureICLAAsCSVHandler = signatures.DownloadProjectSignatureICLAAsCSVHandlerFunc(
+		func(params signatures.DownloadProjectSignatureICLAAsCSVParams, authUser *auth.User) middleware.Responder {
+			result, err := v2service.GetProjectIclaSignaturesCsv(params.ClaGroupID)
+			if err != nil {
+				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithPayload(errorResponse(err))
+			}
+			return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+				rw.WriteHeader(http.StatusOK)
+				_, err := rw.Write(result)
+				if err != nil {
+					log.Warnf("Error writing pdf, error: %v", err)
+				}
+			})
+		})
+	api.SignaturesListClaGroupIclaSignatureHandler = signatures.ListClaGroupIclaSignatureHandlerFunc(
+		func(params signatures.ListClaGroupIclaSignatureParams, authUser *auth.User) middleware.Responder {
+			result, err := v2service.GetProjectIclaSignatures(params.ClaGroupID, params.SearchTerm)
+			if err != nil {
+				return signatures.NewListClaGroupIclaSignatureInternalServerError().WithPayload(errorResponse(err))
+			}
+			return signatures.NewListClaGroupIclaSignatureOK().WithPayload(result)
+		})
 }
 
 type codedResponse interface {

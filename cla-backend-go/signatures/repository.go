@@ -33,6 +33,14 @@ import (
 const (
 	LoadACLDetails     = true
 	DontLoadACLDetails = false
+
+	SignatureProjectIDSigtypeSignedApprovedIDIndex = "signature-project-id-sigtype-signed-approved-id-index"
+
+	ICLA = "icla"
+	ECLA = "ecla"
+	CCLA = "ccla"
+
+	HugePageSize = 10000
 )
 
 // SignatureRepository interface defines the functions for the github whitelist service
@@ -60,6 +68,7 @@ type SignatureRepository interface {
 
 	AddSigTypeSignedApprovedID(signatureID string, sigType string, signed, approved bool, id string) error
 	AddUsersDetails(signatureID string, userID string) error
+	GetClaGroupICLASignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
 }
 
 // repository data model
@@ -1756,6 +1765,11 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("domain_whitelist"),
 		expression.Name("github_whitelist"),
 		expression.Name("github_org_whitelist"),
+		expression.Name("user_github_username"),
+		expression.Name("user_lf_username"),
+		expression.Name("user_name"),
+		expression.Name("user_email"),
+		expression.Name("signed_on"),
 	)
 }
 
@@ -1813,4 +1827,79 @@ func buildApprovalAttributeList(existingList, addEntries, removeEntries []string
 	}
 
 	return &dynamodb.AttributeValue{L: responseList}
+}
+
+func (repo repository) GetClaGroupICLASignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error) {
+	// The table we're interested in
+	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+
+	sortKeyPrefix := fmt.Sprintf("%s#%v#%v", ICLA, true, true)
+	// This is the key we want to match
+	condition := expression.Key("signature_project_id").Equal(expression.Value(claGroupID)).
+		And(expression.Key("sigtype_signed_approved_id").BeginsWith(sortKeyPrefix))
+
+	// Use the builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	if err != nil {
+		log.Warnf("error building expression for get cla group icla signatures, claGroupID: %s, error: %v",
+			claGroupID, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String(SignatureProjectIDSigtypeSignedApprovedIDIndex),
+	}
+	out := &models.IclaSignatures{List: make([]*models.IclaSignature, 0)}
+	if searchTerm != nil {
+		searchTerm = aws.String(strings.ToLower(*searchTerm))
+	}
+	for {
+		// Make the DynamoDB Query API call
+		results, queryErr := repo.dynamoDBClient.Query(queryInput)
+		if queryErr != nil {
+			log.Warnf("error retrieving icla signatures for project: %s, error: %v", claGroupID, queryErr)
+			return nil, queryErr
+		}
+
+		var dbSignatures []ItemSignature
+
+		err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbSignatures)
+		if err != nil {
+			log.Warnf("error unmarshalling icla signatures from database for cla group: %s, error: %v",
+				claGroupID, err)
+			return nil, err
+		}
+
+		for _, sig := range dbSignatures {
+			if searchTerm != nil {
+				if !strings.Contains(sig.SignatureReferenceNameLower, *searchTerm) {
+					continue
+				}
+			}
+			signedOn := sig.DateCreated
+			if sig.SignedOn != "" {
+				signedOn = sig.SignedOn
+			}
+			out.List = append(out.List, &models.IclaSignature{
+				GithubUsername: sig.UserGithubUsername,
+				LfUsername:     sig.UserLFUsername,
+				SignatureID:    sig.SignatureID,
+				UserEmail:      sig.UserEmail,
+				UserName:       sig.UserName,
+				SignedOn:       signedOn,
+			})
+		}
+
+		if len(results.LastEvaluatedKey) == 0 {
+			break
+		}
+		queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+	}
+	return out, nil
 }

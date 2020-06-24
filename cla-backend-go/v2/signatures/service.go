@@ -1,15 +1,22 @@
 package signatures
 
 import (
+	"bytes"
+	"fmt"
+
+	"github.com/jinzhu/copier"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	v1Project "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 	v1Signatures "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/project"
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	"github.com/sirupsen/logrus"
 )
 
 // constants
@@ -28,6 +35,8 @@ type service struct {
 // Service contains method of v2 signature service
 type Service interface {
 	GetProjectCompanySignatures(companySFID string, projectSFID string) (*models.Signatures, error)
+	GetProjectIclaSignaturesCsv(claGroupID string) ([]byte, error)
+	GetProjectIclaSignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
 }
 
 // NewService creates instance of v2 signature service
@@ -77,4 +86,42 @@ func (s *service) GetProjectCompanySignatures(companySFID string, projectSFID st
 		}
 	}
 	return v2SignaturesReplaceCompanyID(filteredSigs, companyModel.CompanyID, companySFID)
+}
+
+func iclaSigCsvLine(sig *v1Models.IclaSignature) string {
+	var dateTime string
+	t, err := utils.ParseDateTime(sig.SignedOn)
+	if err != nil {
+		log.WithFields(logrus.Fields{"signature_id": sig.SignatureID, "signature_created": sig.SignedOn}).
+			Error("invalid time format present for signatures")
+	} else {
+		dateTime = t.Format("Jan 2,2006")
+	}
+	return fmt.Sprintf("\n%s,%s,%s,%s,\"%s\"", sig.GithubUsername, sig.LfUsername, sig.UserName, sig.UserEmail, dateTime)
+}
+
+func (s service) GetProjectIclaSignaturesCsv(claGroupID string) ([]byte, error) {
+	var b bytes.Buffer
+	result, err := s.v1SignatureService.GetClaGroupICLASignatures(claGroupID, nil)
+	if err != nil {
+		return nil, err
+	}
+	b.WriteString(`Github ID,LF_ID,Name,Email,Date Signed`)
+	for _, sig := range result.List {
+		b.WriteString(iclaSigCsvLine(sig))
+	}
+	return b.Bytes(), nil
+}
+
+func (s service) GetProjectIclaSignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error) {
+	var out models.IclaSignatures
+	result, err := s.v1SignatureService.GetClaGroupICLASignatures(claGroupID, searchTerm)
+	if err != nil {
+		return nil, err
+	}
+	err = copier.Copy(&out, result)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
