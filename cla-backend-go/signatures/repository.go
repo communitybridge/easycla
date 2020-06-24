@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -33,6 +35,14 @@ import (
 const (
 	LoadACLDetails     = true
 	DontLoadACLDetails = false
+
+	SignatureProjectIDSigtypeSignedApprovedIDIndex = "signature-project-id-sigtype-signed-approved-id-index"
+
+	ICLA = "icla"
+	ECLA = "ecla"
+	CCLA = "ccla"
+
+	HugePageSize = 10000
 )
 
 // SignatureRepository interface defines the functions for the github whitelist service
@@ -57,6 +67,12 @@ type SignatureRepository interface {
 	RemoveCLAManager(signatureID, claManagerID string) (*models.Signature, error)
 
 	removeColumn(signatureID, columnName string) (*models.Signature, error)
+
+	AddSigTypeSignedApprovedID(signatureID string, sigType string, signed, approved bool, id string) error
+	AddUsersDetails(signatureID string, userID string) error
+	AddSignedOn(signatureID string) error
+
+	GetClaGroupICLASignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
 }
 
 // repository data model
@@ -1524,6 +1540,120 @@ func (repo repository) removeColumn(signatureID, columnName string) (*models.Sig
 	return updatedSig, nil
 }
 
+func (repo repository) AddSigTypeSignedApprovedID(signatureID string, sigType string, signed, approved bool, id string) error {
+	val := fmt.Sprintf("%s#%v#%v#%s", sigType, signed, approved, id)
+	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"signature_id": {
+				S: aws.String(signatureID),
+			},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#signature_project_id_skey": aws.String("sigtype_signed_approved_id"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":val": {
+				S: aws.String(val),
+			},
+		},
+		UpdateExpression: aws.String("SET #signature_project_id_skey = :val"),
+	}
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Warnf("unable to update sigtype_signed_approved_id for signature_id : %s", signatureID)
+		return updateErr
+	}
+	return nil
+}
+func (repo repository) AddUsersDetails(signatureID string, userID string) error {
+	userModel, err := repo.usersRepo.GetUser(userID)
+	if err != nil {
+		return err
+	}
+	if userModel == nil {
+		log.WithFields(logrus.Fields{"user_id": userID, "signature_id": signatureID}).Error("invalid user_id")
+		return fmt.Errorf("invalid user id : %s for signature : %s", userID, signatureID)
+	}
+	var email string
+	if userModel.LfEmail != "" {
+		email = userModel.LfEmail
+	} else {
+		if len(userModel.Emails) > 0 {
+			email = userModel.Emails[0]
+		}
+	}
+
+	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"signature_id": {
+				S: aws.String(signatureID),
+			},
+		},
+	}
+	ue := utils.NewDynamoUpdateExpression()
+	ue.AddAttributeName("#gh_username", "user_github_username", userModel.GithubUsername != "")
+	ue.AddAttributeName("#lf_username", "user_lf_username", userModel.LfUsername != "")
+	ue.AddAttributeName("#name", "user_name", userModel.Username != "")
+	ue.AddAttributeName("#email", "user_email", email != "")
+
+	ue.AddAttributeValue(":gh_username", &dynamodb.AttributeValue{S: aws.String(userModel.GithubUsername)}, userModel.GithubUsername != "")
+	ue.AddAttributeValue(":lf_username", &dynamodb.AttributeValue{S: aws.String(userModel.LfUsername)}, userModel.LfUsername != "")
+	ue.AddAttributeValue(":name", &dynamodb.AttributeValue{S: aws.String(userModel.Username)}, userModel.Username != "")
+	ue.AddAttributeValue(":email", &dynamodb.AttributeValue{S: aws.String(email)}, email != "")
+
+	ue.AddUpdateExpression("#gh_username = :gh_username", userModel.GithubUsername != "")
+	ue.AddUpdateExpression("#lf_username = :lf_username", userModel.LfUsername != "")
+	ue.AddUpdateExpression("#name = :name", userModel.Username != "")
+	ue.AddUpdateExpression("#email = :email", email != "")
+	if ue.Expression == "" {
+		// nothing to update
+		return nil
+	}
+	input.UpdateExpression = aws.String(ue.Expression)
+	input.ExpressionAttributeNames = ue.ExpressionAttributeNames
+	input.ExpressionAttributeValues = ue.ExpressionAttributeValues
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Debugf("update input: %v", input)
+		log.Warnf("unable to add users details to : %s . error = %s", signatureID, updateErr.Error())
+		return updateErr
+	}
+	return nil
+}
+
+func (repo repository) AddSignedOn(signatureID string) error {
+	_, currentTime := utils.CurrentTime()
+	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"signature_id": {
+				S: aws.String(signatureID),
+			},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#signed_on": aws.String("signed_on"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":current_time": {
+				S: aws.String(currentTime),
+			},
+		},
+		UpdateExpression: aws.String("SET #signed_on = :current_time"),
+	}
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Debugf("update input: %v", input)
+		log.Warnf("unable to signed_on to : %s . error = %s", signatureID, updateErr.Error())
+		return updateErr
+	}
+	return nil
+}
+
 // buildProjectSignatureModels converts the response model into a response data model
 func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput, projectID string, loadACLDetails bool) ([]*models.Signature, error) {
 	var sigs []*models.Signature
@@ -1562,6 +1692,9 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			DomainApprovalList:          dbSignature.DomainWhitelist,
 			GithubUsernameApprovalList:  dbSignature.GitHubWhitelist,
 			GithubOrgApprovalList:       dbSignature.GitHubOrgWhitelist,
+			UserName:                    dbSignature.UserName,
+			UserLFID:                    dbSignature.UserLFUsername,
+			UserGHID:                    dbSignature.UserGithubUsername,
 		}
 		sigs = append(sigs, sig)
 		go func(sigModel *models.Signature, signatureUserCompanyID string, sigACL []string) {
@@ -1672,6 +1805,11 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("domain_whitelist"),
 		expression.Name("github_whitelist"),
 		expression.Name("github_org_whitelist"),
+		expression.Name("user_github_username"),
+		expression.Name("user_lf_username"),
+		expression.Name("user_name"),
+		expression.Name("user_email"),
+		expression.Name("signed_on"),
 	)
 }
 
@@ -1729,4 +1867,81 @@ func buildApprovalAttributeList(existingList, addEntries, removeEntries []string
 	}
 
 	return &dynamodb.AttributeValue{L: responseList}
+}
+
+func (repo repository) GetClaGroupICLASignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error) {
+	// The table we're interested in
+	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
+
+	sortKeyPrefix := fmt.Sprintf("%s#%v#%v", ICLA, true, true)
+	// This is the key we want to match
+	condition := expression.Key("signature_project_id").Equal(expression.Value(claGroupID)).
+		And(expression.Key("sigtype_signed_approved_id").BeginsWith(sortKeyPrefix))
+
+	// Use the builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	if err != nil {
+		log.Warnf("error building expression for get cla group icla signatures, claGroupID: %s, error: %v",
+			claGroupID, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String(SignatureProjectIDSigtypeSignedApprovedIDIndex),
+		Limit:                     aws.Int64(HugePageSize),
+	}
+	out := &models.IclaSignatures{List: make([]*models.IclaSignature, 0)}
+	if searchTerm != nil {
+		searchTerm = aws.String(strings.ToLower(*searchTerm))
+	}
+	for {
+		// Make the DynamoDB Query API call
+		results, queryErr := repo.dynamoDBClient.Query(queryInput)
+		if queryErr != nil {
+			log.Warnf("error retrieving icla signatures for project: %s, error: %v", claGroupID, queryErr)
+			return nil, queryErr
+		}
+
+		var dbSignatures []ItemSignature
+
+		err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbSignatures)
+		if err != nil {
+			log.Warnf("error unmarshalling icla signatures from database for cla group: %s, error: %v",
+				claGroupID, err)
+			return nil, err
+		}
+
+		for _, sig := range dbSignatures {
+			if searchTerm != nil {
+				if !strings.Contains(sig.SignatureReferenceNameLower, *searchTerm) {
+					continue
+				}
+			}
+			signedOn := sig.DateCreated
+			if sig.SignedOn != "" {
+				signedOn = sig.SignedOn
+			}
+			out.List = append(out.List, &models.IclaSignature{
+				GithubUsername: sig.UserGithubUsername,
+				LfUsername:     sig.UserLFUsername,
+				SignatureID:    sig.SignatureID,
+				UserEmail:      sig.UserEmail,
+				UserName:       sig.UserName,
+				SignedOn:       signedOn,
+			})
+		}
+
+		if len(results.LastEvaluatedKey) == 0 {
+			break
+		}
+		queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+		log.Debug("querying next page")
+	}
+	return out, nil
 }

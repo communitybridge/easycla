@@ -330,9 +330,12 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'signature_company_signatory_id', type: 'S' },
         { name: 'signature_reference_name_lower', type: 'S' },
         { name: 'signature_company_initial_manager_id', type: 'S' },
+        { name: 'sigtype_signed_approved_id', type: 'S' },
       ],
       hashKey: 'signature_id',
       billingMode: 'PAY_PER_REQUEST',
+      streamEnabled: true,
+      streamViewType: "NEW_AND_OLD_IMAGES",
       globalSecondaryIndexes: [
         {
           name: 'project-signature-index',
@@ -375,6 +378,12 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'signature-company-initial-manager-index',
           hashKey: 'signature_company_initial_manager_id',
+          projectionType: 'ALL',
+        },
+        {
+          name: 'signature-project-id-sigtype-signed-approved-id-index',
+          hashKey: 'signature_project_id',
+          rangeKey: 'sigtype_signed_approved_id',
           projectionType: 'ALL',
         },
       ],
@@ -860,6 +869,10 @@ function buildProjectsClaGroupsTable(importResources: boolean): aws.dynamodb.Tab
     importResources ? { import: 'cla-' + stage + '-projects-cla-groups' } : {},
   );
 }
+
+// dynamodb events handler func
+const dynamoEventsHandlerFunc = aws.lambda.Function.get("dynamoEventsHandler", "cla-backend-go-"+stage+"-dynamo-events");
+signaturesTable.onEvent("signatureStreamEvents",dynamoEventsHandlerFunc)
 
 // Export the name of the bucket
 export const logoBucketARN = logoBucket.arn;

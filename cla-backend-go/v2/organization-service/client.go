@@ -155,14 +155,14 @@ func (osc *Client) CreateOrgUserRoleOrgScopeProjectOrg(emailID string, projectID
 }
 
 // DeleteOrgUserRoleOrgScopeProjectOrg removes role scope for user
-func (osc *Client) DeleteOrgUserRoleOrgScopeProjectOrg(organizationID string, roleID string, scopeID string, userName string, userEmail string) error {
+func (osc *Client) DeleteOrgUserRoleOrgScopeProjectOrg(organizationID string, roleID string, scopeID string, userName *string, userEmail *string) error {
 
 	params := &organizations.DeleteOrgUsrRoleScopesParams{
 		SalesforceID: organizationID,
 		RoleID:       roleID,
 		ScopeID:      scopeID,
-		XUSERNAME:    &userName,
-		XEMAIL:       &userEmail,
+		XUSERNAME:    userName,
+		XEMAIL:       userEmail,
 		Context:      context.Background(),
 	}
 	tok, err := token.GetToken()
@@ -276,6 +276,28 @@ func (osc *Client) ListOrgUserAdminScopes(orgID string) (*models.UserrolescopesL
 		Context:      context.Background(),
 	}
 	result, err := osc.cl.Organizations.ListOrgUsrAdminScopes(params, clientAuth)
+	if err != nil {
+		return nil, err
+	}
+	return result.Payload, nil
+}
+
+// ListOrgUserScopes returns role scope of organization
+// rolename is optional filter
+func (osc *Client) ListOrgUserScopes(orgID string, rolename []string) (*models.UserrolescopesList, error) {
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	params := &organizations.ListOrgUsrServiceScopesParams{
+		SalesforceID: orgID,
+		Context:      context.Background(),
+	}
+	if len(rolename) != 0 {
+		params.Rolename = rolename
+	}
+	result, err := osc.cl.Organizations.ListOrgUsrServiceScopes(params, clientAuth)
 	if err != nil {
 		return nil, err
 	}
