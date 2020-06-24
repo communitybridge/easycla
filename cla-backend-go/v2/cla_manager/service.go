@@ -60,7 +60,7 @@ type Service interface {
 	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
 	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributor *v1User.User, lFxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse)
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
-	CLAManagersRequest(companyID string, projectID string, userID string) error
+	NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerList) error
 }
 
 // NewService returns instance of CLA Manager service
@@ -522,50 +522,19 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 
 }
 
-func (s *service) CLAManagersRequest(companyID string, projectID string, userID string) error {
-	projectService := v2ProjectService.GetClient()
-	//Get EasyCLA Company
-	company, companyErr := s.companyService.GetCompany(companyID)
-	if companyErr != nil {
-		msg := fmt.Sprintf("EasyCLA Bad Request- Problem getting company :%s ", companyID)
-		log.Warn(msg)
-		return ErrCLACompanyNotFound
-	}
-
-	ghRepoModel, ghRepoErr := s.repositoriesService.GetGithubRepositoryByCLAGroup(projectID)
-	if ghRepoErr != nil || ghRepoModel.RepositorySfdcID == "" {
-		msg := fmt.Sprintf("Problem getting salesforce project by claGroupID : %s ", projectID)
-		log.Warn(msg)
-		return ErrGitHubRepoNotFound
-	}
-
-	project, projectErr := projectService.GetProject(ghRepoModel.RepositorySfdcID)
-	if projectErr != nil {
-		msg := fmt.Sprintf("Problem getting salesforce project for given repository association :%+v ", projectErr)
-		log.Warn(msg)
-		return ErrSalesForceProjectNotFound
-	}
-
+func (s *service) NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerList) error {
 	// Search for Easy CLA User
-	log.Debugf("Getting user by ID: %s", userID)
-	userModel, userErr := s.easyCLAUserService.GetUser(userID)
+	log.Debugf("Getting user by ID: %s", notifyCLAManagers.UserID)
+	userModel, userErr := s.easyCLAUserService.GetUser(notifyCLAManagers.UserID)
 	if userErr != nil {
-		msg := fmt.Sprintf("Problem getting user by ID: %s ", userID)
+		msg := fmt.Sprintf("Problem getting user by ID: %s ", notifyCLAManagers.UserID)
 		log.Warn(msg)
 		return ErrCLAUserNotFound
 	}
 
-	// Get CLA Managers
-	claManagers, managersErr := s.v2CompanyService.GetCompanyProjectCLAManagers(company.CompanyExternalID, ghRepoModel.RepositorySfdcID)
-	if managersErr != nil || len(claManagers.List) == 0 {
-		msg := fmt.Sprintf("Problem getting salesforce Company for for easyCLA company: %s ", company.CompanyName)
-		log.Warn(msg)
-		return ErrCLAManagersNotFound
-	}
-
-	// Send Emails to respective CLA Managers
-	for _, claManager := range claManagers.List {
-		sendEmailToCLAManager(claManager.Name, claManager.Email, userModel.GithubUsername, company.CompanyName, project.Name)
+	log.Debugf("Sending notification emails to claManagers: %+v", notifyCLAManagers.List)
+	for _, claManager := range notifyCLAManagers.List {
+		sendEmailToCLAManager(claManager.Name, claManager.Email, userModel.GithubUsername, notifyCLAManagers.CompanyName, notifyCLAManagers.ProjectName)
 	}
 
 	return nil
