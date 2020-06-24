@@ -873,7 +873,7 @@ function buildProjectsClaGroupsTable(importResources: boolean): aws.dynamodb.Tab
 
 // dynamodb events handler func
 signaturesTable.onEvent("signatureStreamEvents",
-  aws.lambda.Function.get("dynamoEventsHandler", "cla-backend-go-" + stage + "-dynamo-events"),
+  aws.lambda.Function.get("dynamoEventsHandler", "cla-backend-" + stage + "-dynamo-events"),
   { startingPosition: "LATEST" });
 
 // Export the name of the bucket
