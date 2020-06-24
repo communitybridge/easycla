@@ -264,7 +264,7 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 		}
 	}
 	email := *user.Emails[0].EmailAddress
-	deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(params.CompanySFID, roleID, scopeID, user.Username, email)
+	deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(params.CompanySFID, roleID, scopeID, &user.Username, &email)
 	if deleteErr != nil {
 		msg := buildErrorMessageDelete(params, deleteErr)
 		log.Warn(msg)

@@ -7,6 +7,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+
 	"github.com/communitybridge/easycla/cla-backend-go/v2/dynamo_events"
 
 	"github.com/communitybridge/easycla/cla-backend-go/token"
@@ -58,8 +60,9 @@ func init() {
 	usersRepo := users.NewRepository(awsSession, stage)
 	companyRepo := company.NewRepository(awsSession, stage)
 	signaturesRepo := signatures.NewRepository(awsSession, stage, companyRepo, usersRepo)
+	projectClaGroupRepo := projects_cla_groups.NewRepository(awsSession, stage)
 	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
-	dynamoEventsService = dynamo_events.NewService(stage, signaturesRepo)
+	dynamoEventsService = dynamo_events.NewService(stage, signaturesRepo, companyRepo, projectClaGroupRepo)
 }
 
 func handler(ctx context.Context, event events.DynamoDBEvent) {

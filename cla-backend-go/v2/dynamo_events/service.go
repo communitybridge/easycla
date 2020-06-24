@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+
+	"github.com/communitybridge/easycla/cla-backend-go/company"
+
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
 
 	"github.com/sirupsen/logrus"
@@ -25,9 +29,10 @@ type EventHandlerFunc func(event events.DynamoDBEventRecord) error
 
 type service struct {
 	// key : tablename:action
-	functions map[string][]EventHandlerFunc
-
-	signatureRepo signatures.SignatureRepository
+	functions            map[string][]EventHandlerFunc
+	signatureRepo        signatures.SignatureRepository
+	companyRepo          company.IRepository
+	projectsClaGroupRepo projects_cla_groups.Repository
 }
 
 // Service implements DynamoDB stream event handler service
@@ -35,11 +40,13 @@ type Service interface {
 	ProcessEvents(event events.DynamoDBEvent)
 }
 
-func NewService(stage string, signatureRepo signatures.SignatureRepository) Service {
+func NewService(stage string, signatureRepo signatures.SignatureRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository) Service {
 	SignaturesTable := fmt.Sprintf("cla-%s-signatures", stage)
 	s := &service{
-		functions:     make(map[string][]EventHandlerFunc),
-		signatureRepo: signatureRepo,
+		functions:            make(map[string][]EventHandlerFunc),
+		signatureRepo:        signatureRepo,
+		companyRepo:          companyRepo,
+		projectsClaGroupRepo: pcgRepo,
 	}
 	s.registerCallback(SignaturesTable, Modify, s.SignatureSignedEvent)
 	s.registerCallback(SignaturesTable, Modify, s.SignatureAddSigTypeSignedApprovedID)

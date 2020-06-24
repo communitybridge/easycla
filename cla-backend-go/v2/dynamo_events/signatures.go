@@ -50,7 +50,13 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 	if oldSignature.SignatureSigned == false && newSignature.SignatureSigned == true {
 		err = s.signatureRepo.AddSignedOn(newSignature.SignatureID)
 		if err != nil {
-			return err
+			log.WithField("signature_id", newSignature.SignatureID).Warnf("failed to add signed_on on signature")
+		}
+		if newSignature.SignatureType == "ccla" {
+			err = s.SetInitialCLAManagerACSPermissions(newSignature.SignatureID)
+			if err != nil {
+				log.WithField("signature_id", newSignature.SignatureID).Warnf("failed to set initial cla manager")
+			}
 		}
 	}
 	return nil
