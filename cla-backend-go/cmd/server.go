@@ -4,6 +4,9 @@
 package cmd
 
 import (
+	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/v2/cla_groups"
+	openapi_runtime "github.com/go-openapi/runtime"
 
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 
@@ -305,6 +309,32 @@ func server(localMode bool) http.Handler {
 		return responseLoggingMiddleware(userCreaterMiddleware(handler))
 	}
 
+	v2API.CsvProducer = openapi_runtime.ProducerFunc(func(w io.Writer, data interface{}) error {
+		switch v := data.(type) {
+		case []byte:
+			_, err := w.Write(v)
+			return err
+		default:
+			return errors.New("invalid value to CSV producer")
+		}
+		return nil
+	})
+
+	v2API.TextJSONProducer = openapi_runtime.ProducerFunc(func(w io.Writer, data interface{}) error {
+		var err error
+		switch v := data.(type) {
+		case []byte:
+			_, err = w.Write(v)
+		default:
+			b, jerr := json.Marshal(data)
+			if jerr != nil {
+				return err
+			}
+			_, err = w.Write(b)
+		}
+		return err
+	})
+
 	// For local mode - we allow anything, otherwise we use the value specified in the config (e.g. AWS SSM)
 	var apiHandler http.Handler
 	if localMode {
@@ -323,7 +353,6 @@ func server(localMode bool) http.Handler {
 				v2API.Serve(middlewareSetupfunc), v2SwaggerSpec.BasePath()),
 			configFile.AllowedOrigins)
 	}
-
 	return apiHandler
 }
 

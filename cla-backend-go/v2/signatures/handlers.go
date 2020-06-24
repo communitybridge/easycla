@@ -461,10 +461,11 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithPayload(errorResponse(err))
 			}
 			return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+				rw.Header().Set("Content-Type", "text/csv")
 				rw.WriteHeader(http.StatusOK)
 				_, err := rw.Write(result)
 				if err != nil {
-					log.Warnf("Error writing pdf, error: %v", err)
+					log.Warnf("Error writing csv file, error: %v", err)
 				}
 			})
 		})

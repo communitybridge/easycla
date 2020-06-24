@@ -1894,6 +1894,7 @@ func (repo repository) GetClaGroupICLASignatures(claGroupID string, searchTerm *
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(tableName),
 		IndexName:                 aws.String(SignatureProjectIDSigtypeSignedApprovedIDIndex),
+		Limit:                     aws.Int64(HugePageSize),
 	}
 	out := &models.IclaSignatures{List: make([]*models.IclaSignature, 0)}
 	if searchTerm != nil {
@@ -1940,6 +1941,7 @@ func (repo repository) GetClaGroupICLASignatures(claGroupID string, searchTerm *
 			break
 		}
 		queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+		log.Debug("querying next page")
 	}
 	return out, nil
 }

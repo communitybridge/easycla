@@ -1222,6 +1222,7 @@ paths:
         - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-claGroupID"
       produces:
+        - text/json
         - text/csv
       responses:
         '200':
