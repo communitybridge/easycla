@@ -1933,6 +1933,32 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - company
+
+  /company/{companyID}/cla-group/{claGroupID}/cla-managers:
+    get:
+      summary: Get list of CLA managers based on the CLA Group and v1 Company ID
+      description: Returns a list of current CLA managers based on the CLA Group ID and the v1 Company ID
+      operationId: getCompanyCLAGroupManagers
+      security: []
+      parameters:
+        - $ref: "#/parameters/path-companyID"
+        - $ref: "#/parameters/path-claGroupID"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company-cla-managers'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
   /company/{companySFID}/project/{projectSFID}/active-cla-list:
     get:
       summary: get active cla list of company for particular project/foundation
