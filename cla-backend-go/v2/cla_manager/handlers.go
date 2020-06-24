@@ -21,9 +21,6 @@ import (
 	v1User "github.com/communitybridge/easycla/cla-backend-go/user"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
-	v2OrgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
-	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
-	v2UserService "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -156,124 +153,37 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 					authUser.UserName, params.ProjectSFID, params.CompanySFID),
 			})
 		}
-		orgService := v2OrgService.GetClient()
 
-		// GetSFProject
-		ps := v2ProjectService.GetClient()
-		projectSF, projectErr := ps.GetProject(params.ProjectSFID)
-		if projectErr != nil {
-			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project service lookup error for SFID: %s, error : %+v",
-				params.ProjectSFID, projectErr)
-			log.Warn(msg)
-			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			})
-		}
+		claManagerDesignee, err := service.CreateCLAManagerRequest(params.Body.ContactAdmin, params.CompanySFID, params.ProjectSFID, params.Body.UserEmail,
+			params.Body.FirstName, params.Body.LastName, authUser, LfxPortalURL)
 
-		// Search for salesForce Company aka external Company
-		companyModel, companyErr := orgService.GetOrganization(params.CompanySFID)
-		if companyErr != nil || companyModel == nil {
-			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Problem getting company by SFID: %s, error: %+v",
-				params.CompanySFID, companyErr)
-			log.Warn(msg)
-			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			})
-		}
-
-		userService := v2UserService.GetClient()
-		user, userErr := userService.SearchUserByEmail(params.Body.UserEmail)
-		if userErr != nil {
-			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Problem looking up user with Email: %s , error: %+v", params.Body.UserEmail, userErr)
+		if err != nil {
+			if err == ErrLFXUserNotFound || err == ErrNoOrgAdmins || err == ErrNoLFID {
+				return cla_manager.NewCreateCLAManagerRequestNotFound().WithPayload(
+					&models.ErrorResponse{
+						Message: err.Error(),
+						Code:    "404",
+					})
+			}
+			// Check if user is already assigned scoperole
+			if err == ErrRoleScopeConflict {
+				msg := fmt.Sprintf("User %s %s already has role scope assigned ", params.Body.FirstName, params.Body.LastName)
+				return cla_manager.NewCreateCLAManagerRequestConflict().WithPayload(
+					&models.ErrorResponse{
+						Message: msg,
+						Code:    "409",
+					})
+			}
+			// Return Bad Request
 			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(
 				&models.ErrorResponse{
-					Message: msg,
+					Message: err.Error(),
 					Code:    "400",
 				})
 		}
-
-		// Check if sending cla manager request to company admin
 		if params.Body.ContactAdmin {
-			log.Debugf("Sending email to company Admin")
-			scopes, listScopeErr := orgService.ListOrgUserAdminScopes(params.CompanySFID)
-			if listScopeErr != nil {
-				msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Admin lookup error for organisation SFID: %s, error: %+v ",
-					params.CompanySFID, listScopeErr)
-				return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(
-					&models.ErrorResponse{
-						Message: msg,
-						Code:    "400",
-					})
-			}
-
-			if len(scopes.Userroles) == 0 {
-				msg := fmt.Sprintf("EasyCLA - 400 Bad Request - No admins for organization SFID: %s",
-					params.CompanySFID)
-				return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(
-					&models.ErrorResponse{
-						Message: msg,
-						Code:    "400",
-					})
-			}
-
-			for _, admin := range scopes.Userroles {
-				sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, companyModel.Name, projectSF.Name, authUser.Email, authUser.UserName, LfxPortalURL)
-				// Make a note in the event log
-				eventsService.LogEvent(&events.LogEventArgs{
-					EventType:         events.ContributorNotifyCompanyAdminType,
-					LfUsername:        authUser.UserName,
-					ExternalProjectID: params.ProjectSFID,
-					CompanyID:         companyModel.ID,
-					EventData: &events.ContributorNotifyCompanyAdminData{
-						AdminName:  admin.Contact.Name,
-						AdminEmail: admin.Contact.EmailAddress,
-					},
-				})
-			}
-
 			return cla_manager.NewCreateCLAManagerRequestNoContent()
 		}
-
-		claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, params.ProjectSFID, params.Body.UserEmail)
-		if err != nil {
-			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - problem creating CLA Manager Designee for user :%s, error: %+v ",
-				params.Body.UserEmail, err)
-			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(
-				&models.ErrorResponse{
-					Message: msg,
-					Code:    "400",
-				})
-		}
-
-		// Make a note in the event log
-		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:         events.ContributorAssignCLADesigneeType,
-			LfUsername:        authUser.UserName,
-			ExternalProjectID: params.ProjectSFID,
-			CompanyID:         companyModel.ID,
-			EventData: &events.ContributorAssignCLADesignee{
-				DesigneeName:  claManagerDesignee.LfUsername,
-				DesigneeEmail: claManagerDesignee.Email,
-			},
-		})
-
-		log.Debugf("Sending Email to CLA Manager Designee email: %s ", params.Body.UserEmail)
-		sendEmailToCLAManagerDesignee(LfxPortalURL, companyModel.Name, projectSF.Name, params.Body.UserEmail, user.Name, authUser.Email, authUser.UserName)
-		// Make a note in the event log
-		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:         events.ContributorNotifyCLADesigneeType,
-			LfUsername:        authUser.UserName,
-			ExternalProjectID: params.ProjectSFID,
-			CompanyID:         companyModel.ID,
-			EventData: &events.ContributorNotifyCLADesignee{
-				DesigneeName:  claManagerDesignee.LfUsername,
-				DesigneeEmail: claManagerDesignee.Email,
-			},
-		})
-
-		log.Debugf("CLA Manager designee created : %+v", claManagerDesignee)
 		return cla_manager.NewCreateCLAManagerRequestOK().WithPayload(claManagerDesignee)
 	})
 
