@@ -20,6 +20,7 @@ import (
 
 // Configure sets up the middleware handlers
 func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository) {
+
 	api.CompanyGetCompanyProjectClaManagersHandler = company.GetCompanyProjectClaManagersHandlerFunc(
 		func(params company.GetCompanyProjectClaManagersParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
@@ -43,6 +44,20 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 			return company.NewGetCompanyProjectClaManagersOK().WithPayload(result)
 		})
+
+	api.CompanyGetCompanyCLAGroupManagersHandler = company.GetCompanyCLAGroupManagersHandlerFunc(
+		// No auth - invoked from Contributor Console
+		func(params company.GetCompanyCLAGroupManagersParams) middleware.Responder {
+			result, err := service.GetCompanyCLAGroupManagers(params.CompanyID, params.ClaGroupID)
+			if err != nil {
+				if err == v1Company.ErrCompanyDoesNotExist {
+					return company.NewGetCompanyCLAGroupManagersNotFound().WithPayload(errorResponse(err))
+				}
+			}
+
+			return company.NewGetCompanyCLAGroupManagersOK().WithPayload(result)
+		})
+
 	api.CompanyGetCompanyProjectActiveClaHandler = company.GetCompanyProjectActiveClaHandlerFunc(
 		func(params company.GetCompanyProjectActiveClaParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
@@ -65,6 +80,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 			return company.NewGetCompanyProjectActiveClaOK().WithPayload(result)
 		})
+
 	api.CompanyGetCompanyProjectContributorsHandler = company.GetCompanyProjectContributorsHandlerFunc(
 		func(params company.GetCompanyProjectContributorsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
