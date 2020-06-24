@@ -5,6 +5,8 @@ package:
   exclude:
     - auth/**
     - ./backend-aws-lambda
+    - ./metrics-aws-lambda
+    - ./dynamo-events-lambda
     - dev.sh
     - docs/**
     - helpers/**
