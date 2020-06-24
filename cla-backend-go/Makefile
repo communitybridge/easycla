@@ -14,11 +14,12 @@ BUILD_TAGS=-tags aws_lambda
 
 LINT_TOOL=$(shell go env GOPATH)/bin/golangci-lint
 LINT_VERSION=v1.27.0
+SWAGGER_TOOL_VERSION=v0.24.0
 GO_PKGS=$(shell go list ./... | grep -v /vendor/ | grep -v /node_modules/)
 GO_FILES=$(shell find . -type f -name '*.go' -not -path './vendor/*')
 TEST_ENV=AWS_REGION=us-east-1 DYNAMODB_AWS_REGION=us-east-1 AWS_PROFILE=bar AWS_ACCESS_KEY_ID=foo AWS_SECRET_ACCESS_KEY=bar
 
-.PHONY: generate setup setup-dev setup-deploy clean-all clean swagger up fmt test run deps build build-mac build-aws-lambda qc lint
+.PHONY: generate setup tool-setup setup-dev setup-deploy clean-all clean swagger up fmt test run deps build build-mac build-aws-lambda qc lint
 
 all: clean swagger deps fmt build-mac test lint
 
@@ -26,14 +27,17 @@ generate: swagger
 
 setup: $(LINT_TOOL) setup-dev setup-deploy
 
-setup_dev: setup-dev
-setup-dev:
-	# DD - updated to fix mismatch between generated code and errors API - TODO - replace the master/head reference below when a new release is made
-	go get -u github.com/go-swagger/go-swagger/cmd/swagger@13907db9c48050fe92ba5fd497a6c816c9dd90fb
-	go get -u golang.org/x/tools/cmd/goimports
-	go get golang.org/x/tools/cmd/cover
-	npm install -g multi-file-swagger
+tool-setup:
+	@echo "Installing gobin for installing tools..."
+	@# gobin is the equivalent of 'go get' whilst in module-aware mode but this does not modify your go.mod
+	GO111MODULE=off go get -u github.com/myitcv/gobin
 
+setup_dev: setup-dev
+setup-dev: tool-setup
+	gobin github.com/go-swagger/go-swagger/cmd/swagger@$(SWAGGER_TOOL_VERSION)
+	gobin golang.org/x/tools/cmd/goimports
+	gobin golang.org/x/tools/cmd/cover
+	npm install -g multi-file-swagger
 
 setup_deploy: setup-deploy
 setup-deploy:
@@ -124,15 +128,17 @@ swagger-build: clean-swagger swagger-prep swagger-build-v1-services swagger-buil
 
 swagger-validate:
 	@echo "Validating v1 legacy API specification..."
-	swagger validate swagger/cla.compiled.yaml
+	@swagger validate --stop-on-error swagger/cla.compiled.yaml
 	@echo "Validating v2 API specification..."
-	swagger validate swagger/cla.v2.compiled.yaml
+	@swagger validate --stop-on-error swagger/cla.v2.compiled.yaml
 
 fmt:
+	@echo "Formatting code and optimizing imports..."
 	@gofmt -w -l -s $(GO_FILES)
 	@goimports -w -l $(GO_FILES)
 
 test:
+	@echo "Running unit tests..."
 	@ $(TEST_ENV) go test -v $(shell go list ./... | grep -v /vendor/ | grep -v /node_modules/) -coverprofile=cover.out
 
 run:
@@ -192,7 +198,7 @@ build-functional-tests-mac: deps
 
 $(LINT_TOOL):
 	@echo "Downloading golangci-lint version $(LINT_VERSION)..."
-	# Latest releases: https://github.com/golangci/golangci-lint/releases
+	@# Latest releases: https://github.com/golangci/golangci-lint/releases
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(shell go env GOPATH)/bin $(LINT_VERSION)
 
 lint: $(LINT_TOOL)
