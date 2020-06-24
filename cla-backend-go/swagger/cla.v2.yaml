@@ -1233,6 +1233,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
         '500':
           $ref: '#/responses/internal-server-error'
       tags:
