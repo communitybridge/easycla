@@ -25,6 +25,7 @@ paths:
   /ops/version:
     get:
       summary: API Version Information
+      description: Returns the API version of the product
       security: []
       operationId: getVersion
       responses:
@@ -38,6 +39,7 @@ paths:
   /ops/health:
     get:
       summary: API Health Check
+      description: Returns the API health status
       security: []
       operationId: healthCheck
       responses:
@@ -46,7 +48,7 @@ paths:
           schema:
             $ref: '#/definitions/health'
         '503':
-          description: ''
+          description: 'Service unavailable'
           schema:
             $ref: '#/definitions/health'
         '400':
@@ -62,11 +64,12 @@ paths:
     get:
       security: []
       summary: API documentation
+      description: Endpoint to render the API documentation
       operationId: getDoc
       produces:
         - text/html
       responses:
-        200:
+        '200':
           description: Success
       tags:
         - docs
@@ -75,11 +78,12 @@ paths:
     get:
       security: []
       summary: Swagger API as JSON
+      description: Returns the Swagger specification as a JSON document
       operationId: getSwagger
       produces:
         - application/json
       responses:
-        200:
+        '200':
           description: Success
       tags:
         - docs
@@ -447,6 +451,7 @@ paths:
   /project:
     put:
       summary: Update Project by ID
+      description: Endpoint to update the project details
       operationId: updateProject
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -476,6 +481,7 @@ paths:
         - project
     get:
       summary: Get Projects
+      description: Endpoint to fetch the project list
       operationId: getProjects
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -511,6 +517,7 @@ paths:
         required: true
     get:
       summary: Get Project by ID
+      description: Endpoint to fetch the project by ID
       operationId: getProjectById
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -536,6 +543,7 @@ paths:
         - project
     delete:
       summary: Delete Project by ID
+      description: Endpoint to delete the project by ID
       operationId: deleteProjectById
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -701,7 +709,7 @@ paths:
         - application/json
       responses:
         '200':
-          description: Success
+          description: 'Success'
           schema:
             $ref: '#/definitions/event-list'
         '400':
@@ -733,7 +741,7 @@ paths:
         - text/csv
       responses:
         '200':
-          description: The events for the SFDC foundation as a CSV document
+          description: 'The events for the SFDC foundation as a CSV document'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -763,7 +771,7 @@ paths:
         - text/csv
       responses:
         '200':
-          description: The events for the SFDC project as a CSV document
+          description: 'The events for the SFDC project as a CSV document'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -794,7 +802,7 @@ paths:
         - application/json
       responses:
         '200':
-          description: Success
+          description: 'Success'
           schema:
             $ref: '#/definitions/event-list'
         '400':
@@ -813,6 +821,7 @@ paths:
   /template:
     get:
       summary: Get Available Templates
+      description: Endpoint to return the list of available templates
       operationId: getTemplates
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -840,6 +849,7 @@ paths:
   /clagroup/{claGroupID}/template:
     post:
       summary: Create contract template for CLA Group
+      description: Endpoint to create the template for the CLA Group
       operationId: createCLAGroupTemplate
       parameters:
         - $ref: "#/parameters/path-claGroupID"
@@ -871,6 +881,7 @@ paths:
   /template/preview:
     post:
       summary: Create contract template for CLA Group
+      description: Endpoint to create the template preview for the CLA Group
       operationId: templatePreview
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -893,7 +904,7 @@ paths:
         - application/pdf
       responses:
         '200':
-          description: A PDF file
+          description: 'A PDF file'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -908,6 +919,7 @@ paths:
   /project/{projectSFID}/github/organizations:
     post:
       summary: API to add new gitHub oranization in the project
+      description: Endpoint to create the template preview for the CLA Group
       operationId: addProjectGithubOrganization
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -924,22 +936,23 @@ paths:
             $ref: '#/definitions/create-github-organization'
           required: true
       responses:
-        200:
-          description: Success
+        '200':
+          description: 'Success'
           schema:
             $ref: '#/definitions/github-organization'
-        400:
+        '400':
           $ref: '#/responses/invalid-request'
-        401:
+        '401':
           $ref: '#/responses/unauthorized'
-        403:
+        '403':
           $ref: '#/responses/forbidden'
-        500:
+        '500':
           $ref: '#/responses/internal-server-error'
       tags:
         - github-organizations
     get:
-      summary: API to fetch the gitHub oranizations of the project
+      summary: API to fetch the GitHub oranizations of the project
+      description: Endpoint to return the list of GitHub organization for the project
       operationId: getProjectGithubOrganizations
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -951,24 +964,25 @@ paths:
           type: string
           required: true
       responses:
-        200:
-          description: Success
+        '200':
+          description: 'Success'
           schema:
             $ref: '#/definitions/github-organizations'
-        400:
+        '400':
           $ref: '#/responses/invalid-request'
-        401:
+        '401':
           $ref: '#/responses/unauthorized'
-        403:
+        '403':
           $ref: '#/responses/forbidden'
-        500:
+        '500':
           $ref: '#/responses/internal-server-error'
       tags:
         - github-organizations
 
   /project/{projectSFID}/github/organizations/{orgName}:
     delete:
-      summary: API to delete gitHub oranization in the project
+      summary: API to delete GitHub oranization in the project
+      description: Endpoint to delete the GitHub organization for the project
       operationId: deleteProjectGithubOrganization
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -984,19 +998,20 @@ paths:
           type: string
           required: true
       responses:
-        200:
-          description: Success
-        400:
+        '200':
+          description: 'Success'
+        '400':
           $ref: '#/responses/invalid-request'
-        401:
+        '401':
           $ref: '#/responses/unauthorized'
-        403:
+        '403':
           $ref: '#/responses/forbidden'
       tags:
         - github-organizations
   /project/{projectSFID}/github/repositories:
     post:
-      summary: API to add the gitHub repository
+      summary: API to add the GitHub repository
+      description: Endpoint to add a GitHub repository for the project
       operationId: addProjectGithubRepository
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1013,22 +1028,23 @@ paths:
             $ref: '#/definitions/github-repository-input'
           required: true
       responses:
-        200:
-          description: Success
+        '200':
+          description: 'Success'
           schema:
             $ref: '#/definitions/github-repository'
-        400:
+        '400':
           $ref: '#/responses/invalid-request'
-        401:
+        '401':
           $ref: '#/responses/unauthorized'
-        403:
+        '403':
           $ref: '#/responses/forbidden'
-        500:
+        '500':
           $ref: '#/responses/internal-server-error'
       tags:
         - github-repositories
     get:
       summary: API to fetch the gitHub repositories of the project
+      description: Endpoint to fetch the list of GitHub repositories for the project
       operationId: getProjectGithubRepositories
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1040,23 +1056,24 @@ paths:
           type: string
           required: true
       responses:
-        200:
-          description: Success
+        '200':
+          description: 'Success'
           schema:
             $ref: '#/definitions/list-github-repositories'
-        400:
+        '400':
           $ref: '#/responses/invalid-request'
-        401:
+        '401':
           $ref: '#/responses/unauthorized'
-        403:
+        '403':
           $ref: '#/responses/forbidden'
-        500:
+        '500':
           $ref: '#/responses/internal-server-error'
       tags:
         - github-repositories
   /project/{projectSFID}/github/repositories/{repositoryID}:
     delete:
-      summary: API to add the gitHub repository
+      summary: API to add the GitHub repository
+      description: Endpoint to add a GitHub repository to a project
       operationId: deleteProjectGithubRepository
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1072,15 +1089,15 @@ paths:
           type: string
           required: true
       responses:
-        200:
-          description: Success
-        400:
+        '200':
+          description: 'Success'
+        '400':
           $ref: '#/responses/invalid-request'
-        401:
+        '401':
           $ref: '#/responses/unauthorized'
-        403:
+        '403':
           $ref: '#/responses/forbidden'
-        404:
+        '404':
           $ref: '#/responses/not-found'
       tags:
         - github-repositories
@@ -1198,7 +1215,7 @@ paths:
         - application/zip
       responses:
         '200':
-          description: The CLA Group ICLAs as a zip file
+          description: 'The CLA Group ICLAs as a zip file'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1226,7 +1243,7 @@ paths:
         - text/csv
       responses:
         '200':
-          description: The CLA Group ICLAs as a CSV file
+          description: 'The CLA Group ICLAs as a CSV file'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1256,7 +1273,7 @@ paths:
         - application/pdf
       responses:
         '200':
-          description: The user's ICLA as a PDF document
+          description: "The user's ICLA as a PDF document"
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1286,7 +1303,7 @@ paths:
         - application/zip
       responses:
         '200':
-          description: The CLA Group coporate CLAs as a zip file
+          description: 'The CLA Group coporate CLAs as a zip file'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1313,7 +1330,7 @@ paths:
         - text/csv
       responses:
         '200':
-          description: The CLA Group corporate CLAs as a CSV file
+          description: 'The CLA Group corporate CLAs as a CSV file'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1341,7 +1358,7 @@ paths:
         - application/pdf
       responses:
         '200':
-          description: The corporate CLA as a PDF document
+          description: 'The corporate CLA as a PDF document'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1371,7 +1388,7 @@ paths:
         - text/csv
       responses:
         '200':
-          description: The CLA Group employee CLA's as a CSV file
+          description: "The CLA Group employee CLA's as a CSV file"
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1562,8 +1579,8 @@ paths:
   /notify-cla-managers:
     post:
       summary: Send Notification to CLA Managaers
-      security: []
       description: Send Notification to selected list of CLA Managers
+      security: []
       operationId: notifyCLAManagers
       parameters:
         - name: body
@@ -1584,8 +1601,8 @@ paths:
   /user/{userID}/invite-company-admin:
     post:
       summary: Invite Manager 
+      description: Invite Company Admin based on user request to sign CLA
       security: []
-      description: Invite Company Admin based on user request to sign CLA 
       operationId: inviteCompanyAdmin
       parameters:
         - $ref: "#/parameters/path-userID"
@@ -1771,6 +1788,7 @@ paths:
   /signatures/{signatureID}/gh-org-whitelist:
     get:
       summary: Signature Update
+      description: Updates the specified signature GitHub Organization approval list
       operationId: getGitHubOrgWhitelist
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1799,7 +1817,8 @@ paths:
       tags:
         - signatures
     delete:
-      summary: Signature Update
+      summary: Signature Delete
+      description: Deletes the specified signature GitHub organization approval list
       operationId: deleteGitHubOrgWhitelist
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1833,6 +1852,7 @@ paths:
         - signatures
     post:
       summary: Signature Update
+      description: Updates the specified signature GitHub organization approval list
       operationId: addGitHubOrgWhitelist
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1867,8 +1887,8 @@ paths:
 
   /project/{projectID}/gerrits/{gerritID}:
     delete:
-      summary: delete the gerrit
-      description: Delete the gerrit
+      summary: Delete the gerrit
+      description: Delete the gerrit instance for the project
       operationId: deleteGerrit
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1897,8 +1917,8 @@ paths:
 
   /project/{projectID}/gerrits:
     post:
-      summary: add the gerrit
-      description: add the gerrit
+      summary: Add the gerrit
+      description: Adds the gerrit instance for the project
       operationId: addGerrit
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1932,8 +1952,8 @@ paths:
 
   /company/{companySFID}/project/{projectSFID}/cla-managers:
     get:
-      summary: get cla manager of company for particular project/foundation
-      description: Returns list cla managers of the company for project/foundation
+      summary: get CLA manager of company for particular project/foundation
+      description: Returns list CLA managers of the company for project/foundation
       operationId: getCompanyProjectClaManagers
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1985,8 +2005,8 @@ paths:
 
   /company/{companySFID}/project/{projectSFID}/active-cla-list:
     get:
-      summary: get active cla list of company for particular project/foundation
-      description: Returns list active cla of the company under particular project/foundation
+      summary: get active CLA list of company for particular project/foundation
+      description: Returns list active CLA of the company under particular project/foundation
       operationId: getCompanyProjectActiveCla
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -2068,8 +2088,8 @@ paths:
   /user/{userID}/company:
     post:
       summary: api that creates salesforce company
-      security: []
       description: Creates a Company for an individual contributor that fails to get a company during the signing getProjectSignatures
+      security: []
       operationId: createCompany
       parameters:
         - $ref: "#/parameters/path-userID"
@@ -2242,18 +2262,18 @@ parameters:
     in: path
     type: string
     required: true
-  path-companyName:
-    name: companyName
-    description: name of the Company
-    in: path
-    type: string
-    required: true
-  path-projectName:
-    name: projectName
-    description: name of EasyCLA Group 
-    in: path
-    type: string
-    required: true
+  #path-companyName:
+  #  name: companyName
+  #  description: name of the Company
+  #  in: path
+  #  type: string
+  #  required: true
+  #path-projectName:
+  #  name: projectName
+  #  description: name of EasyCLA Group
+  #  in: path
+  #  type: string
+  #  required: true
   path-companyID:
     name: companyID
     description: id of the company
@@ -2278,7 +2298,7 @@ parameters:
     in: header
     type: string
     required: true
-    x-example: JImlzQWRtaW4iOiB0cnVlLAoJImFsbG93ZWQiOiB0cnVlLAoJImNvbnRleHQiOic3lzdGVtIgp9Cg==
+    x-example: 'JImlzQWRtaW4iOiB0cnVlLAoJImFsbG93ZWQiOiB0cnVlLAoJImNvbnRleHQiOic3lzdGVtIgp9Cg=='
   authorization:
     name: Authorization
     description: Bearer token
@@ -2290,13 +2310,13 @@ parameters:
     description: The username/LFID value - assigned/set by the API Gateway based on login credentials
     in: header
     type: string
-    x-example: zachking123
+    x-example: 'zachking123'
   x-email:
     name: X-EMAIL
     description: The email value - assigned/set by the API Gateway based on login credentials
     in: header
     type: string
-    x-example: zachking@mail.com
+    x-example: 'zachking@mail.com'
   x-request-id:
     name: X-REQUEST-ID
     description: The unique request ID value - assigned/set by the API Gateway based on the login session
@@ -2400,8 +2420,8 @@ definitions:
   github-repository-info:
     $ref: './common/github-repository-info.yaml'
 
-  company:
-    $ref: './common/company.yaml'
+  #company:
+  #  $ref: './common/company.yaml'
 
   total-count-metrics:
     type: object
@@ -2648,10 +2668,12 @@ definitions:
     properties:
       lf_username:
         type: string
+        description: 'the LF username'
         x-omitempty: false
-        example: "john.doe"
+        example: 'john.doe'
       user_sfid:
         type: string
+        description: 'the user SalesForce ID'
         x-omitempty: false
       email:
         type: string
@@ -2659,22 +2681,24 @@ definitions:
       type:
         type: string
         x-omitempty: false
-        example: "contact"
+        example: 'contact'
       assigned_on:
         type: string
         x-omitempty: false
       company_sfid:
         type: string
+        description: 'the Organization SalesForce ID'
         x-omitempty: false
-        example: ""
+        example: 'abc134234adsdf43'
       project_sfid:
         type: string
+        description: 'the project SalesForce ID'
         x-omitempty: false
-        example: "a2g17000000hyxNAAA"
+        example: 'a2g17000000hyxNAAA'
       project_name:
         type: string
-        description: "name of the salesforce project"
-        example: "Appium"
+        description: 'name of the salesforce project'
+        example: 'Appium'
         x-omitempty: false
 
   company-cla-manager:
@@ -2684,42 +2708,48 @@ definitions:
     properties:
       lf_username:
         type: string
+        description: "The CLA Manager's LF username"
         x-omitempty: false
-        example: "john.doe"
+        example: 'john.doe'
       name:
         type: string
+        description: "The CLA Manager's name"
         x-omitempty: false
-        example: "John Doe"
+        example: 'John Doe'
       user_sfid:
         type: string
+        description: "The CLA Manager's user Saleforce ID"
         x-omitempty: false
       email:
         type: string
+        description: "The CLA Manager's email"
         x-omitempty: false
-        example: "john.doe@company.com"
+        example: 'john.doe@company.com'
       approved_on:
         type: string
         x-omitempty: false
       project_id:
         type: string
+        description: "The Project ID"
         x-omitempty: false
         example: "e1e30240-a722-4c82-a648-121681d959c7"
       project_sfid:
         type: string
+        description: "The Project SalesForce ID"
         x-omitempty: false
         example: "a2g17000000hyxNAAA"
       project_name:
         type: string
-        description: "name of the salesforce project"
+        description: "The name of the SalesForce project"
         example: "Appium"
         x-omitempty: false
       cla_group_name:
         type: string
-        description: "name of the cla group"
+        description: "The name of the CLA group"
         x-omitempty: false
       organization_name:
         type: string
-        description: "name of salesforce organization"
+        description: "The name of Salesforce organization"
         x-omitempty: false
         example: "Intel Corporation"
       organization_sfid:
@@ -2943,7 +2973,7 @@ definitions:
         description: salesforce id of the company
       send_as_email:
         type: boolean
-        example: 'false'
+        example: false
         description: send signing request as email. This should be set to true when requestor is not signatory.
       authority_name:
         type: string
@@ -3120,7 +3150,7 @@ definitions:
     properties:
       valid:
         type: boolean
-        example: 'true'
+        example: true
         description: returns true if the CLA Group validates, false otherwise
         x-omitempty: false
       validation_errors:

@@ -1928,12 +1928,12 @@ parameters:
     in: path
     type: string
     required: true
-  path-companySFID:
-    name: companySFID
-    description: the external SalesForce ID of the Company/Organization
-    in: path
-    type: string
-    required: true
+  #path-companySFID:
+  #  name: companySFID
+  #  description: the external SalesForce ID of the Company/Organization
+  #  in: path
+  #  type: string
+  #  required: true
   path-claGroupID:
     name: claGroupID
     description: the CLA Group ID
@@ -2329,16 +2329,16 @@ definitions:
       Message:
         type: string
 
-  delete-response:
-    type: object
-    x-nullable: true
-    title: Delete Response
-    description: Response Message
-    properties:
-      Code:
-        type: string
-      Message:
-        type: string
+  #delete-response:
+  #  type: object
+  #  x-nullable: true
+  #  title: Delete Response
+  #  description: Response Message
+  #  properties:
+  #    Code:
+  #      type: string
+  #    Message:
+  #      type: string
 
   health:
     $ref: './common/health.yaml'
@@ -2395,10 +2395,10 @@ definitions:
     $ref: './common/icla-signature.yaml'
 
 responses:
-  resource-deleted:
-    description: Resource Deleted
-    schema:
-      $ref: '#/definitions/delete-response'
+  #resource-deleted:
+  #  description: Resource Deleted
+  #  schema:
+  #    $ref: '#/definitions/delete-response'
   unauthorized:
     description: 'The client is not authorized to to make this API call'
     schema:
