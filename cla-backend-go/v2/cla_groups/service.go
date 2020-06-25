@@ -103,14 +103,14 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) error
 	if claGroupModel != nil {
 		return fmt.Errorf("bad request: cla_group with name %s already exist", input.ClaGroupName)
 	}
-	err = s.validateEnrollProjectsInput(input.FoundationSfid, "", input.ProjectSfidList)
+	err = s.validateEnrollProjectsInput(input.FoundationSfid, input.ProjectSfidList)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *service) validateEnrollProjectsInput(foundationSFID string, claGroupID string, projectSFIDList []string) error {
+func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFIDList []string) error {
 	psc := v2ProjectService.GetClient()
 
 	if len(projectSFIDList) == 0 {
@@ -264,7 +264,7 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 func (s *service) EnrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error {
 	f := logrus.Fields{"cla_group_id": claGroupID, "foundation_sfid": foundationSFID, "project_sfid_list": projectSFIDList}
 	log.WithFields(f).Debug("validating enroll project input")
-	err := s.validateEnrollProjectsInput(foundationSFID, claGroupID, projectSFIDList)
+	err := s.validateEnrollProjectsInput(foundationSFID, projectSFIDList)
 	if err != nil {
 		log.WithFields(f).Errorf("validating enroll project input failed. error = %s", err)
 		return err
