@@ -416,6 +416,33 @@ paths:
       tags:
         - cla-group
 
+  /foundation-mapping:
+    get:
+      summary: return cla groups under all foundation
+      description: Return list of all cla groups under foundation
+      operationId: listFoundationClaGroups
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/foundationSFID"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/foundation-mapping-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - foundation
+
   /cla-group/validate:
     post:
       summary: Validates the CLA Group
@@ -1591,7 +1618,7 @@ paths:
         '404':
           $ref: '#/responses/not-found'
         '400':
-          $ref: '#resonses/invalid-request'
+          $ref: '#/responses/invalid-request'
       tags:
         - cla-manager
 
@@ -2229,6 +2256,11 @@ parameters:
     type: string
     required: false
     enum: [ccla,cla]
+  foundationSFID:
+    name: foundationSFID
+    description: the Salesforce ID of the Foundation
+    in: query
+    type: string
   path-claGroupID:
     name: claGroupID
     description: ID of the CLA Group
@@ -3178,6 +3210,33 @@ definitions:
         items:
           type: string
           example: 'duplicate CLA Group name'
+
+  foundation-mapping-list:
+    properties:
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/foundation-mapping'
+
+  foundation-mapping:
+    type: object
+    properties:
+      foundation_sfid:
+        type: string
+      cla_groups:
+        type: array
+        items:
+          $ref: '#/definitions/cla-group-projects'
+
+  cla-group-projects:
+    type: object
+    properties:
+      cla_group_id:
+        type: string
+      project_sfid_list:
+        type: array
+        items:
+          type: string
 
   error-response:
     type: object
