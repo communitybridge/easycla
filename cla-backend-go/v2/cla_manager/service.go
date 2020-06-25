@@ -75,7 +75,7 @@ type Service interface {
 	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
 	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributor *v1User.User, lFxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse)
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
-	CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, firstName string, lastName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error)
+	CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error)
 	NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerList) error
 }
 
@@ -127,25 +127,14 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	}
 	// Get user by firstname,lastname and email parameters
 	userServiceClient := v2UserService.GetClient()
-	user, userErr := userServiceClient.SearchUsers(*params.Body.FirstName, *params.Body.LastName, *params.Body.UserEmail)
+	user, userErr := userServiceClient.SearchUserByEmail(*params.Body.UserEmail)
 
 	if userErr != nil {
 		designeeName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
 		designeeEmail := *params.Body.UserEmail
-		lfxUser, lfxUserErr := userServiceClient.SearchUserByEmail(designeeEmail)
-		if lfxUserErr != nil || lfxUser == nil {
-			msg := fmt.Sprintf("LFID not existing for %s", designeeName)
-			log.Warn(msg)
-			sendEmailToUserWithNoLFID(claGroup, authUsername, authEmail, designeeName, designeeEmail)
-			return nil, &models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			}
-		}
-
-		msg := fmt.Sprintf("Failed search for User with firstname : %s, lastname: %s , email: %s , error: %v ",
-			*params.Body.FirstName, *params.Body.LastName, *params.Body.UserEmail, userErr)
+		msg := fmt.Sprintf("User does not have an LFID account: %s.", *params.Body.UserEmail)
 		log.Warn(msg)
+		sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, authEmail, designeeName, designeeEmail)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -453,8 +442,7 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 	return claManagerDesignee, nil
 }
 
-func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string,
-	firstName string, lastName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error) {
+func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error) {
 	orgService := v2OrgService.GetClient()
 
 	// GetSFProject
@@ -513,18 +501,13 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 	}
 
 	userService := v2UserService.GetClient()
-	lfxUser, userErr := userService.SearchUsers(firstName, lastName, userEmail)
+	lfxUser, userErr := userService.SearchUserByEmail(userEmail)
 	if userErr != nil {
-		var msg string
-		_, lfxUserErr := userService.SearchUserByEmail(userEmail)
-		if lfxUserErr != nil {
-			msg = fmt.Sprintf("EasyCLA - 404 Not Found - User: %s has no LFID ", userEmail)
-			log.Warn(msg)
-			return nil, ErrNoLFID
-		}
-		msg = fmt.Sprintf("EasyCLA - 404 Not Found - User: %s does not exist FirstName: %s LastName : %s ", userEmail, firstName, lastName)
+		msg := fmt.Sprintf("EasyCLA - 404 Not Found - User: %s does not have an LFID ", userEmail)
 		log.Warn(msg)
-		return nil, ErrLFXUserNotFound
+		// Send email
+		sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, authUser.Email, fullName, userEmail)
+		return nil, ErrNoLFID
 	}
 
 	// Check if user is associated with another organization
@@ -557,7 +540,7 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 	})
 
 	log.Debugf("Sending Email to CLA Manager Designee email: %s ", userEmail)
-	designeeName := fmt.Sprintf("%s %s", firstName, lastName)
+	designeeName := fmt.Sprintf("%s %s", lfxUser.FirstName, lfxUser.LastName)
 	sendEmailToCLAManagerDesignee(LfxPortalURL, companyModel.Name, projectSF.Name, userEmail, designeeName, authUser.Email, authUser.UserName)
 	// Make a note in the event log
 	s.eventService.LogEvent(&events.LogEventArgs{
@@ -771,6 +754,36 @@ support</a>.</p>
 <p>Thanks,</p>
 <p>EasyCLA support team </p>`,
 		designeeName, project, project, contributorName, contributorID, corporateConsole, project)
+
+	err := utils.SendEmail(subject, body, recipients)
+	if err != nil {
+		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+	} else {
+		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	}
+}
+
+// sendEmailToUserWithNoLFID helper function to send email to a given user with no LFID
+func sendEmailToUserWithNoLFID(projectName, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail string) {
+	// subject string, body string, recipients []string
+	subject := "EasyCLA: Invitation to create LFID and complete process of becoming CLA Manager"
+	recipients := []string{userWithNoLFIDEmail}
+	body := fmt.Sprintf(`
+<p>Hello %s,</p>
+<p>This is a notification email from EasyCLA regarding the Project %s in the EasyCLA system.</p>
+<p>User %s (%s) was trying to add you as a CLA Manager for Project %s but was unable to identify your account details in
+the EasyCLA system. In order to become a CLA Manager for Project %s, you will need to create a LFID by 
+<a href="https://identity.linuxfoundation.org/" target="_blank">following this link</a> and establishing an account.
+Once complete, notify the user %s and they will be able to add you as a CLA Manager.</p>
+<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
+<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+support</a>.</p>
+<p>Thanks,</p>
+<p>EasyCLA support team</p>`,
+		userWithNoLFIDName, projectName,
+		requesterUsername, requesterEmail, projectName, projectName,
+		requesterUsername)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

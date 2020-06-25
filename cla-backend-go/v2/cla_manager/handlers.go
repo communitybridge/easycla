@@ -14,7 +14,6 @@ import (
 
 	"github.com/LF-Engineering/lfx-kit/auth"
 
-	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/cla_manager"
@@ -155,10 +154,10 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		}
 
 		claManagerDesignee, err := service.CreateCLAManagerRequest(params.Body.ContactAdmin, params.CompanySFID, params.ProjectSFID, params.Body.UserEmail,
-			params.Body.FirstName, params.Body.LastName, authUser, LfxPortalURL)
+			params.Body.FullName, authUser, LfxPortalURL)
 
 		if err != nil {
-			if err == ErrLFXUserNotFound || err == ErrNoOrgAdmins || err == ErrNoLFID {
+			if err == ErrNoOrgAdmins || err == ErrNoLFID {
 				return cla_manager.NewCreateCLAManagerRequestNotFound().WithPayload(
 					&models.ErrorResponse{
 						Message: err.Error(),
@@ -167,7 +166,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 			}
 			// Check if user is already assigned scoperole
 			if err == ErrRoleScopeConflict {
-				msg := fmt.Sprintf("User %s %s already has role scope assigned ", params.Body.FirstName, params.Body.LastName)
+				msg := fmt.Sprintf("User %s already has role scope assigned ", params.Body.FullName)
 				return cla_manager.NewCreateCLAManagerRequestConflict().WithPayload(
 					&models.ErrorResponse{
 						Message: msg,
@@ -211,35 +210,4 @@ func buildErrorMessageCreate(params cla_manager.CreateCLAManagerParams, err erro
 func buildErrorMessageDelete(params cla_manager.DeleteCLAManagerParams, err error) string {
 	return fmt.Sprintf("problem deleting new CLA Manager Request using company SFID: %s, project SFID: %s, user ID: %s, error: %+v",
 		params.CompanySFID, params.ProjectSFID, params.UserLFID, err)
-}
-
-// sendEmailToUserWithNoLFID helper function to send email to a given user with no LFID
-func sendEmailToUserWithNoLFID(projectModel *v1Models.Project, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail string) {
-	projectName := projectModel.ProjectName
-	// subject string, body string, recipients []string
-	subject := "EasyCLA: Invitation to create LFID and complete process of becoming CLA Manager"
-	recipients := []string{userWithNoLFIDEmail}
-	body := fmt.Sprintf(`
-<p>Hello %s,</p>
-<p>This is a notification email from EasyCLA regarding the Project %s in the EasyCLA system.</p>
-<p>User %s (%s) was trying to add you as a CLA Manager for Project %s but was unable to identify your account details in
-the EasyCLA system. In order to become a CLA Manager for Project %s, you will need to create a LFID by 
-<a href="https://identity.linuxfoundation.org/" target="_blank">following this link</a> and establishing an account.
-Once complete, notify the user %s and they will be able to add you as a CLA Manager.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
-		userWithNoLFIDName, projectName,
-		requesterUsername, requesterEmail, projectName, projectName,
-		requesterUsername)
-
-	err := utils.SendEmail(subject, body, recipients)
-	if err != nil {
-		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
-	} else {
-		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
-	}
 }
