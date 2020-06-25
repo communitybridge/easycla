@@ -594,7 +594,7 @@ paths:
       tags:
         - project
 
-  /project/enabled/{projectSfdcId}:
+  /project/enabled/{foundationSFID}:
     get:
       summary: Get CLA enabled projects
       description: Returns a list of CLA enabled projects for a given foundation
@@ -604,10 +604,7 @@ paths:
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - name: projectSfdcId
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-foundationSFID"
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/pageSize'
       responses:
@@ -2777,7 +2774,7 @@ definitions:
   enabled-cla-list:
     type: object
     title: Enabled CLA list
-    description: List of CLA enabled projects for specified Foundation
+    description: List of CLA enabled projects for a specified Foundation
     properties:
       list:
         type: array
@@ -2786,8 +2783,8 @@ definitions:
 
   enabled-cla:
     type: object
-    title: Enabled CLA
-    description: Enabled CLA detail
+    title: Project that is CLA enabled
+    description: A project description of which is CLA enabled
     properties:
       project_name:
         type: string
@@ -2804,6 +2801,21 @@ definitions:
       project_logo:
         type: string
         example: "http://wwwlinuxfoundation.org/logo.gif"
+        x-omitempty: false
+      ccla_enabled:
+        type: boolean
+        description: flag to indicate if corporate CLAs are enabled
+        default: false
+        x-omitempty: false
+      icla_enabled:
+        type: boolean
+        description: flag to indicate if individual CLAs are enabled
+        default: false
+        x-omitempty: false
+      ccla_requires_icla:
+        type: boolean
+        description: flag to indicate if individual ICLAs should be signed with corporate CLAs are signed
+        default: false
         x-omitempty: false
 
   active-cla-list:
