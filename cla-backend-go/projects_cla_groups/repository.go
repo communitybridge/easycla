@@ -42,6 +42,7 @@ type Repository interface {
 	GetClaGroupIDForProject(projectSFID string) (*ProjectClaGroup, error)
 	GetProjectsIdsForClaGroup(claGroupID string) ([]*ProjectClaGroup, error)
 	GetProjectsIdsForFoundation(foundationSFID string) ([]*ProjectClaGroup, error)
+	GetProjectsIdsForAllFoundation() ([]*ProjectClaGroup, error)
 	AssociateClaGroupWithProject(claGroupID string, projectSFID string, foundationSFID string) error
 	RemoveProjectAssociatedWithClaGroup(claGroupID string, projectSFIDList []string, all bool) error
 }
@@ -132,6 +133,33 @@ func (repo *repo) GetProjectsIdsForClaGroup(claGroupID string) ([]*ProjectClaGro
 func (repo *repo) GetProjectsIdsForFoundation(foundationSFID string) ([]*ProjectClaGroup, error) {
 	keyCondition := expression.Key("foundation_sfid").Equal(expression.Value(foundationSFID))
 	return repo.queryClaGroupsProjects(keyCondition, aws.String(FoundationSFIDIndex))
+}
+
+func (repo *repo) GetProjectsIdsForAllFoundation() ([]*ProjectClaGroup, error) {
+	scanInput := &dynamodb.ScanInput{
+		TableName: aws.String(repo.tableName),
+	}
+	var resultList []map[string]*dynamodb.AttributeValue
+	for {
+		results, err := repo.dynamoDBClient.Scan(scanInput) //nolint
+		if err != nil {
+			log.Warnf("error retrieving %s, error: %v", repo.tableName, err)
+			return nil, err
+		}
+		resultList = append(resultList, results.Items...)
+		if len(results.LastEvaluatedKey) != 0 {
+			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			break
+		}
+	}
+	var output []*ProjectClaGroup
+	err := dynamodbattribute.UnmarshalListOfMaps(resultList, &output)
+	if err != nil {
+		log.Warnf("error unmarshalling %s from database. error: %v", repo.tableName, err)
+		return nil, err
+	}
+	return output, nil
 }
 
 // AssociateClaGroupWithProject creates entry in db to track cla_group association with project/foundation

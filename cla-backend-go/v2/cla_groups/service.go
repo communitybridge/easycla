@@ -45,6 +45,7 @@ type Service interface {
 	DeleteCLAGroup(claGroupID string) error
 	ListClaGroupsUnderFoundation(foundationSFID string) (*models.ClaGroupList, error)
 	ValidateCLAGroup(input *models.ClaGroupValidationRequest) (bool, []string)
+	ListAllFoundationClaGroups(foundationID *string) (*models.FoundationMappingList, error)
 }
 
 // NewService returns instance of CLA group service
@@ -409,4 +410,48 @@ func (s *service) getMetrics(claGroupIDList []string) map[string]*metrics.Projec
 		m[r.claGroupID] = r.metric
 	}
 	return m
+}
+
+func (s *service) ListAllFoundationClaGroups(foundationID *string) (*models.FoundationMappingList, error) {
+	var out []*projects_cla_groups.ProjectClaGroup
+	var err error
+	if foundationID != nil {
+		out, err = s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(*foundationID)
+	} else {
+		out, err = s.projectsClaGroupsRepo.GetProjectsIdsForAllFoundation()
+	}
+	if err != nil {
+		return nil, err
+	}
+	return toFoundationMapping(out), nil
+}
+
+func toFoundationMapping(list []*projects_cla_groups.ProjectClaGroup) *models.FoundationMappingList {
+	out := &models.FoundationMappingList{List: make([]*models.FoundationMapping, 0)}
+	foundationMap := make(map[string]*models.FoundationMapping)
+	claGroups := make(map[string]*models.ClaGroupProjects)
+	for _, in := range list {
+		cgp, ok := claGroups[in.ClaGroupID]
+		if !ok {
+			cgp = &models.ClaGroupProjects{
+				ClaGroupID:      in.ClaGroupID,
+				ProjectSfidList: []string{in.ProjectSFID},
+			}
+			claGroups[in.ClaGroupID] = cgp
+			foundation, ok := foundationMap[in.FoundationSFID]
+			if !ok {
+				foundation = &models.FoundationMapping{
+					ClaGroups:      []*models.ClaGroupProjects{cgp},
+					FoundationSfid: in.FoundationSFID,
+				}
+				foundationMap[in.FoundationSFID] = foundation
+				out.List = append(out.List, foundation)
+			} else {
+				foundation.ClaGroups = append(foundation.ClaGroups, cgp)
+			}
+		} else {
+			cgp.ProjectSfidList = append(cgp.ProjectSfidList, in.ProjectSFID)
+		}
+	}
+	return out
 }
