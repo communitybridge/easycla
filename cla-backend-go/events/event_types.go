@@ -76,4 +76,6 @@ const (
 	ContributorNotifyCompanyAdminType = "contributor.notify_company_admin"
 	ContributorNotifyCLADesigneeType  = "contributor.notify_cla_designee"
 	ContributorAssignCLADesigneeType  = "contributor.assign_designee"
+	ConvertUserToContactType          = "lfx_user.convert_to_contact"
+	AssignUserRoleScopeType           = "lfx_org_service.assign_user_role_scope"
 )

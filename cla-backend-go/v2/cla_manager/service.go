@@ -6,8 +6,11 @@ package cla_manager
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/LF-Engineering/lfx-kit/auth"
+	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/communitybridge/easycla/cla-backend-go/company"
@@ -15,6 +18,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/cla_manager"
 	"github.com/communitybridge/easycla/cla-backend-go/project"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
 
 	v1ClaManager "github.com/communitybridge/easycla/cla-backend-go/cla_manager"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -43,6 +47,16 @@ var (
 	ErrCLAUserNotFound = errors.New("cLA User not found")
 	//ErrCLAManagersNotFound when cla managers arent found for given  project and company
 	ErrCLAManagersNotFound = errors.New("cla Managers not found")
+	//ErrLFXUserNotFound when user-service fails to find user
+	ErrLFXUserNotFound = errors.New("lfx user not found")
+	//ErrNoLFID thrown when users dont have an LFID
+	ErrNoLFID = errors.New("user has no LFID")
+	//ErrNotInOrg when user is not in organization
+	ErrNotInOrg = errors.New("user not in organization")
+	//ErrNoOrgAdmins when No admins found for organization
+	ErrNoOrgAdmins = errors.New("no Admins in company ")
+	//ErrRoleScopeConflict thrown if user already has role scope
+	ErrRoleScopeConflict = errors.New("role or scope conflict")
 )
 
 type service struct {
@@ -52,6 +66,7 @@ type service struct {
 	managerService      v1ClaManager.IService
 	easyCLAUserService  easyCLAUser.Service
 	v2CompanyService    v2Company.Service
+	eventService        events.Service
 }
 
 // Service interface
@@ -60,11 +75,13 @@ type Service interface {
 	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
 	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributor *v1User.User, lFxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse)
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
+	CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, firstName string, lastName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error)
 	NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerList) error
 }
 
 // NewService returns instance of CLA Manager service
-func NewService(compService company.IService, projService project.Service, mgrService v1ClaManager.IService, claUserService easyCLAUser.Service, repoService repositories.Service, v2CompService v2Company.Service) Service {
+func NewService(compService company.IService, projService project.Service, mgrService v1ClaManager.IService, claUserService easyCLAUser.Service, repoService repositories.Service, v2CompService v2Company.Service,
+	evService events.Service) Service {
 	return &service{
 		companyService:      compService,
 		projectService:      projService,
@@ -72,6 +89,7 @@ func NewService(compService company.IService, projService project.Service, mgrSe
 		managerService:      mgrService,
 		easyCLAUserService:  claUserService,
 		v2CompanyService:    v2CompService,
+		eventService:        evService,
 	}
 }
 
@@ -370,16 +388,14 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 	user, userErr := userClient.SearchUserByEmail(userEmail)
 	if userErr != nil {
 		log.Debugf("Failed to get user by email: %s , error: %+v", userEmail, userErr)
-		return nil, userErr
+		return nil, ErrLFXUserNotFound
 	}
 
-	if user.Type == Lead {
-		log.Debugf("Converting user: %s from lead to contact ", userEmail)
-		contactErr := userClient.ConvertToContact(user.ID)
-		if contactErr != nil {
-			log.Debugf("failed to convert user: %s to contact ", userEmail)
-			return nil, contactErr
-		}
+	projectSF, projectErr := projectClient.GetProject(projectID)
+	if projectErr != nil {
+		msg := fmt.Sprintf("Problem getting project :%s ", projectID)
+		log.Debug(msg)
+		return nil, projectErr
 	}
 
 	roleID, designeeErr := acServiceClient.GetRoleID("cla-manager-designee")
@@ -396,11 +412,32 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 		return nil, scopeErr
 	}
 
-	projectSF, projectErr := projectClient.GetProject(projectID)
-	if projectErr != nil {
-		msg := fmt.Sprintf("Problem getting project :%s ", projectID)
-		log.Debug(msg)
-		return nil, projectErr
+	// Log Event
+	s.eventService.LogEvent(
+		&events.LogEventArgs{
+			EventType:         events.AssignUserRoleScopeType,
+			LfUsername:        user.Username,
+			ExternalProjectID: projectID,
+			EventData: &events.AssignRoleScopeData{
+				Role:  "cla-manager-designee",
+				Scope: fmt.Sprintf("%s|%s", projectID, companyID),
+			},
+		})
+
+	if user.Type == Lead {
+		log.Debugf("Converting user: %s from lead to contact ", userEmail)
+		contactErr := userClient.ConvertToContact(user.ID)
+		if contactErr != nil {
+			log.Debugf("failed to convert user: %s to contact ", userEmail)
+			return nil, contactErr
+		}
+		// Log user conversion event
+		s.eventService.LogEvent(&events.LogEventArgs{
+			EventType:         events.ConvertUserToContactType,
+			LfUsername:        user.Username,
+			ExternalProjectID: projectID,
+			EventData:         &events.UserConvertToContactData{},
+		})
 	}
 
 	claManagerDesignee := &models.ClaManagerDesignee{
@@ -413,6 +450,128 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 		CompanySfid: companyID,
 		ProjectName: projectSF.Name,
 	}
+	return claManagerDesignee, nil
+}
+
+func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string,
+	firstName string, lastName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error) {
+	orgService := v2OrgService.GetClient()
+
+	// GetSFProject
+	ps := v2ProjectService.GetClient()
+	projectSF, projectErr := ps.GetProject(projectID)
+	if projectErr != nil {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project service lookup error for SFID: %s, error : %+v",
+			projectID, projectErr)
+		log.Warn(msg)
+		return nil, projectErr
+	}
+
+	// Search for salesForce Company aka external Company
+	companyModel, companyErr := orgService.GetOrganization(companyID)
+	if companyErr != nil || companyModel == nil {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Problem getting company by SFID: %s, error: %+v",
+			companyID, companyErr)
+		log.Warn(msg)
+		return nil, companyErr
+	}
+
+	// Check if sending cla manager request to company admin
+	if contactAdmin {
+		log.Debugf("Sending email to company Admin")
+		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyID)
+		if listScopeErr != nil {
+			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Admin lookup error for organisation SFID: %s, error: %+v ",
+				companyID, listScopeErr)
+			log.Warn(msg)
+			return nil, listScopeErr
+		}
+
+		if len(scopes.Userroles) == 0 {
+			msg := fmt.Sprintf("EasyCLA - 404 NotFound - No admins for organization SFID: %s",
+				companyID)
+			log.Warn(msg)
+			return nil, ErrNoOrgAdmins
+		}
+
+		for _, admin := range scopes.Userroles {
+			sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, companyModel.Name, projectSF.Name, authUser.Email, authUser.UserName, LfxPortalURL)
+			// Make a note in the event log
+			s.eventService.LogEvent(&events.LogEventArgs{
+				EventType:         events.ContributorNotifyCompanyAdminType,
+				LfUsername:        authUser.UserName,
+				ExternalProjectID: projectID,
+				CompanyID:         companyModel.ID,
+				EventData: &events.ContributorNotifyCompanyAdminData{
+					AdminName:  admin.Contact.Name,
+					AdminEmail: admin.Contact.EmailAddress,
+				},
+			})
+		}
+
+		return nil, nil
+	}
+
+	userService := v2UserService.GetClient()
+	lfxUser, userErr := userService.SearchUsers(firstName, lastName, userEmail)
+	if userErr != nil {
+		var msg string
+		_, userErr = userService.SearchUserByEmail(userEmail)
+		if userErr != nil {
+			msg = fmt.Sprintf("EasyCLA - 404 Not Found - User: %s has no LFID ", userEmail)
+			log.Warn(msg)
+			return nil, ErrNoLFID
+		}
+		msg = fmt.Sprintf("EasyCLA - 404 Not Found - User: %s does not exist FirstName: %s LastName : %s ", userEmail, firstName, lastName)
+		log.Warn(msg)
+		return nil, ErrLFXUserNotFound
+	}
+
+	// Check if user is associated with another organization
+	log.Debugf("LFX user company :%s", lfxUser.Account.Name)
+	if strings.TrimSpace(lfxUser.Account.Name) != strings.TrimSpace(companyModel.Name) {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - User associated with another organization :%s and should be in :%s ", lfxUser.Account.Name, companyModel.Name)
+		log.Warn(msg)
+		return nil, ErrNotInOrg
+	}
+
+	claManagerDesignee, err := s.CreateCLAManagerDesignee(companyID, projectID, userEmail)
+	if err != nil {
+		// Check conflict for role scope
+		if err == err.(*organizations.CreateOrgUsrRoleScopesConflict) {
+			return nil, ErrRoleScopeConflict
+		}
+		return nil, err
+	}
+
+	// Make a note in the event log
+	s.eventService.LogEvent(&events.LogEventArgs{
+		EventType:         events.ContributorAssignCLADesigneeType,
+		LfUsername:        authUser.UserName,
+		ExternalProjectID: projectID,
+		CompanyID:         companyModel.ID,
+		EventData: &events.ContributorAssignCLADesignee{
+			DesigneeName:  claManagerDesignee.LfUsername,
+			DesigneeEmail: claManagerDesignee.Email,
+		},
+	})
+
+	log.Debugf("Sending Email to CLA Manager Designee email: %s ", userEmail)
+	designeeName := fmt.Sprintf("%s %s", firstName, lastName)
+	sendEmailToCLAManagerDesignee(LfxPortalURL, companyModel.Name, projectSF.Name, userEmail, designeeName, authUser.Email, authUser.UserName)
+	// Make a note in the event log
+	s.eventService.LogEvent(&events.LogEventArgs{
+		EventType:         events.ContributorNotifyCLADesigneeType,
+		LfUsername:        authUser.UserName,
+		ExternalProjectID: projectID,
+		CompanyID:         companyModel.ID,
+		EventData: &events.ContributorNotifyCLADesignee{
+			DesigneeName:  claManagerDesignee.LfUsername,
+			DesigneeEmail: claManagerDesignee.Email,
+		},
+	})
+
+	log.Debugf("CLA Manager designee created : %+v", claManagerDesignee)
 	return claManagerDesignee, nil
 }
 
