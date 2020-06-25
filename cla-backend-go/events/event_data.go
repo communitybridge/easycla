@@ -225,6 +225,13 @@ type ContributorAssignCLADesignee struct {
 	DesigneeEmail string
 }
 
+type UserConvertToContactData struct{}
+
+type AssignRoleScopeData struct {
+	Role  string
+	Scope string
+}
+
 func (ed *GithubRepositoryAddedEventData) GetEventString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user [%s] added github repository [%s] to project [%s]", args.userName, ed.RepositoryName, args.projectName)
 	return data, true
@@ -484,5 +491,18 @@ func (ed *ContributorAssignCLADesignee) GetEventString(args *LogEventArgs) (stri
 		args.userName, ed.DesigneeName, ed.DesigneeEmail,
 		args.projectName, args.ExternalProjectID,
 		args.companyName, args.CompanyID)
+	return data, true
+}
+
+func (ed *UserConvertToContactData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] converted to Contact state for project [%s]",
+		args.LfUsername, args.ExternalProjectID)
+	return data, true
+}
+
+func (ed *AssignRoleScopeData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] assigned scope [%s] with role [%s] for project [%s]",
+		args.LfUsername,
+		ed.Scope, ed.Role, args.ExternalProjectID)
 	return data, true
 }
