@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/foundation"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
@@ -163,5 +165,16 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			Valid:            valid,
 			ValidationErrors: validationErrors,
 		})
+	})
+	api.FoundationListFoundationClaGroupsHandler = foundation.ListFoundationClaGroupsHandlerFunc(func(params foundation.ListFoundationClaGroupsParams, authUser *auth.User) middleware.Responder {
+		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+		result, err := service.ListAllFoundationClaGroups(params.FoundationSFID)
+		if err != nil {
+			return foundation.NewListFoundationClaGroupsInternalServerError().WithPayload(&models.ErrorResponse{
+				Code:    "500",
+				Message: err.Error(),
+			})
+		}
+		return foundation.NewListFoundationClaGroupsOK().WithPayload(result)
 	})
 }
