@@ -23,11 +23,14 @@ package:
     - yarn.lock
 
 custom:
+  allowed_origins: ${file(./env.json):cla-allowed-origins-${opt:stage}, ssm:/cla-allowed-origins-${opt:stage}}
   wsgi:
     app: cla.routes.__hug_wsgi__
     pythonBin: python
     packRequirements: false
   dynamodb:
+    # Region where dynamodb is installed
+    region: us-east-1
     stages:
       - local
     start:
@@ -37,7 +40,6 @@ custom:
     host: 0.0.0.0
     port: 8001
     directory: /tmp
-  allowed_origins: ${file(./env.json):cla-allowed-origins-${opt:stage}, ssm:/cla-allowed-origins-${opt:stage}}
   # Config for serverless-prune-plugin - remove all but the 10 most recent
   # versions to avoid the "Code storage limit exceeded" error
   prune:
@@ -50,6 +52,7 @@ provider:
   stage: ${opt:stage}
   region: us-east-1
   timeout: 60 # optional, in seconds, default is 6
+  logRetentionInDays: 14
 
   tracing:
     apiGateway: true
@@ -62,6 +65,10 @@ provider:
     - "arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole"
 
   iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - cloudwatch:*
+      Resource: "*"
     - Effect: Allow
       Action:
         - xray:PutTraceSegments
@@ -81,11 +88,7 @@ provider:
       Action:
         - ssm:GetParameter
       Resource:
-        Fn::Join:
-          - ""
-          - - "arn:aws:ssm:${self:provider.region}:"
-            - Ref: AWS::AccountId
-            - ":parameter/cla-*"
+        - "arn:aws:ssm:${self:provider.region}:#{AWS::AccountId}:parameter/cla-*"
     - Effect: Allow
       Action:
         - ses:SendEmail
@@ -221,13 +224,15 @@ provider:
 
   stackTags:
     Name: ${self:service}
-    STAGE: ${self:provider.stage}
-    ServiceType: Product
+    stage: ${self:provider.stage}
+    Project: "EasyCLA"
+    Product: "EasyCLA"
+    ManagedBy: "Serverless CloudFormation"
+    SericeType: "Product"
     Service: ${self:service}
-    ServiceRole: Backend
-    Product: EasyCLA
+    ServiceRole: "Backend"
     ProgrammingPlatform: Go
-    Owner: 'David Deal'
+    Owner: "David Deal"
 
 plugins:
   - serverless-python-requirements
@@ -261,7 +266,6 @@ functions:
       - http:
           method: ANY
           path: v3/{proxy+}
-          #cors: true
     package:
       individually: true
       include:
