@@ -516,8 +516,8 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 	lfxUser, userErr := userService.SearchUsers(firstName, lastName, userEmail)
 	if userErr != nil {
 		var msg string
-		_, userErr = userService.SearchUserByEmail(userEmail)
-		if userErr != nil {
+		_, lfxUserErr := userService.SearchUserByEmail(userEmail)
+		if lfxUserErr != nil {
 			msg = fmt.Sprintf("EasyCLA - 404 Not Found - User: %s has no LFID ", userEmail)
 			log.Warn(msg)
 			return nil, ErrNoLFID
