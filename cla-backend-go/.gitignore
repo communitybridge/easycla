@@ -5,10 +5,16 @@ cla-backend-go
 cla
 cla-mac
 backend-aws-lambda
+backend-aws-lambda-mac
+backend-aws-lambda-linux
 metrics-aws-lambda
 metrics-aws-lambda-mac
+functional-tests
 functional-tests-linux
 functional-tests-mac
+dynamo-events-lambda
+dynamo-events-lambda-mac
+dynamo-events-lambda-linux
 *env.json
 db/schema.sql
 

@@ -34,7 +34,7 @@ const defaultTags = {
   ManagedBy: 'Pulumi',
   PulumiStack: pulumi.getStack(),
   STAGE: stage,
-  ServiceType: 'EasyCLA',
+  ServiceType: 'Product',
   Service: 'Database',
   ServiceRole: 'Backend',
   Owner: 'David Deal',
@@ -175,6 +175,8 @@ function buildProjectsTable(importResources: boolean): aws.dynamodb.Table {
       ],
       hashKey: 'project_id',
       billingMode: 'PAY_PER_REQUEST',
+      streamEnabled: true,
+      streamViewType: "NEW_AND_OLD_IMAGES",
       globalSecondaryIndexes: [
         {
           name: 'external-project-index',
@@ -229,6 +231,8 @@ function buildUsersTable(importResources: boolean): aws.dynamodb.Table {
       ],
       hashKey: 'user_id',
       billingMode: 'PAY_PER_REQUEST',
+      streamEnabled: true,
+      streamViewType: "NEW_AND_OLD_IMAGES",
       globalSecondaryIndexes: [
         {
           name: 'github-username-index',
@@ -293,6 +297,8 @@ function buildCompaniesTable(importResources: boolean): aws.dynamodb.Table {
       ],
       hashKey: 'company_id',
       billingMode: 'PAY_PER_REQUEST',
+      streamEnabled: true,
+      streamViewType: "NEW_AND_OLD_IMAGES",
       globalSecondaryIndexes: [
         {
           name: 'external-company-index',
@@ -417,6 +423,8 @@ function buildRepositoriesTable(importResources: boolean): aws.dynamodb.Table {
       ],
       hashKey: 'repository_id',
       billingMode: 'PROVISIONED',
+      streamEnabled: true,
+      streamViewType: "NEW_AND_OLD_IMAGES",
       readCapacity: defaultReadCapacity,
       writeCapacity: defaultWriteCapacity,
       globalSecondaryIndexes: [
@@ -469,6 +477,8 @@ function buildGitHubOrgsTable(importResources: boolean): aws.dynamodb.Table {
       ],
       hashKey: 'organization_name',
       billingMode: 'PROVISIONED',
+      streamEnabled: true,
+      streamViewType: "NEW_AND_OLD_IMAGES",
       readCapacity: defaultReadCapacity,
       writeCapacity: defaultWriteCapacity,
       globalSecondaryIndexes: [
@@ -504,6 +514,8 @@ function buildGerritInstancesTable(importResources: boolean): aws.dynamodb.Table
       attributes: [{ name: 'gerrit_id', type: 'S' }],
       hashKey: 'gerrit_id',
       billingMode: 'PROVISIONED',
+      streamEnabled: true,
+      streamViewType: "NEW_AND_OLD_IMAGES",
       readCapacity: defaultReadCapacity,
       writeCapacity: defaultWriteCapacity,
       pointInTimeRecovery: {
@@ -871,9 +883,12 @@ function buildProjectsClaGroupsTable(importResources: boolean): aws.dynamodb.Tab
   );
 }
 
-// dynamodb events handler func
+// DynamoDB trigger events handler function
+//aws.lambda.Function.get("dynamo-events-lambda", "cla-backend-" + stage + "-dynamo-events"),
+const dynamoDBEventLambdaName = "cla-backend-" + stage + "-dynamo-events-lambda";
+const dynamoDBEventLambdaArn = "arn:aws:lambda:" + aws.getRegion().name + ":" + accountID + ":function:" + dynamoDBEventLambdaName;
 signaturesTable.onEvent("signatureStreamEvents",
-  aws.lambda.Function.get("dynamoEventsHandler", "cla-backend-" + stage + "-dynamo-events"),
+  aws.lambda.Function.get(dynamoDBEventLambdaName, dynamoDBEventLambdaArn),
   { startingPosition: "LATEST" });
 
 // Export the name of the bucket

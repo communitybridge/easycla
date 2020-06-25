@@ -21,7 +21,9 @@ TEST_ENV=AWS_REGION=us-east-1 DYNAMODB_AWS_REGION=us-east-1 AWS_PROFILE=bar AWS_
 
 .PHONY: generate setup tool-setup setup-dev setup-deploy clean-all clean swagger up fmt test run deps build build-mac build-aws-lambda qc lint
 
-all: clean swagger deps fmt build-mac test lint
+all: all-mac
+all-mac: clean swagger deps fmt build-mac build-aws-lambda build-metrics-lambda-mac build-dynamo-events-lambda-mac test lint
+all-linux: clean swagger deps fmt build-linux build-aws-lambda build-metrics-lambda-linux build-dynamo-events-lambda-linux test lint
 
 generate: swagger
 
@@ -148,7 +150,8 @@ deps:
 	go env -w GOPRIVATE=github.com/LF-Engineering/*
 	go mod download
 
-build: deps
+build: build-linux
+build-linux: deps
 	@echo "Building Linux amd64 binary..."
 	env GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(SERVICE) main.go
 	@chmod +x $(SERVICE)
@@ -166,7 +169,8 @@ build-aws-lambda: deps
 	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) $(BUILD_TAGS) -o $(LAMBDA_BIN) main.go
 	@chmod +x $(LAMBDA_BIN)
 
-build-metrics-lambda: deps
+build-metrics-lambda: build-metrics-lambda-linux
+build-metrics-lambda-linux: deps
 	@echo "Building a statically linked Linux amd64 binary..."
 	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(METRICS_BIN) cmd/metrics_lambda/main.go
 	@chmod +x $(METRICS_BIN)
@@ -176,7 +180,8 @@ build-metrics-lambda-mac: deps
 	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(METRICS_BIN)-mac cmd/metrics_lambda/main.go
 	@chmod +x $(METRICS_BIN)-mac
 
-build-dynamo-events-lambda: deps
+build-dynamo-events-lambda: build-dynamo-events-lambda-linux
+build-dynamo-events-lambda-linux: deps
 	@echo "Building a statically linked Linux amd64 binary..."
 	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(DYNAMO_EVENTS_BIN) cmd/dynamo_events_lambda/main.go
 	@chmod +x $(DYNAMO_EVENTS_BIN)
@@ -186,6 +191,7 @@ build-dynamo-events-lambda-mac: deps
 	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(DYNAMO_EVENTS_BIN)-mac cmd/dynamo_events_lambda/main.go
 	@chmod +x $(DYNAMO_EVENTS_BIN)-mac
 
+build-functional-tests: build-functional-tests-linux
 build-functional-tests-linux: deps
 	@echo "Building Functional Tests for Linux amd64 binary..."
 	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(FUNCTIONAL_TESTS_BIN) cmd/functional_tests/main.go
