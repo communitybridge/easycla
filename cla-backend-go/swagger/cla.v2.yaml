@@ -1658,6 +1658,10 @@ paths:
             title: CLA Manager Designee User
             description: User object used for CLA Manager requests
             properties:
+              firstName:
+                type: string
+              lastName:
+                type: string
               userEmail:
                 type: string
               contactAdmin:
@@ -1671,6 +1675,8 @@ paths:
           description: 'Success'
         '400':
           $ref: '#/responses/invalid-request'
+        '404':
+          $ref: '#/responses/not-found'
         '403':
           $ref: '#/responses/forbidden'
         '409':
