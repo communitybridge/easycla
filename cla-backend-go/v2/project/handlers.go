@@ -242,7 +242,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 	// Get CLA enabled projects
 	api.ProjectGetCLAProjectsByIDHandler = project.GetCLAProjectsByIDHandlerFunc(func(projectParams project.GetCLAProjectsByIDParams, user *auth.User) middleware.Responder {
 		// No auth checks - anyone including contributors can request
-		claProjects, getErr := v2Service.GetCLAProjectsByID(projectParams.ProjectSfdcID)
+		claProjects, getErr := v2Service.GetCLAProjectsByID(projectParams.FoundationSFID)
 		if getErr != nil {
 			return project.NewGetCLAProjectsByIDBadRequest().WithPayload(errorResponse(getErr))
 		}
