@@ -11,8 +11,6 @@ import (
 
 	"github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
 
-	"errors"
-
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/jinzhu/copier"
@@ -146,16 +144,9 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, claGroupID 
 	if err != nil {
 		return err
 	}
-	cgmap := make(map[string]int) // key cla-group-id, value: no of projects
 	enabledProjectList := utils.NewStringSet()
 	for _, pr := range enabledProjects {
 		enabledProjectList.Add(pr.ProjectSFID)
-		count, ok := cgmap[pr.ClaGroupID]
-		if !ok {
-			cgmap[pr.ClaGroupID] = 1
-		} else {
-			cgmap[pr.ClaGroupID] = count + 1
-		}
 	}
 	for _, projectSFID := range projectSFIDList {
 		if enabledProjectList.Include(projectSFID) {
@@ -163,79 +154,6 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, claGroupID 
 		}
 	}
 
-	// check conditional validity that foundation has either one foundation level cla-group
-	// or multiple project level cla-group
-	err = validateEnrollProject(cgmap, claGroupID, projectSFIDList)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// validateEnrollProject ensures that foundation has either one foundation level cla-group
-// or multiple project-level cla-group. any other combination is invalid
-// cla-group is considered foundation level only if it has multiple projects present in it
-// cgmap input should contain map of cla_group_id and count of projects inside it
-// claGroupID should be empty if you are calling validation function for creating new cla group
-// projectSFID list should projects list that we are enrolling inside cla group
-func validateEnrollProject(cgmap map[string]int, claGroupID string, projectSFIDList []string) error {
-	log.WithFields(logrus.Fields{"cla_group_project_counts": cgmap, "cla_group_id": claGroupID, "project_sfid_list": projectSFIDList}).Debug("validateEnrollProject called")
-	var foundationLevelClaPresent, projectLevelClaPresent bool
-	for _, count := range cgmap {
-		if count > 1 {
-			foundationLevelClaPresent = true
-		} else {
-			projectLevelClaPresent = true
-		}
-	}
-	var err error
-	if claGroupID == "" {
-		// new cla-group
-		isNewClaGroupLevelFoundation := len(projectSFIDList) > 1
-		err = validateEnrollProjectsForNewClaGroup(foundationLevelClaPresent, projectLevelClaPresent, isNewClaGroupLevelFoundation)
-	} else {
-		haveMultipleProjectLevelCla := len(cgmap) > 1
-		var existingClaGroupIsFoundationLevel bool
-		count, ok := cgmap[claGroupID]
-		if !ok {
-			existingClaGroupIsFoundationLevel = false
-		} else {
-			existingClaGroupIsFoundationLevel = count > 1
-		}
-		err = validateEnrollProjectsForAlreadyPresentClaGroup(haveMultipleProjectLevelCla, existingClaGroupIsFoundationLevel)
-	}
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func validateEnrollProjectsForNewClaGroup(foundationLevelClaPresent, projectLevelClaPresent bool, isNewClaGroupLevelFoundation bool) error {
-	if foundationLevelClaPresent {
-		// foundation level cla is already present
-		return errors.New("bad request: foundation level cla group is already present. Can not create new cla group")
-	}
-	if !projectLevelClaPresent {
-		// there is not any cla present in system
-		return nil
-	}
-	if projectLevelClaPresent && isNewClaGroupLevelFoundation {
-		// project level cla is present and new cla group is foundation level
-		return errors.New("bad request: project level cla group is present. Can not create new cla group with foundation level")
-	}
-	return nil
-}
-
-func validateEnrollProjectsForAlreadyPresentClaGroup(haveMultipleProjectLevelCla bool, existingClaGroupIsFoundationLevel bool) error {
-	if existingClaGroupIsFoundationLevel {
-		// adding projects to foundation level cla-group
-		return nil
-	}
-	// existing cla group is project level
-	// this case is of upgrade cla-group from project-level to cla-group level
-	if haveMultipleProjectLevelCla {
-		return errors.New("bad request: cannot enroll projects to this cla-group because another project level cla is already present in system")
-	}
 	return nil
 }
 
