@@ -55,6 +55,12 @@ provider:
     apiGateway: true
     lambda: true
 
+  # Alongside provider.iamRoleStatements managed policies can also be added to this service-wide Role
+  # These will also be merged into the generated IAM Role
+  iamManagedPolicies:
+    - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+    - "arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole"
+
   iamRoleStatements:
     - Effect: Allow
       Action:
