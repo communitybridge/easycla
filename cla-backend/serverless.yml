@@ -163,7 +163,6 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects-cla-groups/index/cla-group-id-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects-cla-groups/index/foundation-sfid-index"
 
-
   environment:
     STAGE: ${self:provider.stage}
     REGION: us-east-1
@@ -213,6 +212,16 @@ provider:
     # Enable API Debugging for Core Platform Services
     DEBUG: true
 
+  stackTags:
+    Name: ${self:service}
+    STAGE: ${self:provider.stage}
+    ServiceType: Product
+    Service: ${self:service}
+    ServiceRole: Backend
+    Product: EasyCLA
+    ProgrammingPlatform: Go
+    Owner: 'David Deal'
+
 plugins:
   - serverless-python-requirements
   - serverless-dynamodb-local
@@ -252,9 +261,10 @@ functions:
         - ./backend-aws-lambda
 
   dynamo-events:
-    description: "EasyCLA dynamodb events handler"
-    runtime: go1.x
     handler: dynamo-events-lambda
+    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-events-lambda
+    description: "EasyCLA DynamoDB stream events handler"
+    runtime: go1.x
     package:
       individually: true
       include:

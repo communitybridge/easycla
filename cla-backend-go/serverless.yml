@@ -207,13 +207,15 @@ provider:
     DEBUG: true
 
   stackTags:
+    Name: ${self:service}
     stage: ${self:provider.stage}
     project: "EasyCLA"
     Product: "EasyCLA"
     ManagedBy: "Serverless CloudFormation"
-    SericeType: "EasyCLA"
-    Service: "API"
+    SericeType: "Product"
+    Service: ${self:service}
     ServiceRole: "Backend"
+    ProgrammingPlatform: Go
     Owner: "David Deal"
 
 plugins:
@@ -235,10 +237,12 @@ functions:
       individually: true
       include:
         - ./backend-aws-lambda
+
   dynamo-events:
-    description: "EasyCLA dynamodb events handler"
-    runtime: go1.x
     handler: dynamo-events-lambda
+    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-events-lambda
+    description: "EasyCLA DynamoDB stream events handler"
+    runtime: go1.x
     package:
       individually: true
       include:
