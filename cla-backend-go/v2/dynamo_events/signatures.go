@@ -2,6 +2,7 @@ package dynamo_events
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-lambda-go/events"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -81,10 +82,6 @@ func (s *service) SignatureAddSigTypeSignedApprovedID(event events.DynamoDBEvent
 	if err != nil {
 		return err
 	}
-	if newSig.SigtypeSignedApprovedID != "" {
-		return nil
-	}
-	log.Debugf("setting sigtype_signed_approved_id for signature: %s", newSig.SignatureID)
 	switch {
 	case newSig.SignatureType == CCLASignatureType:
 		sigType = CCLASignatureType
@@ -99,7 +96,12 @@ func (s *service) SignatureAddSigTypeSignedApprovedID(event events.DynamoDBEvent
 		log.Warnf("setting sigtype_signed_approved_id for signature: %s failed", newSig.SignatureID)
 		return errors.New("invalid signature in SignatureAddSigTypeSignedApprovedID")
 	}
-	err = s.signatureRepo.AddSigTypeSignedApprovedID(newSig.SignatureID, sigType, newSig.SignatureSigned, newSig.SignatureApproved, id)
+	val := fmt.Sprintf("%s#%v#%v#%s", sigType, newSig.SignatureSigned, newSig.SignatureApproved, id)
+	if newSig.SigtypeSignedApprovedID == val {
+		return nil
+	}
+	log.Debugf("setting sigtype_signed_approved_id for signature: %s", newSig.SignatureID)
+	err = s.signatureRepo.AddSigTypeSignedApprovedID(newSig.SignatureID, val)
 	if err != nil {
 		return err
 	}
