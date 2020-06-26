@@ -375,7 +375,7 @@ def get_user_project_last_signature(user_id, project_id):
         last_signature['latest_document_major_version'] = str(latest_doc.get_document_major_version())
         last_signature['latest_document_minor_version'] = str(latest_doc.get_document_minor_version())
         last_signature['requires_resigning'] = last_signature['latest_document_major_version'] != last_signature[
-            'signature_document_major_version']
+            'signature_document_major_version'] and last_signature['signature_signed']
     return last_signature
 
 
