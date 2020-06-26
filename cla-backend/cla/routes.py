@@ -1258,7 +1258,7 @@ def post_corporate_signed(body, project_id: hug.types.uuid, company_id: hug.type
     Callback URL from signing service upon CCLA signature.
     """
     content = body.read()
-    return cla.controllers.signing.post_corporate_signed(content, project_id, company_id)
+    return cla.controllers.signing.post_corporate_signed(content, str(project_id), str(company_id))
 
 
 @hug.get("/return-url/{signature_id}", versions=2)
