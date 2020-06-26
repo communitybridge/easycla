@@ -123,3 +123,8 @@ func GetDownloadLink(filename string) (string, error) {
 	}
 	return s3Storage.GetPresignedURL(filename)
 }
+
+// SignedCLAFilename provide s3 bucket url
+func SignedCLAFilename(projectID string, claType string, identifier string, signatureID string) string {
+	return strings.Join([]string{"contract-group", projectID, claType, identifier, signatureID}, "/") + ".pdf"
+}
