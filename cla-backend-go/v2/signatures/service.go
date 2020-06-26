@@ -2,6 +2,7 @@ package signatures
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	"github.com/jinzhu/copier"
@@ -37,6 +38,7 @@ type Service interface {
 	GetProjectCompanySignatures(companySFID string, projectSFID string) (*models.Signatures, error)
 	GetProjectIclaSignaturesCsv(claGroupID string) ([]byte, error)
 	GetProjectIclaSignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
+	GetSignedDocument(signatureID string) (*models.SignedDocument, error)
 }
 
 // NewService creates instance of v2 signature service
@@ -124,4 +126,29 @@ func (s service) GetProjectIclaSignatures(claGroupID string, searchTerm *string)
 		return nil, err
 	}
 	return &out, nil
+}
+
+func (s service) GetSignedDocument(signatureID string) (*models.SignedDocument, error) {
+	sig, err := s.v1SignatureService.GetSignature(signatureID)
+	if err != nil {
+		return nil, err
+	}
+	if sig.SignatureType == "cla" && sig.CompanyName != "" {
+		return nil, errors.New("bad request. employee signature does not have signed document")
+	}
+	var url string
+	switch sig.SignatureType {
+	case "cla":
+		url = utils.SignedCLAFilename(sig.ProjectID, "icla", sig.SignatureReferenceID, sig.SignatureID)
+	case "ccla":
+		url = utils.SignedCLAFilename(sig.ProjectID, "ccla", sig.SignatureReferenceID, sig.SignatureID)
+	}
+	signedURL, err := utils.GetDownloadLink(url)
+	if err != nil {
+		return nil, err
+	}
+	return &models.SignedDocument{
+		SignatureID:  signatureID,
+		SignedClaURL: signedURL,
+	}, nil
 }

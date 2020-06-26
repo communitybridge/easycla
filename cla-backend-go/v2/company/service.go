@@ -567,7 +567,7 @@ func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, act
 	var cclaURL string
 	go func() {
 		defer cwg.Done()
-		cclaURL, err = utils.GetDownloadLink(signedCLAFilename(sig.ProjectID, sig.SignatureType, sig.SignatureReferenceID, sig.SignatureID))
+		cclaURL, err = utils.GetDownloadLink(utils.SignedCLAFilename(sig.ProjectID, sig.SignatureType, sig.SignatureReferenceID, sig.SignatureID))
 		if err != nil {
 			log.Error("fillActiveCLA : unable to get ccla s3 link", err)
 			return
@@ -736,7 +736,4 @@ func (s *service) getCompanyAndProjects(companySFID, projectSFID string) (*v1Mod
 		return nil, nil, projectErr
 	}
 	return comp, projects, nil
-}
-func signedCLAFilename(projectID string, claType string, identifier string, signatureID string) string {
-	return strings.Join([]string{"contract-group", projectID, claType, identifier, signatureID}, "/") + ".pdf"
 }
