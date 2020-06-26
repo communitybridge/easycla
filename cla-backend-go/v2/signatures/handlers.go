@@ -505,7 +505,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		if signature == nil {
 			return signatures.NewGetSignatureSignedDocumentNotFound().WithPayload(errorResponse(errors.New("signature not found")))
 		}
-		haveAccess, err := isUserHaveAccessOfSignedSignaturePDF(authUser, signature, companyService, v1SignatureService, projectClaGroupsRepo)
+		haveAccess, err := isUserHaveAccessOfSignedSignaturePDF(authUser, signature, companyService, projectClaGroupsRepo)
 		if err != nil {
 			return signatures.NewGetSignatureSignedDocumentInternalServerError().WithPayload(errorResponse(err))
 		}
@@ -527,7 +527,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 
 }
 
-func isUserHaveAccessOfSignedSignaturePDF(authUser *auth.User, signature *v1Models.Signature, companyService company.IService, v1SignatureService signatureService.SignatureService, projectClaGroupRepo projects_cla_groups.Repository) (bool, error) {
+func isUserHaveAccessOfSignedSignaturePDF(authUser *auth.User, signature *v1Models.Signature, companyService company.IService, projectClaGroupRepo projects_cla_groups.Repository) (bool, error) {
 	projects, err := projectClaGroupRepo.GetProjectsIdsForClaGroup(signature.ProjectID)
 	if err != nil {
 		return false, err
@@ -542,7 +542,7 @@ func isUserHaveAccessOfSignedSignaturePDF(authUser *auth.User, signature *v1Mode
 	if len(pmScope) > 0 && utils.NewStringSetFromStringArray(pmScope).Include(foundationID) {
 		return true, nil
 	}
-	if signature.SignatureType == "ccla" {
+	if signature.SignatureType == CclaSignatureType {
 		comp, err := companyService.GetCompany(signature.SignatureReferenceID)
 		if err != nil {
 			return false, err
