@@ -40,4 +40,6 @@ class EventType(Enum):
     UserAssociatedWithCompany = "User associated with company"
     EmployeeSignatureCreated = "Employee signature created"
     EmployeeSignatureDisapproved = "Employee signature disapproved"
+    IndividualSignatureSigned = "Individual signature signed"
+    EmployeeSignatureSigned = "Employee signature signed"
 
