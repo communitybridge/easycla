@@ -300,8 +300,8 @@ class DocuSign(signing_service_interface.SigningService):
         # and retrieves the return_url from the signature's metadata (github org id, PR id, etc.)
         # It will return the user to the pull request page.
         # For Gerrit users, we want the return_url to be the link to the Gerrit Instance's page.
-        # Since Gerrit users will be able to make changes once they are part of the LDAP Group, 
-        # They do not need to be directed to a specific code submission on Gerrit. 
+        # Since Gerrit users will be able to make changes once they are part of the LDAP Group,
+        # They do not need to be directed to a specific code submission on Gerrit.
         if return_url is None:
             try:
                 gerrits = Gerrit().get_gerrit_by_project_id(project_id)
@@ -354,11 +354,11 @@ class DocuSign(signing_service_interface.SigningService):
     @staticmethod
     def check_and_prepare_employee_signature(project_id, company_id, user_id) -> dict:
 
-        # Before an employee begins the signing process, ensure that 
-        # 1. The given project, company, and user exists 
-        # 2. The company signatory has signed the CCLA for their company. 
-        # 3. The user is included as part of the whitelist of the CCLA that the company signed. 
-        # Returns an error if any of the above is false. 
+        # Before an employee begins the signing process, ensure that
+        # 1. The given project, company, and user exists
+        # 2. The company signatory has signed the CCLA for their company.
+        # 3. The user is included as part of the whitelist of the CCLA that the company signed.
+        # Returns an error if any of the above is false.
 
         request_info = f'project: {project_id}, company: {company_id}, user: {user_id}'
         cla.log.info(f'Check and prepare employee signature for {request_info}')
@@ -559,7 +559,7 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.info(f'Processing request_employee_signature_gerrit request with {request_info}')
 
         check_and_prepare_signature = self.check_and_prepare_employee_signature(project_id, company_id, user_id)
-        # Check if there are any errors while preparing the signature. 
+        # Check if there are any errors while preparing the signature.
         if 'errors' in check_and_prepare_signature:
             cla.log.warning(f'Error in request_employee_signature_gerrit with: {request_info} - '
                             f'signatures: {check_and_prepare_signature}')
@@ -614,7 +614,7 @@ class DocuSign(signing_service_interface.SigningService):
         # Set signature ACL (user already validated in 'check_and_prepare_employee_signature')
         new_signature.set_signature_acl(user.get_lf_username())
 
-        # Save signature before adding user to the LDAP Group. 
+        # Save signature before adding user to the LDAP Group.
         new_signature.save()
         cla.log.info(f'Set and saved signature for: {request_info}')
         Event.create_event(
@@ -1015,8 +1015,8 @@ class DocuSign(signing_service_interface.SigningService):
             signatory_email = user_signature_email
 
             # Assigning a clientUserId does not send an email.
-            # It assumes that the user handles the communication with the client. 
-            # In this case, the user opened the docusign document to manually sign it. 
+            # It assumes that the user handles the communication with the client.
+            # In this case, the user opened the docusign document to manually sign it.
             # Thus the email does not need to be sent.
             cla.log.debug(f'populate_sign_url - {sig_type} - generating a docusign signer object with'
                           f'name: {signatory_name}, email: {signatory_email}')
@@ -1045,8 +1045,8 @@ class DocuSign(signing_service_interface.SigningService):
 
         if callback_url is not None:
             # Webhook properties for callbacks after the user signs the document.
-            # Ensure that a webhook is returned on the status "Completed" where 
-            # all signers on a document finish signing the document. 
+            # Ensure that a webhook is returned on the status "Completed" where
+            # all signers on a document finish signing the document.
             recipient_events = [{"recipientEventStatusCode": "Completed"}]
             event_notification = pydocusign.EventNotification(url=callback_url,
                                                               loggingEnabled=True,
@@ -1106,8 +1106,7 @@ class DocuSign(signing_service_interface.SigningService):
                           f'invalid signature: {content}')
             return
         # Iterate through recipients and update the signature signature status if changed.
-        elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
-                         '/' + self.TAGS['recipient_status'])
+        elem = tree.find('.//' + self.TAGS['recipient_statuses'] + '/' + self.TAGS['recipient_status'])
         status = elem.find(self.TAGS['status']).text
         if status == 'Completed' and not signature.get_signature_signed():
             cla.log.info(f'signed_individual_callback - ICLA signature signed ({signature_id}) - '
@@ -1212,14 +1211,25 @@ class DocuSign(signing_service_interface.SigningService):
         # Get envelope ID.
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
 
-        # Get Company with company ID. 
+        # Load the Project by ID
+        project = Project()
+        try:
+            project.load(project_id)
+        except DoesNotExist as err:
+            msg = (f'signed_corporate_callback - Docusign callback failed: invalid project ID: {project_id}, '
+                   f'error: {err}')
+            cla.log.warning(msg)
+            return {'errors': {'error': msg}}
+
+        # Get Company with company ID.
         company = Company()
         try:
             company.load(str(company_id))
         except DoesNotExist as err:
-            return {'errors':
-                        {f'Docusign callback failed: invalid company_id {company_id}': f'{err}'}
-                    }
+            msg = (f'signed_corporate_callback - Docusign callback failed: invalid company ID: {company_id}, '
+                   f'error: {err}')
+            cla.log.warning(msg)
+            return {'errors': {'error': msg}}
 
         # Assume only one signature per signature.
         client_user_id = tree.find('.//' + self.TAGS['client_user_id'])
@@ -1228,10 +1238,11 @@ class DocuSign(signing_service_interface.SigningService):
             signature = cla.utils.get_signature_instance()
             try:
                 signature.load(signature_id)
-            except DoesNotExist:
-                cla.log.error('signed_corporate_callback - DocuSign callback returned signed info on '
-                              f'invalid signature: {content}')
-                return
+            except DoesNotExist as err:
+                msg = (f'signed_corporate_callback - ocuSign callback returned signed info on '
+                       f'invalid signature: {content}')
+                cla.log.warning(msg)
+                return {'errors': {'error': msg}}
         else:
             # If client_user_id is None, the callback came from the email that finished signing. 
             # Retrieve the latest signature with projectId and CompanyId.
@@ -1241,14 +1252,26 @@ class DocuSign(signing_service_interface.SigningService):
         # Get User
         user = cla.utils.get_user_instance()
         if signature.get_signature_reference_type() == 'user':
+            # ICLA
             cla.log.debug(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
                           f'loading user by id: {signature.get_signature_reference_id()}')
             user.load(signature.get_signature_reference_id())
         elif signature.get_signature_reference_type() == 'company':
+            # CCLA
             cla.log.debug(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
-                          f'loading user by id: {company.get_company_manager_id()}')
-            # Get company manager if reference id is of a company's ID.
-            user.load(company.get_company_manager_id())
+                          'loading CLA Managers...')
+            # Should have only 1 CLA Manager assigned at this point - grab the list of cla managers from the signature
+            # record
+            cla_manager_list = signature.get_signature_acl()
+
+            # Load the user record of the initial CLA Manager
+            user_list = user.get_user_by_username(cla_manager_list[0])
+            if user_list is None:
+                msg = f'signed_corporate_callback - CLA Manager not assign for signature: {signature}'
+                cla.log.warning(msg)
+                return {'errors': {'error': msg}}
+            else:
+                user = user_list[0]
 
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
@@ -1257,9 +1280,32 @@ class DocuSign(signing_service_interface.SigningService):
 
         if status == 'Completed' and not signature.get_signature_signed():
             cla.log.info(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
-                         f'CCLA signature signed ({signature_id}) - setting signature signed attribute to true')
+                         f'CLA signature signed ({signature_id}) - setting signature signed attribute to true')
             signature.set_signature_signed(True)
             signature.save()
+
+            # Update our event/activity log
+            if signature.get_signature_reference_type() == 'user':
+                Event.create_event(
+                    event_type=EventType.IndividualSignatureSigned,
+                    event_project_id=project_id,
+                    event_company_id=None,
+                    event_user_id=user.get_user_id(),
+                    event_data=(f'individual signature of user {user.get_user_name()} '
+                                f'signed for project {project.get_project_name()}'),
+                    contains_pii=False,
+                )
+            elif signature.get_signature_reference_type() == 'company':
+                Event.create_event(
+                    event_type=EventType.EmployeeSignatureSigned,
+                    event_project_id=project_id,
+                    event_company_id=company.get_company_id(),
+                    event_user_id=user.get_user_id(),
+                    event_data=(f'employee signature of user {user.get_user_name()} '
+                                f'signed for project {project.get_project_name()} '
+                                f'and company {company.get_company_name()}'),
+                    contains_pii=False,
+                )
 
             # Check if the callback is for a Gerrit Instance
             try:
@@ -1283,10 +1329,9 @@ class DocuSign(signing_service_interface.SigningService):
                                       f'Failed in adding user to the LDAP group: {e}')
                         return
 
-            # Send manager their signed document.
-            manager = User()
-            manager.load(company.get_company_manager_id())
-            # Get signed document
+            # Get signed document - will be either:
+            # ICLA - user is the individual contributor
+            # CCLA - user is the initial CLA Manager
             document_data = self.get_signed_document(envelope_id, user)
             # Send email with signed document.
             self.send_signed_document(document_data, user)
@@ -1298,8 +1343,10 @@ class DocuSign(signing_service_interface.SigningService):
                 raise SigningError('Missing company_id on CCLA for saving signed file on s3 storage.')
 
             # Store document on S3
+            cla.log.debug('signed_corporate_callback - uploading CCLA document to s3...')
             self.send_to_s3(document_data, project_id, signature_id, 'ccla', company_id)
             cla.log.debug('signed_corporate_callback - uploaded CCLA document to s3')
+            cla.log.debug('signed_corporate_callback - DONE!')
 
     def get_signed_document(self, envelope_id, user):
         """Helper method to get the signed document from DocuSign."""
