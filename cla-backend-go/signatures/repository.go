@@ -68,7 +68,7 @@ type SignatureRepository interface {
 
 	removeColumn(signatureID, columnName string) (*models.Signature, error)
 
-	AddSigTypeSignedApprovedID(signatureID string, sigType string, signed, approved bool, id string) error
+	AddSigTypeSignedApprovedID(signatureID string, val string) error
 	AddUsersDetails(signatureID string, userID string) error
 	AddSignedOn(signatureID string) error
 
@@ -1540,8 +1540,7 @@ func (repo repository) removeColumn(signatureID, columnName string) (*models.Sig
 	return updatedSig, nil
 }
 
-func (repo repository) AddSigTypeSignedApprovedID(signatureID string, sigType string, signed, approved bool, id string) error {
-	val := fmt.Sprintf("%s#%v#%v#%s", sigType, signed, approved, id)
+func (repo repository) AddSigTypeSignedApprovedID(signatureID string, val string) error {
 	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 	input := &dynamodb.UpdateItemInput{
 		TableName: aws.String(tableName),
