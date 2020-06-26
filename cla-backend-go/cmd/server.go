@@ -269,7 +269,7 @@ func server(localMode bool) http.Handler {
 	v2Template.Configure(v2API, templateService, eventsService)
 	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, configFile.Github.AccessToken, sessionStore)
 	signatures.Configure(api, signaturesService, sessionStore, eventsService)
-	v2Signatures.Configure(v2API, projectService, companyService, signaturesService, sessionStore, eventsService, v2SignatureService)
+	v2Signatures.Configure(v2API, projectService, companyService, signaturesService, sessionStore, eventsService, v2SignatureService, projectClaGroupRepo)
 	whitelist.Configure(api, whitelistService, sessionStore, signaturesService, eventsService)
 	company.Configure(api, companyService, usersService, companyUserValidation, eventsService)
 	docs.Configure(api)

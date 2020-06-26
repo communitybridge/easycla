@@ -1187,6 +1187,36 @@ paths:
       tags:
         - signatures
 
+  /signatures/{signatureID}/signed-document:
+    get:
+      summary: Get signed document for the signature
+      description: Returns the signature signed document when provided the signature ID
+      operationId: getSignatureSignedDocument
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: signatureID
+          description: the signature ID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/signed_document'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
 
   /signatures/project/{projectID}:
     get:
@@ -3047,6 +3077,16 @@ definitions:
       sign_url:
         type: string
         description: signing url
+
+  signed_document:
+    type: object
+    properties:
+      signature_id:
+        type: string
+        description: id of the signature
+      signed_cla_url:
+        type: string
+        description: pdf url of the signed agreement
 
   create-cla-group-input:
     type: object

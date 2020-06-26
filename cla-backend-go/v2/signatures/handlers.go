@@ -7,6 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
+
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 
 	"github.com/go-openapi/runtime"
 
@@ -67,7 +70,7 @@ func v2SignaturesReplaceCompanyID(src *v1Models.Signatures, internalID, external
 }
 
 // Configure setups handlers on api with service
-func Configure(api *operations.EasyclaAPI, projectService project.Service, companyService company.IService, v1SignatureService signatureService.SignatureService, sessionStore *dynastore.Store, eventsService events.Service, v2service Service) { //nolint
+func Configure(api *operations.EasyclaAPI, projectService project.Service, companyService company.IService, v1SignatureService signatureService.SignatureService, sessionStore *dynastore.Store, eventsService events.Service, v2service Service, projectClaGroupsRepo projects_cla_groups.Repository) { //nolint
 
 	// Get Signature
 	api.SignaturesGetSignatureHandler = signatures.GetSignatureHandlerFunc(func(params signatures.GetSignatureParams, authUser *auth.User) middleware.Responder {
@@ -491,6 +494,66 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			}
 			return signatures.NewListClaGroupIclaSignatureOK().WithPayload(result)
 		})
+
+	api.SignaturesGetSignatureSignedDocumentHandler = signatures.GetSignatureSignedDocumentHandlerFunc(func(params signatures.GetSignatureSignedDocumentParams, authUser *auth.User) middleware.Responder {
+		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+
+		signature, err := v1SignatureService.GetSignature(params.SignatureID)
+		if err != nil {
+			return signatures.NewGetSignatureSignedDocumentInternalServerError().WithPayload(errorResponse(err))
+		}
+		if signature == nil {
+			return signatures.NewGetSignatureSignedDocumentNotFound().WithPayload(errorResponse(errors.New("signature not found")))
+		}
+		haveAccess, err := isUserHaveAccessOfSignedSignaturePDF(authUser, signature, companyService, v1SignatureService, projectClaGroupsRepo)
+		if err != nil {
+			return signatures.NewGetSignatureSignedDocumentInternalServerError().WithPayload(errorResponse(err))
+		}
+		if !haveAccess {
+			return signatures.NewGetSignatureSignedDocumentForbidden().WithPayload(&models.ErrorResponse{
+				Code:    "403",
+				Message: "EasyCLA - 403 Forbidder : user does not have access of signature",
+			})
+		}
+		doc, err := v2service.GetSignedDocument(signature.SignatureID)
+		if err != nil {
+			if strings.Contains(err.Error(), "bad request") {
+				return signatures.NewGetSignatureSignedDocumentBadRequest().WithPayload(errorResponse(err))
+			}
+			return signatures.NewGetSignatureSignedDocumentInternalServerError().WithPayload(errorResponse(err))
+		}
+		return signatures.NewGetSignatureSignedDocumentOK().WithPayload(doc)
+	})
+
+}
+
+func isUserHaveAccessOfSignedSignaturePDF(authUser *auth.User, signature *v1Models.Signature, companyService company.IService, v1SignatureService signatureService.SignatureService, projectClaGroupRepo projects_cla_groups.Repository) (bool, error) {
+	projects, err := projectClaGroupRepo.GetProjectsIdsForClaGroup(signature.ProjectID)
+	if err != nil {
+		return false, err
+	}
+	if len(projects) == 0 {
+		return false, fmt.Errorf("cannot find cla group for cla_group_id: %s", signature.ProjectID)
+	}
+	foundationID := projects[0].FoundationSFID
+	projectSFID := projects[0].ProjectSFID
+
+	pmScope := authUser.ResourceIDsByTypeAndRole(auth.Project, "project-manager")
+	if len(pmScope) > 0 && utils.NewStringSetFromStringArray(pmScope).Include(foundationID) {
+		return true, nil
+	}
+	if signature.SignatureType == "ccla" {
+		comp, err := companyService.GetCompany(signature.SignatureReferenceID)
+		if err != nil {
+			return false, err
+		}
+		expectedScope := fmt.Sprintf("%s|%s", projectSFID, comp.CompanyExternalID)
+		cmScope := authUser.ResourceIDsByTypeAndRole(auth.ProjectOrganization, "cla-manager")
+		if len(cmScope) > 0 && utils.NewStringSetFromStringArray(cmScope).Include(expectedScope) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 type codedResponse interface {
