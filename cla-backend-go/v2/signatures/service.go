@@ -25,6 +25,7 @@ const (
 	// used when we want to query all data from dependent service.
 	HugePageSize      = int64(10000)
 	CclaSignatureType = "ccla"
+	ClaSignatureType  = "cla"
 )
 
 type service struct {
@@ -133,14 +134,14 @@ func (s service) GetSignedDocument(signatureID string) (*models.SignedDocument, 
 	if err != nil {
 		return nil, err
 	}
-	if sig.SignatureType == "cla" && sig.CompanyName != "" {
+	if sig.SignatureType == ClaSignatureType && sig.CompanyName != "" {
 		return nil, errors.New("bad request. employee signature does not have signed document")
 	}
 	var url string
 	switch sig.SignatureType {
-	case "cla":
+	case ClaSignatureType:
 		url = utils.SignedCLAFilename(sig.ProjectID, "icla", sig.SignatureReferenceID, sig.SignatureID)
-	case "ccla":
+	case CclaSignatureType:
 		url = utils.SignedCLAFilename(sig.ProjectID, "ccla", sig.SignatureReferenceID, sig.SignatureID)
 	}
 	signedURL, err := utils.GetDownloadLink(url)
