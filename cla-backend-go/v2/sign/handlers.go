@@ -4,6 +4,7 @@
 package sign
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/sign"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -33,6 +35,10 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 			if err != nil {
 				if strings.Contains(err.Error(), "does not exist") {
 					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(err))
+				}
+				if err == err.(*organizations.ListOrgUsrAdminScopesNotFound) {
+					formatErr := errors.New("user role scopes not found for cla-signatory role ")
+					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(formatErr))
 				}
 				return sign.NewRequestCorporateSignatureBadRequest().WithPayload(errorResponse(err))
 			}
