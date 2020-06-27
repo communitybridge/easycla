@@ -149,6 +149,10 @@ func requestCorporateSignature(authToken string, apiURL string, input *requestCo
 	log.Debugf("corporate signature response headers :%#v\n", resp.Header)
 	if strings.Contains(string(responseBody), "Company has already signed CCLA with this project") {
 		return nil, errors.New("company has already signed CCLA with this project")
+	} else if strings.Contains(string(responseBody), "Contract Group does not support CCLAs.") {
+		return nil, errors.New("contract Group does not support CCLAs")
+	} else if strings.Contains(string(responseBody), "user_error': 'user does not exist") {
+		return nil, errors.New("user_error': 'user does not exist")
 	}
 	var out requestCorporateSignatureOutput
 	err = json.Unmarshal(responseBody, &out)
