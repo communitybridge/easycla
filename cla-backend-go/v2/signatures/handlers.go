@@ -512,7 +512,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		if !haveAccess {
 			return signatures.NewGetSignatureSignedDocumentForbidden().WithPayload(&models.ErrorResponse{
 				Code:    "403",
-				Message: "EasyCLA - 403 Forbidder : user does not have access of signature",
+				Message: "EasyCLA - 403 Forbidden : user does not have access of signature",
 			})
 		}
 		doc, err := v2service.GetSignedDocument(signature.SignatureID)
@@ -533,7 +533,8 @@ func isUserHaveAccessOfSignedSignaturePDF(authUser *auth.User, signature *v1Mode
 		return false, err
 	}
 	if len(projects) == 0 {
-		return false, fmt.Errorf("cannot find cla group for cla_group_id: %s", signature.ProjectID)
+		return false, fmt.Errorf("cannot find project(s) associated with CLA group cla_group_id: %s - please update the database with the foundation/project mapping",
+			signature.ProjectID)
 	}
 	foundationID := projects[0].FoundationSFID
 	projectSFID := projects[0].ProjectSFID
