@@ -93,7 +93,9 @@ jobs:
             yarn install
       - run:
           name: Install awscli
-          command: sudo apt-get install -y awscli
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y awscli
       - run:
           name: Setup Backend
           command: |
