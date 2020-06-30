@@ -13,6 +13,11 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
+// constants
+const (
+	CLA = "CLA"
+)
+
 // Client is client for user_service
 type Client struct {
 	cl *client.PMM
@@ -57,4 +62,68 @@ func (pmm *Client) GetProject(projectSFID string) (*models.ProjectOutputDetailed
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
 	return pmm.getProject(projectSFID, clientAuth)
+}
+
+// EnableCLA enables CLA service in project-service
+func (pmm *Client) EnableCLA(projectSFID string) error {
+	tok, err := token.GetToken()
+	if err != nil {
+		return err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	projectDetails, err := pmm.getProject(projectSFID, clientAuth)
+	if err != nil {
+		return err
+	}
+	for _, serviceName := range projectDetails.EnabledServices {
+		if serviceName == CLA {
+			// CLA already enabled
+			return nil
+		}
+	}
+	enabledServices := projectDetails.EnabledServices
+	enabledServices = append(enabledServices, CLA)
+	return pmm.updateEnabledServices(projectSFID, enabledServices, clientAuth)
+}
+
+func (pmm *Client) updateEnabledServices(projectSFID string, enabledServices []string, clientAuth runtime.ClientAuthInfoWriter) error {
+	params := project.NewUpdateProjectParams()
+	params.ProjectID = projectSFID
+	params.Body = &models.ProjectInput{
+		ProjectCommon: models.ProjectCommon{
+			EnabledServices: enabledServices,
+		},
+	}
+	_, err := pmm.cl.Project.UpdateProject(params, clientAuth) //nolint
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+// DisableCLA enables CLA service in project-service
+func (pmm *Client) DisableCLA(projectSFID string) error {
+	tok, err := token.GetToken()
+	if err != nil {
+		return err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	projectDetails, err := pmm.getProject(projectSFID, clientAuth)
+	if err != nil {
+		return err
+	}
+	newEnabledServices := make([]string, 0)
+	var claFound bool
+	for _, serviceName := range projectDetails.EnabledServices {
+		if serviceName != CLA {
+			newEnabledServices = append(newEnabledServices, serviceName)
+		} else {
+			claFound = true
+		}
+	}
+	if !claFound {
+		// CLA already disabled
+		return nil
+	}
+	return pmm.updateEnabledServices(projectSFID, newEnabledServices, clientAuth)
 }
