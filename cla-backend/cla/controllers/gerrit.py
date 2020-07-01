@@ -168,7 +168,7 @@ def get_agreement_html(project_id, contract_type):
             Your account is not authorized under a signed CLA.  Click the button to authorize your account.
             </p>
             <p class="text-center">
-            <a href="{console_url}" class="btn btn-primary" role="button">Authorize</a>
+            <a href="{console_url}" class="btn btn-primary" role="button">Proceed To Authorization</a>
             </p>
         </body>
         </html>
