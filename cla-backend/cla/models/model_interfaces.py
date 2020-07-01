@@ -2107,3 +2107,48 @@ class Event(object):
         """
 
         raise NotImplementedError()
+
+class ProjectCLAGroup(object):
+    """
+    Interface to the ProjectCLA Model
+    """
+    def to_dict(self):
+        """
+        Converts models to dictionaries for JSON serialization.
+
+        :return: A dict representation of the model.
+        "rtype: dict
+        """
+        raise NotImplementedError()
+
+    def save(self):
+        """
+        Simple abstraction around the supported ORMs to save a model
+        """
+        raise NotImplementedError()
+
+    def delete(self):
+        """
+        Simple abstraction around the supported ORMs to delete a model
+        """
+        raise NotImplementedError()
+
+    def load(self, project_sfid):
+        """
+        Simple abstraction around the supported ORMs to load a model
+        Populates the current object.
+
+        :param project_sfid: The ID of the projectCLAGroup to load
+        :type project_sfid: string
+        """
+        raise NotImplementedError()
+
+    def all(self, project_sfids):
+        """
+        Fetches all projectCLAGroups in the CLA system.
+
+        :param project_sfids: List of project_sfids to retrieve
+        :return: A list of projectCLAGroup objects.
+        :rtype: [cla.models.model_interfaces.ProjectCLAGroup]
+        """
+        raise NotImplementedError()
