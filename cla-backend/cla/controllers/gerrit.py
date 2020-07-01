@@ -10,6 +10,7 @@ import uuid
 
 import cla
 import cla.hug_types
+from cla.utils import get_project_instance, get_repository_instance
 from cla.controllers.lf_group import LFGroup
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import Gerrit
@@ -132,13 +133,44 @@ def delete_gerrit(gerrit_id):
 
 
 def get_agreement_html(project_id, contract_type):
-    contributor_base_url = cla.conf['CONTRIBUTOR_BASE_URL']
-    return """
-        <html>
-            <a href="https://{contributor_base_url}/#/cla/gerrit/project/{project_id}/{contract_type}">Thank you.
-            Unfortunately, your account is not authorized under a signed CLA. Please click here to proceed.</a>
-        <html>""".format(
-        contributor_base_url=contributor_base_url,
-        project_id=project_id,
-        contract_type=contract_type
-    )
+    console_v1_endpoint = cla.conf['CONTRIBUTOR_BASE_URL']
+    console_v2_endpoint = cla.conf['CONTRIBUTOR_V2_BASE_URL']
+    console_url = ''
+    try:
+        project = get_project_instance()
+        project.load(str(project_id))
+    except DoesNotExist as err:
+        return {'errors': {'project_id': str(err)}}
+
+    # Temporary condition until all CLA Groups are ready for the v2 Contributor Console
+    if project.get_version() == 'v2':
+        # Generate url for the v2 console
+        console_url = f'https://{console_v2_endpoint}/#/cla/gerrit/project/{project_id}/{contract_type}'
+    else:
+        # Generate url for the v1 contributor console
+        console_url = f'https://{console_v1_endpoint}/#/cla/gerrit/project/{project_id}/{contract_type}'
+
+    return f"""
+        <html lang="en">
+        <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        </head>
+        <body style='margin-top:20;margin-left:0;margin-right:0;'>
+            <div class="text-center">
+                <img width=300px" src="https://cla-project-logo-prod.s3.amazonaws.com/lf-horizontal-color.svg" alt="community bridge logo"/>
+            </div>
+            <h2 class="text-center">EasyCLA Account Authorization</h2>
+            <p class="text-center">
+            Your account is not authorized under a signed CLA.  Click the button to authorize your account.
+            </p>
+            <p class="text-center">
+            <a href="{console_url}" class="btn btn-primary" role="button">Authorize</a>
+            </p>
+        </body>
+        </html>
+        """
+
