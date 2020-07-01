@@ -21,7 +21,7 @@ from cla.models import DoesNotExist
 from cla.models.event_types import EventType
 from cla.models.dynamo_models import User, Signature, Repository, \
     Company, Project, Document, \
-    GitHubOrg, Gerrit, UserPermissions, Event, CompanyInvite
+    GitHubOrg, Gerrit, UserPermissions, Event, CompanyInvite, ProjectCLAGroup
 
 API_BASE_URL = os.environ.get('CLA_API_BASE', '')
 CLA_LOGO_URL = os.environ.get('CLA_BUCKET_LOGO_URL', '')
@@ -100,7 +100,7 @@ def get_database_models(conf=None):
         return {'User': User, 'Signature': Signature, 'Repository': Repository,
                 'Company': Company, 'Project': Project, 'Document': Document,
                 'GitHubOrg': GitHubOrg, 'Gerrit': Gerrit, 'UserPermissions': UserPermissions,
-                'Event': Event, 'CompanyInvites': CompanyInvite}
+                'Event': Event, 'CompanyInvites': CompanyInvite, 'ProjectCLAGroup': ProjectCLAGroup ,}
     else:
         raise Exception('Invalid database selection in configuration: %s' % conf['DATABASE'])
 
@@ -235,6 +235,18 @@ def get_event_instance(conf=None) -> Event:
     :rtype: cla.models.model_interfaces.Event
     """
     return get_database_models(conf)['Event']()
+
+def get_project_cla_group_instance(conf=None) -> ProjectCLAGroup:
+    """
+    Helper function to get a database ProjectCLAGroup model
+
+    :paran conf: Same as get_database_nodels()
+    :type conf: dict
+    :return: A ProjectCLAGroup model instance based on configuration
+    :rtype: cla.models.model_interfaces.ProjectCLAGroup
+    """
+
+    return get_database_models(conf)['ProjectCLAGroup']()
 
 
 def get_email_service(conf=None, initialize=True):
