@@ -19,7 +19,7 @@ import (
 )
 
 // Configure sets up the middleware handlers
-func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository) {
+func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository, LFXPortalURL string) {
 
 	api.CompanyGetCompanyProjectClaManagersHandler = company.GetCompanyProjectClaManagersHandlerFunc(
 		func(params company.GetCompanyProjectClaManagersParams, authUser *auth.User) middleware.Responder {
@@ -134,14 +134,13 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				})
 			}
 
-			companyModel, err := service.CreateCompany(*params.Input.CompanyName, *params.Input.CompanyWebsite, params.UserID)
+			companyModel, err := service.CreateCompany(*params.Input.CompanyName, *params.Input.CompanyWebsite, params.UserID, LFXPortalURL)
 			if err != nil {
 				log.Warnf("error returned from create company api: %+v", err)
-				// If EasyCLA company conflict/duplicate or Platform Org Service conflict/duplicate
-				if err == ErrDuplicateCompany || err == err.(*organizations.CreateOrgConflict) {
+				switch err := err; err.(type) {
+				case *organizations.CreateOrgConflict:
 					return company.NewCreateCompanyConflict().WithPayload(errorResponse(err))
 				}
-
 				return company.NewCreateCompanyBadRequest().WithPayload(errorResponse(err))
 			}
 			return company.NewCreateCompanyOK().WithPayload(companyModel)
