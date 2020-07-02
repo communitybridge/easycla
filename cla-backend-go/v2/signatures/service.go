@@ -5,13 +5,14 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
+
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+
 	"github.com/jinzhu/copier"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-	v1Project "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
-	v1Signatures "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/project"
@@ -29,9 +30,10 @@ const (
 )
 
 type service struct {
-	v1ProjectService   project.Service
-	v1CompanyService   company.IService
-	v1SignatureService signatures.SignatureService
+	v1ProjectService      project.Service
+	v1CompanyService      company.IService
+	v1SignatureService    signatures.SignatureService
+	projectsClaGroupsRepo projects_cla_groups.Repository
 }
 
 // Service contains method of v2 signature service
@@ -45,11 +47,13 @@ type Service interface {
 // NewService creates instance of v2 signature service
 func NewService(v1ProjectService project.Service,
 	v1CompanyService company.IService,
-	v1SignatureService signatures.SignatureService) *service {
+	v1SignatureService signatures.SignatureService,
+	pcgRepo projects_cla_groups.Repository) *service {
 	return &service{
-		v1ProjectService:   v1ProjectService,
-		v1CompanyService:   v1CompanyService,
-		v1SignatureService: v1SignatureService,
+		v1ProjectService:      v1ProjectService,
+		v1CompanyService:      v1CompanyService,
+		v1SignatureService:    v1SignatureService,
+		projectsClaGroupsRepo: pcgRepo,
 	}
 }
 
@@ -58,37 +62,24 @@ func (s *service) GetProjectCompanySignatures(companySFID string, projectSFID st
 	if err != nil {
 		return nil, err
 	}
-	projects, err := s.v1ProjectService.GetProjectsByExternalID(&v1Project.GetProjectsByExternalIDParams{
-		PageSize:    aws.Int64(HugePageSize),
-		ProjectSFID: projectSFID,
-	})
+	pm, err := s.projectsClaGroupsRepo.GetClaGroupIDForProject(projectSFID)
 	if err != nil {
 		return nil, err
 	}
-	projectIDs := utils.NewStringSet()
-	for _, p := range projects.Projects {
-		projectIDs.Add(p.ProjectID)
-	}
-	sigs, err := s.v1SignatureService.GetCompanySignatures(v1Signatures.GetCompanySignaturesParams{
-		CompanyID:     companyModel.CompanyID,
-		PageSize:      aws.Int64(HugePageSize),
-		SignatureType: aws.String(CclaSignatureType),
-	})
+	signed := true
+	approved := true
+	sig, err := s.v1SignatureService.GetProjectCompanySignature(companyModel.CompanyID, pm.ClaGroupID, &signed, &approved, nil, aws.Int64(HugePageSize))
 	if err != nil {
 		return nil, err
 	}
-	filteredSigs := &v1Models.Signatures{
-		LastKeyScanned: sigs.LastKeyScanned,
-		ResultCount:    0,
-		Signatures:     nil,
+	resp := &v1Models.Signatures{
+		Signatures: make([]*v1Models.Signature, 0),
 	}
-	for _, sig := range sigs.Signatures {
-		if projectIDs.Include(sig.ProjectID) {
-			filteredSigs.Signatures = append(filteredSigs.Signatures, sig)
-			filteredSigs.ResultCount++
-		}
+	if sig != nil {
+		resp.ResultCount = 1
+		resp.Signatures = append(resp.Signatures, sig)
 	}
-	return v2SignaturesReplaceCompanyID(filteredSigs, companyModel.CompanyID, companySFID)
+	return v2SignaturesReplaceCompanyID(resp, companyModel.CompanyID, companySFID)
 }
 
 func iclaSigCsvLine(sig *v1Models.IclaSignature) string {
