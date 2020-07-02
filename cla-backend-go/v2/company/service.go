@@ -29,6 +29,7 @@ import (
 	v1SignatureParams "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
+	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
 	orgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 	v2ProjectServiceModels "github.com/communitybridge/easycla/cla-backend-go/v2/project-service/models"
@@ -39,6 +40,7 @@ import (
 // errors
 var (
 	ErrProjectNotFound = errors.New("project not found")
+	ErrCLAUserNotFound = errors.New("claUser not found")
 )
 
 // constants
@@ -57,7 +59,7 @@ type Service interface {
 	GetCompanyProjectActiveCLAs(companyID string, projectSFID string) (*models.ActiveClaList, error)
 	GetCompanyProjectContributors(projectSFID string, companySFID string, searchTerm string) (*models.CorporateContributorList, error)
 	GetCompanyProjectCLA(authUser *auth.User, companySFID, projectSFID string) (*models.CompanyProjectClaList, error)
-	CreateCompany(companyName string, companyWebsite string, userID string) (*models.CompanyOutput, error)
+	CreateCompany(companyName string, companyWebsite string, userID string, LFXPortalURL string) (*models.CompanyOutput, error)
 	GetCompanyCLAGroupManagers(companyID, claGroupID string) (*models.CompanyClaManagers, error)
 }
 
@@ -188,7 +190,13 @@ func (s *service) GetCompanyProjectContributors(projectSFID string, companySFID 
 	}, nil
 }
 
-func (s *service) CreateCompany(companyName string, companyWebsite string, userID string) (*models.CompanyOutput, error) {
+func (s *service) CreateCompany(companyName string, companyWebsite string, userID string, LFXPortalURL string) (*models.CompanyOutput, error) {
+
+	// Get EasyCLA User
+	claUser, claUserErr := s.userRepo.GetUser(userID)
+	if claUserErr != nil {
+		return nil, ErrCLAUserNotFound
+	}
 
 	// Create Sales Force company
 	orgClient := orgService.GetClient()
@@ -200,10 +208,50 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 
 	// Create Easy CLA Company
 	log.Debugf("Creating EasyCLA company : %s ", companyName)
-	err = s.repo.CreateCompany(companyName, org.ID, userID)
-	if err != nil {
+	// OrgID used as externalID for the easyCLA Company
+	easyCLAErr := s.repo.CreateCompany(companyName, org.ID, userID)
+	if easyCLAErr != nil {
 		log.Warnf("Failed to create EasyCLA company for company: %s ", companyName)
-		return nil, err
+		return nil, easyCLAErr
+	}
+	acsClient := acs_service.GetClient()
+
+	if claUser.LfUsername != "" {
+		// Get Role ID
+		roleID, designeeErr := acsClient.GetRoleID("company-owner")
+		if designeeErr != nil {
+			msg := "Problem getting role ID for company-owner"
+			log.Warn(msg)
+			return nil, designeeErr
+		}
+
+		err = orgClient.CreateOrgUserRoleOrgScope(claUser.LfEmail, org.ID, roleID)
+		if err != nil {
+			log.Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", claUser.LfUsername, err)
+			return nil, err
+		}
+		log.Debugf("User :%s has been assigned the company-owner role to organization: %s ", claUser.LfUsername, org.Name)
+		//Send Email to User with instructions to complete Company profile
+		log.Debugf("Sending Email to user :%s to complete setup for newly created Org : %s ", claUser.Username, org.Name)
+		sendEmailToUserCompanyProfile(org.Name, claUser.Username, claUser.LfUsername, LFXPortalURL)
+
+	} else {
+		// Ensure to send user invite with public email (GH)
+		filteredEmails := []string{}
+		for _, email := range claUser.Emails {
+			if !(strings.Contains(email, "noreply.github.com")) {
+				filteredEmails = append(filteredEmails, email)
+			}
+		}
+
+		if len(filteredEmails) > 0 {
+			// Send User invite
+			acsErr := acsClient.SendUserInvite(&filteredEmails[0], "contributor", "organization", org.ID, "userinvite")
+			if acsErr != nil {
+				return nil, acsErr
+			}
+			log.Debugf("ACS Service - User invite initiated for user with email : %s", filteredEmails[0])
+		}
 	}
 	return &models.CompanyOutput{
 		CompanyName:    org.Name,
@@ -673,4 +721,27 @@ func (s *service) getCompanyAndClaGroup(companySFID, projectSFID string) (*v1Mod
 		return nil, nil, projectErr
 	}
 	return comp, claGroup, nil
+}
+
+func sendEmailToUserCompanyProfile(orgName string, userEmail string, username string, LFXPortalURL string) {
+	subject := "EasyCLA: Invitation to create LFID and complete process of becoming CLA Manager"
+	recipients := []string{userEmail}
+	body := fmt.Sprintf(`
+<p>Hello %s,</p>
+<p>This is a notification email from EasyCLA regarding the newly created Salesforce Organization %s .</p>
+<p>The organization profile can be completed via <a href="%s/company/manage/" target="_blank">clicking this link</a>
+<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
+<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+support</a>.</p>
+
+<p>Thanks,</p>
+<p>EasyCLA support team</p>`,
+		username, orgName, LFXPortalURL)
+	err := utils.SendEmail(subject, body, recipients)
+	if err != nil {
+		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+	} else {
+		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	}
 }
