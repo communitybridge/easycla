@@ -874,9 +874,12 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 	// This is the keys we want to match
 	condition := expression.Key("signature_user_ccla_company_id").Equal(expression.Value(params.CompanyID)).And(
 		expression.Key("signature_project_id").Equal(expression.Value(params.ProjectID)))
+	// Check for approved signatures
+	filter := expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true))).
+		And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(true))))
 
 	// Use the nice builder to create the expression
-	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithFilter(filter).WithProjection(buildProjection()).Build()
 	if err != nil {
 		log.Warnf("error building expression for project signature ID query, project: %s, error: %v",
 			params.ProjectID, err)

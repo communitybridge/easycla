@@ -55,11 +55,10 @@ func (s service) GetProjects(params *project.GetProjectsParams) (*models.Project
 
 // GetProjectByID service method
 func (s service) GetProjectByID(projectID string) (*models.Project, error) {
-	project, err := s.repo.GetProjectByID(projectID)
+	project, err := s.repo.GetProjectByID(projectID, LoadRepoDetails)
 	if err != nil {
 		return nil, err
 	}
-	s.fillRepoInfo(project)
 	return project, nil
 }
 
