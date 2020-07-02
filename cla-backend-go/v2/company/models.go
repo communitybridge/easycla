@@ -5,11 +5,9 @@ package company
 
 import (
 	"github.com/communitybridge/easycla/cla-backend-go/company"
-	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/users"
-	v2ProjectServiceModels "github.com/communitybridge/easycla/cla-backend-go/v2/project-service/models"
 )
 
 type service struct {
@@ -19,18 +17,6 @@ type service struct {
 	companyRepo          company.IRepository
 	repo                 IRepository
 	projectClaGroupsRepo projects_cla_groups.Repository
-}
-
-type signatureResponse struct {
-	companyID  string
-	projectID  string
-	signatures *v1Models.Signatures
-	err        error
-}
-
-type projectDetailedModel struct {
-	v1ProjectModel       *v1Models.Project
-	v2ProjectOutputModel *v2ProjectServiceModels.ProjectOutput
 }
 
 type claGroupModel struct {

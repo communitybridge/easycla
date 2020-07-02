@@ -18,11 +18,9 @@ import (
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 
-	"github.com/communitybridge/easycla/cla-backend-go/users"
-	"github.com/sirupsen/logrus"
-
 	"github.com/communitybridge/easycla/cla-backend-go/logging"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/users"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -353,8 +351,8 @@ func (s *service) getCLAGroupsUnderProjectOrFoundation(id string) (map[string]*c
 		}
 	} else {
 		// get cla group id from project
-		projectMapping, err := s.projectClaGroupsRepo.GetClaGroupIDForProject(id)
-		if err != nil {
+		projectMapping, perr := s.projectClaGroupsRepo.GetClaGroupIDForProject(id)
+		if perr != nil {
 			return nil, err
 		}
 		// get all projects for that cla group
@@ -452,51 +450,6 @@ func (s *service) getAllCCLASignatures(companyID string) ([]*v1Models.Signature,
 			break
 		}
 		lastScannedKey = aws.String(signatures.LastKeyScanned)
-	}
-	return sigs, nil
-}
-
-// return list of all signature of the company for the projects
-func (s *service) getCompanyProjectCCLASignatures(companyID string, projects *v1Models.Projects) ([]*v1Models.Signature, error) {
-	var sigs []*v1Models.Signature
-	res := make(chan *signatureResponse)
-	var wg sync.WaitGroup
-	wg.Add(len(projects.Projects))
-	go func() {
-		wg.Wait()
-		close(res)
-	}()
-	for _, project := range projects.Projects {
-		go func(companyID, projectID string, responseChan chan *signatureResponse) {
-			defer wg.Done()
-			signed, approved := true, true
-			pageSize := HugePageSize
-			sigs, err := s.signatureRepo.GetProjectCompanySignatures(companyID, projectID, &signed, &approved, nil, &pageSize)
-			if err != nil {
-				return
-			}
-			responseChan <- &signatureResponse{
-				companyID:  companyID,
-				projectID:  projectID,
-				signatures: sigs,
-				err:        err,
-			}
-		}(companyID, project.ProjectID, res)
-	}
-	var sigErr error
-	for sigResp := range res {
-		if sigResp.err != nil {
-			log.WithFields(logrus.Fields{
-				"project_id": sigResp.projectID,
-				"company_id": sigResp.companyID,
-			}).Error("unable to fetch ccla signatures for project")
-			sigErr = sigResp.err
-			continue
-		}
-		sigs = append(sigs, sigResp.signatures.Signatures...)
-	}
-	if sigErr != nil {
-		return nil, sigErr
 	}
 	return sigs, nil
 }
