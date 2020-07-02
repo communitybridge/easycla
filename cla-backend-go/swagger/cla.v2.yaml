@@ -3041,18 +3041,12 @@ definitions:
     type: object
     required:
       - project_sfid
-      - cla_group_id
       - company_sfid
     properties:
       project_sfid:
         type: string
         example: 'a0941000005ouJFAAY'
         description: salesforce id of the project
-      cla_group_id:
-        type: string
-        example: 'c4d71673-e9e8-4e26-a035-99e8334620e5'
-        description: cla group id
-        format: uuid
       company_sfid:
         type: string
         example: '0014100000Te0fMAAR'

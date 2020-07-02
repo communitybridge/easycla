@@ -65,7 +65,7 @@ type Service interface {
 
 // ProjectRepo contains project repo methods
 type ProjectRepo interface {
-	GetProjectByID(projectID string) (*v1Models.Project, error)
+	GetProjectByID(projectID string, loadRepoDetails bool) (*v1Models.Project, error)
 	GetProjectsByExternalID(params *v1ProjectParams.GetProjectsByExternalIDParams, loadRepoDetails bool) (*v1Models.Projects, error)
 }
 
@@ -281,7 +281,7 @@ func (s *service) GetCompanyCLAGroupManagers(companyID, claGroupID string) (*mod
 		return nil, nil
 	}
 
-	projectModel, projErr := s.projectRepo.GetProjectByID(claGroupID)
+	projectModel, projErr := s.projectRepo.GetProjectByID(claGroupID, DontLoadRepoDetails)
 	if projErr != nil {
 		log.Warnf("unable to query CLA Group ID: %s, error: %+v", claGroupID, err)
 		return nil, err
@@ -397,7 +397,7 @@ func (s *service) getCLAGroupsUnderProjectOrFoundation(id string) (map[string]*c
 		go func(claGroupID string, claGroup *claGroupModel) {
 			defer wg.Done()
 			// get cla-group info
-			cginfo, err := s.projectRepo.GetProjectByID(claGroupID)
+			cginfo, err := s.projectRepo.GetProjectByID(claGroupID, DontLoadRepoDetails)
 			if err != nil || cginfo == nil {
 				log.Warnf("Unable to get details of cla_group: %s", claGroupID)
 				return
@@ -705,7 +705,7 @@ func (s *service) getCompanyAndClaGroup(companySFID, projectSFID string) (*v1Mod
 			log.Debugf("cla group mapping not found for projectSFID %s", projectSFID)
 			return
 		}
-		claGroup, projectErr = s.projectRepo.GetProjectByID(pm.ClaGroupID)
+		claGroup, projectErr = s.projectRepo.GetProjectByID(pm.ClaGroupID, DontLoadRepoDetails)
 		if claGroup == nil {
 			projectErr = ErrProjectNotFound
 		}

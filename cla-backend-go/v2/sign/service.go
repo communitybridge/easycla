@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+
 	"github.com/sirupsen/logrus"
 
 	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
@@ -28,9 +30,20 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 )
 
+// constants
+const (
+	DontLoadRepoDetails = false
+)
+
+// errors
+var (
+	ErrCCLANotEnabled        = errors.New("corporate license agreement is not enabled with this project")
+	ErrTemplateNotConfigured = errors.New("cla template not configured for this project")
+)
+
 // ProjectRepo contains project repo methods
 type ProjectRepo interface {
-	GetProjectByID(projectID string) (*v1Models.Project, error)
+	GetProjectByID(projectID string, loadRepoDetails bool) (*v1Models.Project, error)
 }
 
 // Service interface defines the sign service methods
@@ -40,17 +53,19 @@ type Service interface {
 
 // service
 type service struct {
-	ClaV1ApiURL string
-	companyRepo company.IRepository
-	projectRepo ProjectRepo
+	ClaV1ApiURL          string
+	companyRepo          company.IRepository
+	projectRepo          ProjectRepo
+	projectClaGroupsRepo projects_cla_groups.Repository
 }
 
 // NewService returns an instance of v2 project service
-func NewService(apiURL string, compRepo company.IRepository, projectRepo ProjectRepo) Service {
+func NewService(apiURL string, compRepo company.IRepository, projectRepo ProjectRepo, pcgRepo projects_cla_groups.Repository) Service {
 	return &service{
-		ClaV1ApiURL: apiURL,
-		companyRepo: compRepo,
-		projectRepo: projectRepo,
+		ClaV1ApiURL:          apiURL,
+		companyRepo:          compRepo,
+		projectRepo:          projectRepo,
+		projectClaGroupsRepo: pcgRepo,
 	}
 }
 
@@ -95,12 +110,19 @@ func (s *service) RequestCorporateSignature(authorizationHeader string, input *m
 	if err != nil {
 		return nil, err
 	}
-	proj, err := s.projectRepo.GetProjectByID(input.ClaGroupID.String())
+	cgm, err := s.projectClaGroupsRepo.GetClaGroupIDForProject(utils.StringValue(input.ProjectSfid))
 	if err != nil {
 		return nil, err
 	}
-	if proj.ProjectExternalID != utils.StringValue(input.ProjectSfid) {
-		return nil, errors.New("project_sfid does not match with cla_groups project_sfid")
+	proj, err := s.projectRepo.GetProjectByID(cgm.ClaGroupID, DontLoadRepoDetails)
+	if err != nil {
+		return nil, err
+	}
+	if !proj.ProjectCCLAEnabled {
+		return nil, ErrCCLANotEnabled
+	}
+	if len(proj.ProjectCorporateDocuments) == 0 {
+		return nil, ErrTemplateNotConfigured
 	}
 	if input.SendAsEmail {
 		// this would be used only in case of cla-signatory

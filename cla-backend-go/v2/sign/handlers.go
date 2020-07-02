@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
@@ -35,6 +37,12 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 			if err != nil {
 				if strings.Contains(err.Error(), "does not exist") {
 					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(err))
+				}
+				if err == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
+					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(err))
+				}
+				if err == ErrCCLANotEnabled || err == ErrTemplateNotConfigured {
+					return sign.NewRequestCorporateSignatureBadRequest().WithPayload(errorResponse(err))
 				}
 				if err == err.(*organizations.ListOrgUsrAdminScopesNotFound) {
 					formatErr := errors.New("user role scopes not found for cla-signatory role ")

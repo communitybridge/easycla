@@ -12,6 +12,12 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
+// constants
+const (
+	LoadRepoDetails     = true
+	DontLoadRepoDetails = false
+)
+
 // Service interface defines methods of event service
 type Service interface {
 	LogEvent(args *LogEventArgs)
@@ -24,7 +30,7 @@ type Service interface {
 
 // CombinedRepo contains the various methods of other repositories
 type CombinedRepo interface {
-	GetProjectByID(projectID string) (*models.Project, error)
+	GetProjectByID(projectID string, loadRepoDetails bool) (*models.Project, error)
 	GetCompany(companyID string) (*models.Company, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
 	GetUser(userID string) (*models.User, error)
@@ -129,7 +135,7 @@ func (s *service) loadProject(args *LogEventArgs) error {
 		return nil
 	}
 	if args.ProjectID != "" {
-		projectModel, err := s.combinedRepo.GetProjectByID(args.ProjectID)
+		projectModel, err := s.combinedRepo.GetProjectByID(args.ProjectID, DontLoadRepoDetails)
 		if err != nil {
 			return err
 		}
