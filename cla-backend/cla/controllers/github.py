@@ -308,30 +308,39 @@ def notify_project_managers(repositories):
         subject, body, recipients = unable_to_do_cla_check_email_content(managers, project["project_name"], repositories)
         get_email_service().send(subject, body, recipients)
 
+
 def unable_to_do_cla_check_email_content(managers, project_name, repositories):
     """Helper function to get unable to do cla check email subject, body, recipients"""
-    subject = 'EasyCLA is unable to check PRs'
+    subject = 'EasyCLA: Unable to check PRs'
     pronoun = "this repository"
     if len(repositories) > 1:
         pronoun = "these repositories"
 
-    repo_string = "\n    • ".join(repositories)
-    body = """
-Project Manager for {},
+    repo_content = "<ul>"
+    for repo in repositories:
+        repo_content += "<li>" + repo + "<ul>"
+    repo_content += "</ul>"
 
-EasyCLA is unable to check PRs on {} due to permissions issue.
-    • {}
-
-Please contact the repository admin/owner to enable CLA checks.
-
-Provide the Owner/Admin the following instructions:
-    • Go into the "Settings" tab of the GitHub Organization
-    • Click on "Integration & services" vertical navigation
-    • Then click "Configure" associated with the EasyCLA App
-    • Finally, click the "All Repositories" radio button option
-
-Thanks,
-EasyCLA Support Team""".format(project_name, pronoun, repo_string)
+    body = f"""
+    <p>Hello Project Manager,</p>
+    <p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
+    <p>EasyCLA is unable to check PRs on {pronoun} due to permissions issue.</p>
+    {repo_content}
+    <p>Please contact the repository admin/owner to enable CLA checks.</p>
+    <p>Provide the Owner/Admin the following instructions:</p>
+    <ul>
+    <li>Go into the "Settings" tab of the GitHub Organization</li>
+    <li>Click on "Integration & services" vertical navigation</li>
+    <li>Then click "Configure" associated with the EasyCLA App</li>
+    <li>Finally, click the "All Repositories" radio button option</li>
+    </ul>
+    <p>If you need help or have questions about EasyCLA, you can
+    <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
+    <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+    support</a>.</p>
+    <p>Thanks,</p>
+    <p>EasyCLA support team</p>
+    """
     body = '<p>' + body.replace('\n', '<br>')+ '</p>'
     recipients = []
     for manager in managers:

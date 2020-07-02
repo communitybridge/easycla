@@ -2595,6 +2595,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             ret.append(agr)
         return ret
 
+
 class ProjectCLAGroupModel(BaseModel):
     """
     Represents the lookuptable for clagroup and salesforce projects
@@ -2607,10 +2608,14 @@ class ProjectCLAGroupModel(BaseModel):
             host = "http://localhost:8000"
 
     project_sfid = UnicodeAttribute(hash_key=True)
+    project_name = UnicodeAttribute(null=True)
     cla_group_id = UnicodeAttribute(null=True)
+    cla_group_name = UnicodeAttribute(null=True)
     foundation_sfid = UnicodeAttribute(null=True)
+    foundation_name = UnicodeAttribute(null=True)
     foundation_sfid_index = FoundationSfidIndex()
     cla_group_id_index = CLAGroupIDIndex()
+
 
 class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
     """
@@ -2626,9 +2631,12 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
     def __str__(self):
         return (
             f"cla_group_id: {self.model.cla_group_id}",
+            f"cla_group_name: {self.model.cla_group_name}",
             f"project_sfid: {self.model.project_sfid}",
-            f"foundation_sfid: {self.model.foundation_sfid}",        
-            )
+            f"project_name: {self.model.project_name}",
+            f"foundation_sfid: {self.model.foundation_sfid}",
+            f"foundation_name: {self.model.foundation_name}",
+        )
 
     def to_dict(self):
         return dict(self.model)
@@ -2648,24 +2656,42 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
 
     def get_project_sfid(self):
         return self.model.project_sfid
- 
+
+    def get_project_name(self):
+        return self.model.project_name
+
     def get_foundation_sfid(self):
         return self.model.foundation_sfid
 
+    def get_foundation_name(self):
+        return self.model.foundation_name
+
     def get_cla_group_id(self):
         return self.model.cla_group_id
-    
+
+    def get_cla_group_name(self):
+        return self.model.cla_group_name
+
     def set_project_sfid(self, project_sfid):
         self.model.project_sfid = project_sfid
-    
+
+    def set_project_name(self, project_name):
+        self.model.project_name = project_name
+
     def set_foundation_sfid(self, foundation_sfid):
         self.model.foundation_sfid = foundation_sfid
-    
+
+    def set_foundation_name(self, foundation_name):
+        self.model.foundation_name = foundation_name
+
     def set_cla_group_id(self, cla_group_id):
         self.model.cla_group_id = cla_group_id
-    
+
+    def set_cla_group_name(self, cla_group_name):
+        self.model.cla_group_name = cla_group_name
+
     def get_by_foundation_sfid(self, foundation_sfid):
-        project_cla_groups = ProjectCLAGroupModel.foundation_sfid_index.query(foundaton_sfid)
+        project_cla_groups = ProjectCLAGroupModel.foundation_sfid_index.query(foundation_sfid)
         ret = []
         for project_cla_group in project_cla_groups:
             proj_cla_group = ProjectCLAGroup()
