@@ -2993,6 +2993,10 @@ definitions:
         type: string
         example: "John Doe"
         x-omitempty: false
+      signature_id:
+        type: string
+        example: "55ec4162-9e41-47da-a643-f81666953a51"
+        x-omitempty: false
       project_logo:
         type: string
         example: "http://wwwlinuxfoundation.org/logo.gif"

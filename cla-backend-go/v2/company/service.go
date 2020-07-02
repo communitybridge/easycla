@@ -560,6 +560,7 @@ func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, act
 	activeCla.ProjectID = sig.ProjectID
 	activeCla.SignedOn = sig.SignatureCreated
 	activeCla.ClaGroupName = cg.ClaGroupName
+	activeCla.SignatureID = sig.SignatureID
 
 	// fill details from project service
 	activeCla.ProjectName = cg.ProjectName
