@@ -2955,6 +2955,10 @@ definitions:
         type: boolean
         x-omitempty: false
         description: if requesting user is cla-designee then this would be true
+      sub_projects:
+        type: array
+        items:
+          type: string
 
   active-cla:
     type: object
@@ -2981,6 +2985,10 @@ definitions:
         type: string
         example: "Foundation"
         x-omitempty: false
+      sub_projects:
+        type: array
+        items:
+          type: string
       signatory_name:
         type: string
         example: "John Doe"

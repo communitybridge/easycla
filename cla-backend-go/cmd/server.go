@@ -229,7 +229,7 @@ func server(localMode bool) http.Handler {
 	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
 	v2ProjectService := v2Project.NewService(projectRepo)
 	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo, usersService)
-	v2CompanyService := v2Company.NewService(signaturesRepo, projectRepo, usersRepo, companyRepo, v2CompanyRepo)
+	v2CompanyService := v2Company.NewService(signaturesRepo, projectRepo, usersRepo, companyRepo, v2CompanyRepo, projectClaGroupRepo)
 	v2SignService := sign.NewService(configFile.ClaV1ApiURL, companyRepo, projectRepo)
 	signaturesService := signatures.NewService(signaturesRepo, companyService, usersService, eventsService, githubOrgValidation)
 	v2SignatureService := v2Signatures.NewService(projectService, companyService, signaturesService)
