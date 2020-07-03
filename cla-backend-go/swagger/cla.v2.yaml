@@ -274,7 +274,7 @@ paths:
       tags:
         - metrics
 
-  /metrics/company/{companySFID}/project/{projectSFID}/metrics:
+  /metrics/company/{companySFID}/project/{projectSFID}:
     get:
       summary: list project metrics of company
       description: Returns list of project metrics for company
