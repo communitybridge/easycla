@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/token"
 	"github.com/imroc/req"
@@ -49,19 +52,21 @@ type Repository interface {
 }
 
 type repo struct {
-	metricTableName string
-	dynamoDBClient  *dynamodb.DynamoDB
-	stage           string
-	apiGatewayURL   string
+	metricTableName       string
+	dynamoDBClient        *dynamodb.DynamoDB
+	stage                 string
+	apiGatewayURL         string
+	projectsClaGroupsRepo projects_cla_groups.Repository
 }
 
 // NewRepository creates new metrics repository
-func NewRepository(awsSession *session.Session, stage string, apiGwURL string) Repository {
+func NewRepository(awsSession *session.Session, stage string, apiGwURL string, pcgRepo projects_cla_groups.Repository) Repository {
 	return &repo{
-		dynamoDBClient:  dynamodb.New(awsSession),
-		metricTableName: fmt.Sprintf("cla-%s-metrics", stage),
-		stage:           stage,
-		apiGatewayURL:   apiGwURL,
+		dynamoDBClient:        dynamodb.New(awsSession),
+		metricTableName:       fmt.Sprintf("cla-%s-metrics", stage),
+		stage:                 stage,
+		apiGatewayURL:         apiGwURL,
+		projectsClaGroupsRepo: pcgRepo,
 	}
 }
 
@@ -276,6 +281,7 @@ func newProjectMetrics() *ProjectMetrics {
 type CompanyProjectMetric struct {
 	CompanyID         string `json:"company_id"`
 	ProjectID         string `json:"project_id"`
+	ClaGroupName      string `json:"cla_group_name"`
 	ProjectName       string `json:"project_name"`
 	CompanyName       string `json:"company_name"`
 	ClaManagersCount  int64  `json:"cla_managers_count"`
@@ -353,6 +359,7 @@ func (cpm *CompanyProjectMetric) toModel() *models.CompanyProjectMetric {
 		ProjectName:       cpm.ProjectName,
 		CompanyName:       cpm.CompanyName,
 		ProjectSFID:       cpm.ProjectSFID,
+		ClaGroupName:      cpm.ClaGroupName,
 	}
 }
 
@@ -1049,9 +1056,42 @@ func (repo *repo) saveProjectMetrics(projectMetrics *ProjectMetrics) error {
 	return nil
 }
 
+type claGroup struct {
+	claGroupID      string
+	projectSFIDList []string
+	foundationSFID  string
+}
+
+func (repo *repo) getClaGroupProjectsMapping() (map[string]*claGroup, error) {
+	r := make(map[string]*claGroup)
+	cgpList, err := repo.projectsClaGroupsRepo.GetProjectsIdsForAllFoundation()
+	if err != nil {
+		return r, err
+	}
+	for _, cgp := range cgpList {
+		cg, ok := r[cgp.ClaGroupID]
+		if !ok {
+			cg = &claGroup{
+				claGroupID:      cgp.ClaGroupID,
+				projectSFIDList: []string{cgp.ProjectSFID},
+				foundationSFID:  cgp.FoundationSFID,
+			}
+			r[cgp.ClaGroupID] = cg
+		} else {
+			cg.projectSFIDList = append(cg.projectSFIDList, cgp.ProjectSFID)
+		}
+	}
+	return r, nil
+}
+
 func (repo *repo) saveCompanyProjectMetrics(in *CompanyProjectMetrics, pmm map[string]*ProjectMetric, cmm map[string]*CompanyMetric) error {
 	t := time.Now()
 	log.Println("saving company_project_metrics")
+	psc := project_service.GetClient()
+	claGroupMapping, err := repo.getClaGroupProjectsMapping()
+	if err != nil {
+		return err
+	}
 	for id, cpm := range in.CompanyProjectMetrics {
 		pm, ok := pmm[cpm.ProjectID]
 		if !ok {
@@ -1063,9 +1103,25 @@ func (repo *repo) saveCompanyProjectMetrics(in *CompanyProjectMetrics, pmm map[s
 			log.Warnf("saveCompanyProjectMetrics error = company not found with id. [%s]", cpm.CompanyID)
 			continue
 		}
+		claGroupMap, ok := claGroupMapping[cpm.ProjectID]
+		if !ok {
+			log.Warnf("saveCompanyProjectMetrics error = cla group not present in cla-group project mapping. [%s]", cpm.ProjectID)
+			continue
+		}
+		if len(claGroupMap.projectSFIDList) == 1 {
+			cpm.ProjectSFID = claGroupMap.projectSFIDList[0]
+		} else {
+			cpm.ProjectSFID = claGroupMap.foundationSFID
+		}
+		projectDetails, err := psc.GetProject(cpm.ProjectSFID)
+		if err != nil {
+			log.Warnf("saveCompanyProjectMetrics error = unable to get project details from project-service. %s", cpm.ProjectSFID)
+			continue
+		}
+		cpm.ProjectName = projectDetails.Name
+
 		cpm.CompanyName = cm.CompanyName
-		cpm.ProjectName = pm.ProjectName
-		cpm.ProjectSFID = pm.ExternalProjectID
+		cpm.ClaGroupName = pm.ProjectName
 		av, err := dynamodbattribute.MarshalMap(cpm)
 		if err != nil {
 			return err

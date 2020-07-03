@@ -17,7 +17,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
+	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 )
 
 var (
@@ -48,9 +50,10 @@ func init() {
 	if err != nil {
 		log.Panicf("Unable to load config - Error: %v", err)
 	}
-
-	metricsRepo = metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL)
+	pcgRepo := projects_cla_groups.NewRepository(awsSession, stage)
+	metricsRepo = metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL, pcgRepo)
 	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
+	project_service.InitClient(configFile.APIGatewayURL)
 }
 
 func handler(ctx context.Context, event events.CloudWatchEvent) {

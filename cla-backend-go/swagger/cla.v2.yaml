@@ -274,7 +274,7 @@ paths:
       tags:
         - metrics
 
-  /metrics/company/{companySFID}/project-metrics:
+  /metrics/company/{companySFID}/project/{projectSFID}:
     get:
       summary: list project metrics of company
       description: Returns list of project metrics for company
@@ -285,6 +285,7 @@ paths:
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-companySFID"
+        - $ref: "#/parameters/path-projectSFID"
       responses:
         '200':
           description: 'Success'
@@ -2664,6 +2665,9 @@ definitions:
         type: integer
         x-omitempty: false
       projectName:
+        type: string
+        x-omitempty: false
+      claGroupName:
         type: string
         x-omitempty: false
       companyName:
