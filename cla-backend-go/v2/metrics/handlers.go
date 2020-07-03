@@ -96,7 +96,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					return metrics.NewListCompanyProjectMetricsNotFound()
 				}
 			}
-			result, err := service.ListCompanyProjectMetrics(comp.CompanyID)
+			result, err := service.ListCompanyProjectMetrics(comp.CompanyID, params.ProjectSFID)
 			if err != nil {
 				return metrics.NewListCompanyProjectMetricsBadRequest().WithPayload(errorResponse(err))
 			}
