@@ -213,7 +213,7 @@ func server(localMode bool) http.Handler {
 	projectClaGroupRepo := projects_cla_groups.NewRepository(awsSession, stage)
 	projectRepo := project.NewRepository(awsSession, stage, repositoriesRepo, gerritRepo, projectClaGroupRepo)
 	eventsRepo := events.NewRepository(awsSession, stage)
-	metricsRepo := metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL)
+	metricsRepo := metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL, projectClaGroupRepo)
 	githubOrganizationsRepo := github_organizations.NewRepository(awsSession, stage)
 	claManagerReqRepo := cla_manager.NewRepository(awsSession, stage)
 
@@ -238,7 +238,7 @@ func server(localMode bool) http.Handler {
 	v2ClaManagerService := v2ClaManager.NewService(companyService, projectService, claManagerService, usersService, repositoriesService, v2CompanyService, eventsService)
 	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, signaturesRepo, configFile.CorporateConsoleURL, http.DefaultClient)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
-	v2MetricsService := metrics.NewService(metricsRepo)
+	v2MetricsService := metrics.NewService(metricsRepo, projectClaGroupRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
 	gerritService := gerrits.NewService(gerritRepo, &gerrits.LFGroup{
 		LfBaseURL:    configFile.LFGroup.ClientURL,
