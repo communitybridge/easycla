@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
+
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -21,20 +23,27 @@ import (
 const (
 	CLAGroupIDIndex     = "cla-group-id-index"
 	FoundationSFIDIndex = "foundation-sfid-index"
+	NotDefined          = "Not Defined"
+	NotFound            = "Not Found"
 )
 
 // errors
 var (
 	ErrProjectNotAssociatedWithClaGroup = errors.New("provided project is not associated with cla_group")
 	ErrAssociationAlreadyExist          = errors.New("cla_group project association already exist")
+	ErrCLAGroupDoesNotExist             = errors.New("cla group does not exist")
 )
 
 // ProjectClaGroup is database model for projects_cla_group table
 type ProjectClaGroup struct {
 	ProjectSFID       string `json:"project_sfid"`
+	ProjectName       string `json:"project_name"`
 	ClaGroupID        string `json:"cla_group_id"`
+	ClaGroupName      string `json:"cla_group_name"`
 	FoundationSFID    string `json:"foundation_sfid"`
+	FoundationName    string `json:"foundation_name"`
 	RepositoriesCount int64  `json:"repositories_count"`
+	Version           string `json:"version"`
 }
 
 // Repository provides interface for interacting with project_cla_groups table
@@ -45,11 +54,13 @@ type Repository interface {
 	GetProjectsIdsForAllFoundation() ([]*ProjectClaGroup, error)
 	AssociateClaGroupWithProject(claGroupID string, projectSFID string, foundationSFID string) error
 	RemoveProjectAssociatedWithClaGroup(claGroupID string, projectSFIDList []string, all bool) error
+	getCLAGroupNameByID(claGroupID string) (string, error)
 }
 
 type repo struct {
 	tableName      string
 	dynamoDBClient *dynamodb.DynamoDB
+	stage          string
 }
 
 // NewRepository provides implementation of projects_cla_group repository
@@ -57,6 +68,7 @@ func NewRepository(awsSession *session.Session, stage string) Repository {
 	return &repo{
 		tableName:      fmt.Sprintf("cla-%s-projects-cla-groups", stage),
 		dynamoDBClient: dynamodb.New(awsSession),
+		stage:          stage,
 	}
 }
 
@@ -164,11 +176,44 @@ func (repo *repo) GetProjectsIdsForAllFoundation() ([]*ProjectClaGroup, error) {
 
 // AssociateClaGroupWithProject creates entry in db to track cla_group association with project/foundation
 func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID string, foundationSFID string) error {
+	// Lookup the foundation name
+	var foundationName = NotDefined
+	projectServiceModel, projErr := v2ProjectService.GetClient().GetProject(foundationSFID)
+	if projErr != nil {
+		log.Warnf("unable to lookup foundation SFID: %s - error: %+v - using '%s'",
+			foundationSFID, projErr, NotDefined)
+	} else {
+		foundationName = projectServiceModel.Name
+	}
+
+	// Lookup the project name
+	var projectName = NotDefined
+	projectServiceModel, projErr = v2ProjectService.GetClient().GetProject(projectSFID)
+	if projErr != nil {
+		log.Warnf("unable to lookup project SFID: %s - error: %+v - using '%s'",
+			projectSFID, projErr, NotDefined)
+	} else {
+		projectName = projectServiceModel.Name
+	}
+
+	// Lookup the CLA Group name/Project Name
+	claGroupName, claGroupLookupErr := repo.getCLAGroupNameByID(claGroupID)
+	if claGroupLookupErr != nil {
+		claGroupName = NotDefined
+		log.Warnf("unable to lookup CLA Group ID/Project ID: %s - error: %+v - using '%s'",
+			claGroupID, claGroupLookupErr, NotDefined)
+	}
+
 	input := &ProjectClaGroup{
 		ProjectSFID:    projectSFID,
+		ProjectName:    projectName,
 		ClaGroupID:     claGroupID,
+		ClaGroupName:   claGroupName,
 		FoundationSFID: foundationSFID,
+		FoundationName: foundationName,
+		Version:        "v1",
 	}
+
 	av, err := dynamodbattribute.MarshalMap(input)
 	if err != nil {
 		return err
@@ -223,4 +268,37 @@ func (repo *repo) RemoveProjectAssociatedWithClaGroup(claGroupID string, project
 		return errors.New(strings.Join(errs, ","))
 	}
 	return nil
+}
+
+// getCLAGroupNameByID helper function to fetch the CLA Group name
+func (repo *repo) getCLAGroupNameByID(claGroupID string) (string, error) {
+	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
+	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"repository_id": {
+				S: aws.String(claGroupID),
+			},
+		},
+	})
+	if err != nil {
+		return NotFound, err
+	}
+	if len(result.Item) == 0 {
+		return NotFound, ErrCLAGroupDoesNotExist
+	}
+
+	// Quick model to grab the bare minimum values
+	type claGroupIDNameModel struct {
+		ProjectID   string `dynamodbav:"project_id"`
+		ProjectName string `dynamodbav:"project_name"`
+	}
+
+	var claGroupModel claGroupIDNameModel
+	err = dynamodbattribute.UnmarshalMap(result.Item, &claGroupModel)
+	if err != nil {
+		return NotFound, err
+	}
+
+	return claGroupModel.ProjectName, nil
 }
