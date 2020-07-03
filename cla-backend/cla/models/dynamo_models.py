@@ -1904,6 +1904,15 @@ class Repository(model_interfaces.Repository):
     def set_repository_organization_name(self, organization_name):
         self.model.repository_organization_name = organization_name
 
+    def get_repositories_by_cla_group_id(self, cla_group_id):
+        repository_generator = self.model.repository_project_index.query(str(cla_group_id))
+        repositories = []
+        for repository_model in repository_generator:
+            repository = Repository()
+            repository.model = repository_model
+            repositories.append(repository)
+        return repositories
+
     def get_repository_by_external_id(self, repository_external_id, repository_type):
         # TODO: Optimize this on the DB end.
         repository_generator = self.model.repository_external_index.query(str(repository_external_id))
@@ -2614,6 +2623,8 @@ class ProjectCLAGroupModel(BaseModel):
     foundation_sfid = UnicodeAttribute(null=True)
     foundation_name = UnicodeAttribute(null=True)
     foundation_sfid_index = FoundationSfidIndex()
+    repositories_count = NumberAttribute(null=True)
+    note = UnicodeAttribute(null=True)
     cla_group_id_index = CLAGroupIDIndex()
 
 
@@ -2621,12 +2632,21 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
     """
     ORM-agnostic wrapper for the DynamoDB ProjectCLAGroup model.
     """
-    def __init__(self, project_sfid=None, foundation_sfid=None, cla_group_id=None):
+    def __init__(self, project_sfid=None, project_name=None,
+                 foundation_sfid=None, foundation_name=None,
+                 cla_group_id=None, cla_group_name=None,
+                 repositories_count=0, note=None, version='v1'):
         super(ProjectCLAGroup).__init__()
         self.model = ProjectCLAGroupModel()
         self.model.project_sfid = project_sfid
+        self.model.project_name = project_name
         self.model.foundation_sfid = foundation_sfid
+        self.model.foundation_name = foundation_name
         self.model.cla_group_id = cla_group_id
+        self.model.cla_group_name = cla_group_name
+        self.model.repositories_count = repositories_count
+        self.model.note = note
+        self.model.version = version
 
     def __str__(self):
         return (
@@ -2636,6 +2656,11 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
             f"project_name: {self.model.project_name}",
             f"foundation_sfid: {self.model.foundation_sfid}",
             f"foundation_name: {self.model.foundation_name}",
+            f"repositories_count: {self.model.repositories_count}",
+            f"note: {self.model.note}",
+            f"date_created: {self.model.date_created}",
+            f"date_modified: {self.model.date_modified}",
+            f"version: {self.model.version}",
         )
 
     def to_dict(self):
@@ -2672,6 +2697,15 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
     def get_cla_group_name(self):
         return self.model.cla_group_name
 
+    def get_repositories_count(self):
+        return self.model.repositories_count
+
+    def get_note(self):
+        return self.model.note
+
+    def get_version(self):
+        return self.model.version
+
     def set_project_sfid(self, project_sfid):
         self.model.project_sfid = project_sfid
 
@@ -2689,6 +2723,15 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
 
     def set_cla_group_name(self, cla_group_name):
         self.model.cla_group_name = cla_group_name
+
+    def set_repositories_count(self, repositories_count):
+        self.model.repositories_count = repositories_count
+
+    def set_note(self, note):
+        self.model.note = note
+
+    def set_date_modified(self, date_modified):
+        self.model.date_modified = date_modified
 
     def get_by_foundation_sfid(self, foundation_sfid):
         project_cla_groups = ProjectCLAGroupModel.foundation_sfid_index.query(foundation_sfid)
