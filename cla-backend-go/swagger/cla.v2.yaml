@@ -3185,6 +3185,11 @@ definitions:
         example: 'a09410000182dD2AAI'
         description: foundation sfid under which this CLA group is created
         x-omitempty: false
+      foundation_name:
+        type: string
+        example: 'Academy Software Foundation'
+        description: foundation name under which this CLA group is created
+        x-omitempty: false
       repositories_count:
         type: integer
         description: total repositories under this cla-group
@@ -3217,6 +3222,11 @@ definitions:
         type: string
         description: salesforce id of the project in cla-group
         example: 'a092M00001IV3znQAD'
+        x-omitempty: false
+      project_name:
+        type: string
+        description: salesforce name of the project in cla-group
+        example: 'Academy Software Foundation'
         x-omitempty: false
       repositories_count:
         description: repositories added from this project into cla-group
