@@ -374,6 +374,7 @@ func (s *service) ListClaGroupsUnderFoundation(foundationSFID string) (*models.C
 		}
 		cg.ProjectList = append(cg.ProjectList, &models.ClaGroupProject{
 			ProjectSfid:       cgproject.ProjectSFID,
+			ProjectName:       cgproject.ProjectName,
 			RepositoriesCount: cgproject.RepositoriesCount,
 		})
 		cg.RepositoriesCount += cgproject.RepositoriesCount
