@@ -40,7 +40,6 @@ func (s *service) GetCLAProjectsByID(foundationSFID string) (*models.EnabledClaL
 
 	// Filter claProjects and convert to response model
 	enabledClas = s.filterClaProjects(projectDetails.Projects)
-	log.Warnf("output: %+v", enabledClas)
 
 	// sort by project names
 	sort.Slice(enabledClas, func(i, j int) bool {
@@ -70,9 +69,28 @@ func (s *service) filterClaProjects(projects []*v2ProjectServiceModels.ProjectOu
 				prChan <- nil
 				return
 			}
+
 			// Check if project is cla enabled
 			claProject := project.Projects[0]
 			if !claProject.ProjectCCLAEnabled && !claProject.ProjectICLAEnabled {
+				log.Debugf("filterClaProjects - CLA Group %s/%s doesn't have CCLA or ICLA selected.",
+					claProject.ProjectName, claProject.ProjectID)
+				prChan <- nil
+				return
+			}
+
+			// No template selected yet for ICLA
+			if claProject.ProjectICLAEnabled && len(claProject.ProjectIndividualDocuments) == 0 {
+				log.Debugf("filterClaProjects - CLA Group %s/%s ICLA is enabled, but no individual template.",
+					claProject.ProjectName, claProject.ProjectID)
+				prChan <- nil
+				return
+			}
+
+			// No template selected yet for CCLA
+			if claProject.ProjectCCLAEnabled && len(claProject.ProjectCorporateDocuments) == 0 {
+				log.Debugf("filterClaProjects - CLA Group %s/%s CCLA is enabled, but no corporate template.",
+					claProject.ProjectName, claProject.ProjectID)
 				prChan <- nil
 				return
 			}
@@ -92,7 +110,7 @@ func (s *service) filterClaProjects(projects []*v2ProjectServiceModels.ProjectOu
 	for range projects {
 		project := <-prChan
 		if project != nil {
-			log.Warnf("Adding project to channel: %+v", project)
+			log.Debugf("Adding project to channel: %+v", project)
 			results = append(results, project)
 		}
 	}
