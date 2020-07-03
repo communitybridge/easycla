@@ -145,7 +145,7 @@ def get_agreement_html(project_id, contract_type):
     # Temporary condition until all CLA Groups are ready for the v2 Contributor Console
     if project.get_version() == 'v2':
         # Generate url for the v2 console
-        console_url = f'https://{console_v2_endpoint}/#/cla/gerrit/project/{project_id}/{contract_type}'
+        console_url = f'https://{console_v2_endpoint}/cla/gerrit/project/{project_id}/{contract_type}'
     else:
         # Generate url for the v1 contributor console
         console_url = f'https://{console_v1_endpoint}/#/cla/gerrit/project/{project_id}/{contract_type}'
