@@ -7,9 +7,19 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
+)
+
+// constants
+const (
+	Foundation = "Foundation"
 )
 
 // Service interface defines function of Metrics service
@@ -21,17 +31,19 @@ type Service interface {
 	GetTopCompanies() (*models.TopCompanies, error)
 	GetTopProjects() (*models.TopProjects, error)
 	ListProjectMetrics(paramPageSize *int64, paramNextKey *string) (*models.ListProjectMetric, error)
-	ListCompanyProjectMetrics(companyID string) (*models.CompanyProjectMetrics, error)
+	ListCompanyProjectMetrics(companyID string, projectSFID string) (*models.CompanyProjectMetrics, error)
 }
 
 type service struct {
-	metricsRepo Repository
+	metricsRepo           Repository
+	projectsClaGroupsRepo projects_cla_groups.Repository
 }
 
 // NewService creates new instance of metrics service
-func NewService(metricsRepo Repository) Service {
+func NewService(metricsRepo Repository, pcgRepo projects_cla_groups.Repository) Service {
 	return &service{
-		metricsRepo: metricsRepo,
+		metricsRepo:           metricsRepo,
+		projectsClaGroupsRepo: pcgRepo,
 	}
 }
 
@@ -271,14 +283,38 @@ func (s *service) ListProjectMetrics(paramPageSize *int64, paramNextKey *string)
 	return &out, nil
 }
 
-func (s *service) ListCompanyProjectMetrics(companyID string) (*models.CompanyProjectMetrics, error) {
+func (s *service) ListCompanyProjectMetrics(companyID string, projectSFID string) (*models.CompanyProjectMetrics, error) {
+	psc := project_service.GetClient()
+	claGroupList := utils.NewStringSet()
+	project, err := psc.GetProject(projectSFID)
+	if err != nil {
+		return nil, err
+	}
+	if project.ProjectType == Foundation {
+		cgmList, cgerr := s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(projectSFID)
+		if cgerr != nil {
+			return nil, err
+		}
+		for _, cgm := range cgmList {
+			claGroupList.Add(cgm.ClaGroupID)
+		}
+	} else {
+		cgm, cgerr := s.projectsClaGroupsRepo.GetClaGroupIDForProject(projectSFID)
+		if cgerr != nil {
+			return nil, err
+		}
+		claGroupList.Add(cgm.ClaGroupID)
+	}
+
 	list, err := s.metricsRepo.ListCompanyProjectMetrics(companyID)
 	if err != nil {
 		return nil, err
 	}
 	out := &models.CompanyProjectMetrics{List: make([]*models.CompanyProjectMetric, 0)}
 	for _, cpm := range list {
-		out.List = append(out.List, cpm.toModel())
+		if claGroupList.Include(cpm.ProjectID) {
+			out.List = append(out.List, cpm.toModel())
+		}
 	}
 	sort.Slice(out.List, func(i, j int) bool {
 		return out.List[i].ProjectName < out.List[j].ProjectName

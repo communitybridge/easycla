@@ -274,7 +274,7 @@ paths:
       tags:
         - metrics
 
-  /metrics/company/{companySFID}/project-metrics:
+  /metrics/company/{companySFID}/project/{projectSFID}:
     get:
       summary: list project metrics of company
       description: Returns list of project metrics for company
@@ -285,6 +285,7 @@ paths:
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-companySFID"
+        - $ref: "#/parameters/path-projectSFID"
       responses:
         '200':
           description: 'Success'
@@ -2666,6 +2667,9 @@ definitions:
       projectName:
         type: string
         x-omitempty: false
+      claGroupName:
+        type: string
+        x-omitempty: false
       companyName:
         type: string
         x-omitempty: false
@@ -2955,6 +2959,10 @@ definitions:
         type: boolean
         x-omitempty: false
         description: if requesting user is cla-designee then this would be true
+      sub_projects:
+        type: array
+        items:
+          type: string
 
   active-cla:
     type: object
@@ -2981,9 +2989,17 @@ definitions:
         type: string
         example: "Foundation"
         x-omitempty: false
+      sub_projects:
+        type: array
+        items:
+          type: string
       signatory_name:
         type: string
         example: "John Doe"
+        x-omitempty: false
+      signature_id:
+        type: string
+        example: "55ec4162-9e41-47da-a643-f81666953a51"
         x-omitempty: false
       project_logo:
         type: string
@@ -3033,18 +3049,12 @@ definitions:
     type: object
     required:
       - project_sfid
-      - cla_group_id
       - company_sfid
     properties:
       project_sfid:
         type: string
         example: 'a0941000005ouJFAAY'
         description: salesforce id of the project
-      cla_group_id:
-        type: string
-        example: 'c4d71673-e9e8-4e26-a035-99e8334620e5'
-        description: cla group id
-        format: uuid
       company_sfid:
         type: string
         example: '0014100000Te0fMAAR'
@@ -3175,6 +3185,11 @@ definitions:
         example: 'a09410000182dD2AAI'
         description: foundation sfid under which this CLA group is created
         x-omitempty: false
+      foundation_name:
+        type: string
+        example: 'Academy Software Foundation'
+        description: foundation name under which this CLA group is created
+        x-omitempty: false
       repositories_count:
         type: integer
         description: total repositories under this cla-group
@@ -3207,6 +3222,11 @@ definitions:
         type: string
         description: salesforce id of the project in cla-group
         example: 'a092M00001IV3znQAD'
+        x-omitempty: false
+      project_name:
+        type: string
+        description: salesforce name of the project in cla-group
+        example: 'Academy Software Foundation'
         x-omitempty: false
       repositories_count:
         description: repositories added from this project into cla-group

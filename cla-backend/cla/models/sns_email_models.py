@@ -88,6 +88,12 @@ class SNS(email_service_interface.EmailService):
             data["recipients"] = [recipients]
         else:
             data["recipients"] = recipients
+        # Added MailChip/Mandrill support by setting the template and adding
+        # email body to the parameters list under the BODY attribute
+        data["template_name"] = "EasyCLA System Email Template"
+        data["parameters"] = {
+            "BODY": body
+        }
 
         msg["data"] = data
 

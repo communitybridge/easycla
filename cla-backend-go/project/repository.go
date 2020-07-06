@@ -42,7 +42,7 @@ const (
 // ProjectRepository defines functions of Project repository
 type ProjectRepository interface { //nolint
 	CreateProject(project *models.Project) (*models.Project, error)
-	GetProjectByID(projectID string) (*models.Project, error)
+	GetProjectByID(projectID string, loadRepoDetails bool) (*models.Project, error)
 	GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams, loadRepoDetails bool) (*models.Projects, error)
 	GetProjectByName(projectName string) (*models.Project, error)
 	GetExternalProject(projectExternalID string) (*models.Project, error)
@@ -174,8 +174,8 @@ func (repo *repo) getProjectByID(projectID string, loadProjectDetails bool) (*mo
 }
 
 // GetProjectByID returns the project model associated for the specified projectID
-func (repo *repo) GetProjectByID(projectID string) (*models.Project, error) {
-	return repo.getProjectByID(projectID, LoadRepoDetails)
+func (repo *repo) GetProjectByID(projectID string, loadRepoDetails bool) (*models.Project, error) {
+	return repo.getProjectByID(projectID, loadRepoDetails)
 }
 
 // GetProjectsByExternalID queries the database and returns a list of the projects
@@ -536,7 +536,7 @@ func (repo *repo) GetProjects(params *project.GetProjectsParams) (*models.Projec
 func (repo *repo) DeleteProject(projectID string) error {
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
-	existingProject, getErr := repo.GetProjectByID(projectID)
+	existingProject, getErr := repo.GetProjectByID(projectID, DontLoadRepoDetails)
 	if getErr != nil {
 		log.Warnf("delete - error locating the project id: %s, error: %+v", projectID, getErr)
 		return getErr
@@ -573,7 +573,7 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 		return nil, ErrProjectIDMissing
 	}
 
-	existingProject, getErr := repo.GetProjectByID(projectModel.ProjectID)
+	existingProject, getErr := repo.GetProjectByID(projectModel.ProjectID, DontLoadRepoDetails)
 	if getErr != nil {
 		log.Warnf("update - error locating the project id: %s, error: %+v", projectModel.ProjectID, getErr)
 		return nil, getErr
@@ -649,7 +649,7 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 	// Read the updated record back from the DB and return - probably could
 	// just create/update a new model in memory and return it to make it fast,
 	// but this approach return exactly what the DB has
-	return repo.GetProjectByID(projectModel.ProjectID)
+	return repo.GetProjectByID(projectModel.ProjectID, LoadRepoDetails)
 }
 
 // buildProjectModels converts the database response model into an API response data model

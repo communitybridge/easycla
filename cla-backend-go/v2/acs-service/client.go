@@ -1,15 +1,20 @@
 package acs_service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/token"
 
 	"github.com/communitybridge/easycla/cla-backend-go/v2/acs-service/client"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/acs-service/client/invite"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/acs-service/models"
+	runtimeClient "github.com/go-openapi/runtime/client"
 
 	"errors"
 
@@ -49,6 +54,35 @@ func InitClient(APIGwURL string, apiKey string) {
 // GetClient return user_service client
 func GetClient() *Client {
 	return acsServiceClient
+}
+
+// SendUserInvite invites users to the LFX platform
+func (ac *Client) SendUserInvite(email *string,
+	roleName string, scope string, organizationID string, inviteType string) error {
+	tok, err := token.GetToken()
+	if err != nil {
+		return err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	params := &invite.CreateUserInviteParams{
+		SendInvite: &models.CreateInvite{
+			Email:    email,
+			Scope:    scope,
+			ScopeID:  organizationID,
+			RoleName: roleName,
+			Type:     inviteType,
+		},
+		Context: context.Background(),
+	}
+	result, err := ac.cl.Invite.CreateUserInvite(params, clientAuth)
+	log.Debugf("CreateUserinvite called with args email: %v, scope: %s, roleName: %s, type: %s, scopeID: %s",
+		email, scope, roleName, inviteType, organizationID)
+	if err != nil {
+		log.Error("CreateUserInvite failed", err)
+		return err
+	}
+	log.Debugf("CreateUserInvite result : %#v\n", result)
+	return nil
 }
 
 // GetRoleID will return roleID for the provided role name

@@ -329,9 +329,21 @@ func (s *service) ListClaGroupsUnderFoundation(foundationSFID string) (*models.C
 	if err != nil {
 		return nil, err
 	}
+
 	m := make(map[string]*models.ClaGroup)
 	claGroupIDList := utils.NewStringSet()
 	for _, v1ClaGroup := range v1ClaGroups.Projects {
+
+		// Lookup the foundation name
+		var foundationName = "Not Defined"
+		projectServiceModel, projErr := v2ProjectService.GetClient().GetProject(v1ClaGroup.FoundationSFID)
+		if projErr != nil {
+			log.Warnf("unable to lookup foundation SFID: %s - error: %+v - using 'Not Defined' as the default value",
+				v1ClaGroup.FoundationSFID, projErr)
+		} else {
+			foundationName = projectServiceModel.Name
+		}
+
 		cg := &models.ClaGroup{
 			CclaEnabled:         v1ClaGroup.ProjectCCLAEnabled,
 			CclaRequiresIcla:    v1ClaGroup.ProjectCCLARequiresICLA,
@@ -339,6 +351,7 @@ func (s *service) ListClaGroupsUnderFoundation(foundationSFID string) (*models.C
 			ClaGroupID:          v1ClaGroup.ProjectID,
 			ClaGroupName:        v1ClaGroup.ProjectName,
 			FoundationSfid:      v1ClaGroup.FoundationSFID,
+			FoundationName:      foundationName,
 			IclaEnabled:         v1ClaGroup.ProjectICLAEnabled,
 			CclaPdfURL:          getS3Url(v1ClaGroup.ProjectID, v1ClaGroup.ProjectCorporateDocuments),
 			IclaPdfURL:          getS3Url(v1ClaGroup.ProjectID, v1ClaGroup.ProjectIndividualDocuments),
@@ -347,6 +360,7 @@ func (s *service) ListClaGroupsUnderFoundation(foundationSFID string) (*models.C
 		claGroupIDList.Add(cg.ClaGroupID)
 		m[cg.ClaGroupID] = cg
 	}
+
 	// Fill projectSFID list in cla group
 	cgprojects, err := s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(foundationSFID)
 	if err != nil {
@@ -360,6 +374,7 @@ func (s *service) ListClaGroupsUnderFoundation(foundationSFID string) (*models.C
 		}
 		cg.ProjectList = append(cg.ProjectList, &models.ClaGroupProject{
 			ProjectSfid:       cgproject.ProjectSFID,
+			ProjectName:       cgproject.ProjectName,
 			RepositoriesCount: cgproject.RepositoriesCount,
 		})
 		cg.RepositoriesCount += cgproject.RepositoriesCount

@@ -441,6 +441,34 @@ class GithubUserExternalIndex(GlobalSecondaryIndex):
 
     user_external_id = UnicodeAttribute(hash_key=True)
 
+class FoundationSfidIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying mapping of cla-groups and projects by foundation_sfid
+    """
+
+    class Meta:
+        """Meta class for project-cla-groups foundation_sfid index"""
+        index_name = "foundation-sfid-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        projection = AllProjection()
+    
+    foundation_sfid = UnicodeAttribute(hash_key=True)
+
+class CLAGroupIDIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying by cla-group-id
+    """
+
+    class Meta:
+        """Meta class for cla-groups-projects cla-group-id index"""
+        index_name = "cla-group-id-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        projection = AllProjection()
+  
+    cla_group_id = UnicodeAttribute(hash_key=True)
+
 
 class BaseModel(Model):
     """
@@ -1876,6 +1904,15 @@ class Repository(model_interfaces.Repository):
     def set_repository_organization_name(self, organization_name):
         self.model.repository_organization_name = organization_name
 
+    def get_repositories_by_cla_group_id(self, cla_group_id):
+        repository_generator = self.model.repository_project_index.query(str(cla_group_id))
+        repositories = []
+        for repository_model in repository_generator:
+            repository = Repository()
+            repository.model = repository_model
+            repositories.append(repository)
+        return repositories
+
     def get_repository_by_external_id(self, repository_external_id, repository_type):
         # TODO: Optimize this on the DB end.
         repository_generator = self.model.repository_external_index.query(str(repository_external_id))
@@ -2565,6 +2602,165 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             agr = Signature()
             agr.model = signature
             ret.append(agr)
+        return ret
+
+
+class ProjectCLAGroupModel(BaseModel):
+    """
+    Represents the lookuptable for clagroup and salesforce projects
+    """
+    class Meta:
+        """Meta class for ProjectCLAGroup. """
+
+        table_name = "cla-{}-projects-cla-groups".format(stage)
+        if stage == "local":
+            host = "http://localhost:8000"
+
+    project_sfid = UnicodeAttribute(hash_key=True)
+    project_name = UnicodeAttribute(null=True)
+    cla_group_id = UnicodeAttribute(null=True)
+    cla_group_name = UnicodeAttribute(null=True)
+    foundation_sfid = UnicodeAttribute(null=True)
+    foundation_name = UnicodeAttribute(null=True)
+    foundation_sfid_index = FoundationSfidIndex()
+    repositories_count = NumberAttribute(null=True)
+    note = UnicodeAttribute(null=True)
+    cla_group_id_index = CLAGroupIDIndex()
+
+
+class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
+    """
+    ORM-agnostic wrapper for the DynamoDB ProjectCLAGroup model.
+    """
+    def __init__(self, project_sfid=None, project_name=None,
+                 foundation_sfid=None, foundation_name=None,
+                 cla_group_id=None, cla_group_name=None,
+                 repositories_count=0, note=None, version='v1'):
+        super(ProjectCLAGroup).__init__()
+        self.model = ProjectCLAGroupModel()
+        self.model.project_sfid = project_sfid
+        self.model.project_name = project_name
+        self.model.foundation_sfid = foundation_sfid
+        self.model.foundation_name = foundation_name
+        self.model.cla_group_id = cla_group_id
+        self.model.cla_group_name = cla_group_name
+        self.model.repositories_count = repositories_count
+        self.model.note = note
+        self.model.version = version
+
+    def __str__(self):
+        return (
+            f"cla_group_id: {self.model.cla_group_id}",
+            f"cla_group_name: {self.model.cla_group_name}",
+            f"project_sfid: {self.model.project_sfid}",
+            f"project_name: {self.model.project_name}",
+            f"foundation_sfid: {self.model.foundation_sfid}",
+            f"foundation_name: {self.model.foundation_name}",
+            f"repositories_count: {self.model.repositories_count}",
+            f"note: {self.model.note}",
+            f"date_created: {self.model.date_created}",
+            f"date_modified: {self.model.date_modified}",
+            f"version: {self.model.version}",
+        )
+
+    def to_dict(self):
+        return dict(self.model)
+ 
+    def save(self):
+        return self.model.save()
+ 
+    def load(self, project_sfid):
+        try:
+            project_cla_group = self.model.get(project_sfid)
+        except ProjectCLAGroupModel.DoesNotExist:
+            raise cla.models.DoesNotExist("projectCLAGroup does not exist")
+        self.model = project_cla_group
+ 
+    def delete(self):
+        self.model.delete()
+
+    def get_project_sfid(self):
+        return self.model.project_sfid
+
+    def get_project_name(self):
+        return self.model.project_name
+
+    def get_foundation_sfid(self):
+        return self.model.foundation_sfid
+
+    def get_foundation_name(self):
+        return self.model.foundation_name
+
+    def get_cla_group_id(self):
+        return self.model.cla_group_id
+
+    def get_cla_group_name(self):
+        return self.model.cla_group_name
+
+    def get_repositories_count(self):
+        return self.model.repositories_count
+
+    def get_note(self):
+        return self.model.note
+
+    def get_version(self):
+        return self.model.version
+
+    def set_project_sfid(self, project_sfid):
+        self.model.project_sfid = project_sfid
+
+    def set_project_name(self, project_name):
+        self.model.project_name = project_name
+
+    def set_foundation_sfid(self, foundation_sfid):
+        self.model.foundation_sfid = foundation_sfid
+
+    def set_foundation_name(self, foundation_name):
+        self.model.foundation_name = foundation_name
+
+    def set_cla_group_id(self, cla_group_id):
+        self.model.cla_group_id = cla_group_id
+
+    def set_cla_group_name(self, cla_group_name):
+        self.model.cla_group_name = cla_group_name
+
+    def set_repositories_count(self, repositories_count):
+        self.model.repositories_count = repositories_count
+
+    def set_note(self, note):
+        self.model.note = note
+
+    def set_date_modified(self, date_modified):
+        self.model.date_modified = date_modified
+
+    def get_by_foundation_sfid(self, foundation_sfid):
+        project_cla_groups = ProjectCLAGroupModel.foundation_sfid_index.query(foundation_sfid)
+        ret = []
+        for project_cla_group in project_cla_groups:
+            proj_cla_group = ProjectCLAGroup()
+            proj_cla_group.model = project_cla_group
+            ret.append(proj_cla_group)
+        return ret
+    
+    def get_by_cla_group_id(self, cla_group_id):
+        project_cla_groups = ProjectCLAGroupModel.cla_group_id_index.query(cla_group_id)
+        ret = []
+        for project_cla_group in project_cla_groups:
+            proj_cla_group = ProjectCLAGroup()
+            proj_cla_group.model = project_cla_group
+            ret.append(proj_cla_group)
+        return ret
+
+    def all(self, project_sfids=None):
+        if project_sfids is None:
+            project_cla_groups = self.model.scan()
+        else:
+            project_cla_groups = ProjectCLAGroupModel.batch_get(project_sfids)
+        ret = []
+        for project_cla_group in project_cla_groups:
+            proj_cla_group = ProjectCLAGroup()
+            proj_cla_group.model = project_cla_group
+            ret.append(proj_cla_group)
         return ret
 
 
