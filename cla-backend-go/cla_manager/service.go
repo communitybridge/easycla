@@ -225,6 +225,13 @@ func (s service) AddClaManager(companyID string, projectID string, LFID string) 
 		return nil, aclErr
 	}
 
+	// Update the company ACL
+	companyACLError := s.companyService.AddUserToCompanyAccessList(companyID, LFID)
+	if companyACLError != nil {
+		log.Warnf("AddCLAManager- Unable to add user to company ACL, companyID: %s, user: %s, error: %+v", companyID, LFID, companyACLError)
+		return nil, companyACLError
+	}
+
 	// Notify CLA Managers - send email to each manager
 	for _, manager := range claManagers {
 		sendClaManagerAddedEmailToCLAManagers(companyModel, projectModel, userModel.Username, userModel.LfEmail,
