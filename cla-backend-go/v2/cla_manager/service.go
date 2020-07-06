@@ -621,9 +621,9 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	// Check if sending cla manager request to company admin
 	if contactAdmin {
 		log.Debugf("Sending email to company Admin")
-		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyID)
+		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyModel.CompanyExternalID)
 		if listScopeErr != nil {
-			msg := fmt.Sprintf("Admin lookup error for organisation SFID: %s ", companyID)
+			msg := fmt.Sprintf("Admin lookup error for organisation SFID: %s ", companyModel.CompanyExternalID)
 			return nil, &models.ErrorResponse{
 				Code:    "400",
 				Message: msg,
