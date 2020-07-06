@@ -6,7 +6,6 @@ package cla_manager
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
@@ -510,9 +509,9 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 		return nil, ErrNoLFID
 	}
 
-	// Check if user is associated with another organization
+	// Check if user is not associated with given organization
 	log.Debugf("LFX user company :%s", lfxUser.Account.Name)
-	if strings.TrimSpace(lfxUser.Account.Name) != strings.TrimSpace(companyModel.Name) {
+	if lfxUser.Account.ID != companyID {
 		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - User associated with another organization :%s and should be in :%s ", lfxUser.Account.Name, companyModel.Name)
 		log.Warn(msg)
 		return nil, ErrNotInOrg
