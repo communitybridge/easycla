@@ -16,6 +16,7 @@ import (
 // constants
 const (
 	CLA = "CLA"
+	NA  = "N/A"
 )
 
 // Client is client for user_service
@@ -89,6 +90,9 @@ func (pmm *Client) EnableCLA(projectSFID string) error {
 func (pmm *Client) updateEnabledServices(projectSFID string, enabledServices []string, clientAuth runtime.ClientAuthInfoWriter) error {
 	params := project.NewUpdateProjectParams()
 	params.ProjectID = projectSFID
+	if len(enabledServices) == 0 {
+		enabledServices = append(enabledServices, NA)
+	}
 	params.Body = &models.ProjectInput{
 		ProjectCommon: models.ProjectCommon{
 			EnabledServices: enabledServices,
