@@ -24,6 +24,7 @@ import (
 const (
 	Insert = "INSERT"
 	Modify = "MODIFY"
+	Remove = "REMOVE"
 )
 
 // EventHandlerFunc is type for dynamoDB event handler function
@@ -45,6 +46,7 @@ type Service interface {
 // NewService creates DynamoDB stream event handler service
 func NewService(stage string, signatureRepo signatures.SignatureRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository) Service {
 	SignaturesTable := fmt.Sprintf("cla-%s-signatures", stage)
+	projectsCLAGroupsTable := fmt.Sprintf("cla-%s-projects-cla-groups", stage)
 	s := &service{
 		functions:            make(map[string][]EventHandlerFunc),
 		signatureRepo:        signatureRepo,
@@ -55,6 +57,9 @@ func NewService(stage string, signatureRepo signatures.SignatureRepository, comp
 	s.registerCallback(SignaturesTable, Modify, s.SignatureAddSigTypeSignedApprovedID)
 	s.registerCallback(SignaturesTable, Insert, s.SignatureAddSigTypeSignedApprovedID)
 	s.registerCallback(SignaturesTable, Insert, s.SignatureAddUsersDetails)
+
+	s.registerCallback(projectsCLAGroupsTable, Insert, s.ProjectAddedEvent)
+	s.registerCallback(projectsCLAGroupsTable, Remove, s.ProjectDeletedEvent)
 	return s
 }
 
