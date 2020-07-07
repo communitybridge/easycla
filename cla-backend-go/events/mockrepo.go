@@ -14,6 +14,26 @@ import (
 // mockRepository data model
 type mockRepository struct{}
 
+func (repo *mockRepository) AddDataToEvent(eventID, foundationSFID, projectSFID, projectSFName, companySFID, projectID string) error {
+	panic("implement me")
+}
+
+func (repo *mockRepository) GetCompanyFoundationEvents(companySFID, foundationSFID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error) {
+	panic("implement me")
+}
+
+func (repo *mockRepository) GetCompanyClaGroupEvents(companySFID, claGroupID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error) {
+	panic("implement me")
+}
+
+func (repo *mockRepository) GetFoundationEvents(foundationSFID string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error) {
+	panic("implement me")
+}
+
+func (repo *mockRepository) GetClaGroupEvents(claGroupID string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error) {
+	panic("implement me")
+}
+
 var events []*models.Event
 
 // NewMockRepository creates a new instance of the mock event repository
@@ -51,16 +71,6 @@ func (repo *mockRepository) SearchEvents(params *eventOps.SearchEventsParams, pa
 	}
 
 	return eventList, nil
-}
-
-// GetFoundationSFDCEvents returns the list of foundation events
-func (repo *mockRepository) GetFoundationSFDCEvents(foundationSFDC string, paramPageSize *int64) (*models.EventList, error) {
-	return nil, nil
-}
-
-// GetProjectSFDCEvents returns the list of project events
-func (repo *mockRepository) GetProjectSFDCEvents(projectSFDC string, paramPageSize *int64) (*models.EventList, error) {
-	return nil, nil
 }
 
 func eventInList(eventList []*models.Event, event *models.Event) bool {
