@@ -115,7 +115,7 @@ func Configure(api *operations.EasyclaAPI, service repositories.Service, eventSe
 				},
 			})
 
-			return github_repositories.NewDeleteProjectGithubRepositoryOK()
+			return github_repositories.NewDeleteProjectGithubRepositoryNoContent()
 		})
 }
 

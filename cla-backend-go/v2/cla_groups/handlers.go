@@ -89,8 +89,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			LfUsername:   authUser.UserName,
 			EventData:    &events.ProjectDeletedEventData{},
 		})
-		return cla_group.NewDeleteClaGroupOK()
+		return cla_group.NewDeleteClaGroupNoContent()
 	})
+
 	api.ClaGroupEnrollProjectsHandler = cla_group.EnrollProjectsHandlerFunc(func(params cla_group.EnrollProjectsParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		cg, err := v1ProjectService.GetProjectByID(params.ClaGroupID)

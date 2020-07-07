@@ -43,7 +43,7 @@ setup-dev: tool-setup
 
 setup_deploy: setup-deploy
 setup-deploy:
-	npm install serverless
+	@yarn add serverless && yarn install
 
 clean:
 	@rm -rf bin/ cla cla-mac cla-linux \

@@ -1766,7 +1766,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         self.log_debug("unable to find user in any whitelist")
         return False
 
-    def get_users_by_company(self, company_id ):
+    def get_users_by_company(self, company_id):
         user_generator = self.model.scan(user_company_id__eq=str(company_id))
         users = []
         for user_model in user_generator:
