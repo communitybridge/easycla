@@ -192,9 +192,10 @@ func prepareUserForSigning(userEmail string, companySFID, projectSFID string) er
 	// search user
 	log.WithFields(f).Debug("searching user by email")
 	user, err := usc.SearchUserByEmail(userEmail)
+
 	if err != nil {
-		log.WithFields(f).Errorf("search user by email failed: %v", err)
-		return err
+		log.Debugf("User with email : %s does not have an LF login", userEmail)
+		return nil
 	}
 	log.WithFields(f).Debugf("user type is %s", user.Type)
 	if user.Type == "lead" {
