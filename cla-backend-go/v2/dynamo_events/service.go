@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	claevent "github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 
 	"github.com/communitybridge/easycla/cla-backend-go/company"
@@ -35,6 +36,7 @@ type service struct {
 	signatureRepo        signatures.SignatureRepository
 	companyRepo          company.IRepository
 	projectsClaGroupRepo projects_cla_groups.Repository
+	eventsRepo           claevent.Repository
 }
 
 // Service implements DynamoDB stream event handler service
@@ -43,18 +45,22 @@ type Service interface {
 }
 
 // NewService creates DynamoDB stream event handler service
-func NewService(stage string, signatureRepo signatures.SignatureRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository) Service {
+func NewService(stage string, signatureRepo signatures.SignatureRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository, eventsRepo claevent.Repository) Service {
 	SignaturesTable := fmt.Sprintf("cla-%s-signatures", stage)
+	eventsTable := fmt.Sprintf("cla-%s-events", stage)
 	s := &service{
 		functions:            make(map[string][]EventHandlerFunc),
 		signatureRepo:        signatureRepo,
 		companyRepo:          companyRepo,
 		projectsClaGroupRepo: pcgRepo,
+		eventsRepo:           eventsRepo,
 	}
 	s.registerCallback(SignaturesTable, Modify, s.SignatureSignedEvent)
 	s.registerCallback(SignaturesTable, Modify, s.SignatureAddSigTypeSignedApprovedID)
 	s.registerCallback(SignaturesTable, Insert, s.SignatureAddSigTypeSignedApprovedID)
 	s.registerCallback(SignaturesTable, Insert, s.SignatureAddUsersDetails)
+
+	s.registerCallback(eventsTable, Insert, s.EventAddedEvent)
 	return s
 }
 

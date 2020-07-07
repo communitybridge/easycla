@@ -712,10 +712,15 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'event_date_and_contains_pii', type: 'B' },
         { name: 'company_id_external_project_id', type: 'S' },
         { name: 'event_time_epoch', type: 'N' },
+        { name: 'company_sfid_foundation_sfid', type: 'S' },
+        { name: 'company_sfid_project_id', type: 'S' },
+        { name: 'event_foundation_sfid', type: 'S' },
       ],
       hashKey: 'event_id',
       readCapacity: defaultReadCapacity,
       writeCapacity: defaultWriteCapacity,
+      streamEnabled: true,
+      streamViewType: "NEW_AND_OLD_IMAGES",
       globalSecondaryIndexes: [
         { name: 'event-type-index', hashKey: 'event_type', projectionType: 'ALL', readCapacity: 1, writeCapacity: 1 },
         {
@@ -728,6 +733,30 @@ function buildEventsTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'event-project-id-event-time-epoch-index',
           hashKey: 'event_project_id',
+          rangeKey: 'event_time_epoch',
+          projectionType: 'ALL',
+          readCapacity: 1,
+          writeCapacity: 1
+        },
+        {
+          name: 'company-sfid-foundation-sfid-event-time-epoch-index',
+          hashKey: 'company_sfid_foundation_sfid',
+          rangeKey: 'event_time_epoch',
+          projectionType: 'ALL',
+          readCapacity: 1,
+          writeCapacity: 1
+        },
+        {
+          name: 'company-sfid-project-id-event-time-epoch-index',
+          hashKey: 'company_sfid_project_id',
+          rangeKey: 'event_time_epoch',
+          projectionType: 'ALL',
+          readCapacity: 1,
+          writeCapacity: 1
+        },
+        {
+          name: 'event-foundation-sfid-event-time-epoch-index',
+          hashKey: 'event_foundation_sfid',
           rangeKey: 'event_time_epoch',
           projectionType: 'ALL',
           readCapacity: 1,
@@ -888,6 +917,9 @@ function buildProjectsClaGroupsTable(importResources: boolean): aws.dynamodb.Tab
 const dynamoDBEventLambdaName = "cla-backend-" + stage + "-dynamo-events-lambda";
 const dynamoDBEventLambdaArn = "arn:aws:lambda:" + aws.getRegion().name + ":" + accountID + ":function:" + dynamoDBEventLambdaName;
 signaturesTable.onEvent("signatureStreamEvents",
+  aws.lambda.Function.get(dynamoDBEventLambdaName, dynamoDBEventLambdaArn),
+  { startingPosition: "LATEST" });
+eventsTable.onEvent("eventStreamEvents",
   aws.lambda.Function.get(dynamoDBEventLambdaName, dynamoDBEventLambdaArn),
   { startingPosition: "LATEST" });
 
