@@ -914,19 +914,23 @@ function buildProjectsClaGroupsTable(importResources: boolean): aws.dynamodb.Tab
   );
 }
 
-// DynamoDB trigger events handler function
-//aws.lambda.Function.get("dynamo-events-lambda", "cla-backend-" + stage + "-dynamo-events"),
-const dynamoDBEventLambdaName = "cla-backend-" + stage + "-dynamo-events-lambda";
-const dynamoDBEventLambdaArn = "arn:aws:lambda:" + aws.getRegion().name + ":" + accountID + ":function:" + dynamoDBEventLambdaName;
+// DynamoDB trigger events handler functions
+const dynamoDBSignaturesEventLambdaName = "cla-backend-" + stage + "-dynamo-signatures-events-lambda";
+const dynamoDBSignaturesEventLambdaArn = "arn:aws:lambda:" + aws.getRegion().name + ":" + accountID + ":function:" + dynamoDBSignaturesEventLambdaName;
 signaturesTable.onEvent("signatureStreamEvents",
-  aws.lambda.Function.get(dynamoDBEventLambdaName, dynamoDBEventLambdaArn),
-  { startingPosition: "LATEST" });
-eventsTable.onEvent("eventStreamEvents",
-  aws.lambda.Function.get(dynamoDBEventLambdaName, dynamoDBEventLambdaArn),
+  aws.lambda.Function.get(dynamoDBSignaturesEventLambdaName, dynamoDBSignaturesEventLambdaArn),
   { startingPosition: "LATEST" });
 
+const dynamoDBEventsEventLambdaName = "cla-backend-" + stage + "-dynamo-events-events-lambda";
+const dynamoDBEventsEventLambdaArn = "arn:aws:lambda:" + aws.getRegion().name + ":" + accountID + ":function:" + dynamoDBEventsEventLambdaName;
+eventsTable.onEvent("eventStreamEvents",
+  aws.lambda.Function.get(dynamoDBEventsEventLambdaName, dynamoDBEventsEventLambdaArn),
+  { startingPosition: "LATEST" });
+
+const dynamoDBProjectsCLAGroupsEventLambdaName = "cla-backend-" + stage + "-dynamo-projects-cla-groups-events-lambda";
+const dynamoDBProjectsCLAGroupsEventLambdaArn = "arn:aws:lambda:" + aws.getRegion().name + ":" + accountID + ":function:" + dynamoDBProjectsCLAGroupsEventLambdaName;
 projectsClaGroupsTable.onEvent("projectsCLAGroupsStreamEvents",
-  aws.lambda.Function.get(dynamoDBEventLambdaName, dynamoDBEventLambdaArn),
+  aws.lambda.Function.get(dynamoDBProjectsCLAGroupsEventLambdaName, dynamoDBProjectsCLAGroupsEventLambdaArn),
   { startingPosition: "LATEST" });
 
 // Export the name of the bucket
