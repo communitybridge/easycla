@@ -42,3 +42,15 @@ properties:
   ContainsPII:
     type: boolean
     description: contains personal identifiable information
+  EventCompanySFID:
+    type: string
+    description: sf id of the company
+  EventFoundationSFID:
+    type: string
+    description: sf id of the foundation
+  EventProjectSFID:
+    type: string
+    description: sf id of the project. this would be projectSFID if cla group have only one project otherwise it would be foundationSFID
+  EventProjectSFName:
+    type: string
+    description: name of project to display. This would be name of project if cla group have only one project otherwise it would be name of foundation

@@ -10,7 +10,7 @@ import uuid
 
 import cla
 import cla.hug_types
-from cla.utils import get_project_instance, get_repository_instance
+from cla.utils import get_project_instance, get_repository_instance, get_gerrit_instance
 from cla.controllers.lf_group import LFGroup
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import Gerrit
@@ -132,23 +132,29 @@ def delete_gerrit(gerrit_id):
     return {'success': True}
 
 
-def get_agreement_html(project_id, contract_type):
+def get_agreement_html(gerrit_id, contract_type):
     console_v1_endpoint = cla.conf['CONTRIBUTOR_BASE_URL']
     console_v2_endpoint = cla.conf['CONTRIBUTOR_V2_BASE_URL']
     console_url = ''
     try:
+        gerrit = get_gerrit_instance()
+        gerrit.load(str(gerrit_id))
+    except DoesNotExist as err:
+        return {'errors': {'gerrit_id': str(err)}}
+    try:
         project = get_project_instance()
-        project.load(str(project_id))
+        project.load(str(gerrit.get_project_id()))
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
+
 
     # Temporary condition until all CLA Groups are ready for the v2 Contributor Console
     if project.get_version() == 'v2':
         # Generate url for the v2 console
-        console_url = f'https://{console_v2_endpoint}/#/cla/gerrit/project/{project_id}/{contract_type}'
+        console_url = f'https://{console_v2_endpoint}/#/cla/gerrit/project/{gerrit.get_project_id()}/{contract_type}?redirect={gerrit.get_gerrit_url()}'
     else:
         # Generate url for the v1 contributor console
-        console_url = f'https://{console_v1_endpoint}/#/cla/gerrit/project/{project_id}/{contract_type}'
+        console_url = f'https://{console_v1_endpoint}/#/cla/gerrit/project/{gerrit.get_project_id()}/{contract_type}'
 
     return f"""
         <html lang="en">

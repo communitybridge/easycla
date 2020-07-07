@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
@@ -35,14 +37,31 @@ var (
 	ErrEventTypeRequired = errors.New("EventType cannot be empty") //nolint
 )
 
+// indexes
+const (
+	CompanySFIDFoundationSFIDEpochIndex = "company-sfid-foundation-sfid-event-time-epoch-index"
+	CompanySFIDProjectIDEpochIndex      = "company-sfid-project-id-event-time-epoch-index"
+	EventFoundationSFIDEpochIndex       = "event-foundation-sfid-event-time-epoch-index"
+	EventProjectIDEpochIndex            = "event-project-id-event-time-epoch-index"
+)
+
+// constants
+const (
+	HugePageSize    = 10000
+	DefaultPageSize = 10
+)
+
 // Repository interface defines methods of event repository service
 type Repository interface {
 	CreateEvent(event *models.Event) error
+	AddDataToEvent(eventID, foundationSFID, projectSFID, projectSFName, companySFID, projectID string) error
 	SearchEvents(params *eventOps.SearchEventsParams, pageSize int64) (*models.EventList, error)
 	GetRecentEvents(pageSize int64) (*models.EventList, error)
-	GetRecentEventsForCompanyProject(companyID, projectID string, pageSize int64) (*models.EventList, error)
-	GetFoundationSFDCEvents(foundationSFDC string, paramPageSize *int64) (*models.EventList, error)
-	GetProjectSFDCEvents(projectSFDC string, paramPageSize *int64) (*models.EventList, error)
+
+	GetCompanyFoundationEvents(companySFID, foundationSFID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error)
+	GetCompanyClaGroupEvents(companySFID, claGroupID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error)
+	GetFoundationEvents(foundationSFID string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error)
+	GetClaGroupEvents(claGroupID string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error)
 }
 
 // repository data model
@@ -285,14 +304,163 @@ func (repo *repository) SearchEvents(params *eventOps.SearchEventsParams, pageSi
 	}, nil
 }
 
-// GetFoundationSFDCEvents returns the list of foundation events
-func (repo *repository) GetFoundationSFDCEvents(foundationSFDC string, paramPageSize *int64) (*models.EventList, error) {
-	return nil, nil
+// queryEventsTable queries events table on index
+func (repo *repository) queryEventsTable(indexName string, condition expression.KeyConditionBuilder, nextKey *string, pageSize *int64, all bool, searchTerm *string) (*models.EventList, error) {
+	f := logrus.Fields{"indexName": indexName, "nextKey": aws.StringValue(nextKey), "pageSize": aws.Int64Value(pageSize), "all": all, "searchTerm": aws.StringValue(searchTerm)}
+	log.WithFields(f).Debug("querying events table")
+	builder := expression.NewBuilder() // .WithProjection(buildProjection())
+	// The table we're interested in
+	tableName := fmt.Sprintf("cla-%s-events", repo.stage)
+
+	builder = builder.WithKeyCondition(condition)
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String(indexName),
+		ScanIndexForward:          aws.Bool(false),
+	}
+
+	if all {
+		pageSize = aws.Int64(HugePageSize)
+	} else {
+		if pageSize == nil {
+			pageSize = aws.Int64(DefaultPageSize)
+		}
+	}
+
+	if searchTerm != nil {
+		// since we are filtering data in client side, we should use large pageSize to avoid recursive query
+		queryInput.Limit = aws.Int64(HugePageSize)
+	} else {
+		queryInput.Limit = aws.Int64(*pageSize)
+	}
+
+	if nextKey != nil && !all {
+		log.Debugf("Received a nextKey, value: %s", *nextKey)
+		queryInput.ExclusiveStartKey, err = fromString(*nextKey)
+		if err != nil {
+			return nil, err
+		}
+	}
+	log.WithField("queryInput", *queryInput).Debug("query")
+	var lastEvaluatedKey string
+	events := make([]*models.Event, 0)
+
+	if searchTerm != nil {
+		searchTerm = aws.String(strings.ToLower(*searchTerm))
+	}
+
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		if errQuery != nil {
+			log.Warnf("error retrieving events. error = %s", errQuery.Error())
+			return nil, errQuery
+		}
+
+		eventsList, modelErr := buildEventListModels(results)
+		if modelErr != nil {
+			return nil, modelErr
+		}
+		if searchTerm != nil {
+			for _, event := range eventsList {
+				if !all {
+					if int64(len(events)) >= *pageSize {
+						break
+					}
+				}
+				if strings.Contains(strings.ToLower(event.EventData), *searchTerm) {
+					events = append(events, event)
+				}
+			}
+		} else {
+			events = append(events, eventsList...)
+		}
+		if len(results.LastEvaluatedKey) != 0 {
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			break
+		}
+		if !all {
+			if int64(len(events)) >= *pageSize {
+				break
+			}
+		}
+	}
+	if !all {
+		if int64(len(events)) >= *pageSize {
+			events = events[0:*pageSize]
+			lastEvaluatedKey, err = buildNextKey(indexName, events[*pageSize-1])
+			if err != nil {
+				log.Warnf("unable to build nextKey. index = %s, event = %#v error = %s", indexName, events[*pageSize-1], err.Error())
+			}
+		}
+	}
+
+	return &models.EventList{
+		Events:  events,
+		NextKey: lastEvaluatedKey,
+	}, nil
 }
 
-// GetProjectSFDCEvents returns the list of project events
-func (repo *repository) GetProjectSFDCEvents(projectSFDC string, paramPageSize *int64) (*models.EventList, error) {
-	return nil, nil
+func buildNextKey(indexName string, event *models.Event) (string, error) {
+	nextKey := make(map[string]*dynamodb.AttributeValue)
+	nextKey["event_id"] = &dynamodb.AttributeValue{S: aws.String(event.EventID)}
+	switch indexName {
+	case CompanySFIDFoundationSFIDEpochIndex:
+		nextKey["company_sfid_foundation_sfid"] = &dynamodb.AttributeValue{
+			S: aws.String(fmt.Sprintf("%s#%s", event.EventCompanySFID, event.EventFoundationSFID)),
+		}
+		nextKey["event_time_epoch"] = &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(event.EventTimeEpoch, 10))}
+	case CompanySFIDProjectIDEpochIndex:
+		nextKey["company_sfid_project_id"] = &dynamodb.AttributeValue{
+			S: aws.String(fmt.Sprintf("%s#%s", event.EventCompanySFID, event.EventProjectID)),
+		}
+		nextKey["event_time_epoch"] = &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(event.EventTimeEpoch, 10))}
+	case EventFoundationSFIDEpochIndex:
+		nextKey["event_foundation_sfid"] = &dynamodb.AttributeValue{S: aws.String(event.EventFoundationSFID)}
+		nextKey["event_time_epoch"] = &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(event.EventTimeEpoch, 10))}
+	case EventProjectIDEpochIndex:
+		nextKey["event_project_id"] = &dynamodb.AttributeValue{S: aws.String(event.EventProjectID)}
+		nextKey["event_time_epoch"] = &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(event.EventTimeEpoch, 10))}
+	}
+	return toString(nextKey)
+}
+
+// GetCompanyFoundationEvents returns the list of events for foundation and company
+func (repo *repository) GetCompanyFoundationEvents(companySFID, foundationSFID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error) {
+	key := fmt.Sprintf("%s#%s", companySFID, foundationSFID)
+	keyCondition := expression.Key("company_sfid_foundation_sfid").Equal(expression.Value(key))
+	return repo.queryEventsTable(CompanySFIDFoundationSFIDEpochIndex, keyCondition, nextKey, paramPageSize, all, nil)
+}
+
+// GetCompanyClaGroupEvents returns the list of events for cla group and the company
+func (repo *repository) GetCompanyClaGroupEvents(companySFID, claGroupID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error) {
+	key := fmt.Sprintf("%s#%s", companySFID, claGroupID)
+	keyCondition := expression.Key("company_sfid_project_id").Equal(expression.Value(key))
+	return repo.queryEventsTable(CompanySFIDProjectIDEpochIndex, keyCondition, nextKey, paramPageSize, all, nil)
+}
+
+// GetFoundationEvents returns the list of foundation events
+func (repo *repository) GetFoundationEvents(foundationSFID string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error) {
+	keyCondition := expression.Key("event_foundation_sfid").Equal(expression.Value(foundationSFID))
+	return repo.queryEventsTable(EventFoundationSFIDEpochIndex, keyCondition, nextKey, paramPageSize, all, searchTerm)
+}
+
+// GetClaGroupEvents returns the list of cla-group events
+func (repo *repository) GetClaGroupEvents(claGroupID string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error) {
+	keyCondition := expression.Key("event_project_id").Equal(expression.Value(claGroupID))
+	return repo.queryEventsTable(EventProjectIDEpochIndex, keyCondition, nextKey, paramPageSize, all, searchTerm)
 }
 
 // toString encodes the map as a string
@@ -441,68 +609,51 @@ func (repo repository) getEventByDay(day string, containsPII bool, pageSize int6
 	return events, nil
 }
 
-func (repo repository) GetRecentEventsForCompanyProject(companyID, projectSFID string, pageSize int64) (*models.EventList, error) {
-	key := fmt.Sprintf("%s#%s", companyID, projectSFID)
-	indexName := "company-id-external-project-id-event-epoch-time-index"
-	condition := expression.Key("company_id_external_project_id").Equal(expression.Value(key))
-	events, err := repo.eventIndexQuery(indexName, condition, nil, pageSize, false)
-	if err != nil {
-		return nil, err
-	}
-	var out models.EventList
-	out.Events = events
-	return &out, nil
-}
-
-func (repo repository) eventIndexQuery(indexName string, condition expression.KeyConditionBuilder, filter *expression.ConditionBuilder, pageSize int64, scanIndexForward bool) ([]*models.Event, error) {
+func (repo repository) AddDataToEvent(eventID, foundationSFID, projectSFID, projectSFName, companySFID, projectID string) error {
 	tableName := fmt.Sprintf("cla-%s-events", repo.stage)
-	builder := expression.NewBuilder().WithProjection(buildProjection())
-	builder = builder.WithKeyCondition(condition)
-	if filter != nil {
-		builder = builder.WithFilter(*filter)
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"event_id": {
+				S: aws.String(eventID),
+			},
+		},
 	}
-	expr, err := builder.Build()
-	if err != nil {
-		return nil, err
+	companySFIDFoundationSFID := fmt.Sprintf("%s#%s", companySFID, foundationSFID)
+	companySFIDProjectID := fmt.Sprintf("%s#%s", companySFID, projectID)
+	ue := utils.NewDynamoUpdateExpression()
+	ue.AddAttributeName("#foundation_sfid", "event_foundation_sfid", foundationSFID != "")
+	ue.AddAttributeName("#project_sfid", "event_project_sfid", projectSFID != "")
+	ue.AddAttributeName("#project_sf_name", "event_sf_project_name", projectSFName != "")
+	ue.AddAttributeName("#company_sfid", "event_company_sfid", companySFID != "")
+	ue.AddAttributeName("#company_sfid_foundation_sfid", "company_sfid_foundation_sfid", companySFID != "" && foundationSFID != "")
+	ue.AddAttributeName("#company_sfid_project_id", "company_sfid_project_id", companySFID != "" && projectID != "")
+
+	ue.AddAttributeValue(":foundation_sfid", &dynamodb.AttributeValue{S: aws.String(foundationSFID)}, foundationSFID != "")
+	ue.AddAttributeValue(":project_sfid", &dynamodb.AttributeValue{S: aws.String(projectSFID)}, projectSFID != "")
+	ue.AddAttributeValue(":project_sf_name", &dynamodb.AttributeValue{S: aws.String(projectSFName)}, projectSFName != "")
+	ue.AddAttributeValue(":company_sfid", &dynamodb.AttributeValue{S: aws.String(companySFID)}, companySFID != "")
+	ue.AddAttributeValue(":company_sfid_foundation_sfid", &dynamodb.AttributeValue{S: aws.String(companySFIDFoundationSFID)}, companySFID != "" && foundationSFID != "")
+	ue.AddAttributeValue(":company_sfid_project_id", &dynamodb.AttributeValue{S: aws.String(companySFIDProjectID)}, companySFID != "" && projectID != "")
+
+	ue.AddUpdateExpression("#foundation_sfid = :foundation_sfid", foundationSFID != "")
+	ue.AddUpdateExpression("#project_sfid = :project_sfid", projectSFID != "")
+	ue.AddUpdateExpression("#project_sf_name = :project_sf_name", projectSFName != "")
+	ue.AddUpdateExpression("#company_sfid = :company_sfid", companySFID != "")
+	ue.AddUpdateExpression("#company_sfid_foundation_sfid = :company_sfid_foundation_sfid", companySFID != "" && foundationSFID != "")
+	ue.AddUpdateExpression("#company_sfid_project_id = :company_sfid_project_id", companySFID != "" && projectID != "")
+	if ue.Expression == "" {
+		// nothing to update
+		return nil
 	}
-	queryInput := &dynamodb.QueryInput{
-		ExpressionAttributeNames:  expr.Names(),
-		ExpressionAttributeValues: expr.Values(),
-		KeyConditionExpression:    expr.KeyCondition(),
-		ProjectionExpression:      expr.Projection(),
-		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(tableName),
-		IndexName:                 aws.String(indexName),
-		Limit:                     aws.Int64(pageSize), // The maximum number of items to evaluate (not necessarily the number of matching items)
-		ScanIndexForward:          aws.Bool(scanIndexForward),
+	input.UpdateExpression = aws.String(ue.Expression)
+	input.ExpressionAttributeNames = ue.ExpressionAttributeNames
+	input.ExpressionAttributeValues = ue.ExpressionAttributeValues
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Debugf("update input: %v", input)
+		log.Warnf("unable to add extra details to event : %s . error = %s", eventID, updateErr.Error())
+		return updateErr
 	}
-
-	events := make([]*models.Event, 0)
-
-	for {
-		results, errQuery := repo.dynamoDBClient.Query(queryInput)
-		if errQuery != nil {
-			log.Warnf("error retrieving events. error = %s", errQuery.Error())
-			return nil, errQuery
-		}
-
-		eventsList, modelErr := buildEventListModels(results)
-		if modelErr != nil {
-			return nil, modelErr
-		}
-
-		if len(eventsList) > 0 {
-			events = append(events, eventsList...)
-		}
-		if int64(len(events)) >= pageSize {
-			events = events[0:pageSize]
-			break
-		}
-		if len(results.LastEvaluatedKey) != 0 {
-			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
-		} else {
-			break
-		}
-	}
-	return events, nil
+	return nil
 }

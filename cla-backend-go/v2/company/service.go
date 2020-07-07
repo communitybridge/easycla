@@ -206,14 +206,6 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 		return nil, err
 	}
 
-	// Create Easy CLA Company
-	log.Debugf("Creating EasyCLA company : %s ", companyName)
-	// OrgID used as externalID for the easyCLA Company
-	easyCLAErr := s.repo.CreateCompany(companyName, org.ID, userID)
-	if easyCLAErr != nil {
-		log.Warnf("Failed to create EasyCLA company for company: %s ", companyName)
-		return nil, easyCLAErr
-	}
 	acsClient := acs_service.GetClient()
 
 	if claUser.LfUsername != "" {
@@ -253,6 +245,16 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 			log.Debugf("ACS Service - User invite initiated for user with email : %s", filteredEmails[0])
 		}
 	}
+
+	// Create Easy CLA Company
+	log.Debugf("Creating EasyCLA company : %s ", companyName)
+	// OrgID used as externalID for the easyCLA Company
+	easyCLAErr := s.repo.CreateCompany(companyName, org.ID, userID)
+	if easyCLAErr != nil {
+		log.Warnf("Failed to create EasyCLA company for company: %s ", companyName)
+		return nil, easyCLAErr
+	}
+
 	return &models.CompanyOutput{
 		CompanyName:    org.Name,
 		CompanyWebsite: companyWebsite,
