@@ -20,6 +20,10 @@ type Event struct {
 	EventTime              string `dynamodbav:"event_time"`
 	EventTimeEpoch         int64  `dynamodbav:"event_time_epoch"`
 	EventData              string `dynamodbav:"event_data"`
+	EventFoundationSFID    string `dynamodbav:"event_foundation_sfid"`
+	EventSFProjectName     string `dynamodbav:"event_sf_project_name"`
+	EventProjectSFID       string `dynamodbav:"event_project_sfid"`
+	EventCompanySFID       string `dynamodbav:"event_company_sfid"`
 }
 
 // DBUser data model
@@ -55,6 +59,10 @@ func (e *Event) toEvent() *models.Event { //nolint
 		UserName:               e.EventUserName,
 		LfUsername:             e.EventLfUsername,
 		EventTimeEpoch:         e.EventTimeEpoch,
+		EventFoundationSFID:    e.EventFoundationSFID,
+		EventProjectSFID:       e.EventProjectSFID,
+		EventProjectSFName:     e.EventSFProjectName,
+		EventCompanySFID:       e.EventCompanySFID,
 	}
 }
 

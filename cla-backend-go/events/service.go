@@ -14,6 +14,7 @@ import (
 
 // constants
 const (
+	ReturnAllEvents     = true
 	LoadRepoDetails     = true
 	DontLoadRepoDetails = false
 )
@@ -23,9 +24,11 @@ type Service interface {
 	LogEvent(args *LogEventArgs)
 	SearchEvents(params *eventOps.SearchEventsParams) (*models.EventList, error)
 	GetRecentEvents(paramPageSize *int64) (*models.EventList, error)
-	GetRecentEventsForCompanyProject(companyID, projectSFID string, pageSize *int64) (*models.EventList, error)
-	GetFoundationSFDCEvents(foundationSFDC string, paramPageSize *int64) (*models.EventList, error)
-	GetProjectSFDCEvents(projectSFDC string, paramPageSize *int64) (*models.EventList, error)
+
+	GetFoundationEvents(foundationSFID string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error)
+	GetClaGroupEvents(claGroupID string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error)
+	GetCompanyFoundationEvents(companySFID, foundationSFID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error)
+	GetCompanyClaGroupEvents(companySFID, claGroupID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error)
 }
 
 // CombinedRepo contains the various methods of other repositories
@@ -72,23 +75,25 @@ func (s *service) GetRecentEvents(paramPageSize *int64) (*models.EventList, erro
 	}
 	return s.repo.GetRecentEvents(pageSize)
 }
-func (s *service) GetRecentEventsForCompanyProject(companyID, projectSFID string, paramPageSize *int64) (*models.EventList, error) {
-	const defaultPageSize int64 = 10
-	var pageSize = defaultPageSize
-	if paramPageSize != nil {
-		pageSize = *paramPageSize
-	}
-	return s.repo.GetRecentEventsForCompanyProject(companyID, projectSFID, pageSize)
+
+// GetFoundationEvents returns the list of foundation events
+func (s *service) GetFoundationEvents(foundationSFID string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error) {
+	return s.repo.GetFoundationEvents(foundationSFID, nextKey, paramPageSize, all, searchTerm)
 }
 
-// GetFoundationSFDCEvents returns the list of foundation events
-func (s *service) GetFoundationSFDCEvents(foundationSFDC string, paramPageSize *int64) (*models.EventList, error) {
-	return s.repo.GetFoundationSFDCEvents(foundationSFDC, paramPageSize)
+// GetClaGroupEvents returns the list of project events
+func (s *service) GetClaGroupEvents(projectSFDC string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error) {
+	return s.repo.GetClaGroupEvents(projectSFDC, nextKey, paramPageSize, all, searchTerm)
 }
 
-// GetProjectSFDCEvents returns the list of project events
-func (s *service) GetProjectSFDCEvents(projectSFDC string, paramPageSize *int64) (*models.EventList, error) {
-	return s.repo.GetProjectSFDCEvents(projectSFDC, paramPageSize)
+// GetCompanyFoundationEvents returns list of events for company and foundation
+func (s *service) GetCompanyFoundationEvents(companySFID, foundationSFID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error) {
+	return s.repo.GetCompanyFoundationEvents(companySFID, foundationSFID, nextKey, paramPageSize, all)
+}
+
+// GetCompanyClaGroupEvents returns list of events for company and cla group
+func (s *service) GetCompanyClaGroupEvents(companySFID, claGroupID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error) {
+	return s.repo.GetCompanyClaGroupEvents(companySFID, claGroupID, nextKey, paramPageSize, all)
 }
 
 // LogEventArgs is argument to LogEvent function
