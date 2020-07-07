@@ -6,7 +6,6 @@ package cla_manager
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
@@ -510,9 +509,9 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 		return nil, ErrNoLFID
 	}
 
-	// Check if user is associated with another organization
+	// Check if user is not associated with given organization
 	log.Debugf("LFX user company :%s", lfxUser.Account.Name)
-	if strings.TrimSpace(lfxUser.Account.Name) != strings.TrimSpace(companyModel.Name) {
+	if lfxUser.Account.ID != companyID {
 		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - User associated with another organization :%s and should be in :%s ", lfxUser.Account.Name, companyModel.Name)
 		log.Warn(msg)
 		return nil, ErrNotInOrg
@@ -621,9 +620,9 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	// Check if sending cla manager request to company admin
 	if contactAdmin {
 		log.Debugf("Sending email to company Admin")
-		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyID)
+		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyModel.CompanyExternalID)
 		if listScopeErr != nil {
-			msg := fmt.Sprintf("Admin lookup error for organisation SFID: %s ", companyID)
+			msg := fmt.Sprintf("Admin lookup error for organisation SFID: %s ", companyModel.CompanyExternalID)
 			return nil, &models.ErrorResponse{
 				Code:    "400",
 				Message: msg,

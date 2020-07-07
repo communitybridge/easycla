@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 
 	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
@@ -90,7 +91,14 @@ func main() {
 	log.Info("Lambda server starting...")
 	printBuildInfo()
 	if os.Getenv("LOCAL_MODE") == "true" {
-		handler(context.Background(), events.DynamoDBEvent{})
+		var dynamodbEvent events.DynamoDBEvent
+		args := os.Args[1:]
+		if len(args) > 0 {
+			if err := json.Unmarshal([]byte(args[0]), &dynamodbEvent); err != nil {
+				log.Fatal(err)
+			}
+		}
+		handler(context.Background(), dynamodbEvent)
 	} else {
 		lambda.Start(handler)
 	}

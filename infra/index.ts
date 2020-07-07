@@ -887,6 +887,8 @@ function buildProjectsClaGroupsTable(importResources: boolean): aws.dynamodb.Tab
       hashKey: 'project_sfid',
       readCapacity: defaultReadCapacity,
       writeCapacity: 1,
+      streamEnabled: true,
+      streamViewType: "NEW_AND_OLD_IMAGES",
       globalSecondaryIndexes: [
         {
           name: 'cla-group-id-index',
@@ -920,6 +922,10 @@ signaturesTable.onEvent("signatureStreamEvents",
   aws.lambda.Function.get(dynamoDBEventLambdaName, dynamoDBEventLambdaArn),
   { startingPosition: "LATEST" });
 eventsTable.onEvent("eventStreamEvents",
+  aws.lambda.Function.get(dynamoDBEventLambdaName, dynamoDBEventLambdaArn),
+  { startingPosition: "LATEST" });
+
+projectsClaGroupsTable.onEvent("projectsCLAGroupsStreamEvents",
   aws.lambda.Function.get(dynamoDBEventLambdaName, dynamoDBEventLambdaArn),
   { startingPosition: "LATEST" });
 
