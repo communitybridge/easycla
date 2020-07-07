@@ -101,7 +101,7 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 					GithubOrganizationName: params.OrgName,
 				},
 			})
-			return github_organizations.NewDeleteProjectGithubOrganizationOK()
+			return github_organizations.NewDeleteProjectGithubOrganizationNoContent()
 		})
 }
 

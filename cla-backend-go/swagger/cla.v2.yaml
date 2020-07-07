@@ -346,8 +346,8 @@ paths:
         - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-claGroupID"
       responses:
-        '200':
-          description: 'Success'
+        '204':
+          description: 'Resource Deleted'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -580,7 +580,7 @@ paths:
         - $ref: "#/parameters/x-email"
       responses:
         '204':
-          description: 'Success'
+          description: 'Resource Deleted'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1089,8 +1089,8 @@ paths:
           type: string
           required: true
       responses:
-        '200':
-          description: 'Success'
+        '204':
+          description: 'Resource Deleted'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1180,8 +1180,8 @@ paths:
           type: string
           required: true
       responses:
-        '200':
-          description: 'Success'
+        '204':
+          description: 'Resource Deleted'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1855,10 +1855,9 @@ paths:
         - $ref: "#/parameters/path-projectSFID"
         - $ref: "#/parameters/path-companySFID"
         - $ref: "#/parameters/path-userLFID"
-
       responses:
         '204':
-          description: 'Success'
+          description: 'Resource Deleted'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1960,7 +1959,7 @@ paths:
             $ref: '#/definitions/gh-org-whitelist'
       responses:
         '204':
-          description: 'Success'
+          description: 'Resource Deleted'
           schema:
             type: array
             items:
@@ -2029,8 +2028,8 @@ paths:
           type: string
           required: true
       responses:
-        '200':
-          description: 'Success'
+        '204':
+          description: 'Resource Deleted'
         '400':
           $ref: '#/responses/invalid-request'
         '401':

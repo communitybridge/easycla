@@ -56,6 +56,7 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 			if err != nil {
 				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
 			}
+
 			// record the event
 			eventService.LogEvent(&events.LogEventArgs{
 				EventType:    events.GerritRepositoryDeleted,
@@ -65,7 +66,8 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 					GerritRepositoryName: gerrit.GerritName,
 				},
 			})
-			return gerrits.NewDeleteGerritOK()
+
+			return gerrits.NewDeleteGerritNoContent()
 		})
 
 	api.GerritsAddGerritHandler = gerrits.AddGerritHandlerFunc(
