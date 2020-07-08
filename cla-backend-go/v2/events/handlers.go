@@ -5,6 +5,11 @@ package events
 
 import (
 	"fmt"
+	"net/http"
+
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+
+	"github.com/go-openapi/runtime"
 
 	"github.com/aws/aws-sdk-go/aws"
 
@@ -62,7 +67,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 		func(params events.GetFoundationEventsAsCSVParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !utils.IsUserAuthorizedForProject(authUser, params.FoundationSFID) {
-				return events.NewGetRecentEventsForbidden().WithPayload(&models.ErrorResponse{
+				return WriteResponse(http.StatusForbidden, runtime.JSONMime, runtime.JSONProducer(), &models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Foundation Events for foundation %s.",
 						authUser.UserName, params.FoundationSFID),
@@ -71,7 +76,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 
 			result, err := service.GetFoundationEvents(params.FoundationSFID, nil, nil, v1Events.ReturnAllEvents, nil)
 			if err != nil {
-				return events.NewGetFoundationEventsAsCSVBadRequest().WithPayload(errorResponse(err))
+				return WriteResponse(http.StatusBadRequest, runtime.JSONMime, runtime.JSONProducer(), errorResponse(err))
 			}
 
 			filename := fmt.Sprintf("foundation-events-%s.csv", params.FoundationSFID)
@@ -104,7 +109,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 		func(params events.GetProjectEventsAsCSVParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
-				return events.NewGetRecentEventsForbidden().WithPayload(&models.ErrorResponse{
+				return WriteResponse(http.StatusForbidden, runtime.JSONMime, runtime.JSONProducer(), &models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project Events for project %s.",
 						authUser.UserName, params.ProjectSFID),
@@ -113,13 +118,13 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			pm, err := projectsClaGroupsRepo.GetClaGroupIDForProject(params.ProjectSFID)
 			if err != nil {
 				if err == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
-					return events.NewGetProjectEventsAsCSVNotFound().WithPayload(&models.ErrorResponse{
+					return WriteResponse(http.StatusNotFound, runtime.JSONMime, runtime.JSONProducer(), &models.ErrorResponse{
 						Code: "404",
 						Message: fmt.Sprintf("EasyCLA - 403 Forbidden - project %s not found in cla",
 							params.ProjectSFID),
 					})
 				}
-				return events.NewGetProjectEventsAsCSVInternalServerError().WithPayload(errorResponse(err))
+				return WriteResponse(http.StatusInternalServerError, runtime.JSONMime, runtime.JSONProducer(), errorResponse(err))
 			}
 			result, err := service.GetClaGroupEvents(pm.ClaGroupID, nil, nil, v1Events.ReturnAllEvents, nil)
 			if err != nil {
@@ -225,4 +230,16 @@ func errorResponse(err error) *models.ErrorResponse {
 	}
 
 	return &e
+}
+
+// WriteResponse function writes http response.
+func WriteResponse(httpStatus int, contentType string, contentProducer runtime.Producer, data interface{}) middleware.Responder {
+	return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+		rw.Header().Set(runtime.HeaderContentType, contentType)
+		rw.WriteHeader(httpStatus)
+		err := contentProducer.Produce(rw, data)
+		if err != nil {
+			log.Warnf("failed to write data. error = %v", err)
+		}
+	})
 }
