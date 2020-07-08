@@ -1262,16 +1262,22 @@ class DocuSign(signing_service_interface.SigningService):
                           'loading CLA Managers...')
             # Should have only 1 CLA Manager assigned at this point - grab the list of cla managers from the signature
             # record
-            cla_manager_list = signature.get_signature_acl()
+            cla_manager_list = list(signature.get_signature_acl())
 
             # Load the user record of the initial CLA Manager
-            user_list = user.get_user_by_username(cla_manager_list[0])
-            if user_list is None:
+            if len(cla_manager_list) > 0 :
+                user_list = user.get_user_by_username(cla_manager_list[0])
+                if user_list is None:
+                    msg = f'signed_corporate_callback - CLA Manager not assign for signature: {signature}'
+                    cla.log.warning(msg)
+                    return {'errors': {'error': msg}}
+                else:
+                    user = user_list[0]
+            else:
                 msg = f'signed_corporate_callback - CLA Manager not assign for signature: {signature}'
                 cla.log.warning(msg)
                 return {'errors': {'error': msg}}
-            else:
-                user = user_list[0]
+        
 
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
