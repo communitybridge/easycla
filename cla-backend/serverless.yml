@@ -275,7 +275,7 @@ functions:
         - ./backend-aws-lambda
 
   dynamo-signatures-events-lambda:
-    handler: dynamo-signatures-events-lambda
+    handler: dynamo-events-lambda
     name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-signatures-events-lambda
     description: "EasyCLA DynamoDB stream events handler for the signatures table"
     runtime: go1.x
@@ -285,7 +285,7 @@ functions:
         - ./dynamo-events-lambda
 
   dynamo-events-events-lambda:
-    handler: dynamo-events-events-lambda
+    handler: dynamo-events-lambda
     name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-events-events-lambda
     description: "EasyCLA DynamoDB stream events handler for the events table"
     runtime: go1.x
@@ -295,7 +295,7 @@ functions:
         - ./dynamo-events-lambda
 
   dynamo-projects-cla-groups-events-lambda:
-    handler: dynamo-projects-cla-groups-events-lambda
+    handler: dynamo-events-lambda
     name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-projects-cla-groups-events-lambda
     description: "EasyCLA DynamoDB stream events handler for the projects-cla-groups table"
     runtime: go1.x
