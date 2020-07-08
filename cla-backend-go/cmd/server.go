@@ -314,9 +314,29 @@ func server(localMode bool) http.Handler {
 		case []byte:
 			_, err := w.Write(v)
 			return err
+		case []string:
+			if len(v) == 0 {
+				return nil
+			}
+			_, err := w.Write([]byte(v[0]))
+			if err != nil {
+				return err
+			}
+			v = v[1:]
+			for _, line := range v {
+				_, err = w.Write([]byte("\n"))
+				if err != nil {
+					return err
+				}
+				_, err := w.Write([]byte(line))
+				if err != nil {
+					return err
+				}
+			}
 		default:
 			return errors.New("invalid value to CSV producer")
 		}
+		return nil
 	})
 
 	v2API.TextJSONProducer = openapi_runtime.ProducerFunc(func(w io.Writer, data interface{}) error {
