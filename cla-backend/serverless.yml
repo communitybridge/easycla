@@ -275,7 +275,7 @@ functions:
         - ./backend-aws-lambda
 
   dynamo-signatures-events-lambda:
-    handler: dynamo-signatures-events-lambdaa
+    handler: dynamo-signatures-events-lambda
     name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-signatures-events-lambda
     description: "EasyCLA DynamoDB stream events handler for the signatures table"
     runtime: go1.x
