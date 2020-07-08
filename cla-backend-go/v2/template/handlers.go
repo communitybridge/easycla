@@ -69,12 +69,12 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 		var param v1Models.CreateClaGroupTemplate
 		err := copier.Copy(&param, &params.TemplatePreviewInput)
 		if err != nil {
-			return template.NewTemplatePreviewInternalServerError().WithPayload(errorResponse(err))
+			return writeResponse(http.StatusInternalServerError, runtime.JSONMime, runtime.JSONProducer(), errorResponse(err))
 		}
 		pdf, err := service.CreateTemplatePreview(&param, params.TemplateFor)
 		if err != nil {
 			log.Warnf("Error generating PDFs from provided templates, error: %v", err)
-			return template.NewTemplatePreviewBadRequest().WithPayload(errorResponse(err))
+			return writeResponse(http.StatusBadRequest, runtime.JSONMime, runtime.JSONProducer(), errorResponse(err))
 		}
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
 			rw.WriteHeader(http.StatusOK)
@@ -102,4 +102,15 @@ func errorResponse(err error) *models.ErrorResponse {
 	}
 
 	return &e
+}
+
+func writeResponse(httpStatus int, contentType string, contentProducer runtime.Producer, data interface{}) middleware.Responder {
+	return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+		rw.Header().Set(runtime.HeaderContentType, contentType)
+		rw.WriteHeader(httpStatus)
+		err := contentProducer.Produce(rw, data)
+		if err != nil {
+			log.Warnf("failed to write data. error = %v", err)
+		}
+	})
 }
