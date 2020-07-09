@@ -41,6 +41,8 @@ import (
 var (
 	ErrProjectNotFound = errors.New("project not found")
 	ErrCLAUserNotFound = errors.New("claUser not found")
+	ErrNoValidEmail    = errors.New("user with no valid email")
+	ErrNoLfUsername    = errors.New("user has no LF username")
 )
 
 // constants
@@ -192,6 +194,8 @@ func (s *service) GetCompanyProjectContributors(projectSFID string, companySFID 
 
 func (s *service) CreateCompany(companyName string, companyWebsite string, userID string, LFXPortalURL string) (*models.CompanyOutput, error) {
 
+	var lfUser *v2UserServiceModels.User
+
 	// Get EasyCLA User
 	claUser, claUserErr := s.userRepo.GetUser(userID)
 	if claUserErr != nil {
@@ -207,8 +211,51 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 	}
 
 	acsClient := acs_service.GetClient()
+	userClient := v2UserService.GetClient()
 
-	if claUser.LfUsername != "" {
+	// Ensure to send user invite with public email (GH)
+	filteredEmails := []string{}
+	for _, email := range claUser.Emails {
+		if !(strings.Contains(email, "noreply.github.com")) {
+			filteredEmails = append(filteredEmails, email)
+		}
+	}
+
+	var userEmail *string
+
+	if len(filteredEmails) > 0 {
+		// Check if userEmail is an LF user
+		for i := range filteredEmails {
+			found, lfErr := userClient.SearchUserByEmail(filteredEmails[i])
+			if lfErr != nil {
+				userEmail = &filteredEmails[i]
+				log.Debugf("User email :%s is not associated with LF", filteredEmails[i])
+				continue
+			}
+			lfUser = found
+			log.Debugf("User email : %s has an LFx account", filteredEmails[i])
+			break
+		}
+	}
+
+	if lfUser != nil || claUser.LfEmail != "" {
+		// Set lf email
+		var email string
+		if claUser.LfEmail != "" {
+			email = claUser.LfEmail
+		} else {
+			email = *lfUser.Emails[0].EmailAddress
+		}
+		// set lf username
+		var lfUsername string
+		if claUser.LfUsername != "" {
+			log.Debugf("Setting username : %s", claUser.LfUsername)
+			lfUsername = claUser.LfUsername
+		} else {
+			log.Debugf("Setting username : %s", lfUser.Username)
+			lfUsername = lfUser.Username
+		}
+
 		// Get Role ID
 		roleID, designeeErr := acsClient.GetRoleID("company-owner")
 		if designeeErr != nil {
@@ -217,32 +264,27 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 			return nil, designeeErr
 		}
 
-		err = orgClient.CreateOrgUserRoleOrgScope(claUser.LfEmail, org.ID, roleID)
+		if lfUsername == "" {
+			msg := fmt.Sprintf("EasyCLA - Bad Request - User with lfEmail: %s has no username required for setting scope ", email)
+			log.Warn(msg)
+			return nil, ErrNoLfUsername
+		}
+		err = orgClient.CreateOrgUserRoleOrgScope(email, org.ID, roleID)
 		if err != nil {
-			log.Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", claUser.LfUsername, err)
+			log.Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", email, err)
 			return nil, err
 		}
-		log.Debugf("User :%s has been assigned the company-owner role to organization: %s ", claUser.LfUsername, org.Name)
+		log.Debugf("User :%s has been assigned the company-owner role to organization: %s ", email, org.Name)
 		//Send Email to User with instructions to complete Company profile
-		log.Debugf("Sending Email to user :%s to complete setup for newly created Org : %s ", claUser.Username, org.Name)
-		sendEmailToUserCompanyProfile(org.Name, claUser.Username, claUser.LfUsername, LFXPortalURL)
+		log.Debugf("Sending Email to user :%s to complete setup for newly created Org : %s ", email, org.Name)
+		sendEmailToUserCompanyProfile(org.Name, email, lfUsername, LFXPortalURL)
 
-	} else {
-		// Ensure to send user invite with public email (GH)
-		filteredEmails := []string{}
-		for _, email := range claUser.Emails {
-			if !(strings.Contains(email, "noreply.github.com")) {
-				filteredEmails = append(filteredEmails, email)
-			}
-		}
-
-		if len(filteredEmails) > 0 {
-			// Send User invite
-			acsErr := acsClient.SendUserInvite(&filteredEmails[0], "contributor", "organization", org.ID, "userinvite")
-			if acsErr != nil {
-				return nil, acsErr
-			}
-			log.Debugf("ACS Service - User invite initiated for user with email : %s", filteredEmails[0])
+	} else if userEmail != nil {
+		// Send User invite
+		log.Debugf("User invite initiated for user with email : %s", *userEmail)
+		acsErr := acsClient.SendUserInvite(userEmail, "contributor", "organization", org.ID, "userinvite")
+		if acsErr != nil {
+			return nil, acsErr
 		}
 	}
 

@@ -74,14 +74,14 @@ func (ac *Client) SendUserInvite(email *string,
 		},
 		Context: context.Background(),
 	}
-	result, err := ac.cl.Invite.CreateUserInvite(params, clientAuth)
-	log.Debugf("CreateUserinvite called with args email: %v, scope: %s, roleName: %s, type: %s, scopeID: %s",
-		email, scope, roleName, inviteType, organizationID)
-	if err != nil {
+	result, inviteErr := ac.cl.Invite.CreateUserInvite(params, clientAuth)
+	log.Debugf("CreateUserinvite called with args email: %s, scope: %s, roleName: %s, type: %s, scopeID: %s",
+		*email, scope, roleName, inviteType, organizationID)
+	if inviteErr != nil {
 		log.Error("CreateUserInvite failed", err)
 		return err
 	}
-	log.Debugf("CreateUserInvite result : %#v\n", result)
+	log.Debugf("CreatedUserInvite :%+v", result.Payload)
 	return nil
 }
 
