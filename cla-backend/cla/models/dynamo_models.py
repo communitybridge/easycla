@@ -441,6 +441,7 @@ class GithubUserExternalIndex(GlobalSecondaryIndex):
 
     user_external_id = UnicodeAttribute(hash_key=True)
 
+
 class FoundationSfidIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying mapping of cla-groups and projects by foundation_sfid
@@ -452,8 +453,9 @@ class FoundationSfidIndex(GlobalSecondaryIndex):
         write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
         read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
         projection = AllProjection()
-    
+
     foundation_sfid = UnicodeAttribute(hash_key=True)
+
 
 class CLAGroupIDIndex(GlobalSecondaryIndex):
     """
@@ -466,7 +468,7 @@ class CLAGroupIDIndex(GlobalSecondaryIndex):
         write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
         read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
         projection = AllProjection()
-  
+
     cla_group_id = UnicodeAttribute(hash_key=True)
 
 
@@ -917,7 +919,7 @@ class ProjectModel(BaseModel):
 
     project_acl = UnicodeSetAttribute(default=set())
     # Default is v1 for all of our models - override for this model so that we can redirect to new UI when ready
-    #version = UnicodeAttribute(default="v2")  # Schema version is v2 for Project Models
+    # version = UnicodeAttribute(default="v2")  # Schema version is v2 for Project Models
 
 
 class Project(model_interfaces.Project):  # pylint: disable=too-many-public-methods
@@ -1636,7 +1638,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             preprocessed_pattern = "^.*@" + pattern + "$"
             pat = re.compile(preprocessed_pattern)
             for email in emails:
-                if pat.match(email) != None:
+                if pat.match(email) is not None:
                     self.log_debug("found user email in email whitelist pattern")
                     return True
         return False
@@ -1779,7 +1781,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         if emails is None:
             users = self.model.scan()
         else:
-            users = UserModel.batch_get(emails )
+            users = UserModel.batch_get(emails)
         ret = []
         for user in users:
             usr = User()
@@ -1999,6 +2001,11 @@ class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     signature_reference_type = UnicodeAttribute()
     signature_type = UnicodeAttribute(default="cla")
     signature_signed = BooleanAttribute(default=False)
+    # Signed on date/time
+    signed_on = UnicodeAttribute(null=True)
+    # Encoded string for searching
+    # eg: icla#true#true#123abd-sadf0-458a-adba-a9393939393
+    sigtype_signed_approved_id = UnicodeAttribute(null=True)
     signature_approved = BooleanAttribute(default=False)
     signature_sign_url = UnicodeAttribute(null=True)
     signature_return_url = UnicodeAttribute(null=True)
@@ -2023,11 +2030,16 @@ class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     signature_company_initial_manager_index = SignatureCompanyInitialManagerIndex()
     project_signature_external_id_index = SignatureProjectExternalIndex()
 
-    # whitelists are only used by CCLAs
+    # approval lists (previously called whitelists) are only used by CCLAs
     domain_whitelist = ListAttribute(null=True)
     email_whitelist = ListAttribute(null=True)
     github_whitelist = ListAttribute(null=True)
     github_org_whitelist = ListAttribute(null=True)
+
+    # Additional attributes for ICLAs
+    user_email = UnicodeAttribute(null=True)
+    user_github_username = UnicodeAttribute(null=True)
+    user_name = UnicodeAttribute(null=True)
 
 
 class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-methods
@@ -2048,6 +2060,8 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             signature_type=None,
             signature_signed=False,
             signature_approved=False,
+            signed_on=None,
+            sigtype_signed_approved_id=None,
             signature_sign_url=None,
             signature_return_url=None,
             signature_callback_url=None,
@@ -2067,7 +2081,10 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             signature_company_initial_manager_id=None,
             signature_company_initial_manager_name=None,
             signature_company_initial_manager_email=None,
-            signature_company_secondary_manager_list=None
+            signature_company_secondary_manager_list=None,
+            user_email=None,
+            user_github_username=None,
+            user_name=None
     ):
         super(Signature).__init__()
         self.model = SignatureModel()
@@ -2083,6 +2100,8 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         self.model.signature_reference_type = signature_reference_type
         self.model.signature_type = signature_type
         self.model.signature_signed = signature_signed
+        self.model.signed_on = signed_on
+        self.model.sigtype_signed_approved_id = sigtype_signed_approved_id
         self.model.signature_approved = signature_approved
         self.model.signature_sign_url = signature_sign_url
         self.model.signature_return_url = signature_return_url
@@ -2103,17 +2122,22 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         self.model.signature_company_initial_manager_name = signature_company_initial_manager_name
         self.model.signature_company_initial_manager_email = signature_company_initial_manager_email
         self.model.signature_company_secondary_manager_list = signature_company_secondary_manager_list
+        self.model.user_email = user_email
+        self.model.user_github_username = user_github_username
+        self.model.user_name = user_name
 
     def __str__(self):
         return (
             "id: {}, project id: {}, reference id: {}, reference name: {}, reference name lower: {}, "
             "reference type: {}, "
-            "user cla company id: {}, signed: {}, approved: {}, domain whitelist: {}, "
+            "user cla company id: {}, signed: {}, signed_on: {}, sigtype_signed_approved_id: {}, "
+            "approved: {}, domain whitelist: {}, "
             "email whitelist: {}, github user whitelist: {}, github domain whitelist: {}, "
             "note: {},signature project external id: {}, signature company signatory id: {}, "
             "signature company signatory name: {}, signature company signatory email: {},"
             "signature company initial manager id: {}, signature company initial manager name: {},"
-            "signature company initial manager email: {}, signature company secondary manager list: {}"
+            "signature company initial manager email: {}, signature company secondary manager list: {},"
+            "user_email: {}, user_github_username: {}, user_name: {}"
         ).format(
             self.model.signature_id,
             self.model.signature_project_id,
@@ -2123,6 +2147,8 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             self.model.signature_reference_type,
             self.model.signature_user_ccla_company_id,
             self.model.signature_signed,
+            self.model.signed_on,
+            self.model.sigtype_signed_approved_id,
             self.model.signature_approved,
             self.model.domain_whitelist,
             self.model.email_whitelist,
@@ -2136,7 +2162,10 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             self.model.signature_company_initial_manager_id,
             self.model.signature_company_initial_manager_name,
             self.model.signature_company_initial_manager_email,
-            self.model.signature_company_secondary_manager_list
+            self.model.signature_company_secondary_manager_list,
+            self.model.user_email,
+            self.model.user_github_username,
+            self.model.user_name
         )
 
     def to_dict(self):
@@ -2175,6 +2204,12 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def get_signature_signed(self):
         return self.model.signature_signed
+
+    def get_signed_on(self):
+        return self.model.signed_on
+
+    def get_sigtype_signed_approved_id(self):
+        return self.model.sigtype_signed_approved_id
 
     def get_signature_approved(self):
         return self.model.signature_approved
@@ -2252,6 +2287,15 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
     def get_signature_project_external_id(self):
         return self.model.signature_project_external_id
 
+    def get_user_email(self):
+        return self.model.user_email
+
+    def get_user_github_username(self):
+        return self.model.user_github_username
+
+    def get_user_name(self):
+        return self.model.user_name
+
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -2272,6 +2316,12 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def set_signature_signed(self, signed):
         self.model.signature_signed = bool(signed)
+
+    def set_signed_on(self, signed_on):
+        self.model.signed_on = signed_on
+
+    def set_sigtype_signed_approved_id(self, sigtype_signed_approved_id):
+        self.model.sigtype_signed_approved_id = sigtype_signed_approved_id
 
     def set_signature_approved(self, approved):
         self.model.signature_approved = bool(approved)
@@ -2354,6 +2404,15 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
     def remove_signature_acl(self, username):
         if username in self.model.signature_acl:
             self.model.signature_acl.remove(username)
+
+    def set_user_email(self, user_email):
+        self.model.user_email = user_email
+
+    def set_user_github_username(self, user_github_username):
+        self.model.user_github_username = user_github_username
+
+    def set_user_name(self, user_name):
+        self.model.user_name = user_name
 
     def get_signatures_by_reference(
             self,  # pylint: disable=too-many-arguments
@@ -2503,8 +2562,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             signature = Signature()
             signature.model = signature_model
             signatures.append(signature)
-        cla.log.info(f'Returning %d signatures for project_id: %s and company_id: %s',
-                     len(signatures), project_id, company_id)
+        cla.log.info(f'Returning {len(signatures)} signatures for '
+                     f'project_id: {project_id} and '
+                     f'company_id: {company_id}')
         return signatures
 
     def get_employee_signatures_by_company_project(self, company_id, project_id):
@@ -2665,17 +2725,17 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
 
     def to_dict(self):
         return dict(self.model)
- 
+
     def save(self):
         return self.model.save()
- 
+
     def load(self, project_sfid):
         try:
             project_cla_group = self.model.get(project_sfid)
         except ProjectCLAGroupModel.DoesNotExist:
             raise cla.models.DoesNotExist("projectCLAGroup does not exist")
         self.model = project_cla_group
- 
+
     def delete(self):
         self.model.delete()
 
@@ -2741,7 +2801,7 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
             proj_cla_group.model = project_cla_group
             ret.append(proj_cla_group)
         return ret
-    
+
     def get_by_cla_group_id(self, cla_group_id):
         project_cla_groups = ProjectCLAGroupModel.cla_group_id_index.query(cla_group_id)
         ret = []
@@ -3058,7 +3118,7 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
         super(GitHubOrg).__init__()
         self.model = GitHubOrgModel()
         self.model.organization_name = organization_name
-        if self.model.organization_name :
+        if self.model.organization_name:
             self.model.organization_name_lower = self.model.organization_name.lower()
         self.model.organization_installation_id = organization_installation_id
         self.model.organization_sfid = organization_sfid
@@ -3432,6 +3492,7 @@ class EventModel(BaseModel):
     event_project_name = UnicodeAttribute(null=True)
     event_project_name_lower = UnicodeAttribute(null=True)
     event_user_name = UnicodeAttribute(null=True)
+    event_user_name_lower = UnicodeAttribute(null=True)
     event_time = UTCDateTimeAttribute(default=datetime.datetime.now())
     event_time_epoch = NumberAttribute(default=int(time.time()))
     event_data = UnicodeAttribute(null=True)
@@ -3558,12 +3619,6 @@ class Event(model_interfaces.Event):
     def get_event_user_name_lower(self):
         return self.model.event_user_name_lower
 
-    def get_event_project_name(self):
-        return self.model.event_project_name
-
-    def get_event_project_name_lower(self):
-        return self.model.event_project_name_lower
-
     def get_event_project_external_id(self):
         return self.model.event_project_external_id
 
@@ -3625,7 +3680,8 @@ class Event(model_interfaces.Event):
 
     def set_company_id_external_project_id(self):
         if self.model.event_project_external_id is not None and self.model.event_company_id is not None:
-            self.model.company_id_external_project_id = '{}#{}'.format(self.model.event_company_id,self.model.event_project_external_id)
+            self.model.company_id_external_project_id = (f'{self.model.event_company_id}'
+                                                         f'#{self.model.event_project_external_id}')
 
     def search_events(self, **kwargs):
         """
