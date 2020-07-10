@@ -175,21 +175,9 @@ func Trace() (line string) {
 	return fmt.Sprintf("%s,:%d %s\n", frame.File, frame.Line, frame.Function)
 }
 
-// StripSpecialChars strips newlines and tabs from a string
-func StripSpecialChars(s string) string {
-	return strings.Map(func(r rune) rune {
-		switch r {
-		case '\t', '\n':
-			return ' '
-		default:
-			return r
-		}
-	}, s)
-}
-
 // GenerateUUID is function to generate our own uuid if the google uuid throws error
 func GenerateUUID() string {
-	Info("entering func generateUUID")
+	Debug("entering func generateUUID")
 	b := make([]byte, 16)
 	_, err := rand.Read(b)
 	if err != nil {

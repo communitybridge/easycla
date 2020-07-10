@@ -67,9 +67,9 @@ const (
 	ClaManagerCreated = "cla_manager.added"
 	ClaManagerDeleted = "cla_manager.deleted"
 
-	ProjectCreated = "project.created"
-	ProjectUpdated = "project.updated"
-	ProjectDeleted = "project.deleted"
+	CLAGroupCreated = "cla_group.created"
+	CLAGroupUpdated = "cla_group.updated"
+	CLAGroupDeleted = "cla_group.deleted"
 
 	InvalidatedSignature = "signature.invalidated"
 
