@@ -415,7 +415,7 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.warning('No user email authorized for this CCLA: {}'.format(request_info))
             return {'errors': {'ccla_approval_list': 'user not authorized for this ccla'}}
 
-        cla.log.info(f'User is whitelisted for this CCLA: {request_info}')
+        cla.log.info(f'User is approved for this CCLA: {request_info}')
 
         # Assume this company is the user's employer.
         # TODO: DAD - we should check to see if they already have a company id assigned
@@ -424,10 +424,16 @@ class DocuSign(signing_service_interface.SigningService):
             Event.create_event(
                 event_type=EventType.UserAssociatedWithCompany,
                 event_company_id=company_id,
+                event_company_name=company.get_company_name(),
                 event_project_id=project_id,
+                event_project_name=project.get_project_name(),
                 event_user_id=user.get_user_id(),
-                event_data='user {} associated himself with company {}'.format(user.get_user_name(),
-                                                                               company.get_company_name()),
+                event_data=(f'user {user.get_user_name()}/'
+                            f'{user.get_github_username()}/'
+                            f'{user.get_user_github_id()}/'
+                            f'{user.get_user_id()} '
+                            f'associated with company {company.get_company_name()} for '
+                            f'project {project.get_project_name()}'),
                 contains_pii=True,
             )
 
@@ -1114,6 +1120,7 @@ class DocuSign(signing_service_interface.SigningService):
             signature.set_signature_signed(True)
             # Save signature
             signature.save()
+
             # Send user their signed document.
             user = User()
             user.load(signature.get_signature_reference_id())
@@ -1135,11 +1142,32 @@ class DocuSign(signing_service_interface.SigningService):
             project_id = signature.get_signature_project_id()
             self.send_to_s3(document_data, project_id, signature_id, 'icla', user_id)
 
+            try:
+                # Load the Project by ID and send audit event
+                project = Project()
+                project.load(signature.get_signature_project_id())
+                Event.create_event(
+                    event_type=EventType.IndividualSignatureSigned,
+                    event_project_id=signature.get_signature_project_id(),
+                    event_company_id=None,
+                    event_user_id=signature.get_signature_reference_id(),
+                    event_data=(f'individual signature of user {user.get_user_name()} '
+                                f'signed for project {project.get_project_name()}'),
+                    contains_pii=False,
+                )
+            except DoesNotExist as err:
+                msg = (f'signed_individual_callback - '
+                       f'unable to load project by CLA Group ID: {signature.get_signature_project_id()}, '
+                       f'unable to send audit event, error: {err}')
+                cla.log.warning(msg)
+                return
+
             # Update the repository provider with this change.
             update_repository_provider(installation_id, github_repository_id, change_request_id)
 
     def signed_individual_callback_gerrit(self, content, user_id):
-        cla.log.debug(f'signed_individual_callback_gerrit - Docusign Gerrit ICLA signed callback POST data: {content}')
+        cla.log.debug('signed_individual_callback_gerrit - '
+                      f'Docusign Gerrit ICLA signed callback POST data: {content}')
         tree = ET.fromstring(content)
         # Get envelope ID.
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
@@ -1168,6 +1196,26 @@ class DocuSign(signing_service_interface.SigningService):
             # Save signature before adding user to LDAP Groups.
             signature.set_signature_signed(True)
             signature.save()
+
+            # Load the Project by ID and send audit event
+            project = Project()
+            try:
+                project.load(signature.get_signature_project_id())
+                Event.create_event(
+                    event_type=EventType.IndividualSignatureSigned,
+                    event_project_id=signature.get_signature_project_id(),
+                    event_company_id=None,
+                    event_user_id=user.get_user_id(),
+                    event_data=(f'individual signature of user {user.get_user_name()} '
+                                f'signed for project {project.get_project_name()}'),
+                    contains_pii=False,
+                )
+            except DoesNotExist as err:
+                msg = (f'signed_individual_callback_gerrit - '
+                       f'unable to load project by CLA Group ID: {signature.get_signature_project_id()}, '
+                       f'unable to send audit event, error: {err}')
+                cla.log.warning(msg)
+                return
 
             gerrits = Gerrit().get_gerrit_by_project_id(signature.get_signature_project_id())
             for gerrit in gerrits:
@@ -1278,7 +1326,6 @@ class DocuSign(signing_service_interface.SigningService):
                 cla.log.warning(msg)
                 return {'errors': {'error': msg}}
         
-
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
                          '/' + self.TAGS['recipient_status'])

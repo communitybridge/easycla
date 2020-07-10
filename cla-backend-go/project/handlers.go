@@ -65,10 +65,10 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.ProjectCreated,
+			EventType:    events.CLAGroupCreated,
 			ProjectModel: projectModel,
 			UserID:       claUser.UserID,
-			EventData:    &events.ProjectCreatedEventData{},
+			EventData:    &events.CLAGroupCreatedEventData{},
 		})
 
 		log.Infof("Create Project Succeeded, project name: %s, project external ID: %s",
@@ -203,10 +203,10 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.ProjectDeleted,
+			EventType:    events.CLAGroupDeleted,
 			ProjectModel: projectModel,
 			UserID:       claUser.UserID,
-			EventData:    &events.ProjectDeletedEventData{},
+			EventData:    &events.CLAGroupDeletedEventData{},
 		})
 
 		return project.NewDeleteProjectByIDNoContent()
@@ -243,10 +243,10 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			return project.NewUpdateProjectBadRequest().WithPayload(errorResponse(err))
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.ProjectUpdated,
+			EventType:    events.CLAGroupUpdated,
 			ProjectModel: projectModel,
 			UserID:       claUser.UserID,
-			EventData:    &events.ProjectUpdatedEventData{},
+			EventData:    &events.CLAGroupUpdatedEventData{},
 		})
 
 		return project.NewUpdateProjectOK().WithPayload(projectModel)

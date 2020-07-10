@@ -493,7 +493,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			msg := buildErrorMessageForDelete(params, sigErr)
 			log.Warn(msg)
 			return cla_manager.NewDeleteCLAManagerRequestBadRequest().WithPayload(&models.ErrorResponse{
-				Message: "CLA Manager Delete Request - error reading CCLA Signatures - " + msg,
+				Message: "EasyCLA - 400 Bad Request - CLA Manager Delete Request - error reading CCLA Signatures - " + msg,
 				Code:    "400",
 			})
 		}
@@ -505,7 +505,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		sigModel := sigModels.Signatures[0]
 		claManagers := sigModel.SignatureACL
 		if !currentUserInACL(claUser, claManagers) {
-			msg := fmt.Sprintf("CLA Manager %s / %s / %s not authorized to delete requests for company ID: %s, project ID: %s",
+			msg := fmt.Sprintf("EasyCLA - 401 Unauthorized - CLA Manager %s / %s / %s not authorized to delete requests for company ID: %s, project ID: %s",
 				claUser.UserID, claUser.Name, claUser.LFEmail, params.CompanyID, params.ProjectID)
 			log.Debug(msg)
 			return cla_manager.NewDeleteCLAManagerRequestUnauthorized().WithPayload(&models.ErrorResponse{
@@ -553,7 +553,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			msg := fmt.Sprintf("User lookup for user by LFID: %s failed ", params.Body.UserLFID)
 			log.Warn(msg)
 			return cla_manager.NewAddCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
-				Message: "Add CLA Manager - error getting user - " + msg,
+				Message: "EasyCLA - 400 Bad Request - Add CLA Manager - error getting user - " + msg,
 				Code:    "400",
 			})
 		}
@@ -562,7 +562,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			msg := fmt.Sprintf("User lookup for company by ID: %s failed ", params.CompanyID)
 			log.Warn(msg)
 			return cla_manager.NewAddCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
-				Message: "Add CLA Manager - error getting company - " + msg,
+				Message: "EasyCLA - 400 Bad Request - Add CLA Manager - error getting company - " + msg,
 				Code:    "400",
 			})
 		}
@@ -572,7 +572,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			msg := fmt.Sprintf("User lookup for project by ID: %s failed ", params.ProjectID)
 			log.Warn(msg)
 			return cla_manager.NewAddCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
-				Message: "Add CLA Manager - error getting project - " + msg,
+				Message: "EasyCLA - 400 Bad Request - Add CLA Manager - error getting project - " + msg,
 				Code:    "400",
 			})
 		}
@@ -589,7 +589,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			msg := buildErrorMessageAddManager("Add CLA Manager - signature lookup error", params, sigErr)
 			log.Warn(msg)
 			return cla_manager.NewAddCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
-				Message: "Add CLA Manager - error reading CCLA Signatures - " + msg,
+				Message: "EasyCLA - 400 Bad Request - Add CLA Manager - error reading CCLA Signatures - " + msg,
 				Code:    "400",
 			})
 		}
@@ -601,7 +601,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		sigModel := sigModels.Signatures[0]
 		claManagers := sigModel.SignatureACL
 		if !currentUserInACL(claUser, claManagers) {
-			msg := fmt.Sprintf("User %s / %s / %s is not authorized to add a CLA Manager for company ID: %s, project ID: %s",
+			msg := fmt.Sprintf("EasyCLA - 401 Unauthorized - User %s / %s / %s is not authorized to add a CLA Manager for company ID: %s, project ID: %s",
 				claUser.UserID, claUser.Name, claUser.LFEmail, params.CompanyID, params.ProjectID)
 			log.Debug(msg)
 			return cla_manager.NewAddCLAManagerUnauthorized().WithPayload(&models.ErrorResponse{
@@ -610,8 +610,8 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
+		// Audit Event sent from service upon success
 		signature, addErr := service.AddClaManager(params.CompanyID, params.ProjectID, params.Body.UserLFID)
-
 		if addErr != nil {
 			msg := buildErrorMessageAddManager("Add CLA Manager - Service Error", params, addErr)
 			log.Warn(msg)
@@ -632,7 +632,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			msg := fmt.Sprintf("User lookup for user by LFID: %s failed ", params.UserLFID)
 			log.Warn(msg)
 			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
-				Message: "Delete CLA Manager - error getting user - " + msg,
+				Message: "EasyCLA - 400 Bad Request - Delete CLA Manager - error getting user - " + msg,
 				Code:    "400",
 			})
 		}
@@ -641,7 +641,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			msg := fmt.Sprintf("User lookup for company by ID: %s failed ", params.CompanyID)
 			log.Warn(msg)
 			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
-				Message: "Delete CLA Manager - error getting company - " + msg,
+				Message: "EasyCLA - 400 Bad Request - Delete CLA Manager - error getting company - " + msg,
 				Code:    "400",
 			})
 		}
@@ -651,7 +651,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			msg := fmt.Sprintf("User lookup for project by ID: %s failed ", params.ProjectID)
 			log.Warn(msg)
 			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
-				Message: "Delete CLA Manager - error getting project - " + msg,
+				Message: "EasyCLA - 400 Bad Request - Delete CLA Manager - error getting project - " + msg,
 				Code:    "400",
 			})
 		}
@@ -667,7 +667,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			msg := buildErrorMessageDeleteManager("Delete CLA Manager - Signature Lookup Error", params, sigErr)
 			log.Warn(msg)
 			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
-				Message: "Delete CLA Manager - error reading CCLA Signatures - " + msg,
+				Message: "EasyCLA - 400 Bad Request - Delete CLA Manager - error reading CCLA Signatures - " + msg,
 				Code:    "400",
 			})
 		}
@@ -688,10 +688,11 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
+		// Audit Event sent from service upon success
 		signature, deleteErr := service.RemoveClaManager(params.CompanyID, params.ProjectID, params.UserLFID)
 
 		if deleteErr != nil {
-			msg := buildErrorMessageDeleteManager("Delete CLA Manager - Service Error", params, deleteErr)
+			msg := buildErrorMessageDeleteManager("EasyCLA - 400 Bad Request - Delete CLA Manager - Service Error", params, deleteErr)
 			log.Warn(msg)
 			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
@@ -700,7 +701,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		if signature == nil {
-			msg := buildErrorMessageDeleteManager("Delete CLA Manager - Response Signature Missing", params, deleteErr)
+			msg := buildErrorMessageDeleteManager("EasyCLA - 400 Bad Request - Delete CLA Manager - Response Signature Missing", params, deleteErr)
 			log.Warn(msg)
 			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
 				Message: msg,
