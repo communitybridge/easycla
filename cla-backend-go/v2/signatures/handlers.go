@@ -528,6 +528,9 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 }
 
 func isUserHaveAccessOfSignedSignaturePDF(authUser *auth.User, signature *v1Models.Signature, companyService company.IService, projectClaGroupRepo projects_cla_groups.Repository) (bool, error) {
+	if authUser.Admin {
+		return true, nil
+	}
 	projects, err := projectClaGroupRepo.GetProjectsIdsForClaGroup(signature.ProjectID)
 	if err != nil {
 		return false, err
