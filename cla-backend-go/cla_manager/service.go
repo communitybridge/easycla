@@ -252,9 +252,11 @@ func (s service) AddClaManager(companyID string, projectID string, LFID string) 
 		UserModel:         userModel,
 		ExternalProjectID: projectModel.ProjectExternalID,
 		EventData: &events.CLAManagerCreatedEventData{
-			UserName:  userModel.Username,
-			UserEmail: userModel.LfEmail,
-			UserLFID:  userModel.LfUsername,
+			CompanyName: companyModel.CompanyName,
+			ProjectName: projectModel.ProjectName,
+			UserName:    userModel.Username,
+			UserEmail:   userModel.LfEmail,
+			UserLFID:    userModel.LfUsername,
 		},
 	})
 
