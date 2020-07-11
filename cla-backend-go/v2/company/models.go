@@ -26,6 +26,8 @@ type claGroupModel struct {
 	ProjectType  string
 	SubProjects  []string
 	ClaGroupName string
+	IclaEnabled  bool
+	CclaEnabled  bool
 
 	// For processing
 	FoundationSFID string

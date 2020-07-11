@@ -3026,6 +3026,12 @@ definitions:
         type: string
         x-omitempty: false
         example: "Appium"
+      ccla_enabled:
+        type: boolean
+        x-omitempty: false
+      icla_enabled:
+        type: boolean
+        x-omitempty: false
       can_sign:
         type: boolean
         x-omitempty: false
