@@ -3776,6 +3776,7 @@ class Event(model_interfaces.Event):
                     user = User()
                     user.load(str(event_user_id))
                     event.set_event_user_id(event_user_id)
+                    event.set_event_user_name(user.get_user_name())
                 except DoesNotExist as err:
                     return {"errors": {"event_": str(err)}}
             event.set_event_id(str(uuid.uuid4()))
