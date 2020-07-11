@@ -185,10 +185,10 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.ProjectDeleted,
+			EventType:    events.CLAGroupDeleted,
 			ProjectModel: projectModel,
 			LfUsername:   user.UserName,
-			EventData:    &events.ProjectDeletedEventData{},
+			EventData:    &events.CLAGroupDeletedEventData{},
 		})
 
 		return project.NewDeleteProjectByIDNoContent()
@@ -226,10 +226,10 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.ProjectUpdated,
+			EventType:    events.CLAGroupUpdated,
 			ProjectModel: projectModel,
 			LfUsername:   user.UserName,
-			EventData:    &events.ProjectUpdatedEventData{},
+			EventData:    &events.CLAGroupUpdatedEventData{},
 		})
 
 		result, err := v2ProjectModel(projectModel)

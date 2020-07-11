@@ -179,6 +179,9 @@ func requestCorporateSignature(authToken string, apiURL string, input *requestCo
 	var out requestCorporateSignatureOutput
 	err = json.Unmarshal(responseBody, &out)
 	if err != nil {
+		if _, ok := err.(*json.UnmarshalTypeError); ok {
+			return nil, errors.New(string(responseBody))
+		}
 		return nil, err
 	}
 	return &out, nil

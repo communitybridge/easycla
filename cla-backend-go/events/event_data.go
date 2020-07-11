@@ -206,9 +206,9 @@ type ClaManagerAccessRequestDeletedEventData struct {
 	RequestID string
 }
 
-type ProjectCreatedEventData struct{}
-type ProjectUpdatedEventData struct{}
-type ProjectDeletedEventData struct{}
+type CLAGroupCreatedEventData struct{}
+type CLAGroupUpdatedEventData struct{}
+type CLAGroupDeletedEventData struct{}
 
 type ContributorNotifyCompanyAdminData struct {
 	AdminName  string
@@ -424,20 +424,20 @@ func (ed *ClaManagerAccessRequestDeletedEventData) GetEventString(args *LogEvent
 	return data, true
 }
 
-func (ed *ProjectCreatedEventData) GetEventString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user [%s] has created project [%s]",
-		args.userName, args.projectName)
+func (ed *CLAGroupCreatedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] has created a CLA Group [%s - %s]",
+		args.userName, args.projectName, args.ProjectID)
 	return data, true
 }
 
-func (ed *ProjectUpdatedEventData) GetEventString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user [%s] has updated project [%s]",
-		args.userName, args.projectName)
+func (ed *CLAGroupUpdatedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] has updated CLA Group [%s - %s]",
+		args.userName, args.projectName, args.ProjectID)
 	return data, true
 }
-func (ed *ProjectDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user [%s] has deleted project [%s]",
-		args.userName, args.projectName)
+func (ed *CLAGroupDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] has deleted CLA Group [%s - %s]",
+		args.userName, args.projectName, args.ProjectID)
 	return data, true
 }
 
