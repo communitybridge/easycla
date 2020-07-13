@@ -120,12 +120,10 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 			return false, fmt.Errorf("bad request: invalid project_sfid_list. This project does not have subprojects")
 		}
 		return true, nil
-	} else {
-		err = s.validateEnrollProjectsInput(input.FoundationSfid, input.ProjectSfidList)
-		if err != nil {
-			return false, err
-		}
-		return false, nil
+	}
+	err = s.validateEnrollProjectsInput(input.FoundationSfid, input.ProjectSfidList)
+	if err != nil {
+		return false, err
 	}
 	return false, nil
 }
