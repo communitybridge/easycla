@@ -224,21 +224,12 @@ func prepareUserForSigning(userEmail string, companySFID, projectSFID string) er
 	if err != nil {
 		return err
 	}
-	log.WithFields(f).Debugf("checking if user have role of %s", role)
-	haveRole, err := osc.IsUserHaveRoleScope(role, user.ID, companySFID, projectSFID)
-	if err != nil {
-		log.WithFields(f).Errorf("checking user have role of %s. failed: %v", role, err)
-		return err
-	}
-	log.WithFields(f).Debugf("user have role %s: status %v", role, haveRole)
 	// make user cla-signatory
-	if !haveRole {
-		log.WithFields(f).Debugf("assigning user role of %s", role)
-		err = osc.CreateOrgUserRoleOrgScopeProjectOrg(userEmail, projectSFID, companySFID, roleID)
-		if err != nil {
-			log.WithFields(f).Errorf("assigning user role of %s failed: %v", role, err)
-			return err
-		}
+	log.WithFields(f).Debugf("assigning user role of %s", role)
+	err = osc.CreateOrgUserRoleOrgScopeProjectOrg(userEmail, projectSFID, companySFID, roleID)
+	if err != nil {
+		log.WithFields(f).Errorf("assigning user role of %s failed: %v", role, err)
+		return err
 	}
 	return nil
 }
