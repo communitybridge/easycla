@@ -282,7 +282,7 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 	} else if userEmail != nil {
 		// Send User invite
 		log.Debugf("User invite initiated for user with email : %s", *userEmail)
-		acsErr := acsClient.SendUserInvite(userEmail, "contributor", "organization", org.ID, "userinvite")
+		acsErr := acsClient.SendUserInvite(userEmail, "contributor", "organization", org.ID, "userinvite", nil, nil)
 		if acsErr != nil {
 			return nil, acsErr
 		}
