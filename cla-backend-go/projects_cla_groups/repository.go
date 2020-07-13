@@ -177,24 +177,18 @@ func (repo *repo) GetProjectsIdsForAllFoundation() ([]*ProjectClaGroup, error) {
 // AssociateClaGroupWithProject creates entry in db to track cla_group association with project/foundation
 func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID string, foundationSFID string) error {
 	var foundationName = NotDefined
-	if foundationSFID == "" {
-		log.Debugf("AssociateClaGroupWithProject - foundationSFID is empty - setting foundation name to 'LF Supported'")
-		// Special case - "LF Supported" project
-		foundationName = "LF Supported"
+	// Lookup the foundation name
+	projectServiceModel, projErr := v2ProjectService.GetClient().GetProject(foundationSFID)
+	if projErr != nil {
+		log.Warnf("unable to lookup foundation SFID: %s - error: %+v - using '%s'",
+			foundationSFID, projErr, NotDefined)
 	} else {
-		// Lookup the foundation name
-		projectServiceModel, projErr := v2ProjectService.GetClient().GetProject(foundationSFID)
-		if projErr != nil {
-			log.Warnf("unable to lookup foundation SFID: %s - error: %+v - using '%s'",
-				foundationSFID, projErr, NotDefined)
-		} else {
-			foundationName = projectServiceModel.Name
-		}
+		foundationName = projectServiceModel.Name
 	}
 
 	// Lookup the project name
 	var projectName = NotDefined
-	projectServiceModel, projErr := v2ProjectService.GetClient().GetProject(projectSFID)
+	projectServiceModel, projErr = v2ProjectService.GetClient().GetProject(projectSFID)
 	if projErr != nil {
 		log.Warnf("unable to lookup project SFID: %s - error: %+v - using '%s'",
 			projectSFID, projErr, NotDefined)
@@ -282,7 +276,7 @@ func (repo *repo) getCLAGroupNameByID(claGroupID string) (string, error) {
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]*dynamodb.AttributeValue{
-			"repository_id": {
+			"project_id": {
 				S: aws.String(claGroupID),
 			},
 		},
