@@ -44,7 +44,7 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 				if err == ErrCCLANotEnabled || err == ErrTemplateNotConfigured {
 					return sign.NewRequestCorporateSignatureBadRequest().WithPayload(errorResponse(err))
 				}
-				if err == err.(*organizations.ListOrgUsrAdminScopesNotFound) {
+				if _, ok := err.(*organizations.ListOrgUsrAdminScopesNotFound); ok {
 					formatErr := errors.New("user role scopes not found for cla-signatory role ")
 					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(formatErr))
 				}

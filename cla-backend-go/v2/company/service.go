@@ -347,6 +347,8 @@ func (s *service) GetCompanyProjectCLA(authUser *auth.User, companySFID, project
 			ProjectName:  claGroup.ProjectName,
 			ProjectSfid:  claGroup.ProjectSFID,
 			SubProjects:  claGroup.SubProjects,
+			IclaEnabled:  claGroup.IclaEnabled,
+			CclaEnabled:  claGroup.CclaEnabled,
 		}
 		resp.UnsignedProjectList = append(resp.UnsignedProjectList, unsignedProject)
 	}
@@ -493,6 +495,8 @@ func (s *service) getCLAGroupsUnderProjectOrFoundation(id string) (map[string]*c
 				return
 			}
 			claGroup.ClaGroupName = cginfo.ProjectName
+			claGroup.IclaEnabled = cginfo.ProjectICLAEnabled
+			claGroup.CclaEnabled = cginfo.ProjectCCLAEnabled
 
 			var pid string
 			if len(claGroup.SubProjectIDs) == 1 {
