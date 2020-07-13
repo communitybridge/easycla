@@ -54,7 +54,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				Message: fmt.Sprintf("EasyCLA - 500 Internal server error. error = %s", err.Error()),
 			})
 		}
-		compCLAManager, errorResponse := service.CreateCLAManager(cginfo.ClaGroupID, params, authUser.UserName, authUser.Email)
+		compCLAManager, errorResponse := service.CreateCLAManager(cginfo.ClaGroupID, params, authUser.UserName)
 		if errorResponse != nil {
 			if errorResponse.Code == BadRequest {
 				return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(errorResponse)
