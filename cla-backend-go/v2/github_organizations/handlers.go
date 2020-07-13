@@ -26,7 +26,7 @@ func Configure(api *operations.EasyclaAPI, service v1GithubOrganizations.Service
 			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
 				return github_organizations.NewGetProjectGithubOrganizationsForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to GetProjectGitHub Organizations with Project scope of %s",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project Github Organizations with Project scope of %s",
 						authUser.UserName, params.ProjectSFID),
 				})
 			}

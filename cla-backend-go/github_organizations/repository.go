@@ -97,8 +97,8 @@ func (repo repository) DeleteGithubOrganization(externalProjectID string, github
 		TableName: aws.String(repo.githubOrgTableName),
 	})
 	if err != nil {
-		errMsg := fmt.Sprintf("error deleting github organization: %s", githubOrgName)
-		log.Error(errMsg, err)
+		errMsg := fmt.Sprintf("error deleting github organization: %s - %+v", githubOrgName, err)
+		log.Warnf(errMsg)
 		return errors.New(errMsg)
 	}
 	return nil
@@ -155,6 +155,7 @@ func buildGithubOrganizationListModels(githubOrganizations []*GithubOrganization
 			go func(ghorg *models.GithubOrganization) {
 				defer wg.Done()
 				ghorg.GithubInfo = &models.GithubOrganizationGithubInfo{}
+				log.Debugf("Loading GitHub organization details: %s...", ghorg.OrganizationName)
 				user, err := github.GetUserDetails(ghorg.OrganizationName)
 				if err != nil {
 					ghorg.GithubInfo.Error = err.Error()
@@ -169,12 +170,16 @@ func buildGithubOrganizationListModels(githubOrganizations []*GithubOrganization
 					List: make([]*models.GithubRepositoryInfo, 0),
 				}
 				if ghorg.OrganizationInstallationID != 0 {
+					log.Debugf("Loading GitHub repository list based on installation id: %d...", ghorg.OrganizationInstallationID)
 					list, err := github.GetInstallationRepositories(ghorg.OrganizationInstallationID)
 					if err != nil {
 						log.Warnf("unable to get repositories for installation id : %d", ghorg.OrganizationInstallationID)
 						ghorg.Repositories.Error = err.Error()
 						return
 					}
+
+					log.Debugf("Found %d GitHub repositories using installation id: %d...",
+						len(list), ghorg.OrganizationInstallationID)
 					for _, repoInfo := range list {
 						ghorg.Repositories.List = append(ghorg.Repositories.List, &models.GithubRepositoryInfo{
 							RepositoryGithubID: utils.Int64Value(repoInfo.ID),
