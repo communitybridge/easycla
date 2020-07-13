@@ -697,7 +697,7 @@ func sendEmailToCLAManager(manager string, managerEmail string, contributorName 
 	support</a>.</p>
 	<p>Thanks,</p>
 	<p>EasyCLA support team </p>`,
-		manager, company, project, company)
+		manager, company, project, contributorName)
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
 		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
