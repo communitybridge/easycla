@@ -1219,6 +1219,7 @@ func (repo repository) AddCLAManager(signatureID, claManagerID string) (*models.
 	}
 
 	aclEntries = append(aclEntries, claManagerID)
+	log.Debugf("To be updated acllist : %+v", aclEntries)
 
 	_, now := utils.CurrentTime()
 
