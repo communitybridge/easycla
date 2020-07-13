@@ -227,7 +227,7 @@ func server(localMode bool) http.Handler {
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
 	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
-	v2ProjectService := v2Project.NewService(projectRepo)
+	v2ProjectService := v2Project.NewService(projectRepo, projectClaGroupRepo)
 	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo, usersService)
 	v2CompanyService := v2Company.NewService(signaturesRepo, projectRepo, usersRepo, companyRepo, v2CompanyRepo, projectClaGroupRepo)
 	v2SignService := sign.NewService(configFile.ClaV1ApiURL, companyRepo, projectRepo, projectClaGroupRepo)
