@@ -698,6 +698,7 @@ class DocuSign(signing_service_interface.SigningService):
                                   signature_reference_type='company',
                                   signature_reference_name=company.get_company_name(),
                                   signature_type='ccla',
+                                  signatory_name=signatory_name,
                                   signature_signed=False,
                                   signature_approved=True)
 
