@@ -3,7 +3,7 @@
     <button ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
-    <ion-title>{{this.company.company_name}}</ion-title>
+    <ion-title>{{company.company_name | trimCharacters:35}}</ion-title>
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-navbar>
   <get-help></get-help>
