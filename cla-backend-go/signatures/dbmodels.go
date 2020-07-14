@@ -30,6 +30,7 @@ type ItemSignature struct {
 	UserEmail                     string   `json:"user_email"`
 	SigtypeSignedApprovedID       string   `json:"sigtype_signed_approved_id"`
 	SignedOn                      string   `json:"signed_on"`
+	SignatoryName                 string   `json:"signatory_name"`
 }
 
 // DBManagersModel is a database model for only the ACL/Manager column

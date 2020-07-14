@@ -603,7 +603,11 @@ func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, act
 
 	// fill details from dynamodb
 	activeCla.ProjectID = sig.ProjectID
-	activeCla.SignedOn = sig.SignatureCreated
+	if sig.SignedOn == "" {
+		activeCla.SignedOn = sig.SignatureCreated
+	} else {
+		activeCla.SignedOn = sig.SignedOn
+	}
 	activeCla.ClaGroupName = cg.ClaGroupName
 	activeCla.SignatureID = sig.SignatureID
 
@@ -630,6 +634,10 @@ func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, act
 
 	go func() {
 		defer cwg.Done()
+		if sig.SignatoryName != "" {
+			signatoryName = sig.SignatoryName
+			return
+		}
 		usc := v2UserService.GetClient()
 		if len(sig.SignatureACL) == 0 {
 			log.Warnf("signature : %s have empty signature_acl", sig.SignatureID)

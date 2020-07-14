@@ -22,6 +22,10 @@ properties:
     type: string
   signatureType:
     type: string
+  signedOn:
+    type: string
+  signatoryName:
+    type: string
   signatureACL:
     type: array
     items:
