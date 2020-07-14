@@ -665,7 +665,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	// Get suggested CLA Manager user details
 	user, userErr := userService.SearchUserByEmail(userEmail)
 	if userErr != nil {
-		msg := fmt.Sprintf("Problem getting user for userEmail: %s , error: %+v", userEmail, userErr)
+		msg := fmt.Sprintf("UserEmail: %s has no LFID and has been sent an invite email to create an account , error: %+v", userEmail, userErr)
 		log.Warn(msg)
 		return nil, &models.ErrorResponse{
 			Code:    "400",
