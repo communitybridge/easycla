@@ -6,6 +6,7 @@ package github_organizations
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -62,6 +63,7 @@ func (repo repository) AddGithubOrganization(externalProjectID string, projectSF
 		DateModified:               currentTime,
 		OrganizationInstallationID: 0,
 		OrganizationName:           input.OrganizationName,
+		OrganizationNameLower:      strings.ToLower(input.OrganizationName),
 		OrganizationSfid:           externalProjectID,
 		ProjectSFID:                projectSFID,
 		Version:                    "v1",
