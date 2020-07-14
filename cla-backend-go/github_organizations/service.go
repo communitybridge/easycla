@@ -33,7 +33,8 @@ func (s service) GetGithubOrganizations(externalProjectID string) (*models.Githu
 }
 
 func (s service) AddGithubOrganization(externalProjectID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
-	return s.repo.AddGithubOrganization(externalProjectID, "", input)
+	projectSFID := externalProjectID
+	return s.repo.AddGithubOrganization(externalProjectID, projectSFID, input)
 }
 
 func (s service) DeleteGithubOrganization(externalProjectID string, githubOrgName string) error {
