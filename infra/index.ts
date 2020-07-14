@@ -420,6 +420,8 @@ function buildRepositoriesTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'repository_external_id', type: 'S' },
         { name: 'repository_project_id', type: 'S' },
         { name: 'repository_sfdc_id', type: 'S' },
+        { name: 'project_sfid', type: 'S' },
+        { name: 'repository_organization_name', type: 'S' },
       ],
       hashKey: 'repository_id',
       billingMode: 'PROVISIONED',
@@ -449,6 +451,14 @@ function buildRepositoriesTable(importResources: boolean): aws.dynamodb.Table {
           readCapacity: defaultReadCapacity,
           writeCapacity: defaultWriteCapacity,
         },
+        {
+          name: 'project-sfid-repository-organization-name-index',
+          hashKey: 'project_sfid',
+          rangeKey: 'repository_organization_name',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
+        },
       ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,
@@ -474,6 +484,7 @@ function buildGitHubOrgsTable(importResources: boolean): aws.dynamodb.Table {
       attributes: [
         { name: 'organization_name', type: 'S' },
         { name: 'organization_sfid', type: 'S' },
+        { name: 'project_sfid', type: 'S' },
       ],
       hashKey: 'organization_name',
       billingMode: 'PROVISIONED',
