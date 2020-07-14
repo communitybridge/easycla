@@ -489,6 +489,14 @@ function buildGitHubOrgsTable(importResources: boolean): aws.dynamodb.Table {
           readCapacity: defaultReadCapacity,
           writeCapacity: defaultWriteCapacity,
         },
+        {
+          name: 'project-sfid-organization-name-index',
+          hashKey: 'project_sfid',
+          rangeKey: 'organization_name',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
+        },
       ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,

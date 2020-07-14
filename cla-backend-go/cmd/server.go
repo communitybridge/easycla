@@ -235,11 +235,13 @@ func server(localMode bool) http.Handler {
 	v2SignatureService := v2Signatures.NewService(projectService, companyService, signaturesService, projectClaGroupRepo)
 	claManagerService := cla_manager.NewService(claManagerReqRepo, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 	repositoriesService := repositories.NewService(repositoriesRepo)
+	v2RepositoriesService := v2Repositories.NewService(repositoriesRepo, projectClaGroupRepo, githubOrganizationsRepo)
 	v2ClaManagerService := v2ClaManager.NewService(companyService, projectService, claManagerService, usersService, repositoriesService, v2CompanyService, eventsService)
 	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, signaturesRepo, configFile.CorporateConsoleURL, http.DefaultClient)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 	v2MetricsService := metrics.NewService(metricsRepo, projectClaGroupRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
+	v2GithubOrganizationsService := v2GithubOrganizations.NewService(githubOrganizationsRepo, repositoriesRepo)
 	gerritService := gerrits.NewService(gerritRepo, &gerrits.LFGroup{
 		LfBaseURL:    configFile.LFGroup.ClientURL,
 		ClientID:     configFile.LFGroup.ClientID,
@@ -280,9 +282,9 @@ func server(localMode bool) http.Handler {
 	v2Events.Configure(v2API, eventsService, companyRepo, projectClaGroupRepo)
 	v2Metrics.Configure(v2API, v2MetricsService, companyRepo)
 	github_organizations.Configure(api, githubOrganizationsService, eventsService)
-	v2GithubOrganizations.Configure(v2API, githubOrganizationsService, eventsService)
+	v2GithubOrganizations.Configure(v2API, v2GithubOrganizationsService, eventsService)
 	repositories.Configure(api, repositoriesService, eventsService)
-	v2Repositories.Configure(v2API, repositoriesService, eventsService)
+	v2Repositories.Configure(v2API, v2RepositoriesService, eventsService)
 	gerrits.Configure(api, gerritService, projectService, eventsService)
 	v2Gerrits.Configure(v2API, gerritService, projectService, eventsService)
 	v2Company.Configure(v2API, v2CompanyService, companyRepo, configFile.LFXPortalURL)

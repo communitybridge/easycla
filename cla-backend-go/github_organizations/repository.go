@@ -24,14 +24,21 @@ import (
 
 // indexes
 const (
-	GithubOrgSFIDIndex = "github-org-sfid-index"
+	GithubOrgSFIDIndex               = "github-org-sfid-index"
+	ProjectSFIDOrganizationNameIndex = "project-sfid-organization-name-index"
+)
+
+// errors
+var (
+	ErrOrganizationDoesNotExist = errors.New("github organization does not exist in cla")
 )
 
 // Repository interface defines the functions for the github organizations data model
 type Repository interface {
-	GetGithubOrganizations(externalProjectID string) (*models.GithubOrganizations, error)
-	AddGithubOrganization(externalProjectID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
-	DeleteGithubOrganization(externalProjectID string, githubOrgName string) error
+	GetGithubOrganizations(externalProjectID string, projectSFID string) (*models.GithubOrganizations, error)
+	AddGithubOrganization(externalProjectID string, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
+	DeleteGithubOrganization(externalProjectID string, projectSFID string, githubOrgName string) error
+	GetGithubOrganization(githubOrganizationName string) (*models.GithubOrganization, error)
 }
 
 type repository struct {
@@ -48,7 +55,7 @@ func NewRepository(awsSession *session.Session, stage string) repository {
 		githubOrgTableName: fmt.Sprintf("cla-%s-github-orgs", stage),
 	}
 }
-func (repo repository) AddGithubOrganization(externalProjectID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
+func (repo repository) AddGithubOrganization(externalProjectID string, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
 	_, currentTime := utils.CurrentTime()
 	githubOrg := &GithubOrganization{
 		DateCreated:                currentTime,
@@ -56,6 +63,7 @@ func (repo repository) AddGithubOrganization(externalProjectID string, input *mo
 		OrganizationInstallationID: 0,
 		OrganizationName:           input.OrganizationName,
 		OrganizationSfid:           externalProjectID,
+		ProjectSFID:                projectSFID,
 		Version:                    "v1",
 	}
 	av, err := dynamodbattribute.MarshalMap(githubOrg)
@@ -80,17 +88,25 @@ func (repo repository) AddGithubOrganization(externalProjectID string, input *mo
 	return toModel(githubOrg), nil
 }
 
-func (repo repository) DeleteGithubOrganization(externalProjectID string, githubOrgName string) error {
+func (repo repository) DeleteGithubOrganization(externalProjectID string, projectSFID string, githubOrgName string) error {
+	var attrName, attrValue string
+	if externalProjectID != "" {
+		attrName = "organization_sfid"
+		attrValue = externalProjectID
+	} else {
+		attrName = "project_sfid"
+		attrValue = projectSFID
+	}
 	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
 		ExpressionAttributeNames: map[string]*string{
-			"#projectSFID": aws.String("organization_sfid"),
+			"#id": aws.String(attrName),
 		},
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-			":externalProjectID": {
-				S: aws.String(externalProjectID),
+			":val": {
+				S: aws.String(attrValue),
 			},
 		},
-		ConditionExpression: aws.String("#projectSFID = :externalProjectID"),
+		ConditionExpression: aws.String("#id = :val"),
 		Key: map[string]*dynamodb.AttributeValue{
 			"organization_name": {S: aws.String(githubOrgName)},
 		},
@@ -104,12 +120,18 @@ func (repo repository) DeleteGithubOrganization(externalProjectID string, github
 	return nil
 }
 
-func (repo repository) GetGithubOrganizations(externalProjectID string) (*models.GithubOrganizations, error) {
+func (repo repository) GetGithubOrganizations(externalProjectID string, projectSFID string) (*models.GithubOrganizations, error) {
 	var condition expression.KeyConditionBuilder
+	var indexName string
 	builder := expression.NewBuilder()
 
-	condition = expression.Key("organization_sfid").Equal(expression.Value(externalProjectID))
-
+	if externalProjectID != "" {
+		condition = expression.Key("organization_sfid").Equal(expression.Value(externalProjectID))
+		indexName = GithubOrgSFIDIndex
+	} else {
+		condition = expression.Key("project_sfid").Equal(expression.Value(projectSFID))
+		indexName = ProjectSFIDOrganizationNameIndex
+	}
 	builder = builder.WithKeyCondition(condition)
 	// Use the nice builder to create the expression
 	expr, err := builder.Build()
@@ -124,12 +146,12 @@ func (repo repository) GetGithubOrganizations(externalProjectID string) (*models
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
 		TableName:                 aws.String(repo.githubOrgTableName),
-		IndexName:                 aws.String(GithubOrgSFIDIndex),
+		IndexName:                 aws.String(indexName),
 	}
 
 	results, err := repo.dynamoDBClient.Query(queryInput)
 	if err != nil {
-		log.Warnf("error retrieving github_organizations using organization_sfid. error = %s", err.Error())
+		log.Warnf("error retrieving github_organizations using organization_sfid = %s, project_sfid = %s. error = %s", externalProjectID, projectSFID, err.Error())
 		return nil, err
 	}
 	if len(results.Items) == 0 {
@@ -189,4 +211,28 @@ func buildGithubOrganizationListModels(githubOrganizations []*GithubOrganization
 		wg.Wait()
 	}
 	return ghOrgList
+}
+
+func (repo repository) GetGithubOrganization(githubOrganizationName string) (*models.GithubOrganization, error) {
+	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"organization_name": {
+				S: aws.String(githubOrganizationName),
+			},
+		},
+		TableName: aws.String(repo.githubOrgTableName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(result.Item) == 0 {
+		return nil, ErrOrganizationDoesNotExist
+	}
+	var org GithubOrganization
+	err = dynamodbattribute.UnmarshalMap(result.Item, &org)
+	if err != nil {
+		log.Warnf("error unmarshalling organization table data, error: %v", err)
+		return nil, err
+	}
+	return toModel(&org), nil
 }

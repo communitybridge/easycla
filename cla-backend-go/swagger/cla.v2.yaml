@@ -2475,7 +2475,18 @@ definitions:
     $ref: './common/event.yaml'
 
   github-repository-input:
-    $ref: './common/github-repository-input.yaml'
+    type: object
+    required:
+      - repository_github_id
+      - github_organization_name
+      - cla_group_id
+    properties:
+      repository_github_id:
+        type: string
+      github_organization_name:
+        type: string
+      cla_group_id:
+        type: string
 
   github-repository:
     $ref: './common/github-repository.yaml'
