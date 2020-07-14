@@ -57,7 +57,9 @@ var (
 	//ErrNoOrgAdmins when No admins found for organization
 	ErrNoOrgAdmins = errors.New("no Admins in company ")
 	//ErrRoleScopeConflict thrown if user already has role scope
-	ErrRoleScopeConflict = errors.New("role or scope conflict")
+	ErrRoleScopeConflict = errors.New("roleScope conflict")
+	//ErrCLAManagerDesigneeConflict when user is already assigned cla-manager-designee role
+	ErrCLAManagerDesigneeConflict = errors.New("user already assigned cla-manager-designee")
 )
 
 type service struct {
@@ -444,6 +446,9 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 	if scopeErr != nil {
 		msg := fmt.Sprintf("Problem creating projectOrg scope for email: %s , projectID: %s, companyID: %s", userEmail, projectID, companyID)
 		log.Warn(msg)
+		if _, ok := scopeErr.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
+			return nil, ErrRoleScopeConflict
+		}
 		return nil, scopeErr
 	}
 
