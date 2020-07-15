@@ -717,7 +717,7 @@ def get_full_sign_url(repository_service, installation_id, github_repository_id,
                                                                str(change_request_id))
 
 
-def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=False, is_whitelisted=False):
+def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=False, is_approved_by_manager=False):
     """
     Returns the CLA badge that will appear on the change request comment (PR for 'github', merge
     request for 'gitlab', etc)
@@ -731,8 +731,8 @@ def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=Fal
     :type sign_url: string
     :param missing_user_id: Flag to check if github id is missing
     :type missing_user_id: bool
-    :param is_whitelisted; Flag checking if unregistered cla user is whitelisted
-    :type is_whitelisted: bool
+    :param is_approved_by_manager; Flag checking if unregistered CLA user has been approved by a CLA Manager
+    :type is_approved_by_manager: bool
     """
 
     if all_signed:
@@ -741,7 +741,7 @@ def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=Fal
     else:
         if missing_user_id:
             badge_url = "{}/cla-missing-id.png".format(CLA_LOGO_URL)
-        elif is_whitelisted:
+        elif is_approved_by_manager:
             badge_url = "{}/cla-confirmation-needed.png".format(CLA_LOGO_URL)
         else:
             badge_url = "{}/cla-notsigned.png".format(CLA_LOGO_URL)
@@ -764,8 +764,8 @@ def assemble_cla_status(author_name, signed=False):
     if author_name is None:
         author_name = 'Unknown'
     if signed:
-        return (author_name, 'EasyCLA check passed. You are authorized to contribute.')
-    return (author_name, 'Missing CLA Authorization.')
+        return author_name, 'EasyCLA check passed. You are authorized to contribute.'
+    return author_name, 'Missing CLA Authorization.'
 
 
 def assemble_cla_comment(repository_type, installation_id, github_repository_id, change_request_id, signed, missing):
@@ -793,14 +793,14 @@ def assemble_cla_comment(repository_type, installation_id, github_repository_id,
     num_missing = len(missing)
     missing_ids = list(filter(lambda x: x[1][0] is None, missing))
     no_user_id = len(missing_ids) > 0
-    # check if an unsigned committer has been whitelisted
-    whitelisted_ids = list(filter(lambda x: len(x[1]) == 4 and x[1][3] is True, missing))
-    whitelisted = len(whitelisted_ids) > 0
+    # check if an unsigned committer has been approved by a CLA Manager, but not associated with a company
+    # Logic not supported as we removed the DB query in the caller
+    # approved_ids = list(filter(lambda x: len(x[1]) == 4 and x[1][3] is True, missing))
+    # approved_by_manager = len(approved_ids) > 0
     sign_url = get_full_sign_url(repository_type, installation_id, github_repository_id, change_request_id)
     comment = get_comment_body(repository_type, sign_url, signed, missing)
     all_signed = num_missing == 0
-    badge = get_comment_badge(repository_type, all_signed, sign_url,
-                              missing_user_id=no_user_id, is_whitelisted=whitelisted)
+    badge = get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=no_user_id)
     return badge + '<br />' + comment
 
 
