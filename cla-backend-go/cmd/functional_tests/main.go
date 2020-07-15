@@ -6,10 +6,12 @@ package main
 import (
 	"os"
 
+	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/company"
+	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/health"
+
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/cla_group"
 
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/cla_manager"
-	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/health"
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/signatures"
 
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/approval_list"
@@ -87,6 +89,7 @@ func main() {
 	// Project Manager
 	auth0User5Config := loadUser("AUTH0_USER5")
 
+	company.NewTestBehaviour(v2APIURL, auth0User1Config).RunAllTests()
 	health.NewTestBehaviour(v2APIURL, auth0User1Config).RunAllTests()
 	cla_manager.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
 	signatures.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()

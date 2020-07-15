@@ -330,6 +330,8 @@ paths:
           $ref: '#/responses/forbidden'
         '409':
           $ref: '#/responses/conflict'
+        '422':
+          $ref: '#/responses/unprocessable-entity'
         '500':
           $ref: '#/responses/internal-server-error'
       tags:
@@ -1285,7 +1287,7 @@ paths:
       tags:
         - signatures
 
-  /signatures/project/{projectID}:
+  /signatures/project/{claGroupID}:
     get:
       summary: Get project signatures
       description: Returns a list of project signature models when provided the project ID
@@ -1295,7 +1297,7 @@ paths:
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - $ref: "#/parameters/path-projectID"
+        - $ref: "#/parameters/path-claGroupID"
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/searchTerm'
@@ -1868,7 +1870,7 @@ paths:
           $ref: '#/responses/conflict'
       tags:
         - cla-manager
-  
+
   /company/{companySFID}/project/{projectSFID}/cla-manager-designee:
     post:
       summary: Assigns CLA Manager designee
@@ -2074,6 +2076,95 @@ paths:
       tags:
         - gerrits
 
+  /company/name/{companyName}:
+    get:
+      summary: gets the company by name
+      description: Returns the matching company by name
+      operationId: getCompanyByName
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: '#/parameters/path-companyName'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - company
+
+  /company/id/{companyID}:
+    delete:
+      summary: deletes the company by ID
+      description: Deletes the company by ID
+      operationId: deleteCompanyByID
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: '#/parameters/path-companyID'
+      produces:
+        - application/json
+      responses:
+        '204':
+          description: 'Resource Deleted'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - company
+
+  /company/sfid/{companySFID}:
+    delete:
+      summary: deletes the company by the SFID
+      description: Deletes the company by the SFID
+      operationId: deleteCompanyBySFID
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: '#/parameters/path-companySFID'
+      produces:
+        - application/json
+      responses:
+        '204':
+          description: 'Resource Deleted'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - company
+
   /company/{companySFID}/project/{projectSFID}/cla-managers:
     get:
       summary: get CLA manager of company for particular project/foundation
@@ -2231,6 +2322,8 @@ paths:
           $ref: '#/responses/invalid-request'
         '409':
           $ref: '#/responses/conflict'
+        '422':
+          $ref: '#/responses/unprocessable-entity'
       tags:
         - company
 
@@ -2292,6 +2385,10 @@ responses:
     description: Duplicate Resource
     schema:
       $ref: '#/definitions/error-response'
+  unprocessable-entity:
+    description: Unprocessable Entity - Validation Failure
+    schema:
+      $ref: '#/definitions/error-response'
 
 # Common parameters
 parameters:
@@ -2342,7 +2439,7 @@ parameters:
     in: query
     type: string
     required: false
-    pattern: '^\w+$'
+    pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
   userName:
     name: userName
     description: The optional user name filter
@@ -2379,12 +2476,6 @@ parameters:
     in: path
     type: string
     required: true
-  path-projectID:
-    name: projectID
-    description: id of the CLA Group
-    in: path
-    type: string
-    required: true
   path-userID:
     name: userID
     description: v1 EasyCLA user Admin ID
@@ -2397,18 +2488,6 @@ parameters:
     in: path
     type: string
     required: true
-  #path-companyName:
-  #  name: companyName
-  #  description: name of the Company
-  #  in: path
-  #  type: string
-  #  required: true
-  #path-projectName:
-  #  name: projectName
-  #  description: name of EasyCLA Group
-  #  in: path
-  #  type: string
-  #  required: true
   path-companyID:
     name: companyID
     description: id of the company
@@ -2421,6 +2500,13 @@ parameters:
     in: path
     type: string
     required: true
+  path-companyName:
+    name: companyName
+    description: the company name
+    in: path
+    type: string
+    required: true
+    pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
   path-signatureID:
     name: signatureID
     description: id of the CLA signature
@@ -2649,6 +2735,8 @@ definitions:
         type: string
       companyName:
         type: string
+        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+        example: "Linux Foundation"
       claManagersCount:
         type: integer
         x-omitempty: false
@@ -2661,7 +2749,7 @@ definitions:
       createdAt:
         type: string
     title: Company metrics
-  
+
   company-input:
     type: object
     required:
@@ -2670,6 +2758,8 @@ definitions:
     properties:
       companyName:
         type: string
+        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+        example: "Linux Foundation"
       companyWebsite:
         type: string
 
@@ -2678,6 +2768,8 @@ definitions:
     properties:
       companyName:
         type: string
+        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+        example: "Intel Corporation"
       companyWebsite:
         type: string
       logoURL:
@@ -2743,6 +2835,8 @@ definitions:
         x-omitempty: false
       companyName:
         type: string
+        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+        example: "Linux Foundation"
         x-omitempty: false
       projectSFID:
         type: string
@@ -2788,6 +2882,9 @@ definitions:
       createdAt:
         type: string
     title: project metrics
+
+  company:
+    $ref: './common/company.yaml'
 
   company-cla-managers:
     type: object
@@ -2982,6 +3079,8 @@ definitions:
         type: string
       companyName:
         type: string
+        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+        example: "Linux Foundation"
       projectName:
         type: string
 
@@ -3182,6 +3281,7 @@ definitions:
         type: string
         example: 'OpenCue'
         description: name of the cla group
+        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+-]*){2,255}$'
       cla_group_description:
         type: string
         example: 'cla group created for OpenCue project'

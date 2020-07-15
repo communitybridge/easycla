@@ -24,9 +24,11 @@ properties:
   EventCompanyName:
     type: string
     description: name of the company
+    pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+    example: "Linux Foundation"
   EventCompanyID:
     type: string
-    description: id od the organization/company
+    description: id of the organization/company
   EventTime:
     type: string
     description: time of the event.
@@ -38,19 +40,19 @@ properties:
     description: data related to the event
   EventProjectExternalID:
     type: string
-    description: sf id of the project
+    description: the external Project ID related to this event
   ContainsPII:
     type: boolean
-    description: contains personal identifiable information
+    description: flag to indicate if this record contains personal identifiable information
   EventCompanySFID:
     type: string
-    description: sf id of the company
+    description: the external SFID associated with the company
   EventFoundationSFID:
     type: string
-    description: sf id of the foundation
+    description: the external SFID associated with the foundation
   EventProjectSFID:
     type: string
-    description: sf id of the project. this would be projectSFID if cla group have only one project otherwise it would be foundationSFID
+    description: the external SFID associated with the project. This would be projectSFID if the CLA group have only one project otherwise it would be foundationSFID
   EventProjectSFName:
     type: string
     description: name of project to display. This would be name of project if cla group have only one project otherwise it would be name of foundation

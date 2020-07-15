@@ -18,17 +18,17 @@ import (
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 
-	"github.com/communitybridge/easycla/cla-backend-go/logging"
-	log "github.com/communitybridge/easycla/cla-backend-go/logging"
-	"github.com/communitybridge/easycla/cla-backend-go/users"
-	"github.com/communitybridge/easycla/cla-backend-go/utils"
-
 	"github.com/aws/aws-sdk-go/aws"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	v1ProjectParams "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 	v1SignatureParams "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
+	v2Models "github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
+	"github.com/communitybridge/easycla/cla-backend-go/logging"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
+	"github.com/communitybridge/easycla/cla-backend-go/users"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
 	orgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
@@ -41,18 +41,18 @@ import (
 var (
 	ErrProjectNotFound = errors.New("project not found")
 	ErrCLAUserNotFound = errors.New("claUser not found")
-	ErrNoValidEmail    = errors.New("user with no valid email")
 	ErrNoLfUsername    = errors.New("user has no LF username")
+	// ErrNoValidEmail    = errors.New("user with no valid email")
 )
 
 // constants
 const (
 	// used when we want to query all data from dependent service.
-	HugePageSize        = int64(10000)
-	LoadRepoDetails     = true
+	HugePageSize = int64(10000)
+	// LoadRepoDetails     = true
 	DontLoadRepoDetails = false
 	FoundationType      = "Foundation"
-	ProjectType         = "Project"
+	// ProjectType         = "Project"
 )
 
 // Service functions for company
@@ -62,6 +62,11 @@ type Service interface {
 	GetCompanyProjectContributors(projectSFID string, companySFID string, searchTerm string) (*models.CorporateContributorList, error)
 	GetCompanyProjectCLA(authUser *auth.User, companySFID, projectSFID string) (*models.CompanyProjectClaList, error)
 	CreateCompany(companyName string, companyWebsite string, userID string, LFXPortalURL string) (*models.CompanyOutput, error)
+	GetCompanyByName(companyName string) (*models.Company, error)
+	GetCompanyByID(companyID string) (*models.Company, error)
+	GetCompanyBySFID(companySFID string) (*models.Company, error)
+	DeleteCompanyByID(companyID string) error
+	DeleteCompanyBySFID(companySFID string) error
 	GetCompanyCLAGroupManagers(companyID, claGroupID string) (*models.CompanyClaManagers, error)
 }
 
@@ -72,13 +77,12 @@ type ProjectRepo interface {
 }
 
 // NewService returns instance of company service
-func NewService(sigRepo signatures.SignatureRepository, projectRepo ProjectRepo, usersRepo users.UserRepository, companyRepo company.IRepository, v2CompanyRepo IRepository, pcgRepo projects_cla_groups.Repository) Service {
+func NewService(sigRepo signatures.SignatureRepository, projectRepo ProjectRepo, usersRepo users.UserRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository) Service {
 	return &service{
 		signatureRepo:        sigRepo,
 		projectRepo:          projectRepo,
 		userRepo:             usersRepo,
 		companyRepo:          companyRepo,
-		repo:                 v2CompanyRepo,
 		projectClaGroupsRepo: pcgRepo,
 	}
 }
@@ -214,8 +218,9 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 	userClient := v2UserService.GetClient()
 
 	// Ensure to send user invite with public email (GH)
-	filteredEmails := []string{}
+	var filteredEmails []string
 	for _, email := range claUser.Emails {
+		// Ignore noreply emails...
 		if !(strings.Contains(email, "noreply.github.com")) {
 			filteredEmails = append(filteredEmails, email)
 		}
@@ -242,17 +247,20 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 		// Set lf email
 		var email string
 		if claUser.LfEmail != "" {
+			log.Debugf("Setting email to: %s", claUser.LfEmail)
 			email = claUser.LfEmail
-		} else {
+		} else if lfUser != nil && len(lfUser.Emails) > 0 {
+			log.Debugf("Setting email to: %s", *lfUser.Emails[0].EmailAddress)
 			email = *lfUser.Emails[0].EmailAddress
 		}
+
 		// set lf username
 		var lfUsername string
 		if claUser.LfUsername != "" {
-			log.Debugf("Setting username : %s", claUser.LfUsername)
+			log.Debugf("Setting username to: %s", claUser.LfUsername)
 			lfUsername = claUser.LfUsername
-		} else {
-			log.Debugf("Setting username : %s", lfUser.Username)
+		} else if lfUser != nil && lfUser.Username != "" {
+			log.Debugf("Setting username to: %s", lfUser.Username)
 			lfUsername = lfUser.Username
 		}
 
@@ -291,10 +299,19 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 	// Create Easy CLA Company
 	log.Debugf("Creating EasyCLA company : %s ", companyName)
 	// OrgID used as externalID for the easyCLA Company
-	easyCLAErr := s.repo.CreateCompany(companyName, org.ID, userID)
-	if easyCLAErr != nil {
+	// Create a new company model for the create function
+	createCompanyModel := &v1Models.Company{
+		CompanyACL:        nil,
+		CompanyExternalID: org.ID,
+		CompanyManagerID:  userID,
+		CompanyName:       companyName,
+	}
+
+	_, createErr := s.companyRepo.CreateCompany(createCompanyModel)
+	//easyCLAErr := s.repo.CreateCompany(companyName, org.ID, userID)
+	if createErr != nil {
 		log.Warnf("Failed to create EasyCLA company for company: %s ", companyName)
-		return nil, easyCLAErr
+		return nil, createErr
 	}
 
 	return &models.CompanyOutput{
@@ -303,6 +320,85 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 		LogoURL:        org.LogoURL,
 	}, nil
 
+}
+
+// GetCompanyByName deletes the company by name
+func (s *service) GetCompanyByName(companyName string) (*models.Company, error) {
+	companyModel, err := s.companyRepo.GetCompanyByName(companyName)
+	if err != nil {
+		return nil, err
+	}
+
+	if companyModel == nil {
+		log.Debugf("search by company name: %s didn't locate the record", companyName)
+		return nil, nil
+	}
+
+	// Convert from v1 to v2 model - use helper: Copy(toValue interface{}, fromValue interface{})
+	var v2CompanyModel v2Models.Company
+	copyErr := copier.Copy(&v2CompanyModel, &companyModel)
+	if copyErr != nil {
+		log.Warnf("problem converting v1 company model to a v2 company model, error: %+v", copyErr)
+		return nil, copyErr
+	}
+
+	return &v2CompanyModel, nil
+}
+
+// GetCompanyByID retrieves the company by internal ID
+func (s *service) GetCompanyByID(companyID string) (*models.Company, error) {
+	companyModel, err := s.companyRepo.GetCompany(companyID)
+	if err != nil {
+		return nil, err
+	}
+
+	if companyModel == nil {
+		log.Debugf("search by company ID: %s didn't locate the record", companyID)
+		return nil, nil
+	}
+
+	// Convert from v1 to v2 model - use helper: Copy(toValue interface{}, fromValue interface{})
+	var v2CompanyModel v2Models.Company
+	copyErr := copier.Copy(&v2CompanyModel, &companyModel)
+	if copyErr != nil {
+		log.Warnf("problem converting v1 company model to a v2 company model, error: %+v", copyErr)
+		return nil, copyErr
+	}
+
+	return &v2CompanyModel, nil
+}
+
+// GetCompanyBySFID retrieves the company by external SFID
+func (s *service) GetCompanyBySFID(companySFID string) (*models.Company, error) {
+	companyModel, err := s.companyRepo.GetCompanyByExternalID(companySFID)
+	if err != nil {
+		return nil, err
+	}
+
+	if companyModel == nil {
+		log.Debugf("search by company SFID: %s didn't locate the record", companySFID)
+		return nil, nil
+	}
+
+	// Convert from v1 to v2 model - use helper: Copy(toValue interface{}, fromValue interface{})
+	var v2CompanyModel v2Models.Company
+	copyErr := copier.Copy(&v2CompanyModel, &companyModel)
+	if copyErr != nil {
+		log.Warnf("problem converting v1 company model to a v2 company model, error: %+v", copyErr)
+		return nil, copyErr
+	}
+
+	return &v2CompanyModel, nil
+}
+
+// DeleteCompanyByID deletes the company by ID
+func (s *service) DeleteCompanyByID(companyID string) error {
+	return s.companyRepo.DeleteCompanyByID(companyID)
+}
+
+// DeleteCompanyBySFID deletes the company by SFID
+func (s *service) DeleteCompanyBySFID(companyID string) error {
+	return s.companyRepo.DeleteCompanyBySFID(companyID)
 }
 
 func (s *service) GetCompanyProjectCLA(authUser *auth.User, companySFID, projectSFID string) (*models.CompanyProjectClaList, error) {
@@ -533,7 +629,7 @@ func (s *service) getAllCCLASignatures(companyID string) ([]*v1Models.Signature,
 	var sigs []*v1Models.Signature
 	var lastScannedKey *string
 	for {
-		signatures, err := s.signatureRepo.GetCompanySignatures(v1SignatureParams.GetCompanySignaturesParams{
+		sigModels, err := s.signatureRepo.GetCompanySignatures(v1SignatureParams.GetCompanySignaturesParams{
 			CompanyID:     companyID,
 			SignatureType: aws.String("ccla"),
 			NextKey:       lastScannedKey,
@@ -541,29 +637,29 @@ func (s *service) getAllCCLASignatures(companyID string) ([]*v1Models.Signature,
 		if err != nil {
 			return nil, err
 		}
-		sigs = append(sigs, signatures.Signatures...)
-		if signatures.LastKeyScanned == "" {
+		sigs = append(sigs, sigModels.Signatures...)
+		if sigModels.LastKeyScanned == "" {
 			break
 		}
-		lastScannedKey = aws.String(signatures.LastKeyScanned)
+		lastScannedKey = aws.String(sigModels.LastKeyScanned)
 	}
 	return sigs, nil
 }
 
 func getUsersInfo(lfUsernames []string) (map[string]*v2UserServiceModels.User, error) {
-	usermap := make(map[string]*v2UserServiceModels.User)
+	userMap := make(map[string]*v2UserServiceModels.User)
 	if len(lfUsernames) == 0 {
-		return usermap, nil
+		return userMap, nil
 	}
 	userServiceClient := v2UserService.GetClient()
-	users, err := userServiceClient.GetUsersByUsernames(lfUsernames)
+	userModels, err := userServiceClient.GetUsersByUsernames(lfUsernames)
 	if err != nil {
 		return nil, err
 	}
-	for _, user := range users {
-		usermap[user.Username] = user
+	for _, user := range userModels {
+		userMap[user.Username] = user
 	}
-	return usermap, nil
+	return userMap, nil
 }
 
 func fillUsersInfo(claManagers []*models.CompanyClaManager, usermap map[string]*v2UserServiceModels.User) {

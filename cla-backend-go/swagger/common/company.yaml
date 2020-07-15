@@ -4,19 +4,22 @@ title: Company
 description: Company Model
 properties:
   companyID:
-    description: The company unique ID
-    example: 13f79a8f-734d-44c1-ab03-ab98c2a1b64a
+    description: The company unique internal ID
+    example: "13f79a8f-734d-44c1-ab03-ab98c2a1b64a"
     type: string
   companyExternalID:
     description: the company external ID
     type: string
+    example: "00117000015vpjXAAQ"
   companyName:
     description: The company name
-    example: Acme, Inc.
+    example: "Linux Foundation"
     type: string
+    pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
   companyManagerID:
     description: The company manager id
     type: string
+    example: "333b7f59-0847-40dc-88a0-5ee4d4ea3075"
   companyACL:
     type: array
     description: A list of user ID's authorized to make changes to the company
@@ -26,7 +29,18 @@ properties:
     type: string
     description: The company record created date/time
     format: date-time
+    example: "2019-09-18T21:40:50.734Z"
   updated:
     type: string
     description: The company record update date/time
     format: date-time
+    example: "2019-09-18T21:40:50.734Z"
+  note:
+    type: string
+    description: An optional note associated with this company record
+    example: "Added by David to support CNCF migration"
+  version:
+    type: string
+    description: 'the version of the company record'
+    x-omitempty: false
+    example: 'v1'
