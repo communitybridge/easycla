@@ -36,6 +36,7 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/labstack/gommon v0.2.8
 	github.com/lytics/logrus v0.0.0-20170528191427-4389a17ed024
 	github.com/mozillazg/request v0.8.0 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
