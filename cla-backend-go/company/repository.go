@@ -838,6 +838,14 @@ func (repo repository) AddPendingCompanyInviteRequest(companyID string, userID s
 
 	// We we already have an invite...don't create another one
 	if previousInvite != nil {
+		// Update rejected invite request
+		if previousInvite.Status == "rejected" {
+			updateErr := repo.updateInviteRequestStatus(previousInvite.CompanyInviteID, "pending")
+			if updateErr != nil {
+				return nil, updateErr
+			}
+			return previousInvite, nil
+		}
 		log.Warnf("Invite already exists for company id: %s and user: %s - skipping creation", companyID, userID)
 		return previousInvite, nil
 	}
