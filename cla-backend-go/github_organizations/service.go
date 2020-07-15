@@ -29,17 +29,18 @@ func NewService(repo Repository, ghRepository repositories.Repository) Service {
 }
 
 func (s service) GetGithubOrganizations(externalProjectID string) (*models.GithubOrganizations, error) {
-	return s.repo.GetGithubOrganizations(externalProjectID)
+	return s.repo.GetGithubOrganizations(externalProjectID, "")
 }
 
 func (s service) AddGithubOrganization(externalProjectID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
-	return s.repo.AddGithubOrganization(externalProjectID, input)
+	projectSFID := externalProjectID
+	return s.repo.AddGithubOrganization(externalProjectID, projectSFID, input)
 }
 
 func (s service) DeleteGithubOrganization(externalProjectID string, githubOrgName string) error {
-	err := s.ghRepository.DeleteRepositoriesOfGithubOrganization(externalProjectID, githubOrgName)
+	err := s.ghRepository.DeleteRepositoriesOfGithubOrganization(externalProjectID, "", githubOrgName)
 	if err != nil {
 		return err
 	}
-	return s.repo.DeleteGithubOrganization(externalProjectID, githubOrgName)
+	return s.repo.DeleteGithubOrganization(externalProjectID, "", githubOrgName)
 }

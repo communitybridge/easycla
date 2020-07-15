@@ -1698,6 +1698,8 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			UserName:                    dbSignature.UserName,
 			UserLFID:                    dbSignature.UserLFUsername,
 			UserGHID:                    dbSignature.UserGithubUsername,
+			SignedOn:                    dbSignature.SignedOn,
+			SignatoryName:               dbSignature.SignatoryName,
 		}
 		sigs = append(sigs, sig)
 		go func(sigModel *models.Signature, signatureUserCompanyID string, sigACL []string) {
@@ -1813,6 +1815,7 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("user_name"),
 		expression.Name("user_email"),
 		expression.Name("signed_on"),
+		expression.Name("signatory_name"),
 	)
 }
 

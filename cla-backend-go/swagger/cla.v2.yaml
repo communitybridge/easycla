@@ -1060,7 +1060,7 @@ paths:
         '200':
           description: 'Success'
           schema:
-            $ref: '#/definitions/github-organizations'
+            $ref: '#/definitions/project-github-organizations'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -2561,7 +2561,18 @@ definitions:
     $ref: './common/event.yaml'
 
   github-repository-input:
-    $ref: './common/github-repository-input.yaml'
+    type: object
+    required:
+      - repository_github_id
+      - github_organization_name
+      - cla_group_id
+    properties:
+      repository_github_id:
+        type: string
+      github_organization_name:
+        type: string
+      cla_group_id:
+        type: string
 
   github-repository:
     $ref: './common/github-repository.yaml'
@@ -3362,6 +3373,10 @@ definitions:
         example: 'a09410000182dD2AAI'
         description: foundation sfid under which this CLA group is created
         x-omitempty: false
+      root_project_repositories_count:
+        type: integer
+        description: number of repositories added to this CLA Group from root project
+        x-omitempty: false
       foundation_name:
         type: string
         example: 'Academy Software Foundation'
@@ -3472,6 +3487,54 @@ definitions:
         type: array
         items:
           type: string
+
+  project-github-organizations:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/project-github-organization'
+
+  project-github-organization:
+    type: object
+    properties:
+      auto_enabled:
+        type: boolean
+        x-omitempty: false
+      github_organization_name:
+        type: string
+      connection_status:
+        type: string
+        enum:
+          - connected
+          - partial_connection
+          - connection_failure
+          - no_connection
+      repositories:
+        type: array
+        items:
+          $ref: '#/definitions/project-github-repository'
+
+  project-github-repository:
+    type: object
+    properties:
+      repository_id:
+        type: string
+        x-omitempty: false
+      repository_github_id:
+        type: integer
+      repository_name:
+        type: string
+        x-omitempty: false
+      enabled:
+        type: boolean
+        x-omitempty: false
+      connection_status:
+        type: string
+        enum:
+          - connected
+          - connection_failure
 
   error-response:
     type: object

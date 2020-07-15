@@ -8,7 +8,10 @@ type GithubOrganization struct {
 	DateModified               string `json:"date_modified,omitempty"`
 	OrganizationInstallationID int64  `json:"organization_installation_id,omitempty"`
 	OrganizationName           string `json:"organization_name,omitempty"`
+	OrganizationNameLower      string `json:"organization_name_lower,omitempty"`
 	OrganizationSfid           string `json:"organization_sfid,omitempty"`
+	ProjectSFID                string `json:"project_sfid"`
+	AutoEnabled                bool   `json:"auto_enabled"`
 	Version                    string `json:"version,omitempty"`
 }
 
@@ -20,8 +23,9 @@ func toModel(in *GithubOrganization) *models.GithubOrganization {
 		OrganizationName:           in.OrganizationName,
 		OrganizationSfid:           in.OrganizationSfid,
 		Version:                    in.Version,
+		AutoEnabled:                in.AutoEnabled,
+		ProjectSFID:                in.ProjectSFID,
 	}
-
 }
 
 func toModels(input []*GithubOrganization) []*models.GithubOrganization {
