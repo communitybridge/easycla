@@ -879,6 +879,7 @@ paths:
           in: query
           type: string
           required: true
+          pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
       responses:
         '200':
           description: 'Success'
@@ -1837,7 +1838,7 @@ parameters:
     in: query
     type: string
     required: false
-    pattern: '^\w+$'
+    pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
   userName:
     name: userName
     description: The optional user name filter
@@ -2047,6 +2048,8 @@ definitions:
         type: string
       companyName:
         type: string
+        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+        example: "Linux Foundation"
 
   access-list-user:
     type: object
@@ -2089,7 +2092,8 @@ definitions:
       companyName:
         type: string
         description: The company name
-        example: 'ACME, Inc.'
+        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+        example: "Linux Foundation"
       projectID:
         type: string
         description: The project's ID
@@ -2216,8 +2220,9 @@ definitions:
         type: string
       companyName:
         description: The company name
-        example: Acme, Inc.
         type: string
+        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+        example: "Linux Foundation"
       companyACL:
         type: array
         description: A list of user ID's authorized to make changes to the company
@@ -2284,6 +2289,8 @@ definitions:
         type: string
       companyName:
         type: string
+        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+        example: "Linux Foundation"
       projectId:
         type: string
       projectName:

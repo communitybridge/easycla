@@ -30,6 +30,7 @@ properties:
     type: string
   companyName:
     type: string
+    pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
   projectID:
     type: string
   userGHID:

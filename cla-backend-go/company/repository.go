@@ -36,7 +36,10 @@ type IRepository interface { //nolint
 	GetCompanies() (*models.Companies, error)
 	GetCompany(companyID string) (*models.Company, error)
 	GetCompanyByExternalID(companySFID string) (*models.Company, error)
+	GetCompanyByName(companyName string) (*models.Company, error)
 	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
+	DeleteCompanyByID(companyID string) error
+	DeleteCompanyBySFID(companySFID string) error
 	GetCompaniesByUserManager(userID string, userModel user.User) (*models.Companies, error)
 	GetCompaniesByUserManagerWithInvites(userID string, userModel user.User) (*models.CompaniesWithInvites, error)
 
@@ -53,47 +56,24 @@ type IRepository interface { //nolint
 }
 
 type repository struct {
-	stage          string
-	dynamoDBClient *dynamodb.DynamoDB
+	stage                   string
+	dynamoDBClient          *dynamodb.DynamoDB
+	companyTableName        string
+	companyInvitesTableName string
 }
 
 // NewRepository creates a new company repository instance
 func NewRepository(awsSession *session.Session, stage string) IRepository {
 	return repository{
-		stage:          stage,
-		dynamoDBClient: dynamodb.New(awsSession),
+		stage:                   stage,
+		dynamoDBClient:          dynamodb.New(awsSession),
+		companyTableName:        fmt.Sprintf("cla-%s-companies", stage),
+		companyInvitesTableName: fmt.Sprintf("cla-%s-company-invites", stage),
 	}
-}
-
-func (dbCompanyModel *Company) toModel() (*models.Company, error) {
-	// Convert the "string" date time
-	createdDateTime, err := utils.ParseDateTime(dbCompanyModel.Created)
-	if err != nil {
-		log.Warnf("Error converting created date time for company: %s, error: %v", dbCompanyModel.CompanyID, err)
-		return nil, err
-	}
-	updateDateTime, err := utils.ParseDateTime(dbCompanyModel.Updated)
-	if err != nil {
-		log.Warnf("Error converting updated date time for company: %s, error: %v", dbCompanyModel.CompanyID, err)
-		return nil, err
-	}
-
-	// Convert the local DB model to a public swagger model
-	return &models.Company{
-		CompanyACL:        dbCompanyModel.CompanyACL,
-		CompanyID:         dbCompanyModel.CompanyID,
-		CompanyName:       dbCompanyModel.CompanyName,
-		CompanyExternalID: dbCompanyModel.CompanyExternalID,
-		CompanyManagerID:  dbCompanyModel.CompanyManagerID,
-		Created:           strfmt.DateTime(createdDateTime),
-		Updated:           strfmt.DateTime(updateDateTime),
-	}, nil
 }
 
 // GetCompanies retrieves all the companies
 func (repo repository) GetCompanies() (*models.Companies, error) {
-	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
-
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().WithProjection(buildCompanyProjection()).Build()
 	if err != nil {
@@ -107,7 +87,7 @@ func (repo repository) GetCompanies() (*models.Companies, error) {
 		ExpressionAttributeValues: expr.Values(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.companyTableName),
 	}
 
 	var lastEvaluatedKey string
@@ -147,7 +127,7 @@ func (repo repository) GetCompanies() (*models.Companies, error) {
 
 	// How many total records do we have - may not be up-to-date as this value is updated only periodically
 	describeTableInput := &dynamodb.DescribeTableInput{
-		TableName: &tableName,
+		TableName: &repo.companyTableName,
 	}
 
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
@@ -168,9 +148,8 @@ func (repo repository) GetCompanies() (*models.Companies, error) {
 
 // GetCompanyByExternalID returns a company based on the company external ID
 func (repo repository) GetCompanyByExternalID(companySFID string) (*models.Company, error) {
-	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
 	condition := expression.Key("company_external_id").Equal(expression.Value(companySFID))
-	builder := expression.NewBuilder().WithKeyCondition(condition)
+	builder := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildCompanyProjection())
 	// Use the nice builder to create the expression
 	expr, err := builder.Build()
 	if err != nil {
@@ -184,7 +163,7 @@ func (repo repository) GetCompanyByExternalID(companySFID string) (*models.Compa
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.companyTableName),
 		IndexName:                 aws.String("external-company-index"),
 	}
 
@@ -197,7 +176,7 @@ func (repo repository) GetCompanyByExternalID(companySFID string) (*models.Compa
 	if len(results.Items) == 0 {
 		return nil, ErrCompanyDoesNotExist
 	}
-	dbCompanyModel := Company{}
+	dbCompanyModel := DBModel{}
 	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbCompanyModel)
 	if err != nil {
 		return nil, err
@@ -205,13 +184,59 @@ func (repo repository) GetCompanyByExternalID(companySFID string) (*models.Compa
 	return dbCompanyModel.toModel()
 }
 
+// GetCompanyByName searches the database and returns the matching company names
+func (repo repository) GetCompanyByName(companyName string) (*models.Company, error) {
+	// This is the key we want to match
+	condition := expression.Key("company_name").Equal(expression.Value(companyName))
+
+	// Use the builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildCompanyProjection()).Build()
+	if err != nil {
+		log.Warnf("error building expression for company query, companyName: %s, error: %v",
+			companyName, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(repo.companyTableName),
+		IndexName:                 aws.String("company-name-index"),
+	}
+
+	// Make the DynamoDB Query API call
+	results, queryErr := repo.dynamoDBClient.Query(queryInput)
+	if queryErr != nil {
+		log.Warnf("error retrieving company by companyName: %s, error: %+v", companyName, queryErr)
+		return nil, queryErr
+	}
+
+	// Didn't find it...
+	if *results.Count == 0 {
+		log.Debugf("Company query by name returned no results using companyName: %s", companyName)
+		return nil, nil
+	}
+
+	// Found it...
+	var dbModels []DBModel
+	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbModels)
+	if err != nil {
+		log.Warnf("error unmarshalling db company, error: %+v", err)
+		return nil, err
+	}
+	// TODO: DAD - review projection and unmarshalling logic, the 'note' column is not being loaded into the data model
+	//log.Debugf("DB response model: %#v", dbModels)
+
+	return toSwaggerModel(&dbModels[0])
+}
+
 // GetCompany returns a company based on the company ID
 func (repo repository) GetCompany(companyID string) (*models.Company, error) {
-
-	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
-
 	companyTableData, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.companyTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"company_id": {
 				S: aws.String(companyID),
@@ -229,7 +254,7 @@ func (repo repository) GetCompany(companyID string) (*models.Company, error) {
 		return nil, ErrCompanyDoesNotExist
 	}
 
-	dbCompanyModel := Company{}
+	dbCompanyModel := DBModel{}
 	err = dynamodbattribute.UnmarshalMap(companyTableData.Item, &dbCompanyModel)
 	if err != nil {
 		log.Warnf("error unmarshalling company table data, error: %v", err)
@@ -251,8 +276,6 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 		}, nil
 	}
 
-	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
-
 	// This is the company name we want to match
 	filter := expression.Name("company_name").Contains(companyName)
 
@@ -270,7 +293,7 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 		ExpressionAttributeValues: expr.Values(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.companyTableName),
 	}
 
 	// If we have the next key, set the exclusive start key value
@@ -324,7 +347,7 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 
 	// How many total records do we have - may not be up-to-date as this value is updated only periodically
 	describeTableInput := &dynamodb.DescribeTableInput{
-		TableName: &tableName,
+		TableName: &repo.companyTableName,
 	}
 
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
@@ -343,6 +366,38 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 	}, nil
 }
 
+// DeleteCompanyByID deletes the company by ID
+func (repo repository) DeleteCompanyByID(companyID string) error {
+	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"company_id": {S: aws.String(companyID)},
+		},
+		TableName: aws.String(repo.companyTableName),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteCompanyBySFID deletes the company by SFID
+func (repo repository) DeleteCompanyBySFID(companySFID string) error {
+	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"company_external_id": {S: aws.String(companySFID)},
+		},
+		TableName: aws.String(repo.companyTableName),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetCompanyUserManager the get a list of companies when provided the company id and user manager
 func (repo repository) GetCompaniesByUserManager(userID string, userModel user.User) (*models.Companies, error) {
 	// Sorry, no results if empty user ID
@@ -354,8 +409,6 @@ func (repo repository) GetCompaniesByUserManager(userID string, userModel user.U
 			TotalCount:     0,
 		}, nil
 	}
-
-	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
 
 	// This is the user name we want to match
 	var filter expression.ConditionBuilder
@@ -386,7 +439,7 @@ func (repo repository) GetCompaniesByUserManager(userID string, userModel user.U
 		ExpressionAttributeValues: expr.Values(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.companyTableName),
 	}
 
 	//log.Debugf("Running company search scan using queryInput: %+v", scanInput)
@@ -427,7 +480,7 @@ func (repo repository) GetCompaniesByUserManager(userID string, userModel user.U
 
 	// How many total records do we have - may not be up-to-date as this value is updated only periodically
 	describeTableInput := &dynamodb.DescribeTableInput{
-		TableName: &tableName,
+		TableName: &repo.companyTableName,
 	}
 
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
@@ -565,7 +618,6 @@ func buildCompanyModels(results *dynamodb.ScanOutput) ([]models.Company, error) 
 // GetCompanyInviteRequest returns the specified request
 func (repo repository) GetCompanyInviteRequest(companyInviteID string) (*Invite, error) {
 
-	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
 	condition := expression.Key("company_invite_id").Equal(expression.Value(companyInviteID))
 
 	// Use the nice builder to create the expression
@@ -583,7 +635,7 @@ func (repo repository) GetCompanyInviteRequest(companyInviteID string) (*Invite,
 		KeyConditionExpression:    expr.KeyCondition(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.companyInvitesTableName),
 	}
 
 	queryResults, err := repo.dynamoDBClient.Query(queryInput)
@@ -609,7 +661,6 @@ func (repo repository) GetCompanyInviteRequest(companyInviteID string) (*Invite,
 // GetCompanyInviteRequests returns a list of company invites when provided the company ID
 func (repo repository) GetCompanyInviteRequests(companyID string, status *string) ([]Invite, error) {
 
-	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
 	// These are the keys we want to match
 	condition := expression.Key("requested_company_id").Equal(expression.Value(companyID))
 
@@ -636,7 +687,7 @@ func (repo repository) GetCompanyInviteRequests(companyID string, status *string
 		KeyConditionExpression:    expr.KeyCondition(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.companyInvitesTableName),
 		IndexName:                 aws.String("requested-company-index"), // Name of a secondary index
 	}
 
@@ -658,8 +709,6 @@ func (repo repository) GetCompanyInviteRequests(companyID string, status *string
 
 // GetCompanyUserInviteRequests returns a list of company invites when provided the company ID and user ID
 func (repo repository) GetCompanyUserInviteRequests(companyID string, userID string) (*Invite, error) {
-
-	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
 
 	// These are the keys we want to match
 	condition := expression.Key("requested_company_id").Equal(expression.Value(companyID))
@@ -683,7 +732,7 @@ func (repo repository) GetCompanyUserInviteRequests(companyID string, userID str
 		KeyConditionExpression:    expr.KeyCondition(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.companyInvitesTableName),
 		IndexName:                 aws.String("requested-company-index"), // Name of a secondary index
 	}
 
@@ -717,7 +766,6 @@ func (repo repository) GetCompanyUserInviteRequests(companyID string, userID str
 // GetUserInviteRequests returns a list of company invites when provided the user ID
 func (repo repository) GetUserInviteRequests(userID string) ([]Invite, error) {
 
-	tableName := fmt.Sprintf("cla-%s-company-invites", repo.stage)
 	filter := expression.Name("user_id").Equal(expression.Value(userID))
 
 	// Use the nice builder to create the expression
@@ -735,7 +783,7 @@ func (repo repository) GetUserInviteRequests(userID string) ([]Invite, error) {
 		ExpressionAttributeValues: expr.Values(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.companyInvitesTableName),
 	}
 
 	var lastEvaluatedKey string
@@ -907,8 +955,6 @@ func (repo repository) updateInviteRequestStatus(companyInviteID, status string)
 
 // UpdateCompanyAccessList updates the company ACL when provided the company ID and ACL list
 func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []string) error {
-	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
-
 	_, now := utils.CurrentTime()
 
 	input := &dynamodb.UpdateItemInput{
@@ -924,7 +970,7 @@ func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []st
 				S: aws.String(now),
 			},
 		},
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.companyTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"company_id": {
 				S: aws.String(companyID),
@@ -942,15 +988,15 @@ func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []st
 	return nil
 }
 
+// CreateCompany creates a new company record
 func (repo repository) CreateCompany(in *models.Company) (*models.Company, error) {
-	tableName := fmt.Sprintf("cla-%s-companies", repo.stage)
 	companyID, err := uuid.NewV4()
 	if err != nil {
 		log.Warnf("Unable to generate a UUID for a pending invite, error: %v", err)
 		return nil, err
 	}
 	_, now := utils.CurrentTime()
-	comp := &Company{
+	comp := &DBModel{
 		CompanyID:         companyID.String(),
 		CompanyName:       in.CompanyName,
 		CompanyACL:        in.CompanyACL,
@@ -966,7 +1012,7 @@ func (repo repository) CreateCompany(in *models.Company) (*models.Company, error
 	}
 	_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item:      av,
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.companyTableName),
 	})
 	if err != nil {
 		return nil, err

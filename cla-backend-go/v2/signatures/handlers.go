@@ -317,14 +317,14 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 			FullMatch:     params.FullMatch,
 			NextKey:       params.NextKey,
 			PageSize:      params.PageSize,
-			ProjectID:     params.ProjectID,
+			ProjectID:     params.ClaGroupID,
 			SearchField:   params.SearchField,
 			SearchTerm:    params.SearchTerm,
 			SignatureType: params.SignatureType,
 		})
 		if err != nil {
 			log.Warnf("error retrieving project signatures for projectID: %s, error: %+v",
-				params.ProjectID, err)
+				params.ClaGroupID, err)
 			return signatures.NewGetProjectSignaturesBadRequest().WithPayload(errorResponse(err))
 		}
 		resp, err := v2Signatures(projectSignatures)
