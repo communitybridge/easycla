@@ -3,6 +3,7 @@ package projects_cla_groups
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
@@ -55,6 +56,8 @@ type Repository interface {
 	AssociateClaGroupWithProject(claGroupID string, projectSFID string, foundationSFID string) error
 	RemoveProjectAssociatedWithClaGroup(claGroupID string, projectSFIDList []string, all bool) error
 	getCLAGroupNameByID(claGroupID string) (string, error)
+
+	UpdateRepositoriesCount(projectSFID string, diff int64) error
 }
 
 type repo struct {
@@ -307,4 +310,21 @@ func (repo *repo) getCLAGroupNameByID(claGroupID string) (string, error) {
 	}
 
 	return claGroupModel.ProjectName, nil
+}
+
+func (repo *repo) UpdateRepositoriesCount(projectSFID string, diff int64) error {
+	val := strconv.FormatInt(diff, 10)
+	updateExp := "ADD repositories_count :val"
+	_, err := repo.dynamoDBClient.UpdateItem(&dynamodb.UpdateItemInput{
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{":val": {N: aws.String(val)}},
+		UpdateExpression:          aws.String(updateExp),
+		Key: map[string]*dynamodb.AttributeValue{
+			"project_sfid": {S: aws.String(projectSFID)},
+		},
+		TableName: aws.String(repo.tableName),
+	})
+	if err != nil {
+		log.WithField("project_sfid", projectSFID).Error("update repositories count failed", err)
+	}
+	return err
 }

@@ -911,6 +911,8 @@ class ProjectModel(BaseModel):
     project_icla_enabled = BooleanAttribute(default=True)
     project_ccla_enabled = BooleanAttribute(default=True)
     project_ccla_requires_icla_signature = BooleanAttribute(default=False)
+    foundation_sfid = UnicodeAttribute()
+    root_project_repositories_count = NumberAttribute(null=True)
     # Indexes
     project_external_id_index = ExternalProjectIndex()
     project_name_search_index = ProjectNameIndex()
@@ -1003,6 +1005,12 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def get_project_id(self):
         return self.model.project_id
+
+    def get_foundation_sfid(self):
+        return self.model.foundation_sfid
+
+    def get_root_project_repositories_count(self):
+        return self.model.root_project_repositories_count
 
     def get_project_external_id(self):
         return self.model.project_external_id
@@ -1128,6 +1136,12 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def set_project_id(self, project_id):
         self.model.project_id = str(project_id)
+
+    def set_foundation_sfid(self, foundation_sfid):
+        self.model.foundation_sfid = str(foundation_sfid)
+
+    def set_root_project_repositories_count(self, root_project_repositories_count):
+        self.model.root_project_repositories_count = root_project_repositories_count
 
     def set_project_external_id(self, project_external_id):
         self.model.project_external_id = str(project_external_id)

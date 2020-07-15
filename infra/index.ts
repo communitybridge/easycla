@@ -952,6 +952,12 @@ projectsClaGroupsTable.onEvent("projectsCLAGroupsStreamEvents",
   aws.lambda.Function.get(dynamoDBProjectsCLAGroupsEventLambdaName, dynamoDBProjectsCLAGroupsEventLambdaArn),
   { startingPosition: "LATEST" });
 
+const dynamoDBRepositoriesEventLambdaName = "cla-backend-" + stage + "-dynamo-repositories-events-lambda";
+const dynamoDBRepositoriesEventLambdaArn = "arn:aws:lambda:" + aws.getRegion().name + ":" + accountID + ":function:" + dynamoDBRepositoriesEventLambdaName;
+repositoriesTable.onEvent("repositoriesStreamEvents",
+  aws.lambda.Function.get(dynamoDBRepositoriesEventLambdaName, dynamoDBRepositoriesEventLambdaArn),
+  { startingPosition: "LATEST" });
+
 // Export the name of the bucket
 export const logoBucketARN = logoBucket.arn;
 export const logoBucketName = logoBucket.bucket;

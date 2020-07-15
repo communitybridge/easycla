@@ -268,6 +268,16 @@ functions:
       include:
         - ./dynamo-events-lambda
 
+  dynamo-repositories-events-lambda:
+    handler: dynamo-repositories-events-lambda
+    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-repositories-events-lambda
+    description: "EasyCLA DynamoDB stream events handler for the repositories table"
+    runtime: go1.x
+    package:
+      individually: true
+      include:
+        - ./dynamo-events-lambda
+
   dynamo-projects-cla-groups-events-lambda:
     handler: dynamo-projects-cla-groups-events-lambda
     name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-projects-cla-groups-events-lambda

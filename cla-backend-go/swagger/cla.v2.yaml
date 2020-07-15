@@ -3267,6 +3267,10 @@ definitions:
         example: 'a09410000182dD2AAI'
         description: foundation sfid under which this CLA group is created
         x-omitempty: false
+      root_project_repositories_count:
+        type: integer
+        description: number of repositories added to this CLA Group from root project
+        x-omitempty: false
       foundation_name:
         type: string
         example: 'Academy Software Foundation'
