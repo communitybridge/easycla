@@ -428,6 +428,13 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 		return nil, ErrLFXUserNotFound
 	}
 
+	// Check if user is part of organization
+	if user.Account.ID != strings.TrimSpace(companyID) {
+		msg := fmt.Sprintf("User :%s does not belong to organization", userEmail)
+		log.Warn(msg)
+		return nil, ErrNotInOrg
+	}
+
 	projectSF, projectErr := projectClient.GetProject(projectID)
 	if projectErr != nil {
 		msg := fmt.Sprintf("Problem getting project :%s ", projectID)
@@ -568,14 +575,6 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 			return nil, sendEmailErr
 		}
 		return nil, ErrNoLFID
-	}
-
-	// Check if user is not associated with given organization
-	log.Debugf("LFX user company :%s", lfxUser.Account.Name)
-	if lfxUser.Account.ID != companyID {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - User associated with another organization :%s and should be in :%s ", lfxUser.Account.Name, companyModel.Name)
-		log.Warn(msg)
-		return nil, ErrNotInOrg
 	}
 
 	claManagerDesignee, err := s.CreateCLAManagerDesignee(companyID, projectID, userEmail)
