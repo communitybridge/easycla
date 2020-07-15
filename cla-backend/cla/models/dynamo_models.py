@@ -911,7 +911,7 @@ class ProjectModel(BaseModel):
     project_icla_enabled = BooleanAttribute(default=True)
     project_ccla_enabled = BooleanAttribute(default=True)
     project_ccla_requires_icla_signature = BooleanAttribute(default=False)
-    foundation_sfid = UnicodeAttribute()
+    foundation_sfid = UnicodeAttribute(null=True)
     root_project_repositories_count = NumberAttribute(null=True)
     # Indexes
     project_external_id_index = ExternalProjectIndex()
@@ -953,7 +953,8 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def __str__(self):
         return (
-            "id: {}, name: {}, project_name_lower: {},external id: {}, icla enabled: {}, " "ccla enabled: {}, requires icla: {}, acl: {}"
+            "id: {}, name: {}, project_name_lower: {},external id: {}, icla enabled: {}, " "ccla enabled: {}, requires icla: {}, acl: {}," +
+            " foundation_sfid: {}, root_project_repositories_count: {}"
         ).format(
             self.model.project_id,
             self.model.project_name,
@@ -963,6 +964,8 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
             self.model.project_ccla_enabled,
             self.model.project_ccla_requires_icla_signature,
             self.model.project_acl,
+            self.model.foundation_sfid,
+            self.model.root_project_repositories_count,
         )
 
     def to_dict(self):
