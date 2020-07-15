@@ -578,8 +578,8 @@ def handle_commit_from_user(project, commit_sha, author_info, signed, missing): 
     """
     Helper method to triage commits between signed and not-signed user signatures.
 
-    :param project_id: The project ID for this github PR organization.
-    :type project_id: string
+    :param project: The project model for this github PR organization.
+    :type project: Project
     :param commit_sha: Commit has as a string
     :type commit_sha: string
     :param author_info: the commit author details, including id, name, email (if available)
@@ -627,12 +627,17 @@ def handle_commit_from_user(project, commit_sha, author_info, signed, missing): 
                     return
 
             # Didn't find a signed signature for this project - add to our missing bucket list
+            # author_info consists of: [author_id, author_username, author_email]
             missing.append((commit_sha, list(author_info)))
         else:
             # Not seen this user before - no record on file in our user's database
             cla.log.debug(f'GitHub user (id: {author_id}, '
                           f'user: {author_username}, '
                           f'email: {author_email}) lookup by email in our database failed - not found')
+
+            # This bit of logic below needs to be reconsidered - query logic takes a very long time for large
+            # projects like CNCF which significantly delays updating the GH PR status.
+            # Revisit once we add more indexes to the table
 
             # # Check to see if not found user is whitelisted to assist in triaging github comment
             # # Search for the CCLA signatures for this project - wish we had a company ID to restrict the query...
@@ -657,8 +662,10 @@ def handle_commit_from_user(project, commit_sha, author_info, signed, missing): 
             #         list_author_info.append(True)
             #         break
             # missing.append((commit_sha, list_author_info))
+
             # For now - we'll just return the author info as a list without the flag to indicate that they have been on
             # the approved list for any company/signature
+            # author_info consists of: [author_id, author_username, author_email]
             missing.append((commit_sha, list(author_info)))
     else:
         cla.log.debug(f'Found {len(users)} GitHub user(s) matching github id: {author_id} in our database')
@@ -800,8 +807,7 @@ def has_check_previously_failed(pull_request: PullRequest) -> bool:
     return False
 
 
-def update_pull_request(installation_id, github_repository_id, pull_request, repository_name, signed,
-                        missing):  # pylint: disable=too-many-locals
+def update_pull_request(installation_id, github_repository_id, pull_request, repository_name, signed, missing):  # pylint: disable=too-many-locals
     """
     Helper function to update a PR's comment/status based on the list of signers.
 
@@ -813,6 +819,8 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
     :type github_repository_id: int
     :param pull_request: The GitHub PullRequest object for this PR.
     :type pull_request: GitHub.PullRequest
+    :param repository_name: The GitHub repository name for this PR.
+    :type repository_name: string
     :param signed: The list of (commit hash, author name) tuples that have signed an
         signature for this PR.
     :type signed: [(string, string)]
