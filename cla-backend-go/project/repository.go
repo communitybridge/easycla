@@ -6,6 +6,7 @@ package project
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -52,6 +53,7 @@ type ProjectRepository interface { //nolint
 
 	GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error)
 	GetClaGroupByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Project, error)
+	UpdateRootProjectRepositoriesCount(claGroupID string, diff int64) error
 }
 
 // NewRepository creates instance of project repository
@@ -652,6 +654,25 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 	return repo.GetProjectByID(projectModel.ProjectID, LoadRepoDetails)
 }
 
+func (repo *repo) UpdateRootProjectRepositoriesCount(claGroupID string, diff int64) error {
+	val := strconv.FormatInt(diff, 10)
+	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
+	updateExp := "ADD root_project_repositories_count :val"
+	input := &dynamodb.UpdateItemInput{
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{":val": {N: aws.String(val)}},
+		UpdateExpression:          aws.String(updateExp),
+		Key: map[string]*dynamodb.AttributeValue{
+			"project_id": {S: aws.String(claGroupID)},
+		},
+		TableName: aws.String(tableName),
+	}
+	_, err := repo.dynamoDBClient.UpdateItem(input)
+	if err != nil {
+		log.WithField("cla_group_id", claGroupID).Error("unable to update repositories count", err)
+	}
+	return err
+}
+
 // buildProjectModels converts the database response model into an API response data model
 func (repo *repo) buildProjectModels(results []map[string]*dynamodb.AttributeValue, loadRepoDetails bool) ([]models.Project, error) {
 	var projects []models.Project
@@ -724,23 +745,24 @@ func (repo *repo) buildProjectModel(dbModel DBProjectModel, loadRepoDetails bool
 		}
 	}
 	return &models.Project{
-		ProjectID:                  dbModel.ProjectID,
-		FoundationSFID:             dbModel.FoundationSFID,
-		ProjectDescription:         dbModel.ProjectDescription,
-		ProjectExternalID:          dbModel.ProjectExternalID,
-		ProjectName:                dbModel.ProjectName,
-		ProjectACL:                 dbModel.ProjectACL,
-		ProjectCCLAEnabled:         dbModel.ProjectCclaEnabled,
-		ProjectICLAEnabled:         dbModel.ProjectIclaEnabled,
-		ProjectCCLARequiresICLA:    dbModel.ProjectCclaRequiresIclaSignature,
-		ProjectCorporateDocuments:  repo.buildProjectDocumentModels(dbModel.ProjectCorporateDocuments),
-		ProjectIndividualDocuments: repo.buildProjectDocumentModels(dbModel.ProjectIndividualDocuments),
-		ProjectMemberDocuments:     repo.buildProjectDocumentModels(dbModel.ProjectMemberDocuments),
-		GithubRepositories:         ghOrgs,
-		Gerrits:                    gerrits,
-		DateCreated:                dbModel.DateCreated,
-		DateModified:               dbModel.DateModified,
-		Version:                    dbModel.Version,
+		ProjectID:                    dbModel.ProjectID,
+		FoundationSFID:               dbModel.FoundationSFID,
+		RootProjectRepositoriesCount: dbModel.RootProjectRepositoriesCount,
+		ProjectDescription:           dbModel.ProjectDescription,
+		ProjectExternalID:            dbModel.ProjectExternalID,
+		ProjectName:                  dbModel.ProjectName,
+		ProjectACL:                   dbModel.ProjectACL,
+		ProjectCCLAEnabled:           dbModel.ProjectCclaEnabled,
+		ProjectICLAEnabled:           dbModel.ProjectIclaEnabled,
+		ProjectCCLARequiresICLA:      dbModel.ProjectCclaRequiresIclaSignature,
+		ProjectCorporateDocuments:    repo.buildProjectDocumentModels(dbModel.ProjectCorporateDocuments),
+		ProjectIndividualDocuments:   repo.buildProjectDocumentModels(dbModel.ProjectIndividualDocuments),
+		ProjectMemberDocuments:       repo.buildProjectDocumentModels(dbModel.ProjectMemberDocuments),
+		GithubRepositories:           ghOrgs,
+		Gerrits:                      gerrits,
+		DateCreated:                  dbModel.DateCreated,
+		DateModified:                 dbModel.DateModified,
+		Version:                      dbModel.Version,
 	}
 }
 
@@ -777,6 +799,7 @@ func buildProjection() expression.ProjectionBuilder {
 	return expression.NamesList(
 		expression.Name("project_id"),
 		expression.Name("foundation_sfid"),
+		expression.Name("root_project_repositories_count"),
 		expression.Name("project_description"),
 		expression.Name("project_external_id"),
 		expression.Name("project_name"),

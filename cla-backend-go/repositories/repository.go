@@ -25,9 +25,10 @@ import (
 
 // index
 const (
-	ProjectRepositoryIndex  = "project-repository-index"
-	SFDCRepositoryIndex     = "sfdc-repository-index"
-	ExternalRepositoryIndex = "external-repository-index"
+	ProjectRepositoryIndex                    = "project-repository-index"
+	SFDCRepositoryIndex                       = "sfdc-repository-index"
+	ExternalRepositoryIndex                   = "external-repository-index"
+	ProjectSFIDRepositoryOrgnizationNameIndex = "project-sfid-repository-organization-name-index"
 )
 
 // errors
@@ -38,10 +39,10 @@ var (
 // Repository defines functions of Repositories
 type Repository interface {
 	GetProjectRepositoriesGroupByOrgs(projectID string) ([]*models.GithubRepositoriesGroupByOrgs, error)
-	DeleteRepositoriesOfGithubOrganization(externalProjectID, githubOrgName string) error
-	AddGithubRepository(externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
-	DeleteGithubRepository(externalProjectID string, repositoryID string) error
-	ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error)
+	DeleteRepositoriesOfGithubOrganization(externalProjectID, projectSFID, githubOrgName string) error
+	AddGithubRepository(externalProjectID string, projectSFID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
+	DeleteGithubRepository(externalProjectID string, projectSFID string, repositoryID string) error
+	ListProjectRepositories(externalProjectID string, projectSFID string) (*models.ListGithubRepositories, error)
 	GetGithubRepository(repositoryID string) (*models.GithubRepository, error)
 	DeleteProject(projectID string) error
 	GetGithubRepositoryByCLAGroup(claGroup string) (*models.GithubRepository, error)
@@ -169,18 +170,26 @@ func (repo repo) getRepositoriesByGithubOrg(githubOrgName string) ([]*models.Git
 	return out, nil
 }
 
-func (repo repo) deleteGithubRepository(externalProjectID, ghRepoID string) error {
+func (repo repo) deleteGithubRepository(externalProjectID, projectSFID, ghRepoID string) error {
 	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
+	var attrName, attrVal string
+	if projectSFID != "" {
+		attrName = "project_sfid"
+		attrVal = projectSFID
+	} else {
+		attrName = "repository_sfdc_id"
+		attrVal = externalProjectID
+	}
 	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
 		ExpressionAttributeNames: map[string]*string{
-			"#projectSFID": aws.String("repository_sfdc_id"),
+			"#id": aws.String(attrName),
 		},
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-			":externalProjectID": {
-				S: aws.String(externalProjectID),
+			":val": {
+				S: aws.String(attrVal),
 			},
 		},
-		ConditionExpression: aws.String("#projectSFID = :externalProjectID"),
+		ConditionExpression: aws.String("#id = :val"),
 		Key: map[string]*dynamodb.AttributeValue{
 			"repository_id": {S: aws.String(ghRepoID)},
 		},
@@ -199,13 +208,13 @@ func (repo repo) deleteGithubRepository(externalProjectID, ghRepoID string) erro
 	return nil
 }
 
-func (repo repo) DeleteRepositoriesOfGithubOrganization(externalProjectID, githubOrgName string) error {
+func (repo repo) DeleteRepositoriesOfGithubOrganization(externalProjectID, projectSFID, githubOrgName string) error {
 	ghrepos, err := repo.getRepositoriesByGithubOrg(githubOrgName)
 	if err != nil {
 		return err
 	}
 	for _, ghrepo := range ghrepos {
-		err = repo.deleteGithubRepository(externalProjectID, ghrepo.RepositoryID)
+		err = repo.deleteGithubRepository(externalProjectID, projectSFID, ghrepo.RepositoryID)
 		if err != nil {
 			return err
 		}
@@ -214,14 +223,21 @@ func (repo repo) DeleteRepositoriesOfGithubOrganization(externalProjectID, githu
 }
 
 // List github repositories of project by external/salesforce project id
-func (repo repo) ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error) {
+func (repo repo) ListProjectRepositories(externalProjectID string, projectSFID string) (*models.ListGithubRepositories, error) {
+	var indexName string
 	out := &models.ListGithubRepositories{
 		List: make([]*models.GithubRepository, 0),
 	}
 	var condition expression.KeyConditionBuilder
 	builder := expression.NewBuilder()
 
-	condition = expression.Key("repository_sfdc_id").Equal(expression.Value(externalProjectID))
+	if externalProjectID != "" {
+		condition = expression.Key("repository_sfdc_id").Equal(expression.Value(externalProjectID))
+		indexName = SFDCRepositoryIndex
+	} else {
+		condition = expression.Key("project_sfid").Equal(expression.Value(projectSFID))
+		indexName = ProjectSFIDRepositoryOrgnizationNameIndex
+	}
 
 	builder = builder.WithKeyCondition(condition)
 	expr, err := builder.Build()
@@ -235,7 +251,7 @@ func (repo repo) ListProjectRepositories(externalProjectID string) (*models.List
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
 		TableName:                 aws.String(repo.repositoryTableName),
-		IndexName:                 aws.String(SFDCRepositoryIndex),
+		IndexName:                 aws.String(indexName),
 	}
 
 	results, err := repo.dynamoDBClient.Query(queryInput)
@@ -257,7 +273,7 @@ func (repo repo) ListProjectRepositories(externalProjectID string) (*models.List
 	return out, nil
 }
 
-func (repo repo) AddGithubRepository(externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
+func (repo repo) AddGithubRepository(externalProjectID string, projectSFID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
 	_, err := repo.getRepositoryByGithubID(utils.StringValue(input.RepositoryExternalID))
 	if err != nil {
 		if err != ErrGithubRepositoryNotFound {
@@ -282,6 +298,7 @@ func (repo repo) AddGithubRepository(externalProjectID string, input *models.Git
 		RepositorySfdcID:           externalProjectID,
 		RepositoryType:             utils.StringValue(input.RepositoryType),
 		RepositoryURL:              utils.StringValue(input.RepositoryURL),
+		ProjectSFID:                projectSFID,
 		Version:                    "v1",
 	}
 	av, err := dynamodbattribute.MarshalMap(repository)
@@ -299,8 +316,8 @@ func (repo repo) AddGithubRepository(externalProjectID string, input *models.Git
 	return repository.toModel(), nil
 }
 
-func (repo repo) DeleteGithubRepository(externalProjectID string, repositoryID string) error {
-	return repo.deleteGithubRepository(externalProjectID, repositoryID)
+func (repo repo) DeleteGithubRepository(externalProjectID string, projectSFID string, repositoryID string) error {
+	return repo.deleteGithubRepository(externalProjectID, projectSFID, repositoryID)
 }
 
 func (repo repo) getRepositoryByGithubID(externalID string) (*models.GithubRepository, error) {

@@ -32,13 +32,14 @@ func NewService(repo Repository) Service {
 }
 
 func (s *service) AddGithubRepository(externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
-	return s.repo.AddGithubRepository(externalProjectID, input)
+	projectSFID := externalProjectID
+	return s.repo.AddGithubRepository(externalProjectID, projectSFID, input)
 }
 func (s *service) DeleteGithubRepository(externalProjectID string, repositoryID string) error {
-	return s.repo.DeleteGithubRepository(externalProjectID, repositoryID)
+	return s.repo.DeleteGithubRepository(externalProjectID, "", repositoryID)
 }
 func (s *service) ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error) {
-	return s.repo.ListProjectRepositories(externalProjectID)
+	return s.repo.ListProjectRepositories(externalProjectID, "")
 }
 func (s *service) GetGithubRepository(repositoryID string) (*models.GithubRepository, error) {
 	return s.repo.GetGithubRepository(repositoryID)

@@ -426,6 +426,8 @@ function buildRepositoriesTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'repository_external_id', type: 'S' },
         { name: 'repository_project_id', type: 'S' },
         { name: 'repository_sfdc_id', type: 'S' },
+        { name: 'project_sfid', type: 'S' },
+        { name: 'repository_organization_name', type: 'S' },
       ],
       hashKey: 'repository_id',
       billingMode: 'PROVISIONED',
@@ -455,6 +457,14 @@ function buildRepositoriesTable(importResources: boolean): aws.dynamodb.Table {
           readCapacity: defaultReadCapacity,
           writeCapacity: defaultWriteCapacity,
         },
+        {
+          name: 'project-sfid-repository-organization-name-index',
+          hashKey: 'project_sfid',
+          rangeKey: 'repository_organization_name',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
+        },
       ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,
@@ -480,6 +490,7 @@ function buildGitHubOrgsTable(importResources: boolean): aws.dynamodb.Table {
       attributes: [
         { name: 'organization_name', type: 'S' },
         { name: 'organization_sfid', type: 'S' },
+        { name: 'project_sfid', type: 'S' },
       ],
       hashKey: 'organization_name',
       billingMode: 'PROVISIONED',
@@ -491,6 +502,14 @@ function buildGitHubOrgsTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'github-org-sfid-index',
           hashKey: 'organization_sfid',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
+        },
+        {
+          name: 'project-sfid-organization-name-index',
+          hashKey: 'project_sfid',
+          rangeKey: 'organization_name',
           projectionType: 'ALL',
           readCapacity: defaultReadCapacity,
           writeCapacity: defaultWriteCapacity,
@@ -937,6 +956,12 @@ const dynamoDBProjectsCLAGroupsEventLambdaName = "cla-backend-" + stage + "-dyna
 const dynamoDBProjectsCLAGroupsEventLambdaArn = "arn:aws:lambda:" + aws.getRegion().name + ":" + accountID + ":function:" + dynamoDBProjectsCLAGroupsEventLambdaName;
 projectsClaGroupsTable.onEvent("projectsCLAGroupsStreamEvents",
   aws.lambda.Function.get(dynamoDBProjectsCLAGroupsEventLambdaName, dynamoDBProjectsCLAGroupsEventLambdaArn),
+  { startingPosition: "LATEST" });
+
+const dynamoDBRepositoriesEventLambdaName = "cla-backend-" + stage + "-dynamo-repositories-events-lambda";
+const dynamoDBRepositoriesEventLambdaArn = "arn:aws:lambda:" + aws.getRegion().name + ":" + accountID + ":function:" + dynamoDBRepositoriesEventLambdaName;
+repositoriesTable.onEvent("repositoriesStreamEvents",
+  aws.lambda.Function.get(dynamoDBRepositoriesEventLambdaName, dynamoDBRepositoriesEventLambdaArn),
   { startingPosition: "LATEST" });
 
 // Export the name of the bucket
