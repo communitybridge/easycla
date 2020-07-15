@@ -6,6 +6,8 @@ package cla_manager
 import (
 	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
@@ -55,7 +57,9 @@ var (
 	//ErrNoOrgAdmins when No admins found for organization
 	ErrNoOrgAdmins = errors.New("no Admins in company ")
 	//ErrRoleScopeConflict thrown if user already has role scope
-	ErrRoleScopeConflict = errors.New("role or scope conflict")
+	ErrRoleScopeConflict = errors.New("roleScope conflict")
+	//ErrCLAManagerDesigneeConflict when user is already assigned cla-manager-designee role
+	ErrCLAManagerDesigneeConflict = errors.New("user already assigned cla-manager-designee")
 )
 
 type service struct {
@@ -70,7 +74,7 @@ type service struct {
 
 // Service interface
 type Service interface {
-	CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse)
+	CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername string) (*models.CompanyClaManager, *models.ErrorResponse)
 	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
 	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributor *v1User.User, lFxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse)
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
@@ -93,9 +97,19 @@ func NewService(compService company.IService, projService project.Service, mgrSe
 }
 
 // CreateCLAManager creates Cla Manager
-func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername, authEmail string) (*models.CompanyClaManager, *models.ErrorResponse) {
-	if *params.Body.FirstName == "" || *params.Body.LastName == "" || *params.Body.UserEmail == "" {
-		msg := "firstName, lastName and UserEmail cannot be empty"
+func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername string) (*models.CompanyClaManager, *models.ErrorResponse) {
+
+	re := regexp.MustCompile(`^\w{1,30}$`)
+	if !re.MatchString(*params.Body.FirstName) || !re.MatchString(*params.Body.LastName) {
+		msg := "Firstname and last Name values should not exceed 30 characters in length"
+		log.Warn(msg)
+		return nil, &models.ErrorResponse{
+			Message: msg,
+			Code:    "400",
+		}
+	}
+	if *params.Body.UserEmail == "" {
+		msg := "UserEmail cannot be empty"
 		log.Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
@@ -124,21 +138,47 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 			Code:    "400",
 		}
 	}
-	// Get user by firstname,lastname and email parameters
+	// Get user by email
 	userServiceClient := v2UserService.GetClient()
-	user, userErr := userServiceClient.SearchUserByEmail(*params.Body.UserEmail)
-
-	if userErr != nil {
-		designeeName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
-		designeeEmail := *params.Body.UserEmail
-		msg := fmt.Sprintf("User does not have an LFID account: %s.", *params.Body.UserEmail)
+	// Get Manager lf account by username. Used for email content
+	managerUser, mgrErr := userServiceClient.GetUserByUsername(authUsername)
+	if mgrErr != nil {
+		msg := fmt.Sprintf("Failed to get Lfx User with username : %s ", authUsername)
 		log.Warn(msg)
-		sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, authEmail, designeeName, designeeEmail)
+	}
+	// GetSF Org
+	orgClient := v2OrgService.GetClient()
+	organizationSF, orgErr := orgClient.GetOrganization(params.CompanySFID)
+	if orgErr != nil {
+		msg := buildErrorMessage("organization service lookup error", claGroupID, params, orgErr)
+		log.Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
 		}
 	}
+	acsClient := v2AcsService.GetClient()
+	user, userErr := userServiceClient.SearchUserByEmail(*params.Body.UserEmail)
+
+	if userErr != nil {
+		designeeName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
+		designeeEmail := *params.Body.UserEmail
+		msg := fmt.Sprintf("User does not have an LFID account and has been sent an email invite: %s.", *params.Body.UserEmail)
+		log.Warn(msg)
+		sendEmailErr := sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, *managerUser.Emails[0].EmailAddress, designeeName, designeeEmail, organizationSF.ID)
+		if sendEmailErr != nil {
+			emailMessage := fmt.Sprintf("Failed to send email to user : %s ", designeeEmail)
+			return nil, &models.ErrorResponse{
+				Message: emailMessage,
+				Code:    "400",
+			}
+		}
+		return nil, &models.ErrorResponse{
+			Message: msg,
+			Code:    "400",
+		}
+	}
+
 	// Check if user exists in easyCLA DB, if not add User
 	log.Debugf("Checking user: %s in easyCLA records", user.Username)
 	claUser, claUserErr := s.easyCLAUserService.GetUserByLFUserName(user.Username)
@@ -178,6 +218,17 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		log.Debugf("Created easyCLAUser %+v ", newUserModel)
 	}
 
+	// Check if user is part of org
+	log.Debugf("Check user: %s's organization ", user.Username)
+	if user.Account.ID != strings.TrimSpace(params.CompanySFID) {
+		msg := fmt.Sprintf("User : %s not in organization : %s ", user.Username, organizationSF.Name)
+		log.Warn(msg)
+		return nil, &models.ErrorResponse{
+			Message: msg,
+			Code:    "400",
+		}
+	}
+
 	// GetSFProject
 	ps := v2ProjectService.GetClient()
 	projectSF, projectErr := ps.GetProject(params.ProjectSFID)
@@ -192,7 +243,6 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 
 	log.Warn("Getting role")
 	// Get RoleID for cla-manager
-	acsClient := v2AcsService.GetClient()
 
 	roleID, roleErr := acsClient.GetRoleID("cla-manager")
 	if roleErr != nil {
@@ -206,7 +256,6 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	log.Debugf("Role ID for cla-manager-role : %s", roleID)
 	log.Debugf("Creating user role Scope for user : %s ", *params.Body.UserEmail)
 
-	orgClient := v2OrgService.GetClient()
 	hasScope, err := orgClient.IsUserHaveRoleScope("cla-manager", user.ID, params.CompanySFID, params.ProjectSFID)
 	if err != nil {
 		msg := buildErrorMessageCreate(params, err)
@@ -397,6 +446,9 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 	if scopeErr != nil {
 		msg := fmt.Sprintf("Problem creating projectOrg scope for email: %s , projectID: %s, companyID: %s", userEmail, projectID, companyID)
 		log.Warn(msg)
+		if _, ok := scopeErr.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
+			return nil, ErrRoleScopeConflict
+		}
 		return nil, scopeErr
 	}
 
@@ -501,11 +553,20 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 
 	userService := v2UserService.GetClient()
 	lfxUser, userErr := userService.SearchUserByEmail(userEmail)
+	// Get Manager lf account by username. Used for email content
+	managerUser, mgrErr := userService.GetUserByUsername(authUser.UserName)
+	if mgrErr != nil {
+		msg := fmt.Sprintf("Failed to get Lfx User with username : %s ", authUser.UserName)
+		log.Warn(msg)
+	}
 	if userErr != nil {
 		msg := fmt.Sprintf("EasyCLA - 404 Not Found - User: %s does not have an LFID ", userEmail)
 		log.Warn(msg)
 		// Send email
-		sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, authUser.Email, fullName, userEmail)
+		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, *managerUser.Emails[0].EmailAddress, fullName, userEmail, companyModel.ID)
+		if sendEmailErr != nil {
+			return nil, sendEmailErr
+		}
 		return nil, ErrNoLFID
 	}
 
@@ -609,7 +670,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	// Get suggested CLA Manager user details
 	user, userErr := userService.SearchUserByEmail(userEmail)
 	if userErr != nil {
-		msg := fmt.Sprintf("Problem getting user for userEmail: %s , error: %+v", userEmail, userErr)
+		msg := fmt.Sprintf("UserEmail: %s has no LFID and has been sent an invite email to create an account , error: %+v", userEmail, userErr)
 		log.Warn(msg)
 		return nil, &models.ErrorResponse{
 			Code:    "400",
@@ -697,7 +758,7 @@ func sendEmailToCLAManager(manager string, managerEmail string, contributorName 
 	support</a>.</p>
 	<p>Thanks,</p>
 	<p>EasyCLA support team </p>`,
-		manager, company, project, company)
+		manager, company, project, contributorName)
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
 		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
@@ -763,16 +824,14 @@ support</a>.</p>
 }
 
 // sendEmailToUserWithNoLFID helper function to send email to a given user with no LFID
-func sendEmailToUserWithNoLFID(projectName, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail string) {
+func sendEmailToUserWithNoLFID(projectName, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail, organizationID string) error {
 	// subject string, body string, recipients []string
 	subject := "EasyCLA: Invitation to create LFID and complete process of becoming CLA Manager"
-	recipients := []string{userWithNoLFIDEmail}
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the Project %s in the EasyCLA system.</p>
 <p>User %s (%s) was trying to add you as a CLA Manager for Project %s but was unable to identify your account details in
-the EasyCLA system. In order to become a CLA Manager for Project %s, you will need to create a LFID by 
-<a href="https://identity.linuxfoundation.org/" target="_blank">following this link</a> and establishing an account.
+the EasyCLA system. In order to become a CLA Manager for Project %s, you will need to accept invite below.
 Once complete, notify the user %s and they will be able to add you as a CLA Manager.</p>
 <p>If you need help or have questions about EasyCLA, you can
 <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
@@ -784,12 +843,12 @@ support</a>.</p>
 		requesterUsername, requesterEmail, projectName, projectName,
 		requesterUsername)
 
-	err := utils.SendEmail(subject, body, recipients)
-	if err != nil {
-		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
-	} else {
-		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	acsClient := v2AcsService.GetClient()
+	acsErr := acsClient.SendUserInvite(&userWithNoLFIDEmail, "contact", "organization", organizationID, "userinvite", &subject, &body)
+	if acsErr != nil {
+		return acsErr
 	}
+	return nil
 }
 
 // buildErrorMessage helper function to build an error message

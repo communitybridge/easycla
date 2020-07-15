@@ -58,7 +58,7 @@ func GetClient() *Client {
 
 // SendUserInvite invites users to the LFX platform
 func (ac *Client) SendUserInvite(email *string,
-	roleName string, scope string, organizationID string, inviteType string) error {
+	roleName string, scope string, organizationID string, inviteType string, subject *string, emailContent *string) error {
 	tok, err := token.GetToken()
 	if err != nil {
 		return err
@@ -74,12 +74,19 @@ func (ac *Client) SendUserInvite(email *string,
 		},
 		Context: context.Background(),
 	}
+	if subject != nil {
+		params.SendInvite.Subject = *subject
+	}
+	// Pass emailContent if passed in the args
+	if emailContent != nil {
+		params.SendInvite.Body = *emailContent
+	}
 	result, inviteErr := ac.cl.Invite.CreateUserInvite(params, clientAuth)
 	log.Debugf("CreateUserinvite called with args email: %s, scope: %s, roleName: %s, type: %s, scopeID: %s",
 		*email, scope, roleName, inviteType, organizationID)
 	if inviteErr != nil {
-		log.Error("CreateUserInvite failed", err)
-		return err
+		log.Error("CreateUserInvite failed", inviteErr)
+		return nil
 	}
 	log.Debugf("CreatedUserInvite :%+v", result.Payload)
 	return nil

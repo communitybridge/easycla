@@ -19,7 +19,7 @@ import (
 )
 
 // Configure sets up the middleware handlers
-func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository, LFXPortalURL string) {
+func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository, LFXPortalURL string) { // nolint
 
 	api.CompanyGetCompanyProjectClaManagersHandler = company.GetCompanyProjectClaManagersHandlerFunc(
 		func(params company.GetCompanyProjectClaManagersParams, authUser *auth.User) middleware.Responder {
@@ -126,6 +126,8 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 
 	api.CompanyCreateCompanyHandler = company.CreateCompanyHandlerFunc(
 		func(params company.CreateCompanyParams) middleware.Responder {
+			// No permissions needed - anyone can create a company
+
 			// Quick validation of the input parameters
 			if !utils.ValidCompanyName(*params.Input.CompanyName) {
 				return company.NewCreateCompanyBadRequest().WithPayload(&models.ErrorResponse{
@@ -144,6 +146,143 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				return company.NewCreateCompanyBadRequest().WithPayload(errorResponse(err))
 			}
 			return company.NewCreateCompanyOK().WithPayload(companyModel)
+		})
+
+	api.CompanyGetCompanyByNameHandler = company.GetCompanyByNameHandlerFunc(
+		func(params company.GetCompanyByNameParams, authUser *auth.User) middleware.Responder {
+			// Anyone can query for a company by name
+
+			companyModel, err := service.GetCompanyByName(params.CompanyName)
+			if err != nil {
+				log.Warnf("unable to locate company by name: %s, error: %+v", params.CompanyName, err)
+				return company.NewGetCompanyByNameBadRequest().WithPayload(errorResponse(err))
+			}
+
+			if companyModel == nil {
+				msg := fmt.Sprintf("unable to locate company by name: %s", params.CompanyName)
+				log.Warn(msg)
+				return company.NewGetCompanyByNameNotFound().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", msg),
+				})
+			}
+
+			return company.NewGetCompanyByNameOK().WithPayload(companyModel)
+		})
+
+	api.CompanyDeleteCompanyByIDHandler = company.DeleteCompanyByIDHandlerFunc(
+		func(params company.DeleteCompanyByIDParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+
+			// Attempt to locate the company by ID
+			companyModel, getErr := service.GetCompanyByID(params.CompanyID)
+			if getErr != nil {
+				msg := fmt.Sprintf("error returned from get company by ID: %s, error: %+v",
+					params.CompanyID, getErr)
+				log.Warn(msg)
+				return company.NewDeleteCompanyByIDBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
+				})
+			}
+
+			// Didn't find the company
+			if companyModel == nil {
+				msg := fmt.Sprintf("unable to locate company by ID: %s", params.CompanyID)
+				log.Warn(msg)
+				return company.NewDeleteCompanyByIDNotFound().WithPayload(&models.ErrorResponse{
+					Code:    "404",
+					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", msg),
+				})
+			}
+
+			// No external ID assigned - unable to check permissions
+			if companyModel.CompanyExternalID == "" {
+				msg := fmt.Sprintf("company %s does not have an external SFID assigned - unable to validate permissions, company ID: %s",
+					companyModel.CompanyName, params.CompanyID)
+				log.Warn(msg)
+				return company.NewDeleteCompanyByIDBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
+				})
+			}
+
+			// finally, we can check permissions for the delete operation
+			if !utils.IsUserAuthorizedForOrganization(authUser, companyModel.CompanyExternalID) {
+				msg := fmt.Sprintf(" user %s does not have access to company %s with Organization scope of %s",
+					authUser.UserName, companyModel.CompanyName, companyModel.CompanyExternalID)
+				log.Warn(msg)
+				return company.NewDeleteCompanyByIDForbidden().WithPayload(&models.ErrorResponse{
+					Code:    "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - %s", msg),
+				})
+			}
+
+			err := service.DeleteCompanyByID(params.CompanyID)
+			if err != nil {
+				log.Warnf("unable to delete company by ID: %s, error: %+v", params.CompanyID, err)
+				return company.NewDeleteCompanyByIDBadRequest().WithPayload(errorResponse(err))
+			}
+
+			return company.NewDeleteCompanyByIDNoContent()
+		})
+
+	api.CompanyDeleteCompanyBySFIDHandler = company.DeleteCompanyBySFIDHandlerFunc(
+		func(params company.DeleteCompanyBySFIDParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+
+			// Attempt to locate the company by external SFID
+			companyModel, getErr := service.GetCompanyBySFID(params.CompanySFID)
+			if getErr != nil {
+				msg := fmt.Sprintf("error returned from get company by SFID: %s, error: %+v",
+					params.CompanySFID, getErr)
+				log.Warn(msg)
+				return company.NewDeleteCompanyBySFIDBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
+				})
+			}
+
+			// Didn't find the company
+			if companyModel == nil {
+				msg := fmt.Sprintf("unable to locate company by SFID: %s", params.CompanySFID)
+				log.Warn(msg)
+				return company.NewDeleteCompanyBySFIDNotFound().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", msg),
+				})
+			}
+
+			// This should never ever happen given we searched by this key, keep it here anyway
+			// No external ID assigned - unable to check permissions
+			if companyModel.CompanyExternalID == "" {
+				msg := fmt.Sprintf("company %s does not have an external SFID assigned - unable to validate permissions, company ID: %s",
+					companyModel.CompanyName, params.CompanySFID)
+				log.Warn(msg)
+				return company.NewDeleteCompanyBySFIDBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
+				})
+			}
+
+			// finally, we can check permissions for the delete operation
+			if !utils.IsUserAuthorizedForOrganization(authUser, companyModel.CompanyExternalID) {
+				msg := fmt.Sprintf(" user %s does not have access to company %s with Organization scope of %s",
+					authUser.UserName, companyModel.CompanyName, companyModel.CompanyExternalID)
+				log.Warn(msg)
+				return company.NewDeleteCompanyBySFIDForbidden().WithPayload(&models.ErrorResponse{
+					Code:    "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - %s", msg),
+				})
+			}
+
+			err := service.DeleteCompanyBySFID(params.CompanySFID)
+			if err != nil {
+				log.Warnf("unable to delete company by SFID: %s, error: %+v", params.CompanySFID, err)
+				return company.NewDeleteCompanyBySFIDBadRequest().WithPayload(errorResponse(err))
+			}
+
+			return company.NewDeleteCompanyBySFIDNoContent()
 		})
 }
 

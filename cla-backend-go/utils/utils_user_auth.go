@@ -3,7 +3,9 @@
 
 package utils
 
-import "github.com/LF-Engineering/lfx-kit/auth"
+import (
+	"github.com/LF-Engineering/lfx-kit/auth"
+)
 
 // IsUserAdmin helper function for determining if the user is an admin
 func IsUserAdmin(user *auth.User) bool {

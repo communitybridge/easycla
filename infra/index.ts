@@ -294,6 +294,7 @@ function buildCompaniesTable(importResources: boolean): aws.dynamodb.Table {
       attributes: [
         { name: 'company_id', type: 'S' },
         { name: 'company_external_id', type: 'S' },
+        { name: 'company_name', type: 'S' },
       ],
       hashKey: 'company_id',
       billingMode: 'PAY_PER_REQUEST',
@@ -303,6 +304,11 @@ function buildCompaniesTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'external-company-index',
           hashKey: 'company_external_id',
+          projectionType: 'ALL',
+        },
+        {
+          name: 'company-name-index',
+          hashKey: 'company_name',
           projectionType: 'ALL',
         },
       ],

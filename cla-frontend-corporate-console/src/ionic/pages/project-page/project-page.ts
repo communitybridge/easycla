@@ -1,15 +1,15 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {AlertController, IonicPage, ModalController, NavController, NavParams, ViewController} from 'ionic-angular';
-import {ClaService} from '../../services/cla.service';
-import {ClaCompanyModel} from '../../models/cla-company';
-import {ClaUserModel} from '../../models/cla-user';
-import {ClaSignatureModel} from '../../models/cla-signature';
-import {ClaManager} from '../../models/cla-manager';
-import {SortService} from '../../services/sort.service';
-import {Restricted} from '../../decorators/restricted';
+import { Component } from '@angular/core';
+import { AlertController, IonicPage, ModalController, NavController, NavParams, ViewController } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
+import { ClaCompanyModel } from '../../models/cla-company';
+import { ClaUserModel } from '../../models/cla-user';
+import { ClaSignatureModel } from '../../models/cla-signature';
+import { ClaManager } from '../../models/cla-manager';
+import { SortService } from '../../services/sort.service';
+import { Restricted } from '../../decorators/restricted';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -44,7 +44,7 @@ export class ProjectPage {
   pendingCLAManagerRequests: any[];
   approvedCLAManagerRequests: any[];
   deniedCLAManagerRequests: any[];
-
+  title: string;
   project: any;
   userEmail: any;
   sort: any;
@@ -97,6 +97,7 @@ export class ProjectPage {
       this.loading.projects = false;
       this.project = response;
       this.projectName = this.project.project_name;
+      this.getTitle();
       this.getProjectSignatures();
     });
   }
@@ -104,8 +105,19 @@ export class ProjectPage {
   getCompany() {
     this.claService.getCompany(this.companyId).subscribe((response) => {
       this.company = response;
+      this.getTitle();
       this.getManager(this.company.company_manager_id);
     });
+  }
+
+  getTitle() {
+    this.title = '';
+    if (this.company.company_name) {
+      this.title += this.company.company_name;
+    }
+    if (this.projectName) {
+      this.title += '-' + this.projectName + ' Signatures'
+    }
   }
 
   getCLAManagers() {
@@ -424,11 +436,11 @@ export class ProjectPage {
   approveCLAManagerRequest(companyID: string, companyName: string, projectID, projectName: string, requestID: string) {
     let alert = this.alertCtrl.create({
       subTitle: `Approve Request - Confirmation`,
-      message: `This will dismiss this pending CLA Manager request and send all the CLA Managers for ${companyName} `+
+      message: `This will dismiss this pending CLA Manager request and send all the CLA Managers for ${companyName} ` +
         `for project ${projectName} ` +
-        'an email confirming that this user will now have CLA Manager authority. '+
-        'Additionally, the new CLA Manager will also receive an email with instructions '+
-        'on how to login, view and manage the approval lists.'+
+        'an email confirming that this user will now have CLA Manager authority. ' +
+        'Additionally, the new CLA Manager will also receive an email with instructions ' +
+        'on how to login, view and manage the approval lists.' +
         '<br/><br/>Are you sure you want to approve this request?',
       buttons: [
         {

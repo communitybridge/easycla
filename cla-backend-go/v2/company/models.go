@@ -15,7 +15,6 @@ type service struct {
 	projectRepo          ProjectRepo
 	userRepo             users.UserRepository
 	companyRepo          company.IRepository
-	repo                 IRepository
 	projectClaGroupsRepo projects_cla_groups.Repository
 }
 
@@ -26,6 +25,8 @@ type claGroupModel struct {
 	ProjectType  string
 	SubProjects  []string
 	ClaGroupName string
+	IclaEnabled  bool
+	CclaEnabled  bool
 
 	// For processing
 	FoundationSFID string

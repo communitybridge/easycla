@@ -153,6 +153,7 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-company-initial-manager-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-project-id-sigtype-signed-approved-id-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-companies/index/external-company-index"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-companies/index/company-name-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/external-project-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/project-name-search-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/project-name-lower-search-index"
@@ -224,8 +225,8 @@ provider:
     PLATFORM_AUTH0_CLIENT_SECRET: ${file(./env.json):cla-auth0-platform-client-secret, ssm:/cla-auth0-platform-client-secret-${opt:stage}}
     PLATFORM_AUTH0_AUDIENCE: ${file(./env.json):cla-auth0-platform-audience, ssm:/cla-auth0-platform-audience-${opt:stage}}
     PLATFORM_GATEWAY_URL: ${file(./env.json):platform-gateway-url, ssm:/cla-auth0-platform-api-gw-${opt:stage}}
-    # Enable API Debugging for Core Platform Services
-    DEBUG: true
+    # Set to true for verbose API logging - useful when Debugging API calls for Core Platform Services or other external services
+    DEBUG: false
 
   stackTags:
     Name: ${self:service}

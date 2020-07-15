@@ -88,27 +88,44 @@ func (s *service) ValidateCLAGroup(input *models.ClaGroupValidationRequest) (boo
 	return valid, validationErrors
 }
 
-func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) error {
+// validateClaGroupInput validates the cla group input. It there is validation error then it returns the error
+// if foundation_sfid is root project i.e project without parent and if it does not have subprojects then return boolean
+// flag would be true
+func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool, error) {
 	if !input.IclaEnabled && !input.CclaEnabled {
-		return fmt.Errorf("bad request: can not create cla group with both icla and ccla disabled")
+		return false, fmt.Errorf("bad request: can not create cla group with both icla and ccla disabled")
 	}
 	if input.CclaRequiresIcla {
 		if !(input.IclaEnabled && input.CclaEnabled) {
-			return fmt.Errorf("bad request: ccla_requires_icla can not be enabled if one of icla/ccla is disabled")
+			return false, fmt.Errorf("bad request: ccla_requires_icla can not be enabled if one of icla/ccla is disabled")
 		}
 	}
 	claGroupModel, err := s.v1ProjectService.GetProjectByName(input.ClaGroupName)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if claGroupModel != nil {
-		return fmt.Errorf("bad request: cla_group with name %s already exist", input.ClaGroupName)
+		return false, fmt.Errorf("bad request: cla_group with name %s already exist", input.ClaGroupName)
+	}
+
+	psc := v2ProjectService.GetClient()
+	rootProjectDetails, err := psc.GetProject(input.FoundationSfid)
+	if err != nil {
+		return false, err
+	}
+
+	if rootProjectDetails.Parent == "" && len(rootProjectDetails.Projects) == 0 {
+		// this is standalone project
+		if len(input.ProjectSfidList) != 0 {
+			return false, fmt.Errorf("bad request: invalid project_sfid_list. This project does not have subprojects")
+		}
+		return true, nil
 	}
 	err = s.validateEnrollProjectsInput(input.FoundationSfid, input.ProjectSfidList)
 	if err != nil {
-		return err
+		return false, err
 	}
-	return nil
+	return false, nil
 }
 
 func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFIDList []string) error {
@@ -119,19 +136,21 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFID
 	}
 
 	// fetch foundation and its sub projects
-	foundationProjectDetails, err := psc.GetProject(foundationSFID)
+	rootProjectDetails, err := psc.GetProject(foundationSFID)
 	if err != nil {
 		return err
 	}
 
-	// check if it is foundation
-	if foundationProjectDetails.ProjectType != "Foundation" {
-		return fmt.Errorf("bad request: invalid foundation_sfid: %s", foundationSFID)
+	if rootProjectDetails.Parent != "" {
+		return fmt.Errorf("bad request: invalid input foundation_sfid. It have parent project")
+	}
+	if len(rootProjectDetails.Projects) == 0 {
+		return fmt.Errorf("bad request: invalid input to enroll projects. project does not have subprojects")
 	}
 
 	// check if all enrolled projects are part of foundation
 	foundationProjectList := utils.NewStringSet()
-	for _, pr := range foundationProjectDetails.Projects {
+	for _, pr := range rootProjectDetails.Projects {
 		foundationProjectList.Add(pr.ID)
 	}
 	for _, projectSFID := range projectSFIDList {
@@ -180,7 +199,7 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 	f := logrus.Fields{"function": "CreateCLAGroup"}
 	// Validate the input
 	log.WithFields(f).WithField("input", input).Debugf("validating create cla group input")
-	err := s.validateClaGroupInput(input)
+	standaloneProject, err := s.validateClaGroupInput(input)
 	if err != nil {
 		log.WithFields(f).Warnf("validation of create cla group input failed")
 		return nil, err
@@ -231,6 +250,12 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 	log.WithFields(f).Debug("cla_group_template attached", pdfUrls)
 
 	// Associate projects with cla group
+
+	if standaloneProject {
+		// for standalone project, root_project_sfid i.e foundation_sfid and project_sfid
+		// would be same
+		input.ProjectSfidList = append(input.ProjectSfidList, input.FoundationSfid)
+	}
 	err = s.enrollProjects(claGroup.ProjectID, input.FoundationSfid, input.ProjectSfidList)
 	if err != nil {
 		log.WithFields(f).Debug("deleting created cla group")
@@ -241,10 +266,18 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 		return nil, err
 	}
 
+	subProjectList, err := s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(input.FoundationSfid)
+	if err != nil {
+		return nil, err
+	}
+	var foundationName string
 	projectList := make([]*models.ClaGroupProject, 0)
-	for _, p := range input.ProjectSfidList {
+	for _, p := range subProjectList {
+		foundationName = p.FoundationName
 		projectList = append(projectList, &models.ClaGroupProject{
-			ProjectSfid: p,
+			ProjectName:       p.ProjectName,
+			ProjectSfid:       p.ProjectSFID,
+			RepositoriesCount: 0,
 		})
 	}
 
@@ -256,6 +289,7 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 		ClaGroupID:          claGroup.ProjectID,
 		ClaGroupName:        claGroup.ProjectName,
 		FoundationSfid:      claGroup.FoundationSFID,
+		FoundationName:      foundationName,
 		IclaEnabled:         claGroup.ProjectICLAEnabled,
 		IclaPdfURL:          pdfUrls.IndividualPDFURL,
 		ProjectList:         projectList,

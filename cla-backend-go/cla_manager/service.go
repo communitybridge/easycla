@@ -197,23 +197,14 @@ func (s service) AddClaManager(companyID string, projectID string, LFID string) 
 	}
 
 	// Look up signature ACL to ensure the user can add cla manager
-	sigModels, sigErr := s.sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
-		HTTPRequest: nil,
-		CompanyID:   companyID,
-		ProjectID:   projectID,
-		NextKey:     nil,
-		PageSize:    aws.Int64(5),
-	})
-	if sigErr != nil || sigModels == nil {
+
+	signed := true
+	approved := true
+	sigModel, sigErr := s.sigService.GetProjectCompanySignature(companyID, projectID, &signed, &approved, nil, aws.Int64(5))
+	if sigErr != nil || sigModel == nil {
 		return nil, sigErr
 	}
 
-	if len(sigModels.Signatures) > 1 {
-		log.Warnf("returned multiple CCLA signature models for company ID: %s, project ID: %s",
-			companyID, projectID)
-	}
-
-	sigModel := sigModels.Signatures[0]
 	claManagers := sigModel.SignatureACL
 
 	log.Debugf("Got Company signatures - Company: %s , Project: %s , signatureID: %s ",
@@ -252,9 +243,11 @@ func (s service) AddClaManager(companyID string, projectID string, LFID string) 
 		UserModel:         userModel,
 		ExternalProjectID: projectModel.ProjectExternalID,
 		EventData: &events.CLAManagerCreatedEventData{
-			UserName:  userModel.Username,
-			UserEmail: userModel.LfEmail,
-			UserLFID:  userModel.LfUsername,
+			CompanyName: companyModel.CompanyName,
+			ProjectName: projectModel.ProjectName,
+			UserName:    userModel.Username,
+			UserEmail:   userModel.LfEmail,
+			UserLFID:    userModel.LfUsername,
 		},
 	})
 
@@ -301,27 +294,10 @@ func (s service) RemoveClaManager(companyID string, projectID string, LFID strin
 		return nil, projectErr
 	}
 
-	// Look up signature ACL to ensure the user can remove given cla manager
-	sigModels, sigErr := s.sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
-		HTTPRequest: nil,
-		CompanyID:   companyID,
-		ProjectID:   projectID,
-		NextKey:     nil,
-		PageSize:    aws.Int64(5),
-	})
-	if sigErr != nil || sigModels == nil {
-		log.Warnf("Unable to lookup project company signature using Project ID: %s, Company ID: %s, error: %+v",
-			projectID, companyID, sigErr)
-		return nil, sigErr
-	}
-
-	if len(sigModels.Signatures) > 1 {
-		log.Warnf("returned multiple CCLA signature models for company ID: %s, project ID: %s",
-			companyID, projectID)
-	}
-
-	sigModel, sigErr := s.getCompanySignature(companyID, projectID)
-	if sigErr != nil {
+	signed := true
+	approved := true
+	sigModel, sigErr := s.sigService.GetProjectCompanySignature(companyID, projectID, &signed, &approved, nil, aws.Int64(5))
+	if sigErr != nil || sigModel == nil {
 		return nil, sigErr
 	}
 

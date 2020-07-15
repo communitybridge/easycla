@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 package cla_groups
 
 import (
@@ -19,6 +22,7 @@ import (
 
 // Configure configures the cla group api
 func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1Project.Service, eventsService events.Service) {
+
 	api.ClaGroupCreateClaGroupHandler = cla_group.CreateClaGroupHandlerFunc(func(params cla_group.CreateClaGroupParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !utils.IsUserAuthorizedForProject(authUser, params.ClaGroupInput.FoundationSfid) {
@@ -44,11 +48,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:  events.ProjectCreated,
+			EventType:  events.CLAGroupCreated,
 			ProjectID:  claGroup.ClaGroupID,
 			LfUsername: authUser.UserName,
-			EventData:  &events.ProjectCreatedEventData{},
+			EventData:  &events.CLAGroupCreatedEventData{},
 		})
+
 		return cla_group.NewCreateClaGroupOK().WithPayload(claGroup)
 	})
 
@@ -64,8 +69,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				})
 			}
 			return cla_group.NewDeleteClaGroupInternalServerError().WithPayload(&models.ErrorResponse{
-				Code:    "400",
-				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+				Code: "500",
+				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - unable to lookup CLA Group by ID, error = %+v",
+					err),
 			})
 		}
 		if !utils.IsUserAuthorizedForProject(authUser, cg.FoundationSFID) {
@@ -83,12 +89,14 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
 			})
 		}
+
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.ProjectDeleted,
+			EventType:    events.CLAGroupDeleted,
 			ProjectModel: cg,
 			LfUsername:   authUser.UserName,
-			EventData:    &events.ProjectDeletedEventData{},
+			EventData:    &events.CLAGroupDeletedEventData{},
 		})
+
 		return cla_group.NewDeleteClaGroupNoContent()
 	})
 
@@ -129,14 +137,17 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
 			})
 		}
+
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.ProjectUpdated,
+			EventType:    events.CLAGroupUpdated,
 			ProjectModel: cg,
 			LfUsername:   authUser.UserName,
-			EventData:    &events.ProjectUpdatedEventData{},
+			EventData:    &events.CLAGroupUpdatedEventData{},
 		})
+
 		return cla_group.NewEnrollProjectsOK()
 	})
+
 	api.ClaGroupListClaGroupsUnderFoundationHandler = cla_group.ListClaGroupsUnderFoundationHandlerFunc(func(params cla_group.ListClaGroupsUnderFoundationParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
@@ -156,6 +167,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		}
 		return cla_group.NewListClaGroupsUnderFoundationOK().WithPayload(result)
 	})
+
 	api.ClaGroupValidateClaGroupHandler = cla_group.ValidateClaGroupHandlerFunc(func(params cla_group.ValidateClaGroupParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
@@ -167,6 +179,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			ValidationErrors: validationErrors,
 		})
 	})
+
 	api.FoundationListFoundationClaGroupsHandler = foundation.ListFoundationClaGroupsHandlerFunc(func(params foundation.ListFoundationClaGroupsParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		result, err := service.ListAllFoundationClaGroups(params.FoundationSFID)
