@@ -6,7 +6,9 @@ package cla_groups
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
@@ -426,6 +428,18 @@ func (s *service) ListClaGroupsUnderFoundation(foundationSFID string) (*models.C
 		}
 		out.List = append(out.List, cg)
 	}
+
+	// Sort the response based on the Foundation and CLA group name
+	sort.Slice(out.List, func(i, j int) bool {
+		switch strings.Compare(out.List[i].FoundationName, out.List[j].FoundationName) {
+		case -1:
+			return true
+		case 1:
+			return false
+		}
+		return out.List[i].ClaGroupName > out.List[j].ClaGroupName
+	})
+
 	return out, nil
 }
 
