@@ -9,6 +9,7 @@ import { ClaUserModel } from '../../models/cla-user';
 import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+import Timer = NodeJS.Timer;
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -35,7 +36,9 @@ export class CompanyPage {
   loading: any;
   invites: any;
   claManagerRequests: any;
-
+  fetchProjectInterval: Timer = null;
+  intervalCount = 0;
+  maxIntervalCount = 5; //Max 20 to 25 sec required to update new signed project in database.
   data: any;
   columns: any[];
   rows: any[] = [];
@@ -77,8 +80,16 @@ export class CompanyPage {
 
   ngOnInit() {
     this.getCompany();
-    this.getCompanySignatures();
+    this.fetchCompanyProjectsInInterval(); //To handled issue Docusign take some time to update records in database.
     this.getCompanyInvites();
+  }
+
+  fetchCompanyProjectsInInterval() {
+    const obj = this;
+    this.fetchProjectInterval = setInterval(() => {
+      obj.intervalCount++;
+      this.getCompanySignatures();
+    }, 5000);
   }
 
   getCompany() {
@@ -95,6 +106,9 @@ export class CompanyPage {
   }
 
   getCompanySignatures() {
+    if (this.intervalCount === this.maxIntervalCount) {
+      clearInterval(this.fetchProjectInterval);
+    }
     this.loading.projects = true;
     this.claService.getCompanySignatures(this.companyId).subscribe(
       (response) => {
@@ -116,15 +130,26 @@ export class CompanyPage {
 
   getProject(signature) {
     this.claService.getProject(signature.projectID).subscribe((response) => {
-      this.rows.push({
-        ProjectID: response.project_id,
-        ProjectName: response.project_name !== undefined ? response.project_name : '',
-        ProjectManagers: signature.signatureACL,
-        Status: this.getStatus(response.project_id, this.rows.length),
-        PendingContributorRequests: this.getPendingContributorRequests(response.project_id, this.rows.length),
-        PendingCLAManagerRequests: this.getPendingCLAManagerRequests(response.project_id, this.rows.length),
-      });
+      if (!this.hasProjectExist(response.project_id)) {
+        this.rows.push({
+          ProjectID: response.project_id,
+          ProjectName: response.project_name !== undefined ? response.project_name : '',
+          ProjectManagers: signature.signatureACL,
+          Status: this.getStatus(response.project_id, this.rows.length),
+          PendingContributorRequests: this.getPendingContributorRequests(response.project_id, this.rows.length),
+          PendingCLAManagerRequests: this.getPendingCLAManagerRequests(response.project_id, this.rows.length),
+        });
+      }
     });
+  }
+
+  hasProjectExist(ProjectId) {
+    for (const project of this.rows) {
+      if (project.ProjectID === ProjectId) {
+        return true;
+      }
+    }
+    return false;
   }
 
   sortData() {
