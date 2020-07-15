@@ -2666,10 +2666,19 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         return signatures
 
     def get_projects_by_company_signed(self, company_id):
-        # Query returns all the signatures that the company has signed a CCLA for.
+        # Query returns all the signatures that the company has an approved and signed a CCLA for.
         # Loop through the signatures and retrieve only the project IDs referenced by the signatures.
+        # Company Signatures
+        signature_attributes = {
+            "signature_signed": True,
+            "signature_approved": True,
+            "signature_type": 'ccla',
+            "signature_reference_type": 'company',
+        }
+        filter_condition = create_filter(signature_attributes, SignatureModel)
         signature_generator = self.model.signature_reference_index.query(
-            company_id, SignatureModel.signature_signed.exists(),
+            company_id,
+            filter_condition=filter_condition & (SignatureModel.signature_user_ccla_company_id.does_not_exist())
         )
         project_ids = []
         for signature in signature_generator:
