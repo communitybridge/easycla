@@ -437,7 +437,7 @@ func (s *service) ListClaGroupsUnderFoundation(foundationSFID string) (*models.C
 		case 1:
 			return false
 		}
-		return out.List[i].ClaGroupName > out.List[j].ClaGroupName
+		return out.List[i].ClaGroupName < out.List[j].ClaGroupName
 	})
 
 	return out, nil
