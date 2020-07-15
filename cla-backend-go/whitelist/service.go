@@ -300,15 +300,12 @@ func (s service) sendRequestApprovedEmailToRecipient(companyModel *models.Compan
 	projectName := projectModel.ProjectName
 
 	// subject string, body string, recipients []string
-	subject := fmt.Sprintf("EasyCLA: CLA Manager Access Approved for %s", projectName)
+	subject := fmt.Sprintf("EasyCLA: Contributor Access Approved for %s", projectName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
-<p>You have now been approved as a CLA Manager from %s for the project %s.
-This means that you can now maintain the list of employees allowed to contribute
-to %s on behalf of your company, as well as the list of your company’s CLA
-Managers for %s. </p>
+<p>You have now been approved as a contributor from %s for the project %s.</p>
 <p>To get started, please log into the EasyCLA Corporate Console at 
 https://%s, and select your company and then the project %s. From here you will
 be able to edit the list of approved employees and CLA Managers.
@@ -320,7 +317,7 @@ support</a>.</p>
 <p>Thanks,</p>
 <p>EasyCLA support team</p>`,
 		recipientName, projectName,
-		companyName, projectName, projectName, projectName,
+		companyName, projectName,
 		s.corpConsoleURL, projectName)
 
 	err := utils.SendEmail(subject, body, recipients)
