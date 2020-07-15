@@ -911,6 +911,8 @@ class ProjectModel(BaseModel):
     project_icla_enabled = BooleanAttribute(default=True)
     project_ccla_enabled = BooleanAttribute(default=True)
     project_ccla_requires_icla_signature = BooleanAttribute(default=False)
+    foundation_sfid = UnicodeAttribute(null=True)
+    root_project_repositories_count = NumberAttribute(null=True)
     # Indexes
     project_external_id_index = ExternalProjectIndex()
     project_name_search_index = ProjectNameIndex()
@@ -951,7 +953,8 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def __str__(self):
         return (
-            "id: {}, name: {}, project_name_lower: {},external id: {}, icla enabled: {}, " "ccla enabled: {}, requires icla: {}, acl: {}"
+            "id: {}, name: {}, project_name_lower: {},external id: {}, icla enabled: {}, " "ccla enabled: {}, requires icla: {}, acl: {}," +
+            " foundation_sfid: {}, root_project_repositories_count: {}"
         ).format(
             self.model.project_id,
             self.model.project_name,
@@ -961,6 +964,8 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
             self.model.project_ccla_enabled,
             self.model.project_ccla_requires_icla_signature,
             self.model.project_acl,
+            self.model.foundation_sfid,
+            self.model.root_project_repositories_count,
         )
 
     def to_dict(self):
@@ -1003,6 +1008,12 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def get_project_id(self):
         return self.model.project_id
+
+    def get_foundation_sfid(self):
+        return self.model.foundation_sfid
+
+    def get_root_project_repositories_count(self):
+        return self.model.root_project_repositories_count
 
     def get_project_external_id(self):
         return self.model.project_external_id
@@ -1128,6 +1139,12 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def set_project_id(self, project_id):
         self.model.project_id = str(project_id)
+
+    def set_foundation_sfid(self, foundation_sfid):
+        self.model.foundation_sfid = str(foundation_sfid)
+
+    def set_root_project_repositories_count(self, root_project_repositories_count):
+        self.model.root_project_repositories_count = root_project_repositories_count
 
     def set_project_external_id(self, project_external_id):
         self.model.project_external_id = str(project_external_id)
@@ -1811,6 +1828,7 @@ class RepositoryModel(BaseModel):
     repository_external_id = UnicodeAttribute(null=True)
     repository_project_index = ProjectRepositoryIndex()
     repository_sfdc_id = UnicodeAttribute(null=True)
+    project_sfid = UnicodeAttribute(null=True)
     repository_external_index = ExternalRepositoryIndex()
     repository_sfdc_index = SFDCRepositoryIndex()
 
@@ -1836,6 +1854,7 @@ class Repository(model_interfaces.Repository):
         self.model.repository_id = repository_id
         self.model.repository_project_id = repository_project_id
         self.model.repository_sfdc_id = repository_sfdc_id
+        self.model.project_sfid = repository_sfdc_id
         self.model.repository_name = repository_name
         self.model.repository_type = repository_type
         self.model.repository_url = repository_url
@@ -1879,6 +1898,9 @@ class Repository(model_interfaces.Repository):
     def get_repository_sfdc_id(self):
         return self.model.repository_sfdc_id
 
+    def get_project_sfid(self):
+        return self.model.project_sfid
+
     def get_repository_organization_name(self):
         return self.model.repository_organization_name
 
@@ -1902,6 +1924,10 @@ class Repository(model_interfaces.Repository):
 
     def set_repository_sfdc_id(self, repository_sfdc_id):
         self.model.repository_sfdc_id = str(repository_sfdc_id)
+        self.set_project_sfid(str(repository_sfdc_id))
+
+    def set_project_sfid(self, project_sfid):
+        self.model.project_sfid = str(project_sfid)
 
     def set_repository_organization_name(self, organization_name):
         self.model.repository_organization_name = organization_name
@@ -2003,6 +2029,7 @@ class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     signature_signed = BooleanAttribute(default=False)
     # Signed on date/time
     signed_on = UnicodeAttribute(null=True)
+    signatory_name = UnicodeAttribute(null=True)
     # Encoded string for searching
     # eg: icla#true#true#123abd-sadf0-458a-adba-a9393939393
     sigtype_signed_approved_id = UnicodeAttribute(null=True)
@@ -2061,6 +2088,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             signature_signed=False,
             signature_approved=False,
             signed_on=None,
+            signatory_name=None,
             sigtype_signed_approved_id=None,
             signature_sign_url=None,
             signature_return_url=None,
@@ -2101,6 +2129,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         self.model.signature_type = signature_type
         self.model.signature_signed = signature_signed
         self.model.signed_on = signed_on
+        self.model.signatory_name = signatory_name
         self.model.sigtype_signed_approved_id = sigtype_signed_approved_id
         self.model.signature_approved = signature_approved
         self.model.signature_sign_url = signature_sign_url
@@ -2130,7 +2159,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         return (
             "id: {}, project id: {}, reference id: {}, reference name: {}, reference name lower: {}, "
             "reference type: {}, "
-            "user cla company id: {}, signed: {}, signed_on: {}, sigtype_signed_approved_id: {}, "
+            "user cla company id: {}, signed: {}, signed_on: {}, signatory_name: {}, sigtype_signed_approved_id: {}, "
             "approved: {}, domain whitelist: {}, "
             "email whitelist: {}, github user whitelist: {}, github domain whitelist: {}, "
             "note: {},signature project external id: {}, signature company signatory id: {}, "
@@ -2148,6 +2177,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             self.model.signature_user_ccla_company_id,
             self.model.signature_signed,
             self.model.signed_on,
+            self.model.signatory_name,
             self.model.sigtype_signed_approved_id,
             self.model.signature_approved,
             self.model.domain_whitelist,
@@ -2207,6 +2237,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def get_signed_on(self):
         return self.model.signed_on
+
+    def get_signatory_name(self):
+        return self.model.signatory_name
 
     def get_sigtype_signed_approved_id(self):
         return self.model.sigtype_signed_approved_id
@@ -2319,6 +2352,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def set_signed_on(self, signed_on):
         self.model.signed_on = signed_on
+
+    def set_signatory_name(self, signatory_name):
+        self.model.signatory_name = signatory_name
 
     def set_sigtype_signed_approved_id(self, sigtype_signed_approved_id):
         self.model.sigtype_signed_approved_id = sigtype_signed_approved_id
@@ -3102,6 +3138,7 @@ class GitHubOrgModel(BaseModel):
     organization_name_lower = UnicodeAttribute(null=True)
     organization_installation_id = NumberAttribute(null=True)
     organization_sfid = UnicodeAttribute()
+    project_sfid = UnicodeAttribute()
     organization_sfid_index = GithubOrgSFIndex()
     organization_project_id = UnicodeAttribute(null=True)
     organization_company_id = UnicodeAttribute(null=True)
@@ -3122,6 +3159,7 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
             self.model.organization_name_lower = self.model.organization_name.lower()
         self.model.organization_installation_id = organization_installation_id
         self.model.organization_sfid = organization_sfid
+        self.model.project_sfid = organization_sfid
 
     def __str__(self):
         return (
@@ -3162,6 +3200,9 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
     def get_organization_sfid(self):
         return self.model.organization_sfid
 
+    def get_project_sfid(self):
+        return self.model.project_sfid
+
     def get_organization_name_lower(self):
         return self.model.organization_name_lower
 
@@ -3178,6 +3219,10 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
 
     def set_organization_sfid(self, organization_sfid):
         self.model.organization_sfid = organization_sfid
+        self.set_project_sfid(organization_sfid)
+
+    def set_project_sfid(self, project_sfid):
+        self.model.project_sfid = project_sfid
 
     def set_organization_name_lower(self, organization_name_lower):
         self.model.organization_name_lower = organization_name_lower

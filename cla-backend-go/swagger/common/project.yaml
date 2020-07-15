@@ -9,6 +9,9 @@ properties:
   foundationSFID:
     description: the foundation sfid of the project
     type: string
+  rootProjectRepositoriesCount:
+    description: number of repositories configured from root project/foundation
+    type: integer
   projectDescription:
     description: description about the cla group
     type: string

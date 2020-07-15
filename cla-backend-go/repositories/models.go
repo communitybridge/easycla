@@ -17,6 +17,7 @@ type GithubRepository struct {
 	RepositorySfdcID           string `json:"repository_sfdc_id,omitempty"`
 	RepositoryType             string `json:"repository_type,omitempty"`
 	RepositoryURL              string `json:"repository_url,omitempty"`
+	ProjectSFID                string `json:"project_sfid,omitempty"`
 	Version                    string `json:"version,omitempty"`
 }
 
@@ -32,6 +33,7 @@ func (gr *GithubRepository) toModel() *models.GithubRepository {
 		RepositorySfdcID:           gr.RepositorySfdcID,
 		RepositoryType:             gr.RepositoryType,
 		RepositoryURL:              gr.RepositoryURL,
+		ProjectSFID:                gr.ProjectSFID,
 		Version:                    gr.Version,
 	}
 }
