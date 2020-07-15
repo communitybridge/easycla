@@ -390,6 +390,9 @@ func (s *service) ListClaGroupsUnderFoundation(foundationSFID string) (*models.C
 			CclaPdfURL:          getS3Url(v1ClaGroup.ProjectID, v1ClaGroup.ProjectCorporateDocuments),
 			IclaPdfURL:          getS3Url(v1ClaGroup.ProjectID, v1ClaGroup.ProjectIndividualDocuments),
 			ProjectList:         make([]*models.ClaGroupProject, 0),
+			// Add root_project_repositories_count to repositories_count initially
+			RepositoriesCount:            v1ClaGroup.RootProjectRepositoriesCount,
+			RootProjectRepositoriesCount: v1ClaGroup.RootProjectRepositoriesCount,
 		}
 		claGroupIDList.Add(cg.ClaGroupID)
 		m[cg.ClaGroupID] = cg

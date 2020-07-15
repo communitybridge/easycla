@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	claevent "github.com/communitybridge/easycla/cla-backend-go/events"
+	"github.com/communitybridge/easycla/cla-backend-go/project"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 
 	"github.com/communitybridge/easycla/cla-backend-go/company"
@@ -38,6 +39,7 @@ type service struct {
 	companyRepo          company.IRepository
 	projectsClaGroupRepo projects_cla_groups.Repository
 	eventsRepo           claevent.Repository
+	projectRepo          project.ProjectRepository
 }
 
 // Service implements DynamoDB stream event handler service
@@ -46,16 +48,19 @@ type Service interface {
 }
 
 // NewService creates DynamoDB stream event handler service
-func NewService(stage string, signatureRepo signatures.SignatureRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository, eventsRepo claevent.Repository) Service {
+func NewService(stage string, signatureRepo signatures.SignatureRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository, eventsRepo claevent.Repository, projectRepo project.ProjectRepository) Service {
 	SignaturesTable := fmt.Sprintf("cla-%s-signatures", stage)
 	eventsTable := fmt.Sprintf("cla-%s-events", stage)
 	projectsCLAGroupsTable := fmt.Sprintf("cla-%s-projects-cla-groups", stage)
+	repositoryTableName := fmt.Sprintf("cla-%s-repositories", stage)
+
 	s := &service{
 		functions:            make(map[string][]EventHandlerFunc),
 		signatureRepo:        signatureRepo,
 		companyRepo:          companyRepo,
 		projectsClaGroupRepo: pcgRepo,
 		eventsRepo:           eventsRepo,
+		projectRepo:          projectRepo,
 	}
 	s.registerCallback(SignaturesTable, Modify, s.SignatureSignedEvent)
 	s.registerCallback(SignaturesTable, Modify, s.SignatureAddSigTypeSignedApprovedID)
@@ -66,6 +71,9 @@ func NewService(stage string, signatureRepo signatures.SignatureRepository, comp
 
 	s.registerCallback(projectsCLAGroupsTable, Insert, s.ProjectAddedEvent)
 	s.registerCallback(projectsCLAGroupsTable, Remove, s.ProjectDeletedEvent)
+
+	s.registerCallback(repositoryTableName, Insert, s.GithubRepoAddedEvent)
+	s.registerCallback(repositoryTableName, Remove, s.GithubRepoDeletedEvent)
 	return s
 }
 
