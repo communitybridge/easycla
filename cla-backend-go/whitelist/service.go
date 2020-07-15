@@ -69,10 +69,12 @@ func (s service) AddCclaWhitelistRequest(companyID string, projectID string, arg
 			companyID, projectID, args.ContributorID, args.ContributorName, args.ContributorEmail, err)
 		return "", err
 	}
-	if len(list.List) > 0 {
-		log.Warnf("AddCclaWhitelistRequest - found existing contributor invite - id: %s, request for company: %s, project: %s, user by id: %s with name: %s, email: %s",
-			list.List[0].RequestID, companyID, projectID, args.ContributorID, args.ContributorName, args.ContributorEmail)
-		return "", ErrCclaWhitelistRequestAlreadyExists
+	for _, item := range list.List {
+		if item.RequestStatus == "pending" || item.RequestStatus == "approved" {
+			log.Warnf("AddCclaWhitelistRequest - found existing contributor invite - id: %s, request for company: %s, project: %s, user by id: %s with name: %s, email: %s",
+				list.List[0].RequestID, companyID, projectID, args.ContributorID, args.ContributorName, args.ContributorEmail)
+			return "", ErrCclaWhitelistRequestAlreadyExists
+		}
 	}
 	companyModel, err := s.companyRepo.GetCompany(companyID)
 	if err != nil {
