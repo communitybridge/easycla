@@ -33,10 +33,12 @@ import (
 
 // constants
 const (
-	LoadACLDetails     = true
-	DontLoadACLDetails = false
-
-	SignatureProjectIDSigtypeSignedApprovedIDIndex = "signature-project-id-sigtype-signed-approved-id-index"
+	LoadACLDetails                                 = true
+	DontLoadACLDetails                             = false
+	SignatureProjectIDIndex                        = "project-signature-index"
+	SignatureProjectReferenceIndex                 = "signature-project-reference-index"
+	SignatureProjectIDSigTypeSignedApprovedIDIndex = "signature-project-id-sigtype-signed-approved-id-index"
+	SignatureProjectIDTypeIndex                    = "signature-project-id-type-index"
 
 	ICLA = "icla"
 	ECLA = "ecla"
@@ -53,6 +55,7 @@ type SignatureRepository interface {
 	InvalidateProjectRecord(signatureID string, projectName string) error
 
 	GetSignature(signatureID string) (*models.Signature, error)
+	GetIndividualSignature(claGroupID, userID string) (*models.Signature, error)
 	GetSignatureACL(signatureID string) ([]string, error)
 	GetProjectSignatures(params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetProjectCompanySignature(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signature, error)
@@ -77,28 +80,29 @@ type SignatureRepository interface {
 
 // repository data model
 type repository struct {
-	stage          string
-	dynamoDBClient *dynamodb.DynamoDB
-	companyRepo    company.IRepository
-	usersRepo      users.Service
+	stage              string
+	dynamoDBClient     *dynamodb.DynamoDB
+	companyRepo        company.IRepository
+	usersRepo          users.Service
+	signatureTableName string
 }
 
 // NewRepository creates a new instance of the whitelist service
 func NewRepository(awsSession *session.Session, stage string, companyRepo company.IRepository, usersRepo users.Service) SignatureRepository {
 	return repository{
-		stage:          stage,
-		dynamoDBClient: dynamodb.New(awsSession),
-		companyRepo:    companyRepo,
-		usersRepo:      usersRepo,
+		stage:              stage,
+		dynamoDBClient:     dynamodb.New(awsSession),
+		companyRepo:        companyRepo,
+		usersRepo:          usersRepo,
+		signatureTableName: fmt.Sprintf("cla-%s-signatures", stage),
 	}
 }
 
 // GetGithubOrganizationsFromWhitelist returns a list of GH organizations stored in the whitelist
 func (repo repository) GetGithubOrganizationsFromWhitelist(signatureID string) ([]models.GithubOrg, error) {
 	// get item from dynamoDB table
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.signatureTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"signature_id": {
 				S: aws.String(signatureID),
@@ -136,11 +140,10 @@ func (repo repository) GetGithubOrganizationsFromWhitelist(signatureID string) (
 // AddGithubOrganizationToWhitelist adds the specified GH organization to the whitelist
 func (repo repository) AddGithubOrganizationToWhitelist(signatureID, GithubOrganizationID string) ([]models.GithubOrg, error) {
 	// get item from dynamoDB table
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 	log.Debugf("querying database for github organization whitelist using signatureID: %s", signatureID)
 
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.signatureTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"signature_id": {
 				S: aws.String(signatureID),
@@ -184,7 +187,7 @@ func (repo repository) AddGithubOrganizationToWhitelist(signatureID, GithubOrgan
 
 	// Update dynamoDB table
 	input := &dynamodb.UpdateItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.signatureTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"signature_id": {
 				S: aws.String(signatureID),
@@ -224,9 +227,8 @@ func (repo repository) AddGithubOrganizationToWhitelist(signatureID, GithubOrgan
 // DeleteGithubOrganizationFromWhitelist removes the specified GH organization from the whitelist
 func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, GithubOrganizationID string) ([]models.GithubOrg, error) {
 	// get item from dynamoDB table
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.signatureTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"signature_id": {
 				S: aws.String(signatureID),
@@ -276,7 +278,7 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, Github
 					NULL: &nullFlag,
 				},
 			},
-			TableName: aws.String(tableName),
+			TableName: aws.String(repo.signatureTableName),
 			Key: map[string]*dynamodb.AttributeValue{
 				"signature_id": {
 					S: aws.String(signatureID),
@@ -308,7 +310,7 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, Github
 				L: newList,
 			},
 		},
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.signatureTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"signature_id": {
 				S: aws.String(signatureID),
@@ -339,9 +341,6 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, Github
 
 // GetSignature returns the signature for the specified signature id
 func (repo repository) GetSignature(signatureID string) (*models.Signature, error) {
-	// The table we're interested in
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
-
 	// This is the key we want to match
 	condition := expression.Key("signature_id").Equal(expression.Value(signatureID))
 
@@ -359,7 +358,7 @@ func (repo repository) GetSignature(signatureID string) (*models.Signature, erro
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.signatureTableName),
 	}
 
 	// Make the DynamoDB Query API call
@@ -389,11 +388,92 @@ func (repo repository) GetSignature(signatureID string) (*models.Signature, erro
 	return signatureList[0], nil
 }
 
+// GetIndividualSignature returns the signature record for the specified CLA Group and User
+func (repo repository) GetIndividualSignature(claGroupID, userID string) (*models.Signature, error) {
+
+	// These are the keys we want to match for an ICLA Signature with a given CLA Group and User ID
+	condition := expression.Key("signature_project_id").Equal(expression.Value(claGroupID)).
+		And(expression.Key("signature_reference_id").Equal(expression.Value(userID)))
+	filter := expression.Name("signature_type").Equal(expression.Value("cla")).
+		And(expression.Name("signature_reference_type").Equal(expression.Value("user"))).
+		And(expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true)))).
+		And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(true)))).
+		And(expression.Name("signature_user_ccla_company_id").AttributeNotExists())
+
+	builder := expression.NewBuilder().
+		WithKeyCondition(condition).
+		WithFilter(filter).
+		WithProjection(buildProjection())
+
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		log.Warnf("error building expression for project ICLA signature query, claGroupID: %s userID: %s, error: %v",
+			claGroupID, userID, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(repo.signatureTableName),
+		Limit:                     aws.Int64(1000),                            // The maximum number of items to evaluate (not necessarily the number of matching items)
+		IndexName:                 aws.String(SignatureProjectReferenceIndex), // Name of a secondary index to scan
+	}
+
+	sigs := make([]*models.Signature, 0)
+	var lastEvaluatedKey string
+
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		// Make the DynamoDB Query API call
+		log.Debugf("Running signature project query using queryInput: %+v", queryInput)
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		if errQuery != nil {
+			log.Warnf("error retrieving project ICLA signature ID for claGroupID: %s, userID: %s, error: %v",
+				claGroupID, userID, errQuery)
+			return nil, errQuery
+		}
+
+		// Convert the list of DB models to a list of response models
+		signatureList, modelErr := repo.buildProjectSignatureModels(results, claGroupID, LoadACLDetails)
+		if modelErr != nil {
+			log.Warnf("error converting DB model to response model for signatures with project claGroupID: %s, error: %v",
+				claGroupID, modelErr)
+			return nil, modelErr
+		}
+
+		// Add to the signatures response model to the list
+		sigs = append(sigs, signatureList...)
+
+		//log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey)
+		if results.LastEvaluatedKey["signature_id"] != nil {
+			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			lastEvaluatedKey = ""
+		}
+	}
+
+	// Didn't find a matching record
+	if len(sigs) == 0 {
+		return nil, nil
+	}
+
+	if len(sigs) > 1 {
+		log.Warnf("found multiple matching ICLA signatures for project claGroupID: %s for user %s - found %d total",
+			claGroupID, userID, len(sigs))
+	}
+
+	return sigs[0], nil
+}
+
 // GetSignatureACL returns the signature ACL for the specified signature id
 func (repo repository) GetSignatureACL(signatureID string) ([]string, error) {
-	// The table we're interested in
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
-
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().
 		WithProjection(buildSignatureACLProjection()).
@@ -411,7 +491,7 @@ func (repo repository) GetSignatureACL(signatureID string) ([]string, error) {
 		},
 		ExpressionAttributeNames: expr.Names(),
 		ProjectionExpression:     expr.Projection(),
-		TableName:                aws.String(tableName),
+		TableName:                aws.String(repo.signatureTableName),
 	}
 
 	// Make the DynamoDB Query API call
@@ -448,15 +528,10 @@ func addConditionToFilter(filter expression.ConditionBuilder, cond expression.Co
 	return filter
 }
 
-const projIndexName = "project-signature-index"
-
 // GetProjectSignatures returns a list of signatures for the specified project
 func (repo repository) GetProjectSignatures(params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error) {
 
-	// The table we're interested in
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
-
-	indexName := projIndexName
+	indexName := SignatureProjectIDIndex
 
 	// This is the key we want to match
 	condition := expression.Key("signature_project_id").Equal(expression.Value(params.ProjectID))
@@ -472,7 +547,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 
 	if params.SignatureType != nil {
 		if params.SearchTerm != nil && (params.FullMatch != nil && !*params.FullMatch) {
-			indexName = "signature-project-id-type-index"
+			indexName = SignatureProjectIDTypeIndex
 			condition = condition.And(expression.Key("signature_type").Equal(expression.Value(strings.ToLower(*params.SignatureType))))
 		} else {
 			signatureTypeExpression := expression.Name("signature_type").Equal(expression.Value(params.SignatureType))
@@ -523,7 +598,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.signatureTableName),
 		Limit:                     aws.Int64(pageSize),   // The maximum number of items to evaluate (not necessarily the number of matching items)
 		IndexName:                 aws.String(indexName), // Name of a secondary index to scan
 	}
@@ -588,7 +663,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 
 	// How many total records do we have - may not be up-to-date as this value is updated only periodically
 	describeTableInput := &dynamodb.DescribeTableInput{
-		TableName: &tableName,
+		TableName: &repo.signatureTableName,
 	}
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
 	if err != nil {
@@ -634,9 +709,6 @@ func (repo repository) GetProjectCompanySignature(companyID, projectID string, s
 // GetProjectCompanySignatures returns a list of signatures for the specified project and specified company
 func (repo repository) GetProjectCompanySignatures(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signatures, error) {
 
-	// The table we're interested in
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
-
 	// These are the keys we want to match
 	condition := expression.Key("signature_project_id").Equal(expression.Value(projectID))
 	filter := expression.Name("signature_reference_id").Equal(expression.Value(companyID)).
@@ -673,7 +745,7 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 		KeyConditionExpression:    expr.KeyCondition(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.signatureTableName),
 		IndexName:                 aws.String("project-signature-index"), // Name of a secondary index to scan
 		Limit:                     aws.Int64(limit),
 	}
@@ -739,7 +811,7 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 
 	// How many total records do we have - may not be up-to-date as this value is updated only periodically
 	describeTableInput := &dynamodb.DescribeTableInput{
-		TableName: &tableName,
+		TableName: &repo.signatureTableName,
 	}
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
 	if err != nil {
@@ -762,10 +834,7 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 // Get project signatures with no pagination
 func (repo repository) ProjectSignatures(projectID string) (*models.Signatures, error) {
 
-	// The table we're interested in
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
-
-	indexName := projIndexName
+	indexName := SignatureProjectIDIndex
 
 	// This is the key we want to match
 	condition := expression.Key("signature_project_id").Equal(expression.Value(projectID))
@@ -801,7 +870,7 @@ func (repo repository) ProjectSignatures(projectID string) (*models.Signatures, 
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.signatureTableName),
 		IndexName:                 aws.String(indexName), // Name of a secondary index to scan
 	}
 
@@ -868,9 +937,6 @@ func (repo repository) InvalidateProjectRecord(signatureID string, projectName s
 // GetProjectCompanyEmployeeSignatures returns a list of employee signatures for the specified project and specified company
 func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams, pageSize int64) (*models.Signatures, error) {
 
-	// The table we're interested in
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
-
 	// This is the keys we want to match
 	condition := expression.Key("signature_user_ccla_company_id").Equal(expression.Value(params.CompanyID)).And(
 		expression.Key("signature_project_id").Equal(expression.Value(params.ProjectID)))
@@ -893,7 +959,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 		KeyConditionExpression:    expr.KeyCondition(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.signatureTableName),
 		IndexName:                 aws.String("signature-user-ccla-company-index"), // Name of a secondary index to scan
 	}
 
@@ -955,7 +1021,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 
 	// How many total records do we have - may not be up-to-date as this value is updated only periodically
 	describeTableInput := &dynamodb.DescribeTableInput{
-		TableName: &tableName,
+		TableName: &repo.signatureTableName,
 	}
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
 	if err != nil {
@@ -981,9 +1047,6 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 
 // GetCompanySignatures returns a list of company signatures for the specified company
 func (repo repository) GetCompanySignatures(params signatures.GetCompanySignaturesParams, pageSize int64, loadACL bool) (*models.Signatures, error) {
-
-	// The table we're interested in
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 
 	// This is the keys we want to match
 	condition := expression.Key("signature_reference_id").Equal(expression.Value(params.CompanyID))
@@ -1011,7 +1074,7 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 		KeyConditionExpression:    expr.KeyCondition(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.signatureTableName),
 		IndexName:                 aws.String("reference-signature-index"), // Name of a secondary index to scan
 		//Limit:                     aws.Int64(pageSize),                   // The maximum number of items to evaluate (not necessarily the number of matching items)
 	}
@@ -1071,7 +1134,7 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 
 	// How many total records do we have - may not be up-to-date as this value is updated only periodically
 	describeTableInput := &dynamodb.DescribeTableInput{
-		TableName: &tableName,
+		TableName: &repo.signatureTableName,
 	}
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
 	if err != nil {
@@ -1099,9 +1162,6 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 // GetUserSignatures returns a list of user signatures for the specified user
 func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesParams, pageSize int64) (*models.Signatures, error) {
 
-	// The table we're interested in
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
-
 	// This is the keys we want to match
 	condition := expression.Key("signature_reference_id").Equal(expression.Value(params.UserID))
 
@@ -1120,7 +1180,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 		KeyConditionExpression:    expr.KeyCondition(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.signatureTableName),
 		IndexName:                 aws.String("reference-signature-index"), // Name of a secondary index to scan
 		Limit:                     aws.Int64(pageSize),                     // The maximum number of items to evaluate (not necessarily the number of matching items)
 	}
@@ -1179,7 +1239,7 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 
 	// How many total records do we have - may not be up-to-date as this value is updated only periodically
 	describeTableInput := &dynamodb.DescribeTableInput{
-		TableName: &tableName,
+		TableName: &repo.signatureTableName,
 	}
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
 	if err != nil {
@@ -1332,7 +1392,6 @@ func (repo repository) RemoveCLAManager(signatureID, claManagerID string) (*mode
 
 // UpdateApprovalList updates the specified project/company signature with the updated approval list information
 func (repo repository) UpdateApprovalList(projectID, companyID string, params *models.ApprovalList) (*models.Signature, error) { // nolint
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 	log.Debugf("querying database for approval list details using project ID: %s, company ID: %s", projectID, companyID)
 
 	signed, approved := true, true
@@ -1460,7 +1519,7 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 
 	// Update dynamoDB table
 	input := &dynamodb.UpdateItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.signatureTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"signature_id": {
 				S: aws.String(sig.SignatureID),
@@ -1507,12 +1566,11 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 
 // removeColumn is a helper function to remove a given column when we need to zero out the column value - typically the approval list
 func (repo repository) removeColumn(signatureID, columnName string) (*models.Signature, error) {
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 	log.Debugf("removing column %s from signature ID: %s", columnName, signatureID)
 
 	// Update dynamoDB table
 	input := &dynamodb.UpdateItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.signatureTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"signature_id": {
 				S: aws.String(signatureID),
@@ -1545,9 +1603,8 @@ func (repo repository) removeColumn(signatureID, columnName string) (*models.Sig
 }
 
 func (repo repository) AddSigTypeSignedApprovedID(signatureID string, val string) error {
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 	input := &dynamodb.UpdateItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.signatureTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"signature_id": {
 				S: aws.String(signatureID),
@@ -1588,9 +1645,8 @@ func (repo repository) AddUsersDetails(signatureID string, userID string) error 
 		}
 	}
 
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 	input := &dynamodb.UpdateItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.signatureTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"signature_id": {
 				S: aws.String(signatureID),
@@ -1630,9 +1686,8 @@ func (repo repository) AddUsersDetails(signatureID string, userID string) error 
 
 func (repo repository) AddSignedOn(signatureID string) error {
 	_, currentTime := utils.CurrentTime()
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
 	input := &dynamodb.UpdateItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.signatureTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"signature_id": {
 				S: aws.String(signatureID),
@@ -1876,9 +1931,6 @@ func buildApprovalAttributeList(existingList, addEntries, removeEntries []string
 }
 
 func (repo repository) GetClaGroupICLASignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error) {
-	// The table we're interested in
-	tableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
-
 	sortKeyPrefix := fmt.Sprintf("%s#%v#%v", ICLA, true, true)
 	// This is the key we want to match
 	condition := expression.Key("signature_project_id").Equal(expression.Value(claGroupID)).
@@ -1898,8 +1950,8 @@ func (repo repository) GetClaGroupICLASignatures(claGroupID string, searchTerm *
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
-		IndexName:                 aws.String(SignatureProjectIDSigtypeSignedApprovedIDIndex),
+		TableName:                 aws.String(repo.signatureTableName),
+		IndexName:                 aws.String(SignatureProjectIDSigTypeSignedApprovedIDIndex),
 		Limit:                     aws.Int64(HugePageSize),
 	}
 	out := &models.IclaSignatures{List: make([]*models.IclaSignature, 0)}
