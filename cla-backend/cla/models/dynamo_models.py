@@ -3168,7 +3168,6 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
             self.model.organization_name_lower = self.model.organization_name.lower()
         self.model.organization_installation_id = organization_installation_id
         self.model.organization_sfid = organization_sfid
-        self.model.project_sfid = organization_sfid
 
     def __str__(self):
         return (
@@ -3228,7 +3227,6 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
 
     def set_organization_sfid(self, organization_sfid):
         self.model.organization_sfid = organization_sfid
-        self.set_project_sfid(organization_sfid)
 
     def set_project_sfid(self, project_sfid):
         self.model.project_sfid = project_sfid
