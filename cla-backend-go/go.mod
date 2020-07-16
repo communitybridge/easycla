@@ -5,7 +5,8 @@ go 1.14
 replace github.com/awslabs/aws-lambda-go-api-proxy => github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
 
 require (
-	github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
+	//github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
+    github.com/awslabs/aws-lambda-go-api-proxy v0.7.0
 	github.com/LF-Engineering/lfx-kit v0.1.10
 	github.com/LF-Engineering/lfx-models v0.6.2
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
