@@ -527,6 +527,28 @@ paths:
       tags:
         - signatures
 
+  /signatures/{claGroupID}/{userID}/icla/pdf:
+    get:
+      summary: Download signed ICLA PDF
+      security: []
+      operationId: getSignedICLADocument
+      parameters:
+        - $ref: "#/parameters/path-claGroupID"
+        - $ref: "#/parameters/path-userID"
+      produces:
+        - application/pdf
+      responses:
+        '200':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
+
   # Project Service
   /project:
     post:

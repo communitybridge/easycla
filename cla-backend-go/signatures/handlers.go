@@ -4,6 +4,9 @@
 package signatures
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
@@ -12,12 +15,61 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/savaki/dynastore"
 )
 
 // Configure setups handlers on api with service
 func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *dynastore.Store, eventsService events.Service) {
+
+	api.SignaturesGetSignedICLADocumentHandler = signatures.GetSignedICLADocumentHandlerFunc(func(params signatures.GetSignedICLADocumentParams) middleware.Responder {
+		signatureModel, sigErr := service.GetIndividualSignature(params.ClaGroupID, params.UserID)
+		if sigErr != nil {
+			msg := fmt.Sprintf("EasyCLA - 500 Internal Server Error -  error retrieving signature using claGroupID: %s, userID: %s, error: %+v",
+				params.ClaGroupID, params.UserID, sigErr)
+			log.Warn(msg)
+			return signatures.NewGetSignedICLADocumentInternalServerError().WithPayload(&models.ErrorResponse{
+				Code:    "500",
+				Message: msg,
+			})
+
+		}
+
+		if signatureModel == nil {
+			msg := fmt.Sprintf("EasyCLA - 404 Not Found - -  error retrieving signature using claGroupID: %s, userID: %s",
+				params.ClaGroupID, params.UserID)
+			log.Warn(msg)
+			return signatures.NewGetSignedICLADocumentNotFound().WithPayload(&models.ErrorResponse{
+				Code:    "404",
+				Message: msg,
+			})
+		}
+
+		pdfBytes, s3Err := utils.DownloadFromS3(
+			fmt.Sprintf("contact-group/%s/icla/%s/%s.pdf", params.ClaGroupID, params.UserID, signatureModel.SignatureID))
+		if s3Err != nil {
+			msg := fmt.Sprintf("EasyCLA - 500 Internal Server Error -  error retrieving PDF from source using claGroupID: %s, userID: %s, error: %+v",
+				params.ClaGroupID, params.UserID, s3Err)
+			log.Warn(msg)
+			return signatures.NewGetSignedICLADocumentInternalServerError().WithPayload(&models.ErrorResponse{
+				Code:    "500",
+				Message: msg,
+			})
+		}
+
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			rw.Header().Set("Content-type", "application/pdf")
+			rw.WriteHeader(200)
+			bytesWritten, writeErr := rw.Write(pdfBytes)
+			if writeErr != nil {
+				msg := fmt.Sprintf("EasyCLA - 500 Internal Server Error -  error writing PDF document to client from source using claGroupID: %s, userID: %s, error: %+v",
+					params.ClaGroupID, params.UserID, s3Err)
+				log.Warn(msg)
+			}
+			log.Debugf("SignaturesGetSignedICLADocumentHandler - wrote %d bytes", bytesWritten)
+		})
+	})
 
 	// Get Signature
 	api.SignaturesGetSignatureHandler = signatures.GetSignatureHandlerFunc(func(params signatures.GetSignatureParams, claUser *user.CLAUser) middleware.Responder {

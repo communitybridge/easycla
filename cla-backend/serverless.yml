@@ -145,6 +145,7 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/lf-email-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/project-signature-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/reference-signature-index"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-project-reference-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-user-ccla-company-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/project-signature-external-id-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-company-signatory-index"
@@ -291,6 +292,16 @@ functions:
     handler: dynamo-events-lambda
     name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-events-events-lambda
     description: "EasyCLA DynamoDB stream events handler for the events table"
+    runtime: go1.x
+    package:
+      individually: true
+      include:
+        - ./dynamo-events-lambda
+
+  dynamo-repositories-events-lambda:
+    handler: dynamo-repositories-events-lambda
+    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-repositories-events-lambda
+    description: "EasyCLA DynamoDB stream events handler for the repositories table"
     runtime: go1.x
     package:
       individually: true
