@@ -21,6 +21,7 @@ def gh_instance():
         gh_name = "FOO"
         gh_org.set_organization_name(gh_name)
         gh_org.set_organization_sfid("foo_sf_id")
+        gh_org.set_project_sfid("foo_sf_id")
         gh_org.save()
         yield gh_org
 

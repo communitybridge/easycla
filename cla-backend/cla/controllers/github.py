@@ -76,6 +76,7 @@ def create_organization(auth_user, organization_name, organization_sfid):
         cla.log.debug('creating organization: {} with sfid: {}'.format(organization_name, organization_sfid))
         github_organization.set_organization_name(str(organization_name))
         github_organization.set_organization_sfid(str(organization_sfid))
+        github_organization.set_project_sfid(str(organization_sfid))
         github_organization.save()
         return github_organization.to_dict()
 
