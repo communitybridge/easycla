@@ -9,7 +9,7 @@ import uuid
 
 import cla
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import User, Company, Project, Event
+from cla.models.dynamo_models import User, Company, Project, Event, CCLAWhitelistRequest
 from cla.models.event_types import EventType
 from cla.utils import get_user_instance, get_email_service
 
@@ -229,7 +229,7 @@ def invite_cla_manager(contributor_id, contributor_name, contributor_email, cla_
     # We'll use the user's provided contributor name - if not provided use what we have in the DB
     if contributor_name is None:
         contributor_name = user.get_user_name()
-
+    
     log_msg = (f'sent email to CLA Manager: {cla_manager_name} with email {cla_manager_email} '
                f'for project {project_name} and company {company_name} '
                f'to user {contributor_name} with email {contributor_email}')
@@ -238,7 +238,18 @@ def invite_cla_manager(contributor_id, contributor_name, contributor_email, cla_
     send_email_to_cla_manager(contributor_name, contributor_email,
                               cla_manager_name, cla_manager_email,
                               project_name, company_name, False)
-
+    
+    #update ccla_whitelist_request
+    ccla_whitelist_request = CCLAWhitelistRequest()
+    ccla_whitelist_request.set_request_id(str(uuid.uuid4()))
+    ccla_whitelist_request.set_company_name(company_name)
+    ccla_whitelist_request.set_project_name(project_name)
+    ccla_whitelist_request.set_user_github_id(contributor_id)
+    ccla_whitelist_request.set_user_github_username(contributor_name)
+    ccla_whitelist_request.set_user_emails(set([contributor_email]))
+    ccla_whitelist_request.set_request_status("pending")
+    ccla_whitelist_request.save()
+    
     Event.create_event(
         event_user_id=contributor_id,
         event_project_name=project_name,
