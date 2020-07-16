@@ -21,7 +21,7 @@ from cla.models import DoesNotExist
 from cla.models.event_types import EventType
 from cla.models.dynamo_models import User, Signature, Repository, \
     Company, Project, Document, \
-    GitHubOrg, Gerrit, UserPermissions, Event, CompanyInvite, ProjectCLAGroup
+    GitHubOrg, Gerrit, UserPermissions, Event, CompanyInvite, ProjectCLAGroup, CCLAWhitelistRequest
 
 API_BASE_URL = os.environ.get('CLA_API_BASE', '')
 CLA_LOGO_URL = os.environ.get('CLA_BUCKET_LOGO_URL', '')
@@ -100,7 +100,9 @@ def get_database_models(conf=None):
         return {'User': User, 'Signature': Signature, 'Repository': Repository,
                 'Company': Company, 'Project': Project, 'Document': Document,
                 'GitHubOrg': GitHubOrg, 'Gerrit': Gerrit, 'UserPermissions': UserPermissions,
-                'Event': Event, 'CompanyInvites': CompanyInvite, 'ProjectCLAGroup': ProjectCLAGroup ,}
+                'Event': Event, 'CompanyInvites': CompanyInvite, 'ProjectCLAGroup': ProjectCLAGroup ,
+                'CCLAWhitelistRequest': CCLAWhitelistRequest,
+                }
     else:
         raise Exception('Invalid database selection in configuration: %s' % conf['DATABASE'])
 
@@ -247,6 +249,18 @@ def get_project_cla_group_instance(conf=None) -> ProjectCLAGroup:
     """
 
     return get_database_models(conf)['ProjectCLAGroup']()
+
+def get_ccla_whitelist_request_instance(conf=None) -> CCLAWhitelistRequest:
+    """
+    Helper function to get a database CCLAWhitelistRequest model
+
+    :param conf: Same as get_database_nodels()
+    :type conf: dict
+    :return: A CCLAWhitelistRequest model instance based on configuration
+    :rtype: cla.models.model_interfaces.CCLAWhitelistRequest
+    """
+
+    return get_database_models(conf)['CCLAWhitelistRequest']()
 
 
 def get_email_service(conf=None, initialize=True):

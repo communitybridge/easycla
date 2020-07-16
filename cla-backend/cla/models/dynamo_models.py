@@ -50,6 +50,8 @@ def create_database():
         GitHubOrgModel,
         GerritModel,
         EventModel,
+        CCLAWhitelistRequestModel,
+
     ]
     # Create all required tables.
     for table in tables:
@@ -73,6 +75,7 @@ def delete_database():
         StoreModel,
         GitHubOrgModel,
         GerritModel,
+        CCLAWhitelistRequestModel,
     ]
     # Delete all existing tables.
     for table in tables:
@@ -470,6 +473,21 @@ class CLAGroupIDIndex(GlobalSecondaryIndex):
         projection = AllProjection()
 
     cla_group_id = UnicodeAttribute(hash_key=True)
+
+class CompanyIDProjectIDIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying by company-id
+    """
+
+    class Meta:
+        """ Meta class for ccla-whitelist-requests company-id-project-id-index """
+        index_name = "company-id-project-id-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        projection = AllProjection()
+ 
+    company_id = UnicodeAttribute(hash_key=True)
+    project_id = UnicodeAttribute(range_key=True)
 
 
 class BaseModel(Model):
@@ -3848,3 +3866,171 @@ class Event(model_interfaces.Event):
 
         except Exception as err:
             return {"errors": {"event_id": str(err)}}
+
+class CCLAWhitelistRequestModel(BaseModel):
+    """
+    Represents a CCLAWhitelistRequest in the database
+    """
+
+    class Meta:
+        """ Meta class for cclawhitelistrequest """
+
+        table_name = "cla-{}-ccla-whitelist-requests".format(stage)
+        if stage == "local":
+            host = "http://localhost:8000"
+        
+    request_id = UnicodeAttribute(hash_key=True)
+    company_id = UnicodeAttribute(null=True)
+    company_name = UnicodeAttribute(null=True)
+    project_id = UnicodeAttribute(null=True)
+    project_name = UnicodeAttribute(null=True)
+    request_status = UnicodeAttribute(null=True)
+    user_emails = UnicodeSetAttribute(default=set())
+    user_id = UnicodeAttribute(null=True)
+    user_github_id = UnicodeAttribute(null=True)
+    user_github_username = UnicodeAttribute(null=True)
+    user_name = UnicodeAttribute(null=True)
+    company_id_project_id_index = CompanyIDProjectIDIndex()
+        
+
+
+class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
+    """
+    ORM-agnostic wrapper for the DynamoDB CCLAWhitelistRequestModel
+    """
+
+    def __init__(
+            self,
+            request_id=None,
+            company_id=None,
+            company_name=None,
+            project_id=None,
+            project_name=None,
+            request_status=None,
+            user_emails=None,
+            user_id=None,
+            user_github_id=None,
+            user_github_username=None,
+            user_name=None,
+    ):
+        super(CCLAWhitelistRequest).__init__()
+        self.model = CCLAWhitelistRequestModel()
+        self.model.request_id = request_id
+        self.model.company_id = company_id
+        self.model.company_name = company_name
+        self.model.project_id = project_id
+        self.model.project_name = project_name
+        self.model.request_status = request_status
+        self.model.user_emails = user_emails
+        self.model.user_id = user_id
+        self.model.user_github_id = user_github_id
+        self.model.user_github_username = user_github_username
+        self.model.user_name = user_name
+
+    def __str__(self):
+        return (
+            f"request_id:{self.model.request_id}, "
+            f"company_id:{self.model.company_id}, "
+            f"company_name:{self.model.company_name}, "
+            f"project_id:{self.model.project_id}, "
+            f"project_name:{self.model.project_name}, "
+            f"request_status:{self.model.request_status}, "
+            f"user_emails:{self.model.user_emails}, "
+            f"user_id:{self.model.user_id}, "
+            f"user_github_id:{self.model.user_github_id}, "
+            f"user_github_username:{self.model.user_github_username}, "
+            f"user_name:{self.model.user_name}"
+        )
+    
+    def to_dict(self):
+        return dict(self.model)
+    
+    def save(self):
+        return self.model.save()
+    
+    def load(self,request_id):
+        try:
+            ccla_whitelist_request = self.model.get(str(request_id))
+        except CCLAWhitelistRequest.DoesNotExist:
+            raise cla.models.DoesNotExist("CCLAWhitelistRequest not found")
+
+
+    def delete(self):
+        self.model.delete()
+
+    def get_request_id(self):
+        return self.model.request_id
+
+    def get_company_id(self):
+        return self.model.company_id
+    
+    def get_company_name(self):
+        return self.model.company_name
+    
+    def get_project_id(self):
+        return self.model.project_id
+    
+    def get_project_name(self):
+        return self.model.project_name
+
+    def get_request_status(self):
+        return self.model.request_status
+    
+    def get_user_emails(self):
+        return self.model.user_emails
+    
+    def get_user_id(self):
+        return self.model.user_id
+    
+    def get_user_github_id(self):
+        return self.model.user_github_id
+    
+    def get_user_github_username(self):
+        return self.model.user_github_username
+    
+    def get_user_name(self):
+        return self.model.user_name
+    
+    def set_request_id(self, request_id):
+        self.model.request_id = request_id
+    
+    def set_company_id(self, company_id):
+        self.model.company_id = company_id
+    
+    def set_company_name(self, company_name):
+        self.model.company_name = company_name
+    
+    def set_project_id(self, project_id):
+        self.model.project_id = project_id
+    
+    def set_project_name(self, project_name):
+        self.model.project_name = project_name
+    
+    def set_request_status(self, request_status):
+        self.model.request_status = request_status
+    
+    def set_user_emails(self, user_emails):
+        self.model.user_emails = user_emails
+    
+    def set_user_id(self, user_id):
+        self.model.user_id = user_id
+    
+    def set_user_github_id(self, user_github_id):
+        self.model.user_github_id = user_github_id
+    
+    def set_user_github_username(self, user_github_username):
+        self.model.user_github_username = user_github_username
+    
+    def set_user_name(self, user_name):
+        self.model.user_name = user_name
+    
+    def all(self):
+        ccla_whitelist_requests = self.model.scan()
+        ret = []
+        for request in ccla_whitelist_requests:
+            ccla_whitelist_request = CCLAWhitelistRequest()
+            ccla_whitelist_request.model = request
+            ret.append(ccla_whitelist_request)
+        return ret
+
+

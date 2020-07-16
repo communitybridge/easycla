@@ -2152,3 +2152,47 @@ class ProjectCLAGroup(object):
         :rtype: [cla.models.model_interfaces.ProjectCLAGroup]
         """
         raise NotImplementedError()
+
+class CCLAWhitelistRequest(object):
+    """
+    Interface to the CCLAWhitelistRequest Model
+    """
+    def to_dict(self):
+        """
+        Converts models to dictionaries for JSON serialization.
+
+        :return: A dict representation of the model.
+        "rtype: dict
+        """
+        raise NotImplementedError()
+
+    def save(self):
+        """
+        Simple abstraction around the supported ORMs to save a model
+        """
+        raise NotImplementedError()
+
+    def delete(self):
+        """
+        Simple abstraction around the supported ORMs to delete a model
+        """
+        raise NotImplementedError()
+
+    def load(self, request_id):
+        """
+        Simple abstraction around the supported ORMs to load a model
+        Populates the current object.
+
+        :param request_id: The id of the ccla whitelist request
+        :type request_id: string
+        """
+        raise NotImplementedError()
+
+    def all(self):
+        """
+        Fetches all CCLAWhitelistRequests in the CLA system.
+
+        :return: A list of projectCLAGroup objects.
+        :rtype: [cla.models.model_interfaces.ProjectCLAGroup]
+        """
+        raise NotImplementedError()
