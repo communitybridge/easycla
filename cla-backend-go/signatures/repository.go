@@ -39,6 +39,7 @@ const (
 	SignatureProjectReferenceIndex                 = "signature-project-reference-index"
 	SignatureProjectIDSigTypeSignedApprovedIDIndex = "signature-project-id-sigtype-signed-approved-id-index"
 	SignatureProjectIDTypeIndex                    = "signature-project-id-type-index"
+	SignatureReferenceIndex                        = "reference-signature-index"
 
 	ICLA = "icla"
 	ECLA = "ecla"
@@ -421,7 +422,7 @@ func (repo repository) GetIndividualSignature(claGroupID, userID string) (*model
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
 		TableName:                 aws.String(repo.signatureTableName),
-		Limit:                     aws.Int64(1000),                            // The maximum number of items to evaluate (not necessarily the number of matching items)
+		Limit:                     aws.Int64(100),                             // The maximum number of items to evaluate (not necessarily the number of matching items)
 		IndexName:                 aws.String(SignatureProjectReferenceIndex), // Name of a secondary index to scan
 	}
 
@@ -431,8 +432,9 @@ func (repo repository) GetIndividualSignature(claGroupID, userID string) (*model
 	// Loop until we have all the records
 	for ok := true; ok; ok = lastEvaluatedKey != "" {
 		// Make the DynamoDB Query API call
-		log.Debugf("Running signature project query using queryInput: %+v", queryInput)
+		//log.Debugf("Running signature project query using queryInput: %+v", queryInput)
 		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		//log.Debugf("Ran signature project query, results: %+v, error: %+v", results, errQuery)
 		if errQuery != nil {
 			log.Warnf("error retrieving project ICLA signature ID for claGroupID: %s, userID: %s, error: %v",
 				claGroupID, userID, errQuery)
@@ -440,6 +442,7 @@ func (repo repository) GetIndividualSignature(claGroupID, userID string) (*model
 		}
 
 		// Convert the list of DB models to a list of response models
+		//log.Debug("Building response models...")
 		signatureList, modelErr := repo.buildProjectSignatureModels(results, claGroupID, LoadACLDetails)
 		if modelErr != nil {
 			log.Warnf("error converting DB model to response model for signatures with project claGroupID: %s, error: %v",
@@ -1181,8 +1184,8 @@ func (repo repository) GetUserSignatures(params signatures.GetUserSignaturesPara
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(repo.signatureTableName),
-		IndexName:                 aws.String("reference-signature-index"), // Name of a secondary index to scan
-		Limit:                     aws.Int64(pageSize),                     // The maximum number of items to evaluate (not necessarily the number of matching items)
+		IndexName:                 aws.String(SignatureReferenceIndex), // Name of a secondary index to scan
+		Limit:                     aws.Int64(pageSize),                 // The maximum number of items to evaluate (not necessarily the number of matching items)
 	}
 
 	// If we have the next key, set the exclusive start key value
@@ -1777,6 +1780,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 						userLFID = userModel.LfUsername
 						userGHID = userModel.GithubID
 					}
+
 					if signatureUserCompanyID != "" {
 						dbCompanyModel, companyErr := repo.companyRepo.GetCompany(signatureUserCompanyID)
 						if companyErr != nil {

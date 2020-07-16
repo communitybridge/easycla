@@ -1448,7 +1448,7 @@ class DocuSign(signing_service_interface.SigningService):
 
         # subject = 'EasyCLA: Signed Document'
         # body = 'Thank you for signing the CLA! Your signed document is attached to this email.'
-        pdf_link = (f'{cla.conf["API_BASE_URL"]}/'
+        pdf_link = (f'{cla.conf["API_BASE_URL"]}/v3/'
                     f'signatures/{project.get_project_id()}/'
                     f'{user.get_user_id()}/pdf')
         subject = f'EasyCLA: CLA Signature Signed for {project.get_project_name()}'
