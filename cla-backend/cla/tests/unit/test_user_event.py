@@ -5,7 +5,7 @@ from unittest.mock import patch, Mock
 
 import pytest
 
-from cla.models.dynamo_models import User, Project, Company
+from cla.models.dynamo_models import User, Project, Company, CCLAWhitelistRequest
 from cla.models.event_types import EventType
 from cla.controllers import user as user_controller
 from cla.auth import AuthUser
@@ -60,6 +60,7 @@ def test_request_company_whitelist(mock_event, create_event_user, project, compa
 def test_invite_cla_manager(mock_event, create_event_user, user):
     """ Test send email to CLA manager event """
     User.load = Mock()
+    CCLAWhitelistRequest.save = Mock()
     user_controller.send_email_to_cla_manager = Mock()
     contributor_id = user.get_user_id()
     contributor_name = user.get_user_name()
