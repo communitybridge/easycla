@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -55,16 +57,22 @@ func (s3c *S3Client) Upload(fileContent []byte, projectID string, claType string
 // Download file from s3
 func (s3c *S3Client) Download(filename string) ([]byte, error) {
 	ou, err := s3c.s3.GetObject(&s3.GetObjectInput{
-		Bucket: &s3c.BucketName,
-		Key:    &filename,
+		Bucket: aws.String(s3c.BucketName),
+		Key:    aws.String(filename),
 	})
 	if err != nil {
+		log.Warnf("problem downloading from s3 bucket: %s resource: %s, error: %+v",
+			s3c.BucketName, filename, err)
 		return nil, err
 	}
+
 	body, err := ioutil.ReadAll(ou.Body)
 	if err != nil {
+		log.Warnf("problem reading file from s3 bucket: %s resource: %s, error: %+v",
+			s3c.BucketName, filename, err)
 		return nil, err
 	}
+
 	return body, err
 }
 
