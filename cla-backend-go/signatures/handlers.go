@@ -46,10 +46,12 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			})
 		}
 
-		pdfBytes, s3Err := utils.DownloadFromS3(
-			fmt.Sprintf("contact-group/%s/icla/%s/%s.pdf", params.ClaGroupID, params.UserID, signatureModel.SignatureID))
+		downloadURL := fmt.Sprintf("contract-group/%s/icla/%s/%s.pdf",
+			params.ClaGroupID, params.UserID, signatureModel.SignatureID)
+		log.Debugf("Retrieving PDF from path: %s", downloadURL)
+		pdfBytes, s3Err := utils.DownloadFromS3(downloadURL)
 		if s3Err != nil {
-			msg := fmt.Sprintf("EasyCLA - 500 Internal Server Error -  error retrieving PDF from source using claGroupID: %s, userID: %s, error: %+v",
+			msg := fmt.Sprintf("EasyCLA - 500 Internal Server Error -  unable to locate PDF from source using claGroupID: %s, userID: %s, s3 error: %+v",
 				params.ClaGroupID, params.UserID, s3Err)
 			log.Warn(msg)
 			return signatures.NewGetSignedICLADocumentInternalServerError().WithPayload(&models.ErrorResponse{
