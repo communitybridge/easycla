@@ -653,6 +653,6 @@ func getCompanyAdmin(companySFID string) (*models.User, error) {
 			}
 		}
 	}
-	log.WithField("companySFID", companySFID).Errorf("no company-admin found. error = %s", err.Error())
+	log.WithField("companySFID", companySFID).Errorf("no company-admin found")
 	return nil, errors.New("no company-admin found")
 }
