@@ -62,6 +62,8 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			rw.Header().Set("Content-type", "application/pdf")
+			rw.Header().Set("Content-Disposition", fmt.Sprintf("attachment;filename=%s.pdf",
+				signatureModel.SignatureID))
 			rw.WriteHeader(200)
 			bytesWritten, writeErr := rw.Write(pdfBytes)
 			if writeErr != nil {
