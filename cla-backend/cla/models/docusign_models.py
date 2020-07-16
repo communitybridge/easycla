@@ -1437,18 +1437,22 @@ class DocuSign(signing_service_interface.SigningService):
     def send_signed_document(self, document_data, user, icla=True):
         """Helper method to send the user their signed document."""
 
-        subject = 'EasyCLA: Signed Document'
-        body = 'Thank you for signing the CLA! Your signed document is attached to this email.'
-
         recipient = user.get_user_email()
         filename = recipient + '-cla.pdf'
-        attachment = {'type': 'content',
-                      'content': document_data,
-                      'content-type': 'application/pdf',
-                      'filename': filename}
+        subject = 'EasyCLA: Signed Document'
+        body = f'''
+<p> Hello {recipient} </p>
+<p> Thank you for signing CLA {recipient}-cla.pdf </p>
+<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
+<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+support</a>.</p>
+<p>Thanks,</p>
+<p>EasyCLA support team</p>
+        '''
         # Third, send the email.
         cla.log.info(f'Sending signed CLA document to {recipient} with subject: {subject}')
-        cla.utils.get_email_service().send(subject, body, recipient, attachment)
+        cla.utils.get_email_service().send(subject, body, recipient)
 
     def send_to_s3(self, document_data, project_id, signature_id, cla_type, identifier):
         # cla_type could be: icla or ccla (String)
