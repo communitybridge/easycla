@@ -1130,7 +1130,7 @@ class DocuSign(signing_service_interface.SigningService):
             # Get signed document
             document_data = self.get_signed_document(envelope_id, user)
             # Send email with signed document.
-            self.send_signed_document(document_data, user)
+            self.send_signed_document(signature, document_data, user)
 
             # Verify user id exist for saving on storage
             user_id = user.get_user_id()
@@ -1237,7 +1237,7 @@ class DocuSign(signing_service_interface.SigningService):
             # Get signed document
             document_data = self.get_signed_document(envelope_id, user)
             # Send email with signed document.
-            self.send_signed_document(document_data, user)
+            self.send_signed_document(signature, document_data, user)
 
             # Verify user id exist for saving on storage
             if user_id is None:
@@ -1388,7 +1388,7 @@ class DocuSign(signing_service_interface.SigningService):
             # CCLA - user is the initial CLA Manager
             document_data = self.get_signed_document(envelope_id, user)
             # Send email with signed document.
-            self.send_signed_document(document_data, user)
+            self.send_signed_document(signature, document_data, user)
 
             # verify company_id is not none
             if company_id is None:
@@ -1434,21 +1434,42 @@ class DocuSign(signing_service_interface.SigningService):
                           f'for document ID {document["documentId"]}, error: {err}')
             return
 
-    def send_signed_document(self, document_data, user, icla=True):
+    def send_signed_document(self, signature, document_data, user, icla=True):
         """Helper method to send the user their signed document."""
 
-        subject = 'EasyCLA: Signed Document'
-        body = 'Thank you for signing the CLA! Your signed document is attached to this email.'
+        # Load and ensure the CLA Group/Project record exists
+        try:
+            project = Project()
+            project.load(signature.get_signature_project_id())
+        except DoesNotExist as err:
+            cla.log.warning(f'send_signed_document - unable to load project by id: {project.get_project_id()} - '
+                            'unable to send email to user')
+            return
 
+        # subject = 'EasyCLA: Signed Document'
+        # body = 'Thank you for signing the CLA! Your signed document is attached to this email.'
+        pdf_link = (f'{cla.conf["API_BASE_URL"]}/'
+                    f'signatures/{project.get_project_id()}/'
+                    f'{user.get_user_id()}/pdf')
+        subject = f'EasyCLA: CLA Signature Signed for {project.get_project_name()}'
+        body = f'''
+            <p>Hello contributor,</p>
+            <p>This is a notification email from EasyCLA regarding the project {project.get_project_name()}.</p>
+            <p>Thank you for signing the CLA.  You can download the PDF document
+               <a href="{pdf_link}" target="_blank" alt="ICLA Document Link"> from our website<a>.
+            </p>
+            <p>If you need help or have questions about EasyCLA, you can
+               <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">
+               read the documentation</a> or
+               <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach
+               out to us for support</a>.</p>
+            <p>Thanks,</p>
+            <p>EasyCLA support team</p>
+            '''
         recipient = user.get_user_email()
-        filename = recipient + '-cla.pdf'
-        attachment = {'type': 'content',
-                      'content': document_data,
-                      'content-type': 'application/pdf',
-                      'filename': filename}
         # Third, send the email.
         cla.log.info(f'Sending signed CLA document to {recipient} with subject: {subject}')
-        cla.utils.get_email_service().send(subject, body, recipient, attachment)
+        cla.utils.get_email_service().send(subject, body, recipient)
 
     def send_to_s3(self, document_data, project_id, signature_id, cla_type, identifier):
         # cla_type could be: icla or ccla (String)
