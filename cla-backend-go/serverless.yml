@@ -41,17 +41,6 @@ provider:
   region: us-east-2
   timeout: 300 # optional, in seconds, default is 6
   logRetentionInDays: 14
-  # Configuring API Gateway to return binary media can be done via the binaryMediaTypes config:
-  apiGateway:
-    binaryMediaTypes:
-      - 'image/*'
-      - 'application/pdf'
-      - 'application/zip'
-      - 'application/octet-stream'
-      - 'application/x-zip-compressed'
-      - 'application/x-rar-compressed'
-      - 'multipart/x-zip'
-    metrics: true
 
   tracing:
     lambda: true

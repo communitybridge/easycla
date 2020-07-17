@@ -537,6 +537,7 @@ paths:
         - $ref: "#/parameters/path-userID"
       produces:
         - application/pdf
+        - application/json
       responses:
         '200':
           description: 'Success'
