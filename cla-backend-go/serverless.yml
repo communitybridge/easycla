@@ -44,9 +44,13 @@ provider:
   # Configuring API Gateway to return binary media can be done via the binaryMediaTypes config:
   apiGateway:
     binaryMediaTypes:
-      - 'image/png'
-      - 'image/jpeg'
+      - 'image/*'
       - 'application/pdf'
+      - 'application/zip'
+      - 'application/octet-stream'
+      - 'application/x-zip-compressed'
+      - 'application/x-rar-compressed'
+      - 'multipart/x-zip'
     metrics: true
 
   tracing:
