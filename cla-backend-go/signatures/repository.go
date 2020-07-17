@@ -645,12 +645,14 @@ func (repo repository) GetProjectCompanySignatures(companyID, projectID string, 
 
 	// If the caller provided a signature signed value...add the appropriate filter
 	if signed != nil {
-		filter.And(expression.Name("signature_signed").Equal(expression.Value(*signed)))
+		log.Debugf("Filtering signature_signed: %+v", *signed)
+		filter = filter.And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(*signed))))
 	}
 
 	// If the caller provided a signature approved value...add the appropriate filter
 	if approved != nil {
-		filter.And(expression.Name("signature_approved").Equal(expression.Value(*approved)))
+		log.Debugf("Filter by signature_approved: %+v", *approved)
+		filter = filter.And(expression.Name("signature_approved").Equal(expression.Value(aws.Bool(*approved))))
 	}
 
 	limit := int64(10)
