@@ -57,6 +57,7 @@ provider:
   apiGateway:
     binaryMediaTypes:
       - '*/*'
+    metrics: true
 
   tracing:
     apiGateway: true
@@ -244,6 +245,17 @@ provider:
     ServiceRole: "Backend"
     ProgrammingPlatform: Go
     Owner: "David Deal"
+  tags:
+    Name: ${self:service}
+    stage: ${self:provider.stage}
+    Project: "EasyCLA"
+    Product: "EasyCLA"
+    ManagedBy: "Serverless CloudFormation"
+    SericeType: "Product"
+    Service: ${self:service}
+    ServiceRole: "Backend"
+    ProgrammingPlatform: Go
+    Owner: "David Deal"
 
 plugins:
   - serverless-python-requirements
@@ -359,7 +371,7 @@ functions:
       - http:
           method: ANY
           path: v1/salesforce/projects
-          cors: true
+          #cors: true
 
   salesforceprojectbyID:
     handler: cla.salesforce.get_project
@@ -367,7 +379,7 @@ functions:
       - http:
           method: ANY
           path: v1/salesforce/project
-          cors: true
+          #cors: true
 
   saveMetrics:
     description: "EasyCLA Save Metrics"
