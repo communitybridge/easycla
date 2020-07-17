@@ -44,6 +44,7 @@ def format_json_cors_response(status_code, body):
     cors_headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': True,
+        'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     }
     response = format_response(status_code, cors_headers, body)
