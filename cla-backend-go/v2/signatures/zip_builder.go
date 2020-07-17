@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 
@@ -25,9 +26,10 @@ import (
 
 // constants
 const (
-	LocalFolder = "/mnt/storage"
-	ICLA        = "icla"
-	CCLA        = "ccla"
+	LocalFolder        = "/mnt/storage"
+	ICLA               = "icla"
+	CCLA               = "ccla"
+	ParallelDownloader = 100
 )
 
 type Zipper struct {
@@ -103,56 +105,44 @@ func (z *Zipper) buildZip(claType string, claGroupID string) error {
 	}
 	var zipUpdated bool
 	log.WithFields(f).Debug("getting s3 files")
-	err = z.s3.ListObjectsPages(&s3.ListObjectsInput{
-		Bucket: aws.String(z.bucketName),
-		Prefix: aws.String(s3ZipPrefix(claType, claGroupID)),
-	}, func(output *s3.ListObjectsOutput, b bool) bool {
-		for _, obj := range output.Contents {
-			key := utils.StringValue(obj.Key)
-			log.Debugf("filename : %s", key)
-			tmp := strings.Split(key, "/")
-			if len(tmp) != 5 {
-				continue
+	downloaderInputChan := make(chan *DownloadFileInput)
+	downloaderOutputChan := make(chan *FileContent)
+	var wg sync.WaitGroup
+	wg.Add(ParallelDownloader)
+	for i := 1; i <= ParallelDownloader; i++ {
+		go z.downloader(&wg, downloaderInputChan, downloaderOutputChan)
+	}
+	go func() {
+		wg.Wait()
+		close(downloaderOutputChan)
+	}()
+	go func() {
+		err = z.s3.ListObjectsPages(&s3.ListObjectsInput{
+			Bucket: aws.String(z.bucketName),
+			Prefix: aws.String(s3ZipPrefix(claType, claGroupID)),
+		}, func(output *s3.ListObjectsOutput, b bool) bool {
+			for _, obj := range output.Contents {
+				key := utils.StringValue(obj.Key)
+				tmp := strings.Split(key, "/")
+				if len(tmp) != 5 {
+					continue
+				}
+				filename := tmp[4]
+				if !newFile && files.Include(filename) {
+					// skip files which are already present in zip
+					continue
+				}
+				downloaderInputChan <- &DownloadFileInput{
+					filename: filename,
+					key:      obj.Key,
+				}
 			}
-			filename := tmp[4]
-			if !newFile && files.Include(filename) {
-				// skip files which are already present in zip
-				continue
-			}
-			log.Debugf("Downloading file : %s", filename)
-			buff := &aws.WriteAtBuffer{}
-			downloader := s3manager.NewDownloaderWithClient(z.s3)
-			_, err = downloader.Download(buff,
-				&s3.GetObjectInput{
-					Bucket: aws.String(z.bucketName),
-					Key:    obj.Key,
-				})
-			if err != nil {
-				log.WithField("file", key).Error("unable to add file to zip")
-				continue
-			}
-			log.Debugf("Adding file : %s to zip", filename)
-			header := &zip.FileHeader{
-				Name:   filename,
-				Method: zip.Deflate,
-			}
-			header.SetMode(0644)
-			f, err := writer.CreateHeader(header)
-			if err != nil {
-				log.WithField("file", key).Error("unable to write file header in zip")
-				continue
-			}
-			_, err = f.Write(buff.Bytes())
-			if err != nil {
-				log.WithField("file", key).Error("unable to write file data in zip")
-				continue
-			}
-			zipUpdated = true
-		}
-		return true
-	})
+			return true
+		})
+		close(downloaderInputChan)
+	}()
+	zipUpdated = writeFileToZip(writer, downloaderOutputChan)
 	if err != nil {
-		writer.Close()
 		zfile.Close()
 		return err
 	}
@@ -172,6 +162,64 @@ func (z *Zipper) buildZip(claType string, claGroupID string) error {
 		log.Debugf("Uploaded zip file %s", remoteZipFileKey)
 	}
 	return nil
+}
+
+type FileContent struct {
+	buff     *aws.WriteAtBuffer
+	filename string
+}
+
+type DownloadFileInput struct {
+	filename string
+	key      *string
+}
+
+func writeFileToZip(writer *zip.Writer, filesInput chan *FileContent) bool {
+	var zipUpdated bool
+	for fileContent := range filesInput {
+		filename := fileContent.filename
+		buff := fileContent.buff
+		log.Debugf("Adding file : %s to zip", filename)
+		header := &zip.FileHeader{
+			Name:   filename,
+			Method: zip.Deflate,
+		}
+		header.SetMode(0644)
+		f, err := writer.CreateHeader(header)
+		if err != nil {
+			log.WithField("file", filename).Error("unable to write file header in zip")
+			continue
+		}
+		_, err = f.Write(buff.Bytes())
+		if err != nil {
+			log.WithField("file", filename).Error("unable to write file data in zip")
+			continue
+		}
+		zipUpdated = true
+	}
+	return zipUpdated
+}
+
+func (z *Zipper) downloader(wg *sync.WaitGroup, inputChan chan *DownloadFileInput, outputChan chan *FileContent) {
+	defer wg.Done()
+	for in := range inputChan {
+		log.Debugf("Downloading file : %s", in.filename)
+		buff := &aws.WriteAtBuffer{}
+		downloader := s3manager.NewDownloaderWithClient(z.s3)
+		_, err := downloader.Download(buff,
+			&s3.GetObjectInput{
+				Bucket: aws.String(z.bucketName),
+				Key:    in.key,
+			})
+		if err != nil {
+			log.WithField("key", utils.StringValue(in.key)).Error("unable to download file from s3", err)
+			continue
+		}
+		outputChan <- &FileContent{
+			buff:     buff,
+			filename: in.filename,
+		}
+	}
 }
 
 func getZipFiles(zipFile string) (*utils.StringSet, error) {

@@ -53,7 +53,7 @@ func init() {
 	zipBuilder = signatures.NewZipBuilder(awsSession, configFile.SignatureFilesBucket)
 }
 
-func handler(ctx context.Context, event BuildZipEvent) {
+func handler(ctx context.Context, event BuildZipEvent) error {
 	var err error
 	log.WithField("event", event).Debug("zip builder called")
 	switch event.SignatureType {
@@ -65,8 +65,9 @@ func handler(ctx context.Context, event BuildZipEvent) {
 		log.WithField("event", event).Debug("Invalid event")
 	}
 	if err != nil {
-		log.Error("failed", err)
+		log.WithField("args", event).Error("failed to build zip", err)
 	}
+	return err
 }
 
 func printBuildInfo() {
@@ -83,7 +84,10 @@ func main() {
 		if len(os.Args) != 3 {
 			log.Fatal("invalid number of args. first arg should be icla or ccla and 2nd arg should be cla_group_id")
 		}
-		handler(context.Background(), BuildZipEvent{SignatureType: os.Args[1], ClaGroupID: os.Args[2]})
+		err := handler(context.Background(), BuildZipEvent{SignatureType: os.Args[1], ClaGroupID: os.Args[2]})
+		if err != nil {
+			log.Fatal(err)
+		}
 	} else {
 		lambda.Start(handler)
 	}
