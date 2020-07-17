@@ -56,7 +56,9 @@ provider:
   # Configuring API Gateway to return binary media can be done via the binaryMediaTypes config:
   apiGateway:
     binaryMediaTypes:
-      - '*/*'
+      - 'image/png'
+      - 'image/jpeg'
+      - 'application/pdf'
     metrics: true
 
   tracing:
@@ -340,8 +342,7 @@ functions:
       - http:
           method: ANY
           path: v1/{proxy+}
-          cors: true
-          # authorizer: ${file(./serverless-authorizer.yml)} - disabled as python already checks via
+          # cors: true
 
   apiv2:
     handler: wsgi_handler.handler
@@ -349,7 +350,7 @@ functions:
       - http:
           method: ANY
           path: v2/{proxy+}
-          cors: true
+          # cors: true
 
   githubinstall:
     handler: wsgi_handler.handler
@@ -371,7 +372,7 @@ functions:
       - http:
           method: ANY
           path: v1/salesforce/projects
-          #cors: true
+          # cors: true
 
   salesforceprojectbyID:
     handler: cla.salesforce.get_project
@@ -379,7 +380,7 @@ functions:
       - http:
           method: ANY
           path: v1/salesforce/project
-          #cors: true
+          # cors: true
 
   saveMetrics:
     description: "EasyCLA Save Metrics"
