@@ -11,7 +11,6 @@ import (
 
 	"github.com/juju/zip"
 
-	"github.com/communitybridge/easycla/cla-backend-go/logging"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -38,6 +37,7 @@ type Zipper struct {
 
 type ZipBuilder interface {
 	BuildICLAZip(claGroupID string) error
+	BuildCCLAZip(claGroupID string) error
 }
 
 func NewZipBuilder(awsSession *session.Session, bucketName string) ZipBuilder {
@@ -60,17 +60,25 @@ func s3ZipPrefix(claType string, claGroupID string) string {
 }
 
 func (z *Zipper) BuildICLAZip(claGroupID string) error {
-	f := logrus.Fields{"cla_group_id": claGroupID, "cla_type": ICLA}
+	return z.buildZip(ICLA, claGroupID)
+}
+
+func (z *Zipper) BuildCCLAZip(claGroupID string) error {
+	return z.buildZip(CCLA, claGroupID)
+}
+
+func (z *Zipper) buildZip(claType string, claGroupID string) error {
+	f := logrus.Fields{"cla_group_id": claGroupID, "cla_type": claType}
 	log.WithFields(f).Debug("syncing zip file for cla group")
-	err := z.syncFile(ICLA, claGroupID)
+	err := z.syncFile(claType, claGroupID)
 	if err != nil {
 		log.WithFields(f).Errorf("syncing zip file for cla group failed. error = %v", err)
 		return err
 	}
 
 	log.WithFields(f).Debug("syncing zip file for cla group")
-	zipFile := localZipFilepath(ICLA, claGroupID)
-	_, err = os.Stat(zipFile)
+	localZipFile := localZipFilepath(claType, claGroupID)
+	_, err = os.Stat(localZipFile)
 	var newFile bool
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -83,13 +91,13 @@ func (z *Zipper) BuildICLAZip(claGroupID string) error {
 	var files *utils.StringSet
 	if !newFile {
 		log.WithFields(f).Debug("getting list of all zip files in list")
-		files, err = getZipFiles(zipFile)
+		files, err = getZipFiles(localZipFile)
 		if err != nil {
 			return err
 		}
 	}
 	log.WithFields(f).Debug("getting zip writer")
-	writer, err := getZipWriter(newFile, ICLA, claGroupID)
+	writer, zfile, err := getZipWriter(newFile, claType, claGroupID)
 	if err != nil {
 		return err
 	}
@@ -97,7 +105,7 @@ func (z *Zipper) BuildICLAZip(claGroupID string) error {
 	log.WithFields(f).Debug("getting s3 files")
 	err = z.s3.ListObjectsPages(&s3.ListObjectsInput{
 		Bucket: aws.String(z.bucketName),
-		Prefix: aws.String(s3ZipPrefix(ICLA, claGroupID)),
+		Prefix: aws.String(s3ZipPrefix(claType, claGroupID)),
 	}, func(output *s3.ListObjectsOutput, b bool) bool {
 		for _, obj := range output.Contents {
 			key := utils.StringValue(obj.Key)
@@ -123,6 +131,7 @@ func (z *Zipper) BuildICLAZip(claGroupID string) error {
 				log.WithField("file", key).Error("unable to add file to zip")
 				continue
 			}
+			log.Debugf("Adding file : %s to zip", filename)
 			header := &zip.FileHeader{
 				Name:   filename,
 				Method: zip.Deflate,
@@ -143,10 +152,24 @@ func (z *Zipper) BuildICLAZip(claGroupID string) error {
 		return true
 	})
 	if err != nil {
+		writer.Close()
+		zfile.Close()
 		return err
 	}
 	if zipUpdated {
-
+		// we should only close the writer when we have have written some file
+		writer.Close()
+	}
+	zfile.Close()
+	if zipUpdated {
+		remoteZipFileKey := s3ZipFilepath(claType, claGroupID)
+		log.Debugf("Uploading zip file %s", remoteZipFileKey)
+		err := z.UploadFile(localZipFile, remoteZipFileKey)
+		if err != nil {
+			log.Warnf("Uploading zip file %s failed. error = %s", remoteZipFileKey, err.Error())
+			return err
+		}
+		log.Debugf("Uploaded zip file %s", remoteZipFileKey)
 	}
 	return nil
 }
@@ -164,51 +187,62 @@ func getZipFiles(zipFile string) (*utils.StringSet, error) {
 	return files, nil
 }
 
-func getZipWriter(newFile bool, claType string, claGroupID string) (*zip.Writer, error) {
+func getZipWriter(newFile bool, claType string, claGroupID string) (*zip.Writer, *os.File, error) {
 	zipFile := localZipFilepath(claType, claGroupID)
+	var zfile *os.File
+	var err error
 	var writer *zip.Writer
 	if newFile {
-		zfile, err := os.OpenFile(zipFile, os.O_RDWR|os.O_CREATE, 0644)
+		zfile, err = os.OpenFile(zipFile, os.O_RDWR|os.O_CREATE, 0644)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		writer = zip.NewWriter(zfile)
 	} else {
-		zfile, err := os.OpenFile(zipFile, os.O_RDWR, 0644)
+		// open existing zip file
+		zfile, err = os.OpenFile(zipFile, os.O_RDWR, 0644)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
+		// seek to end of file
 		size, err := zfile.Seek(0, 2)
 		if err != nil {
-			return nil, err
+			zfile.Close()
+			return nil, nil, err
 		}
 		r, err := zip.NewReader(zfile, size)
 		if err != nil {
-			return nil, err
+			zfile.Close()
+			return nil, nil, err
 		}
 		writer = r.Append(zfile)
 	}
-	return writer, nil
+	return writer, zfile, nil
 }
 
-func (z *Zipper) syncFile(claGroupID string, claType string) error {
+func (z *Zipper) syncFile(claType string, claGroupID string) error {
 	var localFileExist bool
 	var remoteFileExist bool
+	localFilePath := localZipFilepath(claType, claGroupID)
+	remoteFilePath := s3ZipFilepath(claType, claGroupID)
 	var syncNeeded bool
-	log.Debug("checking if localfile exist or not")
-	info, err := os.Stat(localZipFilepath(claType, claGroupID))
+	log.Debugf("checking if localfile exist or not. file = %s", localFilePath)
+	info, err := os.Stat(localFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
+			localFileExist = false
 		} else {
 			return err
 		}
 	} else {
 		localFileExist = true
 	}
+	log.Debugf("local file exist: %v", localFileExist)
+	log.Debugf("Checking if remote file exist. file =  %v", remoteFilePath)
 	// check if no s3 file exist or not
 	resp, err := z.s3.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(z.bucketName),
-		Key:    aws.String(s3ZipFilepath(claType, claGroupID)),
+		Key:    aws.String(remoteFilePath),
 	})
 	if err != nil {
 		aerr, ok := err.(awserr.Error)
@@ -218,29 +252,40 @@ func (z *Zipper) syncFile(claGroupID string, claType string) error {
 	} else {
 		remoteFileExist = true
 	}
+	log.Debugf("remote file exist: %v", remoteFileExist)
 	if remoteFileExist {
 		if localFileExist {
 			if resp.ContentLength != nil && *resp.ContentLength != info.Size() {
 				syncNeeded = true
+				log.WithField("remote_file_size", *resp.ContentLength).
+					WithField("local_file_size", info.Size()).
+					Debug("content of remote and local file is not same")
+			} else {
+				log.Debug("content of remote and local file is same")
 			}
 		} else {
 			syncNeeded = true
 		}
 	} else {
-		localFileExist = false
-		os.Remove(localZipFilepath(claType, claGroupID))
+		if localFileExist {
+			os.Remove(localFilePath)
+			localFileExist = false
+		}
 	}
 	if syncNeeded {
-		err = z.syncS3File(claType, claGroupID)
+		err = z.downloadZipFile(claType, claGroupID)
 		if err != nil {
+			log.Error("Downloading zip file failed", err)
 			return err
 		}
 	}
 	return nil
 }
 
-func (z *Zipper) syncS3File(claType string, claGroupID string) error {
+func (z *Zipper) downloadZipFile(claType string, claGroupID string) error {
 	localFile := localZipFilepath(claType, claGroupID)
+	remoteFileKey := s3ZipFilepath(claType, claGroupID)
+	log.Debugf("Downloading zip file %s", remoteFileKey)
 	file, err := os.Create(localFile)
 	if err != nil {
 		return err
@@ -253,36 +298,37 @@ func (z *Zipper) syncS3File(claType string, claGroupID string) error {
 	_, err = downloader.Download(file,
 		&s3.GetObjectInput{
 			Bucket: aws.String(z.bucketName),
-			Key:    aws.String(s3ZipFilepath(claType, claGroupID)),
+			Key:    aws.String(remoteFileKey),
 		})
 	if err != nil {
 		return err
 	}
-	logging.WithField("localfile", localFile).Debug("synced s3 file")
+	log.Debugf("Downloading zip file %s completed", remoteFileKey)
 	return nil
 }
 
-func (z *Zipper) UploadFile(localFilename, s3ZipFile string) {
+func (z *Zipper) UploadFile(localFilename, s3ZipFile string) error {
 	uploader := s3manager.NewUploaderWithClient(z.s3)
 
-	//open the file
+	// Open file
 	f, err := os.Open(localFilename)
 	if err != nil {
-		log.Debugf("failed to open file %q, %v", filename, err)
-		return
+		log.Debugf("failed to open file %q, %v", localFilename, err)
+		return err
 	}
-	//defer f.Close()
+	defer f.Close()
 
 	// Upload the file to S3.
-	result, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(myBucket),
-		Key:    aws.String(myKey),
+	_, err = uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(z.bucketName),
+		Key:    aws.String(s3ZipFile),
 		Body:   f,
 	})
 
 	//in case it fails to upload
 	if err != nil {
 		fmt.Printf("failed to upload file, %v", err)
-		return
+		return err
 	}
+	return nil
 }

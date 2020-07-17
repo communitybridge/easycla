@@ -32,6 +32,11 @@ var (
 	buildDate string
 )
 
+type BuildZipEvent struct {
+	ClaGroupID    string `json:"cla_group_id"`
+	SignatureType string `json:"signature_type"`
+}
+
 var zipBuilder signatures.ZipBuilder
 
 func init() {
@@ -48,8 +53,17 @@ func init() {
 	zipBuilder = signatures.NewZipBuilder(awsSession, configFile.SignatureFilesBucket)
 }
 
-func handler(ctx context.Context) {
-	err := zipBuilder.BuildICLAZip("2319870d-0a10-4d97-9b49-1241071e27fa")
+func handler(ctx context.Context, event BuildZipEvent) {
+	var err error
+	log.WithField("event", event).Debug("zip builder called")
+	switch event.SignatureType {
+	case signatures.ICLA:
+		err = zipBuilder.BuildICLAZip(event.ClaGroupID)
+	case signatures.CCLA:
+		err = zipBuilder.BuildCCLAZip(event.ClaGroupID)
+	default:
+		log.WithField("event", event).Debug("Invalid event")
+	}
 	if err != nil {
 		log.Error("failed", err)
 	}
@@ -66,7 +80,10 @@ func main() {
 	log.Info("Lambda server starting...")
 	printBuildInfo()
 	if os.Getenv("LOCAL_MODE") == "true" {
-		handler(context.Background())
+		if len(os.Args) != 3 {
+			log.Fatal("invalid number of args. first arg should be icla or ccla and 2nd arg should be cla_group_id")
+		}
+		handler(context.Background(), BuildZipEvent{SignatureType: os.Args[1], ClaGroupID: os.Args[2]})
 	} else {
 		lambda.Start(handler)
 	}
