@@ -23,7 +23,6 @@ import (
 
 	v1ClaManager "github.com/communitybridge/easycla/cla-backend-go/cla_manager"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
-	v1ProjectParams "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	v1User "github.com/communitybridge/easycla/cla-backend-go/user"
 	easyCLAUser "github.com/communitybridge/easycla/cla-backend-go/users"
@@ -129,9 +128,9 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		}
 	}
 
-	claGroup, err := getCLAGroup(claGroupID, params.ProjectSFID, s.projectService)
+	claGroup, err := s.projectService.GetProjectByID(claGroupID)
 	if err != nil || claGroup == nil {
-		msg := buildErrorMessage("project cla lookup failure or project doesnt have CCLA", claGroupID, params, err)
+		msg := buildErrorMessage("cla group search by ID failure", claGroupID, params, err)
 		log.Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
@@ -241,6 +240,25 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		}
 	}
 
+	// Add CLA Manager to Database
+	signature, addErr := s.managerService.AddClaManager(companyModel.CompanyID, claGroupID, user.Username)
+	if addErr != nil {
+		msg := buildErrorMessageCreate(params, addErr)
+		log.Warn(msg)
+		return nil, &models.ErrorResponse{
+			Message: msg,
+			Code:    "400",
+		}
+	}
+	if signature == nil {
+		sigMsg := fmt.Sprintf("Signature not found for project: %s and company: %s ", claGroupID, companyModel.CompanyID)
+		log.Warn(sigMsg)
+		return nil, &models.ErrorResponse{
+			Message: sigMsg,
+			Code:    "400",
+		}
+	}
+
 	log.Warn("Getting role")
 	// Get RoleID for cla-manager
 
@@ -298,25 +316,6 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		}
 	}
 
-	// Add CLA Manager to Database
-	signature, addErr := s.managerService.AddClaManager(companyModel.CompanyID, claGroup.ProjectID, user.Username)
-	if addErr != nil {
-		msg := buildErrorMessageCreate(params, addErr)
-		log.Warn(msg)
-		return nil, &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
-	if signature == nil {
-		sigMsg := fmt.Sprintf("Signature not found for project: %s and company: %s ", claGroupID, companyModel.CompanyID)
-		log.Warn(sigMsg)
-		return nil, &models.ErrorResponse{
-			Message: sigMsg,
-			Code:    "400",
-		}
-	}
-
 	claCompanyManager := &models.CompanyClaManager{
 		LfUsername:       user.Username,
 		Email:            *params.Body.UserEmail,
@@ -324,7 +323,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		ApprovedOn:       time.Now().String(),
 		ProjectSfid:      params.ProjectSFID,
 		ClaGroupName:     claGroup.ProjectName,
-		ProjectID:        claGroup.ProjectID,
+		ProjectID:        claGroupID,
 		ProjectName:      projectSF.Name,
 		OrganizationName: companyModel.CompanyName,
 		OrganizationSfid: params.CompanySFID,
@@ -854,25 +853,4 @@ support</a>.</p>
 func buildErrorMessage(errPrefix string, claGroupID string, params cla_manager.CreateCLAManagerParams, err error) string {
 	return fmt.Sprintf("%s - problem creating new CLA Manager Request using company SFID: %s, project ID: %s, first name: %s, last name: %s, user email: %s, error: %+v",
 		errPrefix, params.CompanySFID, claGroupID, *params.Body.FirstName, *params.Body.LastName, *params.Body.UserEmail, err)
-}
-
-func getCLAGroup(projectID string, projectSFID string, projectService project.Service) (*v1Models.Project, error) {
-	var claGroup v1Models.Project
-	// Search for projects by ProjectSFID
-	projects, projectErr := projectService.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
-		ProjectSFID: projectSFID,
-	})
-	// Get unique project by passed CLAGroup ID parameter
-	for _, proj := range projects.Projects {
-		if proj.ProjectID == projectID && proj.ProjectCCLAEnabled {
-			claGroup = proj
-			break
-		}
-	}
-
-	if projectErr != nil {
-		return nil, projectErr
-	}
-
-	return &claGroup, nil
 }
