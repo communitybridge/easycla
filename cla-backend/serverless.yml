@@ -56,9 +56,13 @@ provider:
   # Configuring API Gateway to return binary media can be done via the binaryMediaTypes config:
   apiGateway:
     binaryMediaTypes:
-      - 'image/png'
-      - 'image/jpeg'
+      - 'image/*'
       - 'application/pdf'
+      - 'application/zip'
+      - 'application/octet-stream'
+      - 'application/x-zip-compressed'
+      - 'application/x-rar-compressed'
+      - 'multipart/x-zip'
     metrics: true
 
   tracing:
@@ -277,6 +281,7 @@ plugins:
 functions:
   authorizer:
     handler: auth/bin/authorizer
+    description: "EasyCLA API authorizer"
     runtime: go1.x
     cors: true
     package:
@@ -287,10 +292,12 @@ functions:
   apiv3:
     runtime: go1.x
     handler: backend-aws-lambda
+    description: "EasyCLA Golang API handler for the /v3 endpoints"
     events:
       - http:
           method: ANY
           path: v3/{proxy+}
+          cors: true
     package:
       individually: true
       include:
@@ -336,54 +343,8 @@ functions:
       include:
         - ./dynamo-events-lambda
 
-  apiv1:
-    handler: wsgi_handler.handler
-    events:
-      - http:
-          method: ANY
-          path: v1/{proxy+}
-          # cors: true
-
-  apiv2:
-    handler: wsgi_handler.handler
-    events:
-      - http:
-          method: ANY
-          path: v2/{proxy+}
-          # cors: true
-
-  githubinstall:
-    handler: wsgi_handler.handler
-    events:
-      - http:
-          method: ANY
-          path: v2/github/installation
-
-  githubactivity:
-    handler: wsgi_handler.handler
-    events:
-      - http:
-          method: POST
-          path: v2/github/activity
-
-  salesforceprojects:
-    handler: cla.salesforce.get_projects
-    events:
-      - http:
-          method: ANY
-          path: v1/salesforce/projects
-          # cors: true
-
-  salesforceprojectbyID:
-    handler: cla.salesforce.get_project
-    events:
-      - http:
-          method: ANY
-          path: v1/salesforce/project
-          # cors: true
-
   saveMetrics:
-    description: "EasyCLA Save Metrics"
+    description: "EasyCLA Save Metrics API handler"
     runtime: go1.x
     handler: metrics-aws-lambda
     timeout: 900 # maximum time allowed
@@ -396,6 +357,60 @@ functions:
       individually: true
       include:
         - ./metrics-aws-lambda
+
+  apiv1:
+    handler: wsgi_handler.handler
+    description: "EasyCLA Python API handler for the /v1 endpoints"
+    events:
+      - http:
+          method: ANY
+          path: v1/{proxy+}
+          cors: true
+
+  apiv2:
+    handler: wsgi_handler.handler
+    description: "EasyCLA Python API handler for the /v2 endpoints"
+    events:
+      - http:
+          method: ANY
+          path: v2/{proxy+}
+          cors: true
+
+  salesforceprojects:
+    handler: cla.salesforce.get_projects
+    description: "EasyCLA API Callback Handler for fetching all SalesForce projects"
+    events:
+      - http:
+          method: ANY
+          path: v1/salesforce/projects
+          cors: true
+
+  salesforceprojectbyID:
+    handler: cla.salesforce.get_project
+    description: "EasyCLA API Callback Handler for fetching SalesForce projects by ID"
+    events:
+      - http:
+          method: ANY
+          path: v1/salesforce/project
+          cors: true
+
+  # GitHub callback handler
+  githubinstall:
+    handler: wsgi_handler.handler
+    description: "EasyCLA API Callback Handler for GitHub bot installations"
+    events:
+      - http:
+          method: ANY
+          path: v2/github/installation
+
+  # GitHub callback handler
+  githubactivity:
+    handler: wsgi_handler.handler
+    description: "EasyCLA API Callback Handler for GitHub activity"
+    events:
+      - http:
+          method: POST
+          path: v2/github/activity
 
 resources:
   Resources:
