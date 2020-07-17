@@ -53,6 +53,10 @@ provider:
   region: us-east-1
   timeout: 60 # optional, in seconds, default is 6
   logRetentionInDays: 14
+  # Configuring API Gateway to return binary media can be done via the binaryMediaTypes config:
+  apiGateway:
+    binaryMediaTypes:
+      - '*/*'
 
   tracing:
     apiGateway: true
