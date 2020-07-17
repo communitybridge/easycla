@@ -2,16 +2,15 @@ module github.com/communitybridge/easycla/cla-backend-go
 
 go 1.14
 
-replace github.com/awslabs/aws-lambda-go-api-proxy => github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
+//replace github.com/awslabs/aws-lambda-go-api-proxy => github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
 
 require (
-	//github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
-    github.com/awslabs/aws-lambda-go-api-proxy v0.7.0
 	github.com/LF-Engineering/lfx-kit v0.1.10
 	github.com/LF-Engineering/lfx-models v0.6.2
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
-	github.com/aws/aws-lambda-go v1.16.0
+	github.com/aws/aws-lambda-go v1.17.0
 	github.com/aws/aws-sdk-go v1.30.14
+	github.com/awslabs/aws-lambda-go-api-proxy v0.7.0
 	github.com/aymerick/raymond v2.0.2+incompatible
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
