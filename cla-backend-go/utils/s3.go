@@ -128,3 +128,8 @@ func GetDownloadLink(filename string) (string, error) {
 func SignedCLAFilename(projectID string, claType string, identifier string, signatureID string) string {
 	return strings.Join([]string{"contract-group", projectID, claType, identifier, signatureID}, "/") + ".pdf"
 }
+
+// SignedClaGroupZipFilename provides s3 bucket url of zip of pdf
+func SignedClaGroupZipFilename(projectID string, claType string) string {
+	return strings.Join([]string{"contract-group", projectID, claType}, "/") + ".zip"
+}
