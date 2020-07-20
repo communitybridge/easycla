@@ -525,6 +525,62 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 		return signatures.NewGetSignatureSignedDocumentOK().WithPayload(doc)
 	})
 
+	api.SignaturesDownloadProjectSignatureICLAsHandler = signatures.DownloadProjectSignatureICLAsHandlerFunc(
+		func(params signatures.DownloadProjectSignatureICLAsParams, authUser *auth.User) middleware.Responder {
+			claGroup, err := projectService.GetProjectByID(params.ClaGroupID)
+			if err != nil {
+				if err == project.ErrProjectDoesNotExist {
+					return signatures.NewDownloadProjectSignatureICLAsNotFound().WithPayload(errorResponse(err))
+				}
+				return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithPayload(errorResponse(err))
+			}
+			if !utils.IsUserAuthorizedForProject(authUser, claGroup.FoundationSFID) {
+				return signatures.NewDownloadProjectSignatureCCLAsForbidden().WithPayload(&models.ErrorResponse{
+					Code:    "403",
+					Message: fmt.Sprintf("EasyCLA: 403 Forbidden : User does not have permission to access project : %s", claGroup.FoundationSFID),
+				})
+			}
+			if !claGroup.ProjectICLAEnabled {
+				return signatures.NewDownloadProjectSignatureCCLAsBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA : 400 Bad Request : icla is not enabled on this project",
+				})
+			}
+			result, err := v2service.GetSignedIclaZipPdf(params.ClaGroupID)
+			if err != nil {
+				return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithPayload(errorResponse(err))
+			}
+			return signatures.NewDownloadProjectSignatureICLAsOK().WithPayload(result)
+
+		})
+	api.SignaturesDownloadProjectSignatureCCLAsHandler = signatures.DownloadProjectSignatureCCLAsHandlerFunc(
+		func(params signatures.DownloadProjectSignatureCCLAsParams, authUser *auth.User) middleware.Responder {
+			claGroup, err := projectService.GetProjectByID(params.ClaGroupID)
+			if err != nil {
+				if err == project.ErrProjectDoesNotExist {
+					return signatures.NewDownloadProjectSignatureICLAsNotFound().WithPayload(errorResponse(err))
+				}
+				return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithPayload(errorResponse(err))
+			}
+			if !utils.IsUserAuthorizedForProject(authUser, claGroup.FoundationSFID) {
+				return signatures.NewDownloadProjectSignatureCCLAsForbidden().WithPayload(&models.ErrorResponse{
+					Code:    "403",
+					Message: fmt.Sprintf("EasyCLA: 403 Forbidden : User does not have permission to access project : %s", claGroup.FoundationSFID),
+				})
+			}
+			if !claGroup.ProjectCCLAEnabled {
+				return signatures.NewDownloadProjectSignatureCCLAsBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA : 400 Bad Request : ccla is not enabled on this project",
+				})
+			}
+			result, err := v2service.GetSignedCclaZipPdf(params.ClaGroupID)
+			if err != nil {
+				return signatures.NewDownloadProjectSignatureCCLAsInternalServerError().WithPayload(errorResponse(err))
+			}
+			return signatures.NewDownloadProjectSignatureCCLAsOK().WithPayload(result)
+		})
+
 }
 
 func isUserHaveAccessOfSignedSignaturePDF(authUser *auth.User, signature *v1Models.Signature, companyService company.IService, projectClaGroupRepo projects_cla_groups.Repository) (bool, error) {
