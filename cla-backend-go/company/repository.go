@@ -1007,13 +1007,21 @@ func (repo repository) CreateCompany(in *models.Company) (*models.Company, error
 	comp := &DBModel{
 		CompanyID:         companyID.String(),
 		CompanyName:       in.CompanyName,
-		CompanyACL:        in.CompanyACL,
 		CompanyExternalID: in.CompanyExternalID,
-		CompanyManagerID:  in.CompanyManagerID,
 		Created:           now,
 		Updated:           now,
 		Version:           "v1",
 	}
+	if in.CompanyACL != nil {
+		comp.CompanyACL = in.CompanyACL
+	}
+	if in.CompanyManagerID != "" {
+		comp.CompanyManagerID = in.CompanyManagerID
+	}
+	if in.Note != "" {
+		comp.Note = in.Note
+	}
+
 	av, err := dynamodbattribute.MarshalMap(&comp)
 	if err != nil {
 		return nil, err
