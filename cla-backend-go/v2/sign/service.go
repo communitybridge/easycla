@@ -39,6 +39,7 @@ const (
 var (
 	ErrCCLANotEnabled        = errors.New("corporate license agreement is not enabled with this project")
 	ErrTemplateNotConfigured = errors.New("cla template not configured for this project")
+	ErrNotInOrg              error
 )
 
 // ProjectRepo contains project repo methods
@@ -188,6 +189,7 @@ func requestCorporateSignature(authToken string, apiURL string, input *requestCo
 }
 
 func prepareUserForSigning(userEmail string, companySFID, projectSFID string) error {
+	var ErrNotInOrg error
 	role := "cla-signatory"
 	f := logrus.Fields{"user_email": userEmail, "company_sfid": companySFID, "project_sfid": projectSFID}
 	log.WithFields(f).Debug("prepareUserForSigning called")
@@ -228,6 +230,10 @@ func prepareUserForSigning(userEmail string, companySFID, projectSFID string) er
 	log.WithFields(f).Debugf("assigning user role of %s", role)
 	err = osc.CreateOrgUserRoleOrgScopeProjectOrg(userEmail, projectSFID, companySFID, roleID)
 	if err != nil {
+		if strings.Contains(err.Error(), "associated with some organization") {
+			ErrNotInOrg = fmt.Errorf("user: %s already associated with some organization", user.Username)
+			return ErrNotInOrg
+		}
 		log.WithFields(f).Errorf("assigning user role of %s failed: %v", role, err)
 		return err
 	}
