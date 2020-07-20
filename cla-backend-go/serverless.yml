@@ -317,6 +317,8 @@ functions:
     name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-zipbuilder-lambda
     description: "build zip of signed signature pdf for cla group"
     runtime: go1.x
+    timeout: 900 # maximum time allowed
+    memorySize: 1024
     package:
       individually: true
       include:

@@ -31,16 +31,19 @@ const (
 	ParallelDownloader = 100
 )
 
+// Zipper implements ZipBuilder interface
 type Zipper struct {
 	s3         *s3.S3
 	bucketName string
 }
 
+// ZipBuilder provides method to build ICLA/CCLA zip
 type ZipBuilder interface {
 	BuildICLAZip(claGroupID string) error
 	BuildCCLAZip(claGroupID string) error
 }
 
+// NewZipBuilder returns the ZipBuilder
 func NewZipBuilder(awsSession *session.Session, bucketName string) ZipBuilder {
 	return &Zipper{
 		s3:         s3.New(awsSession),
@@ -56,10 +59,12 @@ func s3ZipPrefix(claType string, claGroupID string) string {
 	return fmt.Sprintf("contract-group/%s/%s/", claGroupID, claType)
 }
 
+// BuildICLAZip builds icla pdfs zip for cla-group and upload it on s3
 func (z *Zipper) BuildICLAZip(claGroupID string) error {
 	return z.buildZip(ICLA, claGroupID)
 }
 
+// BuildCCLAZip builds ccla pdfs zip for cla-group and upload it on s3
 func (z *Zipper) BuildCCLAZip(claGroupID string) error {
 	return z.buildZip(CCLA, claGroupID)
 }
@@ -132,7 +137,7 @@ func (z *Zipper) buildZip(claType string, claGroupID string) error {
 	if zipUpdated {
 		remoteZipFileKey := s3ZipFilepath(claType, claGroupID)
 		log.Debugf("Uploading zip file %s", remoteZipFileKey)
-		err := z.UploadFile(buff, remoteZipFileKey)
+		err := z.uploadFile(buff, remoteZipFileKey)
 		if err != nil {
 			log.Warnf("Uploading zip file %s failed. error = %s", remoteZipFileKey, err.Error())
 			return err
@@ -142,11 +147,13 @@ func (z *Zipper) buildZip(claType string, claGroupID string) error {
 	return nil
 }
 
+// FileContent contains file content of s3 file
 type FileContent struct {
 	buff     *aws.WriteAtBuffer
 	filename string
 }
 
+// DownloadFileInput is input to downloader
 type DownloadFileInput struct {
 	filename string
 	key      *string
@@ -259,7 +266,7 @@ func (z *Zipper) getZipFileFromS3(claType string, claGroupID string) (*bytes.Buf
 	return bytes.NewBuffer(buff.Bytes()), nil
 }
 
-func (z *Zipper) UploadFile(localFileContent *bytes.Buffer, s3ZipFile string) error {
+func (z *Zipper) uploadFile(localFileContent *bytes.Buffer, s3ZipFile string) error {
 	uploader := s3manager.NewUploaderWithClient(z.s3)
 	// Upload the file to S3.
 	_, err := uploader.Upload(&s3manager.UploadInput{

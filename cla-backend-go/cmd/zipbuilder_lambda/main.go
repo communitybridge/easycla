@@ -32,6 +32,7 @@ var (
 	buildDate string
 )
 
+// BuildZipEvent is argument to zipbuilder
 type BuildZipEvent struct {
 	ClaGroupID    string `json:"cla_group_id"`
 	SignatureType string `json:"signature_type"`
