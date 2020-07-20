@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
@@ -132,7 +134,8 @@ func (repo *repo) CreateProject(projectModel *models.Project) (*models.Project, 
 }
 
 func (repo *repo) getProjectByID(projectID string, loadProjectDetails bool) (*models.Project, error) {
-	log.Debugf("getProject - projectID: %s", projectID)
+	f := logrus.Fields{"projectID": projectID, "loadProjectDetails": loadProjectDetails}
+	log.WithFields(f).Debugf("getProjectByID - loading project")
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 	// This is the key we want to match
 	condition := expression.Key("project_id").Equal(expression.Value(projectID))
@@ -182,7 +185,8 @@ func (repo *repo) GetProjectByID(projectID string, loadRepoDetails bool) (*model
 
 // GetProjectsByExternalID queries the database and returns a list of the projects
 func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalIDParams, loadRepoDetails bool) (*models.Projects, error) {
-	log.Debugf("Project - Repository Service - GetProjectsByExternalID - ExternalID: %s", params.ProjectSFID)
+	f := logrus.Fields{"ProjectSFID": params.ProjectSFID, "NextKey": params.NextKey, "PageSize": params.PageSize, "loadRepoDetails": loadRepoDetails}
+	log.WithFields(f).Debugf("GetProjectsByExternalID - loading project")
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
 	// This is the key we want to match
@@ -191,7 +195,7 @@ func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalI
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
 	if err != nil {
-		log.Warnf("error building expression for project scan, error: %v", err)
+		log.WithFields(f).Warnf("error building expression for project scan, error: %v", err)
 	}
 
 	// Assemble the query input parameters
@@ -206,7 +210,7 @@ func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalI
 
 	// If we have the next key, set the exclusive start key value
 	if params.NextKey != nil && *params.NextKey != "" {
-		log.Debugf("Received a nextKey, value: %s", *params.NextKey)
+		log.WithFields(f).Debugf("Received a nextKey, value: %s", *params.NextKey)
 		// The primary key of the first item that this operation will evaluate.
 		// and the query key (if not the same)
 		queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
@@ -219,7 +223,7 @@ func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalI
 	var pageSize *int64
 	// If we have a page size, set the limit value - make sure it's a positive value
 	if params.PageSize != nil && *params.PageSize > 0 {
-		log.Debugf("Received a pageSize parameter, value: %d", *params.PageSize)
+		log.WithFields(f).Debugf("Received a pageSize parameter, value: %d", *params.PageSize)
 		pageSize = params.PageSize
 	} else {
 		// Default page size
@@ -234,14 +238,14 @@ func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalI
 	for ok := true; ok; ok = lastEvaluatedKey != "" {
 		results, errQuery := repo.dynamoDBClient.Query(queryInput)
 		if errQuery != nil {
-			log.Warnf("error retrieving projects, error: %v", errQuery)
+			log.WithFields(f).Warnf("error retrieving projects, error: %v", errQuery)
 			return nil, errQuery
 		}
 
 		// Convert the list of DB models to a list of response models
 		projectList, modelErr := repo.buildProjectModels(results.Items, loadRepoDetails)
 		if modelErr != nil {
-			log.Warnf("error converting project DB model to response model, error: %v",
+			log.WithFields(f).Warnf("error converting project DB model to response model, error: %v",
 				modelErr)
 			return nil, modelErr
 		}
@@ -275,7 +279,8 @@ func (repo *repo) GetProjectsByExternalID(params *project.GetProjectsByExternalI
 
 // GetClaGroupsByFoundationID queries the database and returns a list of all cla_groups associated with foundation
 func (repo *repo) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error) {
-	log.Debugf("Project - Repository Service - GetClaGroupsByFoundationSFID - FoundationSFID: %s", foundationSFID)
+	f := logrus.Fields{"foundationSFID": foundationSFID, "loadRepoDetails": loadRepoDetails}
+	log.WithFields(f).Debugf("GetClaGroupsByFoundationSFID - loading project")
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
 	// This is the key we want to match
@@ -284,7 +289,7 @@ func (repo *repo) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDe
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
 	if err != nil {
-		log.Warnf("error building expression for project scan, error: %v", err)
+		log.WithFields(f).Warnf("error building expression for project scan, error: %v", err)
 	}
 
 	// Assemble the query input parameters
@@ -301,14 +306,14 @@ func (repo *repo) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDe
 	for {
 		results, errQuery := repo.dynamoDBClient.Query(queryInput)
 		if errQuery != nil {
-			log.Warnf("error retrieving projects, error: %v", errQuery)
+			log.WithFields(f).Warnf("error retrieving projects, error: %v", errQuery)
 			return nil, errQuery
 		}
 
 		// Convert the list of DB models to a list of response models
 		projectList, modelErr := repo.buildProjectModels(results.Items, loadRepoDetails)
 		if modelErr != nil {
-			log.Warnf("error converting project DB model to response model, error: %v",
+			log.WithFields(f).Warnf("error converting project DB model to response model, error: %v",
 				modelErr)
 			return nil, modelErr
 		}
@@ -331,8 +336,11 @@ func (repo *repo) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDe
 
 // GetClaGroupsByProjectSFID returns cla_group associated with project
 func (repo *repo) GetClaGroupByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Project, error) {
+	f := logrus.Fields{"projectSFID": projectSFID, "loadRepoDetails": loadRepoDetails}
+	log.WithFields(f).Debugf("GetClaGroupByProjectSFID - loading project")
 	claGroupProject, err := repo.projectClaGroupRepo.GetClaGroupIDForProject(projectSFID)
 	if err != nil {
+		log.WithFields(f).Warnf("error fetching CLA Group ID for project, error: %v", err)
 		return nil, err
 	}
 	return repo.getProjectByID(claGroupProject.ClaGroupID, loadRepoDetails)
@@ -340,7 +348,8 @@ func (repo *repo) GetClaGroupByProjectSFID(projectSFID string, loadRepoDetails b
 
 // GetProjectByName returns the project model associated for the specified project name
 func (repo *repo) GetProjectByName(projectName string) (*models.Project, error) {
-	log.Debugf("GetProject - projectName: %s", projectName)
+	f := logrus.Fields{"projectName": projectName}
+	log.WithFields(f).Debugf("GetProjectByName - loading project")
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
 	// This is the key we want to match
@@ -349,7 +358,7 @@ func (repo *repo) GetProjectByName(projectName string) (*models.Project, error) 
 	// Use the builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
 	if err != nil {
-		log.Warnf("error building expression for Project query, projectName: %s, error: %v",
+		log.WithFields(f).Warnf("error building expression for Project query, projectName: %s, error: %v",
 			projectName, err)
 		return nil, err
 	}
@@ -367,18 +376,18 @@ func (repo *repo) GetProjectByName(projectName string) (*models.Project, error) 
 	// Make the DynamoDB Query API call
 	results, queryErr := repo.dynamoDBClient.Query(queryInput)
 	if queryErr != nil {
-		log.Warnf("error retrieving project by projectName: %s, error: %v", projectName, queryErr)
+		log.WithFields(f).Warnf("error retrieving project by projectName: %s, error: %v", projectName, queryErr)
 		return nil, queryErr
 	}
 
 	// Should only have one result
 	if *results.Count > 1 {
-		log.Warnf("Project scan by name returned more than one result using projectName: %s", projectName)
+		log.WithFields(f).Warnf("Project scan by name returned more than one result using projectName: %s", projectName)
 	}
 
 	// Didn't find it...
 	if *results.Count == 0 {
-		log.Debugf("Project scan by name returned no results using projectName: %s", projectName)
+		log.WithFields(f).Debugf("Project scan by name returned no results using projectName: %s", projectName)
 		return nil, nil
 	}
 
@@ -386,7 +395,7 @@ func (repo *repo) GetProjectByName(projectName string) (*models.Project, error) 
 	var dbModel DBProjectModel
 	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
 	if err != nil {
-		log.Warnf("error unmarshalling db project model, error: %+v", err)
+		log.WithFields(f).Warnf("error unmarshalling db project model, error: %+v", err)
 		return nil, err
 	}
 
@@ -396,7 +405,8 @@ func (repo *repo) GetProjectByName(projectName string) (*models.Project, error) 
 
 // GetExternalProject returns the project model associated for the specified external project ID
 func (repo *repo) GetExternalProject(projectExternalID string) (*models.Project, error) {
-	log.Debugf("GetExternalProject - projectID: %s", projectExternalID)
+	f := logrus.Fields{"projectExternalID": projectExternalID}
+	log.WithFields(f).Debugf("GetExternalProject - loading project")
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 	// This is the key we want to match
 	condition := expression.Key("project_external_id").Equal(expression.Value(projectExternalID))
@@ -404,7 +414,7 @@ func (repo *repo) GetExternalProject(projectExternalID string) (*models.Project,
 	// Use the builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
 	if err != nil {
-		log.Warnf("error building expression for Project query, projectExternalID: %s, error: %v",
+		log.WithFields(f).Warnf("error building expression for Project query, projectExternalID: %s, error: %v",
 			projectExternalID, err)
 		return nil, err
 	}
@@ -422,7 +432,7 @@ func (repo *repo) GetExternalProject(projectExternalID string) (*models.Project,
 	// Make the DynamoDB Query API call
 	results, queryErr := repo.dynamoDBClient.Query(queryInput)
 	if queryErr != nil {
-		log.Warnf("error retrieving project by projectExternalID: %s, error: %v", projectExternalID, queryErr)
+		log.WithFields(f).Warnf("error retrieving project by projectExternalID: %s, error: %v", projectExternalID, queryErr)
 		return nil, queryErr
 	}
 
@@ -433,13 +443,13 @@ func (repo *repo) GetExternalProject(projectExternalID string) (*models.Project,
 
 	// Should only have one result
 	if *results.Count > 1 {
-		log.Warnf("Project query returned more than one result using projectExternalID: %s", projectExternalID)
+		log.WithFields(f).Warnf("Project query returned more than one result using projectExternalID: %s", projectExternalID)
 	}
 
 	var dbModel DBProjectModel
 	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
 	if err != nil {
-		log.Warnf("error unmarshalling db project model, error: %+v", err)
+		log.WithFields(f).Warnf("error unmarshalling db project model, error: %+v", err)
 		return nil, err
 	}
 
@@ -536,15 +546,18 @@ func (repo *repo) GetProjects(params *project.GetProjectsParams) (*models.Projec
 
 // DeleteProject deletes the project by projectID
 func (repo *repo) DeleteProject(projectID string) error {
+	f := logrus.Fields{"projectID": projectID}
+	log.WithFields(f).Debugf("DeleteProject - deleting CLA Group")
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
 	existingProject, getErr := repo.GetProjectByID(projectID, DontLoadRepoDetails)
 	if getErr != nil {
-		log.Warnf("delete - error locating the project id: %s, error: %+v", projectID, getErr)
+		log.WithFields(f).Warnf("delete - error locating the CLA Group, error: %+v", getErr)
 		return getErr
 	}
 
 	if existingProject == nil {
+		log.WithFields(f).Warn("unable to locate CLA Group by ID - CLA Group does not exist")
 		return ErrProjectDoesNotExist
 	}
 
@@ -560,7 +573,7 @@ func (repo *repo) DeleteProject(projectID string) error {
 	})
 
 	if deleteErr != nil {
-		log.Warnf("Error deleting project with ID : %s, error: %v", projectID, deleteErr)
+		log.WithFields(f).Warnf("Error deleting project with CLA Guoup ID : %s, error: %v", projectID, deleteErr)
 		return deleteErr
 	}
 
@@ -569,6 +582,11 @@ func (repo *repo) DeleteProject(projectID string) error {
 
 // UpdateProject updates the project by projectID
 func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, error) {
+	f := logrus.Fields{"ProjectID": projectModel.ProjectID, "ProjectName": projectModel.ProjectName,
+		"FoundationSFID": projectModel.FoundationSFID, "ProjectExternalID": projectModel.ProjectExternalID,
+		"ProjectICLAEnabled": projectModel.ProjectICLAEnabled, "ProjectCCLAEnabled": projectModel.ProjectCCLAEnabled,
+		"ProjectCCLARequiresICLA": projectModel.ProjectCCLARequiresICLA}
+	log.WithFields(f).Debugf("UpdateProject - updating CLA Group")
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 
 	if projectModel.ProjectID == "" {
@@ -577,7 +595,7 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 
 	existingProject, getErr := repo.GetProjectByID(projectModel.ProjectID, DontLoadRepoDetails)
 	if getErr != nil {
-		log.Warnf("update - error locating the project id: %s, error: %+v", projectModel.ProjectID, getErr)
+		log.WithFields(f).Warnf("update - error locating the project id: %s, error: %+v", projectModel.ProjectID, getErr)
 		return nil, getErr
 	}
 
@@ -590,39 +608,39 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 	updateExpression := "SET "
 
 	if projectModel.ProjectName != "" {
-		log.Debugf("UpdateProject - adding project_name: %s", projectModel.ProjectName)
+		log.WithFields(f).Debugf("UpdateProject - adding project_name: %s", projectModel.ProjectName)
 		expressionAttributeNames["#N"] = aws.String("project_name")
 		expressionAttributeValues[":n"] = &dynamodb.AttributeValue{S: aws.String(projectModel.ProjectName)}
 		updateExpression = updateExpression + " #N = :n, "
-		log.Debugf("UpdateProject- adding project name lower: %s", strings.ToLower(projectModel.ProjectName))
+		log.WithFields(f).Debugf("UpdateProject- adding project name lower: %s", strings.ToLower(projectModel.ProjectName))
 		expressionAttributeNames["#LOW"] = aws.String("project_name_lower")
 		expressionAttributeValues[":low"] = &dynamodb.AttributeValue{S: aws.String(strings.ToLower(projectModel.ProjectName))}
 		updateExpression = updateExpression + " #LOW = :low, "
 	}
 	if projectModel.ProjectACL != nil && len(projectModel.ProjectACL) > 0 {
-		log.Debugf("UpdateProject - adding project_acl: %s", projectModel.ProjectACL)
+		log.WithFields(f).Debugf("UpdateProject - adding project_acl: %s", projectModel.ProjectACL)
 		expressionAttributeNames["#A"] = aws.String("project_acl")
 		expressionAttributeValues[":a"] = &dynamodb.AttributeValue{SS: aws.StringSlice(projectModel.ProjectACL)}
 		updateExpression = updateExpression + " #A = :a, "
 	}
 
-	log.Debugf("UpdateProject - adding project_icla_enabled: %t", projectModel.ProjectICLAEnabled)
+	log.WithFields(f).Debugf("UpdateProject - adding project_icla_enabled: %t", projectModel.ProjectICLAEnabled)
 	expressionAttributeNames["#I"] = aws.String("project_icla_enabled")
 	expressionAttributeValues[":i"] = &dynamodb.AttributeValue{BOOL: aws.Bool(projectModel.ProjectICLAEnabled)}
 	updateExpression = updateExpression + " #I = :i, "
 
-	log.Debugf("UpdateProject - adding project_ccla_enabled: %t", projectModel.ProjectCCLAEnabled)
+	log.WithFields(f).Debugf("UpdateProject - adding project_ccla_enabled: %t", projectModel.ProjectCCLAEnabled)
 	expressionAttributeNames["#C"] = aws.String("project_ccla_enabled")
 	expressionAttributeValues[":c"] = &dynamodb.AttributeValue{BOOL: aws.Bool(projectModel.ProjectCCLAEnabled)}
 	updateExpression = updateExpression + " #C = :c, "
 
-	log.Debugf("UpdateProject - adding project_ccla_requires_icla_signature: %t", projectModel.ProjectCCLARequiresICLA)
+	log.WithFields(f).Debugf("UpdateProject - adding project_ccla_requires_icla_signature: %t", projectModel.ProjectCCLARequiresICLA)
 	expressionAttributeNames["#CI"] = aws.String("project_ccla_requires_icla_signature")
 	expressionAttributeValues[":ci"] = &dynamodb.AttributeValue{BOOL: aws.Bool(projectModel.ProjectCCLARequiresICLA)}
 	updateExpression = updateExpression + " #CI = :ci, "
 
 	_, currentTimeString := utils.CurrentTime()
-	log.Debugf("UpdateProject - adding date_modified: %s", currentTimeString)
+	log.WithFields(f).Debugf("UpdateProject - adding date_modified: %s", currentTimeString)
 	expressionAttributeNames["#M"] = aws.String("date_modified")
 	expressionAttributeValues[":m"] = &dynamodb.AttributeValue{S: aws.String(currentTimeString)}
 	updateExpression = updateExpression + " #M = :m "
@@ -644,7 +662,7 @@ func (repo *repo) UpdateProject(projectModel *models.Project) (*models.Project, 
 	// Make the DynamoDB Update API call
 	_, updateErr := repo.dynamoDBClient.UpdateItem(updateInput)
 	if updateErr != nil {
-		log.Warnf("error updating project by projectID: %s, error: %v", projectModel.ProjectID, updateErr)
+		log.WithFields(f).Warnf("error updating project by projectID: %s, error: %v", projectModel.ProjectID, updateErr)
 		return nil, updateErr
 	}
 
