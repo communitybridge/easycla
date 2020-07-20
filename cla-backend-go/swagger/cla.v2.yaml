@@ -2365,6 +2365,8 @@ paths:
           $ref: '#/responses/forbidden'
         '404':
           $ref: '#/responses/not-found'
+        '409':
+          $ref: '#/responses/conflict'
       tags:
         - sign
 
