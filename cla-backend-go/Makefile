@@ -26,6 +26,8 @@ TEST_ENV=AWS_REGION=us-east-1 DYNAMODB_AWS_REGION=us-east-1 AWS_PROFILE=bar AWS_
 all: all-mac
 all-mac: clean swagger deps fmt build-mac build-aws-lambda build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-schedular-lambda-mac build-zipbuilder-lambda-mac test lint
 all-linux: clean swagger deps fmt build-linux build-aws-lambda build-metrics-lambda-linux build-dynamo-events-lambda-linux build-zipbuilder-schedular-lambda-linux build-zipbuilder-lambda-linux test lint
+build-lambdas-mac: build-aws-lambda build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-schedular-lambda-mac build-zipbuilder-lambda-mac
+build-lambdas-linux: build-aws-lambda build-metrics-lambda-linux build-dynamo-events-lambda-linux build-zipbuilder-schedular-lambda-linux build-zipbuilder-lambda-linux
 
 generate: swagger
 
