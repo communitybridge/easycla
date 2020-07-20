@@ -42,6 +42,8 @@ type Service interface {
 	GetProjectIclaSignaturesCsv(claGroupID string) ([]byte, error)
 	GetProjectIclaSignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
 	GetSignedDocument(signatureID string) (*models.SignedDocument, error)
+	GetSignedIclaZipPdf(claGroupID string) (*models.URLObject, error)
+	GetSignedCclaZipPdf(claGroupID string) (*models.URLObject, error)
 }
 
 // NewService creates instance of v2 signature service
@@ -142,5 +144,26 @@ func (s service) GetSignedDocument(signatureID string) (*models.SignedDocument, 
 	return &models.SignedDocument{
 		SignatureID:  signatureID,
 		SignedClaURL: signedURL,
+	}, nil
+}
+
+func (s service) GetSignedCclaZipPdf(claGroupID string) (*models.URLObject, error) {
+	url := utils.SignedClaGroupZipFilename(claGroupID, CCLA)
+	signedURL, err := utils.GetDownloadLink(url)
+	if err != nil {
+		return nil, err
+	}
+	return &models.URLObject{
+		URL: signedURL,
+	}, nil
+}
+func (s service) GetSignedIclaZipPdf(claGroupID string) (*models.URLObject, error) {
+	url := utils.SignedClaGroupZipFilename(claGroupID, ICLA)
+	signedURL, err := utils.GetDownloadLink(url)
+	if err != nil {
+		return nil, err
+	}
+	return &models.URLObject{
+		URL: signedURL,
 	}, nil
 }
