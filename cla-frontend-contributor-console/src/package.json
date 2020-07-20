@@ -62,6 +62,9 @@
     "@ionic/app-scripts": "3.2.0",
     "typescript": "2.6.2"
   },
+  "resolutions": {
+    "mem": "^4.0.0"
+  },
   "cordovaPlugins": [
     "cordova-plugin-whitelist",
     "cordova-plugin-statusbar",
