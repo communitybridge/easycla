@@ -75,6 +75,11 @@ provider:
         - "arn:aws:s3:::cla-project-logo-${self:provider.stage}/*"
     - Effect: Allow
       Action:
+        - lambda:InvokeFunction
+      Resource:
+        - "arn:aws:lambda:${self:provider.region}:#{AWS::AccountId}:function:cla-${opt:stage}-zipbuilder-lambda"
+    - Effect: Allow
+      Action:
         - ssm:GetParameter
       Resource:
         - "arn:aws:ssm:${self:provider.region}:#{AWS::AccountId}:parameter/cla-*"
