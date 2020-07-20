@@ -15,6 +15,10 @@ functional-tests-mac
 dynamo-events-lambda
 dynamo-events-lambda-mac
 dynamo-events-lambda-linux
+zipbuilder-lambda
+zipbuilder-lambda-mac
+zipbuilder-schedular-lambda-mac
+zipbuilder-schedular-lambda
 *env.json
 db/schema.sql
 
