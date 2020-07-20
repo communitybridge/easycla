@@ -39,12 +39,14 @@ var (
 	buildDate string
 )
 
+// ClaGroup is cla-group dynamodb model
 type ClaGroup struct {
 	ProjectID          string `json:"project_id"`
 	ProjectIclaEnabled bool   `json:"project_icla_enabled"`
 	ProjectCclaEnabled bool   `json:"project_ccla_enabled"`
 }
 
+// BuildZipEvent is argument to zipbuilder
 type BuildZipEvent struct {
 	ClaGroupID    string `json:"cla_group_id"`
 	SignatureType string `json:"signature_type"`
@@ -103,9 +105,7 @@ func invokeLambda(wg *sync.WaitGroup, lambdaClient *lambda.Lambda, stage string,
 	_, err = lambdaClient.Invoke(&lambda.InvokeInput{FunctionName: aws.String(functionName), Payload: payload})
 	if err != nil {
 		log.WithField("input", buildZipEvent).Error("unable to create zip", err)
-		return
 	}
-	return
 }
 
 func getClaGroups(dynamoDBClient *dynamodb.DynamoDB, stage string) ([]*ClaGroup, error) {
