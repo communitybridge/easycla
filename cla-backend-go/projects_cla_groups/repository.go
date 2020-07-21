@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -117,7 +119,9 @@ func (repo *repo) queryClaGroupsProjects(keyCondition expression.KeyConditionBui
 	return projectClaGroups, nil
 }
 
+// GetClaGroupIDForProject retrieves the CLA Group ID for the project
 func (repo *repo) GetClaGroupIDForProject(projectSFID string) (*ProjectClaGroup, error) {
+	f := logrus.Fields{"function": "GetClaGroupIDForProject", "tableName": repo.tableName, "projectSFID": projectSFID}
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(repo.tableName),
 		Key: map[string]*dynamodb.AttributeValue{
@@ -126,15 +130,20 @@ func (repo *repo) GetClaGroupIDForProject(projectSFID string) (*ProjectClaGroup,
 			},
 		},
 	})
+
 	if err != nil {
+		log.WithFields(f).Warnf("unable to lookup CLA Group associated with project, error: %+v", err)
 		return nil, err
 	}
 	if len(result.Item) == 0 {
+		log.WithFields(f).Warn("unable to lookup CLA Group associated with project - missing table entry")
 		return nil, ErrProjectNotAssociatedWithClaGroup
 	}
+
 	var out ProjectClaGroup
 	err = dynamodbattribute.UnmarshalMap(result.Item, &out)
 	if err != nil {
+		log.WithFields(f).Warnf("unable decode results from database, error: %+v", err)
 		return nil, err
 	}
 	return &out, nil
