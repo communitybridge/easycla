@@ -12,6 +12,9 @@
   "dependencies": {
     "graceful-fs": "^4.2.2"
   },
+  "resolutions": {
+    "mem": "^4.0.0"
+  },
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
