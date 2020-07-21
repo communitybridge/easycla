@@ -59,7 +59,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 	api.ClaGroupDeleteClaGroupHandler = cla_group.DeleteClaGroupHandlerFunc(func(params cla_group.DeleteClaGroupParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		cg, err := v1ProjectService.GetProjectByID(params.ClaGroupID)
+		cg, err := v1ProjectService.GetCLAGroupByID(params.ClaGroupID)
 		if err != nil {
 			if err == v1Project.ErrProjectDoesNotExist {
 				return cla_group.NewDeleteClaGroupNotFound().WithPayload(&models.ErrorResponse{
@@ -102,7 +102,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 	api.ClaGroupEnrollProjectsHandler = cla_group.EnrollProjectsHandlerFunc(func(params cla_group.EnrollProjectsParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		cg, err := v1ProjectService.GetProjectByID(params.ClaGroupID)
+		cg, err := v1ProjectService.GetCLAGroupByID(params.ClaGroupID)
 		if err != nil {
 			if err == v1Project.ErrProjectDoesNotExist {
 				return cla_group.NewEnrollProjectsNotFound().WithPayload(&models.ErrorResponse{
@@ -158,7 +158,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			})
 		}
 
-		result, err := service.ListClaGroupsUnderFoundation(params.ProjectSFID)
+		result, err := service.ListClaGroupsForFoundationOrProject(params.ProjectSFID)
 		if err != nil {
 			return cla_group.NewListClaGroupsUnderFoundationInternalServerError().WithPayload(&models.ErrorResponse{
 				Code:    "500",

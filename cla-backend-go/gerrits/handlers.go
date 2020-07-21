@@ -12,14 +12,14 @@ import (
 
 // ProjectService contains Project methods
 type ProjectService interface {
-	GetProjectByID(projectID string) (*models.Project, error)
+	GetCLAGroupByID(projectID string) (*models.Project, error)
 }
 
 // Configure the gerrit api
 func Configure(api *operations.ClaAPI, service Service, projectService ProjectService, eventService events.Service) {
 	api.GerritsDeleteGerritHandler = gerrits.DeleteGerritHandlerFunc(
 		func(params gerrits.DeleteGerritParams, claUser *user.CLAUser) middleware.Responder {
-			projectModel, err := projectService.GetProjectByID(params.ProjectID)
+			projectModel, err := projectService.GetCLAGroupByID(params.ProjectID)
 			if err != nil {
 				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
 			}
@@ -57,7 +57,7 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 
 	api.GerritsAddGerritHandler = gerrits.AddGerritHandlerFunc(
 		func(params gerrits.AddGerritParams, claUser *user.CLAUser) middleware.Responder {
-			projectModel, err := projectService.GetProjectByID(params.ProjectID)
+			projectModel, err := projectService.GetCLAGroupByID(params.ProjectID)
 			if err != nil {
 				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
 			}

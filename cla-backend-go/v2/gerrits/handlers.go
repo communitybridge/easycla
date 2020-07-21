@@ -16,7 +16,7 @@ import (
 )
 
 type ProjectService interface { //nolint
-	GetProjectByID(projectID string) (*v1Models.Project, error)
+	GetCLAGroupByID(projectID string) (*v1Models.Project, error)
 }
 
 // Configure the Gerrit api
@@ -24,7 +24,7 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 	api.GerritsDeleteGerritHandler = gerrits.DeleteGerritHandlerFunc(
 		func(params gerrits.DeleteGerritParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			projectModel, err := projectService.GetProjectByID(params.ProjectID)
+			projectModel, err := projectService.GetCLAGroupByID(params.ProjectID)
 			if err != nil {
 				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
 			}
@@ -73,7 +73,7 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 	api.GerritsAddGerritHandler = gerrits.AddGerritHandlerFunc(
 		func(params gerrits.AddGerritParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			projectModel, err := projectService.GetProjectByID(params.ProjectID)
+			projectModel, err := projectService.GetCLAGroupByID(params.ProjectID)
 			if err != nil {
 				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
 			}

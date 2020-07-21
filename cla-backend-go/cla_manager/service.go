@@ -191,7 +191,7 @@ func (s service) AddClaManager(companyID string, projectID string, LFID string) 
 		return nil, companyErr
 	}
 
-	projectModel, projectErr := s.projectService.GetProjectByID(projectID)
+	projectModel, projectErr := s.projectService.GetCLAGroupByID(projectID)
 	if projectErr != nil || projectModel == nil {
 		return nil, projectErr
 	}
@@ -289,7 +289,7 @@ func (s service) RemoveClaManager(companyID string, projectID string, LFID strin
 		return nil, companyErr
 	}
 
-	projectModel, projectErr := s.projectService.GetProjectByID(projectID)
+	projectModel, projectErr := s.projectService.GetCLAGroupByID(projectID)
 	if projectErr != nil || projectModel == nil {
 		return nil, projectErr
 	}
@@ -309,7 +309,7 @@ func (s service) RemoveClaManager(companyID string, projectID string, LFID strin
 		return nil, aclErr
 	}
 
-	// Get Updated cla manager list with removed manager for email purporses
+	// Get Updated cla manager list with removed manager for email purposes
 	sigModel, sigErr = s.getCompanySignature(companyID, projectID)
 	if sigErr != nil {
 		return nil, sigErr

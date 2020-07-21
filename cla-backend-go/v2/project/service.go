@@ -64,7 +64,7 @@ func (s *service) GetCLAProjectsByID(foundationSFID string) (*models.EnabledClaL
 				cla.ProjectLogo = projectDetails.ProjectLogo
 				cla.ProjectType = projectDetails.ProjectType
 			}
-			claGroup, err := s.projectRepo.GetProjectByID(claGroupID, v1Project.DontLoadRepoDetails)
+			claGroup, err := s.projectRepo.GetCLAGroupByID(claGroupID, v1Project.DontLoadRepoDetails)
 			if err != nil {
 				log.Warnf("unable to fetch cla-group details of %s", claGroupID)
 			} else {

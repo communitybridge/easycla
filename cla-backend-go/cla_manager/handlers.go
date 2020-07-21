@@ -50,7 +50,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		projectModel, projectErr := projectService.GetCLAGroupByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
 			msg := buildErrorMessage("project lookup error", params, projectErr)
 			log.Warn(msg)
@@ -252,7 +252,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		projectModel, projectErr := projectService.GetCLAGroupByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
 			msg := buildErrorMessageForApprove(params, projectErr)
 			log.Warn(msg)
@@ -357,7 +357,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		projectModel, projectErr := projectService.GetCLAGroupByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
 			msg := buildErrorMessageForDeny(params, projectErr)
 			log.Warn(msg)
@@ -451,7 +451,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		// Make sure the project id exists...
-		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		projectModel, projectErr := projectService.GetCLAGroupByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
 			msg := buildErrorMessageForDelete(params, projectErr)
 			log.Warn(msg)
@@ -567,7 +567,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		projectModel, projectErr := projectService.GetCLAGroupByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
 			msg := fmt.Sprintf("User lookup for project by ID: %s failed ", params.ProjectID)
 			log.Warn(msg)
@@ -646,7 +646,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		projectModel, projectErr := projectService.GetCLAGroupByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
 			msg := fmt.Sprintf("User lookup for project by ID: %s failed ", params.ProjectID)
 			log.Warn(msg)
