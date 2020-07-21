@@ -17,8 +17,8 @@ dynamo-events-lambda-mac
 dynamo-events-lambda-linux
 zipbuilder-lambda
 zipbuilder-lambda-mac
-zipbuilder-schedular-lambda-mac
-zipbuilder-schedular-lambda
+zipbuilder-scheduler-lambda-mac
+zipbuilder-scheduler-lambda
 *env.json
 db/schema.sql
 
