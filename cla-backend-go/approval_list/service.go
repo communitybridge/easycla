@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-package whitelist
+package approval_list
 
 import (
 	"errors"
@@ -81,7 +81,7 @@ func (s service) AddCclaWhitelistRequest(companyID string, projectID string, arg
 		log.Warnf("AddCclaWhitelistRequest - unable to lookup company by id: %s, error: %+v", companyID, err)
 		return "", err
 	}
-	projectModel, err := s.projectRepo.GetProjectByID(projectID, DontLoadRepoDetails)
+	projectModel, err := s.projectRepo.GetCLAGroupByID(projectID, DontLoadRepoDetails)
 	if err != nil {
 		log.Warnf("AddCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", projectID, err)
 		return "", err
@@ -139,7 +139,7 @@ func (s service) ApproveCclaWhitelistRequest(companyID, projectID, requestID str
 		log.Warnf("ApproveCclaWhitelistRequest - unable to lookup company by id: %s, error: %+v", companyID, err)
 		return err
 	}
-	projectModel, err := s.projectRepo.GetProjectByID(projectID, DontLoadRepoDetails)
+	projectModel, err := s.projectRepo.GetCLAGroupByID(projectID, DontLoadRepoDetails)
 	if err != nil {
 		log.Warnf("ApproveCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", projectID, err)
 		return err
@@ -177,7 +177,7 @@ func (s service) RejectCclaWhitelistRequest(companyID, projectID, requestID stri
 		log.Warnf("RejectCclaWhitelistRequest - unable to lookup company by id: %s, error: %+v", companyID, err)
 		return err
 	}
-	projectModel, err := s.projectRepo.GetProjectByID(projectID, DontLoadRepoDetails)
+	projectModel, err := s.projectRepo.GetCLAGroupByID(projectID, DontLoadRepoDetails)
 	if err != nil {
 		log.Warnf("RejectCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", projectID, err)
 		return err

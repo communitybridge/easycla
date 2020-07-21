@@ -45,7 +45,7 @@ type Service interface {
 	CreateCLAGroup(input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error)
 	EnrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error
 	DeleteCLAGroup(claGroupID string) error
-	ListClaGroupsUnderFoundation(foundationSFID string) (*models.ClaGroupList, error)
+	ListClaGroupsForFoundationOrProject(foundationSFID string) (*models.ClaGroupList, error)
 	ValidateCLAGroup(input *models.ClaGroupValidationRequest) (bool, []string)
 	ListAllFoundationClaGroups(foundationID *string) (*models.FoundationMappingList, error)
 }
@@ -72,7 +72,7 @@ func (s *service) ValidateCLAGroup(input *models.ClaGroupValidationRequest) (boo
 
 	// Note: CLA Group Name Min/Max Character Length validated via Swagger Spec restrictions
 	if input.ClaGroupName != nil {
-		claGroupModel, err := s.v1ProjectService.GetProjectByName(*input.ClaGroupName)
+		claGroupModel, err := s.v1ProjectService.GetCLAGroupByName(*input.ClaGroupName)
 		if err != nil {
 			valid = false
 			validationErrors = append(validationErrors, fmt.Sprintf("unable to query project service - error: %+v", err))
@@ -102,7 +102,7 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 			return false, fmt.Errorf("bad request: ccla_requires_icla can not be enabled if one of icla/ccla is disabled")
 		}
 	}
-	claGroupModel, err := s.v1ProjectService.GetProjectByName(input.ClaGroupName)
+	claGroupModel, err := s.v1ProjectService.GetCLAGroupByName(input.ClaGroupName)
 	if err != nil {
 		return false, err
 	}
@@ -209,7 +209,7 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 
 	// Create cla group
 	log.WithFields(f).WithField("input", input).Debugf("creating cla group")
-	claGroup, err := s.v1ProjectService.CreateProject(&v1Models.Project{
+	claGroup, err := s.v1ProjectService.CreateCLAGroup(&v1Models.Project{
 		FoundationSFID:          input.FoundationSfid,
 		ProjectDescription:      input.ClaGroupDescription,
 		ProjectCCLAEnabled:      input.CclaEnabled,
@@ -243,7 +243,7 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 	if err != nil {
 		log.WithFields(f).Error("attaching cla_group_template failed", err)
 		log.WithFields(f).Debug("deleting created cla group")
-		deleteErr := s.v1ProjectService.DeleteProject(claGroup.ProjectID)
+		deleteErr := s.v1ProjectService.DeleteCLAGroup(claGroup.ProjectID)
 		if deleteErr != nil {
 			log.WithFields(f).Error("deleting created cla group failed.", deleteErr)
 		}
@@ -261,7 +261,7 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 	err = s.enrollProjects(claGroup.ProjectID, input.FoundationSfid, input.ProjectSfidList)
 	if err != nil {
 		log.WithFields(f).Debug("deleting created cla group")
-		deleteErr := s.v1ProjectService.DeleteProject(claGroup.ProjectID)
+		deleteErr := s.v1ProjectService.DeleteCLAGroup(claGroup.ProjectID)
 		if deleteErr != nil {
 			log.WithFields(f).Error("deleting created cla group failed.", deleteErr)
 		}
@@ -326,7 +326,7 @@ func (s *service) DeleteCLAGroup(claGroupID string) error {
 		return nil
 	}
 	log.WithFields(f).Debug("deleting cla_group from dynamodb")
-	err = s.v1ProjectService.DeleteProject(claGroupID)
+	err = s.v1ProjectService.DeleteCLAGroup(claGroupID)
 	if err != nil {
 		log.WithFields(f).Errorf("deleting cla_group from dynamodb failed. error = %s", err.Error())
 		return err
@@ -359,7 +359,8 @@ func getS3Url(claGroupID string, docs []v1Models.ProjectDocument) string {
 	return url
 }
 
-func (s *service) ListClaGroupsUnderFoundation(foundationSFID string) (*models.ClaGroupList, error) {
+// ListClaGroupsForFoundationOrProject returns the CLA Group list for the specified foundation ID
+func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*models.ClaGroupList, error) {
 	out := &models.ClaGroupList{List: make([]*models.ClaGroup, 0)}
 	v1ClaGroups, err := s.v1ProjectService.GetClaGroupsByFoundationSFID(foundationSFID, DontLoadDetails)
 	if err != nil {

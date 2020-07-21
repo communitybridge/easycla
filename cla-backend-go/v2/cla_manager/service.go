@@ -128,7 +128,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		}
 	}
 
-	claGroup, err := s.projectService.GetProjectByID(claGroupID)
+	claGroup, err := s.projectService.GetCLAGroupByID(claGroupID)
 	if err != nil || claGroup == nil {
 		msg := buildErrorMessage("cla group search by ID failure", claGroupID, params, err)
 		log.Warn(msg)

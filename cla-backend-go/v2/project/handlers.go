@@ -26,8 +26,8 @@ import (
 
 // errors
 var (
-	ErrProjectDoesNotExist = errors.New("project does not exist")
-	ErrProjectIDMissing    = errors.New("project id is missing")
+	ErrCLAGroupDoesNotExist = errors.New("cla group does not exist")
+	ErrCLAGroupIDMissing    = errors.New("cla group id is missing")
 )
 
 func v1ProjectModel(in *models.Project) (*v1Models.Project, error) {
@@ -54,7 +54,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 	api.ProjectGetProjectsHandler = project.GetProjectsHandlerFunc(func(params project.GetProjectsParams, user *auth.User) middleware.Responder {
 
 		// No auth checks - anyone can request the list of projects
-		projects, err := service.GetProjects(&v1ProjectOps.GetProjectsParams{
+		projects, err := service.GetCLAGroups(&v1ProjectOps.GetProjectsParams{
 			HTTPRequest: params.HTTPRequest,
 			FullMatch:   params.FullMatch,
 			NextKey:     params.NextKey,
@@ -77,7 +77,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 	// Get Project By ID
 	api.ProjectGetProjectByIDHandler = project.GetProjectByIDHandlerFunc(func(params project.GetProjectByIDParams, user *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
-		projectModel, err := service.GetProjectByID(params.ProjectSfdcID)
+		projectModel, err := service.GetCLAGroupByID(params.ProjectSfdcID)
 		if err != nil {
 			return project.NewGetProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
@@ -112,7 +112,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			})
 		}
 
-		projectModel, err := service.GetProjectsByExternalID(&v1ProjectOps.GetProjectsByExternalIDParams{
+		projectModel, err := service.GetCLAGroupsByExternalID(&v1ProjectOps.GetProjectsByExternalIDParams{
 			HTTPRequest: params.HTTPRequest,
 			ProjectSFID: params.ExternalID,
 			NextKey:     params.NextKey,
@@ -134,7 +134,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 	api.ProjectGetProjectByNameHandler = project.GetProjectByNameHandlerFunc(func(params project.GetProjectByNameParams, user *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
 
-		projectModel, err := service.GetProjectByName(params.ProjectName)
+		projectModel, err := service.GetCLAGroupByName(params.ProjectName)
 		if err != nil {
 			return project.NewGetProjectByNameBadRequest().WithPayload(errorResponse(err))
 		}
@@ -161,9 +161,9 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 	api.ProjectDeleteProjectByIDHandler = project.DeleteProjectByIDHandlerFunc(func(projectParams project.DeleteProjectByIDParams, user *auth.User) middleware.Responder {
 		log.Debugf("Processing delete request with project id: %s", projectParams.ProjectSfdcID)
 		utils.SetAuthUserProperties(user, projectParams.XUSERNAME, projectParams.XEMAIL)
-		projectModel, err := service.GetProjectByID(projectParams.ProjectSfdcID)
+		projectModel, err := service.GetCLAGroupByID(projectParams.ProjectSfdcID)
 		if err != nil {
-			if err == ErrProjectDoesNotExist {
+			if err == ErrCLAGroupDoesNotExist {
 				return project.NewDeleteProjectByIDNotFound()
 			}
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
@@ -177,9 +177,9 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			})
 		}
 
-		err = service.DeleteProject(projectParams.ProjectSfdcID)
+		err = service.DeleteCLAGroup(projectParams.ProjectSfdcID)
 		if err != nil {
-			if err == ErrProjectDoesNotExist {
+			if err == ErrCLAGroupDoesNotExist {
 				return project.NewDeleteProjectByIDNotFound()
 			}
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
@@ -197,9 +197,9 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 	// Update Project By ID
 	api.ProjectUpdateProjectHandler = project.UpdateProjectHandlerFunc(func(projectParams project.UpdateProjectParams, user *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(user, projectParams.XUSERNAME, projectParams.XEMAIL)
-		projectModel, err := service.GetProjectByID(projectParams.Body.ProjectID)
+		projectModel, err := service.GetCLAGroupByID(projectParams.Body.ProjectID)
 		if err != nil {
-			if err == ErrProjectDoesNotExist {
+			if err == ErrCLAGroupDoesNotExist {
 				return project.NewUpdateProjectNotFound()
 			}
 			return project.NewUpdateProjectNotFound().WithPayload(errorResponse(err))
@@ -217,9 +217,9 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewUpdateProjectInternalServerError().WithPayload(errorResponse(err))
 		}
 
-		projectModel, err = service.UpdateProject(in)
+		projectModel, err = service.UpdateCLAGroup(in)
 		if err != nil {
-			if err == ErrProjectDoesNotExist {
+			if err == ErrCLAGroupDoesNotExist {
 				return project.NewUpdateProjectNotFound()
 			}
 			return project.NewUpdateProjectBadRequest().WithPayload(errorResponse(err))

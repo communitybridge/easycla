@@ -37,7 +37,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			})
 		}
 
-		exitingModel, getErr := service.GetProjectByName(params.Body.ProjectName)
+		exitingModel, getErr := service.GetCLAGroupByName(params.Body.ProjectName)
 		if getErr != nil {
 			msg := fmt.Sprintf("Error querying the project by name, error: %+v", getErr)
 			log.Warnf("Create Project Failed - %s", msg)
@@ -58,7 +58,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		}
 
 		// Ok, safe to create now
-		projectModel, err := service.CreateProject(&params.Body)
+		projectModel, err := service.CreateCLAGroup(&params.Body)
 		if err != nil {
 			log.Warnf("Create Project Failed - %+v", err)
 			return project.NewCreateProjectBadRequest().WithPayload(errorResponse(err))
@@ -79,7 +79,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 	// Get Projects
 	api.ProjectGetProjectsHandler = project.GetProjectsHandlerFunc(func(params project.GetProjectsParams, claUser *user.CLAUser) middleware.Responder {
 
-		projects, err := service.GetProjects(&params)
+		projects, err := service.GetCLAGroups(&params)
 		if err != nil {
 			return project.NewGetProjectsBadRequest().WithPayload(errorResponse(err))
 		}
@@ -90,7 +90,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 	// Get Project By ID
 	api.ProjectGetProjectByIDHandler = project.GetProjectByIDHandlerFunc(func(projectParams project.GetProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
 
-		projectModel, err := service.GetProjectByID(projectParams.ProjectID)
+		projectModel, err := service.GetCLAGroupByID(projectParams.ProjectID)
 		if err != nil {
 			return project.NewGetProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
@@ -118,7 +118,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		}
 
 		log.Debugf("Project Handler - GetProjectsByExternalID - invoking service")
-		projectsModel, err := service.GetProjectsByExternalID(&projectParams)
+		projectsModel, err := service.GetCLAGroupsByExternalID(&projectParams)
 		if err != nil {
 			return project.NewGetProjectsByExternalIDBadRequest().WithPayload(errorResponse(err))
 		}
@@ -132,7 +132,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 	// Get Project By Name
 	api.ProjectGetProjectByNameHandler = project.GetProjectByNameHandlerFunc(func(projectParams project.GetProjectByNameParams, claUser *user.CLAUser) middleware.Responder {
 
-		projectModel, err := service.GetProjectByName(projectParams.ProjectName)
+		projectModel, err := service.GetCLAGroupByName(projectParams.ProjectName)
 		if err != nil {
 			return project.NewGetProjectByNameBadRequest().WithPayload(errorResponse(err))
 		}
@@ -146,7 +146,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 	// Delete Project By ID
 	api.ProjectDeleteProjectByIDHandler = project.DeleteProjectByIDHandlerFunc(func(projectParams project.DeleteProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
 		log.Debugf("Processing delete request with project id: %s", projectParams.ProjectID)
-		projectModel, err := service.GetProjectByID(projectParams.ProjectID)
+		projectModel, err := service.GetCLAGroupByID(projectParams.ProjectID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
 				return project.NewDeleteProjectByIDNotFound()
@@ -195,7 +195,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			EventData:    &events.SignatureProjectInvalidatedEventData{},
 		})
 
-		err = service.DeleteProject(projectParams.ProjectID)
+		err = service.DeleteCLAGroup(projectParams.ProjectID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
 				return project.NewDeleteProjectByIDNotFound()
@@ -215,7 +215,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 	// Update Project By ID
 	api.ProjectUpdateProjectHandler = project.UpdateProjectHandlerFunc(func(projectParams project.UpdateProjectParams, claUser *user.CLAUser) middleware.Responder {
 
-		exitingModel, getErr := service.GetProjectByName(projectParams.Body.ProjectName)
+		exitingModel, getErr := service.GetCLAGroupByName(projectParams.Body.ProjectName)
 		if getErr != nil {
 			msg := fmt.Sprintf("Error querying the project by name, error: %+v", getErr)
 			log.Warnf("Update Project Failed - %s", msg)
@@ -235,7 +235,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			})
 		}
 
-		projectModel, err := service.UpdateProject(&projectParams.Body)
+		projectModel, err := service.UpdateCLAGroup(&projectParams.Body)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
 				return project.NewUpdateProjectNotFound()

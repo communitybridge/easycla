@@ -392,6 +392,7 @@ paths:
           $ref: '#/responses/internal-server-error'
       tags:
         - cla-group
+
   /foundation/{projectSFID}/cla-groups:
     get:
       summary: List CLA Groups associated with a foundation or project

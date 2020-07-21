@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-package whitelist
+package approval_list
 
 import (
 	"errors"
@@ -73,7 +73,7 @@ func (repo repository) AddCclaWhitelistRequest(company *models.Company, project 
 	status := "status:fail"
 
 	if err != nil {
-		log.Warnf("AddCclaWhitelistRequest - unable to generate a UUID for a whitelist request, error: %v", err)
+		log.Warnf("AddCclaWhitelistRequest - unable to generate a UUID for a approval request, error: %v", err)
 		return status, err
 	}
 
@@ -99,7 +99,7 @@ func (repo repository) AddCclaWhitelistRequest(company *models.Company, project 
 
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
-		log.Warnf("AddCclaWhitelistRequest - unable to create a new ccla whitelist request, error: %v", err)
+		log.Warnf("AddCclaWhitelistRequest - unable to create a new ccla approval request, error: %v", err)
 		return status, err
 	}
 

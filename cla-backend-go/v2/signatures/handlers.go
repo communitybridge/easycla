@@ -91,14 +91,14 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			return signatures.NewUpdateApprovalListNotFound().WithPayload(errorResponse(compErr))
 		}
 
-		projectModels, projsErr := projectService.GetProjectsByExternalSFID(params.ProjectSFID)
+		projectModels, projsErr := projectService.GetCLAGroupsByExternalSFID(params.ProjectSFID)
 		if projsErr != nil || projectModels == nil {
 			log.Warnf("unable to locate projects by Project SFID: %s", params.ProjectSFID)
 			return signatures.NewUpdateApprovalListNotFound().WithPayload(errorResponse(projsErr))
 		}
 
 		// Lookup the internal project ID when provided the external ID via the v1SignatureService call
-		projectModel, projErr := projectService.GetProjectByID(params.ClaGroupID)
+		projectModel, projErr := projectService.GetCLAGroupByID(params.ClaGroupID)
 		if projErr != nil || projectModel == nil {
 			log.Warnf("unable to locate project by CLA Group ID: %s", params.ClaGroupID)
 			return signatures.NewUpdateApprovalListNotFound().WithPayload(errorResponse(projErr))
@@ -411,7 +411,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	// Download ICLAs as a CSV document
 	api.SignaturesDownloadProjectSignatureICLAAsCSVHandler = signatures.DownloadProjectSignatureICLAAsCSVHandlerFunc(
 		func(params signatures.DownloadProjectSignatureICLAAsCSVParams, authUser *auth.User) middleware.Responder {
-			claGroupModel, err := projectService.GetProjectByID(params.ClaGroupID)
+			claGroupModel, err := projectService.GetCLAGroupByID(params.ClaGroupID)
 			if err != nil {
 				if err == project.ErrProjectDoesNotExist {
 					return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithPayload(errorResponse(err))
@@ -442,7 +442,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 
 	api.SignaturesListClaGroupIclaSignatureHandler = signatures.ListClaGroupIclaSignatureHandlerFunc(
 		func(params signatures.ListClaGroupIclaSignatureParams, authUser *auth.User) middleware.Responder {
-			claGroupModel, err := projectService.GetProjectByID(params.ClaGroupID)
+			claGroupModel, err := projectService.GetCLAGroupByID(params.ClaGroupID)
 			if err != nil {
 				if err == project.ErrProjectDoesNotExist {
 					return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithPayload(errorResponse(err))
@@ -465,7 +465,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 
 	api.SignaturesListClaGroupCorporateContributorsHandler = signatures.ListClaGroupCorporateContributorsHandlerFunc(
 		func(params signatures.ListClaGroupCorporateContributorsParams, authUser *auth.User) middleware.Responder {
-			claGroupModel, err := projectRepo.GetProjectByID(params.ClaGroupID, project.DontLoadRepoDetails)
+			claGroupModel, err := projectRepo.GetCLAGroupByID(params.ClaGroupID, project.DontLoadRepoDetails)
 			if err != nil {
 				if err == project.ErrProjectDoesNotExist {
 					return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithPayload(errorResponse(err))
@@ -518,7 +518,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 
 	api.SignaturesDownloadProjectSignatureICLAsHandler = signatures.DownloadProjectSignatureICLAsHandlerFunc(
 		func(params signatures.DownloadProjectSignatureICLAsParams, authUser *auth.User) middleware.Responder {
-			claGroup, err := projectService.GetProjectByID(params.ClaGroupID)
+			claGroup, err := projectService.GetCLAGroupByID(params.ClaGroupID)
 			if err != nil {
 				if err == project.ErrProjectDoesNotExist {
 					return signatures.NewDownloadProjectSignatureICLAsNotFound().WithPayload(errorResponse(err))
@@ -547,7 +547,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 
 	api.SignaturesDownloadProjectSignatureCCLAsHandler = signatures.DownloadProjectSignatureCCLAsHandlerFunc(
 		func(params signatures.DownloadProjectSignatureCCLAsParams, authUser *auth.User) middleware.Responder {
-			claGroup, err := projectService.GetProjectByID(params.ClaGroupID)
+			claGroup, err := projectService.GetCLAGroupByID(params.ClaGroupID)
 			if err != nil {
 				if err == project.ErrProjectDoesNotExist {
 					return signatures.NewDownloadProjectSignatureCCLAsNotFound().WithPayload(errorResponse(err))
