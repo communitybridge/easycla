@@ -11,6 +11,7 @@ import (
 )
 
 type service struct {
+	v1CompanyService     company.IService
 	signatureRepo        signatures.SignatureRepository
 	projectRepo          ProjectRepo
 	userRepo             users.UserRepository

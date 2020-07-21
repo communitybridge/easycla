@@ -21,6 +21,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 
 	"github.com/aws/aws-sdk-go/aws"
+	v1Company "github.com/communitybridge/easycla/cla-backend-go/company"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	v1ProjectParams "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 	v1SignatureParams "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
@@ -70,7 +71,6 @@ type Service interface {
 	DeleteCompanyByID(companyID string) error
 	DeleteCompanyBySFID(companySFID string) error
 	GetCompanyCLAGroupManagers(companyID, claGroupID string) (*models.CompanyClaManagers, error)
-	autoCreateCompany(companySFID string) (*v1Models.Company, error)
 }
 
 // ProjectRepo contains project repo methods
@@ -80,8 +80,9 @@ type ProjectRepo interface {
 }
 
 // NewService returns instance of company service
-func NewService(sigRepo signatures.SignatureRepository, projectRepo ProjectRepo, usersRepo users.UserRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository) Service {
+func NewService(v1CompanyService v1Company.IService, sigRepo signatures.SignatureRepository, projectRepo ProjectRepo, usersRepo users.UserRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository) Service {
 	return &service{
+		v1CompanyService:     v1CompanyService,
 		signatureRepo:        sigRepo,
 		projectRepo:          projectRepo,
 		userRepo:             usersRepo,
