@@ -41,6 +41,7 @@ type Service interface {
 	GetProjectCompanySignatures(companySFID string, projectSFID string) (*models.Signatures, error)
 	GetProjectIclaSignaturesCsv(claGroupID string) ([]byte, error)
 	GetProjectIclaSignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
+	GetClaGroupCorporateContributors(claGroupID string, companySFID *string, searchTerm *string) (*models.CorporateContributorList, error)
 	GetSignedDocument(signatureID string) (*models.SignedDocument, error)
 	GetSignedIclaZipPdf(claGroupID string) (*models.URLObject, error)
 	GetSignedCclaZipPdf(claGroupID string) (*models.URLObject, error)
@@ -166,4 +167,25 @@ func (s service) GetSignedIclaZipPdf(claGroupID string) (*models.URLObject, erro
 	return &models.URLObject{
 		URL: signedURL,
 	}, nil
+}
+
+func (s service) GetClaGroupCorporateContributors(claGroupID string, companySFID *string, searchTerm *string) (*models.CorporateContributorList, error) {
+	var companyID *string
+	if companySFID != nil {
+		companyModel, err := s.v1CompanyService.GetCompanyByExternalID(*companySFID)
+		if err != nil {
+			return nil, err
+		}
+		companyID = &companyModel.CompanyID
+	}
+	result, err := s.v1SignatureService.GetClaGroupCorporateContributors(claGroupID, companyID, searchTerm)
+	if err != nil {
+		return nil, err
+	}
+	var resp models.CorporateContributorList
+	err = copier.Copy(&resp, result)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
 }
