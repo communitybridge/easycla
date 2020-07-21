@@ -394,8 +394,8 @@ paths:
         - cla-group
   /foundation/{projectSFID}/cla-groups:
     get:
-      summary: List cla groups under foundation
-      description: Return list of cla groups under foundation
+      summary: List CLA Groups associated with a foundation or project
+      description: Return list of CLA Groups associated with a group of projects (formerly a foundation) or project
       operationId: listClaGroupsUnderFoundation
       parameters:
         - $ref: "#/parameters/x-request-id"
