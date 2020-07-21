@@ -227,7 +227,7 @@ func (osc *Client) SearchOrganization(orgName string) ([]*models.Organization, e
 	var orgs []*models.Organization
 	for {
 		params := &organizations.SearchOrgParams{
-			Name:     []string{orgName},
+			Name:     aws.String(orgName),
 			Offset:   aws.String(strconv.FormatInt(offset, 10)),
 			PageSize: aws.String(strconv.FormatInt(pageSize, 10)),
 			Context:  context.TODO(),
