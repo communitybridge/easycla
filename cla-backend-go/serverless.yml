@@ -5,10 +5,6 @@ package:
   exclude:
     - auth/**
     - ./backend-aws-lambda
-    - ./metrics-aws-lambda
-    - ./dynamo-events-lambda
-    - ./zipbuilder-schedular-lambda
-    - ./zipbuilder-lambda
     - dev.sh
     - docs/**
     - helpers/**
@@ -259,6 +255,8 @@ plugins:
   - serverless-prune-plugin
 
 functions:
+  # Only lambda function we want in us-east-2, for now, is the V2 API (/v4 endpoint)
+  # which is invoked by the platform core services
   api:
     description: "EasyCLA v2 API"
     runtime: go1.x
@@ -267,71 +265,3 @@ functions:
       individually: true
       include:
         - ./backend-aws-lambda
-
-  dynamo-signatures-events-lambda:
-    handler: dynamo-signatures-events-lambda
-    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-signatures-events-lambda
-    description: "EasyCLA DynamoDB stream events handler for the signatures table"
-    runtime: go1.x
-    package:
-      individually: true
-      include:
-        - ./dynamo-events-lambda
-
-  dynamo-events-events-lambda:
-    handler: dynamo-events-events-lambda
-    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-events-events-lambda
-    description: "EasyCLA DynamoDB stream events handler for the events table"
-    runtime: go1.x
-    package:
-      individually: true
-      include:
-        - ./dynamo-events-lambda
-
-  dynamo-repositories-events-lambda:
-    handler: dynamo-repositories-events-lambda
-    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-repositories-events-lambda
-    description: "EasyCLA DynamoDB stream events handler for the repositories table"
-    runtime: go1.x
-    package:
-      individually: true
-      include:
-        - ./dynamo-events-lambda
-
-  dynamo-projects-cla-groups-events-lambda:
-    handler: dynamo-projects-cla-groups-events-lambda
-    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-projects-cla-groups-events-lambda
-    description: "EasyCLA DynamoDB stream events handler for the projects-cla-groups table"
-    runtime: go1.x
-    package:
-      individually: true
-      include:
-        - ./dynamo-events-lambda
-
-  zipbuilder-schedular-lambda:
-    handler: zipbuilder-schedular-lambda
-    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-zipbuilder-schedular-lambda
-    description: "call zipbuilder-lambda for all cla groups periodically"
-    runtime: go1.x
-    timeout: 900 # maximum time allowed
-    events:
-      - schedule:
-          description: 'build signatures pdf for cla group'
-          rate: rate(1 hour)
-          enabled: true
-    package:
-      individually: true
-      include:
-        - ./zipbuilder-schedular-lambda
-
-  zipbuilder-lambda:
-    handler: zipbuilder-lambda
-    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-zipbuilder-lambda
-    description: "build zip of signed signature pdf for cla group"
-    runtime: go1.x
-    timeout: 900 # maximum time allowed
-    memorySize: 1024
-    package:
-      individually: true
-      include:
-        - ./zipbuilder-lambda
