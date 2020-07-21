@@ -34,41 +34,6 @@ import (
 	"github.com/savaki/dynastore"
 )
 
-func v2Signature(src *v1Models.Signature) (*models.Signature, error) {
-	var dst models.Signature
-	err := copier.Copy(&dst, src)
-	if err != nil {
-		return nil, err
-	}
-	return &dst, nil
-}
-
-func v2Signatures(src *v1Models.Signatures) (*models.Signatures, error) {
-	var dst models.Signatures
-	err := copier.Copy(&dst, src)
-	if err != nil {
-		return nil, err
-	}
-	return &dst, nil
-}
-
-func v2SignaturesReplaceCompanyID(src *v1Models.Signatures, internalID, externalID string) (*models.Signatures, error) {
-	var dst models.Signatures
-	err := copier.Copy(&dst, src)
-	if err != nil {
-		return nil, err
-	}
-
-	// Resplace the internal ID with the External ID
-	for _, sig := range dst.Signatures {
-		if sig.SignatureReferenceID == internalID {
-			sig.SignatureReferenceID = externalID
-		}
-	}
-
-	return &dst, nil
-}
-
 // Configure setups handlers on api with service
 func Configure(api *operations.EasyclaAPI, projectService project.Service, projectRepo project.ProjectRepository, companyService company.IService, v1SignatureService signatureService.SignatureService, sessionStore *dynastore.Store, eventsService events.Service, v2service Service, projectClaGroupsRepo projects_cla_groups.Repository) { //nolint
 
@@ -442,6 +407,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 		return signatures.NewGetUserSignaturesOK().WithPayload(resp)
 	})
+
+	// Download ICLAs as a CSV document
 	api.SignaturesDownloadProjectSignatureICLAAsCSVHandler = signatures.DownloadProjectSignatureICLAAsCSVHandlerFunc(
 		func(params signatures.DownloadProjectSignatureICLAAsCSVParams, authUser *auth.User) middleware.Responder {
 			claGroupModel, err := projectService.GetProjectByID(params.ClaGroupID)
@@ -472,6 +439,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				}
 			})
 		})
+
 	api.SignaturesListClaGroupIclaSignatureHandler = signatures.ListClaGroupIclaSignatureHandlerFunc(
 		func(params signatures.ListClaGroupIclaSignatureParams, authUser *auth.User) middleware.Responder {
 			claGroupModel, err := projectService.GetProjectByID(params.ClaGroupID)
@@ -494,6 +462,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			}
 			return signatures.NewListClaGroupIclaSignatureOK().WithPayload(result)
 		})
+
 	api.SignaturesListClaGroupCorporateContributorsHandler = signatures.ListClaGroupCorporateContributorsHandlerFunc(
 		func(params signatures.ListClaGroupCorporateContributorsParams, authUser *auth.User) middleware.Responder {
 			claGroupModel, err := projectRepo.GetProjectByID(params.ClaGroupID, project.DontLoadRepoDetails)
@@ -575,14 +544,15 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			return signatures.NewDownloadProjectSignatureICLAsOK().WithPayload(result)
 
 		})
+
 	api.SignaturesDownloadProjectSignatureCCLAsHandler = signatures.DownloadProjectSignatureCCLAsHandlerFunc(
 		func(params signatures.DownloadProjectSignatureCCLAsParams, authUser *auth.User) middleware.Responder {
 			claGroup, err := projectService.GetProjectByID(params.ClaGroupID)
 			if err != nil {
 				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewDownloadProjectSignatureICLAsNotFound().WithPayload(errorResponse(err))
+					return signatures.NewDownloadProjectSignatureCCLAsNotFound().WithPayload(errorResponse(err))
 				}
-				return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithPayload(errorResponse(err))
+				return signatures.NewDownloadProjectSignatureCCLAsInternalServerError().WithPayload(errorResponse(err))
 			}
 			if !utils.IsUserAuthorizedForProject(authUser, claGroup.FoundationSFID) {
 				return signatures.NewDownloadProjectSignatureCCLAsForbidden().WithPayload(&models.ErrorResponse{
