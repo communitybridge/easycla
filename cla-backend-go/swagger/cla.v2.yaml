@@ -1223,6 +1223,35 @@ paths:
       tags:
         - signatures
 
+  /cla-group/{claGroupID}/corporate-contributors:
+    get:
+      summary: List corporate contributors for cla group
+      description: Return list of corporate contributor for cla group
+      operationId: listClaGroupCorporateContributors
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+        - $ref: "#/parameters/companySFID"
+        - $ref: '#/parameters/searchTerm'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/corporate-contributor-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
+
   /signatures/id/{signatureID}:
     get:
       summary: Get the signature by ID
@@ -2523,6 +2552,11 @@ parameters:
     in: path
     type: string
     required: true
+  companySFID:
+    name: companySFID
+    description: salesforce id of the company
+    in: query
+    type: string
   x-acl:
     name: X-ACL
     description: The access control list header value encoded as base64 - assigned by the API Gateway based on user/request permissions
@@ -3211,36 +3245,10 @@ definitions:
         x-omitempty: false
 
   corporate-contributor-list:
-    type: object
-    title: corporate contributors list
-    properties:
-      list:
-        type: array
-        items:
-          $ref: '#/definitions/corporate-contributor'
+    $ref: './common/corporate-contributors-list.yaml'
 
   corporate-contributor:
-    type: object
-    properties:
-      name:
-        type: string
-        example: "john doe"
-        x-omitempty: false
-      linux_foundation_id:
-        type: string
-        example: "john.doe"
-        x-omitempty: false
-      github_id:
-        type: string
-        example: "123456"
-        x-omitempty: false
-      signature_version:
-        type: string
-        example: "v1"
-        x-omitempty: false
-      timestamp:
-        type: string
-        x-omitempty: false
+    $ref: './common/corporate-contributor.yaml'
 
   corporate-signature-input:
     type: object
