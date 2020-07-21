@@ -44,7 +44,7 @@ var (
 
 // ProjectRepo contains project repo methods
 type ProjectRepo interface {
-	GetProjectByID(projectID string, loadRepoDetails bool) (*v1Models.Project, error)
+	GetCLAGroupByID(projectID string, loadRepoDetails bool) (*v1Models.Project, error)
 }
 
 // Service interface defines the sign service methods
@@ -115,7 +115,7 @@ func (s *service) RequestCorporateSignature(authorizationHeader string, input *m
 	if err != nil {
 		return nil, err
 	}
-	proj, err := s.projectRepo.GetProjectByID(cgm.ClaGroupID, DontLoadRepoDetails)
+	proj, err := s.projectRepo.GetCLAGroupByID(cgm.ClaGroupID, DontLoadRepoDetails)
 	if err != nil {
 		return nil, err
 	}

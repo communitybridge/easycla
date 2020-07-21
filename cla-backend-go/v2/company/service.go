@@ -75,8 +75,8 @@ type Service interface {
 
 // ProjectRepo contains project repo methods
 type ProjectRepo interface {
-	GetProjectByID(projectID string, loadRepoDetails bool) (*v1Models.Project, error)
-	GetProjectsByExternalID(params *v1ProjectParams.GetProjectsByExternalIDParams, loadRepoDetails bool) (*v1Models.Projects, error)
+	GetCLAGroupByID(projectID string, loadRepoDetails bool) (*v1Models.Project, error)
+	GetCLAGroupsByExternalID(params *v1ProjectParams.GetProjectsByExternalIDParams, loadRepoDetails bool) (*v1Models.Projects, error)
 }
 
 // NewService returns instance of company service
@@ -534,7 +534,7 @@ func (s *service) GetCompanyCLAGroupManagers(companyID, claGroupID string) (*mod
 		return nil, nil
 	}
 
-	projectModel, projErr := s.projectRepo.GetProjectByID(claGroupID, DontLoadRepoDetails)
+	projectModel, projErr := s.projectRepo.GetCLAGroupByID(claGroupID, DontLoadRepoDetails)
 	if projErr != nil {
 		log.WithFields(f).Warnf("unable to query CLA Group ID: %s, error: %+v", claGroupID, err)
 		return nil, err
@@ -650,7 +650,7 @@ func (s *service) getCLAGroupsUnderProjectOrFoundation(id string) (map[string]*c
 		go func(claGroupID string, claGroup *claGroupModel) {
 			defer wg.Done()
 			// get cla-group info
-			cginfo, err := s.projectRepo.GetProjectByID(claGroupID, DontLoadRepoDetails)
+			cginfo, err := s.projectRepo.GetCLAGroupByID(claGroupID, DontLoadRepoDetails)
 			if err != nil || cginfo == nil {
 				log.Warnf("Unable to get details of cla_group: %s", claGroupID)
 				return
@@ -829,7 +829,7 @@ func (s *service) filterClaProjects(projects []*v2ProjectServiceModels.ProjectOu
 	prChan := make(chan *v2ProjectServiceModels.ProjectOutput)
 	for _, v := range projects {
 		go func(projectOutput *v2ProjectServiceModels.ProjectOutput) {
-			project, err := s.projectRepo.GetProjectsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
+			project, err := s.projectRepo.GetCLAGroupsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
 				ProjectSFID: projectOutput.ID,
 				PageSize:    aws.Int64(1),
 			}, DontLoadRepoDetails)
@@ -924,7 +924,7 @@ func (s *service) getCompanyAndClaGroup(companySFID, projectSFID string) (*v1Mod
 			log.Debugf("cla group mapping not found for projectSFID %s", projectSFID)
 			return
 		}
-		claGroup, projectErr = s.projectRepo.GetProjectByID(pm.ClaGroupID, DontLoadRepoDetails)
+		claGroup, projectErr = s.projectRepo.GetCLAGroupByID(pm.ClaGroupID, DontLoadRepoDetails)
 		if claGroup == nil {
 			projectErr = ErrProjectNotFound
 		}

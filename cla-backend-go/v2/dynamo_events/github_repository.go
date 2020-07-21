@@ -27,7 +27,7 @@ func (s *service) GithubRepoAddedEvent(event events.DynamoDBEventRecord) error {
 	var uerr error
 	if project.Parent == "" {
 		log.Debugf("incrementing root_project_repositories_count of cla_group_id %s", newGithubOrg.ClaGroupID)
-		uerr = s.projectRepo.UpdateRootProjectRepositoriesCount(newGithubOrg.ClaGroupID, 1)
+		uerr = s.projectRepo.UpdateRootCLAGroupRepositoriesCount(newGithubOrg.ClaGroupID, 1)
 	} else {
 		log.Debugf("incrementing repositories_count for project %s", newGithubOrg.ProjectSFID)
 		uerr = s.projectsClaGroupRepo.UpdateRepositoriesCount(newGithubOrg.ProjectSFID, 1)
@@ -53,7 +53,7 @@ func (s *service) GithubRepoDeletedEvent(event events.DynamoDBEventRecord) error
 	var uerr error
 	if project.Parent == "" {
 		log.Debugf("decrementing root_project_repositories_count of cla_group_id %s", oldGithubOrg.ClaGroupID)
-		uerr = s.projectRepo.UpdateRootProjectRepositoriesCount(oldGithubOrg.ClaGroupID, -1)
+		uerr = s.projectRepo.UpdateRootCLAGroupRepositoriesCount(oldGithubOrg.ClaGroupID, -1)
 	} else {
 		log.Debugf("decrementing repositories_count for project %s", oldGithubOrg.ProjectSFID)
 		uerr = s.projectsClaGroupRepo.UpdateRepositoriesCount(oldGithubOrg.ProjectSFID, -1)
