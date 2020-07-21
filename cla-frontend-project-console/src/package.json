@@ -74,7 +74,8 @@
     "ionic-plugin-keyboard"
   ],
   "resolutions": {
-    "mem": "^4.0.0"
+    "mem": "^4.0.0",
+    "tunnel-agent": "^0.6.0"
   },
   "cordovaPlatforms": [
     "ios",

@@ -63,7 +63,8 @@
     "typescript": "2.6.2"
   },
   "resolutions": {
-    "mem": "^4.0.0"
+    "mem": "^4.0.0",
+    "tunnel-agent": "^0.6.0"
   },
   "cordovaPlugins": [
     "cordova-plugin-whitelist",
