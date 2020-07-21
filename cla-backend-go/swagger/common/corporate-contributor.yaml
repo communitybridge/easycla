@@ -1,0 +1,21 @@
+type: object
+properties:
+  name:
+    type: string
+    example: "john doe"
+    x-omitempty: false
+  linux_foundation_id:
+    type: string
+    example: "john.doe"
+    x-omitempty: false
+  github_id:
+    type: string
+    example: "123456"
+    x-omitempty: false
+  signature_version:
+    type: string
+    example: "v1"
+    x-omitempty: false
+  timestamp:
+    type: string
+    x-omitempty: false

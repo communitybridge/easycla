@@ -70,7 +70,7 @@ func v2SignaturesReplaceCompanyID(src *v1Models.Signatures, internalID, external
 }
 
 // Configure setups handlers on api with service
-func Configure(api *operations.EasyclaAPI, projectService project.Service, companyService company.IService, v1SignatureService signatureService.SignatureService, sessionStore *dynastore.Store, eventsService events.Service, v2service Service, projectClaGroupsRepo projects_cla_groups.Repository) { //nolint
+func Configure(api *operations.EasyclaAPI, projectService project.Service, projectRepo project.ProjectRepository, companyService company.IService, v1SignatureService signatureService.SignatureService, sessionStore *dynastore.Store, eventsService events.Service, v2service Service, projectClaGroupsRepo projects_cla_groups.Repository) { //nolint
 
 	// Get Signature
 	api.SignaturesGetSignatureHandler = signatures.GetSignatureHandlerFunc(func(params signatures.GetSignatureParams, authUser *auth.User) middleware.Responder {
@@ -493,6 +493,28 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, compa
 				return signatures.NewListClaGroupIclaSignatureInternalServerError().WithPayload(errorResponse(err))
 			}
 			return signatures.NewListClaGroupIclaSignatureOK().WithPayload(result)
+		})
+	api.SignaturesListClaGroupCorporateContributorsHandler = signatures.ListClaGroupCorporateContributorsHandlerFunc(
+		func(params signatures.ListClaGroupCorporateContributorsParams, authUser *auth.User) middleware.Responder {
+			claGroupModel, err := projectRepo.GetProjectByID(params.ClaGroupID, project.DontLoadRepoDetails)
+			if err != nil {
+				if err == project.ErrProjectDoesNotExist {
+					return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithPayload(errorResponse(err))
+				}
+				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithPayload(errorResponse(err))
+			}
+			if !utils.IsUserAuthorizedForProject(authUser, claGroupModel.FoundationSFID) {
+				return signatures.NewDownloadProjectSignatureICLAAsCSVForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to ListClaGroupCorporateContributors with project scope of %s",
+						authUser.UserName, claGroupModel.FoundationSFID),
+				})
+			}
+			result, err := v2service.GetClaGroupCorporateContributors(params.ClaGroupID, params.CompanySFID, params.SearchTerm)
+			if err != nil {
+				return signatures.NewListClaGroupCorporateContributorsInternalServerError().WithPayload(errorResponse(err))
+			}
+			return signatures.NewListClaGroupCorporateContributorsOK().WithPayload(result)
 		})
 
 	api.SignaturesGetSignatureSignedDocumentHandler = signatures.GetSignatureSignedDocumentHandlerFunc(func(params signatures.GetSignatureSignedDocumentParams, authUser *auth.User) middleware.Responder {

@@ -46,6 +46,7 @@ type SignatureService interface {
 	RemoveCLAManager(signatureID, claManagerID string) (*models.Signature, error)
 
 	GetClaGroupICLASignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
+	GetClaGroupCorporateContributors(claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error)
 }
 
 type service struct {
@@ -750,6 +751,10 @@ func (s service) createEventLogEntries(companyModel *models.Company, projectMode
 
 func (s service) GetClaGroupICLASignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error) {
 	return s.repo.GetClaGroupICLASignatures(claGroupID, searchTerm)
+}
+
+func (s service) GetClaGroupCorporateContributors(claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error) {
+	return s.repo.GetClaGroupCorporateContributors(claGroupID, companyID, searchTerm)
 }
 
 // sendRequestAccessEmailToContributors sends the request access email to the specified contributors

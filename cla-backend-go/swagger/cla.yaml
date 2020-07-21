@@ -2424,6 +2424,12 @@ definitions:
   icla-signature:
     $ref: './common/icla-signature.yaml'
 
+  corporate-contributor-list:
+    $ref: './common/corporate-contributors-list.yaml'
+
+  corporate-contributor:
+    $ref: './common/corporate-contributor.yaml'
+
 responses:
   #resource-deleted:
   #  description: Resource Deleted
