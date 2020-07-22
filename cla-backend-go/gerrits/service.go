@@ -16,10 +16,11 @@ import (
 
 // Service handles gerrit Repository service
 type Service interface {
-	DeleteProjectGerrits(projectID string) error
+	DeleteClaGroupGerrits(claGroupID string) error
 	DeleteGerrit(gerritID string) error
 	GetGerrit(gerritID string) (*models.Gerrit, error)
-	AddGerrit(projectID string, input *models.AddGerritInput) (*models.Gerrit, error)
+	AddGerrit(claGroupID string, projectSFID string, input *models.AddGerritInput) (*models.Gerrit, error)
+	GetClaGroupGerrits(claGroupID string, projectSFID *string) (*models.GerritList, error)
 }
 
 type service struct {
@@ -35,14 +36,14 @@ func NewService(repo Repository, lfg *LFGroup) Service {
 	}
 }
 
-func (s service) DeleteProjectGerrits(projectID string) error {
-	gerrits, err := s.repo.GetProjectGerrits(projectID)
+func (s service) DeleteClaGroupGerrits(claGroupID string) error {
+	gerrits, err := s.repo.GetClaGroupGerrits(claGroupID, nil)
 	if err != nil {
 		return err
 	}
-	if len(gerrits) > 0 {
-		log.Debugf(fmt.Sprintf("Deleting gerrit projects for project :%s ", projectID))
-		for _, gerrit := range gerrits {
+	if len(gerrits.List) > 0 {
+		log.Debugf(fmt.Sprintf("Deleting gerrits for cla-group :%s ", claGroupID))
+		for _, gerrit := range gerrits.List {
 			err = s.repo.DeleteGerrit(gerrit.GerritID)
 			if err != nil {
 				return err
@@ -60,7 +61,7 @@ func (s service) GetGerrit(gerritID string) (*models.Gerrit, error) {
 	return s.repo.GetGerrit(gerritID)
 }
 
-func (s service) AddGerrit(projectID string, params *models.AddGerritInput) (*models.Gerrit, error) {
+func (s service) AddGerrit(claGroupID string, projectSFID string, params *models.AddGerritInput) (*models.Gerrit, error) {
 	if params.GroupIDIcla == "" && params.GroupIDCcla == "" {
 		return nil, errors.New("should specify at least a LDAP group for ICLA or CCLA")
 	}
@@ -94,7 +95,12 @@ func (s service) AddGerrit(projectID string, params *models.AddGerritInput) (*mo
 		GroupIDIcla:   params.GroupIDIcla,
 		GroupNameCcla: groupNameCcla,
 		GroupNameIcla: groupNameIcla,
-		ProjectID:     projectID,
+		ProjectID:     claGroupID,
+		ProjectSFID:   projectSFID,
 	}
 	return s.repo.AddGerrit(input)
+}
+
+func (s service) GetClaGroupGerrits(claGroupID string, projectSFID *string) (*models.GerritList, error) {
+	return s.repo.GetClaGroupGerrits(claGroupID, projectSFID)
 }

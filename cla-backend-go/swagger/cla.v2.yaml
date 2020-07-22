@@ -2049,7 +2049,7 @@ paths:
       tags:
         - signatures
 
-  /project/{projectID}/gerrits/{gerritID}:
+  /cla-group/{claGroupID}/project/{projectSFID}/gerrits/{gerritID}:
     delete:
       summary: Delete the gerrit
       description: Delete the gerrit instance for the project
@@ -2059,10 +2059,8 @@ paths:
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectSFID"
+        - $ref: "#/parameters/path-claGroupID"
         - name: gerritID
           in: path
           type: string
@@ -2072,14 +2070,40 @@ paths:
           description: 'Resource Deleted'
         '400':
           $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
+        '404':
+          $ref: '#/responses/not-found'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - gerrits
 
-  /project/{projectID}/gerrits:
+  /cla-group/{claGroupID}/project/{projectSFID}/gerrits:
+    get:
+      summary: Get the gerrits for project and cla-group
+      description: Get the gerrit instance list for the project and cla-group
+      operationId: ListGerrits
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+        - $ref: "#/parameters/path-projectSFID"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/gerrit-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - gerrits
     post:
       summary: Add the gerrit
       description: Adds the gerrit instance for the project
@@ -2089,10 +2113,8 @@ paths:
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-claGroupID"
+        - $ref: "#/parameters/path-projectSFID"
         - in: body
           name: add-gerrit-input
           schema:
@@ -2105,8 +2127,6 @@ paths:
             $ref: '#/definitions/gerrit'
         '400':
           $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
         '500':
@@ -2681,6 +2701,9 @@ definitions:
 
   gerrit:
     $ref: './common/gerrit.yaml'
+
+  gerrit-list:
+    $ref: './common/gerrit-list.yaml'
 
   github-repositories-group-by-orgs:
     $ref: './common/github-repositories-group-by-orgs.yaml'

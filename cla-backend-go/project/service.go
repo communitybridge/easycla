@@ -123,12 +123,13 @@ func (s service) fillRepoInfo(project *models.Project) {
 	go func() {
 		defer wg.Done()
 		var err error
-		gerrits, err = s.gerritRepo.GetProjectGerrits(project.ProjectID)
+		var gerritsList *models.GerritList
+		gerritsList, err = s.gerritRepo.GetClaGroupGerrits(project.ProjectID, nil)
 		if err != nil {
 			log.Error("unable to get gerrit instances:w for project.", err)
 			return
 		}
-
+		gerrits = gerritsList.List
 	}()
 	wg.Wait()
 	project.GithubRepositories = ghrepos

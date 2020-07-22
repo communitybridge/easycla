@@ -59,6 +59,7 @@ type Repository interface {
 	RemoveProjectAssociatedWithClaGroup(claGroupID string, projectSFIDList []string, all bool) error
 	getCLAGroupNameByID(claGroupID string) (string, error)
 
+	IsAssociated(projectSFID string, claGroupID string) (bool, error)
 	UpdateRepositoriesCount(projectSFID string, diff int64) error
 }
 
@@ -330,4 +331,21 @@ func (repo *repo) UpdateRepositoriesCount(projectSFID string, diff int64) error 
 		log.WithField("project_sfid", projectSFID).Error("update repositories count failed", err)
 	}
 	return err
+}
+
+func (repo *repo) IsAssociated(projectSFID string, claGroupID string) (bool, error) {
+	pmlist, err := repo.GetProjectsIdsForClaGroup(claGroupID)
+	if err != nil {
+		return false, err
+	}
+	if len(pmlist) == 0 {
+		return false, errors.New("no cla-group mapping found for cla-group")
+	}
+	for _, pm := range pmlist {
+		if pm.ProjectSFID == projectSFID || pm.FoundationSFID == projectSFID {
+			return true, nil
+		}
+	}
+	return false, nil
+
 }

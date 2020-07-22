@@ -791,13 +791,16 @@ func (repo *repo) buildCLAGroupModel(dbModel DBProjectModel, loadRepoDetails boo
 			go func() {
 				defer wg.Done()
 				var err error
-				gerrits, err = repo.gerritRepo.GetProjectGerrits(dbModel.ProjectID)
+				var gerritsList *models.GerritList
+				gerritsList, err = repo.gerritRepo.GetClaGroupGerrits(dbModel.ProjectID, nil)
 				if err != nil {
 					log.Warnf("buildCLAGroupModel - unable to load Gerrit repositories by project ID: %s, error: %+v",
 						dbModel.ProjectID, err)
 					// Reset to empty array
 					gerrits = make([]*models.Gerrit, 0)
+					return
 				}
+				gerrits = gerritsList.List
 			}()
 			wg.Wait()
 		} else {
