@@ -66,7 +66,7 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 				return gerrits.NewAddGerritUnauthorized()
 			}
 			// add the gerrit
-			result, err := service.AddGerrit(params.ProjectID, params.AddGerritInput)
+			result, err := service.AddGerrit(params.ProjectID, projectModel.ProjectExternalID, params.AddGerritInput)
 			if err != nil {
 				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
 			}

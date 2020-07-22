@@ -16,6 +16,7 @@ type Gerrit struct {
 	GroupIDIcla   string `json:"group_id_icla,omitempty"`
 	GroupNameCcla string `json:"group_name_ccla,omitempty"`
 	GroupNameIcla string `json:"group_name_icla,omitempty"`
+	ProjectSFID   string `json:"project_sfid,omitempty"`
 	ProjectID     string `json:"project_id,omitempty"`
 	Version       string `json:"version,omitempty"`
 }
@@ -33,5 +34,6 @@ func (g *Gerrit) toModel() *models.Gerrit {
 		GroupNameIcla: g.GroupNameIcla,
 		ProjectID:     g.ProjectID,
 		Version:       g.Version,
+		ProjectSFID:   g.ProjectSFID,
 	}
 }

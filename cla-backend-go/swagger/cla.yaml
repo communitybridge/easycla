@@ -2397,6 +2397,9 @@ definitions:
   gerrit:
     $ref: './common/gerrit.yaml'
 
+  gerrit-list:
+    $ref: './common/gerrit-list.yaml'
+
   github-organizations:
     $ref: './common/github-organizations.yaml'
 
