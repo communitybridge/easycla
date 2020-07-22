@@ -61,7 +61,6 @@ provider:
       Resource: "*"
     - Effect: Allow
       Action:
-        - s3:ListBucket
         - s3:GetObject
         - s3:PutObject
         - s3:DeleteObject
@@ -69,6 +68,12 @@ provider:
       Resource:
         - "arn:aws:s3:::cla-signature-files-${self:provider.stage}/*"
         - "arn:aws:s3:::cla-project-logo-${self:provider.stage}/*"
+    - Effect: Allow
+      Action:
+        - s3:ListBucket
+      Resource:
+        - "arn:aws:s3:::cla-signature-files-${self:provider.stage}"
+        - "arn:aws:s3:::cla-project-logo-${self:provider.stage}"
     - Effect: Allow
       Action:
         - ssm:GetParameter
