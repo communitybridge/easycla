@@ -842,7 +842,7 @@ support</a>.</p>
 		requesterUsername)
 
 	acsClient := v2AcsService.GetClient()
-	acsErr := acsClient.SendUserInvite(&userWithNoLFIDEmail, "contact", "organization", organizationID, "userinvite", &subject, &body)
+	acsErr := acsClient.SendUserInvite(&userWithNoLFIDEmail, "cla-manager", "organization", organizationID, "userinvite", &subject, &body)
 	if acsErr != nil {
 		return acsErr
 	}
