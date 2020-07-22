@@ -11,8 +11,6 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 
-	"github.com/communitybridge/easycla/cla-backend-go/config"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -46,12 +44,13 @@ func init() {
 	if stage == "" {
 		log.Fatal("stage not set")
 	}
-	log.Infof("STAGE set to %s\n", stage)
-	configFile, err := config.LoadConfig("", awsSession, stage)
-	if err != nil {
-		log.Panicf("Unable to load config - Error: %v", err)
+	log.Infof("STAGE : %s", stage)
+	signaturesFileBucket := os.Getenv("CLA_SIGNATURE_FILES_BUCKET")
+	if signaturesFileBucket == "" {
+		log.Fatal("CLA_SIGNATURE_FILES_BUCKET is not set in environment")
 	}
-	zipBuilder = signatures.NewZipBuilder(awsSession, configFile.SignatureFilesBucket)
+	log.Infof("CLA_SIGNATURE_FILES_BUCKET : %s", signaturesFileBucket)
+	zipBuilder = signatures.NewZipBuilder(awsSession, signaturesFileBucket)
 }
 
 func handler(ctx context.Context, event BuildZipEvent) error {
