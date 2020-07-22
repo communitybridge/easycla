@@ -42,7 +42,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			msg := fmt.Sprintf("Error querying the project by name, error: %+v", getErr)
 			log.Warnf("Create Project Failed - %s", msg)
 			return project.NewCreateProjectBadRequest().WithPayload(&models.ErrorResponse{
-				Code:    "500",
+				Code:    "400",
 				Message: msg,
 			})
 		}
@@ -251,24 +251,4 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 		return project.NewUpdateProjectOK().WithPayload(projectModel)
 	})
-}
-
-// codedResponse interface
-type codedResponse interface {
-	Code() string
-}
-
-// errorResponse is a helper to wrap the specified error into an error response model
-func errorResponse(err error) *models.ErrorResponse {
-	code := ""
-	if e, ok := err.(codedResponse); ok {
-		code = e.Code()
-	}
-
-	e := models.ErrorResponse{
-		Code:    code,
-		Message: err.Error(),
-	}
-
-	return &e
 }
