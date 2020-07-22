@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 
 	"github.com/communitybridge/easycla/cla-backend-go/users"
@@ -478,6 +480,16 @@ func buildApprovalListSummary(approvalListChanges *models.ApprovalList) string {
 
 // sendRequestAccessEmailToCLAManagers sends the request access email to the specified CLA Managers
 func (s service) sendApprovalListUpdateEmailToCLAManagers(companyModel *models.Company, projectModel *models.Project, recipientName, recipientAddress string, approvalListChanges *models.ApprovalList) {
+	f := logrus.Fields{
+		"function":          "sendApprovalListUpdateEmailToCLAManagers",
+		"projectName":       projectModel.ProjectName,
+		"projectExternalID": projectModel.ProjectExternalID,
+		"foundationSFID":    projectModel.FoundationSFID,
+		"companyName":       companyModel.CompanyName,
+		"companyExternalID": companyModel.CompanyExternalID,
+		"recipientName":     recipientName,
+		"recipientAddress":  recipientAddress}
+
 	companyName := companyModel.CompanyName
 	projectName := projectModel.ProjectName
 
@@ -488,7 +500,7 @@ func (s service) sendApprovalListUpdateEmailToCLAManagers(companyModel *models.C
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>The EasyCLA approval list for %s for project %s was modified.</p>
-<p>The modification was as follows:
+<p>The modification was as follows:</p>
 %s
 <p>Contributors with previously failed pull requests to %s can close and re-open the pull request to force a recheck by
 the EasyCLA system.</p>
@@ -496,15 +508,15 @@ the EasyCLA system.</p>
 <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
 <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
 support</a>.</p>
-<p>Thanks,
+<p>Thanks,</p>
 <p>EasyCLA support team</p>`,
 		recipientName, projectName, companyName, projectName, buildApprovalListSummary(approvalListChanges), projectName)
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
-		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+		log.WithFields(f).Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
 	} else {
-		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+		log.WithFields(f).Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
 	}
 }
 
