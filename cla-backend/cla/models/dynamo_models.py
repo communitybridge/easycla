@@ -3307,6 +3307,7 @@ class GerritModel(BaseModel):
     group_id_ccla = UnicodeAttribute(null=True)
     group_name_icla = UnicodeAttribute(null=True)
     group_name_ccla = UnicodeAttribute(null=True)
+    project_sfid = UnicodeAttribute(null=True)
 
 
 class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-methods
@@ -3346,6 +3347,9 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
     def get_gerrit_id(self):
         return self.model.gerrit_id
 
+    def get_project_sfid(self):
+        return self.model.project_sfid
+
     def get_gerrit_name(self):
         return self.model.gerrit_name
 
@@ -3360,6 +3364,9 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
 
     def get_group_id_ccla(self):
         return self.model.group_id_ccla
+
+    def set_project_sfid(self, project_sfid):
+        self.model.project_sfid = str(project_sfid)
 
     def set_gerrit_id(self, gerrit_id):
         self.model.gerrit_id = gerrit_id

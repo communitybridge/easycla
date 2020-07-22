@@ -3,6 +3,8 @@ package gerrits
 import (
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -20,34 +22,30 @@ type ProjectService interface { //nolint
 }
 
 // Configure the Gerrit api
-func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectService ProjectService, eventService events.Service) {
+func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectService ProjectService, eventService events.Service, projectsClaGroupsRepo projects_cla_groups.Repository) {
 	api.GerritsDeleteGerritHandler = gerrits.DeleteGerritHandlerFunc(
 		func(params gerrits.DeleteGerritParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			projectModel, err := projectService.GetCLAGroupByID(params.ProjectID)
-			if err != nil {
-				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
-			}
-
-			// verify user have access to the project
-			if !utils.IsUserAuthorizedForProject(authUser, projectModel.ProjectExternalID) {
-				return gerrits.NewDeleteGerritForbidden().WithPayload(&models.ErrorResponse{
-					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DeleteGerrit with Project scope of %s",
-						authUser.UserName, projectModel.ProjectExternalID),
-				})
-			}
 
 			gerrit, err := service.GetGerrit(params.GerritID)
 			if err != nil {
-				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
+				if err == v1Gerrits.ErrGerritNotFound {
+					return gerrits.NewDeleteGerritNotFound().WithPayload(errorResponse(err))
+				}
+				return gerrits.NewDeleteGerritInternalServerError().WithPayload(errorResponse(err))
 			}
-
-			// verify gerrit project is same as the request
-			if gerrit.ProjectID != params.ProjectID {
+			if gerrit.ProjectSFID != params.ProjectSFID || gerrit.ProjectID != params.ClaGroupID {
 				return gerrits.NewDeleteGerritBadRequest().WithPayload(&models.ErrorResponse{
 					Code:    "400",
-					Message: "provided project id does not match with gerrit project id",
+					Message: "EasyCLA - 403 Bad Request - projectSFID or claGroupID does not match with provided gerrit record",
+				})
+			}
+			// verify user have access to the project
+			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+				return gerrits.NewDeleteGerritForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DeleteGerrit with Project scope of %s",
+						authUser.UserName, gerrit.ProjectSFID),
 				})
 			}
 
@@ -59,9 +57,9 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 
 			// record the event
 			eventService.LogEvent(&events.LogEventArgs{
-				EventType:    events.GerritRepositoryDeleted,
-				ProjectModel: projectModel,
-				LfUsername:   authUser.UserName,
+				EventType:  events.GerritRepositoryDeleted,
+				ProjectID:  gerrit.ProjectID,
+				LfUsername: authUser.UserName,
 				EventData: &events.GerritDeletedEventData{
 					GerritRepositoryName: gerrit.GerritName,
 				},
@@ -73,17 +71,23 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 	api.GerritsAddGerritHandler = gerrits.AddGerritHandlerFunc(
 		func(params gerrits.AddGerritParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			projectModel, err := projectService.GetCLAGroupByID(params.ProjectID)
-			if err != nil {
-				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
-			}
 
 			// verify user have access to the project
-			if !utils.IsUserAuthorizedForProject(authUser, projectModel.ProjectExternalID) {
+			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
 				return gerrits.NewAddGerritForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to AddGerrit with Project scope of %s",
-						authUser.UserName, projectModel.ProjectExternalID),
+						authUser.UserName, params.ProjectSFID),
+				})
+			}
+			ok, err := projectsClaGroupsRepo.IsAssociated(params.ProjectSFID, params.ClaGroupID)
+			if err != nil {
+				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
+			}
+			if !ok {
+				return gerrits.NewAddGerritBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "provided cla-group and project are not associated with each other",
 				})
 			}
 
@@ -94,16 +98,16 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 				GroupIDCcla: params.AddGerritInput.GroupIDCcla,
 				GroupIDIcla: params.AddGerritInput.GroupIDIcla,
 			}
-			result, err := service.AddGerrit(params.ProjectID, addGerritInput)
+			result, err := service.AddGerrit(params.ClaGroupID, params.ProjectSFID, addGerritInput)
 			if err != nil {
 				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
 			}
 
 			// record the event
 			eventService.LogEvent(&events.LogEventArgs{
-				EventType:    events.GerritRepositoryAdded,
-				ProjectModel: projectModel,
-				LfUsername:   authUser.UserName,
+				EventType:  events.GerritRepositoryAdded,
+				ProjectID:  params.ClaGroupID,
+				LfUsername: authUser.UserName,
 				EventData: &events.GerritAddedEventData{
 					GerritRepositoryName: utils.StringValue(params.AddGerritInput.GerritName),
 				},
@@ -115,6 +119,31 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 				return gerrits.NewAddGerritInternalServerError().WithPayload(errorResponse(err))
 			}
 			return gerrits.NewAddGerritOK().WithPayload(&response)
+		})
+
+	api.GerritsListGerritsHandler = gerrits.ListGerritsHandlerFunc(
+		func(params gerrits.ListGerritsParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+
+			// verify user have access to the project
+			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+				return gerrits.NewListGerritsForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to ListGerrits with Project scope of %s",
+						authUser.UserName, params.ProjectSFID),
+				})
+			}
+			result, err := service.GetClaGroupGerrits(params.ClaGroupID, &params.ProjectSFID)
+			if err != nil {
+				return gerrits.NewListGerritsBadRequest().WithPayload(errorResponse(err))
+			}
+
+			var response models.GerritList
+			err = copier.Copy(&response, result)
+			if err != nil {
+				return gerrits.NewListGerritsInternalServerError().WithPayload(errorResponse(err))
+			}
+			return gerrits.NewListGerritsOK().WithPayload(&response)
 		})
 }
 

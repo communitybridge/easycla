@@ -6,6 +6,7 @@ package gerrits
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/gofrs/uuid"
 
@@ -23,9 +24,14 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
+// errors
+var (
+	ErrGerritNotFound = errors.New("gerrit not found")
+)
+
 // Repository defines functions of Repositories
 type Repository interface {
-	GetProjectGerrits(projectID string) ([]*models.Gerrit, error)
+	GetClaGroupGerrits(projectID string, projectSFID *string) (*models.GerritList, error)
 	DeleteGerrit(gerritID string) error
 	GetGerrit(gerritID string) (*models.Gerrit, error)
 	AddGerrit(input *models.Gerrit) (*models.Gerrit, error)
@@ -44,10 +50,13 @@ type repo struct {
 	dynamoDBClient *dynamodb.DynamoDB
 }
 
-func (repo repo) GetProjectGerrits(projectID string) ([]*models.Gerrit, error) {
-	out := make([]*models.Gerrit, 0)
+func (repo repo) GetClaGroupGerrits(projectID string, projectSFID *string) (*models.GerritList, error) {
+	resultList := make([]*models.Gerrit, 0)
 	tableName := fmt.Sprintf("cla-%s-gerrit-instances", repo.stage)
 	filter := expression.Name("project_id").Equal(expression.Value(projectID))
+	if projectSFID != nil {
+		filter = filter.And(expression.Name("project_sfid").Equal(expression.Value(*projectSFID)))
+	}
 	expr, err := expression.NewBuilder().WithFilter(filter).Build()
 	if err != nil {
 		log.Warnf("error building expression for gerrit instances scan, error: %v", err)
@@ -77,7 +86,7 @@ func (repo repo) GetProjectGerrits(projectID string) ([]*models.Gerrit, error) {
 		}
 
 		for _, g := range gerrits {
-			out = append(out, g.toModel())
+			resultList = append(resultList, g.toModel())
 		}
 
 		if len(results.LastEvaluatedKey) != 0 {
@@ -86,7 +95,10 @@ func (repo repo) GetProjectGerrits(projectID string) ([]*models.Gerrit, error) {
 			break
 		}
 	}
-	return out, nil
+	sort.Slice(resultList, func(i, j int) bool {
+		return resultList[i].GerritName < resultList[j].GerritName
+	})
+	return &models.GerritList{List: resultList}, nil
 }
 
 func (repo *repo) DeleteGerrit(gerritID string) error {
@@ -125,7 +137,7 @@ func (repo *repo) GetGerrit(gerritID string) (*models.Gerrit, error) {
 		return nil, err
 	}
 	if len(result.Item) == 0 {
-		return nil, errors.New("gerrit not found")
+		return nil, ErrGerritNotFound
 	}
 	var gerrit Gerrit
 	err = dynamodbattribute.UnmarshalMap(result.Item, &gerrit)
@@ -154,6 +166,7 @@ func (repo *repo) AddGerrit(input *models.Gerrit) (*models.Gerrit, error) {
 		GroupNameCcla: input.GroupNameCcla,
 		GroupNameIcla: input.GroupNameIcla,
 		ProjectID:     input.ProjectID,
+		ProjectSFID:   input.ProjectSFID,
 		Version:       "v1",
 	}
 	av, err := dynamodbattribute.MarshalMap(gerrit)
