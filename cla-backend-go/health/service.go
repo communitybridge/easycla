@@ -81,12 +81,15 @@ func getDynamoTableStatus() []*models.HealthStatus {
 
 	tableNames := []string{
 		"cla-" + ini.GetStage() + "-ccla-whitelist-requests",
+		"cla-" + ini.GetStage() + "-cla-manager-requests",
 		"cla-" + ini.GetStage() + "-companies",
 		"cla-" + ini.GetStage() + "-company-invites",
 		"cla-" + ini.GetStage() + "-events",
 		"cla-" + ini.GetStage() + "-gerrit-instances",
 		"cla-" + ini.GetStage() + "-github-orgs",
+		"cla-" + ini.GetStage() + "-metrics",
 		"cla-" + ini.GetStage() + "-projects",
+		"cla-" + ini.GetStage() + "-projects-cla-groups",
 		"cla-" + ini.GetStage() + "-repositories",
 		"cla-" + ini.GetStage() + "-session-store",
 		"cla-" + ini.GetStage() + "-signatures",
