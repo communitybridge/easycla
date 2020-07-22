@@ -100,7 +100,7 @@ func invokeLambda(wg *sync.WaitGroup, lambdaClient *lambda.Lambda, stage string,
 		log.Error("Error marshalling BuildZip request", err)
 		return
 	}
-	functionName := fmt.Sprintf("cla-%s-zipbuilder-lambda", stage)
+	functionName := fmt.Sprintf("cla-backend-%s-zipbuilder-lambda", stage)
 
 	_, err = lambdaClient.Invoke(&lambda.InvokeInput{FunctionName: aws.String(functionName), Payload: payload})
 	if err != nil {
