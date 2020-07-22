@@ -2356,8 +2356,16 @@ definitions:
     properties:
       Code:
         type: string
+        description: error code - typically the HTTP response status code
+        example: '404'
+#      Type:
+#        type: string
+#        description: error type contains a string code or enumation value that can be used by the client for string lookup for internationalization
+#        example: 'cla_group_not_found'
       Message:
         type: string
+        description: an API message string, typically used by developers to encode additional call/trace information
+        example: 'CLA Group with ID 123445 was not found'
 
   #delete-response:
   #  type: object

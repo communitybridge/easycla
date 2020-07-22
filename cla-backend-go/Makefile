@@ -26,7 +26,7 @@ TEST_ENV=AWS_REGION=us-east-1 DYNAMODB_AWS_REGION=us-east-1 AWS_PROFILE=bar AWS_
 all: all-mac
 all-mac: clean swagger deps fmt build-mac build-aws-lambda-mac build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-scheduler-lambda-mac build-zipbuilder-lambda-mac test lint
 all-linux: clean swagger deps fmt build-linux build-aws-lambda-linux build-metrics-lambda-linux build-dynamo-events-lambda-linux build-zipbuilder-scheduler-lambda-linux build-zipbuilder-lambda-linux test lint
-build-lambdas-mac: build-aws-lambda build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-scheduler-lambda-mac build-zipbuilder-lambda-mac
+build-lambdas-mac: build-aws-lambda-mac build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-scheduler-lambda-mac build-zipbuilder-lambda-mac
 build-lambdas-linux: build-aws-lambda-linux build-metrics-lambda-linux build-dynamo-events-lambda-linux build-zipbuilder-scheduler-lambda-linux build-zipbuilder-lambda-linux
 
 generate: swagger
@@ -176,7 +176,7 @@ build-aws-lambda-linux: deps
 
 build-aws-lambda-mac: deps
 	@echo "Building a statically linked Mac OSX amd64 binary..."
-	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) $(BUILD_TAGS) -o $(LAMBDA_BIN) main.go
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) $(BUILD_TAGS) -o $(LAMBDA_BIN)-mac main.go
 	@chmod +x $(LAMBDA_BIN)-mac
 
 build-metrics-lambda: build-metrics-lambda-linux
