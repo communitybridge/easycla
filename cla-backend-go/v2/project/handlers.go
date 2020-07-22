@@ -4,7 +4,6 @@
 package project
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/jinzhu/copier"
@@ -14,7 +13,6 @@ import (
 	"github.com/LF-Engineering/lfx-kit/auth"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
-	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	v1ProjectOps "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/project"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
@@ -23,30 +21,6 @@ import (
 	v1Project "github.com/communitybridge/easycla/cla-backend-go/project"
 	"github.com/go-openapi/runtime/middleware"
 )
-
-// errors
-var (
-	ErrCLAGroupDoesNotExist = errors.New("cla group does not exist")
-	ErrCLAGroupIDMissing    = errors.New("cla group id is missing")
-)
-
-func v1ProjectModel(in *models.Project) (*v1Models.Project, error) {
-	out := &v1Models.Project{}
-	err := copier.Copy(out, in)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func v2ProjectModel(in *v1Models.Project) (*models.Project, error) {
-	out := &models.Project{}
-	err := copier.Copy(out, in)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
 
 // Configure establishes the middleware handlers for the project service
 func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service Service, eventsService events.Service) { //nolint
@@ -249,24 +223,4 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 
 		return project.NewGetCLAProjectsByIDOK().WithPayload(claProjects)
 	})
-}
-
-// codedResponse interface
-type codedResponse interface {
-	Code() string
-}
-
-// errorResponse is a helper to wrap the specified error into an error response model
-func errorResponse(err error) *models.ErrorResponse {
-	code := ""
-	if e, ok := err.(codedResponse); ok {
-		code = e.Code()
-	}
-
-	e := models.ErrorResponse{
-		Code:    code,
-		Message: err.Error(),
-	}
-
-	return &e
 }
