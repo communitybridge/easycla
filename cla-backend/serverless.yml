@@ -315,7 +315,7 @@ functions:
       - http:
           method: ANY
           path: v3/{proxy+}
-          cors: true
+          # cors: true # CORS handled at the API implementation
     package:
       individually: true
       include:
