@@ -58,10 +58,11 @@ type service struct {
 	companyRepo          company.IRepository
 	projectRepo          ProjectRepo
 	projectClaGroupsRepo projects_cla_groups.Repository
+	companyService       company.IService
 }
 
 // NewService returns an instance of v2 project service
-func NewService(apiURL string, compRepo company.IRepository, projectRepo ProjectRepo, pcgRepo projects_cla_groups.Repository) Service {
+func NewService(apiURL string, compRepo company.IRepository, projectRepo ProjectRepo, pcgRepo projects_cla_groups.Repository, compService company.IService) Service {
 	return &service{
 		ClaV1ApiURL:          apiURL,
 		companyRepo:          compRepo,
@@ -143,6 +144,22 @@ func (s *service) RequestCorporateSignature(authorizationHeader string, input *m
 	if err != nil {
 		return nil, err
 	}
+
+	usc := user_service.GetClient()
+	// search user
+	lfUser, err := usc.SearchUserByEmail(input.AuthorityEmail.String())
+	if err != nil {
+		log.Debugf("User with email : %s does not have an LF login", input.AuthorityEmail.String())
+		return nil, err
+	}
+
+	// Update the company ACL
+	companyACLError := s.companyService.AddUserToCompanyAccessList(*input.CompanySfid, lfUser.Username)
+	if companyACLError != nil {
+		log.Warnf("AddCLAManager- Unable to add user to company ACL, companyID: %s, user: %s, error: %+v", *input.CompanySfid, lfUser.Username, companyACLError)
+		return nil, companyACLError
+	}
+
 	return out.toModel(), nil
 }
 
