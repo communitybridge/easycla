@@ -83,6 +83,7 @@ def request_employee_signature(project_id, company_id, user_id, return_url_type,
     elif return_url_type == "Github":
         return signing_service.request_employee_signature(str(project_id), str(company_id), str(user_id), return_url)
 
+
 def check_and_prepare_employee_signature(project_id, company_id, user_id):
     """
     Checks that 
@@ -90,7 +91,7 @@ def check_and_prepare_employee_signature(project_id, company_id, user_id):
     2. The company signatory has signed the CCLA for their company. 
     3. The user is included as part of the whitelist of the CCLA that the company signed. 
 
-    :param project_id: The ID of the project the user is signing a CCLA for.
+    :param project_id: The ID of the CLA Group (project) the user is signing a CCLA for.
     :type project_id: string
     :param company_id: The ID of the company the employee belongs to.
     :type company_id: string
@@ -98,6 +99,7 @@ def check_and_prepare_employee_signature(project_id, company_id, user_id):
     :type user_id: string
     """
     return get_signing_service().check_and_prepare_employee_signature(str(project_id), str(company_id), str(user_id))
+
 
 # Deprecated in favor of sending the email through DocuSign
 def send_authority_email(company_name, project_name, authority_name, authority_email):

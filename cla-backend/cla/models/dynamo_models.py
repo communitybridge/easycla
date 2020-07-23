@@ -971,19 +971,19 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def __str__(self):
         return (
-            "id: {}, name: {}, project_name_lower: {},external id: {}, icla enabled: {}, " "ccla enabled: {}, requires icla: {}, acl: {}," +
-            " foundation_sfid: {}, root_project_repositories_count: {}"
-        ).format(
-            self.model.project_id,
-            self.model.project_name,
-            self.model.project_name_lower,
-            self.model.project_external_id,
-            self.model.project_icla_enabled,
-            self.model.project_ccla_enabled,
-            self.model.project_ccla_requires_icla_signature,
-            self.model.project_acl,
-            self.model.foundation_sfid,
-            self.model.root_project_repositories_count,
+            f"id:{self.model.project_id}, "
+            f"project_name:{self.model.project_name}, "
+            f"project_name_lower:{self.model.project_name_lower}, "
+            f"project_external_id:{self.model.project_external_id}, "
+            f"foundation_sfid:{self.model.foundation_sfid}, "
+            f"project_icla_enabled: {self.model.project_icla_enabled}, "
+            f"project_ccla_enabled: {self.model.project_ccla_enabled}, "
+            f"project_ccla_requires_icla_signature: {self.model.project_ccla_requires_icla_signature}, "
+            f"project_acl: {self.model.project_acl}, "
+            f"root_project_repositories_count: {self.model.root_project_repositories_count}, "
+            f"date_created: {self.model.date_created}, "
+            f"date_modified: {self.model.date_modified}, "
+            f"version: {self.model.version}"
         )
 
     def to_dict(self):
@@ -3332,6 +3332,19 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
         self.model.gerrit_url = gerrit_url
         self.model.group_id_icla = group_id_icla
         self.model.group_id_ccla = group_id_ccla
+
+    def __str__(self):
+        return (
+            f"gerrit_id:{self.model.gerrit_id}, "
+            f"gerrit_name:{self.model.gerrit_name}, "
+            f"project_id:{self.model.project_id}, "
+            f"gerrit_url:{self.model.gerrit_url}, "
+            f"group_id_icla: {self.model.group_id_icla}, "
+            f"group_id_ccla: {self.model.group_id_ccla}, "
+            f"date_created: {self.model.date_created}, "
+            f"date_modified: {self.model.date_modified}, "
+            f"version: {self.model.version}"
+        )
 
     def to_dict(self):
         ret = dict(self.model)
