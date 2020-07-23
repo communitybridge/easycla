@@ -371,7 +371,7 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 
 	// Get Scope ID
 	orgClient := v2OrgService.GetClient()
-	scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, "cla-manager", "project|organization", params.UserLFID)
+	scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, params.ProjectSFID, "cla-manager", "project|organization", params.UserLFID)
 	if scopeErr != nil {
 		msg := buildErrorMessageDelete(params, scopeErr)
 		log.Warn(msg)

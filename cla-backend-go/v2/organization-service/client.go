@@ -182,7 +182,7 @@ func (osc *Client) DeleteOrgUserRoleOrgScopeProjectOrg(organizationID string, ro
 }
 
 // GetScopeID will return scopeID for a give role
-func (osc *Client) GetScopeID(organizationID string, roleName string, objectTypeName string, userLFID string) (string, error) {
+func (osc *Client) GetScopeID(organizationID string, projectID string, roleName string, objectTypeName string, userLFID string) (string, error) {
 	tok, err := token.GetToken()
 	if err != nil {
 		return "", err
@@ -203,8 +203,13 @@ func (osc *Client) GetScopeID(organizationID string, roleName string, objectType
 			for _, roleScopes := range userRole.RoleScopes {
 				if roleScopes.RoleName == roleName {
 					for _, scope := range roleScopes.Scopes {
-						if scope.ObjectTypeName == objectTypeName {
-							return scope.ScopeID, nil
+						// Check object ID and and objectTypeName
+						objectList := strings.Split(scope.ObjectID, "|")
+						// check objectID having project|organization scope
+						if len(objectList) == 2 {
+							if scope.ObjectTypeName == objectTypeName && projectID == objectList[0] {
+								return scope.ScopeID, nil
+							}
 						}
 					}
 				}
