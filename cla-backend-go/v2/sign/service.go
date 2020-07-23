@@ -68,6 +68,7 @@ func NewService(apiURL string, compRepo company.IRepository, projectRepo Project
 		companyRepo:          compRepo,
 		projectRepo:          projectRepo,
 		projectClaGroupsRepo: pcgRepo,
+		companyService:       compService,
 	}
 }
 
