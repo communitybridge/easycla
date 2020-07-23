@@ -1769,6 +1769,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			var userName = ""
 			var userLFID = ""
 			var userGHID = ""
+			var userGHUsername = ""
 			var swg sync.WaitGroup
 			swg.Add(2)
 
@@ -1782,6 +1783,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 						userName = userModel.Username
 						userLFID = userModel.LfUsername
 						userGHID = userModel.GithubID
+						userGHUsername = userModel.GithubUsername
 					}
 
 					if signatureUserCompanyID != "" {
@@ -1827,6 +1829,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			sigModel.UserName = userName
 			sigModel.UserLFID = userLFID
 			sigModel.UserGHID = userGHID
+			sigModel.UserGHUsername = userGHUsername
 			sigModel.SignatureACL = signatureACL
 		}(sig, dbSignature.SignatureUserCompanyID, dbSignature.SignatureACL)
 	}
