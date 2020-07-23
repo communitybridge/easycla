@@ -10,10 +10,10 @@ import uuid
 
 import cla
 import cla.hug_types
-from cla.utils import get_project_instance, get_repository_instance, get_gerrit_instance
 from cla.controllers.lf_group import LFGroup
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import Gerrit
+from cla.utils import get_project_instance, get_gerrit_instance
 
 lf_group_client_url = os.environ.get('LF_GROUP_CLIENT_URL', '')
 lf_group_client_id = os.environ.get('LF_GROUP_CLIENT_ID', '')
@@ -136,47 +136,69 @@ def get_agreement_html(gerrit_id, contract_type):
     console_v1_endpoint = cla.conf['CONTRIBUTOR_BASE_URL']
     console_v2_endpoint = cla.conf['CONTRIBUTOR_V2_BASE_URL']
     console_url = ''
+
     try:
         gerrit = get_gerrit_instance()
         gerrit.load(str(gerrit_id))
+        cla.log.debug(f'get_agreement_html - {contract_type} - Loaded gerrit record: {str(gerrit)}')
     except DoesNotExist as err:
         return {'errors': {'gerrit_id': str(err)}}
+
     try:
         project = get_project_instance()
         project.load(str(gerrit.get_project_id()))
+        cla.log.debug(f'get_agreement_html - {contract_type} - Loaded project record: {str(project)}')
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
-
 
     # Temporary condition until all CLA Groups are ready for the v2 Contributor Console
     if project.get_version() == 'v2':
         # Generate url for the v2 console
-        console_url = f'https://{console_v2_endpoint}/#/cla/gerrit/project/{gerrit.get_project_id()}/{contract_type}?redirect={gerrit.get_gerrit_url()}'
+        # Note: we pass the CLA Group (project_id) in the v2 API call, not the gerrit_id value
+        console_url = (f'https://{console_v2_endpoint}/'
+                       f'#/cla/gerrit/project/{gerrit.get_project_id()}/'
+                       f'{contract_type}?redirect={gerrit.get_gerrit_url()}')
     else:
         # Generate url for the v1 contributor console
-        console_url = f'https://{console_v1_endpoint}/#/cla/gerrit/project/{gerrit.get_project_id()}/{contract_type}'
+        # Note: we pass the Gerrit ID in the v1 API call, not the CLA Group (project_id) value
+        console_url = (f'https://{console_v1_endpoint}/'
+                       f'#/cla/gerrit/project/{gerrit.get_gerrit_id()}/'
+                       f'{contract_type}?redirect={gerrit.get_gerrit_url()}')
+
+    cla.log.debug(f'redirecting user to: {console_url}')
+    contract_type_title = contract_type.title()
 
     return f"""
         <html lang="en">
         <head>
+        <title>The Linux Foundation – EasyCLA Gerrit {contract_type_title} Console Redirect</title>
         <!-- Required meta tags -->
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        <link rel="shortcut icon" href="https://www.linuxfoundation.org/wp-content/uploads/2017/08/favicon.png">
+        <link rel="stylesheet"
+              href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+              integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+              crossorigin="anonymous"/>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+                integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+                crossorigin="anonymous"></script>
         </head>
         <body style='margin-top:20;margin-left:0;margin-right:0;'>
             <div class="text-center">
-                <img width=300px" src="https://cla-project-logo-prod.s3.amazonaws.com/lf-horizontal-color.svg" alt="community bridge logo"/>
+                <img width=300px"
+                 src="https://cla-project-logo-prod.s3.amazonaws.com/lf-horizontal-color.svg"
+                 alt="community bridge logo"/>
             </div>
             <h2 class="text-center">EasyCLA Account Authorization</h2>
             <p class="text-center">
-            Your account is not authorized under a signed CLA.  Click the button to authorize your account.
+            Your account is not authorized under a signed CLA.  Click the button to authorize your account for a
+            {contract_type_title} CLA.
             </p>
             <p class="text-center">
-            <a href="{console_url}" class="btn btn-primary" role="button">Proceed To Authorization</a>
+            <a href="{console_url}" class="btn btn-primary" role="button">
+                Proceed To {contract_type_title} Authorization</a>
             </p>
         </body>
         </html>
         """
-
