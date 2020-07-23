@@ -90,7 +90,7 @@ export class ClaSelectCompanyModal {
       user_id: this.userId
     };
 
-    this.claService.postCheckedAndPreparedEmployeeSignature(data).subscribe((response) => {
+    this.claService.postCheckAndPreparedEmployeeSignature(data).subscribe((response) => {
       /*
       Before an employee begins the signing process, ensure that
       1. The given project, company, and user exists

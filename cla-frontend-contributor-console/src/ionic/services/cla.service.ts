@@ -193,7 +193,7 @@ export class ClaService {
   /**
    * /check-prepare-employee-signature
    **/
-  postCheckedAndPreparedEmployeeSignature(data) {
+  postCheckAndPreparedEmployeeSignature(data) {
     const url: URL = this.getV2Endpoint('/v2/check-prepare-employee-signature');
     return this.http.post(url, data).map((res) => res.json());
   }
