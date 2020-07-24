@@ -18,8 +18,8 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/cla_manager"
 	"github.com/communitybridge/easycla/cla-backend-go/project"
-	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
 
 	v1ClaManager "github.com/communitybridge/easycla/cla-backend-go/cla_manager"
@@ -60,6 +60,8 @@ var (
 	ErrRoleScopeConflict = errors.New("roleScope conflict")
 	//ErrCLAManagerDesigneeConflict when user is already assigned cla-manager-designee role
 	ErrCLAManagerDesigneeConflict = errors.New("user already assigned cla-manager-designee")
+	//ErrScopeNotFound returns error when getting scopeID
+	ErrScopeNotFound = errors.New("scope not found")
 )
 
 type service struct {
@@ -70,6 +72,7 @@ type service struct {
 	easyCLAUserService  easyCLAUser.Service
 	v2CompanyService    v2Company.Service
 	eventService        events.Service
+	projectCGRepo       projects_cla_groups.Repository
 }
 
 // Service interface
@@ -83,8 +86,9 @@ type Service interface {
 }
 
 // NewService returns instance of CLA Manager service
-func NewService(compService company.IService, projService project.Service, mgrService v1ClaManager.IService, claUserService easyCLAUser.Service, repoService repositories.Service, v2CompService v2Company.Service,
-	evService events.Service) Service {
+func NewService(compService company.IService, projService project.Service, mgrService v1ClaManager.IService, claUserService easyCLAUser.Service,
+	repoService repositories.Service, v2CompService v2Company.Service,
+	evService events.Service, projectCGroupRepo projects_cla_groups.Repository) Service {
 	return &service{
 		companyService:      compService,
 		projectService:      projService,
@@ -93,6 +97,7 @@ func NewService(compService company.IService, projService project.Service, mgrSe
 		easyCLAUserService:  claUserService,
 		v2CompanyService:    v2CompService,
 		eventService:        evService,
+		projectCGRepo:       projectCGroupRepo,
 	}
 }
 
@@ -293,13 +298,28 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		}
 	}
 
-	scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(*params.Body.UserEmail, params.ProjectSFID, params.CompanySFID, roleID)
-	if scopeErr != nil {
-		msg := buildErrorMessageCreate(params, scopeErr)
+	projectCLAGroups, getErr := s.projectCGRepo.GetProjectsIdsForClaGroup(claGroupID)
+	log.Debugf("Getting associated SF projects for claGroup: %s ", claGroupID)
+
+	if getErr != nil {
+		msg := buildErrorMessageCreate(params, getErr)
 		log.Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
+		}
+	}
+
+	for _, projectCG := range projectCLAGroups {
+
+		scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(*params.Body.UserEmail, projectCG.ProjectSFID, params.CompanySFID, roleID)
+		if scopeErr != nil {
+			msg := buildErrorMessageCreate(params, scopeErr)
+			log.Warn(msg)
+			return nil, &models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			}
 		}
 	}
 
@@ -370,25 +390,46 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 	}
 	log.Debugf("Role ID for cla-manager-role : %s", roleID)
 
-	// Get Scope ID
-	orgClient := v2OrgService.GetClient()
-	scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, params.ProjectSFID, "cla-manager", "project|organization", params.UserLFID)
-	if scopeErr != nil {
-		msg := buildErrorMessageDelete(params, scopeErr)
+	projectCLAGroups, getErr := s.projectCGRepo.GetProjectsIdsForClaGroup(claGroupID)
+
+	if getErr != nil {
+		msg := buildErrorMessageDelete(params, getErr)
 		log.Warn(msg)
 		return &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
 		}
 	}
-	email := *user.Emails[0].EmailAddress
-	deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(params.CompanySFID, roleID, scopeID, &user.Username, &email)
-	if deleteErr != nil {
-		msg := buildErrorMessageDelete(params, deleteErr)
-		log.Warn(msg)
-		return &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
+
+	orgClient := v2OrgService.GetClient()
+
+	for _, projectCG := range projectCLAGroups {
+		scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, projectCG.ProjectSFID, "cla-manager", "project|organization", params.UserLFID)
+		if scopeErr != nil {
+			msg := buildErrorMessageDelete(params, scopeErr)
+			log.Warn(msg)
+			return &models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			}
+		}
+		if scopeID == "" {
+			msg := buildErrorMessageDelete(params, ErrScopeNotFound)
+			log.Warn(msg)
+			return &models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			}
+		}
+		email := *user.Emails[0].EmailAddress
+		deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(params.CompanySFID, roleID, scopeID, &user.Username, &email)
+		if deleteErr != nil {
+			msg := buildErrorMessageDelete(params, deleteErr)
+			log.Warn(msg)
+			return &models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			}
 		}
 	}
 

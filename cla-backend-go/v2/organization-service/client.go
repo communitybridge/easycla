@@ -5,7 +5,6 @@ package organization_service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -32,8 +31,6 @@ const (
 
 var (
 	organizationServiceClient *Client
-	//ErrScopeNotFound returns error when getting scopeID
-	ErrScopeNotFound = errors.New("scope not found")
 )
 
 // InitClient initializes the user_service client
@@ -216,7 +213,7 @@ func (osc *Client) GetScopeID(organizationID string, projectID string, roleName 
 			}
 		}
 	}
-	return "", ErrScopeNotFound
+	return "", nil
 }
 
 // SearchOrganization search organization by name. It will return
