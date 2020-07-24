@@ -8,15 +8,15 @@ SPDX-License-Identifier: CC-BY-4.0
 
 ## Prerequisites
 
-- Go 1.13
-- Python
-- Node 8/12
+- Go 1.14
+- Python 3
+- Node 8/12+
 
 ## Node Setup
 
 The frontend UI still requires an older version of nodejs - version 8. This is
 due to compatibility issues with the Angular and Ionic toolchain. Use node
-version 8.x for the frontend package installation and build/deploy commands.
+version 8.x for the frontend source package installation and build/deploy commands.
 For all other folders which use node, use version 12.x+.  The serverless
 library picks up a newer version of semver which requires node 10+.
 
@@ -163,7 +163,7 @@ echo $GOROOT
 
 # And go should be in your path
 go version
-go version go1.14 darwin/amd64
+go version go1.14.5 darwin/amd64
 ```
 
 ### Setup Project Folders
@@ -206,13 +206,14 @@ lrwxr-xr-x  1 ddeal  staff  29 Jul  7 14:48 /Users/ddeal/projects/go/src/github.
 
 ### Configure Git
 
-EasyCLA currently relies on two private libraries for user authorization and
-common data models:
+EasyCLA currently relies on several private libraries for user authorization and
+common data models and other libraries:
 
 - github.com/LF-Engineering/lfx-kit (authorization library)
 - github.com/LF-Engineering/lfx-models (common data models)
+- github.com/LF-Engineering/aws-lambda-go-api-proxy (forked library which includes query parameters fixes)
 
-The near-term plan is to migrate these private libraries to the 
+The near-term plan is to migrate some of these private libraries to the 
 github.com/communitybridge organization as public repositories.
 
 Until that time, each user needs to request access to these repositories 
@@ -223,7 +224,7 @@ and create/update the following file: `~/.gitconfig` to include the following:
   insteadOf = https://github.com/
 ```
 
-This will allow the Golang `dep` tool to pull dependencies from private
+This GoLang build file (Makefile) will handling pulling dependencies from the private
 repositories.
 
 ### Building Go Source
@@ -246,20 +247,26 @@ make setup
 # - lint will run lint checks (do this before checking in code to avoid CI/CD catching the violations later)
 
 # Linux only:
-make clean swagger swagger-validate deps fmt build test lint
+make all-linux
+# or everything individually - including the extra lambdas
+make clean swagger deps fmt build-linux build-aws-lambda-linux build-metrics-lambda-linux build-dynamo-events-lambda-linux build-zipbuilder-scheduler-lambda-linux build-zipbuilder-lambda-linux test lint
 
 # Mac only:
-make clean swagger swagger-validate deps fmt build-mac test lint
-# or use the 'all' target (mac only)
-make all
+make all-mac
+# or everything individually - including the extra lambdas
+make clean swagger deps fmt build-mac build-aws-lambda-mac build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-scheduler-lambda-mac build-zipbuilder-lambda-mac test lint
 
-# After the above, you should have the binary now:
+# After the above, you should have the binary now (Mac example):
 ls -lhF cla
--rwxr-xr-x  1 ddeal  staff    36M Jul 18 10:57 cla*
+-rwxr-xr-x  1 ddeal  staff    36M Jul 18 10:57 cla-mac*
 
-# Type is based on your OS
-file cla
-cla: Mach-O 64-bit executable x86_64
+# Type is based on your OS:
+# Mac example:
+file cla-mac
+cla-mac: Mach-O 64-bit executable x86_64
+# Linux example:
+file cla    
+cla: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, Go BuildID=9KJXkKLbz8QXVJiIStug/13hRaqNdkbT0_CJAC_96/pqAvGfgbdkRS-xcMCFwk/PEhC2JMjFKBawWbErcth, stripped
 ```
 
 ### Setup the Environment
@@ -286,8 +293,9 @@ First build and setup the environment.  Then simply run it:
 ```
 
 You should see the typical diagnostic details on startup indicating that it
-started without errors. To confirm, connect to the health service using a
-browser, curl or PostMan:
+started without errors including build information with successful load of 
+configuration parameters. To confirm the service is up and running locally,
+connect to the health service using a browser, curl or PostMan:
 
 ```bash
 open http://localhost:8080/v3/ops/health
