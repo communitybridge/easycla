@@ -137,7 +137,8 @@ def request_company_whitelist(user_id: str, company_id: str, user_name: str, use
         return {'errors': {'user_id': str(err)}}
 
     if user_email not in user.get_user_emails():
-        return {'errors': {'user_email': 'User\'s email must match one of the user\'s existing emails in their profile'}}
+        return {
+            'errors': {'user_email': 'User\'s email must match one of the user\'s existing emails in their profile'}}
 
     company = Company()
     try:
@@ -229,7 +230,7 @@ def invite_cla_manager(contributor_id, contributor_name, contributor_email, cla_
     # We'll use the user's provided contributor name - if not provided use what we have in the DB
     if contributor_name is None:
         contributor_name = user.get_user_name()
-    
+
     log_msg = (f'sent email to CLA Manager: {cla_manager_name} with email {cla_manager_email} '
                f'for project {project_name} and company {company_name} '
                f'to user {contributor_name} with email {contributor_email}')
@@ -238,8 +239,8 @@ def invite_cla_manager(contributor_id, contributor_name, contributor_email, cla_
     send_email_to_cla_manager(contributor_name, contributor_email,
                               cla_manager_name, cla_manager_email,
                               project_name, company_name, False)
-    
-    #update ccla_whitelist_request
+
+    # update ccla_whitelist_request
     ccla_whitelist_request = CCLAWhitelistRequest()
     ccla_whitelist_request.set_request_id(str(uuid.uuid4()))
     ccla_whitelist_request.set_company_name(company_name)
@@ -249,7 +250,7 @@ def invite_cla_manager(contributor_id, contributor_name, contributor_email, cla_
     ccla_whitelist_request.set_user_emails(set([contributor_email]))
     ccla_whitelist_request.set_request_status("pending")
     ccla_whitelist_request.save()
-    
+
     Event.create_event(
         event_user_id=contributor_id,
         event_project_name=project_name,
@@ -447,48 +448,46 @@ def get_or_create_user(auth_user):
     # Just return the first matching record
     return users[0]
 
-
-def request_company_admin_access(user_id, company_id):
-    """
-    Send Email to company admins to inform that that a user is requesting to be a CLA Manager for their company.
-    """
-
-    user = User()
-    try:
-        user.load(user_id)
-    except DoesNotExist as err:
-        return {'errors': {'user_id': str(err)}}
-    user_name = user.get_user_name()
-
-    company = Company()
-    try:
-        company.load(company_id)
-    except DoesNotExist as err:
-        return {'errors': {'company_id': str(err)}}
-
-    subject = 'EasyCLA: New CLA Manager Access Request'
-
-    # Send emails to every CLA manager
-    for admin in company.get_managers():
-        # TODO: Review this - need to load project
-        body = f'''
-<p>Hello {admin.get_user_name()},</p>
-<p>This is a notification email from EasyCLA regarding the project {project}.</p>
-<p>You are currently listed as a CLA Manager from {company.get_company_name()} for the project {project}.
-This means that you are able to maintain the list of employees allowed to contribute to {project} on behalf of your
-company, as well as the list of your company’s CLA Managers for {project}.</p>
-<p>{user_name} ({user.get_user_email}) has requested to be added as another CLA Manager from
-{company.get_company_name()} for {project}. This would permit them to maintain the lists of approved contributors and
-CLA Managers as well.</p>
-<p>If you want to permit this, please log into the EasyCLA Corporate Console at https://{corporate_console_url}, where
-you can approve this user as an additional CLA Manager.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the
-documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143"
-target="_blank">reach out to us for support</a>.</p>
-<p>Thanks,</p>
-<p>EasyCLA support team</p>
-'''
-        recipient = admin.get_lf_email()
-        email_service = get_email_service()
-        email_service.send(subject, body, recipient)
+# def request_company_admin_access(user_id, company_id):
+#     """
+#     Send Email to company admins to inform that that a user is requesting to be a CLA Manager for their company.
+#     """
+#     user = User()
+#     try:
+#         user.load(user_id)
+#     except DoesNotExist as err:
+#         return {'errors': {'user_id': str(err)}}
+#     user_name = user.get_user_name()
+#
+#     company = Company()
+#     try:
+#         company.load(company_id)
+#     except DoesNotExist as err:
+#         return {'errors': {'company_id': str(err)}}
+#
+#     subject = 'EasyCLA: New CLA Manager Access Request'
+#
+#     # Send emails to every CLA manager
+#     for admin in company.get_managers():
+#         # TODO: Review this - need to load project
+#         body = f'''
+# <p>Hello {admin.get_user_name()},</p>
+# <p>This is a notification email from EasyCLA regarding the company {company.get_company_name()}.</p>
+# <p>You are currently listed as a company admin for {company.get_company_name()}.
+# This means that you are able to maintain the list of employees allowed to contribute to {project} on behalf of your
+# company, as well as the list of your company’s CLA Managers for {project}.</p>
+# <p>{user_name} ({user.get_user_email}) has requested to be added as another CLA Manager from
+# {company.get_company_name()} for {project}. This would permit them to maintain the lists of approved contributors and
+# CLA Managers as well.</p>
+# <p>If you want to permit this, please log into the EasyCLA Corporate Console at https://{corporate_console_url}, where
+# you can approve this user as an additional CLA Manager.</p>
+# <p>If you need help or have questions about EasyCLA, you can
+# <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the
+# documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143"
+# target="_blank">reach out to us for support</a>.</p>
+# <p>Thanks,</p>
+# <p>EasyCLA support team</p>
+# '''
+#         recipient = admin.get_lf_email()
+#         email_service = get_email_service()
+#         email_service.send(subject, body, recipient)

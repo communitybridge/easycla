@@ -3911,7 +3911,6 @@ class CCLAWhitelistRequestModel(BaseModel):
     company_id_project_id_index = CompanyIDProjectIDIndex()
         
 
-
 class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
     """
     ORM-agnostic wrapper for the DynamoDB CCLAWhitelistRequestModel
@@ -3966,12 +3965,11 @@ class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
     def save(self):
         return self.model.save()
     
-    def load(self,request_id):
+    def load(self, request_id):
         try:
             ccla_whitelist_request = self.model.get(str(request_id))
         except CCLAWhitelistRequest.DoesNotExist:
             raise cla.models.DoesNotExist("CCLAWhitelistRequest not found")
-
 
     def delete(self):
         self.model.delete()
@@ -4050,5 +4048,3 @@ class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
             ccla_whitelist_request.model = request
             ret.append(ccla_whitelist_request)
         return ret
-
-

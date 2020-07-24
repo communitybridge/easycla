@@ -87,6 +87,7 @@ def get_user(request, user_id: hug.types.uuid):
     """
     try:
         auth_user = check_auth(request)
+        cla.log.debug(f'validated request for: {auth_user}')
     except cla.auth.AuthError as auth_err:
         if auth_err.response == "missing authorization header":
             cla.log.info("getting github user: {}".format(user_id))
@@ -179,9 +180,9 @@ def invite_company_admin(
     Sends an Email to the prospective CLA Manager to sign up through the ccla console.
     """
     return cla.controllers.user.invite_cla_manager(
-        user_id, contributor_name, str(contributor_email),
+        str(user_id), str(contributor_name), str(contributor_email),
         str(cla_manager_name), str(cla_manager_email),
-        project_name, company_name
+        str(project_name), str(company_name)
     )
 
 
@@ -197,14 +198,15 @@ def request_company_ccla(
     return cla.controllers.user.request_company_ccla(str(user_id), str(user_email), str(company_id), str(project_id))
 
 
-@hug.post("/user/{user_id}/company/{company_id}/request-access", versions=2)
-def request_company_admin_access(user_id: hug.types.uuid, company_id: hug.types.uuid):
-    """
-    POST: /user/{user_id}/company/{company_id}/request-access
-
-    Sends an Email for a user requesting access to be on Company ACL.
-    """
-    return cla.controllers.user.request_company_admin_access(str(user_id), str(company_id))
+# Company Admin's don't have a role within EasyCLA v1
+# @hug.post("/user/{user_id}/company/{company_id}/request-access", versions=2)
+# def request_company_admin_access(user_id: hug.types.uuid, company_id: hug.types.uuid):
+#    """
+#     POST: /user/{user_id}/company/{company_id}/request-access
+#
+#     Sends an Email for a user requesting access to be on Company ACL.
+#     """
+#     return cla.controllers.user.request_company_admin_access(str(user_id), str(company_id))
 
 
 @hug.get("/user/{user_id}/active-signature", versions=2)
