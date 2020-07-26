@@ -64,7 +64,7 @@ type Service interface {
 	GetCompanyProjectActiveCLAs(companyID string, projectSFID string) (*models.ActiveClaList, error)
 	GetCompanyProjectContributors(projectSFID string, companySFID string, searchTerm string) (*models.CorporateContributorList, error)
 	GetCompanyProjectCLA(authUser *auth.User, companySFID, projectSFID string) (*models.CompanyProjectClaList, error)
-	CreateCompany(companyName string, companyWebsite string, userID string, LFXPortalURL string) (*models.CompanyOutput, error)
+	CreateCompany(companyName string, companyWebsite string, userEmail string, userID string, LFXPortalURL string) (*models.CompanyOutput, error)
 	GetCompanyByName(companyName string) (*models.Company, error)
 	GetCompanyByID(companyID string) (*models.Company, error)
 	GetCompanyBySFID(companySFID string) (*models.Company, error)
@@ -209,16 +209,9 @@ func (s *service) GetCompanyProjectContributors(projectSFID string, companySFID 
 	}, nil
 }
 
-func (s *service) CreateCompany(companyName string, companyWebsite string, userID string, LFXPortalURL string) (*models.CompanyOutput, error) {
+func (s *service) CreateCompany(companyName string, companyWebsite string, userEmail string, userID string, LFXPortalURL string) (*models.CompanyOutput, error) {
 	f := logrus.Fields{"companyName": companyName, "companyWebsite": companyWebsite, "userID": userID, "LFXPortalURL": LFXPortalURL}
 	var lfUser *v2UserServiceModels.User
-
-	// Get EasyCLA User
-	claUser, claUserErr := s.userRepo.GetUser(userID)
-	if claUserErr != nil {
-		log.WithFields(f).Warnf("unable to lookup user by ID, error: %+v", claUserErr)
-		return nil, ErrCLAUserNotFound
-	}
 
 	// Create Sales Force company
 	orgClient := orgService.GetClient()
@@ -232,84 +225,30 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 	acsClient := acs_service.GetClient()
 	userClient := v2UserService.GetClient()
 
-	// Ensure to send user invite with public email (GH)
-	var filteredEmails []string
-	for _, email := range claUser.Emails {
-		// Ignore noreply emails...
-		if !(strings.Contains(email, "noreply.github.com")) {
-			filteredEmails = append(filteredEmails, email)
-		}
+	lfUser, lfErr := userClient.SearchUserByEmail(userEmail)
+	if lfErr != nil {
+		msg := fmt.Sprintf("User : %s has no LFID", userEmail)
+		log.Warn(msg)
+		return nil, ErrNoLfUsername
 	}
 
-	var userEmail *string
-
-	if len(filteredEmails) > 0 {
-		// Check if userEmail is an LF user
-		for i := range filteredEmails {
-			found, lfErr := userClient.SearchUserByEmail(filteredEmails[i])
-			if lfErr != nil {
-				userEmail = &filteredEmails[i]
-				log.WithFields(f).Debugf("User email: %s is not associated with LF", filteredEmails[i])
-				continue
-			}
-			lfUser = found
-			log.WithFields(f).Debugf("User email: %s has an LFx account", filteredEmails[i])
-			break
-		}
+	// Get Role ID
+	roleID, designeeErr := acsClient.GetRoleID("company-owner")
+	if designeeErr != nil {
+		msg := "Problem getting role ID for company-owner"
+		log.WithFields(f).Warn(msg)
+		return nil, designeeErr
 	}
 
-	if lfUser != nil || claUser.LfEmail != "" {
-		// Set lf email
-		var email string
-		if claUser.LfEmail != "" {
-			log.WithFields(f).Debugf("Setting email to: %s", claUser.LfEmail)
-			email = claUser.LfEmail
-		} else if lfUser != nil && len(lfUser.Emails) > 0 {
-			log.WithFields(f).Debugf("Setting email to: %s", *lfUser.Emails[0].EmailAddress)
-			email = *lfUser.Emails[0].EmailAddress
-		}
-
-		// set lf username
-		var lfUsername string
-		if claUser.LfUsername != "" {
-			log.WithFields(f).Debugf("Setting username to: %s", claUser.LfUsername)
-			lfUsername = claUser.LfUsername
-		} else if lfUser != nil && lfUser.Username != "" {
-			log.WithFields(f).Debugf("Setting username to: %s", lfUser.Username)
-			lfUsername = lfUser.Username
-		}
-
-		// Get Role ID
-		roleID, designeeErr := acsClient.GetRoleID("company-owner")
-		if designeeErr != nil {
-			msg := "Problem getting role ID for company-owner"
-			log.WithFields(f).Warn(msg)
-			return nil, designeeErr
-		}
-
-		if lfUsername == "" {
-			msg := fmt.Sprintf("EasyCLA - Bad Request - User with lfEmail: %s has no username required for setting scope ", email)
-			log.WithFields(f).Warn(msg)
-			return nil, ErrNoLfUsername
-		}
-		err = orgClient.CreateOrgUserRoleOrgScope(email, org.ID, roleID)
-		if err != nil {
-			log.WithFields(f).Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", email, err)
-			return nil, err
-		}
-		log.WithFields(f).Debugf("User :%s has been assigned the company-owner role to organization: %s ", email, org.Name)
-		//Send Email to User with instructions to complete Company profile
-		log.WithFields(f).Debugf("Sending Email to user :%s to complete setup for newly created Org: %s ", email, org.Name)
-		sendEmailToUserCompanyProfile(org.Name, email, lfUsername, LFXPortalURL)
-
-	} else if userEmail != nil {
-		// Send User invite
-		log.WithFields(f).Debugf("User invite initiated for user with email: %s", *userEmail)
-		acsErr := acsClient.SendUserInvite(userEmail, "contributor", "organization", org.ID, "userinvite", nil, nil)
-		if acsErr != nil {
-			return nil, acsErr
-		}
+	err = orgClient.CreateOrgUserRoleOrgScope(userEmail, org.ID, roleID)
+	if err != nil {
+		log.WithFields(f).Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", userEmail, err)
+		return nil, err
 	}
+	log.WithFields(f).Debugf("User :%s has been assigned the company-owner role to organization: %s ", userEmail, org.Name)
+	//Send Email to User with instructions to complete Company profile
+	log.WithFields(f).Debugf("Sending Email to user :%s to complete setup for newly created Org: %s ", userEmail, org.Name)
+	sendEmailToUserCompanyProfile(org.Name, userEmail, lfUser.Username, LFXPortalURL)
 
 	// Create Easy CLA Company
 	log.WithFields(f).Debugf("Creating EasyCLA company: %s ", companyName)
