@@ -250,7 +250,13 @@ def activity(event_type, body):
                 return {'status': 'Organization Enrollment Completed. CLA System is operational'}
             else:
                 cla.log.info('github.activity - Organization already enrolled: %s', existing['organization_name'])
-                return {'status': 'Organization already enrolled in the CLA system'}
+                cla.log.info('github.activity - Updating installation ID for github organization: %s', existing['organization_name'])
+                update_organization(
+                    existing['organization_name'],
+                    existing['organization_sfid'],
+                    body['installation']['id'],
+                )
+                return {'status': 'Already Enrolled Organization Updated. CLA System is operational'}
         elif 'action' in body and body['action'] == 'deleted':
             cla.log.debug('github.activity - processing github installation activity [deleted] callback...')
             org_name = get_org_name_from_installation_event(body)
