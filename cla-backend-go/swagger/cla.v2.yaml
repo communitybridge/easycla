@@ -2832,6 +2832,7 @@ definitions:
   company-input:
     type: object
     required:
+      - userEmail
       - companyName
       - companyWebsite
     properties:
@@ -2841,6 +2842,9 @@ definitions:
         example: "Linux Foundation"
       companyWebsite:
         type: string
+      userEmail:
+        type: string
+        example: "wanyaland"
 
   company-output:
     type: object
