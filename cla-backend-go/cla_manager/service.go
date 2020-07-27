@@ -362,15 +362,12 @@ list of employees allowed to contribute to %s on behalf of your company, as well
 company’s CLA Managers for %s.</p>
 <p> To get started, please log into the EasyCLA Corporate Console at https://%s, and select your company and then the
 project %s. From here you will be able to edit the list of approved employees and CLA Managers.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		requesterName, projectName,
 		companyName, projectName, projectName, projectName,
-		corporateConsoleURL, projectName)
+		corporateConsoleURL, projectName,
+		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -396,15 +393,12 @@ list of company’s CLA Managers for %s.</p>
 <ul>
 <li>%s (%s)</li>
 </ul>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		recipientName, projectName,
 		companyName, projectName, projectName, projectName,
-		name, email)
+		name, email,
+		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -455,13 +449,10 @@ func sendRemovedClaManagerEmailToRecipient(companyModel *models.Company, project
 <p>If you have further questions about this, please contact one of the existing managers from
 %s:</p>
 %s
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
-		recipientName, projectName, companyName, projectName, companyName, companyManagerText)
+%s
+%s`,
+		recipientName, projectName, companyName, projectName, companyName, companyManagerText,
+		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -482,12 +473,11 @@ func sendClaManagerDeleteEmailToCLAManagers(companyModel *models.Company, projec
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>%s has been removed as a CLA Manager from %s for the project %s.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`, recipientName, projectName, name, companyName, projectName)
+%s
+%s
+`,
+		recipientName, projectName, name, companyName, projectName,
+		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

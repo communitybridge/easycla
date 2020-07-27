@@ -504,13 +504,10 @@ func (s service) sendApprovalListUpdateEmailToCLAManagers(companyModel *models.C
 %s
 <p>Contributors with previously failed pull requests to %s can close and re-open the pull request to force a recheck by
 the EasyCLA system.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,</p>
-<p>EasyCLA support team</p>`,
-		recipientName, projectName, companyName, projectName, buildApprovalListSummary(approvalListChanges), projectName)
+%s
+%s`,
+		recipientName, projectName, companyName, projectName, buildApprovalListSummary(approvalListChanges), projectName,
+		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -783,14 +780,11 @@ func sendRequestAccessEmailToContributorRecipient(authUser *auth.User, companyMo
 <p>You have been %s %s the Approval List of %s for %s by CLA Manager %s. This means that %s on behalf of %s.</p>
 <p>If you had previously submitted one or more pull requests to %s that had failed, you should 
 close and re-open the pull request to force a recheck by the EasyCLA system.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		recipientName, projectName, addRemove, toFrom,
-		companyName, projectName, authUser.UserName, authorizedString, projectName, projectName)
+		companyName, projectName, authUser.UserName, authorizedString, projectName, projectName,
+		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

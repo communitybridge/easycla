@@ -793,16 +793,14 @@ your company’s CLA Managers for %s.</p>
 lists of approved contributors and CLA Managers as well.</p>
 <p>If you want to permit this, please log into the EasyCLA Corporate Console at https://%s, select your company, then
 select the %s project. From the CLA Manager requests, you can approve this user as an additional CLA Manager.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p> `,
+%s
+%s
+`,
 		recipientName, projectName,
 		companyName, projectName, projectName, projectName,
 		requesterName, requesterEmail, companyName, projectName,
-		corporateConsoleURL, projectName)
+		corporateConsoleURL, projectName,
+		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -828,15 +826,12 @@ list of company’s CLA Managers for %s.</p>
 <ul>
 <li>%s (%s)</li>
 </ul>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		recipientName, projectName,
 		companyName, projectName, projectName, projectName,
-		requesterName, requesterEmail)
+		requesterName, requesterEmail,
+		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -861,15 +856,12 @@ list of employees allowed to contribute to %s on behalf of your company, as well
 company’s CLA Managers for %s.</p>
 <p> To get started, please log into the EasyCLA Corporate Console at https://%s, and select your company and then the
 project %s. From here you will be able to edit the list of approved employees and CLA Managers.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		requesterName, projectName,
 		companyName, projectName, projectName, projectName,
-		corporateConsoleURL, projectName)
+		corporateConsoleURL, projectName,
+		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -894,15 +886,12 @@ be able to maintain the list of employees allowed to contribute to %s on behalf 
 <ul>
 <li>%s (%s)</li>
 </ul>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		recipientName, projectName,
 		companyName, projectName, projectName,
-		requesterName, requesterEmail)
+		requesterName, requesterEmail,
+		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -924,14 +913,11 @@ func sendRequestDeniedEmailToRequester(companyModel *models.Company, projectMode
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>You have been denied as a CLA Manager from %s for the project %s. This means that you can not maintain the
 list of employees allowed to contribute to %s on behalf of your company.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		requesterName, projectName,
-		companyName, projectName, projectName)
+		companyName, projectName, projectName,
+		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

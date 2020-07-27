@@ -17,8 +17,9 @@ from cla.auth import AuthUser
 from cla.controllers.github_application import GitHubInstallation
 from cla.controllers.project import check_user_authorization
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import UserPermissions, Repository, Project
-from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client, get_email_service
+from cla.models.dynamo_models import UserPermissions, Repository
+from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client, get_email_service, \
+    get_email_sign_off_content, get_email_help_content, get_project_instance
 
 
 def get_organizations():
@@ -212,7 +213,7 @@ def activity(event_type, body):
     :param body: the webhook body payload
     :type body: dict
     """
-    cla.log.debug('github.activity - received github activity event of type %s',event_type)
+    cla.log.debug('github.activity - received github activity event of type %s', event_type)
     cla.log.debug('github.activity - received github activity event, '
                   f'action: {get_github_activity_action(body)}...')
 
@@ -250,7 +251,8 @@ def activity(event_type, body):
                 return {'status': 'Organization Enrollment Completed. CLA System is operational'}
             else:
                 cla.log.info('github.activity - Organization already enrolled: %s', existing['organization_name'])
-                cla.log.info('github.activity - Updating installation ID for github organization: %s', existing['organization_name'])
+                cla.log.info('github.activity - Updating installation ID for github organization: %s',
+                             existing['organization_name'])
                 update_organization(
                     existing['organization_name'],
                     existing['organization_sfid'],
@@ -289,7 +291,7 @@ def activity(event_type, body):
             repositories = []
             for repo in repository_removed:
                 repository_external_id = repo['id']
-                ghrepo = Repository().get_repository_by_external_id(repository_external_id,'github')
+                ghrepo = Repository().get_repository_by_external_id(repository_external_id, 'github')
                 if ghrepo is not None:
                     repositories.append(ghrepo)
             notify_project_managers(repositories)
@@ -297,6 +299,7 @@ def activity(event_type, body):
 
     cla.log.debug('github.activity - ignoring github activity event, '
                   f'action: {get_github_activity_action(body)}...')
+
 
 def notify_project_managers(repositories):
     if repositories is None:
@@ -309,14 +312,21 @@ def notify_project_managers(repositories):
         else:
             project_repos[project_id] = [ghrepo.get_repository_url()]
     for project_id in project_repos:
-        managers = cla.controllers.project.get_project_managers("",project_id,enable_auth = False)
-        project = cla.controllers.project.get_project(project_id)
+        managers = cla.controllers.project.get_project_managers("", project_id, enable_auth=False)
+        project = get_project_instance()
+        try:
+            project.load(project_id=str(project_id))
+        except DoesNotExist as err:
+            cla.log.warning('notify_project_managers - unable to load project (cla_group) by '
+                            f'project_id: {project_id}, error: {err}')
+            return {'errors': {'project_id': str(err)}}
         repositories = project_repos[project_id]
-        subject, body, recipients = unable_to_do_cla_check_email_content(managers, project["project_name"], repositories)
+        subject, body, recipients = unable_to_do_cla_check_email_content(
+            project, managers, repositories)
         get_email_service().send(subject, body, recipients)
 
 
-def unable_to_do_cla_check_email_content(managers, project_name, repositories):
+def unable_to_do_cla_check_email_content(project, managers, repositories):
     """Helper function to get unable to do cla check email subject, body, recipients"""
     subject = 'EasyCLA: Unable to check PRs'
     pronoun = "this repository"
@@ -330,7 +340,7 @@ def unable_to_do_cla_check_email_content(managers, project_name, repositories):
 
     body = f"""
     <p>Hello Project Manager,</p>
-    <p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
+    <p>This is a notification email from EasyCLA regarding the project {project.get_project_name()}.</p>
     <p>EasyCLA is unable to check PRs on {pronoun} due to permissions issue.</p>
     {repo_content}
     <p>Please contact the repository admin/owner to enable CLA checks.</p>
@@ -341,18 +351,15 @@ def unable_to_do_cla_check_email_content(managers, project_name, repositories):
     <li>Then click "Configure" associated with the EasyCLA App</li>
     <li>Finally, click the "All Repositories" radio button option</li>
     </ul>
-    <p>If you need help or have questions about EasyCLA, you can
-    <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-    <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-    support</a>.</p>
-    <p>Thanks,</p>
-    <p>EasyCLA support team</p>
+    {get_email_help_content(project.get_version() == 'v2')}
+    {get_email_sign_off_content()}
     """
-    body = '<p>' + body.replace('\n', '<br>')+ '</p>'
+    body = '<p>' + body.replace('\n', '<br>') + '</p>'
     recipients = []
     for manager in managers:
         recipients.append(manager["email"])
     return subject, body, recipients
+
 
 def get_organization_repositories(organization_name):
     github_organization = get_github_organization_instance()
