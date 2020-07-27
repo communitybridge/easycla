@@ -49,7 +49,7 @@ type ProjectRepo interface {
 
 // Service interface defines the sign service methods
 type Service interface {
-	RequestCorporateSignature(authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error)
+	RequestCorporateSignature(lfUsername string, authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error)
 }
 
 // service
@@ -104,7 +104,7 @@ func validateCorporateSignatureInput(input *models.CorporateSignatureInput) erro
 	return nil
 }
 
-func (s *service) RequestCorporateSignature(authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error) {
+func (s *service) RequestCorporateSignature(lfUsername string, authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error) {
 	err := validateCorporateSignatureInput(input)
 	if err != nil {
 		return nil, err
@@ -146,19 +146,10 @@ func (s *service) RequestCorporateSignature(authorizationHeader string, input *m
 		return nil, err
 	}
 
-	usc := user_service.GetClient()
-	// search user
-	lfUser, err := usc.SearchUserByEmail(input.AuthorityEmail.String())
-	if err != nil {
-		log.Debugf("User with email : %s does not have an LF login", input.AuthorityEmail.String())
-		return nil, err
-	}
-
 	// Update the company ACL
-	companyACLError := s.companyService.AddUserToCompanyAccessList(*input.CompanySfid, lfUser.Username)
+	companyACLError := s.companyService.AddUserToCompanyAccessList(comp.CompanyID, lfUsername)
 	if companyACLError != nil {
-		log.Warnf("AddCLAManager- Unable to add user to company ACL, companyID: %s, user: %s, error: %+v", *input.CompanySfid, lfUser.Username, companyACLError)
-		return nil, companyACLError
+		log.Warnf("AddCLAManager- Unable to add user to company ACL, companyID: %s, user: %s, error: %+v", *input.CompanySfid, lfUsername, companyACLError)
 	}
 
 	return out.toModel(), nil
