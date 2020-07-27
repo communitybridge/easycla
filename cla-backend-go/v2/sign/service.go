@@ -143,6 +143,11 @@ func (s *service) RequestCorporateSignature(lfUsername string, authorizationHead
 		ReturnURL:      input.ReturnURL.String(),
 	})
 	if err != nil {
+		// remove role
+		removeErr := removeSignatoryRole(input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
+		if removeErr != nil {
+			return nil, removeErr
+		}
 		return nil, err
 	}
 
@@ -150,6 +155,7 @@ func (s *service) RequestCorporateSignature(lfUsername string, authorizationHead
 	companyACLError := s.companyService.AddUserToCompanyAccessList(comp.CompanyID, lfUsername)
 	if companyACLError != nil {
 		log.Warnf("AddCLAManager- Unable to add user to company ACL, companyID: %s, user: %s, error: %+v", *input.CompanySfid, lfUsername, companyACLError)
+		return nil, companyACLError
 	}
 
 	return out.toModel(), nil
@@ -195,6 +201,49 @@ func requestCorporateSignature(authToken string, apiURL string, input *requestCo
 		return nil, err
 	}
 	return &out, nil
+}
+
+func removeSignatoryRole(userEmail string, companySFID string, projectSFID string) error {
+	f := logrus.Fields{"user_email": userEmail, "company_sfid": companySFID, "project_sfid": projectSFID}
+	log.WithFields(f).Debug("removing role for user")
+
+	usc := user_service.GetClient()
+	// search user
+	log.WithFields(f).Debug("searching user by email")
+	user, err := usc.SearchUserByEmail(userEmail)
+	if err != nil {
+		log.WithFields(f).Debug("Failed to get user")
+		return err
+	}
+
+	log.WithFields(f).Debug("Getting role id")
+	acsClient := acs_service.GetClient()
+	roleID, roleErr := acsClient.GetRoleID("cla-signatory")
+	if roleErr != nil {
+		log.WithFields(f).Debug("Failed to get role id for cla-signatory")
+		return roleErr
+	}
+	// Get scope id
+	log.WithFields(f).Debug("getting scope id")
+	orgClient := organization_service.GetClient()
+	scopeID, scopeErr := orgClient.GetScopeID(companySFID, projectSFID, "cla-signatory", "project|organization", user.Username)
+
+	if scopeErr != nil {
+		log.WithFields(f).Debug("Failed to get scope id for cla-signatory role")
+		return scopeErr
+	}
+
+	//Unassign role
+	log.WithFields(f).Debug("Unassigning role")
+	deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(companySFID, roleID, scopeID, &user.Username, &userEmail)
+
+	if deleteErr != nil {
+		log.WithFields(f).Debug("Failed to remove cla-signatory role")
+		return deleteErr
+	}
+
+	return nil
+
 }
 
 func prepareUserForSigning(userEmail string, companySFID, projectSFID string) error {
