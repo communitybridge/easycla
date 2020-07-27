@@ -2085,6 +2085,7 @@ class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     user_email = UnicodeAttribute(null=True)
     user_github_username = UnicodeAttribute(null=True)
     user_name = UnicodeAttribute(null=True)
+    user_lf_username = UnicodeAttribute(null=True)
 
 
 class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-methods
@@ -2347,6 +2348,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
     def get_user_name(self):
         return self.model.user_name
 
+    def get_user_lf_username(self):
+        return self.model.user_lf_username
+
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -2467,6 +2471,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def set_user_name(self, user_name):
         self.model.user_name = user_name
+
+    def set_user_lf_username(self, user_lf_username):
+        self.model.user_lf_username = user_lf_username
 
     def get_signatures_by_reference(
             self,  # pylint: disable=too-many-arguments
