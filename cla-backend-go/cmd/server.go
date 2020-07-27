@@ -290,7 +290,7 @@ func server(localMode bool) http.Handler {
 	cla_manager.Configure(api, claManagerService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 	v2ClaManager.Configure(v2API, v2ClaManagerService, configFile.LFXPortalURL, projectClaGroupRepo, userRepo, eventsService)
 	sign.Configure(v2API, v2SignService)
-	cla_groups.Configure(v2API, v2ClaGroupService, projectService, eventsService)
+	cla_groups.Configure(v2API, v2ClaGroupService, projectService, eventsService, gerritService, repositoriesService, signaturesService)
 
 	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	project_service.InitClient(configFile.APIGatewayURL)
