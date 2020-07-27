@@ -418,13 +418,10 @@ https://%s, and select your company. From there you will
 be able to view the list of projects which have EasyCLA configured and apply
 for CLA Manager status.
 </p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
-		recipientName, companyName, companyName, requestedUserInfo, s.corporateConsoleURL)
+%s
+%s`,
+		recipientName, companyName, companyName, requestedUserInfo, s.corporateConsoleURL,
+		utils.GetEmailHelpContent(false), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -453,13 +450,10 @@ https://%s, and select your company. From there you will
 be able to view the list of projects which have EasyCLA configured and apply
 for CLA Manager status.
 </p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
-		recipientName, companyName, companyName, s.corporateConsoleURL)
+%s
+%s`,
+		recipientName, companyName, companyName, s.corporateConsoleURL,
+		utils.GetEmailHelpContent(false), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -515,13 +509,10 @@ func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Compan
 If you have further questions about this denial, please contact one of the existing managers from
 %s:</p>
 %s
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
-		recipientName, companyName, companyName, companyManagerText)
+%s
+%s`,
+		recipientName, companyName, companyName, companyManagerText,
+		utils.GetEmailHelpContent(false), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

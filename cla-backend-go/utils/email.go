@@ -70,3 +70,24 @@ func SendEmail(subject string, body string, recipients []string) error {
 	}
 	return emailSender.SendEmail(subject, body, recipients)
 }
+
+// GetEmailHelpContent returns the standard email help paragraph details.
+func GetEmailHelpContent(showV2HelpLink bool) string {
+	if showV2HelpLink {
+		return `<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/docs/v/v2-beta/" target="_blank">read the documentation</a> or
+<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+support</a>.</p>`
+	}
+
+	return `<p>If you need help or have questions about EasyCLA, you can
+<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
+<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
+support</a>.</p>`
+}
+
+// GetEmailSignOffContent returns the standard email sign-off details
+func GetEmailSignOffContent() string {
+	return `<p>Thanks,</p>
+<p>EasyCLA support team</p>`
+}

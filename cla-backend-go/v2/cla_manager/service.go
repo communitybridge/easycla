@@ -790,15 +790,12 @@ func sendEmailToCLAManager(manager string, managerEmail string, contributorName 
 	<p>This is a notification email from EasyCLA regarding the organization %s.</p>
 	<p>The following contributor would like to submit a contribution to %s 
 	   and is requesting to be approved as a contributor for your organization: </p>
-	<p> %s </p>
+	<p>%s</p>
 	<p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
-	<p>If you need help or have questions about EasyCLA, you can
-	<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-	<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-	support</a>.</p>
-	<p>Thanks,</p>
-	<p>EasyCLA support team </p>`,
-		manager, company, project, contributorName)
+	%s
+    %s`,
+		manager, company, project, contributorName,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
 		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
@@ -807,7 +804,7 @@ func sendEmailToCLAManager(manager string, managerEmail string, contributorName 
 	}
 }
 
-func sendEmailToOrgAdmin(adminEmail string, admin string, company string, project string, contributorID string, contributorName string, corporateConsole string) {
+func sendEmailToOrgAdmin(adminEmail string, admin string, company string, projectName string, contributorID string, contributorName string, corporateConsole string) {
 	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorID)
 	recipients := []string{adminEmail}
 	body := fmt.Sprintf(`
@@ -819,13 +816,10 @@ func sendEmailToOrgAdmin(adminEmail string, admin string, company string, projec
 <p>Before the contribution can be accepted, your organization must sign a CLA.
 <p>Kindly login to this portal %s and sign the CLA for this project %s. </p>
 <p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,</p>
-<p>EasyCLA support team </p>`,
-		admin, project, project, contributorName, contributorID, corporateConsole, project)
+%s
+%s`,
+		admin, projectName, projectName, contributorName, contributorID, corporateConsole, projectName,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -835,8 +829,9 @@ support</a>.</p>
 	}
 }
 
-func sendEmailToCLAManagerDesignee(corporateConsole string, company string, project string, designeeEmail string, designeeName string, contributorID string, contributorName string) {
-	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorID)
+func sendEmailToCLAManagerDesignee(corporateConsole string, companyName string, projectName string, designeeEmail string, designeeName string, contributorID string, contributorName string) {
+	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ",
+		companyName, contributorID)
 	recipients := []string{designeeEmail}
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
@@ -847,13 +842,10 @@ func sendEmailToCLAManagerDesignee(corporateConsole string, company string, proj
 <p>Before the contribution can be accepted, your organization must sign a CLA.
 <p>Kindly login to this portal %s and sign the CLA for this project %s. </p>
 <p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,</p>
-<p>EasyCLA support team </p>`,
-		designeeName, project, project, contributorName, contributorID, corporateConsole, project)
+%s
+%s`,
+		designeeName, projectName, projectName, contributorName, contributorID, corporateConsole, projectName,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -873,15 +865,12 @@ func sendEmailToUserWithNoLFID(projectName, requesterUsername, requesterEmail, u
 <p>User %s (%s) was trying to add you as a CLA Manager for Project %s but was unable to identify your account details in
 the EasyCLA system. In order to become a CLA Manager for Project %s, you will need to accept invite below.
 Once complete, notify the user %s and they will be able to add you as a CLA Manager.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,</p>
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		userWithNoLFIDName, projectName,
 		requesterUsername, requesterEmail, projectName, projectName,
-		requesterUsername)
+		requesterUsername,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	acsClient := v2AcsService.GetClient()
 	acsErr := acsClient.SendUserInvite(&userWithNoLFIDEmail, "cla-manager", "organization", organizationID, "userinvite", &subject, &body)

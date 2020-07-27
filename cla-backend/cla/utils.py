@@ -18,10 +18,10 @@ from requests_oauthlib import OAuth2Session
 
 import cla
 from cla.models import DoesNotExist
-from cla.models.event_types import EventType
 from cla.models.dynamo_models import User, Signature, Repository, \
     Company, Project, Document, \
     GitHubOrg, Gerrit, UserPermissions, Event, CompanyInvite, ProjectCLAGroup, CCLAWhitelistRequest
+from cla.models.event_types import EventType
 
 API_BASE_URL = os.environ.get('CLA_API_BASE', '')
 CLA_LOGO_URL = os.environ.get('CLA_BUCKET_LOGO_URL', '')
@@ -100,7 +100,7 @@ def get_database_models(conf=None):
         return {'User': User, 'Signature': Signature, 'Repository': Repository,
                 'Company': Company, 'Project': Project, 'Document': Document,
                 'GitHubOrg': GitHubOrg, 'Gerrit': Gerrit, 'UserPermissions': UserPermissions,
-                'Event': Event, 'CompanyInvites': CompanyInvite, 'ProjectCLAGroup': ProjectCLAGroup ,
+                'Event': Event, 'CompanyInvites': CompanyInvite, 'ProjectCLAGroup': ProjectCLAGroup,
                 'CCLAWhitelistRequest': CCLAWhitelistRequest,
                 }
     else:
@@ -238,6 +238,7 @@ def get_event_instance(conf=None) -> Event:
     """
     return get_database_models(conf)['Event']()
 
+
 def get_project_cla_group_instance(conf=None) -> ProjectCLAGroup:
     """
     Helper function to get a database ProjectCLAGroup model
@@ -249,6 +250,7 @@ def get_project_cla_group_instance(conf=None) -> ProjectCLAGroup:
     """
 
     return get_database_models(conf)['ProjectCLAGroup']()
+
 
 def get_ccla_whitelist_request_instance(conf=None) -> CCLAWhitelistRequest:
     """
@@ -651,7 +653,8 @@ def user_signed_project_signature(user: User, project: Project):
                     cla.log.debug('user not whitelisted- marking signature approved = false for '
                                   f'user: {user}, project_id: {project}, company_id: {company_id}')
                     user_signatures = user.get_user_signatures(
-                        project_id=project.get_project_id(), company_id=company_id, signature_approved=True, signature_signed=True
+                        project_id=project.get_project_id(), company_id=company_id, signature_approved=True,
+                        signature_signed=True
                     )
                     for signature in user_signatures:
                         signature.set_signature_approved(False)
@@ -875,46 +878,46 @@ def get_comment_body(repository_type, sign_url, signed, missing):
         for author, commit_hashes in committers.items():
             if author == "Unknown":
                 committers_comment += (
-                    f"<li>"
-                    + failed
-                    + "The commit ("
-                    + " ,".join(commit_hashes)
-                    + ") is missing the User's ID, preventing the EasyCLA check. [Consult GitHub Help]("
-                    + github_help_url
-                    + ") to resolve. For further assistance with EasyCLA, "
-                    + f"[please submit a support request ticket]({support_url})."
-                    + "</li>"
+                        f"<li>"
+                        + failed
+                        + "The commit ("
+                        + " ,".join(commit_hashes)
+                        + ") is missing the User's ID, preventing the EasyCLA check. [Consult GitHub Help]("
+                        + github_help_url
+                        + ") to resolve. For further assistance with EasyCLA, "
+                        + f"[please submit a support request ticket]({support_url})."
+                        + "</li>"
                 )
             else:
                 if True in commit_hashes:
                     committers_comment += (
-                        f"<li>"
-                        + author
-                        + "("
-                        + " ,".join(commit_hashes[:-1])
-                        + ") "
-                        + "is authorized, but they must confirm "
-                        + "their affiliation with their company. "
-                        + f"[Start the authorization process by clicking here]({sign_url}), click \"Corporate\","
-                        + "select the appropriate company from the list, then confirm "
-                        + "your affiliation on the page that appears. For further assistance with EasyCLA, "
-                        + f"[please submit a support request ticket]({support_url})."
-                        + "</li>"
+                            f"<li>"
+                            + author
+                            + "("
+                            + " ,".join(commit_hashes[:-1])
+                            + ") "
+                            + "is authorized, but they must confirm "
+                            + "their affiliation with their company. "
+                            + f"[Start the authorization process by clicking here]({sign_url}), click \"Corporate\","
+                            + "select the appropriate company from the list, then confirm "
+                            + "your affiliation on the page that appears. For further assistance with EasyCLA, "
+                            + f"[please submit a support request ticket]({support_url})."
+                            + "</li>"
                     )
                 else:
                     committers_comment += (
-                        "<li>["
-                        + failed
-                        + "]("
-                        + sign_url
-                        + ")  "
-                        + author
-                        + " The commit ("
-                        + " ,".join(commit_hashes)
-                        + ") is not authorized under a signed CLA. "
-                        + f"[Please click here to be authorized]({sign_url}). For further assistance with "
-                        + f"EasyCLA, [please submit a support request ticket]({support_url})."
-                        + "</li>"
+                            "<li>["
+                            + failed
+                            + "]("
+                            + sign_url
+                            + ")  "
+                            + author
+                            + " The commit ("
+                            + " ,".join(commit_hashes)
+                            + ") is not authorized under a signed CLA. "
+                            + f"[Please click here to be authorized]({sign_url}). For further assistance with "
+                            + f"EasyCLA, [please submit a support request ticket]({support_url})."
+                            + "</li>"
                     )
         committers_comment += "</ul>"
         return committers_comment
@@ -1389,6 +1392,7 @@ def is_whitelisted(ccla_signature: Signature, email=None, github_username=None, 
 
 def audit_event(func):
     """ Decorator that audits events """
+
     def wrapper(**kwargs):
         response = func(**kwargs)
         if response.get("status_code") == falcon.HTTP_200:
@@ -1396,6 +1400,7 @@ def audit_event(func):
         else:
             cla.log.debug("Failed to add event")
         return response
+
     return wrapper
 
 
@@ -1427,3 +1432,28 @@ def fmt_users(users: List[User]):
         response += fmt_user(user) + ' '
 
     return response
+
+
+def get_email_help_content(show_v2_help_link: bool) -> str:
+    if show_v2_help_link:
+        return """
+            <p>If you need help or have questions about EasyCLA, you can
+            <a href="https://docs.linuxfoundation.org/docs/v/v2-beta/" target="_blank">read the documentation</a> or
+            <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach
+            out to us for support</a>.</p>
+        """
+
+    return """
+        <p>If you need help or have questions about EasyCLA, you can
+        <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the
+        documentation</a> or
+        <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out
+        to us for support</a>.</p>
+    """
+
+
+def get_email_sign_off_content() -> str:
+    return """
+        <p>Thanks,</p>
+        <p>EasyCLA support team</p>
+    """
