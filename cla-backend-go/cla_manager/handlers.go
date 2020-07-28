@@ -179,8 +179,9 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 		// Send email to each manager
 		for _, manager := range claManagers {
-			sendRequestAccessEmailToCLAManagers(companyModel, projectModel, params.Body.UserName, params.Body.UserEmail,
-				manager.Username, manager.LfEmail, corporateConsoleURL)
+			sendRequestAccessEmailToCLAManagers(companyModel, projectModel,
+				params.Body.UserName, params.Body.UserEmail,
+				manager.Username, manager.LfEmail)
 		}
 
 		return cla_manager.NewCreateCLAManagerRequestOK().WithPayload(request)
@@ -339,7 +340,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		// Notify the requester
-		sendRequestApprovedEmailToRequester(companyModel, projectModel, request.UserName, request.UserEmail, corporateConsoleURL)
+		sendRequestApprovedEmailToRequester(companyModel, projectModel, request.UserName, request.UserEmail)
 
 		return cla_manager.NewCreateCLAManagerRequestOK().WithPayload(request)
 	})
@@ -776,7 +777,7 @@ func buildErrorMessageDeleteManager(errPrefix string, params cla_manager.DeleteC
 }
 
 // sendRequestAccessEmailToCLAManagers sends the request access email to the specified CLA Managers
-func sendRequestAccessEmailToCLAManagers(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail, recipientName, recipientAddress, corporateConsoleURL string) {
+func sendRequestAccessEmailToCLAManagers(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
 	projectName := projectModel.ProjectName
 
@@ -791,16 +792,17 @@ list of employees allowed to contribute to %s on behalf of your company, as well
 your company’s CLA Managers for %s.</p>
 <p>%s (%s) has requested to be added as another CLA Manager from %s for %s. This would permit them to maintain the
 lists of approved contributors and CLA Managers as well.</p>
-<p>If you want to permit this, please log into the EasyCLA Corporate Console at https://%s, select your company, then
-select the %s project. From the CLA Manager requests, you can approve this user as an additional CLA Manager.</p>
+<p>If you want to permit this, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>,
+select your company, then select the %s project. From the CLA Manager requests, you can approve this user as an
+additional CLA Manager.</p>
 %s
 %s
 `,
 		recipientName, projectName,
 		companyName, projectName, projectName, projectName,
 		requesterName, requesterEmail, companyName, projectName,
-		corporateConsoleURL, projectName,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetCorporateURL(projectModel.Version == utils.V2), projectName,
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -831,7 +833,7 @@ list of company’s CLA Managers for %s.</p>
 		recipientName, projectName,
 		companyName, projectName, projectName, projectName,
 		requesterName, requesterEmail,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -841,7 +843,7 @@ list of company’s CLA Managers for %s.</p>
 	}
 }
 
-func sendRequestApprovedEmailToRequester(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail, corporateConsoleURL string) {
+func sendRequestApprovedEmailToRequester(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail string) {
 	companyName := companyModel.CompanyName
 	projectName := projectModel.ProjectName
 
@@ -854,14 +856,14 @@ func sendRequestApprovedEmailToRequester(companyModel *models.Company, projectMo
 <p>You have now been approved as a CLA Manager from %s for the project %s.  This means that you can now maintain the
 list of employees allowed to contribute to %s on behalf of your company, as well as view and manage the list of your
 company’s CLA Managers for %s.</p>
-<p> To get started, please log into the EasyCLA Corporate Console at https://%s, and select your company and then the
-project %s. From here you will be able to edit the list of approved employees and CLA Managers.</p>
+<p> To get started, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>, and select your
+company and then the project %s. From here you will be able to edit the list of approved employees and CLA Managers.</p>
 %s
 %s`,
 		requesterName, projectName,
 		companyName, projectName, projectName, projectName,
-		corporateConsoleURL, projectName,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetCorporateURL(projectModel.Version == utils.V2), projectName,
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -891,7 +893,7 @@ be able to maintain the list of employees allowed to contribute to %s on behalf 
 		recipientName, projectName,
 		companyName, projectName, projectName,
 		requesterName, requesterEmail,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -917,7 +919,7 @@ list of employees allowed to contribute to %s on behalf of your company.</p>
 %s`,
 		requesterName, projectName,
 		companyName, projectName, projectName,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

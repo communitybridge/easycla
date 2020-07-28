@@ -507,7 +507,7 @@ the EasyCLA system.</p>
 %s
 %s`,
 		recipientName, projectName, companyName, projectName, buildApprovalListSummary(approvalListChanges), projectName,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -784,7 +784,7 @@ close and re-open the pull request to force a recheck by the EasyCLA system.</p>
 %s`,
 		recipientName, projectName, addRemove, toFrom,
 		companyName, projectName, authUser.UserName, authorizedString, projectName, projectName,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

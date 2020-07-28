@@ -281,7 +281,7 @@ repository. This will permit them to begin contributing to %s on behalf of %s.</
 		companyName, projectName, companyName, projectName,
 		optionalMessage, s.corpConsoleURL,
 		companyModel.CompanyID, projectName, companyName,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -303,16 +303,16 @@ func (s service) sendRequestApprovedEmailToRecipient(companyModel *models.Compan
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>You have now been approved as a contributor from %s for the project %s.</p>
-<p>To get started, please log into the EasyCLA Corporate Console at 
-https://%s, and select your company and then the project %s. From here you will
+<p> To get started, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>,
+and select your company and then the project %s. From here you will
 be able to edit the list of approved employees and CLA Managers.
 </p>
 %s
 %s`,
 		recipientName, projectName,
 		companyName, projectName,
-		s.corpConsoleURL, projectName,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetCorporateURL(projectModel.Version == utils.V2), projectName,
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -366,7 +366,7 @@ If you have further questions about this denial, please contact one of the exist
 		recipientName, projectName,
 		companyName, projectName, companyName, projectName,
 		claManagerText,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

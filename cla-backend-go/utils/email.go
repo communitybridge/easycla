@@ -2,6 +2,9 @@ package utils
 
 import (
 	"errors"
+	"fmt"
+
+	"github.com/communitybridge/easycla/cla-backend-go/config"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -69,6 +72,15 @@ func SendEmail(subject string, body string, recipients []string) error {
 		return errors.New("email sender not set")
 	}
 	return emailSender.SendEmail(subject, body, recipients)
+}
+
+// GetCorporateURL returns the corporate URL based on the specified flag
+func GetCorporateURL(isV2Project bool) string {
+	if isV2Project {
+		return fmt.Sprintf("https://%s", config.GetConfig().CorporateConsoleV2URL)
+	}
+
+	return fmt.Sprintf("https://%s", config.GetConfig().CorporateConsoleURL)
 }
 
 // GetEmailHelpContent returns the standard email help paragraph details.

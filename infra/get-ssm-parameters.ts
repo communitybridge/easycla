@@ -51,6 +51,7 @@ const parameters = [
   `cla-contributor-base-${program.stage}`,
   `cla-contributor-v2-base-${program.stage}`,
   `cla-corporate-base-${program.stage}`,
+  `cla-corporate-v2-base-${program.stage}`,
   `cla-landing-page-${program.stage}`,
   `cla-signature-files-bucket-${program.stage}`,
   `cla-cla-logo-s3-url-${program.stage}`,
