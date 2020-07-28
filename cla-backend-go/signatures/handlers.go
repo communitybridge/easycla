@@ -367,6 +367,7 @@ func generateHTMLRedirectPage(downloadLink, claType string) string {
                               <p class="text-center">
                                  <a href="%s" class="btn btn-primary" role="button">Proceed To Download</a>
                               </p>
+                              <p class="text-center">Link is only active for 15 minutes. Click on the CLA email to create a new download link.</p>
                             </body>
                         </html>`, claType, downloadLink, claType, downloadLink)
 }
