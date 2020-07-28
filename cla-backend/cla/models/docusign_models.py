@@ -1126,7 +1126,7 @@ class DocuSign(signing_service_interface.SigningService):
             # Get signed document
             document_data = self.get_signed_document(envelope_id, user)
             # Send email with signed document.
-            self.send_signed_document(signature, document_data, user)
+            self.send_signed_document(signature, document_data, user, icla=True)
 
             # Verify user id exist for saving on storage
             user_id = user.get_user_id()
@@ -1233,7 +1233,7 @@ class DocuSign(signing_service_interface.SigningService):
             # Get signed document
             document_data = self.get_signed_document(envelope_id, user)
             # Send email with signed document.
-            self.send_signed_document(signature, document_data, user)
+            self.send_signed_document(signature, document_data, user, icla=True)
 
             # Verify user id exist for saving on storage
             if user_id is None:
@@ -1384,7 +1384,7 @@ class DocuSign(signing_service_interface.SigningService):
             # CCLA - user is the initial CLA Manager
             document_data = self.get_signed_document(envelope_id, user)
             # Send email with signed document.
-            self.send_signed_document(signature, document_data, user)
+            self.send_signed_document(signature, document_data, user, icla=False)
 
             # verify company_id is not none
             if company_id is None:
@@ -1444,15 +1444,21 @@ class DocuSign(signing_service_interface.SigningService):
 
         # subject = 'EasyCLA: Signed Document'
         # body = 'Thank you for signing the CLA! Your signed document is attached to this email.'
-        pdf_link = (f'{cla.conf["API_BASE_URL"]}/v3/'
-                    f'signatures/{project.get_project_id()}/'
-                    f'{user.get_user_id()}/icla/pdf')
+        if icla:
+            pdf_link = (f'{cla.conf["API_BASE_URL"]}/v3/'
+                        f'signatures/{project.get_project_id()}/'
+                        f'{user.get_user_id()}/icla/pdf')
+        else:
+            pdf_link = (f'{cla.conf["API_BASE_URL"]}/v3/'
+                        f'signatures/{project.get_project_id()}/'
+                        f'{signature.get_signature_reference_id()}/ccla/pdf')
         subject = f'EasyCLA: CLA Signature Signed for {project.get_project_name()}'
         body = f'''
             <p>Hello contributor,</p>
             <p>This is a notification email from EasyCLA regarding the project {project.get_project_name()}.</p>
             <p>Thank you for signing the CLA.  You can download the PDF document
-               <a href="{pdf_link}" target="_blank" alt="ICLA Document Link"> from our website<a>.
+               <a href="{pdf_link}" target="_blank" alt="{'ICLA' if icla else 'CCLA'} Document Link">
+               from our website<a>.
             </p>
             {get_email_help_content(project.get_version() == 'v2')}
             {get_email_sign_off_content()}

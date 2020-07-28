@@ -57,6 +57,7 @@ type SignatureRepository interface {
 
 	GetSignature(signatureID string) (*models.Signature, error)
 	GetIndividualSignature(claGroupID, userID string) (*models.Signature, error)
+	GetCorporateSignature(claGroupID, companyID string) (*models.Signature, error)
 	GetSignatureACL(signatureID string) ([]string, error)
 	GetProjectSignatures(params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetProjectCompanySignature(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signature, error)
@@ -392,6 +393,16 @@ func (repo repository) GetSignature(signatureID string) (*models.Signature, erro
 
 // GetIndividualSignature returns the signature record for the specified CLA Group and User
 func (repo repository) GetIndividualSignature(claGroupID, userID string) (*models.Signature, error) {
+	f := logrus.Fields{
+		"functionName":           "GetIndividualSignature",
+		"tableName":              repo.signatureTableName,
+		"claGroupID":             claGroupID,
+		"userID":                 userID,
+		"signatureType":          "cla",
+		"signatureReferenceType": "user",
+		"signatureApproved":      "true",
+		"signatureSigned":        "true",
+	}
 
 	// These are the keys we want to match for an ICLA Signature with a given CLA Group and User ID
 	condition := expression.Key("signature_project_id").Equal(expression.Value(claGroupID)).
@@ -410,8 +421,7 @@ func (repo repository) GetIndividualSignature(claGroupID, userID string) (*model
 	// Use the nice builder to create the expression
 	expr, err := builder.Build()
 	if err != nil {
-		log.Warnf("error building expression for project ICLA signature query, claGroupID: %s userID: %s, error: %v",
-			claGroupID, userID, err)
+		log.WithFields(f).Warnf("error building expression for project ICLA signature query, error: %v", err)
 		return nil, err
 	}
 
@@ -437,8 +447,7 @@ func (repo repository) GetIndividualSignature(claGroupID, userID string) (*model
 		results, errQuery := repo.dynamoDBClient.Query(queryInput)
 		//log.Debugf("Ran signature project query, results: %+v, error: %+v", results, errQuery)
 		if errQuery != nil {
-			log.Warnf("error retrieving project ICLA signature ID for claGroupID: %s, userID: %s, error: %v",
-				claGroupID, userID, errQuery)
+			log.WithFields(f).Warnf("error retrieving project ICLA signature ID, error: %v", errQuery)
 			return nil, errQuery
 		}
 
@@ -446,8 +455,8 @@ func (repo repository) GetIndividualSignature(claGroupID, userID string) (*model
 		//log.Debug("Building response models...")
 		signatureList, modelErr := repo.buildProjectSignatureModels(results, claGroupID, LoadACLDetails)
 		if modelErr != nil {
-			log.Warnf("error converting DB model to response model for signatures with project claGroupID: %s, error: %v",
-				claGroupID, modelErr)
+			log.WithFields(f).Warnf("error converting DB model to response model for signatures, error: %v",
+				modelErr)
 			return nil, modelErr
 		}
 
@@ -469,8 +478,100 @@ func (repo repository) GetIndividualSignature(claGroupID, userID string) (*model
 	}
 
 	if len(sigs) > 1 {
-		log.Warnf("found multiple matching ICLA signatures for project claGroupID: %s for user %s - found %d total",
-			claGroupID, userID, len(sigs))
+		log.WithFields(f).Warnf("found multiple matching ICLA signatures - found %d total", len(sigs))
+	}
+
+	return sigs[0], nil
+}
+
+// GetCorporateSignature returns the signature record for the specified CLA Group and Company ID
+func (repo repository) GetCorporateSignature(claGroupID, companyID string) (*models.Signature, error) {
+	f := logrus.Fields{
+		"functionName":           "GetCorporateSignature",
+		"tableName":              repo.signatureTableName,
+		"claGroupID":             claGroupID,
+		"companyID":              companyID,
+		"signatureType":          "ccla",
+		"signatureReferenceType": "company",
+		"signatureApproved":      "true",
+		"signatureSigned":        "true",
+	}
+
+	// These are the keys we want to match for an ICLA Signature with a given CLA Group and User ID
+	condition := expression.Key("signature_project_id").Equal(expression.Value(claGroupID)).
+		And(expression.Key("signature_reference_id").Equal(expression.Value(companyID)))
+	filter := expression.Name("signature_type").Equal(expression.Value("ccla")).
+		And(expression.Name("signature_reference_type").Equal(expression.Value("company"))).
+		And(expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true)))).
+		And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(true)))).
+		And(expression.Name("signature_user_ccla_company_id").AttributeNotExists())
+
+	builder := expression.NewBuilder().
+		WithKeyCondition(condition).
+		WithFilter(filter).
+		WithProjection(buildProjection())
+
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		log.WithFields(f).Warnf("error building expression for project CCLA signature query, error: %v", err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(repo.signatureTableName),
+		Limit:                     aws.Int64(100),                             // The maximum number of items to evaluate (not necessarily the number of matching items)
+		IndexName:                 aws.String(SignatureProjectReferenceIndex), // Name of a secondary index to scan
+	}
+
+	sigs := make([]*models.Signature, 0)
+	var lastEvaluatedKey string
+
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		// Make the DynamoDB Query API call
+		//log.Debugf("Running signature project query using queryInput: %+v", queryInput)
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		//log.Debugf("Ran signature project query, results: %+v, error: %+v", results, errQuery)
+		if errQuery != nil {
+			log.WithFields(f).Warnf("error retrieving project CCLA signature, error: %v", errQuery)
+			return nil, errQuery
+		}
+
+		// Convert the list of DB models to a list of response models
+		//log.Debug("Building response models...")
+		signatureList, modelErr := repo.buildProjectSignatureModels(results, claGroupID, LoadACLDetails)
+		if modelErr != nil {
+			log.WithFields(f).Warnf("error converting DB model to response model for signatures, error: %v",
+				modelErr)
+			return nil, modelErr
+		}
+
+		// Add to the signatures response model to the list
+		sigs = append(sigs, signatureList...)
+
+		//log.Debugf("LastEvaluatedKey: %+v", results.LastEvaluatedKey)
+		if results.LastEvaluatedKey["signature_id"] != nil {
+			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
+			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			lastEvaluatedKey = ""
+		}
+	}
+
+	// Didn't find a matching record
+	if len(sigs) == 0 {
+		return nil, nil
+	}
+
+	if len(sigs) > 1 {
+		log.WithFields(f).Warnf("found multiple matching ICLA signatures - found %d total", len(sigs))
 	}
 
 	return sigs[0], nil
