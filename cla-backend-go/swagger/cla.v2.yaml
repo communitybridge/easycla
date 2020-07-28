@@ -1335,16 +1335,20 @@ paths:
         - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-claGroupID"
       produces:
-        - application/zip
+        - application/json
       responses:
         '200':
-          description: 'The CLA Group ICLAs as a zip file'
+          description: 'The CLA Group ICLAs as a zip'
+          schema:
+            $ref: '#/definitions/url-object'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
         '500':
           $ref: '#/responses/internal-server-error'
       tags:
@@ -1423,12 +1427,16 @@ paths:
         - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-claGroupID"
       produces:
-        - application/zip
+        - application/json
       responses:
         '200':
-          description: 'The CLA Group coporate CLAs as a zip file'
+          description: 'The CLA Group CCLAs as a zip'
+          schema:
+            $ref: '#/definitions/url-object'
         '400':
           $ref: '#/responses/invalid-request'
+        '404':
+          $ref: '#/responses/not-found'
         '401':
           $ref: '#/responses/unauthorized'
         '403':
@@ -2357,6 +2365,8 @@ paths:
           $ref: '#/responses/forbidden'
         '404':
           $ref: '#/responses/not-found'
+        '409':
+          $ref: '#/responses/conflict'
       tags:
         - sign
 
@@ -3535,6 +3545,13 @@ definitions:
         enum:
           - connected
           - connection_failure
+
+  url-object:
+    type: object
+    properties:
+      url:
+        type: string
+        x-omitempty: false
 
   error-response:
     type: object
