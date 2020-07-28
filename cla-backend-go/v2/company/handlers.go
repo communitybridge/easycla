@@ -4,10 +4,11 @@
 package company
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
-	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
 	v1Company "github.com/communitybridge/easycla/cla-backend-go/company"
@@ -15,6 +16,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/company"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -139,9 +141,13 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			companyModel, err := service.CreateCompany(*params.Input.CompanyName, *params.Input.CompanyWebsite, *params.Input.UserEmail, params.UserID, LFXPortalURL)
 			if err != nil {
 				log.Warnf("error returned from create company api: %+v", err)
-				switch err := err; err.(type) {
-				case *organizations.CreateOrgConflict:
-					return company.NewCreateCompanyConflict().WithPayload(errorResponse(err))
+				if strings.Contains(err.Error(), "website already exists") {
+					formatErr := errors.New("website already exists")
+					return company.NewCreateCompanyConflict().WithPayload(errorResponse(formatErr))
+				}
+				if _, ok := err.(*organizations.CreateOrgConflict); ok {
+					formatErr := errors.New("organization already exists")
+					return company.NewCreateCompanyConflict().WithPayload(errorResponse(formatErr))
 				}
 				return company.NewCreateCompanyBadRequest().WithPayload(errorResponse(err))
 			}
