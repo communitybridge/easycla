@@ -683,14 +683,15 @@ class TestGitHubController(unittest.TestCase):
 
         cla.controllers.project.get_project_managers = Mock(side_effect=mock_get_project_managers)
         cla.controllers.project.get_project = Mock(side_effect=mock_get_project)
+        cla.controllers.project.load_project_by_name = Mock(side_effect=mock_load_project_by_name)
         sesClient = MockSES()
         cla.controllers.github.get_email_service = Mock()
         cla.controllers.github.get_email_service.return_value = sesClient
 
         notify_project_managers(repositories)
 
-        cla.controllers.project.get_project.assert_any_call('project_1')
-        cla.controllers.project.get_project.assert_called_with('project_2')
+        # cla.controllers.project.get_project.assert_any_call('project_1')
+        # cla.controllers.project.get_project.assert_called_with('project_2')
 
         cla.controllers.project.get_project_managers.assert_any_call('', 'project_1', enable_auth=False)
         cla.controllers.project.get_project_managers.assert_called_with('', 'project_2', enable_auth=False)
@@ -706,16 +707,18 @@ class TestGitHubController(unittest.TestCase):
 
 def mock_get_project_managers(username, project_id, enable_auth):
     if project_id == 'project_1':
-        return [{
-            'name': 'project manager1',
-            'email': 'pm1@linuxfoundation.org',
-            'lfid': 'pm1'
-        },
+        return [
+            {
+                'name': 'project manager1',
+                'email': 'pm1@linuxfoundation.org',
+                'lfid': 'pm1'
+            },
             {
                 'name': 'project manager2',
                 'email': 'pm2@linuxfoundation.org',
                 'lfid': 'pm2'
-            }]
+            }
+        ]
     if project_id == 'project_2':
         return [{
             'name': 'project manager3',
@@ -727,10 +730,25 @@ def mock_get_project_managers(username, project_id, enable_auth):
 def mock_get_project(project_id, user_id=None):
     if project_id == 'project_1':
         return {
+            "project_id": "project_1",
             "project_name": 'Kubernetes'
         }
     if project_id == 'project_2':
         return {
+            "project_id": "project_2",
+            "project_name": 'Prometheus'
+        }
+
+
+def mock_load_project_by_name(project_name):
+    if project_name == "Kubernetes":
+        return {
+            "project_id": "project_1",
+            "project_name": 'Kubernetes'
+        }
+    if project_name == "Prometheus":
+        return {
+            "project_id": "project_2",
             "project_name": 'Prometheus'
         }
 

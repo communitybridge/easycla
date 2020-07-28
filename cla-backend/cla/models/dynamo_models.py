@@ -1021,6 +1021,17 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
             raise cla.models.DoesNotExist("Project not found")
         self.model = project
 
+    def load_project_by_name(self, project_name):
+        try:
+            project_generator = self.model.project_name_lower_search_index.query(project_name.lower())
+            for project_model in project_generator:
+                self.model = project_model
+                return
+            # Didn't find a result - throw an error
+            raise cla.models.DoesNotExist(f'Project with name {project_name} not found')
+        except ProjectModel.DoesNotExist:
+            raise cla.models.DoesNotExist(f'Project with name {project_name} not found')
+
     def delete(self):
         self.model.delete()
 
@@ -1075,8 +1086,6 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
         document = version[2]
         return document
 
-        raise cla.models.DoesNotExist("Document revision not found")
-
     def get_latest_individual_document(self):
         document_models = self.get_project_individual_documents()
         version = self._get_latest_version(document_models)
@@ -1091,7 +1100,6 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
         version = self._get_latest_version(document_models)
         document = version[2]
         return document
-        raise cla.models.DoesNotExist("Document revision not found")
 
     def get_latest_corporate_document(self):
         """
