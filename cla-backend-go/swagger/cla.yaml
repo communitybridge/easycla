@@ -550,6 +550,29 @@ paths:
       tags:
         - signatures
 
+  /signatures/{claGroupID}/{companyID}/ccla/pdf:
+    get:
+      summary: Download signed CCLA PDF
+      security: []
+      operationId: getSignedCCLADocument
+      parameters:
+        - $ref: "#/parameters/path-claGroupID"
+        - $ref: "#/parameters/path-companyID"
+      produces:
+        - application/pdf
+        - application/json
+      responses:
+        '200':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
+
   # Project Service
   /project:
     post:

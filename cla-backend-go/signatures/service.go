@@ -31,6 +31,7 @@ import (
 type SignatureService interface {
 	GetSignature(signatureID string) (*models.Signature, error)
 	GetIndividualSignature(claGroupID, userID string) (*models.Signature, error)
+	GetCorporateSignature(claGroupID, companyID string) (*models.Signature, error)
 	GetProjectSignatures(params signatures.GetProjectSignaturesParams) (*models.Signatures, error)
 	GetProjectCompanySignature(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signature, error)
 	GetProjectCompanySignatures(params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error)
@@ -75,9 +76,14 @@ func (s service) GetSignature(signatureID string) (*models.Signature, error) {
 	return s.repo.GetSignature(signatureID)
 }
 
-// GetIndividualSignature returns the signature associated with the specified signature ID
+// GetIndividualSignature returns the signature associated with the specified CLA Group and User ID
 func (s service) GetIndividualSignature(claGroupID, userID string) (*models.Signature, error) {
 	return s.repo.GetIndividualSignature(claGroupID, userID)
+}
+
+// GetCorporateSignature returns the signature associated with the specified CLA Group and Company ID
+func (s service) GetCorporateSignature(claGroupID, companyID string) (*models.Signature, error) {
+	return s.repo.GetCorporateSignature(claGroupID, companyID)
 }
 
 // GetProjectSignatures returns the list of signatures associated with the specified project
