@@ -229,7 +229,7 @@ func (s service) AddClaManager(companyID string, projectID string, LFID string) 
 			manager.Username, manager.LfEmail)
 	}
 	// Notify the added user
-	sendClaManagerAddedEmailToUser(companyModel, projectModel, userModel.Username, userModel.LfEmail, s.corporateConsoleURL)
+	sendClaManagerAddedEmailToUser(companyModel, projectModel, userModel.Username, userModel.LfEmail)
 
 	// Send an event
 	s.eventsService.LogEvent(&events.LogEventArgs{
@@ -347,7 +347,7 @@ func (s service) RemoveClaManager(companyID string, projectID string, LFID strin
 	return updatedSignature, nil
 }
 
-func sendClaManagerAddedEmailToUser(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail, corporateConsoleURL string) {
+func sendClaManagerAddedEmailToUser(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail string) {
 	companyName := companyModel.CompanyName
 	projectName := projectModel.ProjectName
 
@@ -360,14 +360,14 @@ func sendClaManagerAddedEmailToUser(companyModel *models.Company, projectModel *
 <p>You have been added as a CLA Manager from %s for the project %s.  This means that you can now maintain the
 list of employees allowed to contribute to %s on behalf of your company, as well as view and manage the list of your
 company’s CLA Managers for %s.</p>
-<p> To get started, please log into the EasyCLA Corporate Console at https://%s, and select your company and then the
-project %s. From here you will be able to edit the list of approved employees and CLA Managers.</p>
+<p> To get started, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>, and select your
+company and then the project %s. From here you will be able to edit the list of approved employees and CLA Managers.</p>
 %s
 %s`,
 		requesterName, projectName,
 		companyName, projectName, projectName, projectName,
-		corporateConsoleURL, projectName,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetCorporateURL(projectModel.Version == utils.V2), projectName,
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -398,7 +398,7 @@ list of company’s CLA Managers for %s.</p>
 		recipientName, projectName,
 		companyName, projectName, projectName, projectName,
 		name, email,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -452,7 +452,7 @@ func sendRemovedClaManagerEmailToRecipient(companyModel *models.Company, project
 %s
 %s`,
 		recipientName, projectName, companyName, projectName, companyName, companyManagerText,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -477,7 +477,7 @@ func sendClaManagerDeleteEmailToCLAManagers(companyModel *models.Company, projec
 %s
 `,
 		recipientName, projectName, name, companyName, projectName,
-		utils.GetEmailHelpContent(projectModel.Version == "v2"), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

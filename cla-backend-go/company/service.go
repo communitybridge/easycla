@@ -413,14 +413,13 @@ func (s service) sendRequestAccessEmail(companyModel *models.Company, requesterN
 By approving this request the user could view and apply for CLA Manager
 status on projects associated with your company. </p>
 %s
-<p>To get started, please log into the EasyCLA Corporate Console at 
-https://%s, and select your company. From there you will
-be able to view the list of projects which have EasyCLA configured and apply
-for CLA Manager status.
+<p>To get started, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>, and select your
+company. From there you will be able to view the list of projects which have EasyCLA configured and apply for CLA
+Manager status.
 </p>
 %s
 %s`,
-		recipientName, companyName, companyName, requestedUserInfo, s.corporateConsoleURL,
+		recipientName, companyName, companyName, requestedUserInfo, utils.GetCorporateURL(false),
 		utils.GetEmailHelpContent(false), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
@@ -445,14 +444,13 @@ func (s service) sendRequestApprovedEmailToRecipient(companyModel *models.Compan
 This means that you can now view and apply for CLA Manager status on
 projects associated with your company.
 </p>
-<p>To get started, please log into the EasyCLA Corporate Console at 
-https://%s, and select your company. From there you will
-be able to view the list of projects which have EasyCLA configured and apply
-for CLA Manager status.
+<p>To get started, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>, and select your
+company. From there you will be able to view the list of projects which have EasyCLA configured and apply for CLA
+Manager status.
 </p>
 %s
 %s`,
-		recipientName, companyName, companyName, s.corporateConsoleURL,
+		recipientName, companyName, companyName, utils.GetCorporateURL(false),
 		utils.GetEmailHelpContent(false), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
