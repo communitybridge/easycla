@@ -1736,7 +1736,7 @@ paths:
           $ref: '#/responses/internal-server-error'
       tags:
         - signatures
-  
+
   /notify-cla-managers:
     post:
       summary: Send Notification to CLA Managaers
@@ -1761,7 +1761,7 @@ paths:
 
   /user/{userID}/invite-company-admin:
     post:
-      summary: Invite Manager 
+      summary: Invite Manager
       description: Invite Company Admin based on user request to sign CLA
       security: []
       operationId: inviteCompanyAdmin
@@ -1776,7 +1776,7 @@ paths:
             properties:
               contactAdmin:
                 description: flag checking whether to contact company admin
-                type: boolean 
+                type: boolean
               companyID:
                 description: EasyCLA companyID of contributor inviting CLA Manager
                 type: string
@@ -1845,7 +1845,7 @@ paths:
           $ref: '#/responses/conflict'
       tags:
         - cla-manager
-            
+
 
   /company/{companySFID}/project/{projectSFID}/cla-manager:
     post:
@@ -1931,7 +1931,7 @@ paths:
             properties:
               userEmail:
                 type: string
-        
+
       responses:
         '200':
           description: 'Success'
@@ -2048,6 +2048,33 @@ paths:
           $ref: '#/responses/internal-server-error'
       tags:
         - signatures
+
+  /gerrit/repos:
+    get:
+      summary: Returns a list of repositories under the specified gerrit instance
+      description: Returns a list of repositories under the specified gerrit instance
+      operationId: getGerritRepos
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/gerritName"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/gerrit-repo-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '404':
+          $ref: '#/responses/not-found'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - gerrits
 
   /cla-group/{claGroupID}/project/{projectSFID}/gerrits/{gerritID}:
     delete:
@@ -2357,7 +2384,7 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - company
-  
+
   /user/{userID}/company:
     post:
       summary: api that creates salesforce company
@@ -2374,7 +2401,7 @@ paths:
       responses:
         '200':
           description: 'Success'
-          schema: 
+          schema:
             $ref: '#/definitions/company-output'
         '400':
           $ref: '#/responses/invalid-request'
@@ -2578,6 +2605,11 @@ parameters:
     description: salesforce id of the company
     in: query
     type: string
+  gerritName:
+    name: gerritName
+    description: name of the gerrit server
+    in: query
+    type: string
   x-acl:
     name: X-ACL
     description: The access control list header value encoded as base64 - assigned by the API Gateway based on user/request permissions
@@ -2698,6 +2730,12 @@ definitions:
 
   add-gerrit-input:
     $ref: './common/add-gerrit-input.yaml'
+
+  gerrit-repo:
+    $ref: './common/gerrit-repo.yaml'
+
+  gerrit-repo-list:
+    $ref: './common/gerrit-repo-list.yaml'
 
   gerrit:
     $ref: './common/gerrit.yaml'
@@ -2857,7 +2895,7 @@ definitions:
         type: string
       logoURL:
         type: string
-  
+
   cla-manager-distribution:
     type: object
     properties:
@@ -3148,7 +3186,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/active-cla'
-  
+
   notify-cla-manager-list:
     type: object
     title: Cla Manager list and contributor userID for given company and Project
@@ -3174,7 +3212,7 @@ definitions:
         type: string
       name:
         type: string
-  
+
   company-project-cla-list:
     type: object
     properties:

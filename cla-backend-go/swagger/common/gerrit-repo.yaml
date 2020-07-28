@@ -1,0 +1,10 @@
+type: object
+properties:
+  name:
+    type: string
+  id:
+    type: string
+  description:
+    type: string
+  state:
+    type: string
