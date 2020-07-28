@@ -27,6 +27,7 @@ export class AddManagerModal {
   managerEmail: string;
   managerLFID: string;
   errorMsg: string;
+
   linuxFoundationIdentityURL: string = generalConstants.linuxFoundationIdentityURL;
 
   constructor(
@@ -51,13 +52,19 @@ export class AddManagerModal {
   }
 
   addManager() {
-    this.claService.addCLAManager(this.companyId, this.projectId, this.form.getRawValue()).subscribe((result) => {
-      if (result.errors) {
-        this.errorMsg = result.errors[0];
-      } else {
-        this.dismiss(true);
+    this.claService.addCLAManager(this.companyId, this.projectId, this.form.getRawValue()).subscribe(
+      (result) => {
+        if (result.errors) {
+          this.errorMsg = result.errors[0];
+        } else {
+          this.dismiss(true);
+        }
+      },
+      (exception) => {
+        const error = JSON.parse(exception._body);
+        this.errorMsg = error.Message;
       }
-    });
+    );
   }
 
   dismiss(data = false) {
