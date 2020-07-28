@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -43,7 +45,7 @@ type IRepository interface { //nolint
 	GetCompaniesByUserManager(userID string, userModel user.User) (*models.Companies, error)
 	GetCompaniesByUserManagerWithInvites(userID string, userModel user.User) (*models.CompaniesWithInvites, error)
 
-	AddPendingCompanyInviteRequest(companyID string, userID string) (*Invite, error)
+	AddPendingCompanyInviteRequest(companyID string, userModel user.User) (*Invite, error)
 	GetCompanyInviteRequest(companyInviteID string) (*Invite, error)
 	GetCompanyInviteRequests(companyID string, status *string) ([]Invite, error)
 	GetCompanyUserInviteRequests(companyID string, userID string) (*Invite, error)
@@ -826,13 +828,22 @@ func (repo repository) GetUserInviteRequests(userID string) ([]Invite, error) {
 }
 
 // AddPendingCompanyInviteRequest adds a pending company invite when provided the company ID and user ID
-func (repo repository) AddPendingCompanyInviteRequest(companyID string, userID string) (*Invite, error) {
+func (repo repository) AddPendingCompanyInviteRequest(companyID string, userModel user.User) (*Invite, error) {
+	f := logrus.Fields{
+		"functionName":       "AddPendingCompanyInviteRequest",
+		"companyID":          companyID,
+		"UserID":             userModel.UserID,
+		"UserName":           userModel.UserName,
+		"UserGithubID":       userModel.UserGithubID,
+		"UserGithubUsername": userModel.UserGithubUsername,
+		"LFUsername":         userModel.LFUsername,
+	}
 
 	// First, let's check if we already have a previous invite for this company and user ID pair
-	previousInvite, err := repo.GetCompanyUserInviteRequests(companyID, userID)
+	previousInvite, err := repo.GetCompanyUserInviteRequests(companyID, userModel.UserID)
 	if err != nil {
-		log.Warnf("Previous invite already exists for company id: %s and user: %s, error: %v",
-			companyID, userID, err)
+		log.WithFields(f).Warnf("Previous invite already exists for company id: %s and user: %s, error: %v",
+			companyID, userModel.UserID, err)
 		return nil, err
 	}
 
@@ -846,51 +857,71 @@ func (repo repository) AddPendingCompanyInviteRequest(companyID string, userID s
 			}
 			return previousInvite, nil
 		}
-		log.Warnf("Invite already exists for company id: %s and user: %s - skipping creation", companyID, userID)
+		log.WithFields(f).Warnf("Invite already exists for company id: %s and user: %s - skipping creation",
+			companyID, userModel.UserID)
 		return previousInvite, nil
 	}
 
 	companyInviteID, err := uuid.NewV4()
 	if err != nil {
-		log.Warnf("Unable to generate a UUID for a pending invite, error: %v", err)
+		log.WithFields(f).Warnf("Unable to generate a UUID for a pending invite, error: %v", err)
 		return nil, err
 	}
 
 	_, now := utils.CurrentTime()
 
-	input := &dynamodb.PutItemInput{
-		Item: map[string]*dynamodb.AttributeValue{
-			"company_invite_id": {
-				S: aws.String(companyInviteID.String()),
-			},
-			"requested_company_id": {
-				S: aws.String(companyID),
-			},
-			"user_id": {
-				S: aws.String(userID),
-			},
-			"status": {
-				S: aws.String("pending"),
-			},
-			"date_created": {
-				S: aws.String(now),
-			},
-			"date_modified": {
-				S: aws.String(now),
-			},
+	attributes := map[string]*dynamodb.AttributeValue{
+		"company_invite_id": {
+			S: aws.String(companyInviteID.String()),
 		},
+		"requested_company_id": {
+			S: aws.String(companyID),
+		},
+		"user_id": {
+			S: aws.String(userModel.UserID),
+		},
+		"status": {
+			S: aws.String("pending"),
+		},
+		"date_created": {
+			S: aws.String(now),
+		},
+		"date_modified": {
+			S: aws.String(now),
+		},
+	}
+
+	// Add a few more fields, if they are available
+	if userModel.UserName != "" {
+		attributes["user_name"] = &dynamodb.AttributeValue{S: aws.String(userModel.UserName)}
+	}
+	if userModel.UserGithubID != "" {
+		attributes["user_github_id"] = &dynamodb.AttributeValue{S: aws.String(userModel.UserGithubID)}
+	}
+	if userModel.UserGithubUsername != "" {
+		attributes["user_github_username"] = &dynamodb.AttributeValue{S: aws.String(userModel.UserGithubUsername)}
+	}
+	if userModel.LFUsername != "" {
+		attributes["user_lf_user_name"] = &dynamodb.AttributeValue{S: aws.String(userModel.LFUsername)}
+	}
+	if userModel.UserName != "" {
+		attributes["user_name"] = &dynamodb.AttributeValue{S: aws.String(userModel.UserName)}
+	}
+
+	input := &dynamodb.PutItemInput{
+		Item:      attributes,
 		TableName: aws.String(fmt.Sprintf("cla-%s-company-invites", repo.stage)),
 	}
 
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
-		log.Warnf("Unable to create a new pending invite, error: %v", err)
+		log.WithFields(f).Warnf("Unable to create a new pending invite, error: %v", err)
 		return nil, err
 	}
 
 	createdInvite, err := repo.GetCompanyInviteRequest(companyInviteID.String())
 	if err != nil || createdInvite == nil {
-		log.Warnf("Unable to query newly created company invite id: %s, error: %v",
+		log.WithFields(f).Warnf("Unable to query newly created company invite id: %s, error: %v",
 			companyInviteID.String(), err)
 		return nil, err
 	}
