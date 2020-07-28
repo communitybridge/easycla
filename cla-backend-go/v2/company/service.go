@@ -922,16 +922,12 @@ func sendEmailToUserCompanyProfile(orgName string, userEmail string, username st
 	recipients := []string{userEmail}
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
-<p>This is a notification email from EasyCLA regarding the newly created Salesforce Organization %s .</p>
+<p>This is a notification email from EasyCLA regarding the newly created Salesforce Organization %s.</p>
 <p>The organization profile can be completed via <a href="%s/company/manage/" target="_blank">clicking this link</a>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-
-<p>Thanks,</p>
-<p>EasyCLA support team</p>`,
-		username, orgName, LFXPortalURL)
+%s
+%s`,
+		username, orgName, LFXPortalURL,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
 		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)

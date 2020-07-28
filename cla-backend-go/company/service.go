@@ -413,18 +413,14 @@ func (s service) sendRequestAccessEmail(companyModel *models.Company, requesterN
 By approving this request the user could view and apply for CLA Manager
 status on projects associated with your company. </p>
 %s
-<p>To get started, please log into the EasyCLA Corporate Console at 
-https://%s, and select your company. From there you will
-be able to view the list of projects which have EasyCLA configured and apply
-for CLA Manager status.
+<p>To get started, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>, and select your
+company. From there you will be able to view the list of projects which have EasyCLA configured and apply for CLA
+Manager status.
 </p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
-		recipientName, companyName, companyName, requestedUserInfo, s.corporateConsoleURL)
+%s
+%s`,
+		recipientName, companyName, companyName, requestedUserInfo, utils.GetCorporateURL(false),
+		utils.GetEmailHelpContent(false), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -448,18 +444,14 @@ func (s service) sendRequestApprovedEmailToRecipient(companyModel *models.Compan
 This means that you can now view and apply for CLA Manager status on
 projects associated with your company.
 </p>
-<p>To get started, please log into the EasyCLA Corporate Console at 
-https://%s, and select your company. From there you will
-be able to view the list of projects which have EasyCLA configured and apply
-for CLA Manager status.
+<p>To get started, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>, and select your
+company. From there you will be able to view the list of projects which have EasyCLA configured and apply for CLA
+Manager status.
 </p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
-		recipientName, companyName, companyName, s.corporateConsoleURL)
+%s
+%s`,
+		recipientName, companyName, companyName, utils.GetCorporateURL(false),
+		utils.GetEmailHelpContent(false), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -515,13 +507,10 @@ func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Compan
 If you have further questions about this denial, please contact one of the existing managers from
 %s:</p>
 %s
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
-		recipientName, companyName, companyName, companyManagerText)
+%s
+%s`,
+		recipientName, companyName, companyName, companyManagerText,
+		utils.GetEmailHelpContent(false), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
