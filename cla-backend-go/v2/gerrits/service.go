@@ -38,7 +38,7 @@ func (s service) GetGerritRepos(gerritName string) (*models.GerritRepoList, erro
 
 	resp, err := client.R().
 		EnableTrace().
-		Get(fmt.Sprintf("https://%s/infra/projects/?d&pp=0", gerritName))
+		Get(fmt.Sprintf("https://%s/%s/projects/?d&pp=0", gerritName, getGerritAPIPath(gerritName)))
 	if err != nil {
 		log.WithFields(f).Warnf("problem querying gerrit %s, error: %+v", gerritName, err)
 		return nil, err
@@ -50,39 +50,59 @@ func (s service) GetGerritRepos(gerritName string) (*models.GerritRepoList, erro
 		return nil, errors.New(msg)
 	}
 
-	// Clean up the output - has this weird prefix at the beginning of the JSON
-	//log.Debugf("Body: %s", resp.Body())
-	// responseClean := strings.Trim(string(resp.Body()), ")]}'")
-	//log.Debugf("Body clean: %s", resp.Body()[4:])
-
-	//log.WithFields(f).Debug("Decoding response...")
-	//var responseModel GerritRepoListResponse
-	//err = json.Unmarshal(resp.Body()[4:], &responseModel)
 	var result map[string]GerritRepoInfo
+	// Need to strip off the leading "magic prefix line" from the response payload, which is: )]}'
+	// See: https://gerrit.linuxfoundation.org/infra/Documentation/rest-api.html#output
 	err = json.Unmarshal(resp.Body()[4:], &result)
 	if err != nil {
 		log.WithFields(f).Warnf("problem unmarshalling response for gerrit: %s, error: %+v", gerritName, err)
 		return nil, err
 	}
 
-	//log.WithFields(f).Debugf("response model: %+v", responseModel)
-	//log.WithFields(f).Debugf("response model: %+v", result)
-
 	return convertModel(result), nil
 }
 
+// convertModel is a helper function to create a GerritRepoList response model
 func convertModel(responseModel map[string]GerritRepoInfo) *models.GerritRepoList {
 	var gerritRepos []*models.GerritRepo
 	for name, repo := range responseModel {
+
+		var weblinks []*models.GerritRepoWebLinksItems0
+		for _, weblink := range repo.WebLinks {
+			weblinks = append(weblinks, &models.GerritRepoWebLinksItems0{
+				Name: weblink.Name,
+				URL:  weblink.URL,
+			})
+		}
+
 		gerritRepos = append(gerritRepos, &models.GerritRepo{
 			ID:          repo.ID,
 			Name:        name,
 			Description: repo.Description,
 			State:       repo.State,
+			WebLinks:    weblinks,
 		})
 	}
 
 	return &models.GerritRepoList{
 		List: gerritRepos,
+	}
+}
+
+// getGerritAPIPath returns the path to the API based on the gerrit host
+func getGerritAPIPath(gerritHost string) string {
+	switch gerritHost {
+	case "gerrit.linuxfoundation.org":
+		return "infra"
+	case "gerrit.onap.org":
+		return "r"
+	case "gerrit.o-ran-sc.org":
+		return "r"
+	case "gerrit.tungsten.io":
+		return "r"
+	case "gerrit.opnfv.org":
+		return "gerrit"
+	default:
+		return "r"
 	}
 }

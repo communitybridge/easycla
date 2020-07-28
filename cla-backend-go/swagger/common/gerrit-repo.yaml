@@ -2,9 +2,30 @@ type: object
 properties:
   name:
     type: string
+    description: the name of the gerrit repository
+    example: 'ansible/roles/docker-install'
   id:
     type: string
+    description: the id of the gerrit repository, typically the base64 encoding of the name
+    example: 'ansible%2Froles%2Fdocker-install'
   description:
     type: string
+    description: the gerrit repository description
+    example: 'Ansible docker installation role'
   state:
     type: string
+    description: the state of the gerrit repository, typically ACTIVE
+    example: 'ACTIVE'
+  webLinks:
+    type: array
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+          description: the weblink name
+          example: 'gitweb'
+        url:
+          type: string
+          description: the weblink url
+          example: 'https://gerrit.linuxfoundation.org/infra/gitweb?p\u003dansible%2Froles%2Fhaveged-install.git;a\u003dsummary'
