@@ -1438,7 +1438,8 @@ def get_email_help_content(show_v2_help_link: bool) -> str:
     if show_v2_help_link:
         return """
             <p>If you need help or have questions about EasyCLA, you can
-            <a href="https://docs.linuxfoundation.org/docs/v/v2-beta/" target="_blank">read the documentation</a> or
+            <a href="https://docs.linuxfoundation.org/docs/v/v2/communitybridge/easycla" target="_blank">read the
+            documentation</a> or
             <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach
             out to us for support</a>.</p>
         """
