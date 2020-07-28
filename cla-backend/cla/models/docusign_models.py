@@ -1454,7 +1454,7 @@ class DocuSign(signing_service_interface.SigningService):
                         f'{signature.get_signature_reference_id()}/ccla/pdf')
         subject = f'EasyCLA: CLA Signature Signed for {project.get_project_name()}'
         body = f'''
-            <p>Hello contributor,</p>
+            <p>Hello {"Contributor" if icla else "CLA Signatory"},</p>
             <p>This is a notification email from EasyCLA regarding the project {project.get_project_name()}.</p>
             <p>Thank you for signing the CLA.  You can download the PDF document
                <a href="{pdf_link}" target="_blank" alt="{'ICLA' if icla else 'CCLA'} Document Link">
