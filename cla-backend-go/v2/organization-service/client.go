@@ -5,7 +5,6 @@ package organization_service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -32,8 +31,6 @@ const (
 
 var (
 	organizationServiceClient *Client
-	//ErrScopeNotFound returns error when getting scopeID
-	ErrScopeNotFound = errors.New("scope not found")
 )
 
 // InitClient initializes the user_service client
@@ -182,7 +179,7 @@ func (osc *Client) DeleteOrgUserRoleOrgScopeProjectOrg(organizationID string, ro
 }
 
 // GetScopeID will return scopeID for a give role
-func (osc *Client) GetScopeID(organizationID string, roleName string, objectTypeName string, userLFID string) (string, error) {
+func (osc *Client) GetScopeID(organizationID string, projectID string, roleName string, objectTypeName string, userLFID string) (string, error) {
 	tok, err := token.GetToken()
 	if err != nil {
 		return "", err
@@ -203,15 +200,20 @@ func (osc *Client) GetScopeID(organizationID string, roleName string, objectType
 			for _, roleScopes := range userRole.RoleScopes {
 				if roleScopes.RoleName == roleName {
 					for _, scope := range roleScopes.Scopes {
-						if scope.ObjectTypeName == objectTypeName {
-							return scope.ScopeID, nil
+						// Check object ID and and objectTypeName
+						objectList := strings.Split(scope.ObjectID, "|")
+						// check objectID having project|organization scope
+						if len(objectList) == 2 {
+							if scope.ObjectTypeName == objectTypeName && projectID == objectList[0] {
+								return scope.ScopeID, nil
+							}
 						}
 					}
 				}
 			}
 		}
 	}
-	return "", ErrScopeNotFound
+	return "", nil
 }
 
 // SearchOrganization search organization by name. It will return
@@ -227,7 +229,7 @@ func (osc *Client) SearchOrganization(orgName string) ([]*models.Organization, e
 	var orgs []*models.Organization
 	for {
 		params := &organizations.SearchOrgParams{
-			Name:     []string{orgName},
+			Name:     aws.String(orgName),
 			Offset:   aws.String(strconv.FormatInt(offset, 10)),
 			PageSize: aws.String(strconv.FormatInt(pageSize, 10)),
 			Context:  context.TODO(),

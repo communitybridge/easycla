@@ -77,6 +77,7 @@ type SignatureRepository interface {
 	AddSignedOn(signatureID string) error
 
 	GetClaGroupICLASignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
+	GetClaGroupCorporateContributors(claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error)
 }
 
 // repository data model
@@ -1768,6 +1769,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			var userName = ""
 			var userLFID = ""
 			var userGHID = ""
+			var userGHUsername = ""
 			var swg sync.WaitGroup
 			swg.Add(2)
 
@@ -1781,6 +1783,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 						userName = userModel.Username
 						userLFID = userModel.LfUsername
 						userGHID = userModel.GithubID
+						userGHUsername = userModel.GithubUsername
 					}
 
 					if signatureUserCompanyID != "" {
@@ -1826,6 +1829,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			sigModel.UserName = userName
 			sigModel.UserLFID = userLFID
 			sigModel.UserGHID = userGHID
+			sigModel.UserGHUsername = userGHUsername
 			sigModel.SignatureACL = signatureACL
 		}(sig, dbSignature.SignatureUserCompanyID, dbSignature.SignatureACL)
 	}
@@ -2007,5 +2011,90 @@ func (repo repository) GetClaGroupICLASignatures(claGroupID string, searchTerm *
 		queryInput.ExclusiveStartKey = results.LastEvaluatedKey
 		log.Debug("querying next page")
 	}
+	return out, nil
+}
+
+func (repo repository) GetClaGroupCorporateContributors(claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error) {
+	condition := expression.Key("signature_project_id").Equal(expression.Value(claGroupID))
+	if companyID != nil {
+		sortKey := fmt.Sprintf("%s#%v#%v#%v", ECLA, true, true, *companyID)
+		condition = condition.And(expression.Key("sigtype_signed_approved_id").Equal(expression.Value(sortKey)))
+	} else {
+		sortKeyPrefix := fmt.Sprintf("%s#%v#%v", ECLA, true, true)
+		condition = condition.And(expression.Key("sigtype_signed_approved_id").BeginsWith(sortKeyPrefix))
+	}
+
+	// Use the builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	if err != nil {
+		log.Warnf("error building expression for get cla group icla signatures, claGroupID: %s, error: %v",
+			claGroupID, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(repo.signatureTableName),
+		IndexName:                 aws.String(SignatureProjectIDSigTypeSignedApprovedIDIndex),
+		Limit:                     aws.Int64(HugePageSize),
+	}
+	out := &models.CorporateContributorList{List: make([]*models.CorporateContributor, 0)}
+	if searchTerm != nil {
+		searchTerm = aws.String(strings.ToLower(*searchTerm))
+	}
+	for {
+		// Make the DynamoDB Query API call
+		results, queryErr := repo.dynamoDBClient.Query(queryInput)
+		if queryErr != nil {
+			log.Warnf("error retrieving icla signatures for project: %s, error: %v", claGroupID, queryErr)
+			return nil, queryErr
+		}
+
+		var dbSignatures []ItemSignature
+
+		err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbSignatures)
+		if err != nil {
+			log.Warnf("error unmarshalling icla signatures from database for cla group: %s, error: %v",
+				claGroupID, err)
+			return nil, err
+		}
+
+		for _, sig := range dbSignatures {
+			if searchTerm != nil {
+				if !strings.Contains(sig.SignatureReferenceNameLower, *searchTerm) {
+					continue
+				}
+			}
+			var sigCreatedTime = sig.DateCreated
+			t, err := utils.ParseDateTime(sig.DateCreated)
+			if err != nil {
+				log.Error("fillCorporateContributorModel: unable to parse time", err)
+			} else {
+				sigCreatedTime = utils.TimeToString(t)
+			}
+			signatureVersion := fmt.Sprintf("v%s.%s", sig.SignatureDocumentMajorVersion, sig.SignatureDocumentMinorVersion)
+			out.List = append(out.List, &models.CorporateContributor{
+				GithubID:          sig.UserGithubUsername,
+				LinuxFoundationID: sig.UserLFUsername,
+				Name:              sig.SignatureReferenceName,
+				SignatureVersion:  signatureVersion,
+				Timestamp:         sigCreatedTime,
+			})
+		}
+
+		if len(results.LastEvaluatedKey) == 0 {
+			break
+		}
+		queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+		log.Debug("querying next page")
+	}
+	sort.Slice(out.List, func(i, j int) bool {
+		return out.List[i].Name < out.List[j].Name
+	})
+
 	return out, nil
 }

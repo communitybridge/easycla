@@ -50,7 +50,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		projectModel, projectErr := projectService.GetCLAGroupByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
 			msg := buildErrorMessage("project lookup error", params, projectErr)
 			log.Warn(msg)
@@ -179,8 +179,9 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 		// Send email to each manager
 		for _, manager := range claManagers {
-			sendRequestAccessEmailToCLAManagers(companyModel, projectModel, params.Body.UserName, params.Body.UserEmail,
-				manager.Username, manager.LfEmail, corporateConsoleURL)
+			sendRequestAccessEmailToCLAManagers(companyModel, projectModel,
+				params.Body.UserName, params.Body.UserEmail,
+				manager.Username, manager.LfEmail)
 		}
 
 		return cla_manager.NewCreateCLAManagerRequestOK().WithPayload(request)
@@ -252,7 +253,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		projectModel, projectErr := projectService.GetCLAGroupByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
 			msg := buildErrorMessageForApprove(params, projectErr)
 			log.Warn(msg)
@@ -339,7 +340,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		// Notify the requester
-		sendRequestApprovedEmailToRequester(companyModel, projectModel, request.UserName, request.UserEmail, corporateConsoleURL)
+		sendRequestApprovedEmailToRequester(companyModel, projectModel, request.UserName, request.UserEmail)
 
 		return cla_manager.NewCreateCLAManagerRequestOK().WithPayload(request)
 	})
@@ -357,7 +358,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		projectModel, projectErr := projectService.GetCLAGroupByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
 			msg := buildErrorMessageForDeny(params, projectErr)
 			log.Warn(msg)
@@ -451,7 +452,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		// Make sure the project id exists...
-		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		projectModel, projectErr := projectService.GetCLAGroupByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
 			msg := buildErrorMessageForDelete(params, projectErr)
 			log.Warn(msg)
@@ -567,7 +568,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		projectModel, projectErr := projectService.GetCLAGroupByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
 			msg := fmt.Sprintf("User lookup for project by ID: %s failed ", params.ProjectID)
 			log.Warn(msg)
@@ -646,7 +647,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetProjectByID(params.ProjectID)
+		projectModel, projectErr := projectService.GetCLAGroupByID(params.ProjectID)
 		if projectErr != nil || projectModel == nil {
 			msg := fmt.Sprintf("User lookup for project by ID: %s failed ", params.ProjectID)
 			log.Warn(msg)
@@ -776,7 +777,7 @@ func buildErrorMessageDeleteManager(errPrefix string, params cla_manager.DeleteC
 }
 
 // sendRequestAccessEmailToCLAManagers sends the request access email to the specified CLA Managers
-func sendRequestAccessEmailToCLAManagers(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail, recipientName, recipientAddress, corporateConsoleURL string) {
+func sendRequestAccessEmailToCLAManagers(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
 	projectName := projectModel.ProjectName
 
@@ -791,18 +792,17 @@ list of employees allowed to contribute to %s on behalf of your company, as well
 your company’s CLA Managers for %s.</p>
 <p>%s (%s) has requested to be added as another CLA Manager from %s for %s. This would permit them to maintain the
 lists of approved contributors and CLA Managers as well.</p>
-<p>If you want to permit this, please log into the EasyCLA Corporate Console at https://%s, select your company, then
-select the %s project. From the CLA Manager requests, you can approve this user as an additional CLA Manager.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p> `,
+<p>If you want to permit this, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>,
+select your company, then select the %s project. From the CLA Manager requests, you can approve this user as an
+additional CLA Manager.</p>
+%s
+%s
+`,
 		recipientName, projectName,
 		companyName, projectName, projectName, projectName,
 		requesterName, requesterEmail, companyName, projectName,
-		corporateConsoleURL, projectName)
+		utils.GetCorporateURL(projectModel.Version == utils.V2), projectName,
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -828,15 +828,12 @@ list of company’s CLA Managers for %s.</p>
 <ul>
 <li>%s (%s)</li>
 </ul>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		recipientName, projectName,
 		companyName, projectName, projectName, projectName,
-		requesterName, requesterEmail)
+		requesterName, requesterEmail,
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -846,7 +843,7 @@ support</a>.</p>
 	}
 }
 
-func sendRequestApprovedEmailToRequester(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail, corporateConsoleURL string) {
+func sendRequestApprovedEmailToRequester(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail string) {
 	companyName := companyModel.CompanyName
 	projectName := projectModel.ProjectName
 
@@ -859,17 +856,14 @@ func sendRequestApprovedEmailToRequester(companyModel *models.Company, projectMo
 <p>You have now been approved as a CLA Manager from %s for the project %s.  This means that you can now maintain the
 list of employees allowed to contribute to %s on behalf of your company, as well as view and manage the list of your
 company’s CLA Managers for %s.</p>
-<p> To get started, please log into the EasyCLA Corporate Console at https://%s, and select your company and then the
-project %s. From here you will be able to edit the list of approved employees and CLA Managers.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
+<p> To get started, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>, and select your
+company and then the project %s. From here you will be able to edit the list of approved employees and CLA Managers.</p>
+%s
+%s`,
 		requesterName, projectName,
 		companyName, projectName, projectName, projectName,
-		corporateConsoleURL, projectName)
+		utils.GetCorporateURL(projectModel.Version == utils.V2), projectName,
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -894,15 +888,12 @@ be able to maintain the list of employees allowed to contribute to %s on behalf 
 <ul>
 <li>%s (%s)</li>
 </ul>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		recipientName, projectName,
 		companyName, projectName, projectName,
-		requesterName, requesterEmail)
+		requesterName, requesterEmail,
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -924,14 +915,11 @@ func sendRequestDeniedEmailToRequester(companyModel *models.Company, projectMode
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>You have been denied as a CLA Manager from %s for the project %s. This means that you can not maintain the
 list of employees allowed to contribute to %s on behalf of your company.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		requesterName, projectName,
-		companyName, projectName, projectName)
+		companyName, projectName, projectName,
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

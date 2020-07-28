@@ -7,6 +7,9 @@ package:
     - ./backend-aws-lambda
     - ./metrics-aws-lambda
     - ./dynamo-events-lambda
+    - ./zipbuilder-scheduler-lambda
+    - ./zipbuilder-lambda
+    - ./functional-tests
     - dev.sh
     - docs/**
     - helpers/**
@@ -92,7 +95,6 @@ provider:
       Resource: "*"
     - Effect: Allow
       Action:
-        - s3:ListBucket
         - s3:GetObject
         - s3:PutObject
         - s3:DeleteObject
@@ -100,6 +102,17 @@ provider:
       Resource:
         - "arn:aws:s3:::cla-signature-files-${self:provider.stage}/*"
         - "arn:aws:s3:::cla-project-logo-${self:provider.stage}/*"
+    - Effect: Allow
+      Action:
+        - s3:ListBucket
+      Resource:
+        - "arn:aws:s3:::cla-signature-files-${self:provider.stage}"
+        - "arn:aws:s3:::cla-project-logo-${self:provider.stage}"
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource:
+        - "arn:aws:lambda:${self:provider.region}:#{AWS::AccountId}:function:cla-backend-${opt:stage}-zipbuilder-lambda"
     - Effect: Allow
       Action:
         - ssm:GetParameter
@@ -302,7 +315,7 @@ functions:
       - http:
           method: ANY
           path: v3/{proxy+}
-          cors: true
+          # cors: true # CORS handled at the API implementation
     package:
       individually: true
       include:
@@ -362,6 +375,34 @@ functions:
       individually: true
       include:
         - ./metrics-aws-lambda
+
+  zipbuilder-scheduler-lambda:
+    handler: zipbuilder-scheduler-lambda
+    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-zipbuilder-scheduler-lambda
+    description: "call zipbuilder-lambda for all cla groups periodically"
+    runtime: go1.x
+    timeout: 900 # maximum time allowed
+    events:
+      - schedule:
+          description: 'build signatures pdf for cla group'
+          rate: rate(1 hour)
+          enabled: true
+    package:
+      individually: true
+      include:
+        - ./zipbuilder-scheduler-lambda
+
+  zipbuilder-lambda:
+    handler: zipbuilder-lambda
+    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-zipbuilder-lambda
+    description: "build zip of signed signature pdf for cla group"
+    runtime: go1.x
+    timeout: 900 # maximum time allowed
+    memorySize: 1024
+    package:
+      individually: true
+      include:
+        - ./zipbuilder-lambda
 
   apiv1:
     handler: wsgi_handler.handler

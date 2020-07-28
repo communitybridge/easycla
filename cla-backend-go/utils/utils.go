@@ -16,6 +16,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
+const (
+	// V1 is the version 1 identifier
+	V1 = "v1"
+
+	// V2 is the version 2 identifier
+	V2 = "v2"
+)
+
 // FmtDuration is a helper function to format a duration in the HH:MM:SS.sss format
 func FmtDuration(d time.Duration) string {
 	//days := int64(d.Hours() / 24)

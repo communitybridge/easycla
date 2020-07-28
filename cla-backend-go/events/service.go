@@ -33,7 +33,7 @@ type Service interface {
 
 // CombinedRepo contains the various methods of other repositories
 type CombinedRepo interface {
-	GetProjectByID(projectID string, loadRepoDetails bool) (*models.Project, error)
+	GetCLAGroupByID(projectID string, loadRepoDetails bool) (*models.Project, error)
 	GetCompany(companyID string) (*models.Company, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
 	GetUser(userID string) (*models.User, error)
@@ -140,7 +140,7 @@ func (s *service) loadProject(args *LogEventArgs) error {
 		return nil
 	}
 	if args.ProjectID != "" {
-		projectModel, err := s.combinedRepo.GetProjectByID(args.ProjectID, DontLoadRepoDetails)
+		projectModel, err := s.combinedRepo.GetCLAGroupByID(args.ProjectID, DontLoadRepoDetails)
 		if err != nil {
 			return err
 		}

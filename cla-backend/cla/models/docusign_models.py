@@ -22,6 +22,7 @@ from pydocusign.exceptions import DocuSignException  # type: ignore
 
 import cla
 from cla.controllers.lf_group import LFGroup
+from cla.utils import get_email_help_content, get_email_sign_off_content
 from cla.models import signing_service_interface, DoesNotExist
 from cla.models.dynamo_models import Signature, User, \
     Project, Company, Gerrit, \
@@ -998,13 +999,8 @@ class DocuSign(signing_service_interface.SigningService):
                your initial CLA Manager for {project_name}, please click the link below to review and sign the CLA.</p>
             <p>If you have questions, or if you are not an authorized signatory of this company, please contact
                the requester at {cla_manager_email}.</p>
-            <p>If you need help or have questions about EasyCLA, you can
-               <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">
-               read the documentation</a> or
-               <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach
-               out to us for support</a>.</p>
-            <p>Thanks,</p>
-            <p>EasyCLA support team</p>
+            {get_email_help_content(project.get_version() == 'v2')}
+            {get_email_sign_off_content()}
             '''
             cla.log.debug(f'populate_sign_url - {sig_type} - generating a docusign signer object form email with'
                           f'name: {signatory_name}, email: {signatory_email}, subject: {email_subject}')
@@ -1458,13 +1454,8 @@ class DocuSign(signing_service_interface.SigningService):
             <p>Thank you for signing the CLA.  You can download the PDF document
                <a href="{pdf_link}" target="_blank" alt="ICLA Document Link"> from our website<a>.
             </p>
-            <p>If you need help or have questions about EasyCLA, you can
-               <a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">
-               read the documentation</a> or
-               <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach
-               out to us for support</a>.</p>
-            <p>Thanks,</p>
-            <p>EasyCLA support team</p>
+            {get_email_help_content(project.get_version() == 'v2')}
+            {get_email_sign_off_content()}
             '''
         recipient = user.get_user_email()
         # Third, send the email.

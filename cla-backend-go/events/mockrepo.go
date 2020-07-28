@@ -85,7 +85,7 @@ func eventInList(eventList []*models.Event, event *models.Event) bool {
 	return retVal
 }
 
-func (repo *mockRepository) GetProjectByID(projectID string, loadACLDetails bool) (*models.Project, error) {
+func (repo *mockRepository) GetCLAGroupByID(projectID string, loadACLDetails bool) (*models.Project, error) {
 	return &models.Project{
 		DateCreated:             "",
 		DateModified:            "",

@@ -33,7 +33,7 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 				})
 			}
 
-			resp, err := service.RequestCorporateSignature(params.Authorization, params.Input)
+			resp, err := service.RequestCorporateSignature(utils.StringValue(params.XUSERNAME), params.Authorization, params.Input)
 			if err != nil {
 				if strings.Contains(err.Error(), "does not exist") {
 					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(err))

@@ -11,6 +11,8 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
+var easyCLAConfig Config
+
 // Config data model
 type Config struct {
 	// Auth0
@@ -48,7 +50,8 @@ type Config struct {
 	AllowedOriginsCommaSeparated string   `json:"allowedOriginsCommaSeparated"`
 	AllowedOrigins               []string `json:"-"`
 
-	CorporateConsoleURL string `json:"corporateConsoleURL"`
+	CorporateConsoleURL   string `json:"corporateConsoleURL"`
+	CorporateConsoleV2URL string `json:"corporateConsoleV2URL"`
 
 	// SNSEventTopic the topic ARN for events
 	SNSEventTopicARN string `json:"snsEventTopicARN"`
@@ -113,20 +116,24 @@ type Github struct {
 	AppPrivateKey string `json:"app_private_key"`
 }
 
+// GetConfig returns the current EasyCLA configuration
+func GetConfig() Config {
+	return easyCLAConfig
+}
+
 // LoadConfig loads the configuration
 func LoadConfig(configFilePath string, awsSession *session.Session, awsStage string) (Config, error) {
-	var config Config
 	var err error
 
 	if configFilePath != "" {
 		// Read from local env.jso
 		log.Info("Loading local config...")
-		config, err = loadLocalConfig(configFilePath)
+		easyCLAConfig, err = loadLocalConfig(configFilePath)
 
 	} else if awsSession != nil {
 		// Read from SSM
 		log.Info("Loading SSM config...")
-		config = loadSSMConfig(awsSession, awsStage)
+		easyCLAConfig = loadSSMConfig(awsSession, awsStage)
 
 	} else {
 		return Config{}, errors.New("config not found")
@@ -137,7 +144,7 @@ func LoadConfig(configFilePath string, awsSession *session.Session, awsStage str
 	}
 
 	// Convert the allowed origins into an array of values
-	config.AllowedOrigins = strings.Split(config.AllowedOriginsCommaSeparated, ",")
+	easyCLAConfig.AllowedOrigins = strings.Split(easyCLAConfig.AllowedOriginsCommaSeparated, ",")
 
-	return config, nil
+	return easyCLAConfig, nil
 }

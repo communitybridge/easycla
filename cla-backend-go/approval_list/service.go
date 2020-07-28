@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-package whitelist
+package approval_list
 
 import (
 	"errors"
@@ -81,7 +81,7 @@ func (s service) AddCclaWhitelistRequest(companyID string, projectID string, arg
 		log.Warnf("AddCclaWhitelistRequest - unable to lookup company by id: %s, error: %+v", companyID, err)
 		return "", err
 	}
-	projectModel, err := s.projectRepo.GetProjectByID(projectID, DontLoadRepoDetails)
+	projectModel, err := s.projectRepo.GetCLAGroupByID(projectID, DontLoadRepoDetails)
 	if err != nil {
 		log.Warnf("AddCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", projectID, err)
 		return "", err
@@ -139,7 +139,7 @@ func (s service) ApproveCclaWhitelistRequest(companyID, projectID, requestID str
 		log.Warnf("ApproveCclaWhitelistRequest - unable to lookup company by id: %s, error: %+v", companyID, err)
 		return err
 	}
-	projectModel, err := s.projectRepo.GetProjectByID(projectID, DontLoadRepoDetails)
+	projectModel, err := s.projectRepo.GetCLAGroupByID(projectID, DontLoadRepoDetails)
 	if err != nil {
 		log.Warnf("ApproveCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", projectID, err)
 		return err
@@ -177,7 +177,7 @@ func (s service) RejectCclaWhitelistRequest(companyID, projectID, requestID stri
 		log.Warnf("RejectCclaWhitelistRequest - unable to lookup company by id: %s, error: %+v", companyID, err)
 		return err
 	}
-	projectModel, err := s.projectRepo.GetProjectByID(projectID, DontLoadRepoDetails)
+	projectModel, err := s.projectRepo.GetCLAGroupByID(projectID, DontLoadRepoDetails)
 	if err != nil {
 		log.Warnf("RejectCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", projectID, err)
 		return err
@@ -275,16 +275,13 @@ Console</a>, where you can approve this user's request by selecting the 'Manage 
 contributor's email, the contributor's entire email domain, their GitHub ID or the entire GitHub Organization for the
 repository. This will permit them to begin contributing to %s on behalf of %s.</p>
 <p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,</p>
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		recipientName, projectName, contributorName, contributorEmail,
 		companyName, projectName, companyName, projectName,
 		optionalMessage, s.corpConsoleURL,
-		companyModel.CompanyID, projectName, companyName)
+		companyModel.CompanyID, projectName, companyName,
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -306,19 +303,16 @@ func (s service) sendRequestApprovedEmailToRecipient(companyModel *models.Compan
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
 <p>You have now been approved as a contributor from %s for the project %s.</p>
-<p>To get started, please log into the EasyCLA Corporate Console at 
-https://%s, and select your company and then the project %s. From here you will
+<p> To get started, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>,
+and select your company and then the project %s. From here you will
 be able to edit the list of approved employees and CLA Managers.
 </p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,</p>
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		recipientName, projectName,
 		companyName, projectName,
-		s.corpConsoleURL, projectName)
+		utils.GetCorporateURL(projectModel.Version == utils.V2), projectName,
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -367,15 +361,12 @@ func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Compan
 If you have further questions about this denial, please contact one of the existing CLA Managers from
 %s for %s:</p>
 %s
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,</p>
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		recipientName, projectName,
 		companyName, projectName, companyName, projectName,
-		claManagerText)
+		claManagerText,
+		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
