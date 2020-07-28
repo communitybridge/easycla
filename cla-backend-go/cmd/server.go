@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/approval_list"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/cla_groups"
 	openapi_runtime "github.com/go-openapi/runtime"
 
@@ -80,7 +81,6 @@ import (
 	v2Company "github.com/communitybridge/easycla/cla-backend-go/v2/company"
 	v2Health "github.com/communitybridge/easycla/cla-backend-go/v2/health"
 	v2Template "github.com/communitybridge/easycla/cla-backend-go/v2/template"
-	"github.com/communitybridge/easycla/cla-backend-go/whitelist"
 
 	"github.com/go-openapi/loads"
 	"github.com/lytics/logrus"
@@ -206,7 +206,7 @@ func server(localMode bool) http.Handler {
 	repositoriesRepo := repositories.NewRepository(awsSession, stage)
 	gerritRepo := gerrits.NewRepository(awsSession, stage)
 	templateRepo := template.NewRepository(awsSession, stage)
-	whitelistRepo := whitelist.NewRepository(awsSession, stage)
+	approvalListRepo := approval_list.NewRepository(awsSession, stage)
 	companyRepo := company.NewRepository(awsSession, stage)
 	signaturesRepo := signatures.NewRepository(awsSession, stage, companyRepo, usersRepo)
 	projectClaGroupRepo := projects_cla_groups.NewRepository(awsSession, stage)
@@ -228,15 +228,15 @@ func server(localMode bool) http.Handler {
 	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
 	v2ProjectService := v2Project.NewService(projectRepo, projectClaGroupRepo)
 	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo, usersService)
-	v2CompanyService := v2Company.NewService(signaturesRepo, projectRepo, usersRepo, companyRepo, projectClaGroupRepo)
-	v2SignService := sign.NewService(configFile.ClaV1ApiURL, companyRepo, projectRepo, projectClaGroupRepo)
+	v2CompanyService := v2Company.NewService(companyService, signaturesRepo, projectRepo, usersRepo, companyRepo, projectClaGroupRepo)
+	v2SignService := sign.NewService(configFile.ClaV1ApiURL, companyRepo, projectRepo, projectClaGroupRepo, companyService)
 	signaturesService := signatures.NewService(signaturesRepo, companyService, usersService, eventsService, githubOrgValidation)
 	v2SignatureService := v2Signatures.NewService(projectService, companyService, signaturesService, projectClaGroupRepo)
 	claManagerService := cla_manager.NewService(claManagerReqRepo, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 	repositoriesService := repositories.NewService(repositoriesRepo)
 	v2RepositoriesService := v2Repositories.NewService(repositoriesRepo, projectClaGroupRepo, githubOrganizationsRepo)
-	v2ClaManagerService := v2ClaManager.NewService(companyService, projectService, claManagerService, usersService, repositoriesService, v2CompanyService, eventsService)
-	whitelistService := whitelist.NewService(whitelistRepo, usersRepo, companyRepo, projectRepo, signaturesRepo, configFile.CorporateConsoleURL, http.DefaultClient)
+	v2ClaManagerService := v2ClaManager.NewService(companyService, projectService, claManagerService, usersService, repositoriesService, v2CompanyService, eventsService, projectClaGroupRepo)
+	approvalListService := approval_list.NewService(approvalListRepo, usersRepo, companyRepo, projectRepo, signaturesRepo, configFile.CorporateConsoleURL, http.DefaultClient)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 	v2MetricsService := metrics.NewService(metricsRepo, projectClaGroupRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
@@ -247,6 +247,7 @@ func server(localMode bool) http.Handler {
 		ClientSecret: configFile.LFGroup.ClientSecret,
 		RefreshToken: configFile.LFGroup.RefreshToken,
 	})
+	v2GerritService := v2Gerrits.NewService()
 	v2ClaGroupService := cla_groups.NewService(projectService, templateService, projectClaGroupRepo, metricsRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
@@ -270,8 +271,8 @@ func server(localMode bool) http.Handler {
 	v2Template.Configure(v2API, templateService, eventsService)
 	github.Configure(api, configFile.Github.ClientID, configFile.Github.ClientSecret, configFile.Github.AccessToken, sessionStore)
 	signatures.Configure(api, signaturesService, sessionStore, eventsService)
-	v2Signatures.Configure(v2API, projectService, companyService, signaturesService, sessionStore, eventsService, v2SignatureService, projectClaGroupRepo)
-	whitelist.Configure(api, whitelistService, sessionStore, signaturesService, eventsService)
+	v2Signatures.Configure(v2API, projectService, projectRepo, companyService, signaturesService, sessionStore, eventsService, v2SignatureService, projectClaGroupRepo)
+	approval_list.Configure(api, approvalListService, sessionStore, signaturesService, eventsService)
 	company.Configure(api, companyService, usersService, companyUserValidation, eventsService)
 	docs.Configure(api)
 	v2Docs.Configure(v2API)
@@ -285,12 +286,12 @@ func server(localMode bool) http.Handler {
 	repositories.Configure(api, repositoriesService, eventsService)
 	v2Repositories.Configure(v2API, v2RepositoriesService, eventsService)
 	gerrits.Configure(api, gerritService, projectService, eventsService)
-	v2Gerrits.Configure(v2API, gerritService, projectService, eventsService)
+	v2Gerrits.Configure(v2API, gerritService, v2GerritService, projectService, eventsService, projectClaGroupRepo)
 	v2Company.Configure(v2API, v2CompanyService, companyRepo, configFile.LFXPortalURL)
 	cla_manager.Configure(api, claManagerService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 	v2ClaManager.Configure(v2API, v2ClaManagerService, configFile.LFXPortalURL, projectClaGroupRepo, userRepo, eventsService)
 	sign.Configure(v2API, v2SignService)
-	cla_groups.Configure(v2API, v2ClaGroupService, projectService, eventsService)
+	cla_groups.Configure(v2API, v2ClaGroupService, projectService, eventsService, gerritService, repositoriesService, signaturesService)
 
 	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	project_service.InitClient(configFile.APIGatewayURL)

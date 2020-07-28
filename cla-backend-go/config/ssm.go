@@ -60,6 +60,7 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
 		fmt.Sprintf("cla-gh-app-id-%s", stage),
 		fmt.Sprintf("cla-gh-app-private-key-%s", stage),
 		fmt.Sprintf("cla-corporate-base-%s", stage),
+		fmt.Sprintf("cla-corporate-v2-base-%s", stage),
 		fmt.Sprintf("cla-doc-raptor-api-key-%s", stage),
 		fmt.Sprintf("cla-session-store-table-%s", stage),
 		fmt.Sprintf("cla-ses-sender-email-address-%s", stage),
@@ -129,6 +130,8 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
 				corporateConsoleURLValue = "corporate.lfcla.com"
 			}
 			config.CorporateConsoleURL = corporateConsoleURLValue
+		case fmt.Sprintf("cla-corporate-v2-base-%s", stage):
+			config.CorporateConsoleV2URL = resp.value
 		case fmt.Sprintf("cla-doc-raptor-api-key-%s", stage):
 			config.Docraptor.APIKey = resp.value
 			config.Docraptor.TestMode = stage != "prod" && stage != "staging"

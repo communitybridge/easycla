@@ -44,12 +44,12 @@ var (
 
 // ProjectRepo contains project repo methods
 type ProjectRepo interface {
-	GetProjectByID(projectID string, loadRepoDetails bool) (*v1Models.Project, error)
+	GetCLAGroupByID(projectID string, loadRepoDetails bool) (*v1Models.Project, error)
 }
 
 // Service interface defines the sign service methods
 type Service interface {
-	RequestCorporateSignature(authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error)
+	RequestCorporateSignature(lfUsername string, authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error)
 }
 
 // service
@@ -58,15 +58,17 @@ type service struct {
 	companyRepo          company.IRepository
 	projectRepo          ProjectRepo
 	projectClaGroupsRepo projects_cla_groups.Repository
+	companyService       company.IService
 }
 
 // NewService returns an instance of v2 project service
-func NewService(apiURL string, compRepo company.IRepository, projectRepo ProjectRepo, pcgRepo projects_cla_groups.Repository) Service {
+func NewService(apiURL string, compRepo company.IRepository, projectRepo ProjectRepo, pcgRepo projects_cla_groups.Repository, compService company.IService) Service {
 	return &service{
 		ClaV1ApiURL:          apiURL,
 		companyRepo:          compRepo,
 		projectRepo:          projectRepo,
 		projectClaGroupsRepo: pcgRepo,
+		companyService:       compService,
 	}
 }
 
@@ -102,7 +104,7 @@ func validateCorporateSignatureInput(input *models.CorporateSignatureInput) erro
 	return nil
 }
 
-func (s *service) RequestCorporateSignature(authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error) {
+func (s *service) RequestCorporateSignature(lfUsername string, authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error) {
 	err := validateCorporateSignatureInput(input)
 	if err != nil {
 		return nil, err
@@ -115,7 +117,7 @@ func (s *service) RequestCorporateSignature(authorizationHeader string, input *m
 	if err != nil {
 		return nil, err
 	}
-	proj, err := s.projectRepo.GetProjectByID(cgm.ClaGroupID, DontLoadRepoDetails)
+	proj, err := s.projectRepo.GetCLAGroupByID(cgm.ClaGroupID, DontLoadRepoDetails)
 	if err != nil {
 		return nil, err
 	}
@@ -141,8 +143,21 @@ func (s *service) RequestCorporateSignature(authorizationHeader string, input *m
 		ReturnURL:      input.ReturnURL.String(),
 	})
 	if err != nil {
+		// remove role
+		removeErr := removeSignatoryRole(input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
+		if removeErr != nil {
+			return nil, removeErr
+		}
 		return nil, err
 	}
+
+	// Update the company ACL
+	companyACLError := s.companyService.AddUserToCompanyAccessList(comp.CompanyID, lfUsername)
+	if companyACLError != nil {
+		log.Warnf("AddCLAManager- Unable to add user to company ACL, companyID: %s, user: %s, error: %+v", *input.CompanySfid, lfUsername, companyACLError)
+		return nil, companyACLError
+	}
+
 	return out.toModel(), nil
 }
 
@@ -186,6 +201,49 @@ func requestCorporateSignature(authToken string, apiURL string, input *requestCo
 		return nil, err
 	}
 	return &out, nil
+}
+
+func removeSignatoryRole(userEmail string, companySFID string, projectSFID string) error {
+	f := logrus.Fields{"user_email": userEmail, "company_sfid": companySFID, "project_sfid": projectSFID}
+	log.WithFields(f).Debug("removing role for user")
+
+	usc := user_service.GetClient()
+	// search user
+	log.WithFields(f).Debug("searching user by email")
+	user, err := usc.SearchUserByEmail(userEmail)
+	if err != nil {
+		log.WithFields(f).Debug("Failed to get user")
+		return err
+	}
+
+	log.WithFields(f).Debug("Getting role id")
+	acsClient := acs_service.GetClient()
+	roleID, roleErr := acsClient.GetRoleID("cla-signatory")
+	if roleErr != nil {
+		log.WithFields(f).Debug("Failed to get role id for cla-signatory")
+		return roleErr
+	}
+	// Get scope id
+	log.WithFields(f).Debug("getting scope id")
+	orgClient := organization_service.GetClient()
+	scopeID, scopeErr := orgClient.GetScopeID(companySFID, projectSFID, "cla-signatory", "project|organization", user.Username)
+
+	if scopeErr != nil {
+		log.WithFields(f).Debug("Failed to get scope id for cla-signatory role")
+		return scopeErr
+	}
+
+	//Unassign role
+	log.WithFields(f).Debug("Unassigning role")
+	deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(companySFID, roleID, scopeID, &user.Username, &userEmail)
+
+	if deleteErr != nil {
+		log.WithFields(f).Debug("Failed to remove cla-signatory role")
+		return deleteErr
+	}
+
+	return nil
+
 }
 
 func prepareUserForSigning(userEmail string, companySFID, projectSFID string) error {

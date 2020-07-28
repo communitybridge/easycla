@@ -34,23 +34,43 @@ properties:
     type: string
   companyName:
     type: string
+    description: the company name
     pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
   projectID:
     type: string
+    description: the CLA Group ID
   userGHID:
     type: string
+    description: the user's GitHub ID, when available
+    example: 13434323
+  userGHUsername:
+    type: string
+    description: the user's GitHub username, when available
+    example: linux-user
   userLFID:
     type: string
+    description: the user's LF Login ID
+    example: abc1234
   version:
     type: string
+    description: the version of the signature record
+    example: v1
   created:
     type: string
+    description: the date/time when this signature record was created
+    example: '2017-04-19T16:42:00.000000+0000'
   modified:
     type: string
+    description: the date/time when this signature record was last modified
+    example: '2019-07-15T15:28:33.127118+0000'
   signatureMajorVersion:
     type: string
+    description: the signature major version number
+    example: 2
   signatureMinorVersion:
     type: string
+    description: the signature minor version number
+    example: 1
   emailApprovalList:
     type: array
     description: a list of zero or more email addresses in the approval list

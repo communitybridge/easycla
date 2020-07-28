@@ -4,7 +4,7 @@ SERVICE = cla
 LAMBDA_BIN = backend-aws-lambda
 METRICS_BIN = metrics-aws-lambda
 DYNAMO_EVENTS_BIN = dynamo-events-lambda
-ZIPBUILDER_SCHEDULAR_BIN = zipbuilder-schedular-lambda
+ZIPBUILDER_SCHEDULER_BIN = zipbuilder-scheduler-lambda
 ZIPBUILDER_BIN = zipbuilder-lambda
 FUNCTIONAL_TESTS_BIN = functional-tests
 BUILD_TIME=`date +%FT%T%z`
@@ -15,7 +15,7 @@ LDFLAGS=-ldflags "-s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X m
 BUILD_TAGS=-tags aws_lambda
 
 LINT_TOOL=$(shell go env GOPATH)/bin/golangci-lint
-LINT_VERSION=v1.27.0
+LINT_VERSION=v1.29.0
 SWAGGER_TOOL_VERSION=v0.24.0
 GO_PKGS=$(shell go list ./... | grep -v /vendor/ | grep -v /node_modules/)
 GO_FILES=$(shell find . -type f -name '*.go' -not -path './vendor/*')
@@ -24,10 +24,10 @@ TEST_ENV=AWS_REGION=us-east-1 DYNAMODB_AWS_REGION=us-east-1 AWS_PROFILE=bar AWS_
 .PHONY: generate setup tool-setup setup-dev setup-deploy clean-all clean swagger up fmt test run deps build build-mac build-aws-lambda qc lint
 
 all: all-mac
-all-mac: clean swagger deps fmt build-mac build-aws-lambda build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-schedular-lambda-mac build-zipbuilder-lambda-mac test lint
-all-linux: clean swagger deps fmt build-linux build-aws-lambda build-metrics-lambda-linux build-dynamo-events-lambda-linux build-zipbuilder-schedular-lambda-linux build-zipbuilder-lambda-linux test lint
-build-lambdas-mac: build-aws-lambda build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-schedular-lambda-mac build-zipbuilder-lambda-mac
-build-lambdas-linux: build-aws-lambda build-metrics-lambda-linux build-dynamo-events-lambda-linux build-zipbuilder-schedular-lambda-linux build-zipbuilder-lambda-linux
+all-mac: clean swagger deps fmt build-mac build-aws-lambda-mac build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-scheduler-lambda-mac build-zipbuilder-lambda-mac test lint
+all-linux: clean swagger deps fmt build-linux build-aws-lambda-linux build-metrics-lambda-linux build-dynamo-events-lambda-linux build-zipbuilder-scheduler-lambda-linux build-zipbuilder-lambda-linux test lint
+build-lambdas-mac: build-aws-lambda-mac build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-scheduler-lambda-mac build-zipbuilder-lambda-mac
+build-lambdas-linux: build-aws-lambda-linux build-metrics-lambda-linux build-dynamo-events-lambda-linux build-zipbuilder-scheduler-lambda-linux build-zipbuilder-lambda-linux
 
 generate: swagger
 
@@ -168,10 +168,16 @@ build-mac: deps
 rebuild-mac: clean fmt build-mac lint
 	./$(SERVICE)-mac
 
-build-aws-lambda: deps
+build-aws-lambda: build-aws-lambda-linux
+build-aws-lambda-linux: deps
 	@echo "Building a statically linked Linux amd64 binary..."
 	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) $(BUILD_TAGS) -o $(LAMBDA_BIN) main.go
 	@chmod +x $(LAMBDA_BIN)
+
+build-aws-lambda-mac: deps
+	@echo "Building a statically linked Mac OSX amd64 binary..."
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) $(BUILD_TAGS) -o $(LAMBDA_BIN)-mac main.go
+	@chmod +x $(LAMBDA_BIN)-mac
 
 build-metrics-lambda: build-metrics-lambda-linux
 build-metrics-lambda-linux: deps
@@ -195,16 +201,16 @@ build-dynamo-events-lambda-mac: deps
 	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(DYNAMO_EVENTS_BIN)-mac cmd/dynamo_events_lambda/main.go
 	@chmod +x $(DYNAMO_EVENTS_BIN)-mac
 
-build-zipbuilder-schedular-lambda: build-zipbuilder-schedular-lambda-linux
-build-zipbuilder-schedular-lambda-linux: deps
+build-zipbuilder-scheduler-lambda: build-zipbuilder-scheduler-lambda-linux
+build-zipbuilder-scheduler-lambda-linux: deps
 	@echo "Building a statically linked Linux amd64 binary..."
-	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(ZIPBUILDER_SCHEDULAR_BIN) cmd/zipbuilder_schedular_lambda/main.go
-	@chmod +x $(ZIPBUILDER_SCHEDULAR_BIN)
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(ZIPBUILDER_SCHEDULER_BIN) cmd/zipbuilder_scheduler_lambda/main.go
+	@chmod +x $(ZIPBUILDER_SCHEDULER_BIN)
 
-build-zipbuilder-schedular-lambda-mac: deps
+build-zipbuilder-scheduler-lambda-mac: deps
 	@echo "Building a statically linked Mac OSX amd64 binary..."
-	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(ZIPBUILDER_SCHEDULAR_BIN)-mac cmd/zipbuilder_schedular_lambda/main.go
-	@chmod +x $(ZIPBUILDER_SCHEDULAR_BIN)-mac
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(ZIPBUILDER_SCHEDULER_BIN)-mac cmd/zipbuilder_scheduler_lambda/main.go
+	@chmod +x $(ZIPBUILDER_SCHEDULER_BIN)-mac
 
 build-zipbuilder-lambda: build-zipbuilder-lambda-linux
 build-zipbuilder-lambda-linux: deps

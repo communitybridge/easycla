@@ -18,6 +18,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/cla_manager"
 	"github.com/communitybridge/easycla/cla-backend-go/project"
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
 
@@ -59,6 +60,8 @@ var (
 	ErrRoleScopeConflict = errors.New("roleScope conflict")
 	//ErrCLAManagerDesigneeConflict when user is already assigned cla-manager-designee role
 	ErrCLAManagerDesigneeConflict = errors.New("user already assigned cla-manager-designee")
+	//ErrScopeNotFound returns error when getting scopeID
+	ErrScopeNotFound = errors.New("scope not found")
 )
 
 type service struct {
@@ -69,6 +72,7 @@ type service struct {
 	easyCLAUserService  easyCLAUser.Service
 	v2CompanyService    v2Company.Service
 	eventService        events.Service
+	projectCGRepo       projects_cla_groups.Repository
 }
 
 // Service interface
@@ -82,8 +86,9 @@ type Service interface {
 }
 
 // NewService returns instance of CLA Manager service
-func NewService(compService company.IService, projService project.Service, mgrService v1ClaManager.IService, claUserService easyCLAUser.Service, repoService repositories.Service, v2CompService v2Company.Service,
-	evService events.Service) Service {
+func NewService(compService company.IService, projService project.Service, mgrService v1ClaManager.IService, claUserService easyCLAUser.Service,
+	repoService repositories.Service, v2CompService v2Company.Service,
+	evService events.Service, projectCGroupRepo projects_cla_groups.Repository) Service {
 	return &service{
 		companyService:      compService,
 		projectService:      projService,
@@ -92,6 +97,7 @@ func NewService(compService company.IService, projService project.Service, mgrSe
 		easyCLAUserService:  claUserService,
 		v2CompanyService:    v2CompService,
 		eventService:        evService,
+		projectCGRepo:       projectCGroupRepo,
 	}
 }
 
@@ -128,7 +134,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		}
 	}
 
-	claGroup, err := s.projectService.GetProjectByID(claGroupID)
+	claGroup, err := s.projectService.GetCLAGroupByID(claGroupID)
 	if err != nil || claGroup == nil {
 		msg := buildErrorMessage("cla group search by ID failure", claGroupID, params, err)
 		log.Warn(msg)
@@ -292,13 +298,28 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		}
 	}
 
-	scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(*params.Body.UserEmail, params.ProjectSFID, params.CompanySFID, roleID)
-	if scopeErr != nil {
-		msg := buildErrorMessageCreate(params, scopeErr)
+	projectCLAGroups, getErr := s.projectCGRepo.GetProjectsIdsForClaGroup(claGroupID)
+	log.Debugf("Getting associated SF projects for claGroup: %s ", claGroupID)
+
+	if getErr != nil {
+		msg := buildErrorMessageCreate(params, getErr)
 		log.Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
+		}
+	}
+
+	for _, projectCG := range projectCLAGroups {
+
+		scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(*params.Body.UserEmail, projectCG.ProjectSFID, params.CompanySFID, roleID)
+		if scopeErr != nil {
+			msg := buildErrorMessageCreate(params, scopeErr)
+			log.Warn(msg)
+			return nil, &models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			}
 		}
 	}
 
@@ -369,25 +390,46 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 	}
 	log.Debugf("Role ID for cla-manager-role : %s", roleID)
 
-	// Get Scope ID
-	orgClient := v2OrgService.GetClient()
-	scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, "cla-manager", "project|organization", params.UserLFID)
-	if scopeErr != nil {
-		msg := buildErrorMessageDelete(params, scopeErr)
+	projectCLAGroups, getErr := s.projectCGRepo.GetProjectsIdsForClaGroup(claGroupID)
+
+	if getErr != nil {
+		msg := buildErrorMessageDelete(params, getErr)
 		log.Warn(msg)
 		return &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
 		}
 	}
-	email := *user.Emails[0].EmailAddress
-	deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(params.CompanySFID, roleID, scopeID, &user.Username, &email)
-	if deleteErr != nil {
-		msg := buildErrorMessageDelete(params, deleteErr)
-		log.Warn(msg)
-		return &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
+
+	orgClient := v2OrgService.GetClient()
+
+	for _, projectCG := range projectCLAGroups {
+		scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, projectCG.ProjectSFID, "cla-manager", "project|organization", params.UserLFID)
+		if scopeErr != nil {
+			msg := buildErrorMessageDelete(params, scopeErr)
+			log.Warn(msg)
+			return &models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			}
+		}
+		if scopeID == "" {
+			msg := buildErrorMessageDelete(params, ErrScopeNotFound)
+			log.Warn(msg)
+			return &models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			}
+		}
+		email := *user.Emails[0].EmailAddress
+		deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(params.CompanySFID, roleID, scopeID, &user.Username, &email)
+		if deleteErr != nil {
+			msg := buildErrorMessageDelete(params, deleteErr)
+			log.Warn(msg)
+			return &models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			}
 		}
 	}
 
@@ -748,15 +790,12 @@ func sendEmailToCLAManager(manager string, managerEmail string, contributorName 
 	<p>This is a notification email from EasyCLA regarding the organization %s.</p>
 	<p>The following contributor would like to submit a contribution to %s 
 	   and is requesting to be approved as a contributor for your organization: </p>
-	<p> %s </p>
+	<p>%s</p>
 	<p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
-	<p>If you need help or have questions about EasyCLA, you can
-	<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-	<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-	support</a>.</p>
-	<p>Thanks,</p>
-	<p>EasyCLA support team </p>`,
-		manager, company, project, contributorName)
+	%s
+    %s`,
+		manager, company, project, contributorName,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
 		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
@@ -765,7 +804,7 @@ func sendEmailToCLAManager(manager string, managerEmail string, contributorName 
 	}
 }
 
-func sendEmailToOrgAdmin(adminEmail string, admin string, company string, project string, contributorID string, contributorName string, corporateConsole string) {
+func sendEmailToOrgAdmin(adminEmail string, admin string, company string, projectName string, contributorID string, contributorName string, corporateConsole string) {
 	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorID)
 	recipients := []string{adminEmail}
 	body := fmt.Sprintf(`
@@ -777,13 +816,10 @@ func sendEmailToOrgAdmin(adminEmail string, admin string, company string, projec
 <p>Before the contribution can be accepted, your organization must sign a CLA.
 <p>Kindly login to this portal %s and sign the CLA for this project %s. </p>
 <p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,</p>
-<p>EasyCLA support team </p>`,
-		admin, project, project, contributorName, contributorID, corporateConsole, project)
+%s
+%s`,
+		admin, projectName, projectName, contributorName, contributorID, corporateConsole, projectName,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -793,8 +829,9 @@ support</a>.</p>
 	}
 }
 
-func sendEmailToCLAManagerDesignee(corporateConsole string, company string, project string, designeeEmail string, designeeName string, contributorID string, contributorName string) {
-	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorID)
+func sendEmailToCLAManagerDesignee(corporateConsole string, companyName string, projectName string, designeeEmail string, designeeName string, contributorID string, contributorName string) {
+	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ",
+		companyName, contributorID)
 	recipients := []string{designeeEmail}
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
@@ -805,13 +842,10 @@ func sendEmailToCLAManagerDesignee(corporateConsole string, company string, proj
 <p>Before the contribution can be accepted, your organization must sign a CLA.
 <p>Kindly login to this portal %s and sign the CLA for this project %s. </p>
 <p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,</p>
-<p>EasyCLA support team </p>`,
-		designeeName, project, project, contributorName, contributorID, corporateConsole, project)
+%s
+%s`,
+		designeeName, projectName, projectName, contributorName, contributorID, corporateConsole, projectName,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -831,18 +865,15 @@ func sendEmailToUserWithNoLFID(projectName, requesterUsername, requesterEmail, u
 <p>User %s (%s) was trying to add you as a CLA Manager for Project %s but was unable to identify your account details in
 the EasyCLA system. In order to become a CLA Manager for Project %s, you will need to accept invite below.
 Once complete, notify the user %s and they will be able to add you as a CLA Manager.</p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,</p>
-<p>EasyCLA support team</p>`,
+%s
+%s`,
 		userWithNoLFIDName, projectName,
 		requesterUsername, requesterEmail, projectName, projectName,
-		requesterUsername)
+		requesterUsername,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	acsClient := v2AcsService.GetClient()
-	acsErr := acsClient.SendUserInvite(&userWithNoLFIDEmail, "contact", "organization", organizationID, "userinvite", &subject, &body)
+	acsErr := acsClient.SendUserInvite(&userWithNoLFIDEmail, "cla-manager", "organization", organizationID, "userinvite", &subject, &body)
 	if acsErr != nil {
 		return acsErr
 	}

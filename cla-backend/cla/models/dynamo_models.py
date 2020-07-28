@@ -971,19 +971,19 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def __str__(self):
         return (
-            "id: {}, name: {}, project_name_lower: {},external id: {}, icla enabled: {}, " "ccla enabled: {}, requires icla: {}, acl: {}," +
-            " foundation_sfid: {}, root_project_repositories_count: {}"
-        ).format(
-            self.model.project_id,
-            self.model.project_name,
-            self.model.project_name_lower,
-            self.model.project_external_id,
-            self.model.project_icla_enabled,
-            self.model.project_ccla_enabled,
-            self.model.project_ccla_requires_icla_signature,
-            self.model.project_acl,
-            self.model.foundation_sfid,
-            self.model.root_project_repositories_count,
+            f"id:{self.model.project_id}, "
+            f"project_name:{self.model.project_name}, "
+            f"project_name_lower:{self.model.project_name_lower}, "
+            f"project_external_id:{self.model.project_external_id}, "
+            f"foundation_sfid:{self.model.foundation_sfid}, "
+            f"project_icla_enabled: {self.model.project_icla_enabled}, "
+            f"project_ccla_enabled: {self.model.project_ccla_enabled}, "
+            f"project_ccla_requires_icla_signature: {self.model.project_ccla_requires_icla_signature}, "
+            f"project_acl: {self.model.project_acl}, "
+            f"root_project_repositories_count: {self.model.root_project_repositories_count}, "
+            f"date_created: {self.model.date_created}, "
+            f"date_modified: {self.model.date_modified}, "
+            f"version: {self.model.version}"
         )
 
     def to_dict(self):
@@ -1020,6 +1020,17 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
         except ProjectModel.DoesNotExist:
             raise cla.models.DoesNotExist("Project not found")
         self.model = project
+
+    def load_project_by_name(self, project_name):
+        try:
+            project_generator = self.model.project_name_lower_search_index.query(project_name.lower())
+            for project_model in project_generator:
+                self.model = project_model
+                return
+            # Didn't find a result - throw an error
+            raise cla.models.DoesNotExist(f'Project with name {project_name} not found')
+        except ProjectModel.DoesNotExist:
+            raise cla.models.DoesNotExist(f'Project with name {project_name} not found')
 
     def delete(self):
         self.model.delete()
@@ -1075,8 +1086,6 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
         document = version[2]
         return document
 
-        raise cla.models.DoesNotExist("Document revision not found")
-
     def get_latest_individual_document(self):
         document_models = self.get_project_individual_documents()
         version = self._get_latest_version(document_models)
@@ -1091,7 +1100,6 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
         version = self._get_latest_version(document_models)
         document = version[2]
         return document
-        raise cla.models.DoesNotExist("Document revision not found")
 
     def get_latest_corporate_document(self):
         """
@@ -2085,6 +2093,7 @@ class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     user_email = UnicodeAttribute(null=True)
     user_github_username = UnicodeAttribute(null=True)
     user_name = UnicodeAttribute(null=True)
+    user_lf_username = UnicodeAttribute(null=True)
 
 
 class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-methods
@@ -2347,6 +2356,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
     def get_user_name(self):
         return self.model.user_name
 
+    def get_user_lf_username(self):
+        return self.model.user_lf_username
+
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -2467,6 +2479,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def set_user_name(self, user_name):
         self.model.user_name = user_name
+
+    def set_user_lf_username(self, user_lf_username):
+        self.model.user_lf_username = user_lf_username
 
     def get_signatures_by_reference(
             self,  # pylint: disable=too-many-arguments
@@ -3307,6 +3322,7 @@ class GerritModel(BaseModel):
     group_id_ccla = UnicodeAttribute(null=True)
     group_name_icla = UnicodeAttribute(null=True)
     group_name_ccla = UnicodeAttribute(null=True)
+    project_sfid = UnicodeAttribute(null=True)
 
 
 class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-methods
@@ -3332,6 +3348,19 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
         self.model.group_id_icla = group_id_icla
         self.model.group_id_ccla = group_id_ccla
 
+    def __str__(self):
+        return (
+            f"gerrit_id:{self.model.gerrit_id}, "
+            f"gerrit_name:{self.model.gerrit_name}, "
+            f"project_id:{self.model.project_id}, "
+            f"gerrit_url:{self.model.gerrit_url}, "
+            f"group_id_icla: {self.model.group_id_icla}, "
+            f"group_id_ccla: {self.model.group_id_ccla}, "
+            f"date_created: {self.model.date_created}, "
+            f"date_modified: {self.model.date_modified}, "
+            f"version: {self.model.version}"
+        )
+
     def to_dict(self):
         ret = dict(self.model)
         return ret
@@ -3345,6 +3374,9 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
 
     def get_gerrit_id(self):
         return self.model.gerrit_id
+
+    def get_project_sfid(self):
+        return self.model.project_sfid
 
     def get_gerrit_name(self):
         return self.model.gerrit_name
@@ -3360,6 +3392,9 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
 
     def get_group_id_ccla(self):
         return self.model.group_id_ccla
+
+    def set_project_sfid(self, project_sfid):
+        self.model.project_sfid = str(project_sfid)
 
     def set_gerrit_id(self, gerrit_id):
         self.model.gerrit_id = gerrit_id
@@ -3891,7 +3926,6 @@ class CCLAWhitelistRequestModel(BaseModel):
     company_id_project_id_index = CompanyIDProjectIDIndex()
         
 
-
 class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
     """
     ORM-agnostic wrapper for the DynamoDB CCLAWhitelistRequestModel
@@ -3946,12 +3980,11 @@ class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
     def save(self):
         return self.model.save()
     
-    def load(self,request_id):
+    def load(self, request_id):
         try:
             ccla_whitelist_request = self.model.get(str(request_id))
         except CCLAWhitelistRequest.DoesNotExist:
             raise cla.models.DoesNotExist("CCLAWhitelistRequest not found")
-
 
     def delete(self):
         self.model.delete()
@@ -4030,5 +4063,3 @@ class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
             ccla_whitelist_request.model = request
             ret.append(ccla_whitelist_request)
         return ret
-
-

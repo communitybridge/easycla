@@ -49,7 +49,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		downloadURL := fmt.Sprintf("contract-group/%s/icla/%s/%s.pdf",
 			params.ClaGroupID, params.UserID, signatureModel.SignatureID)
 		log.Debugf("Retrieving PDF from path: %s", downloadURL)
-		pdfBytes, s3Err := utils.DownloadFromS3(downloadURL)
+		downloadLink, s3Err := utils.GetDownloadLink(downloadURL)
 		if s3Err != nil {
 			msg := fmt.Sprintf("EasyCLA - 500 Internal Server Error -  unable to locate PDF from source using claGroupID: %s, userID: %s, s3 error: %+v",
 				params.ClaGroupID, params.UserID, s3Err)
@@ -61,13 +61,18 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		}
 
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			rw.Header().Set("Content-type", "application/pdf")
-			rw.Header().Set("Content-Disposition", fmt.Sprintf("attachment;filename=%s.pdf",
-				signatureModel.SignatureID))
+			rw.Header().Set("Content-type", "text/html")
 			rw.WriteHeader(200)
-			bytesWritten, writeErr := rw.Write(pdfBytes)
+			redirectDocument := fmt.Sprintf(
+				`<html>
+							<head><meta http-equiv="Refresh" content="0; url='%s'"/></head>
+                            <body>
+                              <p>Please follow <a href="%s">this link</a>.</p>
+                            </body>
+                        </html>`, downloadLink, downloadLink)
+			bytesWritten, writeErr := rw.Write([]byte(redirectDocument))
 			if writeErr != nil {
-				msg := fmt.Sprintf("EasyCLA - 500 Internal Server Error -  error writing PDF document to client from source using claGroupID: %s, userID: %s, error: %+v",
+				msg := fmt.Sprintf("EasyCLA - 500 Internal Server Error - generating s3 redirect for the client client using source using claGroupID: %s, userID: %s, error: %+v",
 					params.ClaGroupID, params.UserID, s3Err)
 				log.Warn(msg)
 			}

@@ -92,7 +92,7 @@ export class ClaGerritCorporatePage {
       company_id: company.company_id,
       user_id: this.userId
     };
-    this.claService.postCheckedAndPreparedEmployeeSignature(data).subscribe((response) => {
+    this.claService.postCheckAndPreparedEmployeeSignature(data).subscribe((response) => {
       let errors = response.hasOwnProperty('errors');
       if (errors) {
         if (response.errors.hasOwnProperty('missing_ccla')) {

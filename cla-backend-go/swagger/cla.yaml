@@ -2356,8 +2356,16 @@ definitions:
     properties:
       Code:
         type: string
+        description: error code - typically the HTTP response status code
+        example: '404'
+#      Type:
+#        type: string
+#        description: error type contains a string code or enumation value that can be used by the client for string lookup for internationalization
+#        example: 'cla_group_not_found'
       Message:
         type: string
+        description: an API message string, typically used by developers to encode additional call/trace information
+        example: 'CLA Group with ID 123445 was not found'
 
   #delete-response:
   #  type: object
@@ -2397,6 +2405,9 @@ definitions:
   gerrit:
     $ref: './common/gerrit.yaml'
 
+  gerrit-list:
+    $ref: './common/gerrit-list.yaml'
+
   github-organizations:
     $ref: './common/github-organizations.yaml'
 
@@ -2423,6 +2434,12 @@ definitions:
 
   icla-signature:
     $ref: './common/icla-signature.yaml'
+
+  corporate-contributor-list:
+    $ref: './common/corporate-contributors-list.yaml'
+
+  corporate-contributor:
+    $ref: './common/corporate-contributor.yaml'
 
 responses:
   #resource-deleted:

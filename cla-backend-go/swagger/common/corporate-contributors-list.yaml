@@ -1,0 +1,7 @@
+type: object
+title: corporate contributors list
+properties:
+  list:
+    type: array
+    items:
+      $ref: '#/definitions/corporate-contributor'

@@ -392,10 +392,11 @@ paths:
           $ref: '#/responses/internal-server-error'
       tags:
         - cla-group
+
   /foundation/{projectSFID}/cla-groups:
     get:
-      summary: List cla groups under foundation
-      description: Return list of cla groups under foundation
+      summary: List CLA Groups associated with a foundation or project
+      description: Return list of CLA Groups associated with a group of projects (formerly a foundation) or project
       operationId: listClaGroupsUnderFoundation
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1223,6 +1224,35 @@ paths:
       tags:
         - signatures
 
+  /cla-group/{claGroupID}/corporate-contributors:
+    get:
+      summary: List corporate contributors for cla group
+      description: Return list of corporate contributor for cla group
+      operationId: listClaGroupCorporateContributors
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+        - $ref: "#/parameters/companySFID"
+        - $ref: '#/parameters/searchTerm'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/corporate-contributor-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - signatures
+
   /signatures/id/{signatureID}:
     get:
       summary: Get the signature by ID
@@ -1706,7 +1736,7 @@ paths:
           $ref: '#/responses/internal-server-error'
       tags:
         - signatures
-  
+
   /notify-cla-managers:
     post:
       summary: Send Notification to CLA Managaers
@@ -1731,7 +1761,7 @@ paths:
 
   /user/{userID}/invite-company-admin:
     post:
-      summary: Invite Manager 
+      summary: Invite Manager
       description: Invite Company Admin based on user request to sign CLA
       security: []
       operationId: inviteCompanyAdmin
@@ -1746,7 +1776,7 @@ paths:
             properties:
               contactAdmin:
                 description: flag checking whether to contact company admin
-                type: boolean 
+                type: boolean
               companyID:
                 description: EasyCLA companyID of contributor inviting CLA Manager
                 type: string
@@ -1815,7 +1845,7 @@ paths:
           $ref: '#/responses/conflict'
       tags:
         - cla-manager
-            
+
 
   /company/{companySFID}/project/{projectSFID}/cla-manager:
     post:
@@ -1901,7 +1931,7 @@ paths:
             properties:
               userEmail:
                 type: string
-        
+
       responses:
         '200':
           description: 'Success'
@@ -2019,7 +2049,34 @@ paths:
       tags:
         - signatures
 
-  /project/{projectID}/gerrits/{gerritID}:
+  /gerrit/repos:
+    get:
+      summary: Returns a list of repositories under the specified gerrit instance
+      description: Returns a list of repositories under the specified gerrit instance
+      operationId: getGerritRepos
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/gerritName"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/gerrit-repo-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '404':
+          $ref: '#/responses/not-found'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - gerrits
+
+  /cla-group/{claGroupID}/project/{projectSFID}/gerrits/{gerritID}:
     delete:
       summary: Delete the gerrit
       description: Delete the gerrit instance for the project
@@ -2029,10 +2086,8 @@ paths:
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectSFID"
+        - $ref: "#/parameters/path-claGroupID"
         - name: gerritID
           in: path
           type: string
@@ -2042,14 +2097,40 @@ paths:
           description: 'Resource Deleted'
         '400':
           $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
+        '404':
+          $ref: '#/responses/not-found'
         '403':
           $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
       tags:
         - gerrits
 
-  /project/{projectID}/gerrits:
+  /cla-group/{claGroupID}/project/{projectSFID}/gerrits:
+    get:
+      summary: Get the gerrits for project and cla-group
+      description: Get the gerrit instance list for the project and cla-group
+      operationId: ListGerrits
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+        - $ref: "#/parameters/path-projectSFID"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/gerrit-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - gerrits
     post:
       summary: Add the gerrit
       description: Adds the gerrit instance for the project
@@ -2059,10 +2140,8 @@ paths:
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - name: projectID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-claGroupID"
+        - $ref: "#/parameters/path-projectSFID"
         - in: body
           name: add-gerrit-input
           schema:
@@ -2075,8 +2154,6 @@ paths:
             $ref: '#/definitions/gerrit'
         '400':
           $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
         '500':
@@ -2307,7 +2384,7 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - company
-  
+
   /user/{userID}/company:
     post:
       summary: api that creates salesforce company
@@ -2324,7 +2401,7 @@ paths:
       responses:
         '200':
           description: 'Success'
-          schema: 
+          schema:
             $ref: '#/definitions/company-output'
         '400':
           $ref: '#/responses/invalid-request'
@@ -2523,6 +2600,16 @@ parameters:
     in: path
     type: string
     required: true
+  companySFID:
+    name: companySFID
+    description: salesforce id of the company
+    in: query
+    type: string
+  gerritName:
+    name: gerritName
+    description: name of the gerrit server
+    in: query
+    type: string
   x-acl:
     name: X-ACL
     description: The access control list header value encoded as base64 - assigned by the API Gateway based on user/request permissions
@@ -2644,8 +2731,17 @@ definitions:
   add-gerrit-input:
     $ref: './common/add-gerrit-input.yaml'
 
+  gerrit-repo:
+    $ref: './common/gerrit-repo.yaml'
+
+  gerrit-repo-list:
+    $ref: './common/gerrit-repo-list.yaml'
+
   gerrit:
     $ref: './common/gerrit.yaml'
+
+  gerrit-list:
+    $ref: './common/gerrit-list.yaml'
 
   github-repositories-group-by-orgs:
     $ref: './common/github-repositories-group-by-orgs.yaml'
@@ -2774,6 +2870,7 @@ definitions:
   company-input:
     type: object
     required:
+      - userEmail
       - companyName
       - companyWebsite
     properties:
@@ -2783,6 +2880,9 @@ definitions:
         example: "Linux Foundation"
       companyWebsite:
         type: string
+      userEmail:
+        type: string
+        example: "wanyaland"
 
   company-output:
     type: object
@@ -2795,7 +2895,7 @@ definitions:
         type: string
       logoURL:
         type: string
-  
+
   cla-manager-distribution:
     type: object
     properties:
@@ -3086,7 +3186,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/active-cla'
-  
+
   notify-cla-manager-list:
     type: object
     title: Cla Manager list and contributor userID for given company and Project
@@ -3112,7 +3212,7 @@ definitions:
         type: string
       name:
         type: string
-  
+
   company-project-cla-list:
     type: object
     properties:
@@ -3211,36 +3311,10 @@ definitions:
         x-omitempty: false
 
   corporate-contributor-list:
-    type: object
-    title: corporate contributors list
-    properties:
-      list:
-        type: array
-        items:
-          $ref: '#/definitions/corporate-contributor'
+    $ref: './common/corporate-contributors-list.yaml'
 
   corporate-contributor:
-    type: object
-    properties:
-      name:
-        type: string
-        example: "john doe"
-        x-omitempty: false
-      linux_foundation_id:
-        type: string
-        example: "john.doe"
-        x-omitempty: false
-      github_id:
-        type: string
-        example: "123456"
-        x-omitempty: false
-      signature_version:
-        type: string
-        example: "v1"
-        x-omitempty: false
-      timestamp:
-        type: string
-        x-omitempty: false
+    $ref: './common/corporate-contributor.yaml'
 
   corporate-signature-input:
     type: object

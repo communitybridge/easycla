@@ -1490,8 +1490,8 @@ class Document(object):
         """
         Setter for the document's file ID that's used as filename in storage.
 
-        :param document_id: The document's file ID.
-        :type document_id: string
+        :param document_file_id: The document's file ID.
+        :type document_file_id: string
         """
         raise NotImplementedError()
 
@@ -1536,8 +1536,8 @@ class Document(object):
         """
         Setter for the document's major version number.
 
-        :param document_revision: The document's major version number.
-        :type document_revision: integer
+        :param version: The document's major version number.
+        :type version: integer
         """
         raise NotImplementedError()
 
@@ -1545,8 +1545,8 @@ class Document(object):
         """
         Setter for the document's minor version number.
 
-        :param document_revision: The document's minor version number.
-        :type document_revision: integer
+        :param version: The document's minor version number.
+        :type version: integer
         """
         raise NotImplementedError()
 
@@ -1590,8 +1590,8 @@ class Document(object):
         """
         Same as set_document_tabs except it accepts a list of dict of values instead.
 
-        :param tabs: List of dict of tab data to set for this document.
-        :type tabs: [dict]
+        :param tabs_data: List of dict of tab data to set for this document.
+        :type tabs_data: [dict]
         """
         raise NotImplementedError()
 
@@ -1608,8 +1608,8 @@ class Document(object):
         """
         Same as add_document_tab except it accepts a dict of values instead.
 
-        :param tab: Data on the tab to add.
-        :type tab: dict
+        :param tab_data: Data on the tab to add.
+        :type tab_data: dict
         """
         raise NotImplementedError()
 
@@ -1722,8 +1722,8 @@ class DocumentTab(object):
         """
         Setter for the document tab's X position.
 
-        :param position_x: The document tab's X position.
-        :type position_x: int
+        :param tab_position_x: The document tab's X position.
+        :type tab_position_x: int
         """
         raise NotImplementedError()
 
@@ -1731,8 +1731,8 @@ class DocumentTab(object):
         """
         Setter for the document tab's Y position.
 
-        :param position_y: The document tab's Y position.
-        :type position_y: int
+        :param tab_position_y: The document tab's Y position.
+        :type tab_position_y: int
         """
         raise NotImplementedError()
 
@@ -1883,7 +1883,7 @@ class Gerrit(object):
         Should populate the current object.
 
         :param gerrit_id: The Gerrit instance's ID.
-        :type organization_id: string
+        :type gerrit_id: string
         """
         raise NotImplementedError()
 
@@ -2108,6 +2108,7 @@ class Event(object):
 
         raise NotImplementedError()
 
+
 class ProjectCLAGroup(object):
     """
     Interface to the ProjectCLA Model
@@ -2152,6 +2153,7 @@ class ProjectCLAGroup(object):
         :rtype: [cla.models.model_interfaces.ProjectCLAGroup]
         """
         raise NotImplementedError()
+
 
 class CCLAWhitelistRequest(object):
     """

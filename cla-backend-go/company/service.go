@@ -33,6 +33,8 @@ const (
 
 // IService interface defining the functions for the company service
 type IService interface { // nolint
+	CreateOrgFromExternalID(companySFID string) (*models.Company, error)
+
 	GetCompanies() (*models.Companies, error)
 	GetCompany(companyID string) (*models.Company, error)
 	GetCompanyByExternalID(companySFID string) (*models.Company, error)
@@ -411,18 +413,14 @@ func (s service) sendRequestAccessEmail(companyModel *models.Company, requesterN
 By approving this request the user could view and apply for CLA Manager
 status on projects associated with your company. </p>
 %s
-<p>To get started, please log into the EasyCLA Corporate Console at 
-https://%s, and select your company. From there you will
-be able to view the list of projects which have EasyCLA configured and apply
-for CLA Manager status.
+<p>To get started, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>, and select your
+company. From there you will be able to view the list of projects which have EasyCLA configured and apply for CLA
+Manager status.
 </p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
-		recipientName, companyName, companyName, requestedUserInfo, s.corporateConsoleURL)
+%s
+%s`,
+		recipientName, companyName, companyName, requestedUserInfo, utils.GetCorporateURL(false),
+		utils.GetEmailHelpContent(false), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -446,18 +444,14 @@ func (s service) sendRequestApprovedEmailToRecipient(companyModel *models.Compan
 This means that you can now view and apply for CLA Manager status on
 projects associated with your company.
 </p>
-<p>To get started, please log into the EasyCLA Corporate Console at 
-https://%s, and select your company. From there you will
-be able to view the list of projects which have EasyCLA configured and apply
-for CLA Manager status.
+<p>To get started, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>, and select your
+company. From there you will be able to view the list of projects which have EasyCLA configured and apply for CLA
+Manager status.
 </p>
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
-		recipientName, companyName, companyName, s.corporateConsoleURL)
+%s
+%s`,
+		recipientName, companyName, companyName, utils.GetCorporateURL(false),
+		utils.GetEmailHelpContent(false), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -513,13 +507,10 @@ func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Compan
 If you have further questions about this denial, please contact one of the existing managers from
 %s:</p>
 %s
-<p>If you need help or have questions about EasyCLA, you can
-<a href="https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla" target="_blank">read the documentation</a> or 
-<a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out to us for
-support</a>.</p>
-<p>Thanks,
-<p>EasyCLA support team</p>`,
-		recipientName, companyName, companyName, companyManagerText)
+%s
+%s`,
+		recipientName, companyName, companyName, companyManagerText,
+		utils.GetEmailHelpContent(false), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -558,7 +549,7 @@ func (s service) GetCompanyByExternalID(companySFID string) (*models.Company, er
 		return comp, nil
 	}
 	if err == ErrCompanyDoesNotExist {
-		comp, err = s.createOrgFromExternalID(companySFID)
+		comp, err = s.CreateOrgFromExternalID(companySFID)
 		if err != nil {
 			return comp, err
 		}
@@ -584,20 +575,28 @@ func (s service) SearchOrganizationByName(orgName string) (*models.OrgList, erro
 	return result, nil
 }
 
-func (s service) createOrgFromExternalID(orgID string) (*models.Company, error) {
-	f := logrus.Fields{"orgID": orgID}
+// CreateOrgFromExternalID creates a new EasyCLA company from the external SF Organization ID
+func (s service) CreateOrgFromExternalID(companySFID string) (*models.Company, error) {
+	f := logrus.Fields{"companySFID": companySFID}
 	osc := organization_service.GetClient()
 	log.WithFields(f).Debugf("getting organization details")
-	org, err := osc.GetOrganization(orgID)
+	org, err := osc.GetOrganization(companySFID)
 	if err != nil {
 		log.WithFields(f).Errorf("getting organization details failed. error = %s", err.Error())
 		return nil, err
 	}
+
+	// Add some fields to the logger
+	f["companyName"] = org.Name
+	f["companyStatus"] = org.Status
+
+	// Query the platform user service to locate the company admin
 	log.WithFields(f).Debugf("getting company-admin information")
-	companyAdmin, err := getCompanyAdmin(orgID)
+	companyAdmin, err := getCompanyAdmin(companySFID)
 	if err != nil {
 		return nil, err
 	}
+
 	f["company-admin"] = companyAdmin
 	log.WithFields(f).Debugf("getting user information from cla")
 	claUser, err := s.userService.GetUserByLFUserName(companyAdmin.LfUsername)
@@ -614,12 +613,15 @@ func (s service) createOrgFromExternalID(orgID string) (*models.Company, error) 
 			return nil, err
 		}
 	}
+
 	newComp := &models.Company{
 		CompanyACL:        []string{companyAdmin.LfUsername},
 		CompanyExternalID: org.ID,
 		CompanyName:       org.Name,
 		CompanyManagerID:  claUser.UserID,
+		Note:              "created based on SF Organization Service record",
 	}
+
 	f["company"] = newComp
 	log.WithFields(f).Debugf("creating cla company")
 	// create company

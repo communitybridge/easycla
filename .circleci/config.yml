@@ -171,11 +171,17 @@ jobs:
           name: Build
           command: |
             cd cla-backend-go
-            make build-aws-lambda
-            make build-metrics-lambda
-            make build-dynamo-events-lambda
-            make build-zipbuilder-schedular-lambda
-            make build-zipbuilder-lambda
+            echo "Building AWS Lambda - API..."
+            make build-aws-lambda-linux
+            echo "Building AWS Lambda - Metrics..."
+            make build-metrics-lambda-linux
+            echo "Building AWS Lambda - DynamoDB Events Handler..."
+            make build-dynamo-events-lambda-linux
+            echo "Building AWS Lambda - Zip Builder Scheduler..."
+            make build-zipbuilder-scheduler-lambda-linux
+            echo "Building AWS Lambda - Zip Builder Handler..."
+            make build-zipbuilder-lambda-linux
+            echo "Building Functional Tests..."
             make build-functional-tests-linux
       - run:
           name: Test
@@ -197,7 +203,7 @@ jobs:
             - cla-backend-go/backend-aws-lambda
             - cla-backend-go/metrics-aws-lambda
             - cla-backend-go/dynamo-events-lambda
-            - cla-backend-go/zipbuilder-schedular-lambda
+            - cla-backend-go/zipbuilder-scheduler-lambda
             - cla-backend-go/zipbuilder-lambda
             - cla-backend-go/functional-tests
 
@@ -273,7 +279,7 @@ jobs:
             cp ~/cla-backend-go/backend-aws-lambda ~/project/cla-backend/
             cp ~/cla-backend-go/metrics-aws-lambda ~/project/cla-backend/
             cp ~/cla-backend-go/dynamo-events-lambda ~/project/cla-backend/
-            cp ~/cla-backend-go/zipbuilder-schedular-lambda ~/project/cla-backend/
+            cp ~/cla-backend-go/zipbuilder-scheduler-lambda ~/project/cla-backend/
             cp ~/cla-backend-go/zipbuilder-lambda ~/project/cla-backend/
 
             ls -alF ~/project/cla-backend/
@@ -285,7 +291,7 @@ jobs:
             if [[ ! -f metrics-aws-lambda ]]; then echo "Missing metrics-aws-lambda binary file. Exiting..."; exit 1; fi
             if [[ ! -f dynamo-events-lambda ]]; then echo "Missing dynamo-events-lambda binary file. Exiting..."; exit 1; fi
             if [[ ! -f zipbuilder-lambda ]]; then echo "Missing zipbuilder-lambda binary file. Exiting..."; exit 1; fi
-            if [[ ! -f zipbuilder-schedular-lambda ]]; then echo "Missing zipbuilder-schedular-lambda binary file. Exiting..."; exit 1; fi
+            if [[ ! -f zipbuilder-scheduler-lambda ]]; then echo "Missing zipbuilder-scheduler-lambda binary file. Exiting..."; exit 1; fi
             if [[ ! -f serverless.yml ]]; then echo "Missing serverless.yml file. Exiting..."; exit 1; fi
             if [[ ! -f serverless-authorizer.yml ]]; then echo "Missing serverless-authorizer.yml file. Exiting..."; exit 1; fi
             yarn sls deploy --force --stage ${STAGE} --region us-east-1
