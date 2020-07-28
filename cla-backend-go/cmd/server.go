@@ -247,6 +247,7 @@ func server(localMode bool) http.Handler {
 		ClientSecret: configFile.LFGroup.ClientSecret,
 		RefreshToken: configFile.LFGroup.RefreshToken,
 	})
+	v2GerritService := v2Gerrits.NewService()
 	v2ClaGroupService := cla_groups.NewService(projectService, templateService, projectClaGroupRepo, metricsRepo)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
@@ -285,7 +286,7 @@ func server(localMode bool) http.Handler {
 	repositories.Configure(api, repositoriesService, eventsService)
 	v2Repositories.Configure(v2API, v2RepositoriesService, eventsService)
 	gerrits.Configure(api, gerritService, projectService, eventsService)
-	v2Gerrits.Configure(v2API, gerritService, projectService, eventsService, projectClaGroupRepo)
+	v2Gerrits.Configure(v2API, gerritService, v2GerritService, projectService, eventsService, projectClaGroupRepo)
 	v2Company.Configure(v2API, v2CompanyService, companyRepo, configFile.LFXPortalURL)
 	cla_manager.Configure(api, claManagerService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 	v2ClaManager.Configure(v2API, v2ClaManagerService, configFile.LFXPortalURL, projectClaGroupRepo, userRepo, eventsService)
