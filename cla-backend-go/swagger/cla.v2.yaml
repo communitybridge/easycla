@@ -3371,16 +3371,27 @@ definitions:
 
   create-cla-group-input:
     type: object
+    required:
+      - cla_group_name
+      - ccla_enabled
+      - ccla_requires_icla
+      - icla_enabled
+      - foundation_sfid
+      - template_fields
     properties:
       cla_group_name:
         type: string
         example: 'OpenCue'
         description: name of the cla group
         pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+-]*){2,255}$'
+        minLength: 3
+        maxLength: 256
       cla_group_description:
         type: string
         example: 'cla group created for OpenCue project'
         description: description of the cla group
+        minLength: 3
+        maxLength: 256
       ccla_enabled:
         type: boolean
         example: true
