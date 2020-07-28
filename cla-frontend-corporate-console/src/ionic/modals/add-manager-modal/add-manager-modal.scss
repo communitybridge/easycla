@@ -4,5 +4,8 @@ ion-label {
     font-size: 14px;
     white-space: normal;
     color: #666;
+    &.danger {
+      color: #f53d3d;
+    }
   }
 }
