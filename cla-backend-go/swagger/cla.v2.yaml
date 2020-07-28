@@ -2051,7 +2051,7 @@ paths:
 
   /gerrit/repos:
     get:
-      summary: Returns a list of repositories under the specified gerrit instance
+      summary: Get Gerrit Repositories
       description: Returns a list of repositories under the specified gerrit instance
       operationId: getGerritRepos
       parameters:
