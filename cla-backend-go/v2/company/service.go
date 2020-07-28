@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 
 	"github.com/jinzhu/copier"
@@ -68,6 +70,7 @@ type Service interface {
 	DeleteCompanyByID(companyID string) error
 	DeleteCompanyBySFID(companySFID string) error
 	GetCompanyCLAGroupManagers(companyID, claGroupID string) (*models.CompanyClaManagers, error)
+	autoCreateCompany(companySFID string) (*v1Models.Company, error)
 }
 
 // ProjectRepo contains project repo methods
@@ -88,13 +91,16 @@ func NewService(sigRepo signatures.SignatureRepository, projectRepo ProjectRepo,
 }
 
 func (s *service) GetCompanyProjectCLAManagers(companyID string, projectSFID string) (*models.CompanyClaManagers, error) {
+	f := logrus.Fields{"projectSFID": projectSFID, "companyID": companyID}
 	var err error
 	claGroups, err := s.getCLAGroupsUnderProjectOrFoundation(projectSFID)
 	if err != nil {
+		log.WithFields(f).Warnf("problem fetching CLA Groups under project or foundation, error: %+v", err)
 		return nil, err
 	}
 	sigs, err := s.getAllCCLASignatures(companyID)
 	if err != nil {
+		log.WithFields(f).Warnf("problem fetching CLA signatures, error: %+v", err)
 		return nil, err
 	}
 	claManagers := make([]*models.CompanyClaManager, 0)
@@ -118,6 +124,7 @@ func (s *service) GetCompanyProjectCLAManagers(companyID string, projectSFID str
 	var usermap map[string]*v2UserServiceModels.User
 	usermap, err = getUsersInfo(lfUsernames.List())
 	if err != nil {
+		log.WithFields(f).Warnf("problem fetching users information, error: %+v", err)
 		return nil, err
 	}
 	// fill user info
@@ -132,14 +139,17 @@ func (s *service) GetCompanyProjectCLAManagers(companyID string, projectSFID str
 }
 
 func (s *service) GetCompanyProjectActiveCLAs(companyID string, projectSFID string) (*models.ActiveClaList, error) {
+	f := logrus.Fields{"projectSFID": projectSFID, "companyID": companyID}
 	var err error
 	claGroups, err := s.getCLAGroupsUnderProjectOrFoundation(projectSFID)
 	if err != nil {
+		log.WithFields(f).Warnf("problem fetching CLA Groups under project or foundation, error: %+v", err)
 		return nil, err
 	}
 	var out models.ActiveClaList
 	sigs, err := s.getAllCCLASignatures(companyID)
 	if err != nil {
+		log.WithFields(f).Warnf("problem fetching CCLA signatures, error: %+v", err)
 		return nil, err
 	}
 	out.List = make([]*models.ActiveCla, 0, len(sigs))
@@ -165,9 +175,11 @@ func (s *service) GetCompanyProjectActiveCLAs(companyID string, projectSFID stri
 }
 
 func (s *service) GetCompanyProjectContributors(projectSFID string, companySFID string, searchTerm string) (*models.CorporateContributorList, error) {
+	f := logrus.Fields{"projectSFID": projectSFID, "companySFID": companySFID, "searchTerm": searchTerm}
 	list := make([]*models.CorporateContributor, 0)
 	sigs, err := s.getAllCompanyProjectEmployeeSignatures(companySFID, projectSFID)
 	if err != nil {
+		log.WithFields(f).Warnf("problem fetching all company project employee signatures, error: %+v", err)
 		return nil, err
 	}
 	if len(sigs) == 0 {
@@ -197,12 +209,13 @@ func (s *service) GetCompanyProjectContributors(projectSFID string, companySFID 
 }
 
 func (s *service) CreateCompany(companyName string, companyWebsite string, userID string, LFXPortalURL string) (*models.CompanyOutput, error) {
-
+	f := logrus.Fields{"companyName": companyName, "companyWebsite": companyWebsite, "userID": userID, "LFXPortalURL": LFXPortalURL}
 	var lfUser *v2UserServiceModels.User
 
 	// Get EasyCLA User
 	claUser, claUserErr := s.userRepo.GetUser(userID)
 	if claUserErr != nil {
+		log.WithFields(f).Warnf("unable to lookup user by ID, error: %+v", claUserErr)
 		return nil, ErrCLAUserNotFound
 	}
 
@@ -211,6 +224,7 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 	log.Debugf("Creating Organization : %s Website: %s", companyName, companyWebsite)
 	org, err := orgClient.CreateOrg(companyName, companyWebsite)
 	if err != nil {
+		log.WithFields(f).Warnf("unable to create platform organization service, error: %+v", err)
 		return nil, err
 	}
 
@@ -234,11 +248,11 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 			found, lfErr := userClient.SearchUserByEmail(filteredEmails[i])
 			if lfErr != nil {
 				userEmail = &filteredEmails[i]
-				log.Debugf("User email :%s is not associated with LF", filteredEmails[i])
+				log.WithFields(f).Debugf("User email: %s is not associated with LF", filteredEmails[i])
 				continue
 			}
 			lfUser = found
-			log.Debugf("User email : %s has an LFx account", filteredEmails[i])
+			log.WithFields(f).Debugf("User email: %s has an LFx account", filteredEmails[i])
 			break
 		}
 	}
@@ -247,20 +261,20 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 		// Set lf email
 		var email string
 		if claUser.LfEmail != "" {
-			log.Debugf("Setting email to: %s", claUser.LfEmail)
+			log.WithFields(f).Debugf("Setting email to: %s", claUser.LfEmail)
 			email = claUser.LfEmail
 		} else if lfUser != nil && len(lfUser.Emails) > 0 {
-			log.Debugf("Setting email to: %s", *lfUser.Emails[0].EmailAddress)
+			log.WithFields(f).Debugf("Setting email to: %s", *lfUser.Emails[0].EmailAddress)
 			email = *lfUser.Emails[0].EmailAddress
 		}
 
 		// set lf username
 		var lfUsername string
 		if claUser.LfUsername != "" {
-			log.Debugf("Setting username to: %s", claUser.LfUsername)
+			log.WithFields(f).Debugf("Setting username to: %s", claUser.LfUsername)
 			lfUsername = claUser.LfUsername
 		} else if lfUser != nil && lfUser.Username != "" {
-			log.Debugf("Setting username to: %s", lfUser.Username)
+			log.WithFields(f).Debugf("Setting username to: %s", lfUser.Username)
 			lfUsername = lfUser.Username
 		}
 
@@ -268,28 +282,28 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 		roleID, designeeErr := acsClient.GetRoleID("company-owner")
 		if designeeErr != nil {
 			msg := "Problem getting role ID for company-owner"
-			log.Warn(msg)
+			log.WithFields(f).Warn(msg)
 			return nil, designeeErr
 		}
 
 		if lfUsername == "" {
 			msg := fmt.Sprintf("EasyCLA - Bad Request - User with lfEmail: %s has no username required for setting scope ", email)
-			log.Warn(msg)
+			log.WithFields(f).Warn(msg)
 			return nil, ErrNoLfUsername
 		}
 		err = orgClient.CreateOrgUserRoleOrgScope(email, org.ID, roleID)
 		if err != nil {
-			log.Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", email, err)
+			log.WithFields(f).Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", email, err)
 			return nil, err
 		}
-		log.Debugf("User :%s has been assigned the company-owner role to organization: %s ", email, org.Name)
+		log.WithFields(f).Debugf("User :%s has been assigned the company-owner role to organization: %s ", email, org.Name)
 		//Send Email to User with instructions to complete Company profile
-		log.Debugf("Sending Email to user :%s to complete setup for newly created Org : %s ", email, org.Name)
+		log.WithFields(f).Debugf("Sending Email to user :%s to complete setup for newly created Org: %s ", email, org.Name)
 		sendEmailToUserCompanyProfile(org.Name, email, lfUsername, LFXPortalURL)
 
 	} else if userEmail != nil {
 		// Send User invite
-		log.Debugf("User invite initiated for user with email : %s", *userEmail)
+		log.WithFields(f).Debugf("User invite initiated for user with email: %s", *userEmail)
 		acsErr := acsClient.SendUserInvite(userEmail, "contributor", "organization", org.ID, "userinvite", nil, nil)
 		if acsErr != nil {
 			return nil, acsErr
@@ -297,7 +311,7 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 	}
 
 	// Create Easy CLA Company
-	log.Debugf("Creating EasyCLA company : %s ", companyName)
+	log.WithFields(f).Debugf("Creating EasyCLA company: %s ", companyName)
 	// OrgID used as externalID for the easyCLA Company
 	// Create a new company model for the create function
 	createCompanyModel := &v1Models.Company{
@@ -310,7 +324,8 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 	_, createErr := s.companyRepo.CreateCompany(createCompanyModel)
 	//easyCLAErr := s.repo.CreateCompany(companyName, org.ID, userID)
 	if createErr != nil {
-		log.Warnf("Failed to create EasyCLA company for company: %s ", companyName)
+		log.WithFields(f).Warnf("Failed to create EasyCLA company for company: %s, error: %+v",
+			companyName, createErr)
 		return nil, createErr
 	}
 
@@ -319,7 +334,6 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userI
 		CompanyWebsite: companyWebsite,
 		LogoURL:        org.LogoURL,
 	}, nil
-
 }
 
 // GetCompanyByName deletes the company by name
@@ -370,13 +384,31 @@ func (s *service) GetCompanyByID(companyID string) (*models.Company, error) {
 
 // GetCompanyBySFID retrieves the company by external SFID
 func (s *service) GetCompanyBySFID(companySFID string) (*models.Company, error) {
+	f := logrus.Fields{"companySFID": companySFID}
 	companyModel, err := s.companyRepo.GetCompanyByExternalID(companySFID)
 	if err != nil {
+		// If we were unable to find the company/org in our local database, try to auto-create based
+		// on the existing SF record
+		if err == company.ErrCompanyDoesNotExist {
+			log.WithFields(f).Debug("company not found in EasyCLA database - attempting to auto-create from platform organization service record")
+			newCompanyModel, createCompanyErr := s.autoCreateCompany(companySFID)
+			if createCompanyErr != nil {
+				log.WithFields(f).Warnf("problem creating company from platform organization SF record, error: %+v",
+					createCompanyErr)
+				return nil, createCompanyErr
+			}
+			if newCompanyModel == nil {
+				log.WithFields(f).Warnf("problem creating company from SF records - created model is nil")
+				return nil, company.ErrCompanyDoesNotExist
+			}
+			// Success, fall through and continue processing
+			companyModel = newCompanyModel
+		}
 		return nil, err
 	}
 
 	if companyModel == nil {
-		log.Debugf("search by company SFID: %s didn't locate the record", companySFID)
+		log.WithFields(f).Debugf("search by company SFID didn't locate the record")
 		return nil, nil
 	}
 
@@ -384,7 +416,7 @@ func (s *service) GetCompanyBySFID(companySFID string) (*models.Company, error) 
 	var v2CompanyModel v2Models.Company
 	copyErr := copier.Copy(&v2CompanyModel, &companyModel)
 	if copyErr != nil {
-		log.Warnf("problem converting v1 company model to a v2 company model, error: %+v", copyErr)
+		log.WithFields(f).Warnf("problem converting v1 company model to a v2 company model, error: %+v", copyErr)
 		return nil, copyErr
 	}
 
@@ -402,6 +434,7 @@ func (s *service) DeleteCompanyBySFID(companyID string) error {
 }
 
 func (s *service) GetCompanyProjectCLA(authUser *auth.User, companySFID, projectSFID string) (*models.CompanyProjectClaList, error) {
+	f := logrus.Fields{"authUserName": authUser.UserName, "authUserEmail": authUser.Email, "companySFID": companySFID, "projectSFID": projectSFID}
 	var canSign bool
 	resources := authUser.ResourceIDsByTypeAndRole(auth.ProjectOrganization, "cla-manager-designee")
 	projectOrg := fmt.Sprintf("%s|%s", projectSFID, companySFID)
@@ -411,26 +444,54 @@ func (s *service) GetCompanyProjectCLA(authUser *auth.User, companySFID, project
 			break
 		}
 	}
-	companyModel, err := s.companyRepo.GetCompanyByExternalID(companySFID)
-	if err != nil {
-		return nil, err
+
+	// Attempt to locate the company model in our database
+	log.WithFields(f).Debug("locating company by SF ID")
+	var companyModel *v1Models.Company
+	companyModel, companyErr := s.companyRepo.GetCompanyByExternalID(companySFID)
+	if companyErr != nil {
+		// If we were unable to find the company/org in our local database, try to auto-create based
+		// on the existing SF record
+		if companyErr == company.ErrCompanyDoesNotExist {
+
+			log.WithFields(f).Debug("company not found in EasyCLA database - attempting to auto-create from platform organization service record")
+			var createCompanyErr error
+			companyModel, createCompanyErr = s.autoCreateCompany(companySFID)
+			if createCompanyErr != nil {
+				log.WithFields(f).Warnf("problem creating company from platform organization SF record, error: %+v",
+					createCompanyErr)
+				return nil, createCompanyErr
+			}
+			if companyModel == nil {
+				log.WithFields(f).Warnf("problem creating company from SF records - created model is nil")
+				return nil, company.ErrCompanyDoesNotExist
+			}
+			// Success, fall through and continue processing
+		} else {
+			return nil, companyErr
+		}
 	}
 
 	claGroups, err := s.getCLAGroupsUnderProjectOrFoundation(projectSFID)
 	if err != nil {
+		log.WithFields(f).Warnf("problem fetching CLA Groups under project or foundation, error: %+v", err)
 		return nil, err
 	}
 
 	activeCLAList, err := s.GetCompanyProjectActiveCLAs(companyModel.CompanyID, projectSFID)
 	if err != nil {
+		log.WithFields(f).Warnf("problem fetching company project active CLAs, error: %+v", err)
 		return nil, err
 	}
+
 	resp := &models.CompanyProjectClaList{
 		SignedClaList:       activeCLAList.List,
 		UnsignedProjectList: make([]*models.UnsignedProject, 0),
 	}
+
 	for _, activeCLA := range activeCLAList.List {
 		// remove cla groups for which we have signed cla
+		log.WithFields(f).Debugf("removing CLA Groups with active CLA, CLA Group: %+v, error: %+v", activeCLA, err)
 		delete(claGroups, activeCLA.ProjectID)
 	}
 
@@ -446,48 +507,51 @@ func (s *service) GetCompanyProjectCLA(authUser *auth.User, companySFID, project
 			IclaEnabled:  claGroup.IclaEnabled,
 			CclaEnabled:  claGroup.CclaEnabled,
 		}
+		log.WithFields(f).Debugf("adding unsigned CLA Group: %+v, error: %+v", unsignedProject, err)
 		resp.UnsignedProjectList = append(resp.UnsignedProjectList, unsignedProject)
 	}
+
 	return resp, nil
 }
 
 // GetCompanyCLAGroupManagers when provided the internal company ID and CLA Groups ID, this routine returns the list of
 // corresponding CLA managers
 func (s *service) GetCompanyCLAGroupManagers(companyID, claGroupID string) (*models.CompanyClaManagers, error) {
+	f := logrus.Fields{"companyID": companyID, "claGroupID": claGroupID}
 	signed, approved := true, true
 	pageSize := int64(10)
 	sigModel, err := s.signatureRepo.GetProjectCompanySignature(companyID, claGroupID, &signed, &approved, nil, &pageSize)
 	if err != nil {
-		log.Warnf("unable to query CCLA signature using Company ID: %s and CLA Group ID: %s, signed: true, approved: true, error: %+v",
+		log.WithFields(f).Warnf("unable to query CCLA signature using Company ID: %s and CLA Group ID: %s, signed: true, approved: true, error: %+v",
 			companyID, claGroupID, err)
 		return nil, err
 	}
 
 	if sigModel == nil {
-		log.Warnf("unable to query CCLA signature using Company ID: %s and CLA Group ID: %s, signed: true, approved: true - no signature found",
+		log.WithFields(f).Warnf("unable to query CCLA signature using Company ID: %s and CLA Group ID: %s, signed: true, approved: true - no signature found",
 			companyID, claGroupID)
 		return nil, nil
 	}
 
 	projectModel, projErr := s.projectRepo.GetProjectByID(claGroupID, DontLoadRepoDetails)
 	if projErr != nil {
-		log.Warnf("unable to query CLA Group ID: %s, error: %+v", claGroupID, err)
+		log.WithFields(f).Warnf("unable to query CLA Group ID: %s, error: %+v", claGroupID, err)
 		return nil, err
 	}
 
 	if projectModel == nil {
-		log.Warnf("unable to query CLA Group ID: %s - no CLA Group found", claGroupID)
+		log.WithFields(f).Warnf("unable to query CLA Group ID: %s - no CLA Group found", claGroupID)
 		return nil, nil
 	}
 
 	companyModel, companyErr := s.companyRepo.GetCompany(companyID)
 	if companyErr != nil {
-		log.Warnf("unable to query Company ID: %s, error: %+v", companyID, companyErr)
+		log.WithFields(f).Warnf("unable to query Company ID: %s, error: %+v", companyID, companyErr)
 		return nil, err
 	}
 
 	if companyModel == nil {
-		log.Warnf("unable to query Company ID: %s - no company by ID found", companyID)
+		log.WithFields(f).Warnf("unable to query Company ID: %s - no company by ID found", companyID)
 		return nil, nil
 	}
 
@@ -873,6 +937,44 @@ func (s *service) getCompanyAndClaGroup(companySFID, projectSFID string) (*v1Mod
 		return nil, nil, projectErr
 	}
 	return comp, claGroup, nil
+}
+
+// autoCreateCompany helper function to create a new company record based on the SF ID and underlying record in SF
+func (s service) autoCreateCompany(companySFID string) (*v1Models.Company, error) {
+	f := logrus.Fields{"companySFID": companySFID}
+	// Get a reference to the platform organization service client
+	orgClient := orgService.GetClient()
+	log.WithFields(f).Debug("locating Organization in SF")
+
+	// Lookup organization by ID in the Org Service
+	sfOrgModel, sfOrgErr := orgClient.GetOrganization(companySFID)
+	if sfOrgErr != nil {
+		log.WithFields(f).Warnf("unable to locate platform organization record by SF ID, error: %+v", sfOrgErr)
+		return nil, sfOrgErr
+	}
+
+	// If we were unable to lookup the company record in SF - we tried our best - return not exist error
+	if sfOrgModel == nil {
+		log.WithFields(f).Warn("unable to locate platform organization record by SF ID - record not found")
+		return nil, company.ErrCompanyDoesNotExist
+	}
+
+	log.WithFields(f).Debug("found platform organization record in SF")
+	// Auto-create based on the SF record information
+	companyModel, companyCreateErr := s.companyRepo.CreateCompany(&v1Models.Company{
+		CompanyExternalID: companySFID,
+		CompanyName:       sfOrgModel.Name,
+		Note:              "created on-demand by v4 service based on SF Organization Service record",
+	})
+
+	if companyCreateErr != nil || companyModel == nil {
+		log.WithFields(f).Warnf("unable to create EasyCLA company from platform SF organization record, error: %+v",
+			companyCreateErr)
+		return nil, companyCreateErr
+	}
+
+	log.WithFields(f).Debugf("successfully created EasyCLA company record: %+v", companyModel)
+	return companyModel, nil
 }
 
 func sendEmailToUserCompanyProfile(orgName string, userEmail string, username string, LFXPortalURL string) {

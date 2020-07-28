@@ -48,6 +48,13 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 					formatErr := errors.New("user role scopes not found for cla-signatory role ")
 					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(formatErr))
 				}
+				if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
+					formatErr := errors.New("user role scope conflict")
+					return sign.NewRequestCorporateSignatureConflict().WithPayload(errorResponse(formatErr))
+				}
+				if err == ErrNotInOrg {
+					return sign.NewRequestCorporateSignatureConflict().WithPayload(errorResponse(err))
+				}
 				return sign.NewRequestCorporateSignatureBadRequest().WithPayload(errorResponse(err))
 			}
 			return sign.NewRequestCorporateSignatureOK().WithPayload(resp)
