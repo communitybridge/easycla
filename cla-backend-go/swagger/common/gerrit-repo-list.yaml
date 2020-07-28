@@ -1,6 +1,6 @@
 type: object
 properties:
-  list:
+  repos:
     type: array
     items:
       type: object
