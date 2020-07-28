@@ -1908,6 +1908,46 @@ paths:
           $ref: '#/responses/conflict'
       tags:
         - cla-manager
+  
+  /company/{companySFID}/claGroup/{claGroupID}/cla-manager-designee:
+    post:
+      summary: Assigns CLA Manager designee
+      description: Assigns CLA Manager designee to a given user
+      operationId: createCLAManagerDesigneeByGroup
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+        - $ref: "#/parameters/path-companySFID"
+        - name: body
+          in: body
+          schema:
+            type: object
+            x-nullable: false
+            title: CLA Manager designee
+            description: User object used for CLA Manager designee
+            properties:
+              userEmail:
+                type: string
+
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/cla-manager-designees'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - cla-manager
+  
 
   /company/{companySFID}/project/{projectSFID}/cla-manager-designee:
     post:
@@ -3016,6 +3056,17 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/company-cla-manager'
+    
+  cla-manager-designees:
+    type: object
+    title: cla manager designees
+    description: List of cla manager designee roles for a user
+    properties:
+      list:
+        type: array
+        items:
+          $ref:
+            '#/definitions/cla-manager-designee'
 
   cla-manager-designee:
     type: object
