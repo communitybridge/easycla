@@ -27,6 +27,7 @@ export class AddManagerModal {
   managerEmail: string;
   managerLFID: string;
   errorMsg: string;
+
   linuxFoundationIdentityURL: string = generalConstants.linuxFoundationIdentityURL;
 
   constructor(
@@ -46,22 +47,23 @@ export class AddManagerModal {
   }
 
   submit() {
-    if (/[~`!@#$%\^&*()+=\-\[\]\\';,/{}|\\":<>\?]/g.test(this.form.value.managerLFID)) {
-      this.errorMsg = 'Special characters are not allowed';
-      return;
-    }
     this.submitAttempt = true;
     this.addManager();
   }
 
   addManager() {
-    this.claService.addCLAManager(this.companyId, this.projectId, this.form.getRawValue()).subscribe((result) => {
-      if (result.errors) {
-        this.errorMsg = result.errors[0];
-      } else {
-        this.dismiss(true);
+    this.claService.addCLAManager(this.companyId, this.projectId, this.form.getRawValue()).subscribe(
+      (result) => {
+        if (result.errors) {
+          this.errorMsg = result.errors[0];
+        } else {
+          this.dismiss(true);
+        }
+      },
+      (exception) => {
+        this.errorMsg = 'User not found with given LFID.';
       }
-    });
+    );
   }
 
   dismiss(data = false) {
