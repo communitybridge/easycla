@@ -46,10 +46,6 @@ export class AddManagerModal {
   }
 
   submit() {
-    if (/[~`!@#$%\^&*()+=\-\[\]\\';,/{}|\\":<>\?]/g.test(this.form.value.managerLFID)) {
-      this.errorMsg = 'Special characters are not allowed';
-      return;
-    }
     this.submitAttempt = true;
     this.addManager();
   }
