@@ -25,6 +25,7 @@ require (
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-openapi/swag v0.19.9
 	github.com/go-openapi/validate v0.19.10
+	github.com/go-resty/resty/v2 v2.3.0
 	github.com/go-swagger/go-swagger v0.23.1-0.20200615161556-13907db9c480 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/google/go-github v17.0.0+incompatible
