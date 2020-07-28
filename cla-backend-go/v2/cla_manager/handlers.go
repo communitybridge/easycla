@@ -31,7 +31,8 @@ const (
 )
 
 // Configure is the API handler routine for CLA Manager routes
-func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string, projectClaGroupRepo projects_cla_groups.Repository, easyCLAUserRepo v1User.RepositoryService, eventsService events.Service) {
+func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string, projectClaGroupRepo projects_cla_groups.Repository,
+	easyCLAUserRepo v1User.RepositoryService, eventsService events.Service) {
 	api.ClaManagerCreateCLAManagerHandler = cla_manager.CreateCLAManagerHandlerFunc(func(params cla_manager.CreateCLAManagerParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
@@ -115,6 +116,44 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		return cla_manager.NewCreateCLAManagerDesigneeOK().WithPayload(claManagerDesignee)
 	})
 
+	api.ClaManagerCreateCLAManagerDesigneeByGroupHandler = cla_manager.CreateCLAManagerDesigneeByGroupHandlerFunc(
+		func(params cla_manager.CreateCLAManagerDesigneeByGroupParams, authUser *auth.User) middleware.Responder {
+			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+				return cla_manager.NewCreateCLAManagerDesigneeForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAManagerDesignee with Organization scope of %s",
+						authUser.UserName, params.CompanySFID),
+				})
+			}
+			projectCLAGroups, getErr := projectClaGroupRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
+			if getErr != nil {
+				msg := fmt.Sprintf("Error getting SF projects for claGroup: %s ", params.ClaGroupID)
+				log.Warn(msg)
+				return cla_manager.NewCreateCLAManagerDesigneeByGroupBadRequest().WithPayload(
+					&models.ErrorResponse{
+						Message: msg,
+						Code:    "400",
+					})
+			}
+			designeeScopes := []*models.ClaManagerDesignee{}
+			for _, pcg := range projectCLAGroups {
+				claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, pcg.ProjectSFID, params.Body.UserEmail)
+				if err != nil {
+					msg := fmt.Sprintf("Creating cla manager designee fail for SF project : %s ", pcg.ProjectSFID)
+					log.Warn(msg)
+					return cla_manager.NewCreateCLAManagerDesigneeByGroupBadRequest().WithPayload(
+						&models.ErrorResponse{
+							Message: msg,
+							Code:    "400",
+						})
+				}
+				designeeScopes = append(designeeScopes, claManagerDesignee)
+			}
+			return cla_manager.NewCreateCLAManagerDesigneeByGroupOK().WithPayload(&models.ClaManagerDesignees{
+				List: designeeScopes,
+			})
+
+		})
 	api.ClaManagerInviteCompanyAdminHandler = cla_manager.InviteCompanyAdminHandlerFunc(func(params cla_manager.InviteCompanyAdminParams) middleware.Responder {
 
 		// Get Contributor details
