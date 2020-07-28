@@ -61,8 +61,7 @@ export class AddManagerModal {
         }
       },
       (exception) => {
-        const error = JSON.parse(exception._body);
-        this.errorMsg = error.Message;
+        this.errorMsg = 'User not found with given LFID.';
       }
     );
   }
