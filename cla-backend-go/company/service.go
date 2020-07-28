@@ -189,11 +189,6 @@ func (s service) GetCompanyUserInviteRequests(companyID string, userID string) (
 // AddPendingCompanyInviteRequest adds a new company invite request
 func (s service) AddPendingCompanyInviteRequest(companyID string, userID string) (*InviteModel, error) {
 
-	newInvite, err := s.repo.AddPendingCompanyInviteRequest(companyID, userID)
-	if err != nil {
-		return nil, err
-	}
-
 	companyModel, companyErr := s.GetCompany(companyID)
 	if companyErr != nil {
 		log.Warnf("AddPendingCompanyInviteRequest - unable to locate company model by ID: %s, error: %+v",
@@ -206,6 +201,11 @@ func (s service) AddPendingCompanyInviteRequest(companyID string, userID string)
 		log.Warnf("AddPendingCompanyInviteRequest - unable to locate user model by ID: %s, error: %+v",
 			userID, userErr)
 		return nil, userErr
+	}
+
+	newInvite, err := s.repo.AddPendingCompanyInviteRequest(companyID, userModel)
+	if err != nil {
+		return nil, err
 	}
 
 	// Need to determine which email...
