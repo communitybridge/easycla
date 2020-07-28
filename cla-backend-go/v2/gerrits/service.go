@@ -85,7 +85,7 @@ func convertModel(responseModel map[string]GerritRepoInfo) *models.GerritRepoLis
 	}
 
 	return &models.GerritRepoList{
-		List: gerritRepos,
+		Repos: gerritRepos,
 	}
 }
 
