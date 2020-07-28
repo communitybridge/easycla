@@ -1,3 +1,6 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 package gerrits
 
 import (
@@ -22,12 +25,12 @@ type ProjectService interface { //nolint
 }
 
 // Configure the Gerrit api
-func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectService ProjectService, eventService events.Service, projectsClaGroupsRepo projects_cla_groups.Repository) {
+func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, service Service, projectService ProjectService, eventService events.Service, projectsClaGroupsRepo projects_cla_groups.Repository) {
 	api.GerritsDeleteGerritHandler = gerrits.DeleteGerritHandlerFunc(
 		func(params gerrits.DeleteGerritParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
-			gerrit, err := service.GetGerrit(params.GerritID)
+			gerrit, err := v1Service.GetGerrit(params.GerritID)
 			if err != nil {
 				if err == v1Gerrits.ErrGerritNotFound {
 					return gerrits.NewDeleteGerritNotFound().WithPayload(errorResponse(err))
@@ -50,7 +53,7 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 			}
 
 			// delete the gerrit
-			err = service.DeleteGerrit(params.GerritID)
+			err = v1Service.DeleteGerrit(params.GerritID)
 			if err != nil {
 				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
 			}
@@ -98,7 +101,7 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 				GroupIDCcla: params.AddGerritInput.GroupIDCcla,
 				GroupIDIcla: params.AddGerritInput.GroupIDIcla,
 			}
-			result, err := service.AddGerrit(params.ClaGroupID, params.ProjectSFID, addGerritInput)
+			result, err := v1Service.AddGerrit(params.ClaGroupID, params.ProjectSFID, addGerritInput)
 			if err != nil {
 				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
 			}
@@ -133,7 +136,7 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 						authUser.UserName, params.ProjectSFID),
 				})
 			}
-			result, err := service.GetClaGroupGerrits(params.ClaGroupID, &params.ProjectSFID)
+			result, err := v1Service.GetClaGroupGerrits(params.ClaGroupID, &params.ProjectSFID)
 			if err != nil {
 				return gerrits.NewListGerritsBadRequest().WithPayload(errorResponse(err))
 			}
@@ -144,6 +147,28 @@ func Configure(api *operations.EasyclaAPI, service v1Gerrits.Service, projectSer
 				return gerrits.NewListGerritsInternalServerError().WithPayload(errorResponse(err))
 			}
 			return gerrits.NewListGerritsOK().WithPayload(&response)
+		})
+
+	api.GerritsGetGerritReposHandler = gerrits.GetGerritReposHandlerFunc(
+		func(params gerrits.GetGerritReposParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+
+			// No specific permissions required
+
+			// Validate input
+			if params.GerritName == nil {
+				return gerrits.NewGetGerritReposBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "missing gerritName query parameter",
+				})
+			}
+
+			result, err := service.GetGerritRepos(*params.GerritName)
+			if err != nil {
+				return gerrits.NewGetGerritReposBadRequest().WithPayload(errorResponse(err))
+			}
+
+			return gerrits.NewGetGerritReposOK().WithPayload(result)
 		})
 }
 
