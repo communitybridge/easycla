@@ -1534,7 +1534,7 @@ paths:
   # --------------------------------------------------------
   # Employee CLA Endpoints - CSV Report Download
   # --------------------------------------------------------
-  /signatures/project/{claGroupID}/employee/csv:
+  /signatures/project/{claGroupID}/company/{companySFID}/employee/csv:
     get:
       summary: Downloads all employee CLA information as a CSV document for this project
       description: Downloads the employee CLA information as a CSV document for this project
@@ -1545,7 +1545,9 @@ paths:
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-claGroupID"
+        - $ref: "#/parameters/path-companySFID"
       produces:
+        - text/json
         - text/csv
       responses:
         '200':
