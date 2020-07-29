@@ -38,6 +38,9 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 				if strings.Contains(err.Error(), "does not exist") {
 					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(err))
 				}
+				if strings.Contains(err.Error(), "internal server error") {
+					return sign.NewRequestCorporateSignatureInternalServerError().WithPayload(errorResponse(err))
+				}
 				if err == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
 					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(err))
 				}

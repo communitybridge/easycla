@@ -187,10 +187,12 @@ func (s *service) RequestCorporateSignature(lfUsername string, authorizationHead
 		ReturnURL:      input.ReturnURL.String(),
 	})
 	if err != nil {
-		// remove role
-		removeErr := removeSignatoryRole(input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
-		if removeErr != nil {
-			return nil, removeErr
+		if input.AuthorityEmail.String() != "" {
+			// remove role
+			removeErr := removeSignatoryRole(input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
+			if removeErr != nil {
+				log.Warnf("failed to remove signatory role. companySFID :%s, email :%s error: %+v", *input.CompanySfid, input.AuthorityEmail.String(), removeErr)
+			}
 		}
 		return nil, err
 	}
@@ -199,7 +201,6 @@ func (s *service) RequestCorporateSignature(lfUsername string, authorizationHead
 	companyACLError := s.companyService.AddUserToCompanyAccessList(comp.CompanyID, lfUsername)
 	if companyACLError != nil {
 		log.Warnf("AddCLAManager- Unable to add user to company ACL, companyID: %s, user: %s, error: %+v", *input.CompanySfid, lfUsername, companyACLError)
-		return nil, companyACLError
 	}
 
 	return out.toModel(), nil
@@ -235,6 +236,8 @@ func requestCorporateSignature(authToken string, apiURL string, input *requestCo
 		return nil, errors.New("contract Group does not support CCLAs")
 	} else if strings.Contains(string(responseBody), "user_error': 'user does not exist") {
 		return nil, errors.New("user_error': 'user does not exist")
+	} else if strings.Contains(string(responseBody), "Internal server error") {
+		return nil, errors.New("internal server error")
 	}
 	var out requestCorporateSignatureOutput
 	err = json.Unmarshal(responseBody, &out)
