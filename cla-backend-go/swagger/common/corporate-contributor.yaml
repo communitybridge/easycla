@@ -12,6 +12,10 @@ properties:
     type: string
     example: "123456"
     x-omitempty: false
+  email:
+    type: string
+    example: "v1"
+    x-omitempty: false
   signature_version:
     type: string
     example: "v1"

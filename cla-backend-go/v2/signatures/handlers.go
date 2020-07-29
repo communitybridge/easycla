@@ -407,6 +407,37 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 		return signatures.NewGetUserSignaturesOK().WithPayload(resp)
 	})
+	// Download ECLAs as a CSV document
+	api.SignaturesDownloadProjectSignatureEmployeeAsCSVHandler = signatures.DownloadProjectSignatureEmployeeAsCSVHandlerFunc(
+		func(params signatures.DownloadProjectSignatureEmployeeAsCSVParams, authUser *auth.User) middleware.Responder {
+			claGroupModel, err := projectService.GetCLAGroupByID(params.ClaGroupID)
+			if err != nil {
+				if err == project.ErrProjectDoesNotExist {
+					return signatures.NewDownloadProjectSignatureEmployeeAsCSVBadRequest().WithPayload(errorResponse(err))
+				}
+				return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithPayload(errorResponse(err))
+			}
+			if !utils.IsUserAuthorizedForProject(authUser, claGroupModel.FoundationSFID) {
+				return signatures.NewDownloadProjectSignatureEmployeeAsCSVForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DownloadProjectSignatureEmployeeAsCSV with project scope of %s",
+						authUser.UserName, claGroupModel.FoundationSFID),
+				})
+			}
+
+			result, err := v2service.GetClaGroupCorporateContributorsCsv(params.ClaGroupID, params.CompanySFID)
+			if err != nil {
+				return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithPayload(errorResponse(err))
+			}
+			return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+				rw.Header().Set("Content-Type", "text/csv")
+				rw.WriteHeader(http.StatusOK)
+				_, err := rw.Write(result)
+				if err != nil {
+					log.Warnf("Error writing csv file, error: %v", err)
+				}
+			})
+		})
 
 	// Download ICLAs as a CSV document
 	api.SignaturesDownloadProjectSignatureICLAAsCSVHandler = signatures.DownloadProjectSignatureICLAAsCSVHandlerFunc(
