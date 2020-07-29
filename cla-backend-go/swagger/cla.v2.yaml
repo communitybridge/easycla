@@ -1824,8 +1824,10 @@ paths:
             properties:
               fullName:
                 type: string
+                pattern: '^\w+${1,60}'
               userEmail:
                 type: string
+                pattern: '[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]'
               contactAdmin:
                 type: boolean
       responses:

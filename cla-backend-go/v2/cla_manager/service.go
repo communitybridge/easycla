@@ -62,6 +62,8 @@ var (
 	ErrCLAManagerDesigneeConflict = errors.New("user already assigned cla-manager-designee")
 	//ErrScopeNotFound returns error when getting scopeID
 	ErrScopeNotFound = errors.New("scope not found")
+	//ErrProjectSigned returns error if project already signed
+	ErrProjectSigned = errors.New("project already signed")
 )
 
 type service struct {
@@ -81,7 +83,7 @@ type Service interface {
 	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
 	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributor *v1User.User, lFxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse)
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
-	CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error)
+	CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, requestEmail, LfxPortalURL string) (*models.ClaManagerDesignee, error)
 	NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerList) error
 }
 
@@ -541,8 +543,21 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 	return claManagerDesignee, nil
 }
 
-func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error) {
+func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, requestEmail, LfxPortalURL string) (*models.ClaManagerDesignee, error) {
 	orgService := v2OrgService.GetClient()
+
+	isSigned, signedErr := s.isSigned(projectID)
+	if signedErr != nil {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request- %s", signedErr)
+		log.Warn(msg)
+		return nil, signedErr
+	}
+
+	if isSigned {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project :%s is already signed ", projectID)
+		log.Warn(msg)
+		return nil, ErrProjectSigned
+	}
 
 	// GetSFProject
 	ps := v2ProjectService.GetClient()
@@ -601,17 +616,11 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 
 	userService := v2UserService.GetClient()
 	lfxUser, userErr := userService.SearchUserByEmail(userEmail)
-	// Get Manager lf account by username. Used for email content
-	managerUser, mgrErr := userService.GetUserByUsername(authUser.UserName)
-	if mgrErr != nil {
-		msg := fmt.Sprintf("Failed to get Lfx User with username : %s ", authUser.UserName)
-		log.Warn(msg)
-	}
 	if userErr != nil {
 		msg := fmt.Sprintf("EasyCLA - 404 Not Found - User: %s does not have an LFID ", userEmail)
 		log.Warn(msg)
 		// Send email
-		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, *managerUser.Emails[0].EmailAddress, fullName, userEmail, companyModel.ID)
+		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, requestEmail, fullName, userEmail, companyModel.ID)
 		if sendEmailErr != nil {
 			return nil, sendEmailErr
 		}
@@ -804,21 +813,47 @@ func sendEmailToCLAManager(manager string, managerEmail string, contributorName 
 	}
 }
 
+// Helper function to check if project/claGroup is signed
+func (s *service) isSigned(projectID string) (bool, error) {
+	isSigned := false
+	// Get claGroup ID
+	cgGroup, cgErr := s.projectCGRepo.GetClaGroupIDForProject(projectID)
+	if cgErr != nil {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - CLAGroup lookup fail for project : %s ", projectID)
+		log.Warn(msg)
+		return isSigned, cgErr
+	}
+
+	// Check if group is signed
+	claGroup, claGroupErr := s.projectService.GetCLAGroupByID(cgGroup.ClaGroupID)
+	if claGroupErr != nil {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - CLAGroup lookup fail for project : %s", cgGroup.ClaGroupID)
+		log.Warn(msg)
+		return isSigned, claGroupErr
+	}
+	if claGroup.ProjectCCLAEnabled {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - CLA Group signed for project : %s ", projectID)
+		log.Warn(msg)
+		isSigned = true
+	}
+
+	return isSigned, nil
+}
+
 func sendEmailToOrgAdmin(adminEmail string, admin string, company string, projectName string, contributorID string, contributorName string, corporateConsole string) {
 	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorID)
 	recipients := []string{adminEmail}
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
-<p>The following contributor would like to submit a contribution to %s 
-   and is requesting to be whitelisted as a contributor for your organization: </p>
+<p>The following contributor is requesting to sign CLA for organization: </p>
 <p> %s %s </p>
-<p>Before the contribution can be accepted, your organization must sign a CLA.
+<p>Before the user contribution can be accepted, your organization must sign a CLA.
 <p>Kindly login to this portal %s and sign the CLA for this project %s. </p>
 <p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
 %s
 %s`,
-		admin, projectName, projectName, contributorName, contributorID, corporateConsole, projectName,
+		admin, projectName, contributorName, contributorID, corporateConsole, projectName,
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
@@ -836,15 +871,14 @@ func sendEmailToCLAManagerDesignee(corporateConsole string, companyName string, 
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
-<p>The following contributor would like to submit a contribution to %s 
-   and is requesting to be whitelisted as a contributor for your organization: </p>
+<p>The following contributor is requesting to sign CLA for organization: </p>
 <p> %s %s </p>
-<p>Before the contribution can be accepted, your organization must sign a CLA.
+<p>Before the user contribution can be accepted, your organization must sign a CLA.
 <p>Kindly login to this portal %s and sign the CLA for this project %s. </p>
 <p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
 %s
 %s`,
-		designeeName, projectName, projectName, contributorName, contributorID, corporateConsole, projectName,
+		designeeName, projectName, contributorName, contributorID, corporateConsole, projectName,
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
