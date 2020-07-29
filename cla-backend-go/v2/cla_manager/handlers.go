@@ -104,7 +104,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 
 		claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, params.ProjectSFID, params.Body.UserEmail)
 		if err != nil {
-			msg := fmt.Sprintf("Problem creating cla Manager Designee for user :%s, error: %+v ", authUser.Email, err)
+			msg := fmt.Sprintf("user :%s, error: %+v ", authUser.Email, err)
 			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(
 				&models.ErrorResponse{
 					Message: msg,
