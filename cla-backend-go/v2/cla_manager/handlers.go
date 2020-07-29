@@ -193,7 +193,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		}
 
 		claManagerDesignee, err := service.CreateCLAManagerRequest(params.Body.ContactAdmin, params.CompanySFID, params.ProjectSFID, params.Body.UserEmail,
-			params.Body.FullName, authUser, LfxPortalURL)
+			params.Body.FullName, authUser, *params.XEMAIL, LfxPortalURL)
 
 		if err != nil {
 			if err == ErrNoOrgAdmins || err == ErrNoLFID {
