@@ -57,7 +57,7 @@ var (
 	//ErrNoOrgAdmins when No admins found for organization
 	ErrNoOrgAdmins = errors.New("no Admins in company ")
 	//ErrRoleScopeConflict thrown if user already has role scope
-	ErrRoleScopeConflict = errors.New("roleScope conflict")
+	ErrRoleScopeConflict = errors.New("user is already cla-manager-designee")
 	//ErrCLAManagerDesigneeConflict when user is already assigned cla-manager-designee role
 	ErrCLAManagerDesigneeConflict = errors.New("user already assigned cla-manager-designee")
 	//ErrScopeNotFound returns error when getting scopeID
