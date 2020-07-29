@@ -213,7 +213,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 			Username:       userName,
 			Version:        "v1",
 		}
-		newUserModel, userModelErr := s.easyCLAUserService.CreateUser(claUserModel)
+		newUserModel, userModelErr := s.easyCLAUserService.CreateUser(claUserModel, nil)
 		if userModelErr != nil {
 			msg := fmt.Sprintf("Failed to create user : %+v", claUserModel)
 			log.Warn(msg)

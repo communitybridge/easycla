@@ -248,8 +248,7 @@ func (ed *UserCreatedEventData) GetEventString(args *LogEventArgs) (string, bool
 }
 
 func (ed *UserUpdatedEventData) GetEventString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user [%s] updated. user details = [%+v]", args.userName, args.UserModel)
-	return data, true
+	return fmt.Sprintf("user [%s] updated. user details = [%+v]", args.userName, *args.UserModel), true
 }
 
 func (ed *UserDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {

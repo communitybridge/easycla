@@ -4,14 +4,16 @@
 package users
 
 import (
+	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	"github.com/communitybridge/easycla/cla-backend-go/user"
 )
 
 // Service interface for users
 type Service interface {
-	CreateUser(user *models.User) (*models.User, error)
-	Save(user *models.UserUpdate) (*models.User, error)
-	Delete(userID string) error
+	CreateUser(user *models.User, claUser *user.CLAUser) (*models.User, error)
+	Save(user *models.UserUpdate, claUser *user.CLAUser) (*models.User, error)
+	Delete(userID string, claUser *user.CLAUser) error
 	GetUser(userID string) (*models.User, error)
 	GetUserByLFUserName(lfUserName string) (*models.User, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
@@ -21,34 +23,77 @@ type Service interface {
 }
 
 type service struct {
-	repo UserRepository
+	repo   UserRepository
+	events events.Service
 }
 
 // NewService creates a new whitelist service
-func NewService(repo UserRepository) Service {
+func NewService(repo UserRepository, events events.Service) Service {
 	return service{
 		repo,
+		events,
 	}
 }
 
 // CreateUser attempts to create a new user based on the specified model
-func (s service) CreateUser(user *models.User) (*models.User, error) {
+func (s service) CreateUser(user *models.User, claUser *user.CLAUser) (*models.User, error) {
 	userModel, err := s.repo.CreateUser(user)
 	if err != nil {
 		return nil, err
 	}
 
+	// System may need to create user accounts
+	var lfUser = "easycla_system_user"
+	if claUser != nil {
+		lfUser = claUser.LFUsername
+	}
+
+	// Create an event - run as a go-routine
+	s.events.LogEvent(&events.LogEventArgs{
+		EventType:  events.UserCreated,
+		UserModel:  userModel,
+		LfUsername: lfUser,
+		EventData:  &events.UserCreatedEventData{},
+	})
+
 	return userModel, nil
 }
 
 // Save saves/updates the user record
-func (s service) Save(user *models.UserUpdate) (*models.User, error) {
-	return s.repo.Save(user)
+func (s service) Save(user *models.UserUpdate, claUser *user.CLAUser) (*models.User, error) {
+	userModel, err := s.repo.Save(user)
+	if err != nil {
+		return nil, err
+	}
+
+	// Log the event
+	s.events.LogEvent(&events.LogEventArgs{
+		EventType:  events.UserUpdated,
+		UserModel:  userModel,
+		LfUsername: claUser.LFUsername,
+		EventData:  &events.UserUpdatedEventData{},
+	})
+
+	return userModel, nil
 }
 
 // Delete deletes the user record
-func (s service) Delete(userID string) error {
-	return s.repo.Delete(userID)
+func (s service) Delete(userID string, claUser *user.CLAUser) error {
+	err := s.repo.Delete(userID)
+	if err != nil {
+		return err
+	}
+
+	// Log the event
+	s.events.LogEvent(&events.LogEventArgs{
+		EventType: events.UserDeleted,
+		UserID:    claUser.UserID,
+		EventData: &events.UserDeletedEventData{
+			DeletedUserID: userID,
+		},
+	})
+
+	return nil
 }
 
 // GetUser attempts to locate the user by the user id field

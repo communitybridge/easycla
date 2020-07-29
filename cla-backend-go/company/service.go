@@ -607,7 +607,7 @@ func (s service) CreateOrgFromExternalID(companySFID string) (*models.Company, e
 	if claUser == nil {
 		// create cla-user
 		log.WithFields(f).Debugf("cla user not found. creating cla user.")
-		claUser, err = s.userService.CreateUser(companyAdmin)
+		claUser, err = s.userService.CreateUser(companyAdmin, nil)
 		if err != nil {
 			log.WithFields(f).Debugf("creating cla user failed. error = %s", err.Error())
 			return nil, err

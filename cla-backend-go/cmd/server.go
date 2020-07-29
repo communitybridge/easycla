@@ -222,7 +222,7 @@ func server(localMode bool) http.Handler {
 		companyRepo,
 		projectRepo,
 	})
-	usersService := users.NewService(usersRepo)
+	usersService := users.NewService(usersRepo, eventsService)
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
 	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo)
@@ -528,7 +528,7 @@ func createUserFromRequest(authorizer auth.Authorizer, usersService users.Servic
 		Username:   claUser.Name,
 	}
 	log.WithField("user", newUser).Debug("creating new user")
-	userModel, err = usersService.CreateUser(newUser)
+	userModel, err = usersService.CreateUser(newUser, nil)
 	if err != nil {
 		log.WithField("user", newUser).Error("creating new user failed")
 		return
