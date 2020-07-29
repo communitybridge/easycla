@@ -327,12 +327,15 @@ jobs:
             sudo apt-get install -y curl
             v2_url=''
             v3_url=''
+            v4_url=''
             if [[ "${STAGE}" == "prod" ]]; then
               v2_url=https://api.lfcla.com/v2/health
               v3_url=https://api.lfcla.com/v3/ops/health
+              v4_url=https://api-gw.platform.linuxfoundation.org/cla-service/v4/ops/health
             else
               v2_url=https://api.${STAGE}.lfcla.com/v2/health
               v3_url=https://api.${STAGE}.lfcla.com/v3/ops/health
+              v4_url=https://api-gw.${STAGE}.platform.linuxfoundation.org/cla-service/v4/ops/health
             fi
 
             echo "Validating v2 backend using endpoint: ${v2_url}"
@@ -359,6 +362,23 @@ jobs:
               fi
             else
               echo "Failed to get a successful response from endpoint: ${v3_url}"
+              exit ${exit_code}
+            fi
+
+            echo "Validating v4 backend using endpoint: ${v4_url}"
+            curl --fail -XGET ${v4_url}
+            exit_code=$?
+            if [[ ${exit_coe} -eq 0 ]]; then
+              echo "Successful response from endpoint: ${v4_url}"
+              # JSON response should include "Status": "healthy"
+              if [[ `curl -s -XGET ${v4_url} | jq -r '.Status'` == "healthy" ]]; then
+                echo "Service is healthy"
+              else
+                echo "Service is NOT healthy"
+                exit -1
+              fi
+            else
+              echo "Failed to get a successful response from endpoint: ${v4_url}"
               exit ${exit_code}
             fi
 
