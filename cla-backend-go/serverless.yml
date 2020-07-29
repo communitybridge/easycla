@@ -258,6 +258,10 @@ functions:
   # Only lambda function we want in us-east-2, for now, is the V2 API (/v4 endpoint)
   # which is invoked by the platform core services
   api:
+    # Provide name, otherwise the default will be something like: ${self:service}-${stage}-api
+    # which is fine, but we need to add the name to the platform api-gw config to make lambda-to-lambda invoke call
+    # so, setting this allows us to always know the name of the lambda (hard-coded now, which ignores the stage identifier in the name)
+    name: ${self:service}-api
     description: "EasyCLA v2 API"
     runtime: go1.x
     handler: backend-aws-lambda
