@@ -202,11 +202,11 @@ func (s *service) loadDetails(args *LogEventArgs) error {
 func (s *service) LogEvent(args *LogEventArgs) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Error("panic occured in CreateEvent", fmt.Errorf("%v", r))
+			log.Error("panic occurred in CreateEvent", fmt.Errorf("%v", r))
 		}
 	}()
 	if args == nil || args.EventType == "" || args.EventData == nil || (args.UserID == "" && args.LfUsername == "") {
-		log.Warnf("invalid arguments to LogEvent: args %#v", args)
+		log.Warnf("invalid arguments to LogEvent, missing one or more required values. args %#v", args)
 		return
 	}
 	err := s.loadDetails(args)

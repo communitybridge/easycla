@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/go-openapi/errors"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -42,6 +44,7 @@ type UserRepository interface {
 type repository struct {
 	stage          string
 	dynamoDBClient *dynamodb.DynamoDB
+	tableName      string
 }
 
 // NewRepository creates a new instance of the whitelist service
@@ -49,13 +52,12 @@ func NewRepository(awsSession *session.Session, stage string) UserRepository {
 	return repository{
 		stage:          stage,
 		dynamoDBClient: dynamodb.New(awsSession),
+		tableName:      fmt.Sprintf("cla-%s-users", stage),
 	}
 }
 
 // CreateUser creates a new user
 func (repo repository) CreateUser(user *models.User) (*models.User, error) {
-
-	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
 
 	theUUID, err := uuid.NewUUID()
 	if err != nil {
@@ -131,7 +133,7 @@ func (repo repository) CreateUser(user *models.User) (*models.User, error) {
 	input := &dynamodb.PutItemInput{
 		Item: attributes,
 		//ConditionExpression: aws.String("attribute_not_exists"),
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.tableName),
 	}
 
 	_, err = repo.dynamoDBClient.PutItem(input)
@@ -167,19 +169,80 @@ func (repo repository) CreateUser(user *models.User) (*models.User, error) {
 	return user, err
 }
 
+func (repo repository) getUserByUpdateModel(user *models.UserUpdate) (*models.User, error) {
+	// Log fields
+	f := logrus.Fields{
+		"functionName":     "GetUserByUpdateModel",
+		"lf_username":      user.LfUsername,
+		"lf_email":         user.LfEmail,
+		"github_username":  user.GithubUsername,
+		"github_id":        user.GithubID,
+		"company_id":       user.CompanyID,
+		"user_id":          user.UserID,
+		"user_external_id": user.UserExternalID,
+	}
+
+	var err error
+	var existingUserModel *models.User
+	if user.LfUsername != "" {
+		log.WithFields(f).Debugf("looking up user by username: %s", user.LfUsername)
+		existingUserModel, err = repo.GetUserByUserName(user.LfUsername, true)
+		if err != nil {
+			log.WithFields(f).Warnf("error fetching existing user record: %+v, error: %v", user, err)
+			return nil, err
+		}
+	}
+
+	// Didn't find it lookup up via LF Username/ID, so, let's try another way
+	// Try to lookup via GH username, if provided...
+	if existingUserModel == nil && user.GithubUsername != "" {
+		log.WithFields(f).Debugf("looking up user by github username: %s", user.GithubUsername)
+		existingUserModel, err = repo.GetUserByGitHubUsername(user.GithubUsername)
+		if err != nil {
+			log.WithFields(f).Warnf("error fetching existing user record by GitHub username: %s, error: %v",
+				user.GithubUsername, err)
+			return nil, err
+		}
+		log.WithFields(f).Debugf("Found user by GitHub Username: %+v", existingUserModel)
+	}
+
+	// Still couldn't find it - time to give up
+	if existingUserModel == nil {
+		log.WithFields(f).Warnf("error fetching existing user record: %+v, error: %v", user, err)
+		return nil, nil
+	}
+
+	return existingUserModel, nil
+}
+
 // Save saves the user model to the data store
 func (repo repository) Save(user *models.UserUpdate) (*models.User, error) {
-	// The table we're interested in
-	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
+	// Log fields
+	f := logrus.Fields{
+		"functionName":     "Save",
+		"lf_username":      user.LfUsername,
+		"lf_email":         user.LfEmail,
+		"github_username":  user.GithubUsername,
+		"github_id":        user.GithubID,
+		"company_id":       user.CompanyID,
+		"user_id":          user.UserID,
+		"user_external_id": user.UserExternalID,
+		"tableName":        repo.tableName,
+	}
 
-	log.Debugf("Save User - looking up user by username: %s", user.LfUsername)
-	oldUserModel, err := repo.GetUserByUserName(user.LfUsername, true)
-	if err != nil || oldUserModel == nil {
-		log.Warnf("Error fetching existing user record: %+v, error: %v", user, err)
+	var oldUserModel *models.User
+	var err error
+	oldUserModel, err = repo.getUserByUpdateModel(user)
+	if err != nil {
+		log.WithFields(f).Warnf("error fetching existing user record, error: %v", err)
 		return nil, err
 	}
 
-	log.Debugf("Found user by username: %+v", oldUserModel)
+	// Still couldn't find it - time to give up
+	if oldUserModel == nil {
+		log.WithFields(f).Warnf("error fetching existing user record: %+v, error: %v", user, err)
+		return nil, nil
+	}
 
 	// return values flag - Returns all of the attributes of the item, as they appear after the UpdateItem operation.
 	addReturnValues := "ALL_NEW" // nolint
@@ -189,28 +252,49 @@ func (repo repository) Save(user *models.UserUpdate) (*models.User, error) {
 	expressionAttributeValues := map[string]*dynamodb.AttributeValue{}
 	updateExpression := "SET "
 
-	if user.LfEmail != "" {
-		log.Debugf("Save User - adding lf_email: %s", user.LfEmail)
+	if user.LfEmail != "" && oldUserModel.LfEmail != user.LfEmail {
+		log.WithFields(f).Debugf("building query - adding lf_email: %s", user.LfEmail)
 		expressionAttributeNames["#E"] = aws.String("lf_email")
 		expressionAttributeValues[":e"] = &dynamodb.AttributeValue{S: aws.String(user.LfEmail)}
 		updateExpression = updateExpression + " #E = :e, "
 	}
 
-	if user.CompanyID != "" {
-		log.Debugf("Save User - adding user_company_id: %s", user.CompanyID)
+	if user.LfUsername != "" && oldUserModel.LfUsername != user.LfUsername {
+		log.WithFields(f).Debugf("building query - adding lf_username: %s", user.LfUsername)
+		expressionAttributeNames["#U"] = aws.String("lf_username")
+		expressionAttributeValues[":u"] = &dynamodb.AttributeValue{S: aws.String(user.LfUsername)}
+		updateExpression = updateExpression + " #U = :u, "
+	}
+
+	if user.CompanyID != "" && oldUserModel.CompanyID != user.CompanyID {
+		log.WithFields(f).Debugf("building query - adding user_company_id: %s", user.CompanyID)
 		expressionAttributeNames["#C"] = aws.String("user_company_id")
 		expressionAttributeValues[":c"] = &dynamodb.AttributeValue{S: aws.String(user.CompanyID)}
 		updateExpression = updateExpression + " #C = :c, "
 	}
 
-	log.Debugf("Save User - adding date_modified: %s", updatedDateTime.Format(time.RFC3339))
+	if user.GithubUsername != "" && oldUserModel.GithubUsername != user.GithubUsername {
+		log.WithFields(f).Debugf("building query - adding user_github_username: %s", user.GithubUsername)
+		expressionAttributeNames["#GU"] = aws.String("user_github_username")
+		expressionAttributeValues[":gu"] = &dynamodb.AttributeValue{S: aws.String(user.GithubUsername)}
+		updateExpression = updateExpression + " #GU = :gu, "
+	}
+
+	if user.GithubID != "" && oldUserModel.GithubID != user.GithubID {
+		log.WithFields(f).Debugf("building query - adding user_github_id: %s", user.GithubID)
+		expressionAttributeNames["#GI"] = aws.String("user_github_id")
+		expressionAttributeValues[":gi"] = &dynamodb.AttributeValue{S: aws.String(user.GithubID)}
+		updateExpression = updateExpression + " #GI = :gi, "
+	}
+
+	log.Debugf("building query - updating date_modified: %s", updatedDateTime.Format(time.RFC3339))
 	expressionAttributeNames["#D"] = aws.String("date_modified")
 	expressionAttributeValues[":d"] = &dynamodb.AttributeValue{S: aws.String(updatedDateTime.Format(time.RFC3339))}
 	updateExpression = updateExpression + " #D = :d "
 
 	// Update dynamoDB table
 	input := &dynamodb.UpdateItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.tableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"user_id": {
 				S: aws.String(oldUserModel.UserID),
@@ -224,32 +308,31 @@ func (repo repository) Save(user *models.UserUpdate) (*models.User, error) {
 
 	_, err = repo.dynamoDBClient.UpdateItem(input)
 	if err != nil {
-		log.Warnf("Error updating user record: %+v, error: %v", user, err)
+		log.WithFields(f).Warnf("Error updating user record: %+v, error: %v", user, err)
 		return nil, err
 	}
 
-	log.Debugf("Save User - looking up saved user by username: %s", user.LfUsername)
-	newUserModel, err := repo.GetUserByUserName(user.LfUsername, true)
+	log.WithFields(f).Debugf("Save User - looking up saved user by username: %s", user.LfUsername)
+	newUserModel, err := repo.getUserByUpdateModel(user)
 	if err != nil || newUserModel == nil {
-		log.Warnf("Error fetching updated user record: %+v, error: %v", user, err)
+		log.WithFields(f).Warnf("Error fetching updated user record: %+v, error: %v", user, err)
 		return nil, err
 	}
 
-	log.Debugf("Returning updated user: %+v", newUserModel)
+	log.WithFields(f).Debugf("Returning updated user: %+v", newUserModel)
 	return newUserModel, err
 }
 
 // Delete deletes the specified user
 func (repo repository) Delete(userID string) error {
 	// The table we're interested in
-	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
 	input := &dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"user_id": {
 				S: aws.String(userID),
 			},
 		},
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.tableName),
 	}
 
 	_, err := repo.dynamoDBClient.DeleteItem(input)
@@ -263,7 +346,6 @@ func (repo repository) Delete(userID string) error {
 
 // GetUser retrieves the specified user using the user id
 func (repo repository) GetUser(userID string) (*models.User, error) {
-	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
 
 	// This is the key we want to match
 	condition := expression.Key("user_id").Equal(expression.Value(userID))
@@ -284,7 +366,7 @@ func (repo repository) GetUser(userID string) (*models.User, error) {
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.tableName),
 	}
 
 	// Make the DynamoDB Query API call
@@ -314,7 +396,6 @@ func (repo repository) GetUser(userID string) (*models.User, error) {
 
 // GetuserByLFUserName returns the user record associated with the LF Username value
 func (repo repository) GetUserByLFUserName(lfUserName string) (*models.User, error) {
-	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
 
 	// This is the key we want to match
 	condition := expression.Key("lf_username").Equal(expression.Value(lfUserName))
@@ -335,7 +416,7 @@ func (repo repository) GetUserByLFUserName(lfUserName string) (*models.User, err
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.tableName),
 		IndexName:                 aws.String("lf-username-index"),
 	}
 
@@ -366,8 +447,6 @@ func (repo repository) GetUserByLFUserName(lfUserName string) (*models.User, err
 }
 
 func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*models.User, error) {
-
-	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
 
 	var indexName string
 
@@ -414,7 +493,7 @@ func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*mode
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.tableName),
 		IndexName:                 aws.String(indexName),
 	}
 
@@ -464,8 +543,6 @@ func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*mode
 
 // GetUserByEmail fetches the user record by email
 func (repo repository) GetUserByEmail(userEmail string) (*models.User, error) {
-	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
-
 	// This is the key we want to match
 	condition := expression.Key("lf_email").Equal(expression.Value(userEmail))
 
@@ -485,7 +562,7 @@ func (repo repository) GetUserByEmail(userEmail string) (*models.User, error) {
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.tableName),
 		IndexName:                 aws.String("lf-email-index"),
 	}
 
@@ -516,8 +593,6 @@ func (repo repository) GetUserByEmail(userEmail string) (*models.User, error) {
 
 // GetUserByGitHubUsername fetches the user record by github username
 func (repo repository) GetUserByGitHubUsername(gitHubUsername string) (*models.User, error) {
-	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
-
 	// This is the key we want to match
 	condition := expression.Key("user_github_username").Equal(expression.Value(gitHubUsername))
 
@@ -537,7 +612,7 @@ func (repo repository) GetUserByGitHubUsername(gitHubUsername string) (*models.U
 		ExpressionAttributeValues: expr.Values(),
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.tableName),
 		IndexName:                 aws.String("github-username-index"),
 	}
 
@@ -578,8 +653,6 @@ func (repo repository) SearchUsers(searchField string, searchTerm string, fullMa
 		}, nil
 	}
 
-	tableName := fmt.Sprintf("cla-%s-users", repo.stage)
-
 	// These are the columns we want returned
 	projection := buildUserProjection()
 
@@ -606,7 +679,7 @@ func (repo repository) SearchUsers(searchField string, searchTerm string, fullMa
 		ExpressionAttributeValues: expr.Values(),
 		FilterExpression:          expr.Filter(),
 		ProjectionExpression:      expr.Projection(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.tableName),
 	}
 
 	var lastEvaluatedKey string
@@ -646,7 +719,7 @@ func (repo repository) SearchUsers(searchField string, searchTerm string, fullMa
 
 	// How many total records do we have - may not be up-to-date as this value is updated only periodically
 	describeTableInput := &dynamodb.DescribeTableInput{
-		TableName: &tableName,
+		TableName: &repo.tableName,
 	}
 
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)

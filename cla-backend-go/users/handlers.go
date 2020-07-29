@@ -6,6 +6,8 @@ package users
 import (
 	"fmt"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
@@ -45,7 +47,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			LfUsername: claUser.LFUsername,
 			Username:   claUser.Name,
 		}
-		userModel, err := service.CreateUser(newUser)
+		userModel, err := service.CreateUser(newUser, claUser)
 		if err != nil {
 			log.Warnf("error creating user from user: %+v, error: %+v", newUser, err)
 			return users.NewAddUserBadRequest().WithPayload(errorResponse(err))
@@ -53,37 +55,91 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		// filling userID in claUser for logging event
 		claUser.UserID = userModel.UserID
 
-		// Create an event - run as a go-routine
-		eventsService.LogEvent(&events.LogEventArgs{
-			EventType: events.UserCreated,
-			UserModel: userModel,
-			EventData: &events.UserCreatedEventData{},
-		})
-
 		return users.NewAddUserOK().WithPayload(userModel)
 	})
 
 	// Save/Update User Handler
 	api.UsersUpdateUserHandler = users.UpdateUserHandlerFunc(func(params users.UpdateUserParams, claUser *user.CLAUser) middleware.Responder {
-		// Make sure we have good non-empty parameters
-		if claUser.LFUsername != params.Body.LfUsername {
-			return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
-				fmt.Errorf("user: %s not authorized to update user: %s", claUser.LFUsername, params.Body.LfUsername)))
+		f := logrus.Fields{"" +
+			"functionName": "UpdateUserHandlerFunc",
+			"authenticatedUserLFUsername": claUser.LFUsername,
+			"authenticatedUserLFEmail":    claUser.LFEmail,
+			"authenticatedUserUserID":     claUser.UserID,
+			"authenticatedUserName":       claUser.Name,
+			"paramsBodyLfUsername":        params.Body.LfUsername,
+			"paramsBodyLfEmail":           params.Body.LfEmail,
+			"paramsBodyGithubID":          params.Body.GithubID,
+			"paramsBodyGithubUsername":    params.Body.GithubUsername,
+			"paramsBodyUsername":          params.Body.Username,
+		}
+		// Update supports two scenarios:
+		// 1) user has LF login and their record has the LF login as part of their existing User record - should find and match - OK, otherwise permission denied
+		// 2) user has new LF login and their record does not have the LF login as part of their existing User record - need to lookup by other means, such as Github Username
+		//   option 2 can happen when GH user gets a user record auto-created and later they need a login for v2 (create company, etc.)
+		//   option 2 will be called after they create their login to update their user record with the new login details
+		//   option 2 we will search by github username to find the old record - but we can't compare LF login with the existing record because it won't be set yet
+
+		// Check to see if the provided payload includes a GH Username we can use for locating the record
+		if params.Body.GithubUsername != "" {
+			// Locate the user record by the user's github user name
+			log.WithFields(f).Debugf("searching user by GithubUsername: %s", params.Body.GithubUsername)
+			userModel, err := service.GetUserByGitHubUsername(params.Body.GithubUsername)
+			if err != nil {
+				log.WithFields(f).Warnf("error locating user from by github username: %s, error: %+v",
+					params.Body.GithubUsername, err)
+				return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
+			}
+
+			// Found it!
+			if userModel != nil {
+				// Update the record base on the specified values
+				log.WithFields(f).Debugf("found user by GithubUsername: %s - updating record",
+					params.Body.GithubUsername)
+				userModel, err := service.Save(params.Body, claUser)
+				if err != nil {
+					log.WithFields(f).Warnf("error updating user from user request with body: %+v, error: %+v",
+						params.Body, err)
+					return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
+				}
+
+				return users.NewUpdateUserOK().WithPayload(userModel)
+			}
 		}
 
-		userModel, err := service.Save(params.Body)
-		if err != nil {
-			log.Warnf("error updating user from user request with body: %+v, error: %+v", params.Body, err)
-			return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
+		// Locate the user record by the user's LF Login ID
+		// Check to see if the provided payload includes a GH Username we can use for locating the record
+		if params.Body.LfUsername != "" {
+			log.WithFields(f).Debugf("searching user by LFUserName: %s", claUser.LFUsername)
+			userModel, err := service.GetUserByLFUserName(claUser.LFUsername)
+			if err != nil {
+				log.WithFields(f).Warnf("error updating user from user request with body: %+v, error: %+v", params.Body, err)
+				return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
+			}
+
+			// If we found the record, but the LF Login ID's don't match up...
+			if userModel != nil && claUser.LFUsername != params.Body.LfUsername {
+				return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
+					fmt.Errorf("user: %s not authorized to update user: %s", claUser.LFUsername, params.Body.LfUsername)))
+			}
+
+			// Found the record and the LF Login ID's match...safe to update
+			if userModel != nil && claUser.LFUsername == params.Body.LfUsername {
+				log.WithFields(f).Debugf("found user by LFUserName: %s - updating record", claUser.LFUsername)
+				userModel, err := service.Save(params.Body, claUser)
+				if err != nil {
+					log.WithFields(f).Warnf("error updating user from user request with body: %+v, error: %+v", params.Body, err)
+					return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
+				}
+
+				return users.NewUpdateUserOK().WithPayload(userModel)
+			}
 		}
 
-		eventsService.LogEvent(&events.LogEventArgs{
-			EventType: events.UserUpdated,
-			UserModel: userModel,
-			EventData: &events.UserUpdatedEventData{},
+		// Fall through - couldn't lookup the record
+		return users.NewUpdateUserNotFound().WithPayload(&models.ErrorResponse{
+			Code:    "404",
+			Message: "unable to locate user by LF login or GitHub username",
 		})
-
-		return users.NewUpdateUserOK().WithPayload(userModel)
 	})
 
 	// Delete User Handler
@@ -111,19 +167,11 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			}
 		*/
 
-		err := service.Delete(params.UserID)
+		err := service.Delete(params.UserID, claUser)
 		if err != nil {
 			log.Warnf("error deleting user from user table with id: %s, error: %+v", params.UserID, err)
 			return users.NewUpdateUserBadRequest().WithPayload(errorResponse(err))
 		}
-
-		eventsService.LogEvent(&events.LogEventArgs{
-			EventType: events.UserDeleted,
-			UserID:    claUser.UserID,
-			EventData: &events.UserDeletedEventData{
-				DeletedUserID: params.UserID,
-			},
-		})
 
 		return users.NewDeleteUserNoContent()
 	})

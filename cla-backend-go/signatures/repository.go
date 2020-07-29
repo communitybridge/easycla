@@ -86,12 +86,12 @@ type repository struct {
 	stage              string
 	dynamoDBClient     *dynamodb.DynamoDB
 	companyRepo        company.IRepository
-	usersRepo          users.Service
+	usersRepo          users.UserRepository
 	signatureTableName string
 }
 
 // NewRepository creates a new instance of the whitelist service
-func NewRepository(awsSession *session.Session, stage string, companyRepo company.IRepository, usersRepo users.Service) SignatureRepository {
+func NewRepository(awsSession *session.Session, stage string, companyRepo company.IRepository, usersRepo users.UserRepository) SignatureRepository {
 	return repository{
 		stage:              stage,
 		dynamoDBClient:     dynamodb.New(awsSession),
