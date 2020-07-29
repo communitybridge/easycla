@@ -2181,8 +2181,9 @@ func (repo repository) GetClaGroupCorporateContributors(claGroupID string, compa
 			out.List = append(out.List, &models.CorporateContributor{
 				GithubID:          sig.UserGithubUsername,
 				LinuxFoundationID: sig.UserLFUsername,
-				Name:              sig.SignatureReferenceName,
+				Name:              sig.UserName,
 				SignatureVersion:  signatureVersion,
+				Email:             sig.UserEmail,
 				Timestamp:         sigCreatedTime,
 			})
 		}

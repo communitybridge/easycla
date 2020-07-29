@@ -41,6 +41,7 @@ type Service interface {
 	GetProjectCompanySignatures(companySFID string, projectSFID string) (*models.Signatures, error)
 	GetProjectIclaSignaturesCsv(claGroupID string) ([]byte, error)
 	GetProjectIclaSignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
+	GetClaGroupCorporateContributorsCsv(claGroupID string, companySFID string) ([]byte, error)
 	GetClaGroupCorporateContributors(claGroupID string, companySFID *string, searchTerm *string) (*models.CorporateContributorList, error)
 	GetSignedDocument(signatureID string) (*models.SignedDocument, error)
 	GetSignedIclaZipPdf(claGroupID string) (*models.URLObject, error)
@@ -95,6 +96,37 @@ func iclaSigCsvLine(sig *v1Models.IclaSignature) string {
 		dateTime = t.Format("Jan 2,2006")
 	}
 	return fmt.Sprintf("\n%s,%s,%s,%s,\"%s\"", sig.GithubUsername, sig.LfUsername, sig.UserName, sig.UserEmail, dateTime)
+}
+
+func eclaSigCsvLine(sig *v1Models.CorporateContributor) string {
+	var dateTime string
+	t, err := utils.ParseDateTime(sig.Timestamp)
+	if err != nil {
+		log.WithFields(logrus.Fields{"signature_id": sig.LinuxFoundationID, "signature_created": sig.Timestamp}).
+			Error("invalid time format present for signatures")
+	} else {
+		dateTime = t.Format("Jan 2,2006")
+	}
+	return fmt.Sprintf("\n%s,%s,%s,%s,\"%s\"", sig.GithubID, sig.LinuxFoundationID, sig.Name, sig.Email, dateTime)
+}
+
+func (s service) GetClaGroupCorporateContributorsCsv(claGroupID string, companySFID string) ([]byte, error) {
+	var b bytes.Buffer
+	comp, companyErr := s.v1CompanyService.GetCompanyByExternalID(companySFID)
+	if companyErr != nil {
+		return nil, companyErr
+	}
+
+	result, err := s.v1SignatureService.GetClaGroupCorporateContributors(claGroupID, &comp.CompanyID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	b.WriteString(`Github ID,LF_ID,Name,Email,Date Signed`)
+	for _, sig := range result.List {
+		b.WriteString(eclaSigCsvLine(sig))
+	}
+	return b.Bytes(), nil
 }
 
 func (s service) GetProjectIclaSignaturesCsv(claGroupID string) ([]byte, error) {
