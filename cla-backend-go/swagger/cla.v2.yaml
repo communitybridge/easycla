@@ -2482,6 +2482,8 @@ paths:
           $ref: '#/responses/forbidden'
         '404':
           $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
         '409':
           $ref: '#/responses/conflict'
       tags:
