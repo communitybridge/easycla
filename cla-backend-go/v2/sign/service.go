@@ -20,6 +20,7 @@ import (
 
 	organization_service "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 
+	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -97,9 +98,22 @@ func (in *requestCorporateSignatureOutput) toModel() *models.CorporateSignatureO
 
 func validateCorporateSignatureInput(input *models.CorporateSignatureInput) error {
 	if input.SendAsEmail {
-		if input.AuthorityName == "" || input.AuthorityEmail == "" {
-			return errors.New("require authority_name and authority_email")
+		if input.AuthorityName == "" {
+			return errors.New("require authority_name")
 		}
+		if input.AuthorityEmail == "" {
+			return errors.New("require authority_email")
+		}
+	} else {
+		if input.ReturnURL.String() == "" {
+			return errors.New("require return_url")
+		}
+	}
+	if input.ProjectSfid == nil || *input.ProjectSfid == "" {
+		return errors.New("require project_sfid")
+	}
+	if input.CompanySfid == nil || *input.CompanySfid == "" {
+		return errors.New("require company_sfid")
 	}
 	return nil
 }
@@ -113,11 +127,41 @@ func (s *service) RequestCorporateSignature(lfUsername string, authorizationHead
 	if err != nil {
 		return nil, err
 	}
-	cgm, err := s.projectClaGroupsRepo.GetClaGroupIDForProject(utils.StringValue(input.ProjectSfid))
+	psc := project_service.GetClient()
+	project, err := psc.GetProject(utils.StringValue(input.ProjectSfid))
 	if err != nil {
 		return nil, err
 	}
-	proj, err := s.projectRepo.GetCLAGroupByID(cgm.ClaGroupID, DontLoadRepoDetails)
+	var claGroupID string
+	if project.Parent == "" {
+		// this is root project
+		cgmlist, perr := s.projectClaGroupsRepo.GetProjectsIdsForFoundation(utils.StringValue(input.ProjectSfid))
+		if perr != nil {
+			return nil, perr
+		}
+		if len(cgmlist) == 0 {
+			// no cla group is link with root_project
+			return nil, projects_cla_groups.ErrProjectNotAssociatedWithClaGroup
+		}
+		claGroups := utils.NewStringSet()
+		for _, cg := range cgmlist {
+			claGroups.Add(cg.ClaGroupID)
+		}
+		if claGroups.Length() > 1 {
+			// multiple cla group are linked with root_project
+			// so we can not determine which cla-group to use
+			return nil, errors.New("invalid project_sfid. multiple cla-groups are associated with this project_sfid")
+		}
+		claGroupID = (claGroups.List())[0]
+	} else {
+		cgm, perr := s.projectClaGroupsRepo.GetClaGroupIDForProject(utils.StringValue(input.ProjectSfid))
+		if perr != nil {
+			return nil, perr
+		}
+		claGroupID = cgm.ClaGroupID
+	}
+
+	proj, err := s.projectRepo.GetCLAGroupByID(claGroupID, DontLoadRepoDetails)
 	if err != nil {
 		return nil, err
 	}
