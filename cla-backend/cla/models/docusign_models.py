@@ -777,6 +777,17 @@ class DocuSign(signing_service_interface.SigningService):
         # We've looked up this user and now have the user record - we'll use the first record we find
         # unlikely we'll have more than one
         cla_manager_user = users_list[0]
+
+        # Add some defensive checks to ensure the Name and Email are set for the CLA Manager
+        if cla_manager_user.get_user_name() is None:
+            cla.log.warning(f'Loaded CLA Manager by username: {auth_user.username}, but '
+                            'the user_name is missing from profile - required for DocuSign.')
+            return {'errors': {'user_error': 'user name missing'}}
+        if cla_manager_user.get_user_email() is None:
+            cla.log.warning(f'Loaded CLA Manager by username: {auth_user.username}, but '
+                            'the user email is missing from profile - required for DocuSign.')
+            return {'errors': {'user_error': 'user email missing'}}
+
         cla.log.debug(f'Loaded user {cla_manager_user} - this is our CLA Manager')
         # Ensure the project exists
         project = Project()
@@ -1021,7 +1032,7 @@ class DocuSign(signing_service_interface.SigningService):
             # It assumes that the user handles the communication with the client.
             # In this case, the user opened the docusign document to manually sign it.
             # Thus the email does not need to be sent.
-            cla.log.debug(f'populate_sign_url - {sig_type} - generating a docusign signer object with'
+            cla.log.debug(f'populate_sign_url - {sig_type} - generating a docusign signer object with '
                           f'name: {signatory_name}, email: {signatory_email}')
             signer = pydocusign.Signer(email=signatory_email, name=signatory_name,
                                        recipientId=1, clientUserId=signature.get_signature_id(),
