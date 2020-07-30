@@ -283,7 +283,7 @@ func (repo repository) Save(user *models.UserUpdate) (*models.User, error) {
 	if user.GithubID != "" && oldUserModel.GithubID != user.GithubID {
 		log.WithFields(f).Debugf("building query - adding user_github_id: %s", user.GithubID)
 		expressionAttributeNames["#GI"] = aws.String("user_github_id")
-		expressionAttributeValues[":gi"] = &dynamodb.AttributeValue{S: aws.String(user.GithubID)}
+		expressionAttributeValues[":gi"] = &dynamodb.AttributeValue{N: aws.String(user.GithubID)}
 		updateExpression = updateExpression + " #GI = :gi, "
 	}
 
