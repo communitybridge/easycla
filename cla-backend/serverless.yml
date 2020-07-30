@@ -342,7 +342,7 @@ functions:
         - ./dynamo-events-lambda
 
   dynamo-repositories-events-lambda:
-    handler: dynamo-repositories-events-lambda
+    handler: dynamo-events-lambda
     name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-repositories-events-lambda
     description: "EasyCLA DynamoDB stream events handler for the repositories table"
     runtime: go1.x
