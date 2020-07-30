@@ -588,6 +588,12 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			}
 			result, err := v2service.GetSignedIclaZipPdf(params.ClaGroupID)
 			if err != nil {
+				if err == ErrZipNotPresent {
+					return signatures.NewDownloadProjectSignatureICLAsNotFound().WithPayload(&models.ErrorResponse{
+						Code:    "404",
+						Message: "EasyCLA: 404 Not found : no icla signatures found for this cla-group",
+					})
+				}
 				return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithPayload(errorResponse(err))
 			}
 			return signatures.NewDownloadProjectSignatureICLAsOK().WithPayload(result)
@@ -617,6 +623,12 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			}
 			result, err := v2service.GetSignedCclaZipPdf(params.ClaGroupID)
 			if err != nil {
+				if err == ErrZipNotPresent {
+					return signatures.NewDownloadProjectSignatureCCLAsNotFound().WithPayload(&models.ErrorResponse{
+						Code:    "404",
+						Message: "EasyCLA: 404 Not found : no ccla signatures found for this cla-group",
+					})
+				}
 				return signatures.NewDownloadProjectSignatureCCLAsInternalServerError().WithPayload(errorResponse(err))
 			}
 			return signatures.NewDownloadProjectSignatureCCLAsOK().WithPayload(result)
