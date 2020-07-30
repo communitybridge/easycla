@@ -1347,13 +1347,14 @@ class DocuSign(signing_service_interface.SigningService):
                 )
             elif signature.get_signature_reference_type() == 'company':
                 Event.create_event(
-                    event_type=EventType.EmployeeSignatureSigned,
+                    event_type=EventType.CompanySignatureSigned,
                     event_project_id=project_id,
                     event_company_id=company.get_company_id(),
                     event_user_id=user.get_user_id(),
-                    event_data=(f'employee signature of user {user.get_user_name()} '
+                    event_data=(f'corporate signature '
                                 f'signed for project {project.get_project_name()} '
-                                f'and company {company.get_company_name()}'),
+                                f'and company {company.get_company_name()} '
+                                f'by user {user.get_user_name()}'),
                     contains_pii=False,
                 )
 

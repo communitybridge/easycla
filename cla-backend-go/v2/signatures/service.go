@@ -5,6 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+
 	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
@@ -29,11 +33,18 @@ const (
 	ClaSignatureType  = "cla"
 )
 
+// errors
+var (
+	ErrZipNotPresent = errors.New("zip file not present")
+)
+
 type service struct {
 	v1ProjectService      project.Service
 	v1CompanyService      company.IService
 	v1SignatureService    signatures.SignatureService
 	projectsClaGroupsRepo projects_cla_groups.Repository
+	s3                    *s3.S3
+	signaturesBucket      string
 }
 
 // Service contains method of v2 signature service
@@ -49,7 +60,7 @@ type Service interface {
 }
 
 // NewService creates instance of v2 signature service
-func NewService(v1ProjectService project.Service,
+func NewService(awsSession *session.Session, signaturesBucketName string, v1ProjectService project.Service,
 	v1CompanyService company.IService,
 	v1SignatureService signatures.SignatureService,
 	pcgRepo projects_cla_groups.Repository) *service {
@@ -58,6 +69,8 @@ func NewService(v1ProjectService project.Service,
 		v1CompanyService:      v1CompanyService,
 		v1SignatureService:    v1SignatureService,
 		projectsClaGroupsRepo: pcgRepo,
+		s3:                    s3.New(awsSession),
+		signaturesBucket:      signaturesBucketName,
 	}
 }
 
@@ -182,6 +195,13 @@ func (s service) GetSignedDocument(signatureID string) (*models.SignedDocument, 
 
 func (s service) GetSignedCclaZipPdf(claGroupID string) (*models.URLObject, error) {
 	url := utils.SignedClaGroupZipFilename(claGroupID, CCLA)
+	ok, err := s.IsZipPresentOnS3(url)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, ErrZipNotPresent
+	}
 	signedURL, err := utils.GetDownloadLink(url)
 	if err != nil {
 		return nil, err
@@ -192,6 +212,13 @@ func (s service) GetSignedCclaZipPdf(claGroupID string) (*models.URLObject, erro
 }
 func (s service) GetSignedIclaZipPdf(claGroupID string) (*models.URLObject, error) {
 	url := utils.SignedClaGroupZipFilename(claGroupID, ICLA)
+	ok, err := s.IsZipPresentOnS3(url)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, ErrZipNotPresent
+	}
 	signedURL, err := utils.GetDownloadLink(url)
 	if err != nil {
 		return nil, err
@@ -199,6 +226,21 @@ func (s service) GetSignedIclaZipPdf(claGroupID string) (*models.URLObject, erro
 	return &models.URLObject{
 		URL: signedURL,
 	}, nil
+}
+
+func (s service) IsZipPresentOnS3(zipFilePath string) (bool, error) {
+	_, err := s.s3.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(s.signaturesBucket),
+		Key:    aws.String(zipFilePath),
+	})
+	if err != nil {
+		aerr, ok := err.(awserr.Error)
+		if ok && aerr.Code() == s3.ErrCodeNoSuchKey {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func (s service) GetClaGroupCorporateContributors(claGroupID string, companySFID *string, searchTerm *string) (*models.CorporateContributorList, error) {
