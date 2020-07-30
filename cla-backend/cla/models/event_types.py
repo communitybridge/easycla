@@ -42,4 +42,5 @@ class EventType(Enum):
     EmployeeSignatureDisapproved = "Employee signature disapproved"
     IndividualSignatureSigned = "Individual signature signed"
     EmployeeSignatureSigned = "Employee signature signed"
+    CompanySignatureSigned = "Company signature signed"
 
