@@ -456,6 +456,12 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 						authUser.UserName, claGroupModel.FoundationSFID),
 				})
 			}
+			if !claGroupModel.ProjectICLAEnabled {
+				return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA - 400 Bad Request - individual contribution is not supported for this project",
+				})
+			}
 
 			result, err := v2service.GetProjectIclaSignaturesCsv(params.ClaGroupID)
 			if err != nil {
@@ -476,15 +482,21 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			claGroupModel, err := projectService.GetCLAGroupByID(params.ClaGroupID)
 			if err != nil {
 				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithPayload(errorResponse(err))
+					return signatures.NewListClaGroupIclaSignatureBadRequest().WithPayload(errorResponse(err))
 				}
-				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithPayload(errorResponse(err))
+				return signatures.NewListClaGroupIclaSignatureInternalServerError().WithPayload(errorResponse(err))
 			}
 			if !utils.IsUserAuthorizedForProject(authUser, claGroupModel.FoundationSFID) {
-				return signatures.NewDownloadProjectSignatureICLAAsCSVForbidden().WithPayload(&models.ErrorResponse{
+				return signatures.NewListClaGroupIclaSignatureForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DownloadProjectSignatureICLAAsCSV with project scope of %s",
 						authUser.UserName, claGroupModel.FoundationSFID),
+				})
+			}
+			if !claGroupModel.ProjectICLAEnabled {
+				return signatures.NewListClaGroupIclaSignatureBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA - 400 Bad Request - individual contribution is not supported for this project",
 				})
 			}
 			result, err := v2service.GetProjectIclaSignatures(params.ClaGroupID, params.SearchTerm)
@@ -508,6 +520,12 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to ListClaGroupCorporateContributors with project scope of %s",
 						authUser.UserName, claGroupModel.FoundationSFID),
+				})
+			}
+			if !claGroupModel.ProjectCCLAEnabled {
+				return signatures.NewDownloadProjectSignatureICLABadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA - 400 Bad Request - This project does not support corporate contribution",
 				})
 			}
 			result, err := v2service.GetClaGroupCorporateContributors(params.ClaGroupID, params.CompanySFID, params.SearchTerm)
@@ -563,7 +581,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				})
 			}
 			if !claGroup.ProjectICLAEnabled {
-				return signatures.NewDownloadProjectSignatureCCLAsBadRequest().WithPayload(&models.ErrorResponse{
+				return signatures.NewDownloadProjectSignatureICLAsBadRequest().WithPayload(&models.ErrorResponse{
 					Code:    "400",
 					Message: "EasyCLA : 400 Bad Request : icla is not enabled on this project",
 				})
