@@ -721,6 +721,14 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	if userErr != nil {
 		msg := fmt.Sprintf("UserEmail: %s has no LFID and has been sent an invite email to create an account , error: %+v", userEmail, userErr)
 		log.Warn(msg)
+		// Send Email
+		sendErr := sendEmailToUserWithNoLFID(project.Name, contributor.UserName, contributor.UserEmails[0], userEmail, userEmail, organization.ID)
+		if sendErr != nil {
+			return nil, &models.ErrorResponse{
+				Code:    "400",
+				Message: sendErr.Error(),
+			}
+		}
 		return nil, &models.ErrorResponse{
 			Code:    "400",
 			Message: msg,
