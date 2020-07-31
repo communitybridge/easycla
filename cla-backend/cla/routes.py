@@ -29,6 +29,7 @@ from cla.utils import (
     get_supported_document_content_types,
     get_session_middleware,
 )
+from cla.controllers.project_cla_group import get_project_cla_group
 
 
 #
@@ -744,10 +745,19 @@ def get_project(project_id: hug.types.uuid):
 
     Returns the CLA project requested by ID.
     """
+    # returns value as a dict
     project = cla.controllers.project.get_project(project_id)
     # For public endpoint, don't show the project_external_id.
     if "project_external_id" in project:
         del project["project_external_id"]
+
+    # Add the Project CLA Group Mappings to the response model
+    sf_projects = []
+    project_cla_group_list = get_project_cla_group(project["project_id"])
+    for project_cla_group in project_cla_group_list:
+        sf_projects.append(project_cla_group.to_dict())
+    project["projects"] = sf_projects
+
     return project
 
 
