@@ -149,7 +149,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	userServiceClient := v2UserService.GetClient()
 	// Get Manager lf account by username. Used for email content
 	managerUser, mgrErr := userServiceClient.GetUserByUsername(authUsername)
-	if mgrErr != nil {
+	if mgrErr != nil || managerUser == nil {
 		msg := fmt.Sprintf("Failed to get Lfx User with username : %s ", authUsername)
 		log.Warn(msg)
 	}
@@ -165,11 +165,11 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		}
 	}
 	acsClient := v2AcsService.GetClient()
-	user, userErr := userServiceClient.SearchUserByEmail(*params.Body.UserEmail)
+	user, userErr := userServiceClient.SearchUserByEmail(params.Body.UserEmail.String())
 
 	if userErr != nil {
 		designeeName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
-		designeeEmail := *params.Body.UserEmail
+		designeeEmail := params.Body.UserEmail.String()
 		msg := fmt.Sprintf("User does not have an LFID account and has been sent an email invite: %s.", *params.Body.UserEmail)
 		log.Warn(msg)
 		sendEmailErr := sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, *managerUser.Emails[0].EmailAddress, designeeName, designeeEmail, organizationSF.ID)
@@ -314,7 +314,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 
 	for _, projectCG := range projectCLAGroups {
 
-		scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(*params.Body.UserEmail, projectCG.ProjectSFID, params.CompanySFID, roleID)
+		scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(params.Body.UserEmail.String(), projectCG.ProjectSFID, params.CompanySFID, roleID)
 		if scopeErr != nil {
 			msg := buildErrorMessageCreate(params, scopeErr)
 			log.Warn(msg)
@@ -341,7 +341,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 
 	claCompanyManager := &models.CompanyClaManager{
 		LfUsername:       user.Username,
-		Email:            *params.Body.UserEmail,
+		Email:            params.Body.UserEmail.String(),
 		UserSfid:         user.ID,
 		ApprovedOn:       time.Now().String(),
 		ProjectSfid:      params.ProjectSFID,
@@ -793,7 +793,7 @@ func (s *service) NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerLi
 
 	log.Debugf("Sending notification emails to claManagers: %+v", notifyCLAManagers.List)
 	for _, claManager := range notifyCLAManagers.List {
-		sendEmailToCLAManager(claManager.Name, claManager.Email, userModel.GithubUsername, notifyCLAManagers.CompanyName, notifyCLAManagers.ProjectName)
+		sendEmailToCLAManager(claManager.Name, claManager.Email.String(), userModel.GithubUsername, notifyCLAManagers.CompanyName, notifyCLAManagers.ProjectName)
 	}
 
 	return nil

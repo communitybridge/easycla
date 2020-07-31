@@ -138,7 +138,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				})
 			}
 
-			companyModel, err := service.CreateCompany(*params.Input.CompanyName, *params.Input.CompanyWebsite, *params.Input.UserEmail, params.UserID, LFXPortalURL)
+			companyModel, err := service.CreateCompany(*params.Input.CompanyName, *params.Input.CompanyWebsite, params.Input.UserEmail.String(), params.UserID, LFXPortalURL)
 			if err != nil {
 				log.Warnf("error returned from create company api: %+v", err)
 				if strings.Contains(err.Error(), "website already exists") {
