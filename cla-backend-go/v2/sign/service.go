@@ -16,12 +16,12 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
+	acsService "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
 
-	organization_service "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
+	organizationService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 
-	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
-	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
+	projectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
+	userService "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
@@ -127,7 +127,7 @@ func (s *service) RequestCorporateSignature(lfUsername string, authorizationHead
 	if err != nil {
 		return nil, err
 	}
-	psc := project_service.GetClient()
+	psc := projectService.GetClient()
 	project, err := psc.GetProject(utils.StringValue(input.ProjectSfid))
 	if err != nil {
 		return nil, err
@@ -207,12 +207,23 @@ func (s *service) RequestCorporateSignature(lfUsername string, authorizationHead
 }
 
 func requestCorporateSignature(authToken string, apiURL string, input *requestCorporateSignatureInput) (*requestCorporateSignatureOutput, error) {
+	f := logrus.Fields{
+		"functionName":   "requestCorporateSignature",
+		"apiURL":         apiURL,
+		"CompanyID":      input.CompanyID,
+		"ProjectID":      input.ProjectID,
+		"AuthorityName":  input.AuthorityName,
+		"AuthorityEmail": input.AuthorityEmail,
+		"ReturnURL":      input.ReturnURL,
+		"SendAsEmail":    input.SendAsEmail,
+	}
 	requestBody, err := json.Marshal(input)
 	if err != nil {
+		log.WithFields(f).Warnf("json marshal error: %+v", err)
 		return nil, err
 	}
 	client := http.Client{}
-	log.Debugf("requesting corporate signatures: %#v\n", string(requestBody))
+	log.WithFields(f).Debugf("requesting corporate signatures: %#v\n", string(requestBody))
 	req, err := http.NewRequest("POST", apiURL+"/v1/request-corporate-signature", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
@@ -221,24 +232,37 @@ func requestCorporateSignature(authToken string, apiURL string, input *requestCo
 	req.Header.Set("Authorization", authToken)
 	resp, err := client.Do(req)
 	if err != nil {
+		log.WithFields(f).Warnf("client request error: %+v", err)
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		closeErr := resp.Body.Close()
+		if closeErr != nil {
+			log.WithFields(f).Warnf("error closing response body: %+v", closeErr)
+		}
+	}()
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		log.WithFields(f).Warnf("error reading response body: %+v", err)
 		return nil, err
 	}
-	log.Debugf("corporate signature response: %#v\n", string(responseBody))
-	log.Debugf("corporate signature response headers :%#v\n", resp.Header)
+	log.WithFields(f).Debugf("corporate signature response: %#v\n", string(responseBody))
+	log.WithFields(f).Debugf("corporate signature response headers :%#v\n", resp.Header)
+
 	if strings.Contains(string(responseBody), "Company has already signed CCLA with this project") {
+		log.WithFields(f).Warnf("response contains error: %+v", responseBody)
 		return nil, errors.New("company has already signed CCLA with this project")
 	} else if strings.Contains(string(responseBody), "Contract Group does not support CCLAs.") {
+		log.WithFields(f).Warnf("response contains error: %+v", responseBody)
 		return nil, errors.New("contract Group does not support CCLAs")
 	} else if strings.Contains(string(responseBody), "user_error': 'user does not exist") {
+		log.WithFields(f).Warnf("response contains error: %+v", responseBody)
 		return nil, errors.New("user_error': 'user does not exist")
 	} else if strings.Contains(string(responseBody), "Internal server error") {
+		log.WithFields(f).Warnf("response contains error: %+v", responseBody)
 		return nil, errors.New("internal server error")
 	}
+
 	var out requestCorporateSignatureOutput
 	err = json.Unmarshal(responseBody, &out)
 	if err != nil {
@@ -247,14 +271,15 @@ func requestCorporateSignature(authToken string, apiURL string, input *requestCo
 		}
 		return nil, err
 	}
+
 	return &out, nil
 }
 
 func removeSignatoryRole(userEmail string, companySFID string, projectSFID string) error {
-	f := logrus.Fields{"user_email": userEmail, "company_sfid": companySFID, "project_sfid": projectSFID}
+	f := logrus.Fields{"functionName": "removeSignatoryRole", "user_email": userEmail, "company_sfid": companySFID, "project_sfid": projectSFID}
 	log.WithFields(f).Debug("removing role for user")
 
-	usc := user_service.GetClient()
+	usc := userService.GetClient()
 	// search user
 	log.WithFields(f).Debug("searching user by email")
 	user, err := usc.SearchUserByEmail(userEmail)
@@ -264,7 +289,7 @@ func removeSignatoryRole(userEmail string, companySFID string, projectSFID strin
 	}
 
 	log.WithFields(f).Debug("Getting role id")
-	acsClient := acs_service.GetClient()
+	acsClient := acsService.GetClient()
 	roleID, roleErr := acsClient.GetRoleID("cla-signatory")
 	if roleErr != nil {
 		log.WithFields(f).Debug("Failed to get role id for cla-signatory")
@@ -272,7 +297,7 @@ func removeSignatoryRole(userEmail string, companySFID string, projectSFID strin
 	}
 	// Get scope id
 	log.WithFields(f).Debug("getting scope id")
-	orgClient := organization_service.GetClient()
+	orgClient := organizationService.GetClient()
 	scopeID, scopeErr := orgClient.GetScopeID(companySFID, projectSFID, "cla-signatory", "project|organization", user.Username)
 
 	if scopeErr != nil {
@@ -298,7 +323,7 @@ func prepareUserForSigning(userEmail string, companySFID, projectSFID string) er
 	role := "cla-signatory"
 	f := logrus.Fields{"user_email": userEmail, "company_sfid": companySFID, "project_sfid": projectSFID}
 	log.WithFields(f).Debug("prepareUserForSigning called")
-	usc := user_service.GetClient()
+	usc := userService.GetClient()
 	// search user
 	log.WithFields(f).Debug("searching user by email")
 	user, err := usc.SearchUserByEmail(userEmail)
@@ -317,7 +342,7 @@ func prepareUserForSigning(userEmail string, companySFID, projectSFID string) er
 			return err
 		}
 	}
-	ac := acs_service.GetClient()
+	ac := acsService.GetClient()
 	log.WithFields(f).Debugf("getting role_id for %s", role)
 	roleID, err := ac.GetRoleID(role)
 	if err != nil {
@@ -327,10 +352,8 @@ func prepareUserForSigning(userEmail string, companySFID, projectSFID string) er
 	}
 	log.Debugf("role %s, role_id %s", role, roleID)
 	// assign user role of cla signatory for this project
-	osc := organization_service.GetClient()
-	if err != nil {
-		return err
-	}
+	osc := organizationService.GetClient()
+
 	// make user cla-signatory
 	log.WithFields(f).Debugf("assigning user role of %s", role)
 	err = osc.CreateOrgUserRoleOrgScopeProjectOrg(userEmail, projectSFID, companySFID, roleID)
