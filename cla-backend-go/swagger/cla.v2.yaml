@@ -1786,8 +1786,10 @@ paths:
                 description: claGroupID to be signed
                 type: string
               userEmail:
-                description: Proposed CLA Manager email
                 type: string
+                description: Proposed CLA Manager email
+                example: "user@linuxfoundation.org"
+                format: email
       responses:
         '200':
           description: 'Success'
@@ -1829,7 +1831,9 @@ paths:
                 pattern: '^\w+${1,60}'
               userEmail:
                 type: string
-                pattern: '[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]'
+                description: CLA Manager Designee email
+                example: "user@linuxfoundation.org"
+                format: email
               contactAdmin:
                 type: boolean
       responses:
@@ -1912,7 +1916,7 @@ paths:
           $ref: '#/responses/conflict'
       tags:
         - cla-manager
-  
+
   /company/{companySFID}/claGroup/{claGroupID}/cla-manager-designee:
     post:
       summary: Assigns CLA Manager designee
@@ -1930,12 +1934,14 @@ paths:
           schema:
             type: object
             x-nullable: false
-            title: CLA Manager designee
+            title: CLA Manager Designee
             description: User object used for CLA Manager designee
             properties:
               userEmail:
                 type: string
-
+                description: 'CLA Manager designee email address'
+                example: 'user@linuxfoundation.org'
+                format: email
       responses:
         '200':
           description: 'Success'
@@ -1947,11 +1953,12 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
         '409':
           $ref: '#/responses/conflict'
       tags:
         - cla-manager
-  
 
   /company/{companySFID}/project/{projectSFID}/cla-manager-designee:
     post:
@@ -1975,7 +1982,9 @@ paths:
             properties:
               userEmail:
                 type: string
-
+                description: 'CLA Manager designee email address'
+                example: 'user@linuxfoundation.org'
+                format: email
       responses:
         '200':
           description: 'Success'
@@ -1991,7 +2000,6 @@ paths:
           $ref: '#/responses/conflict'
       tags:
         - cla-manager
-
 
   /signatures/{signatureID}/gh-org-whitelist:
     get:
@@ -2928,8 +2936,9 @@ definitions:
         type: string
       userEmail:
         type: string
-        example: "wanyaland"
-
+        example: "user@linuxfoundation.org"
+        description: 'user company email'
+        format: email
   company-output:
     type: object
     properties:
@@ -3062,7 +3071,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/company-cla-manager'
-    
+
   cla-manager-designees:
     type: object
     title: cla manager designees
@@ -3186,6 +3195,9 @@ definitions:
         type: string
       userEmail:
         type: string
+        example: "user@linuxfoundation.org"
+        description: 'CLA Manager Email'
+        format: email
 
   enabled-cla-list:
     type: object
@@ -3267,6 +3279,9 @@ definitions:
     properties:
       email:
         type: string
+        description: CLA Manager email
+        example: "user@linuxfoundation.org"
+        format: email
       name:
         type: string
 
@@ -3397,8 +3412,8 @@ definitions:
         description: name of the cla signatory
       authority_email:
         type: string
-        example: 'john.doe@gmail.com'
-        description: email of the cla signatory
+        example: 'user@linuxfoundation.org'
+        description: Email of the CLA Signatory
         format: email
       return_url:
         type: string
