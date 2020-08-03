@@ -16,7 +16,7 @@ import (
 
 // Service handles gerrit Repository service
 type Service interface {
-	DeleteClaGroupGerrits(claGroupID string) error
+	DeleteClaGroupGerrits(claGroupID string) (int, error)
 	DeleteGerrit(gerritID string) error
 	GetGerrit(gerritID string) (*models.Gerrit, error)
 	AddGerrit(claGroupID string, projectSFID string, input *models.AddGerritInput) (*models.Gerrit, error)
@@ -36,21 +36,21 @@ func NewService(repo Repository, lfg *LFGroup) Service {
 	}
 }
 
-func (s service) DeleteClaGroupGerrits(claGroupID string) error {
+func (s service) DeleteClaGroupGerrits(claGroupID string) (int, error) {
 	gerrits, err := s.repo.GetClaGroupGerrits(claGroupID, nil)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if len(gerrits.List) > 0 {
 		log.Debugf(fmt.Sprintf("Deleting gerrits for cla-group :%s ", claGroupID))
 		for _, gerrit := range gerrits.List {
 			err = s.repo.DeleteGerrit(gerrit.GerritID)
 			if err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
-	return nil
+	return len(gerrits.List), nil
 }
 
 func (s service) DeleteGerrit(gerritID string) error {

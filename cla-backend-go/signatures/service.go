@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 
@@ -37,8 +38,9 @@ type SignatureService interface {
 	GetProjectCompanySignatures(params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error)
 	GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error)
 	GetCompanySignatures(params signatures.GetCompanySignaturesParams) (*models.Signatures, error)
+	GetCompanyIDsWithSignedCorporateSignatures(claGroupID string) ([]SignatureCompanyID, error)
 	GetUserSignatures(params signatures.GetUserSignaturesParams) (*models.Signatures, error)
-	InvalidateProjectRecords(projectID string, projectName string) error
+	InvalidateProjectRecords(projectID string, projectName string) (int, error)
 
 	GetGithubOrganizationsFromWhitelist(signatureID string, githubAccessToken string) ([]models.GithubOrg, error)
 	AddGithubOrganizationToWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
@@ -161,6 +163,11 @@ func (s service) GetCompanySignatures(params signatures.GetCompanySignaturesPara
 	}
 
 	return companySignatures, nil
+}
+
+// GetCompanyIDsWithSignedCorporateSignatures returns a list of company IDs that have signed a CLA agreement
+func (s service) GetCompanyIDsWithSignedCorporateSignatures(claGroupID string) ([]SignatureCompanyID, error) {
+	return s.repo.GetCompanyIDsWithSignedCorporateSignatures(claGroupID)
 }
 
 // GetUserSignatures returns the list of user signatures associated with the specified user
@@ -428,22 +435,40 @@ func (s service) UpdateApprovalList(authUser *auth.User, projectModel *models.Pr
 }
 
 // Disassociate project signatures
-func (s service) InvalidateProjectRecords(projectID string, projectName string) error {
+func (s service) InvalidateProjectRecords(projectID string, projectName string) (int, error) {
+	f := logrus.Fields{
+		"functionName": "InvalidateProjectRecords",
+		"projectID":    projectID,
+		"projectName":  projectName}
+
 	result, err := s.repo.ProjectSignatures(projectID)
 	if err != nil {
-		log.Warnf(fmt.Sprintf("Unable to get signatures for project : %s", projectID))
-		return err
+		log.WithFields(f).Warnf(fmt.Sprintf("Unable to get signatures for project: %s", projectID))
+		return 0, err
 	}
+
 	if len(result.Signatures) > 0 {
-		log.Debugf(fmt.Sprintf("Invalidating signatures for project : %s ", projectID))
+		var wg sync.WaitGroup
+		wg.Add(len(result.Signatures))
+		log.WithFields(f).Debugf(fmt.Sprintf("Invalidating %d signatures for project: %s ",
+			len(result.Signatures), projectID))
 		for _, signature := range result.Signatures {
-			updateErr := s.repo.InvalidateProjectRecord(signature.SignatureID, projectName)
-			if updateErr != nil {
-				log.Warnf("Unable to update signature :%s , error: %v", signature.SignatureID, updateErr)
-			}
+			// Do this in parallel, as we could have a lot to invalidate
+			go func(sigID, projName string) {
+				defer wg.Done()
+				updateErr := s.repo.InvalidateProjectRecord(sigID, projName)
+				if updateErr != nil {
+					log.WithFields(f).Warnf("Unable to update signature: %s with project name: %s, error: %v",
+						sigID, projName, updateErr)
+				}
+			}(signature.SignatureID, projectName)
 		}
+
+		// Wait until all the workers are done
+		wg.Wait()
 	}
-	return nil
+
+	return len(result.Signatures), nil
 }
 
 // AddCLAManager adds the specified manager to the signature ACL list
