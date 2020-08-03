@@ -465,6 +465,19 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 	orgClient := v2OrgService.GetClient()
 	projectClient := v2ProjectService.GetClient()
 
+	isSigned, signedErr := s.isSigned(projectID)
+	if signedErr != nil {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request- %s", signedErr)
+		log.Warn(msg)
+		return nil, signedErr
+	}
+
+	if isSigned {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project :%s is already signed ", projectID)
+		log.Warn(msg)
+		return nil, ErrProjectSigned
+	}
+
 	user, userErr := userClient.SearchUserByEmail(userEmail)
 	if userErr != nil {
 		log.Debugf("Failed to get user by email: %s , error: %+v", userEmail, userErr)
