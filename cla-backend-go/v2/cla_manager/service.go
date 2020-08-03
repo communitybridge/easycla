@@ -81,7 +81,7 @@ type service struct {
 type Service interface {
 	CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername string) (*models.CompanyClaManager, *models.ErrorResponse)
 	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
-	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributor *v1User.User, lFxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse)
+	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, name string, contributor *v1User.User, lFxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse)
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
 	CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, requestEmail, LfxPortalURL string) (*models.ClaManagerDesignee, error)
 	NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerList) error
@@ -667,7 +667,7 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 	return claManagerDesignee, nil
 }
 
-func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, contributor *v1User.User, LfxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse) {
+func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, name string, contributor *v1User.User, LfxPortalURL string) (*models.ClaManagerDesignee, *models.ErrorResponse) {
 	orgService := v2OrgService.GetClient()
 	projectService := v2ProjectService.GetClient()
 	userService := v2UserService.GetClient()
@@ -722,7 +722,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 		msg := fmt.Sprintf("UserEmail: %s has no LFID and has been sent an invite email to create an account , error: %+v", userEmail, userErr)
 		log.Warn(msg)
 		// Send Email
-		sendErr := sendEmailToUserWithNoLFID(project.Name, contributor.UserName, contributor.UserEmails[0], userEmail, userEmail, organization.ID)
+		sendErr := sendEmailToUserWithNoLFID(project.Name, contributor.UserName, contributor.UserEmails[0], name, userEmail, organization.ID)
 		if sendErr != nil {
 			return nil, &models.ErrorResponse{
 				Code:    "400",
