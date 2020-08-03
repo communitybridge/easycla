@@ -1889,6 +1889,37 @@ paths:
           $ref: '#/responses/internal-server-error'
       tags:
         - cla-manager
+  
+  /company/{companySFID}/contributorAssociation:
+    post:
+      summary: Associates a contributor with a company
+      description: Associates a contributor with a company
+      security: []
+      operationId: contributorAssociation
+      parameters:
+        - $ref: "#/parameters/path-companySFID"
+        - name: body
+          in: body
+          schema:
+            type: object
+            x-nullable: false
+            title: Contributor
+            properties:
+              userEmail:
+                description: LfEmail for contributor getting associated 
+                type: string
+
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/contributor'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - company
 
   /company/{companySFID}/project/{projectSFID}/cla-manager/{userLFID}:
     delete:
@@ -3082,6 +3113,37 @@ definitions:
         items:
           $ref:
             '#/definitions/cla-manager-designee'
+  
+  contributor:
+    type: object
+    title: Contributor
+    description: Contributor association with an org
+    properties:
+      lf_username:
+        type: string
+        description: 'the LF username'
+        x-omitempty: false
+        example: 'john.doe'
+      user_sfid:
+        type: string
+        description: 'the user SalesForce ID'
+        x-omitempty: false
+      email:
+        type: string
+        x-omitempty: false
+      assigned_on:
+        type: string
+        x-omitempty: false
+      company_sfid:
+        type: string
+        description: 'the Organization SalesForce ID'
+        x-omitempty: false
+        example: 'abc134234adsdf43'
+      role:
+        type: string
+        description: 'The role association with company'
+        example: 'contributor'
+        x-omitempty: false
 
   cla-manager-designee:
     type: object
