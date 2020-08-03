@@ -71,6 +71,7 @@ type Service interface {
 	DeleteCompanyByID(companyID string) error
 	DeleteCompanyBySFID(companySFID string) error
 	GetCompanyCLAGroupManagers(companyID, claGroupID string) (*models.CompanyClaManagers, error)
+	AssociateContributor(companySFID, userEmail string) (*models.Contributor, error)
 }
 
 // ProjectRepo contains project repo methods
@@ -320,6 +321,48 @@ func (s *service) GetCompanyByID(companyID string) (*models.Company, error) {
 	}
 
 	return &v2CompanyModel, nil
+}
+
+func (s *service) AssociateContributor(companySFID string, userEmail string) (*models.Contributor, error) {
+	f := logrus.Fields{"companySFID": companySFID, "userEmail": userEmail}
+
+	orgClient := orgService.GetClient()
+
+	userService := v2UserService.GetClient()
+	log.WithFields(f).Info("searching for LFX User")
+	lfxUser, userErr := userService.SearchUserByEmail(userEmail)
+	if userErr != nil {
+		log.WithFields(f).Warnf("unable to get user")
+		return nil, userErr
+	}
+
+	acsServiceClient := acs_service.GetClient()
+
+	log.WithFields(f).Info("Getting roleID for the contributor role")
+	roleID, roleErr := acsServiceClient.GetRoleID("contributor")
+	if roleErr != nil {
+		log.WithFields(f).Warn("Problem getting roleID for contributor role ")
+		return nil, roleErr
+	}
+
+	log.WithFields(f).Info("creating contributor role scope")
+	scopeErr := orgClient.CreateOrgUserRoleOrgScope(userEmail, companySFID, roleID)
+	if scopeErr != nil {
+		log.WithFields(f).Warnf("Problem creating role scope")
+		return nil, scopeErr
+	}
+
+	contributor := &models.Contributor{
+		LfUsername:  lfxUser.Username,
+		UserSfid:    lfxUser.ID,
+		Email:       userEmail,
+		AssignedOn:  time.Now().String(),
+		CompanySfid: companySFID,
+		Role:        *aws.String("contributor"),
+	}
+
+	return contributor, nil
+
 }
 
 // GetCompanyBySFID retrieves the company by external SFID
