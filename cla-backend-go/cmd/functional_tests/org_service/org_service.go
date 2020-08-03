@@ -5,9 +5,16 @@ package org_service
 
 import (
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/test_models"
+	"github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/config"
+	"github.com/communitybridge/easycla/cla-backend-go/events"
+	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
 	ini "github.com/communitybridge/easycla/cla-backend-go/init"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/project"
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+	"github.com/communitybridge/easycla/cla-backend-go/repositories"
+	"github.com/communitybridge/easycla/cla-backend-go/users"
 	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
 	organization_service "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	"github.com/spf13/viper"
@@ -43,7 +50,26 @@ func (t *TestBehaviour) RunIsUserHaveRoleScope() {
 		log.Panicf("Unable to load config - Error: %v", err)
 	}
 
-	organization_service.InitClient(configFile.APIGatewayURL)
+	// Our service layer handlers
+	type combinedRepo struct {
+		users.UserRepository
+		company.IRepository
+		project.ProjectRepository
+	}
+	eventsRepo := events.NewRepository(awsSession, stage)
+	usersRepo := users.NewRepository(awsSession, stage)
+	companyRepo := company.NewRepository(awsSession, stage)
+	repositoriesRepo := repositories.NewRepository(awsSession, stage)
+	gerritRepo := gerrits.NewRepository(awsSession, stage)
+	projectClaGroupRepo := projects_cla_groups.NewRepository(awsSession, stage)
+	projectRepo := project.NewRepository(awsSession, stage, repositoriesRepo, gerritRepo, projectClaGroupRepo)
+
+	eventsService := events.NewService(eventsRepo, combinedRepo{
+		usersRepo,
+		companyRepo,
+		projectRepo,
+	})
+	organization_service.InitClient(configFile.APIGatewayURL, eventsService)
 	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	acsClient := acs_service.GetClient()
 	roleID, roleErr := acsClient.GetRoleID("cla-manager")
