@@ -64,8 +64,10 @@ const (
 
 	ClaApprovalListUpdated = "cla_manager.approval_list_updated"
 
-	ClaManagerCreated = "cla_manager.added"
-	ClaManagerDeleted = "cla_manager.deleted"
+	ClaManagerCreated     = "cla_manager.added"
+	ClaManagerDeleted     = "cla_manager.deleted"
+	ClaManagerRoleCreated = "cla_manager.added"
+	ClaManagerRoleDeleted = "cla_manager.deleted"
 
 	CLAGroupCreated = "cla_group.created"
 	CLAGroupUpdated = "cla_group.updated"

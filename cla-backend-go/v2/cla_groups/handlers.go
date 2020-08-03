@@ -8,11 +8,7 @@ import (
 	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/template"
-
-	v1Repositories "github.com/communitybridge/easycla/cla-backend-go/repositories"
-	v1Signatures "github.com/communitybridge/easycla/cla-backend-go/signatures"
-
-	v1Gerrits "github.com/communitybridge/easycla/cla-backend-go/gerrits"
+	"github.com/sirupsen/logrus"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/foundation"
 
@@ -29,7 +25,7 @@ import (
 )
 
 // Configure configures the cla group api
-func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1Project.Service, eventsService events.Service, v1GerritService v1Gerrits.Service, v1RepositoryService v1Repositories.Service, v1SignatureService v1Signatures.SignatureService) {
+func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1Project.Service, eventsService events.Service) {
 
 	api.ClaGroupCreateClaGroupHandler = cla_group.CreateClaGroupHandlerFunc(func(params cla_group.CreateClaGroupParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
@@ -67,8 +63,16 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 	api.ClaGroupDeleteClaGroupHandler = cla_group.DeleteClaGroupHandlerFunc(func(params cla_group.DeleteClaGroupParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		cg, err := v1ProjectService.GetCLAGroupByID(params.ClaGroupID)
+		f := logrus.Fields{
+			"functionName": "ClaGroupDeleteClaGroupHandler",
+			"claGroupID":   params.ClaGroupID,
+			"authUsername": params.XUSERNAME,
+			"authEmail":    params.XEMAIL,
+		}
+
+		claGroupModel, err := v1ProjectService.GetCLAGroupByID(params.ClaGroupID)
 		if err != nil {
+			log.WithFields(f).Warn(err)
 			if err == v1Project.ErrProjectDoesNotExist {
 				return cla_group.NewDeleteClaGroupNotFound().WithPayload(&models.ErrorResponse{
 					Code: "404",
@@ -78,78 +82,31 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			}
 			return cla_group.NewDeleteClaGroupInternalServerError().WithPayload(&models.ErrorResponse{
 				Code: "500",
-				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - unable to lookup CLA Group by ID, error = %+v",
-					err),
+				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - unable to lookup CLA Group by ID: %s, error: %+v",
+					params.ClaGroupID, err),
 			})
 		}
-		if !utils.IsUserAuthorizedForProject(authUser, cg.FoundationSFID) {
+		if !utils.IsUserAuthorizedForProject(authUser, claGroupModel.FoundationSFID) {
 			return cla_group.NewDeleteClaGroupForbidden().WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DeleteCLAGroup with Project scope of %s",
-					authUser.UserName, cg.FoundationSFID),
+					authUser.UserName, claGroupModel.FoundationSFID),
 			})
 		}
 
-		// Delete gerrit repositories
-		log.Debugf(" Processing gerrit delete with cla-group id: %s", params.ClaGroupID)
-		err = v1GerritService.DeleteClaGroupGerrits(params.ClaGroupID)
+		err = service.DeleteCLAGroup(claGroupModel, authUser)
 		if err != nil {
+			log.WithFields(f).Warn(err)
 			return cla_group.NewDeleteClaGroupInternalServerError().WithPayload(&models.ErrorResponse{
-				Code:    "500",
-				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
-			})
-		}
-		// Log gerrit event
-		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.GerritRepositoryDeleted,
-			ProjectModel: cg,
-			LfUsername:   authUser.UserName,
-			EventData:    &events.GerritProjectDeletedEventData{},
-		})
-
-		// Delete github repositories
-		err = v1RepositoryService.DeleteProject(params.ClaGroupID)
-		if err != nil {
-			return cla_group.NewDeleteClaGroupInternalServerError().WithPayload(&models.ErrorResponse{
-				Code:    "500",
-				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
-			})
-		}
-
-		// Log github delete event
-		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.GithubRepositoryDeleted,
-			ProjectModel: cg,
-			LfUsername:   authUser.UserName,
-			EventData:    &events.GithubProjectDeletedEventData{},
-		})
-
-		// Invalidate project signatures
-		err = v1SignatureService.InvalidateProjectRecords(params.ClaGroupID, cg.ProjectName)
-		if err != nil {
-			return cla_group.NewDeleteClaGroupInternalServerError().WithPayload(&models.ErrorResponse{
-				Code:    "500",
-				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
-			})
-		}
-		// Log invalidate signatures
-		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.InvalidatedSignature,
-			ProjectModel: cg,
-			LfUsername:   authUser.UserName,
-			EventData:    &events.SignatureProjectInvalidatedEventData{},
-		})
-		err = service.DeleteCLAGroup(params.ClaGroupID)
-		if err != nil {
-			return cla_group.NewDeleteClaGroupInternalServerError().WithPayload(&models.ErrorResponse{
-				Code:    "500",
-				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+				Code: "500",
+				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error deleting CLA Group %s, error: %+v",
+					params.ClaGroupID, err),
 			})
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
 			EventType:    events.CLAGroupDeleted,
-			ProjectModel: cg,
+			ProjectModel: claGroupModel,
 			LfUsername:   authUser.UserName,
 			EventData:    &events.CLAGroupDeletedEventData{},
 		})
