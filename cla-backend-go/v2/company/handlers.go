@@ -290,6 +290,19 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 
 			return company.NewDeleteCompanyBySFIDNoContent()
 		})
+
+	api.CompanyContributorAssociationHandler = company.ContributorAssociationHandlerFunc(
+		func(params company.ContributorAssociationParams) middleware.Responder {
+			contributor, contributorErr := service.AssociateContributor(params.CompanySFID, params.Body.UserEmail)
+			if contributorErr != nil {
+				if _, ok := contributorErr.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
+					formatErr := errors.New("user already assigned contributor role for company")
+					return company.NewContributorAssociationConflict().WithPayload(errorResponse(formatErr))
+				}
+				return company.NewContributorAssociationBadRequest().WithPayload(errorResponse(contributorErr))
+			}
+			return company.NewContributorAssociationOK().WithPayload(contributor)
+		})
 }
 
 type codedResponse interface {
