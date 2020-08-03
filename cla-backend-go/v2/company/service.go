@@ -918,7 +918,7 @@ func (s service) autoCreateCompany(companySFID string) (*v1Models.Company, error
 }
 
 func sendEmailToUserCompanyProfile(orgName string, userEmail string, username string, LFXPortalURL string) {
-	subject := "EasyCLA: Invitation to create LFID and complete process of becoming CLA Manager"
+	subject := "EasyCLA: Company Profile "
 	recipients := []string{userEmail}
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
