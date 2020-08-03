@@ -1790,6 +1790,11 @@ paths:
                 description: Proposed CLA Manager email
                 example: "user@linuxfoundation.org"
                 format: email
+              name:
+                type: string
+                description: Proposed CLA Manager name
+                example: "Harold Wanyama"
+                pattern: '^\w+${1,60}'
       responses:
         '200':
           description: 'Success'
