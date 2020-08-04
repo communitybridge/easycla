@@ -79,6 +79,7 @@ github.com/communitybridge/easycla v1.0.24 h1:h5Va+gTw4CZ3AqNR8GX/yuG4pMgA7lrVEZ
 github.com/communitybridge/easycla v1.0.26 h1:5FemHMYOiOmnDTyt5jhEoqupbylPYOeKOaOvoAUmOHo=
 github.com/communitybridge/easycla v1.0.27 h1:LiHHhDnbdaPlScnQ2Pe6aNnIF/TZ/VSBWTHZEV/1xZE=
 github.com/communitybridge/easycla v1.0.29 h1:ywqFGRSXd4WIHdnb55pMEQDM/fIJZo5///1iv6BkQFs=
+github.com/communitybridge/easycla v1.0.30 h1:TaCh9DTjZKat23bVUF0d3XMRtvM7Rvf+IWdIH3pnjcU=
 github.com/corbym/gocrest v1.0.3/go.mod h1:maVFL5lbdS2PgfOQgGRWDYTeunSWQeiEgoNdTABShCs=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=

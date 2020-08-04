@@ -2149,7 +2149,7 @@ paths:
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - $ref: "#/parameters/gerritName"
+        - $ref: "#/parameters/gerritHost"
       responses:
         '200':
           description: 'Success'
@@ -2697,11 +2697,15 @@ parameters:
     description: salesforce id of the company
     in: query
     type: string
-  gerritName:
-    name: gerritName
-    description: name of the gerrit server
+  gerritHost:
+    name: gerritHost
+    description: host of the gerrit server
     in: query
     type: string
+    # Valid hostname
+    format: hostname
+    minLength: 3
+    maxLength: 255
   x-acl:
     name: X-ACL
     description: The access control list header value encoded as base64 - assigned by the API Gateway based on user/request permissions

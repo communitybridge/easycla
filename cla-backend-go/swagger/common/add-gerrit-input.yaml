@@ -5,9 +5,24 @@ required:
 properties:
   gerritName:
     type: string
+    description: the gerrit name
+    example: 'ONAP'
+    minLength: 3
   gerritUrl:
     type: string
+    description: the gerrit url
+    example: 'https://gerrit.onap.org'
+    minLength: 3
+    format: uri
   groupIdCcla:
     type: string
+    description: the LDAP group ID for CCLA
+    example: '1902'
+    minLength: 3
+    maxLength: 12
   groupIdIcla:
     type: string
+    description: the LDAP group ID for ICLA
+    example: '1903'
+    minLength: 3
+    maxLength: 12

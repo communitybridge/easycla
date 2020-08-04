@@ -1,6 +1,8 @@
 package gerrits
 
 import (
+	"strings"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
@@ -65,6 +67,14 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 			if !claUser.IsAuthorizedForProject(projectModel.ProjectExternalID) {
 				return gerrits.NewAddGerritUnauthorized()
 			}
+
+			if len(strings.TrimSpace(*params.AddGerritInput.GerritName)) == 0 {
+				return gerrits.NewGetGerritReposBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "invalid gerritName parameter - expecting gerrit hostname",
+				})
+			}
+
 			// add the gerrit
 			result, err := service.AddGerrit(params.ProjectID, projectModel.ProjectExternalID, params.AddGerritInput)
 			if err != nil {
@@ -80,6 +90,27 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 				},
 			})
 			return gerrits.NewAddGerritOK().WithPayload(result)
+		})
+
+	api.GerritsGetGerritReposHandler = gerrits.GetGerritReposHandlerFunc(
+		func(params gerrits.GetGerritReposParams, authUser *user.CLAUser) middleware.Responder {
+
+			// No specific permissions required
+
+			// Validate input
+			if params.GerritHost == nil {
+				return gerrits.NewGetGerritReposBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "missing gerritHost query parameter",
+				})
+			}
+
+			result, err := service.GetGerritRepos(params.GerritHost.String())
+			if err != nil {
+				return gerrits.NewGetGerritReposBadRequest().WithPayload(errorResponse(err))
+			}
+
+			return gerrits.NewGetGerritReposOK().WithPayload(result)
 		})
 }
 
