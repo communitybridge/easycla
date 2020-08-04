@@ -136,7 +136,7 @@ func (s service) GetClaGroupCorporateContributorsCsv(claGroupID string, companyS
 	}
 
 	if len(result.List) == 0 {
-		return nil, errors.New("Not Found")
+		return nil, errors.New("not Found")
 	}
 
 	b.WriteString(`Github ID,LF_ID,Name,Email,Date Signed`)

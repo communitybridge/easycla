@@ -432,7 +432,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 					formatErr := errors.New("error retrieving company using companySFID")
 					return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithPayload(errorResponse(formatErr))
 				}
-				if ok := err.Error() == "Not Found"; ok {
+				if ok := err.Error() == "not Found"; ok {
 					message := fmt.Sprintf("request not found for Company ID: %s, Cla Group ID: %s",
 						params.CompanySFID, params.ClaGroupID)
 					formatErr := errors.New(message)
