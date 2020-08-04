@@ -3,9 +3,13 @@ properties:
   dateCreated:
     type: string
     example: "2020-02-06T09:31:49.245630+0000"
+    minLength: 18
+    maxLength: 64
   dateModified:
     type: string
     example: "2020-02-06T09:31:49.245646+0000"
+    minLength: 18
+    maxLength: 64
   organizationInstallationID:
     type: integer
     example: 6635271
@@ -44,6 +48,7 @@ properties:
             type: string
             x-nullable: true
             example: "https://github.com/communitybridge"
+            format: uri
   repositories:
     type: object
     properties:

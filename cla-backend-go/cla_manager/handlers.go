@@ -306,7 +306,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		// Update the signature ACL
-		_, aclErr := sigService.AddCLAManager(sigModel.SignatureID, request.UserID)
+		_, aclErr := sigService.AddCLAManager(sigModel.SignatureID.String(), request.UserID)
 		if aclErr != nil {
 			msg := buildErrorMessageForApprove(params, aclErr)
 			log.Warn(msg)

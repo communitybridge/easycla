@@ -461,7 +461,7 @@ func (s service) InvalidateProjectRecords(projectID string, projectName string) 
 					log.WithFields(f).Warnf("Unable to update signature: %s with project name: %s, error: %v",
 						sigID, projName, updateErr)
 				}
-			}(signature.SignatureID, projectName)
+			}(signature.SignatureID.String(), projectName)
 		}
 
 		// Wait until all the workers are done
