@@ -9,6 +9,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/LF-Engineering/lfx-kit/auth"
+	"github.com/communitybridge/easycla/cla-backend-go/events"
+	"github.com/sirupsen/logrus"
+
 	"github.com/aws/aws-sdk-go/aws"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -31,10 +35,11 @@ const (
 
 var (
 	organizationServiceClient *Client
+	v1EventService            events.Service
 )
 
 // InitClient initializes the user_service client
-func InitClient(APIGwURL string) {
+func InitClient(APIGwURL string, eventService events.Service) {
 	APIGwURL = strings.ReplaceAll(APIGwURL, "https://", "")
 	organizationServiceClient = &Client{
 		cl: client.NewHTTPClientWithConfig(strfmt.Default, &client.TransportConfig{
@@ -43,6 +48,7 @@ func InitClient(APIGwURL string) {
 			Schemes:  []string{"https"},
 		}),
 	}
+	v1EventService = eventService
 }
 
 // GetClient return user_service client
@@ -148,6 +154,69 @@ func (osc *Client) CreateOrgUserRoleOrgScopeProjectOrg(emailID string, projectID
 		return err
 	}
 	log.Debugf("CreateOrgUserRoleOrgScope: result: %#v\n", result)
+	return nil
+}
+
+// DeleteRolePermissions removes the specified Org/Project user permissions for with the given role
+func (osc *Client) DeleteRolePermissions(organizationID, projectID, role string, authUser *auth.User) error {
+	f := logrus.Fields{
+		"functionName":   "DeleteRolePermissions",
+		"organizationID": organizationID,
+		"projectID":      projectID,
+		"role":           role,
+	}
+
+	// First, query the organization for the list of permissions (scopes)
+	scopeResponse, err := osc.ListOrgUserScopes(organizationID, []string{role})
+	if err != nil {
+		log.WithFields(f).Warnf("problem listing org user scopes, error: %+v", err)
+		return err
+	}
+
+	// For each result...
+	for _, userRoleScopes := range scopeResponse.Userroles {
+		userName := userRoleScopes.Contact.Username
+		userEmail := userRoleScopes.Contact.EmailAddress
+
+		for _, roleScopes := range userRoleScopes.RoleScopes {
+			roleID := roleScopes.RoleID
+			for _, scope := range roleScopes.Scopes {
+				// Encoded as ProjectID|OrganizationID - split them out
+				objectList := strings.Split(scope.ObjectID, "|")
+				// check objectID having project|organization scope
+				if len(objectList) == 2 {
+					if scope.ObjectTypeName == projectOrganization && projectID == objectList[0] {
+						delErr := osc.DeleteOrgUserRoleOrgScopeProjectOrg(organizationID, roleID, scope.ScopeID, &userName, &userEmail)
+						if delErr != nil {
+							f["userName"] = userName
+							f["userEmail"] = userEmail
+							log.WithFields(f).Warnf("problem removing user from role, error: %+v", err)
+							return delErr
+						}
+
+						// Log Event...
+						v1EventService.LogEvent(&events.LogEventArgs{
+							EventType:         events.ClaManagerRoleDeleted,
+							ProjectID:         projectID,
+							ProjectModel:      nil,
+							CompanyID:         organizationID,
+							CompanyModel:      nil,
+							LfUsername:        authUser.UserName,
+							UserID:            authUser.UserName,
+							UserModel:         nil,
+							ExternalProjectID: projectID,
+							EventData: &events.ClaManagerRoleCreatedData{
+								Role:      role,                 // cla-manager
+								Scope:     scope.ObjectTypeName, // project|organization
+								UserName:  userName,             // bstonedev
+								UserEmail: userEmail,            // bstone+dev@linuxfoundation.org
+							},
+						})
+					}
+				}
+			}
+		}
+	}
 	return nil
 }
 

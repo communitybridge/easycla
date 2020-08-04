@@ -12,6 +12,14 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/LF-Engineering/lfx-kit/auth"
+	v1ClaManager "github.com/communitybridge/easycla/cla-backend-go/cla_manager"
+	"github.com/communitybridge/easycla/cla-backend-go/events"
+	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
+	"github.com/communitybridge/easycla/cla-backend-go/repositories"
+	signatureService "github.com/communitybridge/easycla/cla-backend-go/signatures"
+	organization_service "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
+
 	"github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -39,26 +47,36 @@ type service struct {
 	v1ProjectService      v1Project.Service
 	v1TemplateService     v1Template.Service
 	projectsClaGroupsRepo projects_cla_groups.Repository
+	claManagerRequests    v1ClaManager.IService
+	signatureService      signatureService.SignatureService
 	metricsRepo           metrics.Repository
+	gerritService         gerrits.Service
+	repositoriesService   repositories.Service
+	eventsService         events.Service
 }
 
 // Service interface
 type Service interface {
 	CreateCLAGroup(input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error)
 	EnrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error
-	DeleteCLAGroup(claGroupID string) error
+	DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth.User) error
 	ListClaGroupsForFoundationOrProject(foundationSFID string) (*models.ClaGroupList, error)
 	ValidateCLAGroup(input *models.ClaGroupValidationRequest) (bool, []string)
 	ListAllFoundationClaGroups(foundationID *string) (*models.FoundationMappingList, error)
 }
 
 // NewService returns instance of CLA group service
-func NewService(projectService v1Project.Service, templateService v1Template.Service, projectsClaGroupsRepo projects_cla_groups.Repository, metricsRepo metrics.Repository) Service {
+func NewService(projectService v1Project.Service, templateService v1Template.Service, projectsClaGroupsRepo projects_cla_groups.Repository, claMangerRequests v1ClaManager.IService, signatureService signatureService.SignatureService, metricsRepo metrics.Repository, gerritService gerrits.Service, repositoriesService repositories.Service, eventsService events.Service) Service {
 	return &service{
 		v1ProjectService:      projectService, // aka cla_group service of v1
 		v1TemplateService:     templateService,
 		projectsClaGroupsRepo: projectsClaGroupsRepo,
+		claManagerRequests:    claMangerRequests,
+		signatureService:      signatureService,
 		metricsRepo:           metricsRepo,
+		gerritService:         gerritService,
+		repositoriesService:   repositoriesService,
+		eventsService:         eventsService,
 	}
 }
 
@@ -344,20 +362,184 @@ func (s *service) EnrollProjectsInClaGroup(claGroupID string, foundationSFID str
 	return nil
 }
 
-func (s *service) DeleteCLAGroup(claGroupID string) error {
-	f := logrus.Fields{"cla_group_id": claGroupID}
-	log.WithFields(f).Debug("deleting cla_group")
-	log.WithFields(f).Debug("deleting cla_group project association")
-	err := s.projectsClaGroupsRepo.RemoveProjectAssociatedWithClaGroup(claGroupID, []string{}, true)
+// DeleteCLAGroup handles deleting and invalidating the CLA group, removing permissions, cleaning up pending requests, etc.
+func (s *service) DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth.User) error {
+	f := logrus.Fields{
+		"functionName":             "DeleteCLAGroup",
+		"claGroupID":               claGroupModel.ProjectID,
+		"claGroupExternalID":       claGroupModel.ProjectExternalID,
+		"claGroupName":             claGroupModel.ProjectName,
+		"claGroupFoundationSFID":   claGroupModel.FoundationSFID,
+		"claGroupVersion":          claGroupModel.Version,
+		"claGroupICLAEnabled":      claGroupModel.ProjectICLAEnabled,
+		"claGroupCCLAEnabled":      claGroupModel.ProjectCCLAEnabled,
+		"claGroupCCLARequiresICLA": claGroupModel.ProjectCCLARequiresICLA,
+	}
+	log.WithFields(f).Debug("start deleting CLA Group")
+
+	// Delete gerrit repositories
+	numDeleted, err := s.gerritService.DeleteClaGroupGerrits(claGroupModel.ProjectID)
+	if err != nil {
+		log.WithFields(f).Warn(err)
+		return err
+	}
+	if numDeleted > 0 {
+		log.WithFields(f).Debugf("deleted %d gerrit repositories", numDeleted)
+		// Log gerrit event
+		s.eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.GerritRepositoryDeleted,
+			ProjectModel: claGroupModel,
+			LfUsername:   authUser.UserName,
+			EventData:    &events.GerritProjectDeletedEventData{},
+		})
+	} else {
+		log.WithFields(f).Debug("no gerrit repositories found to delete")
+	}
+
+	// Delete github repositories
+	numDeleted, delGHReposErr := s.repositoriesService.DeleteProject(claGroupModel.ProjectID)
+	if delGHReposErr != nil {
+		log.WithFields(f).Warn(delGHReposErr)
+		return err
+	}
+	if numDeleted > 0 {
+		log.WithFields(f).Debugf("deleted %d github repositories", numDeleted)
+		// Log github delete event
+		s.eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.GithubRepositoryDeleted,
+			ProjectModel: claGroupModel,
+			LfUsername:   authUser.UserName,
+			EventData:    &events.GithubProjectDeletedEventData{},
+		})
+	} else {
+		log.WithFields(f).Debug("no github repositories found to delete")
+	}
+
+	// Locate all the signed/approved corporate CLA signature records - need all the Organization IDs so we can
+	// remove CLA Manager/CLA Manager Designee/CLA Signatory Permissions
+	log.WithFields(f).Debug("locating signed corporate signatures")
+	signatureCompanyIDModels, companyIDErr := s.signatureService.GetCompanyIDsWithSignedCorporateSignatures(claGroupModel.ProjectID)
+	if companyIDErr != nil {
+		log.WithFields(f).Warnf("unable to fetch list of company IDs, error: %+v", companyIDErr)
+		return companyIDErr
+	}
+	log.WithFields(f).Debugf("discovered %d corporate signatures to investigate", len(signatureCompanyIDModels))
+
+	// Invalidate project signatures
+	log.WithFields(f).Debug("locating signatures to invalidate")
+	numInvalidated, invalidateErr := s.signatureService.InvalidateProjectRecords(claGroupModel.ProjectID, claGroupModel.ProjectName)
+	if invalidateErr != nil {
+		log.WithFields(f).Warn(invalidateErr)
+		return invalidateErr
+	}
+	if numInvalidated > 0 {
+		log.WithFields(f).Debugf("invalidated %d signatures", numInvalidated)
+		// Log invalidate signatures
+		s.eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.InvalidatedSignature,
+			ProjectModel: claGroupModel,
+			LfUsername:   authUser.UserName,
+			EventData:    &events.SignatureProjectInvalidatedEventData{},
+		})
+	} else {
+		log.WithFields(f).Debug("no signatures found to invalidate")
+	}
+
+	// Search ACS for users with cla-manager role with scope of ProjectSFID|CompanySFID => remove cla-manage role
+	oscClient := organization_service.GetClient()
+
+	// Error channel to send back the results
+	errChan := make(chan error)
+
+	// Don't remove project-manager or contributor roles (association with org)
+	// Basically, we want to clean up all who have: Project|Organization scope (corporate console stuff)
+	// For each organization/company...
+	for _, signatureCompanyIDModel := range signatureCompanyIDModels {
+		go func(signatureCompanyIDModel signatureService.SignatureCompanyID, projectSFID string, authUser *auth.User) {
+			// Additional fields for logging
+			f["companySFID"] = signatureCompanyIDModel.CompanySFID
+			f["companyID"] = signatureCompanyIDModel.CompanyID
+			f["companyName"] = signatureCompanyIDModel.CompanyName
+
+			log.WithFields(f).Debugf("locating CLA Manager requests for company: %s", signatureCompanyIDModel.CompanyName)
+			// Fetch any pending CLA manager requests for this company/project
+			requestList, requestErr := s.claManagerRequests.GetRequests(signatureCompanyIDModel.CompanyID, claGroupModel.ProjectID)
+			if requestErr != nil {
+				log.WithFields(f).Warn(requestErr)
+				errChan <- requestErr
+				return
+			}
+
+			// If we have any CLA manager requests - delete them
+			if requestList != nil && len(requestList.Requests) > 0 {
+				log.WithFields(f).Debugf("removing %d CLA Manager Requests found for company and project", len(requestList.Requests))
+				for _, request := range requestList.Requests {
+					reqDelErr := s.claManagerRequests.DeleteRequest(request.RequestID)
+					log.WithFields(f).Warn(reqDelErr)
+					errChan <- reqDelErr
+					return
+				}
+			} else {
+				log.WithFields(f).Debug("no CLA Manager Requests found for company and project")
+			}
+
+			log.WithFields(f).Debugf("removing permissions for CLA Managers, CLA Manager Designees, and CLA Signatories for company: %s", signatureCompanyIDModel.CompanyName)
+			// CLA Managers
+			claMgrErr := oscClient.DeleteRolePermissions(signatureCompanyIDModel.CompanySFID, projectSFID, "cla-manager", authUser)
+			if claMgrErr != nil {
+				log.WithFields(f).Warn(err)
+				errChan <- claMgrErr
+				return
+			}
+
+			// CLA Manager Designee
+			claMgrDesigneeErr := oscClient.DeleteRolePermissions(signatureCompanyIDModel.CompanySFID, projectSFID, "cla-manager-designee", authUser)
+			if claMgrDesigneeErr != nil {
+				log.WithFields(f).Warn(err)
+				errChan <- claMgrDesigneeErr
+				return
+			}
+
+			// CLA Signatories
+			claSignatoryErr := oscClient.DeleteRolePermissions(signatureCompanyIDModel.CompanySFID, projectSFID, "cla-signatory", authUser)
+			if claSignatoryErr != nil {
+				log.WithFields(f).Warn(err)
+				errChan <- claSignatoryErr
+				return
+			}
+
+			// No errors - nice...return nil
+			errChan <- nil
+		}(signatureCompanyIDModel, claGroupModel.ProjectID, authUser)
+	}
+
+	// Process the results
+	for range signatureCompanyIDModels {
+		errFromFunc := <-errChan
+		if errFromFunc != nil {
+			log.WithFields(f).Warnf("problem removing removing requests or removing permissions, error: %+v - continuing with CLA Group delete", errFromFunc)
+		}
+	}
+
+	// clear fields for logging - don't need them anymore
+	delete(f, "companySFID")
+	delete(f, "companyID")
+	delete(f, "companyName")
+
+	// Is this done via trigger?
+	log.WithFields(f).Debug("deleting cla_group project associations")
+	err = s.projectsClaGroupsRepo.RemoveProjectAssociatedWithClaGroup(claGroupModel.ProjectID, []string{}, true)
 	if err != nil {
 		return nil
 	}
+
 	log.WithFields(f).Debug("deleting cla_group from dynamodb")
-	err = s.v1ProjectService.DeleteCLAGroup(claGroupID)
+	err = s.v1ProjectService.DeleteCLAGroup(claGroupModel.ProjectID)
 	if err != nil {
 		log.WithFields(f).Errorf("deleting cla_group from dynamodb failed. error = %s", err.Error())
 		return err
 	}
+
 	return nil
 }
 

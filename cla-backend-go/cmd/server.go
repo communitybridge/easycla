@@ -232,10 +232,10 @@ func server(localMode bool) http.Handler {
 	v2SignService := sign.NewService(configFile.ClaV1ApiURL, companyRepo, projectRepo, projectClaGroupRepo, companyService)
 	signaturesService := signatures.NewService(signaturesRepo, companyService, usersService, eventsService, githubOrgValidation)
 	v2SignatureService := v2Signatures.NewService(awsSession, configFile.SignatureFilesBucket, projectService, companyService, signaturesService, projectClaGroupRepo)
-	claManagerService := cla_manager.NewService(claManagerReqRepo, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
+	v1ClaManagerService := cla_manager.NewService(claManagerReqRepo, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 	repositoriesService := repositories.NewService(repositoriesRepo)
 	v2RepositoriesService := v2Repositories.NewService(repositoriesRepo, projectClaGroupRepo, githubOrganizationsRepo)
-	v2ClaManagerService := v2ClaManager.NewService(companyService, projectService, claManagerService, usersService, repositoriesService, v2CompanyService, eventsService, projectClaGroupRepo)
+	v2ClaManagerService := v2ClaManager.NewService(companyService, projectService, v1ClaManagerService, usersService, repositoriesService, v2CompanyService, eventsService, projectClaGroupRepo)
 	approvalListService := approval_list.NewService(approvalListRepo, usersRepo, companyRepo, projectRepo, signaturesRepo, configFile.CorporateConsoleURL, http.DefaultClient)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 	v2MetricsService := metrics.NewService(metricsRepo, projectClaGroupRepo)
@@ -248,7 +248,7 @@ func server(localMode bool) http.Handler {
 		RefreshToken: configFile.LFGroup.RefreshToken,
 	})
 	v2GerritService := v2Gerrits.NewService()
-	v2ClaGroupService := cla_groups.NewService(projectService, templateService, projectClaGroupRepo, metricsRepo)
+	v2ClaGroupService := cla_groups.NewService(projectService, templateService, projectClaGroupRepo, v1ClaManagerService, signaturesService, metricsRepo, gerritService, repositoriesService, eventsService)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
@@ -260,6 +260,11 @@ func server(localMode bool) http.Handler {
 	// Setup security handlers
 	api.OauthSecurityAuth = authorizer.SecurityAuth
 	v2API.LfAuthAuth = lfxAuth.SwaggerAuth
+
+	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
+	project_service.InitClient(configFile.APIGatewayURL)
+	organization_service.InitClient(configFile.APIGatewayURL, eventsService)
+	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 
 	// Setup our API handlers
 	users.Configure(api, usersService, eventsService)
@@ -288,15 +293,10 @@ func server(localMode bool) http.Handler {
 	gerrits.Configure(api, gerritService, projectService, eventsService)
 	v2Gerrits.Configure(v2API, gerritService, v2GerritService, projectService, eventsService, projectClaGroupRepo)
 	v2Company.Configure(v2API, v2CompanyService, companyRepo, configFile.LFXPortalURL)
-	cla_manager.Configure(api, claManagerService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
+	cla_manager.Configure(api, v1ClaManagerService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 	v2ClaManager.Configure(v2API, v2ClaManagerService, configFile.LFXPortalURL, projectClaGroupRepo, userRepo)
 	sign.Configure(v2API, v2SignService)
-	cla_groups.Configure(v2API, v2ClaGroupService, projectService, eventsService, gerritService, repositoriesService, signaturesService)
-
-	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
-	project_service.InitClient(configFile.APIGatewayURL)
-	organization_service.InitClient(configFile.APIGatewayURL)
-	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
+	cla_groups.Configure(v2API, v2ClaGroupService, projectService, eventsService)
 
 	userCreaterMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
