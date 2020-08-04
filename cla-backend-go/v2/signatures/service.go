@@ -122,6 +122,10 @@ func (s service) GetClaGroupCorporateContributorsCsv(claGroupID string, companyS
 		return nil, err
 	}
 
+	if len(result.List) == 0 {
+		return nil, errors.New("Not Found")
+	}
+
 	b.WriteString(`Github ID,LF_ID,Name,Email,Date Signed`)
 	for _, sig := range result.List {
 		b.WriteString(eclaSigCsvLine(sig))
