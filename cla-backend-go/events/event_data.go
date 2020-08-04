@@ -17,7 +17,9 @@ type GithubRepositoryDeletedEventData struct {
 	RepositoryName string
 }
 
-type GerritProjectDeletedEventData struct{}
+type GerritProjectDeletedEventData struct {
+	DeletedCount int
+}
 
 type GerritAddedEventData struct {
 	GerritRepositoryName string
@@ -27,9 +29,13 @@ type GerritDeletedEventData struct {
 	GerritRepositoryName string
 }
 
-type GithubProjectDeletedEventData struct{}
+type GithubProjectDeletedEventData struct {
+	DeletedCount int
+}
 
-type SignatureProjectInvalidatedEventData struct{}
+type SignatureProjectInvalidatedEventData struct {
+	InvalidatedCount int
+}
 
 type UserCreatedEventData struct{}
 type UserDeletedEventData struct {
@@ -230,6 +236,20 @@ type UserConvertToContactData struct{}
 type AssignRoleScopeData struct {
 	Role  string
 	Scope string
+}
+
+type ClaManagerRoleCreatedData struct {
+	Role      string
+	Scope     string
+	UserName  string
+	UserEmail string
+}
+
+type ClaManagerRoleDeletedData struct {
+	Role      string
+	Scope     string
+	UserName  string
+	UserEmail string
 }
 
 func (ed *GithubRepositoryAddedEventData) GetEventString(args *LogEventArgs) (string, bool) {
@@ -441,8 +461,8 @@ func (ed *CLAGroupDeletedEventData) GetEventString(args *LogEventArgs) (string, 
 }
 
 func (ed *GerritProjectDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Gerrit Repository Deleted  due to CLA Group/Project: [%s] deletion",
-		args.projectName)
+	data := fmt.Sprintf("Deleted %d Gerrit Repositories due to CLA Group/Project: [%s] deletion",
+		ed.DeletedCount, args.projectName)
 	containsPII := false
 	return data, containsPII
 }
@@ -460,14 +480,14 @@ func (ed *GerritDeletedEventData) GetEventString(args *LogEventArgs) (string, bo
 }
 
 func (ed *GithubProjectDeletedEventData) GetEventString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Github Repository Deleted  due to CLA Group/Project: [%s] deletion",
-		args.projectName)
+	data := fmt.Sprintf("Deleted %d Github Repositories  due to CLA Group/Project: [%s] deletion",
+		ed.DeletedCount, args.projectName)
 	return data, true
 }
 
 func (ed *SignatureProjectInvalidatedEventData) GetEventString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Signature invalidated (approved set to false) due to CLA Group/Project: [%s] deletion",
-		args.projectName)
+	data := fmt.Sprintf("Invalidated %d signatures (approved set to false) due to CLA Group/Project: [%s] deletion",
+		ed.InvalidatedCount, args.projectName)
 	return data, true
 }
 
@@ -504,4 +524,14 @@ func (ed *AssignRoleScopeData) GetEventString(args *LogEventArgs) (string, bool)
 		args.LfUsername,
 		ed.Scope, ed.Role, args.ExternalProjectID)
 	return data, true
+}
+
+func (ed *ClaManagerRoleCreatedData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] added user %s/%s from role: %s with scope: %s", args.userName, ed.UserName, ed.UserEmail, ed.Role, ed.Scope)
+	return data, false
+}
+
+func (ed *ClaManagerRoleDeletedData) GetEventString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] removed user %s/%s from role: %s with scope: %s", args.userName, ed.UserName, ed.UserEmail, ed.Role, ed.Scope)
+	return data, false
 }

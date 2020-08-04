@@ -64,6 +64,7 @@ type SignatureRepository interface {
 	GetProjectCompanySignatures(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signatures, error)
 	GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetCompanySignatures(params signatures.GetCompanySignaturesParams, pageSize int64, loadACL bool) (*models.Signatures, error)
+	GetCompanyIDsWithSignedCorporateSignatures(claGroupID string) ([]SignatureCompanyID, error)
 	GetUserSignatures(params signatures.GetUserSignaturesParams, pageSize int64) (*models.Signatures, error)
 	ProjectSignatures(projectID string) (*models.Signatures, error)
 	UpdateApprovalList(projectID, companyID string, params *models.ApprovalList) (*models.Signature, error)
@@ -1003,6 +1004,7 @@ func (repo repository) ProjectSignatures(projectID string) (*models.Signatures, 
 	}, nil
 }
 
+// InvalidateProjectRecord invalidates the specified project record by setting the signature_approved flag to false
 func (repo repository) InvalidateProjectRecord(signatureID string, projectName string) error {
 	// Update project signatures for signature_approved and notes attributes
 	signatureTableName := fmt.Sprintf("cla-%s-signatures", repo.stage)
@@ -1264,6 +1266,88 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 		LastKeyScanned: lastEvaluatedKey,
 		Signatures:     sigs,
 	}, nil
+}
+
+// GetCompanyIDsWithSignedCorporateSignatures returns a list of company IDs that have signed a CLA agreement
+func (repo repository) GetCompanyIDsWithSignedCorporateSignatures(claGroupID string) ([]SignatureCompanyID, error) {
+	f := logrus.Fields{
+		"functionName":             "GetCompanyIDsWithSignedCorporateSignatures",
+		"claGroupID":               claGroupID,
+		"signature_project_id":     claGroupID,
+		"signature_type":           "ccla",
+		"signature_reference_type": "company",
+		"signature_signed":         "true",
+		"signature_approved":       "true",
+		"tableName":                repo.signatureTableName,
+		"stage":                    repo.stage,
+	}
+
+	// These are the keys we want to match
+	condition := expression.Key("signature_project_id").Equal(expression.Value(claGroupID))
+	filter := expression.Name("signature_type").Equal(expression.Value("ccla")).
+		And(expression.Name("signature_reference_type").Equal(expression.Value("company"))).
+		And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(true)))).
+		And(expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true))))
+
+	// Batch size
+	limit := int64(100)
+
+	// Use the nice builder to create the expression - this one uses a simple projection with only the signature id (required) and company id - which is the signature reference id field
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithFilter(filter).WithProjection(buildCompanyIDProjection()).Build()
+	if err != nil {
+		log.WithFields(f).Warnf("error building expression, error: %v", err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(repo.signatureTableName),
+		IndexName:                 aws.String("project-signature-index"), // Name of a secondary index to scan
+		Limit:                     aws.Int64(limit),
+	}
+
+	var companyIDs []SignatureCompanyID
+	var lastEvaluatedKey string
+
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		// Make the DynamoDB Query API call
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		if errQuery != nil {
+			log.Warnf("error retrieving signature record, error: %v", errQuery)
+			return nil, errQuery
+		}
+
+		companyIDList, buildErr := repo.buildCompanyIDList(results)
+		if buildErr != nil {
+			log.WithFields(f).Warnf("problem converting db model to list of company IDs, error: %+v", buildErr)
+			return nil, buildErr
+		}
+
+		// Convert the list of DB models to a list of response models
+		companyIDs = append(companyIDs, companyIDList...)
+
+		if results.LastEvaluatedKey["signature_id"] != nil {
+			lastEvaluatedKey = *results.LastEvaluatedKey["signature_id"].S
+			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"signature_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+				"signature_project_id": {
+					S: &claGroupID,
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
+	}
+
+	return companyIDs, nil
 }
 
 // GetUserSignatures returns a list of user signatures for the specified user
@@ -1994,6 +2078,15 @@ func buildSignatureACLProjection() expression.ProjectionBuilder {
 	)
 }
 
+// buildCompanyIDProjection is a helper function to build a simple projection with the signature id and the company id
+func buildCompanyIDProjection() expression.ProjectionBuilder {
+	// These are the columns we want returned
+	return expression.NamesList(
+		expression.Name("signature_id"),
+		expression.Name("signature_reference_id"),
+	)
+}
+
 // buildApprovalAttributeList builds the updated approval list based on the added and removed values
 func buildApprovalAttributeList(existingList, addEntries, removeEntries []string) *dynamodb.AttributeValue {
 	var updatedList []string
@@ -2039,6 +2132,46 @@ func buildApprovalAttributeList(existingList, addEntries, removeEntries []string
 	}
 
 	return &dynamodb.AttributeValue{L: responseList}
+}
+
+// buildCompanyIDList is a helper function to convert the DB response models into a simple list of company IDs
+func (repo repository) buildCompanyIDList(results *dynamodb.QueryOutput) ([]SignatureCompanyID, error) {
+	var response []SignatureCompanyID
+
+	// The DB signature model
+	var dbSignatures []ItemSignature
+	err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbSignatures)
+	if err != nil {
+		log.Warnf("error unmarshalling signatures from database, error: %v", err)
+		return nil, err
+	}
+
+	// Loop and extract the company ID (signature_reference_id) value
+	for _, item := range dbSignatures {
+		// Lookup the company by ID - try to get more information like the external ID and name
+		companyModel, companyLookupErr := repo.companyRepo.GetCompany(item.SignatureReferenceID)
+		// Start building a model for this entry in the list
+		signatureCompanyID := SignatureCompanyID{
+			SignatureID: item.SignatureID,
+			CompanyID:   item.SignatureReferenceID,
+		}
+
+		if companyLookupErr != nil || companyModel == nil {
+			log.Warnf("problem looking up company using id: %s, error: %+v",
+				item.SignatureReferenceID, companyLookupErr)
+			response = append(response, signatureCompanyID)
+		} else {
+			if companyModel.CompanyExternalID != "" {
+				signatureCompanyID.CompanySFID = companyModel.CompanyExternalID
+			}
+			if companyModel.CompanyName != "" {
+				signatureCompanyID.CompanyName = companyModel.CompanyName
+			}
+			response = append(response, signatureCompanyID)
+		}
+	}
+
+	return response, nil
 }
 
 func (repo repository) GetClaGroupICLASignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error) {

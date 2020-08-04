@@ -14,7 +14,7 @@ type Service interface {
 	DeleteGithubRepository(externalProjectID string, repositoryID string) error
 	ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error)
 	GetGithubRepository(repositoryID string) (*models.GithubRepository, error)
-	DeleteProject(projectID string) error
+	DeleteProject(projectID string) (int, error)
 	GetGithubRepositoryByCLAGroup(claGroupID string) (*models.GithubRepository, error)
 }
 
@@ -45,11 +45,12 @@ func (s *service) GetGithubRepository(repositoryID string) (*models.GithubReposi
 	return s.repo.GetGithubRepository(repositoryID)
 }
 
-func (s *service) DeleteProject(projectID string) error {
+// DeleteProject removes the repositories by Organizations
+func (s *service) DeleteProject(projectID string) (int, error) {
 	var deleteErr error
 	ghOrgs, err := s.repo.GetProjectRepositoriesGroupByOrgs(projectID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if len(ghOrgs) > 0 {
 		log.Debugf("Deleting repositories for project :%s", projectID)
@@ -62,7 +63,8 @@ func (s *service) DeleteProject(projectID string) error {
 			}
 		}
 	}
-	return nil
+
+	return len(ghOrgs), nil
 }
 
 func (s *service) GetGithubRepositoryByCLAGroup(claGroupID string) (*models.GithubRepository, error) {

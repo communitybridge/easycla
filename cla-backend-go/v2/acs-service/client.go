@@ -109,7 +109,12 @@ func (ac *Client) GetRoleID(roleName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		closeErr := resp.Body.Close()
+		if closeErr != nil {
+			log.Warnf("error closing resource: %+v", closeErr)
+		}
+	}()
 	var roles []struct {
 		RoleName string `json:"role_name"`
 		RoleID   string `json:"role_id"`

@@ -78,7 +78,18 @@ func init() {
 	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
 	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	project_service.InitClient(configFile.APIGatewayURL)
-	organization_service.InitClient(configFile.APIGatewayURL)
+
+	type combinedRepo struct {
+		users.UserRepository
+		company.IRepository
+		project.ProjectRepository
+	}
+	eventsService := claevents.NewService(eventsRepo, combinedRepo{
+		usersRepo,
+		companyRepo,
+		projectRepo,
+	})
+	organization_service.InitClient(configFile.APIGatewayURL, eventsService)
 	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	dynamoEventsService = dynamo_events.NewService(stage, signaturesRepo, companyRepo, projectClaGroupRepo, eventsRepo, projectRepo)
 }
