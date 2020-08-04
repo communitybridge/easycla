@@ -927,7 +927,7 @@ paths:
           in: query
           type: string
           required: true
-          pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+          pattern: '^([\w\d\s\-\,\./]+){2,255}$'
       responses:
         '200':
           description: 'Success'
