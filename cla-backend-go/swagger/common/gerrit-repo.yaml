@@ -4,10 +4,14 @@ properties:
     type: string
     description: the name of the gerrit repository
     example: 'ansible/roles/docker-install'
+    minLength: 2
+    maxLength: 255
   id:
     type: string
     description: the id of the gerrit repository, typically the base64 encoding of the name
     example: 'ansible%2Froles%2Fdocker-install'
+    minLength: 2
+    maxLength: 255
   description:
     type: string
     description: the gerrit repository description
@@ -16,6 +20,32 @@ properties:
     type: string
     description: the state of the gerrit repository, typically ACTIVE
     example: 'ACTIVE'
+    minLength: 2
+    maxLength: 30
+  claEnabled:
+    type: boolean
+    description: flag to indicate if CLA is enabled or not
+    example: true
+  contributorAgreements:
+    type: array
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+          description: the name of the contributor agreement
+          example: 'CLA Project 1'
+          minLength: 2
+          maxLength: 255
+        description:
+          type: string
+          description: the description of the contributor agreement
+          example: 'Test Project Authorized Contributor'
+        url:
+          type: string
+          description: the link to the agreement
+          example: 'https://api.dev.lfcla.com/v2/gerrit/138c2d54-1151-11e9-ab14-d663bd873d93/individual/agreementUrl.html'
+          format: uri
   webLinks:
     type: array
     items:
@@ -25,7 +55,10 @@ properties:
           type: string
           description: the weblink name
           example: 'gitweb'
+          minLength: 2
+          maxLength: 255
         url:
           type: string
           description: the weblink url
           example: 'https://gerrit.linuxfoundation.org/infra/gitweb?p\u003dansible%2Froles%2Fhaveged-install.git;a\u003dsummary'
+          format: uri

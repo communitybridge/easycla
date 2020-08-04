@@ -183,9 +183,9 @@ func (s service) GetSignedDocument(signatureID string) (*models.SignedDocument, 
 	var url string
 	switch sig.SignatureType {
 	case ClaSignatureType:
-		url = utils.SignedCLAFilename(sig.ProjectID, "icla", sig.SignatureReferenceID, sig.SignatureID)
+		url = utils.SignedCLAFilename(sig.ProjectID, "icla", sig.SignatureReferenceID.String(), sig.SignatureID.String())
 	case CclaSignatureType:
-		url = utils.SignedCLAFilename(sig.ProjectID, "ccla", sig.SignatureReferenceID, sig.SignatureID)
+		url = utils.SignedCLAFilename(sig.ProjectID, "ccla", sig.SignatureReferenceID.String(), sig.SignatureID.String())
 	}
 	signedURL, err := utils.GetDownloadLink(url)
 	if err != nil {
