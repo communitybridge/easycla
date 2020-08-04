@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
 
 	"github.com/go-openapi/runtime"
 
@@ -427,8 +428,19 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 
 			result, err := v2service.GetClaGroupCorporateContributorsCsv(params.ClaGroupID, params.CompanySFID)
 			if err != nil {
+				if _, ok := err.(*organizations.GetOrgNotFound); ok {
+					formatErr := errors.New("error retrieving company using companySFID")
+					return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithPayload(errorResponse(formatErr))
+				}
+				if ok := err.Error() == "not Found"; ok {
+					message := fmt.Sprintf("request not found for Company ID: %s, Cla Group ID: %s",
+						params.CompanySFID, params.ClaGroupID)
+					formatErr := errors.New(message)
+					return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithPayload(errorResponse(formatErr))
+				}
 				return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithPayload(errorResponse(err))
 			}
+
 			return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
 				rw.Header().Set("Content-Type", "text/csv")
 				rw.WriteHeader(http.StatusOK)

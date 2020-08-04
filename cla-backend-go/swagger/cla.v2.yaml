@@ -1554,6 +1554,8 @@ paths:
           description: "The CLA Group employee CLA's as a CSV file"
         '400':
           $ref: '#/responses/invalid-request'
+        '404':
+          $ref: '#/responses/not-found'
         '401':
           $ref: '#/responses/unauthorized'
         '403':
