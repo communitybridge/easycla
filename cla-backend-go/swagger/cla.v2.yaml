@@ -1796,7 +1796,7 @@ paths:
                 type: string
                 description: Proposed CLA Manager name
                 example: "Harold Wanyama"
-                pattern: '^\w+${1,60}'
+                pattern: '^[a-zA-Z0-9 ]{1,60}$'
       responses:
         '200':
           description: 'Success'
@@ -1835,7 +1835,7 @@ paths:
             properties:
               fullName:
                 type: string
-                pattern: '^\w+${1,60}'
+                pattern: '^[a-zA-Z0-9 ]{1,60}$'
               userEmail:
                 type: string
                 description: CLA Manager Designee email
