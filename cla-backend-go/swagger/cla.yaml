@@ -4,6 +4,10 @@ swagger: '2.0'
 info:
   title: CLA API
   version: '1.0'
+  x-logo:
+    url: "https://www.linuxfoundation.org/wp-content/uploads/2017/06/LF_logo_NEW_H_W.png"
+    backgroundColor: "#FFFFFF"
+    altText: "The Linux Foundation - EasyCLA API"
 basePath: /v3
 schemes:
   - http

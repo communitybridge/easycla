@@ -804,14 +804,14 @@ def has_check_previously_failed(pull_request: PullRequest) -> bool:
         # A previously failed check has 'not authorized' somewhere in the body
         if '[![CLA Check](' in comment.body and 'not authorized' in comment.body:
             return True
+        if '[![CLA Check](' in comment.body and 'must confirm their affiliation' in comment.body:
+            return True
     return False
 
 
 def update_pull_request(installation_id, github_repository_id, pull_request, repository_name, signed, missing):  # pylint: disable=too-many-locals
     """
-    Helper function to update a PR's comment/status based on the list of signers.
-
-    :TODO: Update comments.
+    Helper function to update a PR's comment and status based on the list of signers.
 
     :param installation_id: The ID of the GitHub installation
     :type installation_id: int
