@@ -211,7 +211,7 @@ func (s service) AddClaManager(companyID string, projectID string, LFID string) 
 		companyID, projectID, sigModel.SignatureID)
 
 	// Update the signature ACL
-	addedSignature, aclErr := s.sigService.AddCLAManager(sigModel.SignatureID, LFID)
+	addedSignature, aclErr := s.sigService.AddCLAManager(sigModel.SignatureID.String(), LFID)
 	if aclErr != nil {
 		return nil, aclErr
 	}
@@ -302,7 +302,7 @@ func (s service) RemoveClaManager(companyID string, projectID string, LFID strin
 	}
 
 	// Update the signature ACL
-	updatedSignature, aclErr := s.sigService.RemoveCLAManager(sigModel.SignatureID, LFID)
+	updatedSignature, aclErr := s.sigService.RemoveCLAManager(sigModel.SignatureID.String(), LFID)
 	if aclErr != nil || updatedSignature == nil {
 		log.Warnf("remove CLA Manager returned an error or empty signature model using Signature ID: %s, error: %+v",
 			sigModel.SignatureID, sigErr)

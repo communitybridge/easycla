@@ -195,7 +195,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		}
 		if signatureModel != nil {
 			projectID = signatureModel.ProjectID
-			companyID = signatureModel.SignatureReferenceID
+			companyID = signatureModel.SignatureReferenceID.String()
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
 			EventType: events.ApprovalListGithubOrganizationAdded,
@@ -242,7 +242,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		}
 		if signatureModel != nil {
 			projectID = signatureModel.ProjectID
-			companyID = signatureModel.SignatureReferenceID
+			companyID = signatureModel.SignatureReferenceID.String()
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{

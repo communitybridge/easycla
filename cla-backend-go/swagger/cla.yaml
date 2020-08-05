@@ -1815,6 +1815,32 @@ paths:
       tags:
         - events
 
+  /gerrit/repos:
+    get:
+      summary: Get Gerrit Repositories
+      description: Returns a list of repositories under the specified gerrit instance
+      security:
+        - OauthSecurity:
+            - project
+      operationId: getGerritRepos
+      parameters:
+        - $ref: "#/parameters/gerritHost"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/gerrit-repo-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '404':
+          $ref: '#/responses/not-found'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - gerrits
+
   /project/{projectID}/gerrits/{gerritID}:
     delete:
       summary: delete the gerrit
@@ -1825,10 +1851,7 @@ paths:
       operationId: deleteGerrit
       parameters:
         - $ref: "#/parameters/path-projectID"
-        - name: gerritID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-gerritID"
       responses:
         '200':
           description: 'Success'
@@ -1995,6 +2018,18 @@ parameters:
     in: path
     type: string
     required: true
+  path-gerritID:
+    name: gerritID
+    description: unique id of the gerrit instance
+    in: path
+    type: string
+    required: true
+  gerritHost:
+    name: gerritHost
+    description: host of the gerrit server
+    in: query
+    type: string
+    format: hostname
   before:
     name: before
     description: return result created before this time.
@@ -2383,10 +2418,10 @@ definitions:
         type: string
         description: error code - typically the HTTP response status code
         example: '404'
-#      Type:
-#        type: string
-#        description: error type contains a string code or enumation value that can be used by the client for string lookup for internationalization
-#        example: 'cla_group_not_found'
+      #      Type:
+      #        type: string
+      #        description: error type contains a string code or enumation value that can be used by the client for string lookup for internationalization
+      #        example: 'cla_group_not_found'
       Message:
         type: string
         description: an API message string, typically used by developers to encode additional call/trace information
@@ -2426,6 +2461,12 @@ definitions:
 
   add-gerrit-input:
     $ref: './common/add-gerrit-input.yaml'
+
+  gerrit-repo:
+    $ref: './common/gerrit-repo.yaml'
+
+  gerrit-repo-list:
+    $ref: './common/gerrit-repo-list.yaml'
 
   gerrit:
     $ref: './common/gerrit.yaml'

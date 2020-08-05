@@ -43,7 +43,7 @@ func (s *service) SetInitialCLAManagerACSPermissions(signatureID string) error {
 			email = utils.StringValue(e.EmailAddress)
 		}
 	}
-	company, err := s.companyRepo.GetCompany(sig.SignatureReferenceID)
+	company, err := s.companyRepo.GetCompany(sig.SignatureReferenceID.String())
 	if err != nil {
 		return err
 	}

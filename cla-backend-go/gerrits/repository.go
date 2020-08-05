@@ -160,7 +160,7 @@ func (repo *repo) AddGerrit(input *models.Gerrit) (*models.Gerrit, error) {
 		DateModified:  currentTime,
 		GerritID:      gerritID.String(),
 		GerritName:    input.GerritName,
-		GerritURL:     input.GerritURL,
+		GerritURL:     input.GerritURL.String(),
 		GroupIDCcla:   input.GroupIDCcla,
 		GroupIDIcla:   input.GroupIDCcla,
 		GroupNameCcla: input.GroupNameCcla,
