@@ -201,6 +201,7 @@ def get_github_activity_action(body: dict) -> Optional[str]:
     :type body: dict
     :return:  a string representing the action, or None if it couldn't find the action value
     """
+    cla.log.debug(f'locating action attribute in body: {body}')
     try:
         return body['action']
     except KeyError:
@@ -213,7 +214,7 @@ def activity(event_type, body):
     :param body: the webhook body payload
     :type body: dict
     """
-    cla.log.debug('github.activity - received github activity event of type %s', event_type)
+    cla.log.debug(f'github.activity - received github activity event of type: {event_type}')
     cla.log.debug('github.activity - received github activity event, '
                   f'action: {get_github_activity_action(body)}...')
 
