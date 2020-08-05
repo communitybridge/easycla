@@ -8,6 +8,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -34,14 +35,16 @@ type service struct {
 	repo             ProjectRepository
 	repositoriesRepo repositories.Repository
 	gerritRepo       gerrits.Repository
+	projectCGRepo    projects_cla_groups.Repository
 }
 
 // NewService returns an instance of the project service
-func NewService(projectRepo ProjectRepository, repositoriesRepo repositories.Repository, gerritRepo gerrits.Repository) Service {
+func NewService(projectRepo ProjectRepository, repositoriesRepo repositories.Repository, gerritRepo gerrits.Repository, pcgRepo projects_cla_groups.Repository) Service {
 	return service{
 		repo:             projectRepo,
 		repositoriesRepo: repositoriesRepo,
 		gerritRepo:       gerritRepo,
+		projectCGRepo:    pcgRepo,
 	}
 }
 
@@ -61,6 +64,19 @@ func (s service) GetCLAGroupByID(projectID string) (*models.Project, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debugf("Checking for foundationSFID: %s CLA Groups", project.FoundationSFID)
+	pcgs, pcgErr := s.projectCGRepo.GetProjectsIdsForFoundation(project.FoundationSFID)
+	if pcgErr != nil {
+		return nil, pcgErr
+	}
+
+	if signedAtFoundationLevel(pcgs) {
+		project.FoundationLevelCLA = true
+	}
+
+	log.Debugf("Got Project CLA Groups : %+v for foundation SFID: %s", pcgs, project.FoundationSFID)
+
 	return project, nil
 }
 
@@ -154,4 +170,22 @@ func (s service) UpdateCLAGroup(projectModel *models.Project) (*models.Project, 
 // GetClaGroupsByFoundationSFID service method
 func (s service) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error) {
 	return s.repo.GetClaGroupsByFoundationSFID(foundationSFID, loadRepoDetails)
+}
+
+//signedAtFoundationLevel checks if project is signed at foundation Level else project Level
+func signedAtFoundationLevel(list []*projects_cla_groups.ProjectClaGroup) bool {
+	claGroupMap := make(map[string][]string)
+
+	// Create claGroup map that determines level(Project,Foundation) signage
+	for _, in := range list {
+		_, ok := claGroupMap[in.ClaGroupID]
+		if !ok {
+			claGroupMap[in.ClaGroupID] = []string{in.ProjectSFID}
+		} else {
+			claGroupMap[in.ClaGroupID] = append(claGroupMap[in.ClaGroupID], in.ProjectSFID)
+		}
+	}
+
+	return len(claGroupMap) == 1
+
 }
