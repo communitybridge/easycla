@@ -5,12 +5,20 @@ description: Version Information
 properties:
   version:
     type: string
+    description: the version identifier of the software for this version of the product
+    example: 'v1.0.30-6-gd1ac2745'
   commit:
     type: string
+    description: the git commit hash of the software for this version of the product
+    example: 'd1ac2745'
   branch:
     type: string
+    description: the branch name of the software for this version of the product
+    example: 'master'
   buildDate:
     type: string
+    description: the build date/time of the software for this version of the product
+    example: '2020-08-05T15:24:58+0000'
 required:
   - version
   - commit

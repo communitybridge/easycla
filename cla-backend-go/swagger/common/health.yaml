@@ -3,16 +3,28 @@ title: Health
 properties:
   TimeStamp:
     type: string
+    description: the current date/time of the health report
+    example: '2020-08-05T15:24:58+0000'
   Status:
     type: string
+    description: "the status indicator for the product, either 'healthy' or 'not healthy'"
+    example: 'healthy'
   Version:
     type: string
+    description: the version identifier of the software for this version of the product
+    example: 'v1.0.30-6-gd1ac2745'
   Githash:
     type: string
+    description: the git commit hash of the software for this version of the product
+    example: 'd1ac2745'
   Branch:
     type: string
+    description: the branch name of the software for this version of the product
+    example: 'master'
   BuildTimeStamp:
     type: string
+    description: the build date/time of the software for this version of the product
+    example: '2020-08-05T15:24:58+0000'
   Healths:
     type: array
     items:
