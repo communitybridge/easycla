@@ -9,6 +9,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-openapi/strfmt"
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/communitybridge/easycla/cla-backend-go/github"
@@ -171,6 +174,9 @@ func (repo repository) GetGithubOrganizations(externalProjectID string, projectS
 }
 
 func buildGithubOrganizationListModels(githubOrganizations []*GithubOrganization) []*models.GithubOrganization {
+	f := logrus.Fields{
+		"functionName": "buildGithubOrganizationListModels",
+	}
 	ghOrgList := toModels(githubOrganizations)
 	if len(ghOrgList) > 0 {
 		var wg sync.WaitGroup
@@ -179,14 +185,15 @@ func buildGithubOrganizationListModels(githubOrganizations []*GithubOrganization
 			go func(ghorg *models.GithubOrganization) {
 				defer wg.Done()
 				ghorg.GithubInfo = &models.GithubOrganizationGithubInfo{}
-				log.Debugf("Loading GitHub organization details: %s...", ghorg.OrganizationName)
+				log.WithFields(f).Debugf("Loading GitHub organization details: %s...", ghorg.OrganizationName)
 				user, err := github.GetUserDetails(ghorg.OrganizationName)
 				if err != nil {
 					ghorg.GithubInfo.Error = err.Error()
 				} else {
+					url := strfmt.URI(*user.HTMLURL)
 					ghorg.GithubInfo.Details = &models.GithubOrganizationGithubInfoDetails{
 						Bio:     user.Bio,
-						HTMLURL: user.HTMLURL,
+						HTMLURL: &url,
 						ID:      user.ID,
 					}
 				}
@@ -194,7 +201,7 @@ func buildGithubOrganizationListModels(githubOrganizations []*GithubOrganization
 					List: make([]*models.GithubRepositoryInfo, 0),
 				}
 				if ghorg.OrganizationInstallationID != 0 {
-					log.Debugf("Loading GitHub repository list based on installation id: %d...", ghorg.OrganizationInstallationID)
+					log.WithFields(f).Debugf("Loading GitHub repository list based on installation id: %d...", ghorg.OrganizationInstallationID)
 					list, err := github.GetInstallationRepositories(ghorg.OrganizationInstallationID)
 					if err != nil {
 						log.Warnf("unable to get repositories for installation id : %d", ghorg.OrganizationInstallationID)
@@ -202,7 +209,7 @@ func buildGithubOrganizationListModels(githubOrganizations []*GithubOrganization
 						return
 					}
 
-					log.Debugf("Found %d GitHub repositories using installation id: %d...",
+					log.WithFields(f).Debugf("Found %d GitHub repositories using installation id: %d...",
 						len(list), ghorg.OrganizationInstallationID)
 					for _, repoInfo := range list {
 						ghorg.Repositories.List = append(ghorg.Repositories.List, &models.GithubRepositoryInfo{

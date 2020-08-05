@@ -5,6 +5,7 @@ package gerrits
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 
@@ -25,7 +26,7 @@ type ProjectService interface { //nolint
 }
 
 // Configure the Gerrit api
-func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, service Service, projectService ProjectService, eventService events.Service, projectsClaGroupsRepo projects_cla_groups.Repository) {
+func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectService ProjectService, eventService events.Service, projectsClaGroupsRepo projects_cla_groups.Repository) {
 	api.GerritsDeleteGerritHandler = gerrits.DeleteGerritHandlerFunc(
 		func(params gerrits.DeleteGerritParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
@@ -156,19 +157,32 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, service 
 			// No specific permissions required
 
 			// Validate input
-			if params.GerritName == nil {
+			if params.GerritHost == nil {
 				return gerrits.NewGetGerritReposBadRequest().WithPayload(&models.ErrorResponse{
 					Code:    "400",
-					Message: "missing gerritName query parameter",
+					Message: "missing gerritHost query parameter - expecting gerrit hostname",
 				})
 			}
 
-			result, err := service.GetGerritRepos(*params.GerritName)
+			if len(strings.TrimSpace(params.GerritHost.String())) == 0 {
+				return gerrits.NewGetGerritReposBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "invalid gerritHost query parameter - expecting gerrit hostname",
+				})
+			}
+
+			result, err := v1Service.GetGerritRepos(params.GerritHost.String())
 			if err != nil {
 				return gerrits.NewGetGerritReposBadRequest().WithPayload(errorResponse(err))
 			}
 
-			return gerrits.NewGetGerritReposOK().WithPayload(result)
+			var response models.GerritRepoList
+			err = copier.Copy(&response, result)
+			if err != nil {
+				return gerrits.NewAddGerritInternalServerError().WithPayload(errorResponse(err))
+			}
+
+			return gerrits.NewGetGerritReposOK().WithPayload(&response)
 		})
 }
 

@@ -199,7 +199,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 		if signatureModel != nil {
 			projectID = signatureModel.ProjectID
-			companyID = signatureModel.SignatureReferenceID
+			companyID = signatureModel.SignatureReferenceID.String()
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
@@ -257,7 +257,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 		if signatureModel != nil {
 			projectID = signatureModel.ProjectID
-			companyID = signatureModel.SignatureReferenceID
+			companyID = signatureModel.SignatureReferenceID.String()
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
 			EventType:  events.ApprovalListGithubOrganizationDeleted,
@@ -567,7 +567,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				Message: "EasyCLA - 403 Forbidden : user does not have access of signature",
 			})
 		}
-		doc, err := v2service.GetSignedDocument(signature.SignatureID)
+		doc, err := v2service.GetSignedDocument(signature.SignatureID.String())
 		if err != nil {
 			if strings.Contains(err.Error(), "bad request") {
 				return signatures.NewGetSignatureSignedDocumentBadRequest().WithPayload(errorResponse(err))
@@ -668,7 +668,7 @@ func isUserHaveAccessOfSignedSignaturePDF(authUser *auth.User, signature *v1Mode
 		return true, nil
 	}
 	if signature.SignatureType == CclaSignatureType {
-		comp, err := companyService.GetCompany(signature.SignatureReferenceID)
+		comp, err := companyService.GetCompany(signature.SignatureReferenceID.String())
 		if err != nil {
 			return false, err
 		}

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-openapi/strfmt"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/communitybridge/easycla/cla-backend-go/users"
@@ -781,7 +783,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 	totalCount := *describeTableResult.Table.ItemCount
 	if int64(len(sigs)) > pageSize {
 		sigs = sigs[0:pageSize]
-		lastEvaluatedKey = sigs[pageSize-1].SignatureID
+		lastEvaluatedKey = sigs[pageSize-1].SignatureID.String()
 	}
 
 	return &models.Signatures{
@@ -1142,7 +1144,7 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(params signatures.Get
 	totalCount := *describeTableResult.Table.ItemCount
 	if int64(len(sigs)) > pageSize {
 		sigs = sigs[0:pageSize]
-		lastEvaluatedKey = sigs[pageSize-1].SignatureID
+		lastEvaluatedKey = sigs[pageSize-1].SignatureID.String()
 	}
 
 	return &models.Signatures{
@@ -1253,7 +1255,7 @@ func (repo repository) GetCompanySignatures(params signatures.GetCompanySignatur
 	}
 	if int64(len(sigs)) > pageSize {
 		sigs = sigs[0:pageSize]
-		lastEvaluatedKey = sigs[pageSize-1].SignatureID
+		lastEvaluatedKey = sigs[pageSize-1].SignatureID.String()
 	}
 
 	// Meta-data for the response
@@ -1620,7 +1622,7 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 		// If no entries after consolidating all the updates, we need to remove the column
 		if attrList == nil || attrList.L == nil {
 			var rmColErr error
-			sig, rmColErr = repo.removeColumn(sig.SignatureID, columnName)
+			sig, rmColErr = repo.removeColumn(sig.SignatureID.String(), columnName)
 			if rmColErr != nil {
 				msg := fmt.Sprintf("unable to remove column %s for signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
 					columnName, companyID, projectID, signed, approved)
@@ -1641,7 +1643,7 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 		// If no entries after consolidating all the updates, we need to remove the column
 		if attrList == nil || attrList.L == nil {
 			var rmColErr error
-			sig, rmColErr = repo.removeColumn(sig.SignatureID, columnName)
+			sig, rmColErr = repo.removeColumn(sig.SignatureID.String(), columnName)
 			if rmColErr != nil {
 				msg := fmt.Sprintf("unable to remove column %s for signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
 					columnName, companyID, projectID, signed, approved)
@@ -1662,7 +1664,7 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 		// If no entries after consolidating all the updates, we need to remove the column
 		if attrList == nil || attrList.L == nil {
 			var rmColErr error
-			sig, rmColErr = repo.removeColumn(sig.SignatureID, columnName)
+			sig, rmColErr = repo.removeColumn(sig.SignatureID.String(), columnName)
 			if rmColErr != nil {
 				msg := fmt.Sprintf("unable to remove column %s for signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
 					columnName, companyID, projectID, signed, approved)
@@ -1683,7 +1685,7 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 		// If no entries after consolidating all the updates, we need to remove the column
 		if attrList == nil || attrList.L == nil {
 			var rmColErr error
-			sig, rmColErr = repo.removeColumn(sig.SignatureID, columnName)
+			sig, rmColErr = repo.removeColumn(sig.SignatureID.String(), columnName)
 			if rmColErr != nil {
 				msg := fmt.Sprintf("unable to remove column %s for signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
 					columnName, companyID, projectID, signed, approved)
@@ -1713,7 +1715,7 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 		TableName: aws.String(repo.signatureTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"signature_id": {
-				S: aws.String(sig.SignatureID),
+				S: aws.String(sig.SignatureID.String()),
 			},
 		},
 		ExpressionAttributeNames:  expressionAttributeNames,
@@ -1921,11 +1923,11 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 	wg.Add(len(dbSignatures))
 	for _, dbSignature := range dbSignatures {
 		sig := &models.Signature{
-			SignatureID:                 dbSignature.SignatureID,
+			SignatureID:                 strfmt.UUID4(dbSignature.SignatureID),
 			SignatureCreated:            dbSignature.DateCreated,
 			SignatureModified:           dbSignature.DateModified,
 			SignatureType:               dbSignature.SignatureType,
-			SignatureReferenceID:        dbSignature.SignatureReferenceID,
+			SignatureReferenceID:        strfmt.UUID4(dbSignature.SignatureReferenceID),
 			SignatureReferenceName:      dbSignature.SignatureReferenceName,
 			SignatureReferenceNameLower: dbSignature.SignatureReferenceNameLower,
 			SignatureSigned:             dbSignature.SignatureSigned,
@@ -1961,7 +1963,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 			go func() {
 				defer swg.Done()
 				if sigModel.SignatureReferenceType == "user" {
-					userModel, userErr := repo.usersRepo.GetUser(sigModel.SignatureReferenceID)
+					userModel, userErr := repo.usersRepo.GetUser(sigModel.SignatureReferenceID.String())
 					if userErr != nil || userModel == nil {
 						log.Warnf("unable to lookup user using id: %s, error: %v", sigModel.SignatureReferenceID, userErr)
 					} else {
@@ -1980,7 +1982,7 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 						}
 					}
 				} else if sigModel.SignatureReferenceType == "company" {
-					dbCompanyModel, companyErr := repo.companyRepo.GetCompany(sigModel.SignatureReferenceID)
+					dbCompanyModel, companyErr := repo.companyRepo.GetCompany(sigModel.SignatureReferenceID.String())
 					if companyErr != nil {
 						log.Warnf("unable to lookup company using id: %s, error: %v", sigModel.SignatureReferenceID, companyErr)
 					} else {
