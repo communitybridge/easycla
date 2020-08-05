@@ -26,6 +26,10 @@ properties:
     description: A list of user ID's authorized to make changes to the project
     items:
       type: string
+  foundationLevelCLA:
+    description: Flag indicating whether CLA is signed at Foundation level or Project level 
+    type: boolean
+    x-omitempty: false 
   projectCCLAEnabled:
     description: Flag to indicate if the Corporate/Company Contributor License Agreement is enabled
     type: boolean
