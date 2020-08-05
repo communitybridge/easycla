@@ -465,7 +465,7 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 	orgClient := v2OrgService.GetClient()
 	projectClient := v2ProjectService.GetClient()
 
-	isSigned, signedErr := s.isSigned(projectID)
+	isSigned, signedErr := s.isSigned(companyID, projectID)
 	if signedErr != nil {
 		msg := fmt.Sprintf("EasyCLA - 400 Bad Request- %s", signedErr)
 		log.Warn(msg)
@@ -559,7 +559,7 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, requestEmail, LfxPortalURL string) (*models.ClaManagerDesignee, error) {
 	orgService := v2OrgService.GetClient()
 
-	isSigned, signedErr := s.isSigned(projectID)
+	isSigned, signedErr := s.isSigned(companyID, projectID)
 	if signedErr != nil {
 		msg := fmt.Sprintf("EasyCLA - 400 Bad Request- %s", signedErr)
 		log.Warn(msg)
@@ -835,25 +835,18 @@ func sendEmailToCLAManager(manager string, managerEmail string, contributorName 
 }
 
 // Helper function to check if project/claGroup is signed
-func (s *service) isSigned(projectID string) (bool, error) {
+func (s *service) isSigned(companyID string, projectID string) (bool, error) {
 	isSigned := false
-	// Get claGroup ID
-	cgGroup, cgErr := s.projectCGRepo.GetClaGroupIDForProject(projectID)
-	if cgErr != nil {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - CLAGroup lookup fail for project : %s ", projectID)
+	// Check for company CLA managers
+	claManagers, err := s.v2CompanyService.GetCompanyProjectCLAManagers(companyID, projectID)
+	if err != nil {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request : %v", err)
 		log.Warn(msg)
-		return isSigned, cgErr
+		return isSigned, err
 	}
 
-	// Check if group is signed
-	claGroup, claGroupErr := s.projectService.GetCLAGroupByID(cgGroup.ClaGroupID)
-	if claGroupErr != nil {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - CLAGroup lookup fail for project : %s", cgGroup.ClaGroupID)
-		log.Warn(msg)
-		return isSigned, claGroupErr
-	}
-	if claGroup.ProjectCCLAEnabled {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - CLA Group signed for project : %s ", projectID)
+	if len(claManagers.List) > 0 {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - CLA Group signed for company: %s and project : %s", companyID, projectID)
 		log.Warn(msg)
 		isSigned = true
 	}
