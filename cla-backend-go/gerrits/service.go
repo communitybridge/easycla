@@ -141,6 +141,11 @@ func (s service) GetClaGroupGerrits(claGroupID string, projectSFID *string) (*mo
 			return nil, getRepoErr
 		}
 
+		// Set the connected flag - for now, we just set this value to true
+		for _, repo := range gerritRepoList.Repos {
+			repo.Connected = true
+		}
+
 		gerrit.GerritRepoList = gerritRepoList
 	}
 
