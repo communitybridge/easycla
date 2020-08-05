@@ -1,13 +1,23 @@
 type: object
+title: Health Status
 properties:
   Name:
     type: string
+    description: the name of the sub-system for this health report
+    example: 'EasyCLA - Dynamodb - cla-dev-users'
   Duration:
     type: string
+    description: the time with units on how long the health check took to execute
+    example: '17.478091ms'
   Healthy:
     type: boolean
+    description: a flag to indicate if the sub-system is health or not
+    example: true
   Error:
     type: string
+    description: an optional attribute which is present if there is a health issue with the sub-component
+    example: 'unable to connect to the dynamodb cla-dev-users table'
   TimeStamp:
     type: string
-title: Health Status
+    description: the current date/time of the health report
+    example: '2020-08-05T15:24:58+0000'
