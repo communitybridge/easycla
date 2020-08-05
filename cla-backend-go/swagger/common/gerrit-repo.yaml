@@ -18,13 +18,17 @@ properties:
     example: 'Ansible docker installation role'
   state:
     type: string
-    description: the state of the gerrit repository, typically ACTIVE
+    description: "the gerrit server's state of the gerrit repository, typically ACTIVE, READ_ONLY, or HIDDEN"
     example: 'ACTIVE'
     minLength: 2
     maxLength: 30
+  connected:
+    type: boolean
+    description: 'the connected state between EasyCLA and the Gerrit repository: true or false value'
+    example: true
   claEnabled:
     type: boolean
-    description: flag to indicate if CLA is enabled or not
+    description: flag to indicate if this repository is CLA enabled or not
     example: true
   contributorAgreements:
     type: array
