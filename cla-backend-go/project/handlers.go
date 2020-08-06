@@ -24,6 +24,11 @@ import (
 
 const defaultPageSize int64 = 50
 
+// isValidUser is a helper function to determine if the user object is valid
+func isValidUser(claUser *user.CLAUser) bool {
+	return claUser != nil && claUser.UserID != "" && claUser.LFUsername != "" && claUser.LFEmail != ""
+}
+
 // Configure establishes the middleware handlers for the project service
 func Configure(api *operations.ClaAPI, service Service, eventsService events.Service, gerritService gerrits.Service, repositoryService repositories.Service, signatureService signatures.SignatureService) {
 	// Create CLA Group/Project Handler
@@ -78,7 +83,12 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 	// Get Projects
 	api.ProjectGetProjectsHandler = project.GetProjectsHandlerFunc(func(params project.GetProjectsParams, claUser *user.CLAUser) middleware.Responder {
-
+		if !isValidUser(claUser) {
+			return project.NewGetProjectsUnauthorized().WithPayload(&models.ErrorResponse{
+				Message: "unauthorized",
+				Code:    "401",
+			})
+		}
 		projects, err := service.GetCLAGroups(&params)
 		if err != nil {
 			return project.NewGetProjectsBadRequest().WithPayload(errorResponse(err))
