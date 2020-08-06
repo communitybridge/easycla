@@ -757,6 +757,7 @@ def get_project(project_id: hug.types.uuid):
     for project_cla_group in project_cla_group_list:
         sf_projects.append(project_cla_group.to_dict())
     project["projects"] = sf_projects
+    project["signed_at_foundation_level"] = project_cla_group_list[0].signed_at_foundation
 
     return project
 
