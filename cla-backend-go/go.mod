@@ -6,9 +6,8 @@ replace github.com/awslabs/aws-lambda-go-api-proxy => github.com/LF-Engineering/
 
 require (
 	github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
-	github.com/LF-Engineering/lfx-kit v0.1.10
-	github.com/LF-Engineering/lfx-models v0.6.2
-	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
+	github.com/LF-Engineering/lfx-kit v0.1.15
+	github.com/LF-Engineering/lfx-models v0.6.9
 	github.com/aws/aws-lambda-go v1.17.0
 	github.com/aws/aws-sdk-go v1.30.14
 	github.com/aymerick/raymond v2.0.2+incompatible
@@ -26,8 +25,8 @@ require (
 	github.com/go-openapi/swag v0.19.9
 	github.com/go-openapi/validate v0.19.10
 	github.com/go-resty/resty/v2 v2.3.0
-	github.com/go-swagger/go-swagger v0.23.1-0.20200615161556-13907db9c480 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible
+	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/sessions v1.2.0 // indirect
@@ -38,7 +37,6 @@ require (
 	github.com/juju/mempool v0.0.0-20160205104927-24974d6c264f // indirect
 	github.com/juju/zip v0.0.0-20160205105221-f6b1e93fa2e2
 	github.com/kr/pretty v0.2.0 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/gommon v0.2.8
 	github.com/lytics/logrus v0.0.0-20170528191427-4389a17ed024
 	github.com/mozillazg/request v0.8.0 // indirect
@@ -55,11 +53,12 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/tencentyun/scf-go-lib v0.0.0-20200116145541-9a6ea1bf75b8
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
-	golang.org/x/mod v0.3.0 // indirect
+	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9 // indirect
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20200622182413-4b0db7f3f76b // indirect
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20200622203043-20e05c1c8ffa // indirect
+	google.golang.org/appengine v1.6.6 // indirect
+	google.golang.org/protobuf v1.24.0 // indirect
 	gopkg.in/ini.v1 v1.57.0 // indirect
 )
