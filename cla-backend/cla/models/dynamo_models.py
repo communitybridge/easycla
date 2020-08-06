@@ -2801,6 +2801,7 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
             f"version: {self.model.version}",
         )
 
+    
     def to_dict(self):
         return dict(self.model)
 
@@ -2816,6 +2817,18 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
 
     def delete(self):
         self.model.delete()
+
+    @property
+    def signed_at_foundation(self):
+        cla_group = {}
+        if self.model.foundation_sfid:
+            project_cla_groups = self.get_by_foundation_sfid(self.model.foundation_sfid)
+            for pcg in project_cla_groups:
+                if cla_group.get(self.model.cla_group_id):
+                    cla_group[self.model.cla_group_id] = cla_group[self.model.cla_group_id].append(self.model.project_sfid)
+                else:
+                    cla_group[self.model.cla_group_id] = [self.model.project_sfid]
+        return len(cla_group) == 1
 
     def get_project_sfid(self):
         return self.model.project_sfid
