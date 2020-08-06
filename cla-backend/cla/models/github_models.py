@@ -806,6 +806,8 @@ def has_check_previously_failed(pull_request: PullRequest) -> bool:
             return True
         if '[![CLA Check](' in comment.body and 'must confirm their affiliation' in comment.body:
             return True
+        if '[![CLA Check](' in comment.body and 'is missing the User' in comment.body:
+            return True
     return False
 
 
