@@ -4,6 +4,7 @@
 package company
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/organization"
@@ -270,9 +271,26 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 	})
 
 	api.OrganizationSearchOrganizationHandler = organization.SearchOrganizationHandlerFunc(func(params organization.SearchOrganizationParams) middleware.Responder {
-		result, err := service.SearchOrganizationByName(params.CompanyName)
+		var companyName, websiteName string
+		if params.CompanyName == nil && params.WebsiteName == nil {
+			log.Debugf("CompanyName or WebsiteName atleast one required")
+			return organization.NewSearchOrganizationBadRequest().WithPayload(errorResponse(errors.New("companyName or websiteName atleast one required")))
+		}
+		if params.CompanyName == nil {
+			companyName = ""
+		} else {
+			companyName = *params.CompanyName
+		}
+
+		if params.WebsiteName == nil {
+			websiteName = ""
+		} else {
+			websiteName = *params.WebsiteName
+		}
+
+		result, err := service.SearchOrganizationByName(companyName, websiteName)
 		if err != nil {
-			log.Warnf("error occured while search org %s. error = %s", params.CompanyName, err.Error())
+			log.Warnf("error occured while search org %s. error = %s", *params.CompanyName, err.Error())
 			return organization.NewSearchOrganizationInternalServerError().WithPayload(errorResponse(err))
 		}
 		return organization.NewSearchOrganizationOK().WithPayload(result)

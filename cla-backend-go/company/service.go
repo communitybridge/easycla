@@ -50,7 +50,7 @@ type IService interface { // nolint
 	RejectCompanyAccessRequest(companyInviteID string) (*InviteModel, error)
 
 	// calls org service
-	SearchOrganizationByName(orgName string) (*models.OrgList, error)
+	SearchOrganizationByName(orgName string, websiteName string) (*models.OrgList, error)
 
 	sendRequestAccessEmail(companyModel *models.Company, requesterName, requesterEmail, recipientName, recipientAddress string)
 	sendRequestApprovedEmailToRecipient(companyModel *models.Company, recipientName, recipientAddress string)
@@ -558,9 +558,9 @@ func (s service) GetCompanyByExternalID(companySFID string) (*models.Company, er
 	return nil, err
 }
 
-func (s service) SearchOrganizationByName(orgName string) (*models.OrgList, error) {
+func (s service) SearchOrganizationByName(orgName string, websiteName string) (*models.OrgList, error) {
 	osc := organization_service.GetClient()
-	orgs, err := osc.SearchOrganization(orgName)
+	orgs, err := osc.SearchOrganization(orgName, websiteName)
 	if err != nil {
 		return nil, err
 	}
