@@ -1,6 +1,7 @@
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
 SERVICE = cla
+SHELL = bash
 LAMBDA_BIN = backend-aws-lambda
 METRICS_BIN = metrics-aws-lambda
 DYNAMO_EVENTS_BIN = dynamo-events-lambda
@@ -43,7 +44,9 @@ setup-dev: tool-setup
 	gobin github.com/go-swagger/go-swagger/cmd/swagger@$(SWAGGER_TOOL_VERSION)
 	gobin golang.org/x/tools/cmd/goimports
 	gobin golang.org/x/tools/cmd/cover
-	npm install -g multi-file-swagger
+	# npm install -g multi-file-swagger
+	@echo "Installing multi-file-swagger tool..."
+	cd $(dir $(realpath $(firstword $(MAKEFILE_LIST))))swagger && pip3 install virtualenv && virtualenv .venv && source .venv/bin/activate && pip3 install -r requirements.txt
 
 setup_deploy: setup-deploy
 setup-deploy:
@@ -68,7 +71,8 @@ swagger-prep:
 
 swagger-build-v1-services:
 	@echo "Generating v1 legacy API models..."
-	cd swagger; multi-file-swagger -o yaml cla.yaml > cla.compiled.yaml
+	#cd swagger; multi-file-swagger -o yaml cla.yaml > cla.compiled.yaml
+	cd swagger; source .venv/bin/activate && python3 multi-file-swagger.py --spec-input-file cla.yaml --spec-output-file cla.compiled.yaml
 	swagger -q generate server \
 		-t gen \
 		-f swagger/cla.compiled.yaml \
@@ -79,7 +83,8 @@ swagger-build-v1-services:
 
 swagger-build-v2-services:
 	@echo "Generating v2 API models..."
-	cd swagger; multi-file-swagger -o yaml cla.v2.yaml > cla.v2.compiled.yaml
+	#cd swagger; multi-file-swagger -o yaml cla.v2.yaml > cla.v2.compiled.yaml
+	cd swagger; source .venv/bin/activate && python3 multi-file-swagger.py --spec-input-file cla.v2.yaml --spec-output-file cla.v2.compiled.yaml
 	swagger -q generate server \
 		-t gen \
 		-f swagger/cla.v2.compiled.yaml \
@@ -132,9 +137,15 @@ swagger-build-acs-service:
 
 swagger-build: clean-swagger swagger-prep swagger-build-v1-services swagger-build-v2-services swagger-build-project-service swagger-build-organization-service swagger-build-user-service swagger-build-acs-service
 
-swagger-validate:
+swagger-validate: swagger-v1-validate swagger-v2-validate
+
+swagger-v1-validate:
+	@echo ""
 	@echo "Validating v1 legacy API specification..."
 	@swagger validate --stop-on-error swagger/cla.compiled.yaml
+
+swagger-v2-validate:
+	@echo ""
 	@echo "Validating v2 API specification..."
 	@swagger validate --stop-on-error swagger/cla.v2.compiled.yaml
 
