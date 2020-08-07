@@ -3487,6 +3487,7 @@ definitions:
         type: string
         example: 'John Doe'
         description: name of the cla signatory
+        pattern: "^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$"
       authority_email:
         type: string
         example: 'user@linuxfoundation.org'
