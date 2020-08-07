@@ -1800,12 +1800,14 @@ paths:
                 type: string
                 description: Proposed CLA Manager name
                 example: "Harold Wanyama"
-                pattern: '^[a-zA-Z0-9 ]{1,60}$'
+                pattern: "^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$"
+                minLength: 1 
+                maxLength: 60
       responses:
         '200':
           description: 'Success'
           schema:
-            $ref: "#/definitions/cla-manager-designee"
+            $ref: '#/definitions/cla-manager-designees'
         '204':
           description: 'Success'
         '400':
