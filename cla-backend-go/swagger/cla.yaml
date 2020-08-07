@@ -930,8 +930,13 @@ paths:
         - name: companyName
           in: query
           type: string
-          required: true
           pattern: '^([\w\d\s\-\,\./]+){2,255}$'
+          x-omitempty: false
+        - name: websiteName
+          in: query
+          type: string
+          x-omitempty: false
+          pattern: "^((http|https):\\/\\/)?(www.)?[a-z0-9]+(\\.[a-z]{2,}){1,3}(#?\\/?[a-zA-Z0-9#]+)*\\/?(\\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$"
       responses:
         '200':
           description: 'Success'
