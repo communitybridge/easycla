@@ -6,6 +6,8 @@ package project
 import (
 	"fmt"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/jinzhu/copier"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -133,7 +135,13 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 
 	// Delete Project By ID
 	api.ProjectDeleteProjectByIDHandler = project.DeleteProjectByIDHandlerFunc(func(projectParams project.DeleteProjectByIDParams, user *auth.User) middleware.Responder {
-		log.Debugf("Processing delete request with project id: %s", projectParams.ProjectSfdcID)
+		f := logrus.Fields{
+			"functionName": "ProjectDeleteProjectByIDHandler",
+			"projectSFID":  projectParams.ProjectSfdcID,
+			"userEmail":    user.Email,
+			"userName":     user.UserName,
+		}
+		log.WithFields(f).Debug("Processing delete request")
 		utils.SetAuthUserProperties(user, projectParams.XUSERNAME, projectParams.XEMAIL)
 		projectModel, err := service.GetCLAGroupByID(projectParams.ProjectSfdcID)
 		if err != nil {

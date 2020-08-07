@@ -60,22 +60,38 @@ func (s service) GetCLAGroups(params *project.GetProjectsParams) (*models.Projec
 
 // GetProjectByID service method
 func (s service) GetCLAGroupByID(projectID string) (*models.Project, error) {
+	f := logrus.Fields{
+		"functionName":    "GetCLAGroupByID",
+		"projectID":       projectID,
+		"loadRepoDetails": LoadRepoDetails,
+	}
+
+	log.WithFields(f).Debug("locating CLA Group by ID...")
 	project, err := s.repo.GetCLAGroupByID(projectID, LoadRepoDetails)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Debugf("Checking for foundationSFID: %s CLA Groups", project.FoundationSFID)
-	pcgs, pcgErr := s.projectCGRepo.GetProjectsIdsForFoundation(project.FoundationSFID)
-	if pcgErr != nil {
-		return nil, pcgErr
+	// No Foundation SFID value? Maybe this is a v1 CLA Group record...
+	if project.FoundationSFID == "" {
+		log.WithFields(f).Debug("CLA Group missing FoundationSFID...")
+		// Most likely this is a CLA Group v1 record - use the external ID if available
+		if project.ProjectExternalID != "" {
+			log.WithFields(f).Debugf("CLA Group assigning foundationID to value of external ID: %s", project.ProjectExternalID)
+			project.FoundationSFID = project.ProjectExternalID
+		}
 	}
 
-	if signedAtFoundationLevel(pcgs) {
-		project.FoundationLevelCLA = true
+	if project.FoundationSFID != "" {
+		log.WithFields(f).Debugf("checking for foundationSFID: %s CLA Groups", project.FoundationSFID)
+		pcgs, pcgErr := s.projectCGRepo.GetProjectsIdsForFoundation(project.FoundationSFID)
+		if pcgErr != nil {
+			return nil, pcgErr
+		}
+		log.WithFields(f).Debugf("loaded CLA Groups: %+v for foundation SFID: %s", pcgs, project.FoundationSFID)
+		log.WithFields(f).Debug("checking if signed at the foundation level...")
+		project.FoundationLevelCLA = signedAtFoundationLevel(pcgs)
 	}
-
-	log.Debugf("Got Project CLA Groups : %+v for foundation SFID: %s", pcgs, project.FoundationSFID)
 
 	return project, nil
 }
