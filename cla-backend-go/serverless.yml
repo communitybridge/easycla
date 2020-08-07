@@ -220,6 +220,7 @@ provider:
     PLATFORM_GATEWAY_URL: ${file(./env.json):platform-gateway-url, ssm:/cla-auth0-platform-api-gw-${opt:stage}}
     # Set to true for verbose API logging - useful when Debugging API calls for Core Platform Services or other external services
     DEBUG: false
+    LOG_FORMAT: json
 
   stackTags:
     Name: ${self:service}

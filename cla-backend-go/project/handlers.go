@@ -6,6 +6,8 @@ package project
 import (
 	"fmt"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
@@ -145,7 +147,15 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 	// Delete Project By ID
 	api.ProjectDeleteProjectByIDHandler = project.DeleteProjectByIDHandlerFunc(func(projectParams project.DeleteProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
-		log.Debugf("Processing delete request with project id: %s", projectParams.ProjectID)
+		f := logrus.Fields{
+			"functionName":                "ProjectDeleteProjectByIDHandler",
+			"claGroupID":                  projectParams.ProjectID,
+			"authenticatedUserLFUsername": claUser.LFUsername,
+			"authenticatedUserLFEmail":    claUser.LFEmail,
+			"authenticatedUserUserID":     claUser.UserID,
+			"authenticatedUserName":       claUser.Name,
+		}
+		log.WithFields(f).Debug("Processing delete request")
 		projectModel, err := service.GetCLAGroupByID(projectParams.ProjectID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
@@ -155,56 +165,62 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		}
 
 		// Delete gerrit repositories
-		log.Debugf("Processing gerrit delete with project id: %s", projectParams.ProjectID)
+		log.WithFields(f).Debug("Processing gerrit delete")
 		howMany, err := gerritService.DeleteClaGroupGerrits(projectParams.ProjectID)
 		if err != nil {
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
-		log.Debugf("Deleted %d gerrit groups with project id: %s", howMany, projectParams.ProjectID)
 		// Log gerrit event
-		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.GerritRepositoryDeleted,
-			ProjectModel: projectModel,
-			UserID:       claUser.UserID,
-			EventData: &events.GerritProjectDeletedEventData{
-				DeletedCount: howMany,
-			},
-		})
+		if howMany > 0 {
+			log.WithFields(f).Debugf("Deleted %d gerrit groups", howMany)
+			eventsService.LogEvent(&events.LogEventArgs{
+				EventType:    events.GerritRepositoryDeleted,
+				ProjectModel: projectModel,
+				UserID:       claUser.UserID,
+				EventData: &events.GerritProjectDeletedEventData{
+					DeletedCount: howMany,
+				},
+			})
+		}
 
 		// Delete github repositories
-		log.Debugf("Processing github repository delete with project id: %s", projectParams.ProjectID)
+		log.WithFields(f).Debug("Processing github repository delete")
 		howMany, err = repositoryService.DeleteProject(projectParams.ProjectID)
 		if err != nil {
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
-		log.Debugf("Deleted %d github repositories with project id: %s", howMany, projectParams.ProjectID)
+		if howMany > 0 {
+			log.WithFields(f).Debugf("Deleted %d github repositories", howMany)
 
-		// Log github delete event
-		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.GithubRepositoryDeleted,
-			ProjectModel: projectModel,
-			UserID:       claUser.UserID,
-			EventData: &events.GithubProjectDeletedEventData{
-				DeletedCount: howMany,
-			},
-		})
+			// Log github delete event
+			eventsService.LogEvent(&events.LogEventArgs{
+				EventType:    events.GithubRepositoryDeleted,
+				ProjectModel: projectModel,
+				UserID:       claUser.UserID,
+				EventData: &events.GithubProjectDeletedEventData{
+					DeletedCount: howMany,
+				},
+			})
+		}
 
 		// Invalidate project signatures
-		log.Debugf("Invalidating signatures with project id: %s", projectParams.ProjectID)
+		log.WithFields(f).Debug("Invalidating signatures")
 		howMany, err = signatureService.InvalidateProjectRecords(projectParams.ProjectID, projectModel.ProjectName)
 		if err != nil {
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
-		log.Debugf("Invalidated %d signatures with project id: %s", howMany, projectParams.ProjectID)
-		// Log invalidate signatures
-		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.InvalidatedSignature,
-			ProjectModel: projectModel,
-			UserID:       claUser.UserID,
-			EventData: &events.SignatureProjectInvalidatedEventData{
-				InvalidatedCount: howMany,
-			},
-		})
+		if howMany > 0 {
+			log.WithFields(f).Debugf("Invalidated %d signatures", howMany)
+			// Log invalidate signatures
+			eventsService.LogEvent(&events.LogEventArgs{
+				EventType:    events.InvalidatedSignature,
+				ProjectModel: projectModel,
+				UserID:       claUser.UserID,
+				EventData: &events.SignatureProjectInvalidatedEventData{
+					InvalidatedCount: howMany,
+				},
+			})
+		}
 
 		err = service.DeleteCLAGroup(projectParams.ProjectID)
 		if err != nil {
