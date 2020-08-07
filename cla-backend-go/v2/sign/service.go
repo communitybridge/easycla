@@ -98,7 +98,9 @@ func (in *requestCorporateSignatureOutput) toModel() *models.CorporateSignatureO
 
 func validateCorporateSignatureInput(input *models.CorporateSignatureInput) error {
 	if input.SendAsEmail {
-		if input.AuthorityName == "" {
+		log.Debugf("input.AuthorityName validation %s", input.AuthorityName)
+		if strings.TrimSpace(input.AuthorityName) == "" {
+			log.Warn("error in input.AuthorityName ")
 			return errors.New("require authority_name")
 		}
 		if input.AuthorityEmail == "" {
@@ -207,6 +209,7 @@ func (s *service) RequestCorporateSignature(lfUsername string, authorizationHead
 }
 
 func requestCorporateSignature(authToken string, apiURL string, input *requestCorporateSignatureInput) (*requestCorporateSignatureOutput, error) {
+	log.Debugf("input.AuthorityName %s", input.AuthorityName)
 	f := logrus.Fields{
 		"functionName":   "requestCorporateSignature",
 		"apiURL":         apiURL,
