@@ -195,18 +195,20 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				})
 		}
 
-		claManagerDesignee, err := service.InviteCompanyAdmin(params.Body.ContactAdmin, params.Body.CompanyID, params.Body.ClaGroupID, params.Body.UserEmail.String(), params.Body.Name, &user, LfxPortalURL)
+		claManagerDesignees, err := service.InviteCompanyAdmin(params.Body.ContactAdmin, params.Body.CompanyID, params.Body.ClaGroupID, params.Body.UserEmail.String(), params.Body.Name, &user, LfxPortalURL)
 
 		if err != nil {
 			return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(err)
 		}
 		// Check if admins successfully sent email
-		if claManagerDesignee == nil {
+		if len(claManagerDesignees) == 0 {
 			return cla_manager.NewInviteCompanyAdminNoContent()
 		}
 
 		// successfully created cla manager designee and sent invite
-		return cla_manager.NewInviteCompanyAdminOK().WithPayload(claManagerDesignee)
+		return cla_manager.NewInviteCompanyAdminOK().WithPayload(&models.ClaManagerDesignees{
+			List: claManagerDesignees,
+		})
 	})
 
 	api.ClaManagerCreateCLAManagerRequestHandler = cla_manager.CreateCLAManagerRequestHandlerFunc(func(params cla_manager.CreateCLAManagerRequestParams, authUser *auth.User) middleware.Responder {
