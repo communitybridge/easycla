@@ -130,16 +130,24 @@ func server(localMode bool) http.Handler {
 		log.Fatalf("unable to get hostname. Error: %v", err)
 	}
 
-	// Grab a couple of configuration settings
-	githubOrgValidation, err := strconv.ParseBool(viper.GetString("GH_ORG_VALIDATION"))
-	if err != nil {
-		log.Fatalf("GH_ORG_VALIDATION value must be a boolean string. Error: %v", err)
+	var githubOrgValidation = true // default is true/enabled
+	githubOrgValidationString := viper.GetString("GH_ORG_VALIDATION")
+	if githubOrgValidationString != "" {
+		githubOrgValidation, err = strconv.ParseBool(githubOrgValidationString)
+		if err != nil {
+			log.Fatalf("GH_ORG_VALIDATION value must be a boolean string. Error: %v", err)
+		}
 	}
-	// Grab a couple of configuration settings
-	companyUserValidation, err := strconv.ParseBool(viper.GetString("COMPANY_USER_VALIDATION"))
-	if err != nil {
-		log.Fatalf("COMPANY_USER_VALIDATION value must be a boolean string. Error: %v", err)
+
+	var companyUserValidation = true // default is true/enabled
+	companyUserValidationString := viper.GetString("COMPANY_USER_VALIDATION")
+	if companyUserValidationString != "" {
+		companyUserValidation, err = strconv.ParseBool(companyUserValidationString)
+		if err != nil {
+			log.Fatalf("COMPANY_USER_VALIDATION value must be a boolean string. Error: %v", err)
+		}
 	}
+
 	stage := viper.GetString("STAGE")
 	dynamodbRegion := ini.GetProperty("DYNAMODB_AWS_REGION")
 

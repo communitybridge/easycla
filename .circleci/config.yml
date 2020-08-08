@@ -151,6 +151,14 @@ jobs:
       - run:
           name: Setup
           command: |
+            source ${BASH_ENV}
+            echo "Installing python..."
+            sudo apt-get update
+            sudo apt install -y software-properties-common
+            sudo add-apt-repository ppa:deadsnakes/ppa -y
+            sudo apt-get install -y python3.7 python3-pip
+            echo "Python 3 version:"
+            python3 --version
             make -f cla-backend-go/Makefile setup-dev
       - run:
           name: Clean

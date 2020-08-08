@@ -893,10 +893,7 @@ paths:
             - company
       operationId: searchCompany
       parameters:
-        - name: companyName
-          in: query
-          type: string
-          required: true
+        - $ref: '#/parameters/companyNameRequired'
         - name: nextKey
           description: The next key to scan - used as a page offset for scanning batches of records
           in: query
@@ -927,11 +924,7 @@ paths:
       security: []
       operationId: searchOrganization
       parameters:
-        - name: companyName
-          in: query
-          type: string
-          pattern: '^([\w\d\s\-\,\./]+){2,255}$'
-          x-omitempty: false
+        - $ref: '#/parameters/companyName'
         - name: websiteName
           in: query
           type: string
@@ -1918,7 +1911,19 @@ parameters:
     in: query
     type: string
     required: false
-    pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+    x-omitempty: false
+    pattern: '^([\w\d\s\-\,\./]+){2,255}$'
+    minLength: 2
+    maxLength: 255
+  companyNameRequired:
+    name: companyName
+    description: The optional company name filter
+    in: query
+    type: string
+    required: true
+    pattern: '^([\w\d\s\-\,\./]+){2,255}$'
+    minLength: 2
+    maxLength: 255
   userName:
     name: userName
     description: The optional user name filter
@@ -2139,9 +2144,7 @@ definitions:
       status:
         type: string
       companyName:
-        type: string
-        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
-        example: "Linux Foundation"
+        $ref: './common/properties/company-name.yaml'
 
   access-list-user:
     type: object
@@ -2182,10 +2185,7 @@ definitions:
         type: string
         description: The company's external ID
       companyName:
-        type: string
-        description: The company name
-        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
-        example: "Linux Foundation"
+        $ref: './common/properties/company-name.yaml'
       projectID:
         type: string
         description: The project's ID
@@ -2193,9 +2193,7 @@ definitions:
         type: string
         description: The project's external ID
       projectName:
-        type: string
-        description: The project name
-        example: CNCF
+        $ref: './common/properties/cla-group-name.yaml'
       userID:
         type: string
         description: The user's ID
@@ -2311,10 +2309,7 @@ definitions:
         description: the company external ID
         type: string
       companyName:
-        description: The company name
-        type: string
-        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
-        example: "Linux Foundation"
+        $ref: './common/properties/company-name.yaml'
       companyACL:
         type: array
         description: A list of user ID's authorized to make changes to the company
@@ -2380,13 +2375,11 @@ definitions:
       companyId:
         type: string
       companyName:
-        type: string
-        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
-        example: "Linux Foundation"
+        $ref: './common/properties/company-name.yaml'
       projectId:
         type: string
       projectName:
-        type: string
+        $ref: './common/properties/cla-group-name.yaml'
       dateCreated:
         type: string
       dateModified:

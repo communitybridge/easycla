@@ -2624,7 +2624,7 @@ parameters:
     in: query
     type: string
     required: false
-    pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+    pattern: '^([\w\d\s\-\,\./]+){2,255}$'
   userName:
     name: userName
     description: The optional user name filter
@@ -2691,7 +2691,7 @@ parameters:
     in: path
     type: string
     required: true
-    pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+    pattern: '^([\w\d\s\-\,\./]+){2,255}$'
   path-signatureID:
     name: signatureID
     description: id of the CLA signature
@@ -2744,6 +2744,8 @@ parameters:
     type: string
 
 definitions:
+  # Common definitions
+
   version:
     $ref: './common/version.yaml'
 
@@ -2953,9 +2955,7 @@ definitions:
       id:
         type: string
       companyName:
-        type: string
-        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
-        example: "Linux Foundation"
+        $ref: './common/properties/company-name.yaml'
       claManagersCount:
         type: integer
         x-omitempty: false
@@ -2977,9 +2977,7 @@ definitions:
       - companyWebsite
     properties:
       companyName:
-        type: string
-        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
-        example: "Linux Foundation"
+        $ref: './common/properties/company-name.yaml'
       companyWebsite:
         type: string
       userEmail:
@@ -2987,13 +2985,12 @@ definitions:
         example: "user@linuxfoundation.org"
         description: 'user company email'
         format: email
+
   company-output:
     type: object
     properties:
       companyName:
-        type: string
-        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
-        example: "Intel Corporation"
+        $ref: './common/properties/company-name.yaml'
       companyWebsite:
         type: string
       logoURL:
@@ -3055,12 +3052,10 @@ definitions:
         type: string
         x-omitempty: false
       claGroupName:
-        type: string
+        $ref: './common/properties/cla-group-name.yaml'
         x-omitempty: false
       companyName:
-        type: string
-        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
-        example: "Linux Foundation"
+        $ref: './common/properties/company-name.yaml'
         x-omitempty: false
       projectSFID:
         type: string
@@ -3219,7 +3214,7 @@ definitions:
         example: 'John Doe'
       user_sfid:
         type: string
-        description: "The CLA Manager's user Saleforce ID"
+        description: "The CLA Manager's user Salesforce ID"
         x-omitempty: false
       email:
         type: string
@@ -3245,9 +3240,7 @@ definitions:
         example: "Appium"
         x-omitempty: false
       cla_group_name:
-        type: string
-        description: "The name of the CLA group"
-        x-omitempty: false
+        $ref: './common/properties/cla-group-name.yaml'
       organization_name:
         type: string
         description: "The name of Salesforce organization"
@@ -3347,9 +3340,7 @@ definitions:
       userID:
         type: string
       companyName:
-        type: string
-        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
-        example: "Linux Foundation"
+        $ref: './common/properties/company-name.yaml'
       projectName:
         type: string
 
@@ -3386,9 +3377,8 @@ definitions:
         x-omitempty: false
         example: "e1e30240-a722-4c82-a648-121681d959c7"
       cla_group_name:
-        type: string
+        $ref: './common/properties/cla-group-name.yaml'
         x-omitempty: false
-        example: "gRPC"
       project_sfid:
         type: string
         x-omitempty: false
@@ -3454,8 +3444,7 @@ definitions:
         example: "http://wwwlinuxfoundation.org/logo.gif"
         x-omitempty: false
       cla_group_name:
-        type: string
-        example: "gRPC"
+        $ref: './common/properties/cla-group-name.yaml'
         x-omitempty: false
       ccla_url:
         type: string
@@ -3532,12 +3521,7 @@ definitions:
       - template_fields
     properties:
       cla_group_name:
-        type: string
-        example: 'OpenCue'
-        description: name of the cla group
-        pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+-]*){2,255}$'
-        minLength: 3
-        maxLength: 256
+        $ref: './common/properties/cla-group-name.yaml'
       cla_group_description:
         type: string
         example: 'cla group created for OpenCue project'
@@ -3587,12 +3571,8 @@ definitions:
         description: id of the CLA group
         x-omitempty: false
       cla_group_name:
-        type: string
-        example: 'OpenCue'
-        description: name of the CLA group
+        $ref: './common/properties/cla-group-name.yaml'
         x-omitempty: false
-        minLength: 3
-        maxLength: 256
       cla_group_description:
         type: string
         example: 'CLA group created for OpenCue project'
@@ -3676,13 +3656,9 @@ definitions:
     type: object
     properties:
       cla_group_name:
-        type: string
-        example: 'OpenCue'
-        description: name of the CLA group
+        $ref: './common/properties/cla-group-name.yaml'
         x-omitempty: true
         x-nullable: true
-        minLength: 3
-        maxLength: 256
       cla_group_description:
         type: string
         example: 'CLA group created for OpenCue project'
