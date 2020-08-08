@@ -3523,11 +3523,7 @@ definitions:
       cla_group_name:
         $ref: './common/properties/cla-group-name.yaml'
       cla_group_description:
-        type: string
-        example: 'cla group created for OpenCue project'
-        description: description of the cla group
-        minLength: 3
-        maxLength: 256
+        $ref: './common/properties/cla-group-description.yaml'
       ccla_enabled:
         type: boolean
         example: true
@@ -3574,12 +3570,8 @@ definitions:
         $ref: './common/properties/cla-group-name.yaml'
         x-omitempty: false
       cla_group_description:
-        type: string
-        example: 'CLA group created for OpenCue project'
-        description: description of the CLA group
+        $ref: './common/properties/cla-group-description.yaml'
         x-omitempty: false
-        minLength: 3
-        maxLength: 256
       ccla_enabled:
         type: boolean
         example: true
@@ -3660,13 +3652,9 @@ definitions:
         x-omitempty: true
         x-nullable: true
       cla_group_description:
-        type: string
-        example: 'CLA group created for OpenCue project'
-        description: description of the CLA group
+        $ref: './common/properties/cla-group-description.yaml'
         x-omitempty: true
         x-nullable: true
-        minLength: 3
-        maxLength: 256
 
   cla-group-validation-response:
     type: object
