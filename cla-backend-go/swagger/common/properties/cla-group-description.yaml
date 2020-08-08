@@ -1,0 +1,6 @@
+type: string
+example: 'CLA group created for OpenCue project'
+description: description of the CLA group
+pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+-]*){2,255}$'
+minLength: 2
+maxLength: 256

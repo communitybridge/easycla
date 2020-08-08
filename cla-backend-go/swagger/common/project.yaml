@@ -12,14 +12,13 @@ properties:
   rootProjectRepositoriesCount:
     description: number of repositories configured from root project/foundation
     type: integer
-  projectDescription:
-    description: description about the cla group
-    type: string
   projectExternalID:
     description: the project external ID
     type: string
   projectName:
     $ref: './common/properties/cla-group-name.yaml'
+  projectDescription:
+    $ref: './common/properties/cla-group-description.yaml'
   projectACL:
     type: array
     description: A list of user ID's authorized to make changes to the project
