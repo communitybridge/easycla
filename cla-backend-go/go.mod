@@ -41,7 +41,6 @@ require (
 	github.com/lytics/logrus v0.0.0-20170528191427-4389a17ed024
 	github.com/mozillazg/request v0.8.0 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
-	github.com/pkg/errors v0.9.1
 	github.com/rs/cors v1.7.0
 	github.com/savaki/dynastore v0.0.0-20171109173440-28d8558bb429
 	github.com/sirupsen/logrus v1.5.0
