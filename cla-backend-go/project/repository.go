@@ -661,6 +661,14 @@ func (repo *repo) UpdateCLAGroup(projectModel *models.Project) (*models.Project,
 		expressionAttributeValues[":low"] = &dynamodb.AttributeValue{S: aws.String(strings.ToLower(projectModel.ProjectName))}
 		updateExpression = updateExpression + " #LOW = :low, "
 	}
+
+	if projectModel.ProjectDescription != "" {
+		log.WithFields(f).Debugf("adding project_description: %s", projectModel.ProjectDescription)
+		expressionAttributeNames["#DESC"] = aws.String("project_description")
+		expressionAttributeValues[":desc"] = &dynamodb.AttributeValue{S: aws.String(projectModel.ProjectDescription)}
+		updateExpression = updateExpression + " #DESC = :desc, "
+	}
+
 	if projectModel.ProjectACL != nil && len(projectModel.ProjectACL) > 0 {
 		log.WithFields(f).Debugf("adding project_acl: %s", projectModel.ProjectACL)
 		expressionAttributeNames["#A"] = aws.String("project_acl")
@@ -808,13 +816,14 @@ func (repo *repo) buildCLAGroupModel(dbModel DBProjectModel, loadRepoDetails boo
 				dbModel.ProjectName, dbModel.ProjectID)
 		}
 	}
+
 	return &models.Project{
 		ProjectID:                    dbModel.ProjectID,
 		FoundationSFID:               dbModel.FoundationSFID,
 		RootProjectRepositoriesCount: dbModel.RootProjectRepositoriesCount,
-		ProjectDescription:           dbModel.ProjectDescription,
 		ProjectExternalID:            dbModel.ProjectExternalID,
 		ProjectName:                  dbModel.ProjectName,
+		ProjectDescription:           dbModel.ProjectDescription,
 		ProjectACL:                   dbModel.ProjectACL,
 		ProjectCCLAEnabled:           dbModel.ProjectCclaEnabled,
 		ProjectICLAEnabled:           dbModel.ProjectIclaEnabled,
@@ -864,10 +873,10 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("project_id"),
 		expression.Name("foundation_sfid"),
 		expression.Name("root_project_repositories_count"),
-		expression.Name("project_description"),
 		expression.Name("project_external_id"),
 		expression.Name("project_name"),
 		expression.Name("project_name_lower"),
+		expression.Name("project_description"),
 		expression.Name("project_acl"),
 		expression.Name("project_ccla_enabled"),
 		expression.Name("project_icla_enabled"),

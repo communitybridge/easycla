@@ -1,6 +1,7 @@
 example: 'OpenCue'
 type: string
 description: name of the CLA group
-pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+-]*){2,255}$'
+pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+-]*){2,100}$'
 minLength: 2
-maxLength: 255
+# No more than 100 - DocuSign limits the CLA Group/Project Name to 100 characters when filling out CLA agreements
+maxLength: 100
