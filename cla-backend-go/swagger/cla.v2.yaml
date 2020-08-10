@@ -1792,10 +1792,8 @@ paths:
                 description: claGroupID to be signed
                 type: string
               userEmail:
-                type: string
+                $ref: './common/properties/email.yaml'
                 description: Proposed CLA Manager email
-                example: "user@linuxfoundation.org"
-                format: email
               name:
                 type: string
                 description: Proposed CLA Manager name
@@ -1843,10 +1841,8 @@ paths:
                 type: string
                 pattern: '^[a-zA-Z0-9 ]{1,60}$'
               userEmail:
-                type: string
+                $ref: './common/properties/email.yaml'
                 description: CLA Manager Designee email
-                example: "user@linuxfoundation.org"
-                format: email
               contactAdmin:
                 type: boolean
       responses:
@@ -1919,8 +1915,8 @@ paths:
             title: Contributor
             properties:
               userEmail:
-                description: LfEmail for contributor getting associated 
-                type: string
+                $ref: './common/properties/email.yaml'
+                description: LfEmail for contributor getting associated
 
       responses:
         '200':
@@ -1982,10 +1978,8 @@ paths:
             description: User object used for CLA Manager designee
             properties:
               userEmail:
-                type: string
+                $ref: './common/properties/email.yaml'
                 description: 'CLA Manager designee email address'
-                example: 'user@linuxfoundation.org'
-                format: email
       responses:
         '200':
           description: 'Success'
@@ -2025,10 +2019,8 @@ paths:
             description: User object used for CLA Manager designee
             properties:
               userEmail:
-                type: string
+                $ref: './common/properties/email.yaml'
                 description: 'CLA Manager designee email address'
-                example: 'user@linuxfoundation.org'
-                format: email
       responses:
         '200':
           description: 'Success'
@@ -2483,7 +2475,7 @@ paths:
 
   /user/{userID}/company:
     post:
-      summary: api that creates salesforce company
+      summary: API that creates a salesforce company
       description: Creates a Company for an individual contributor that fails to get a company during the signing getProjectSignatures
       security: []
       operationId: createCompany
@@ -2736,7 +2728,7 @@ parameters:
     description: The email value - assigned/set by the API Gateway based on login credentials
     in: header
     type: string
-    x-example: 'zachking@mail.com'
+    x-example: 'user@linuxfoundation.org'
   x-request-id:
     name: X-REQUEST-ID
     description: The unique request ID value - assigned/set by the API Gateway based on the login session
@@ -2979,12 +2971,10 @@ definitions:
       companyName:
         $ref: './common/properties/company-name.yaml'
       companyWebsite:
-        type: string
+        $ref: './common/properties/website.yaml'
+        description: the company website
       userEmail:
-        type: string
-        example: "user@linuxfoundation.org"
-        description: 'user company email'
-        format: email
+        $ref: './common/properties/email.yaml'
 
   company-output:
     type: object
@@ -3141,7 +3131,7 @@ definitions:
         description: 'the user SalesForce ID'
         x-omitempty: false
       email:
-        type: string
+        $ref: './common/properties/email.yaml'
         x-omitempty: false
       assigned_on:
         type: string
@@ -3172,7 +3162,7 @@ definitions:
         description: 'the user SalesForce ID'
         x-omitempty: false
       email:
-        type: string
+        $ref: './common/properties/email.yaml'
         x-omitempty: false
       type:
         type: string
@@ -3217,10 +3207,8 @@ definitions:
         description: "The CLA Manager's user Salesforce ID"
         x-omitempty: false
       email:
-        type: string
-        description: "The CLA Manager's email"
+        $ref: './common/properties/email.yaml'
         x-omitempty: false
-        example: 'john.doe@company.com'
       approved_on:
         type: string
         x-omitempty: false
@@ -3266,10 +3254,8 @@ definitions:
       lastName:
         type: string
       userEmail:
-        type: string
-        example: "user@linuxfoundation.org"
+        $ref: './common/properties/email.yaml'
         description: 'CLA Manager Email'
-        format: email
 
   enabled-cla-list:
     type: object
@@ -3348,10 +3334,8 @@ definitions:
     type: object
     properties:
       email:
-        type: string
+        $ref: './common/properties/email.yaml'
         description: CLA Manager email
-        example: "user@linuxfoundation.org"
-        format: email
       name:
         type: string
 
@@ -3480,10 +3464,8 @@ definitions:
         description: name of the cla signatory
         pattern: "^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$"
       authority_email:
-        type: string
-        example: 'user@linuxfoundation.org'
+        $ref: './common/properties/email.yaml'
         description: Email of the CLA Signatory
-        format: email
       return_url:
         type: string
         example: 'https://corporate.dev.lfcla.com/#/company/eb4d7d71-693f-4047-bf8d-10d0e7764969'

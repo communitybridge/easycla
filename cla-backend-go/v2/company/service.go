@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-openapi/strfmt"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
@@ -355,7 +357,7 @@ func (s *service) AssociateContributor(companySFID string, userEmail string) (*m
 	contributor := &models.Contributor{
 		LfUsername:  lfxUser.Username,
 		UserSfid:    lfxUser.ID,
-		Email:       userEmail,
+		Email:       strfmt.Email(userEmail),
 		AssignedOn:  time.Now().String(),
 		CompanySfid: companySFID,
 		Role:        *aws.String("contributor"),
@@ -544,7 +546,7 @@ func (s *service) GetCompanyCLAGroupManagers(companyID, claGroupID string) (*mod
 			// DB doesn't have approved_on value - just use sig created date/time
 			ApprovedOn:       sigModel.SignatureCreated,
 			LfUsername:       user.LfUsername,
-			Email:            user.LfEmail,
+			Email:            strfmt.Email(user.LfEmail),
 			Name:             user.Username,
 			UserSfid:         user.UserExternalID,
 			ProjectID:        sigModel.ProjectID,
@@ -720,8 +722,8 @@ func fillUsersInfo(claManagers []*models.CompanyClaManager, usermap map[string]*
 		// cm.LogoURL = user.LogoURL
 		cm.UserSfid = user.ID
 		for _, email := range user.Emails {
-			if email != nil && email.IsPrimary != nil && *email.IsPrimary {
-				cm.Email = utils.StringValue(email.EmailAddress)
+			if email != nil && email.IsPrimary != nil && *email.IsPrimary && email.EmailAddress != nil {
+				cm.Email = strfmt.Email(*email.EmailAddress)
 				break
 			}
 		}

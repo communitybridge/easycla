@@ -82,8 +82,8 @@ def main(spec_input_file, spec_output_file, log_dir):
     except IOError as e:
         print(f'error reading input file {spec_input_file} - error: {e}')
         return
-    logger.info(f'Wrote swagger spec file    : {spec_output_file}')
-    logger.info(f'Finished - duration        : {datetime.now() - start_time}')
+    logger.info(f'Wrote swagger spec file     : {spec_output_file}')
+    logger.info(f'Finished - duration         : {datetime.now() - start_time}')
 
 
 if __name__ == "__main__":

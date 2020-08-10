@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-openapi/strfmt"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
@@ -343,7 +345,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 
 	claCompanyManager := &models.CompanyClaManager{
 		LfUsername:       user.Username,
-		Email:            params.Body.UserEmail.String(),
+		Email:            *params.Body.UserEmail,
 		UserSfid:         user.ID,
 		ApprovedOn:       time.Now().String(),
 		ProjectSfid:      params.ProjectSFID,
@@ -550,7 +552,7 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 		UserSfid:    user.ID,
 		Type:        user.Type,
 		AssignedOn:  time.Now().String(),
-		Email:       userEmail,
+		Email:       strfmt.Email(userEmail),
 		ProjectSfid: projectID,
 		CompanySfid: companyID,
 		ProjectName: projectSF.Name,
@@ -659,7 +661,7 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 		CompanyID:         companyModel.ID,
 		EventData: &events.ContributorAssignCLADesignee{
 			DesigneeName:  claManagerDesignee.LfUsername,
-			DesigneeEmail: claManagerDesignee.Email,
+			DesigneeEmail: claManagerDesignee.Email.String(),
 		},
 	})
 
@@ -674,7 +676,7 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 		CompanyID:         companyModel.ID,
 		EventData: &events.ContributorNotifyCLADesignee{
 			DesigneeName:  claManagerDesignee.LfUsername,
-			DesigneeEmail: claManagerDesignee.Email,
+			DesigneeEmail: claManagerDesignee.Email.String(),
 		},
 	})
 
