@@ -6,6 +6,8 @@ package cla_manager
 import (
 	"fmt"
 
+	"github.com/go-openapi/strfmt"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
@@ -103,7 +105,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 			})
 		}
 
-		claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, params.ProjectSFID, params.Body.UserEmail.String())
+		claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, params.ProjectSFID, strfmt.Email(params.Body.UserEmail).String())
 		if err != nil {
 			msg := fmt.Sprintf("user :%s, error: %+v ", authUser.Email, err)
 			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(
@@ -123,7 +125,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				"functionName": "ClaManagerCreateCLAManagerDesigneeByGroupHandler",
 				"CompanySFID":  params.CompanySFID,
 				"ClaGroupID":   params.ClaGroupID,
-				"Email":        params.Body.UserEmail.String(),
+				"Email":        strfmt.Email(params.Body.UserEmail).String(),
 				"authUser":     *params.XUSERNAME,
 			}
 			log.WithFields(f).Debugf("processing CLA Manager Desginee by group request")
@@ -163,7 +165,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 			var designeeScopes []*models.ClaManagerDesignee
 			for _, pcg := range projectCLAGroups {
 				log.WithFields(f).Debugf("creating CLA Manager Designee for Project SFID: %s", pcg.ProjectSFID)
-				claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, pcg.ProjectSFID, params.Body.UserEmail.String())
+				claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, pcg.ProjectSFID, strfmt.Email(params.Body.UserEmail).String())
 				if err != nil {
 					msg := fmt.Sprintf("Creating cla manager designee failed for Project SFID: %s ", pcg.ProjectSFID)
 					log.WithFields(f).Warn(msg)
@@ -195,7 +197,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				})
 		}
 
-		claManagerDesignees, err := service.InviteCompanyAdmin(params.Body.ContactAdmin, params.Body.CompanyID, params.Body.ClaGroupID, params.Body.UserEmail.String(), params.Body.Name, &user, LfxPortalURL)
+		claManagerDesignees, err := service.InviteCompanyAdmin(params.Body.ContactAdmin, params.Body.CompanyID, params.Body.ClaGroupID, strfmt.Email(params.Body.UserEmail).String(), params.Body.Name, &user, LfxPortalURL)
 
 		if err != nil {
 			return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(err)
@@ -223,7 +225,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 			})
 		}
 
-		claManagerDesignee, err := service.CreateCLAManagerRequest(params.Body.ContactAdmin, params.CompanySFID, params.ProjectSFID, params.Body.UserEmail.String(),
+		claManagerDesignee, err := service.CreateCLAManagerRequest(params.Body.ContactAdmin, params.CompanySFID, params.ProjectSFID, strfmt.Email(params.Body.UserEmail).String(),
 			params.Body.FullName, authUser, *params.XEMAIL, LfxPortalURL)
 
 		if err != nil {
