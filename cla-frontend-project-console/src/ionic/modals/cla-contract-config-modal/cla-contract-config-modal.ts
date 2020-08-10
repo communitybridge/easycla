@@ -1,11 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
-import { NavController, NavParams, ViewController, IonicPage, Events } from 'ionic-angular';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ClaService } from '../../services/cla.service';
-import { PlatformLocation } from '@angular/common';
+import {Component} from '@angular/core';
+import {Events, IonicPage, NavController, NavParams, ViewController} from 'ionic-angular';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {ClaService} from '../../services/cla.service';
+import {PlatformLocation} from '@angular/common';
 
 @IonicPage({
   segment: 'cla-contract-config-modal'
@@ -41,7 +41,18 @@ export class ClaContractConfigModal {
       this.viewCtrl.dismiss(false);
     });
     this.form = formBuilder.group({
-      name: [this.claProject.projectName, Validators.compose([Validators.required])],
+      name: [this.claProject.projectName, Validators.compose(
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(100)
+        ])],
+      description: [this.claProject.projectDescription, Validators.compose(
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(256)
+        ])],
       ccla: [this.claProject.projectCCLAEnabled],
       cclaAndIcla: [this.claProject.projectCCLARequiresICLA],
       icla: [this.claProject.projectICLAEnabled]
@@ -60,6 +71,7 @@ export class ClaContractConfigModal {
       this.claProject = {
         projectExternalID: this.projectId,
         projectName: '',
+        projectDescription: '',
         projectCCLAEnabled: false,
         projectCCLARequiresICLA: false,
         projectICLAEnabled: false
@@ -67,7 +79,8 @@ export class ClaContractConfigModal {
     }
   }
 
-  ngOnInit() { }
+  ngOnInit() {
+  }
 
   submit() {
     this.submitAttempt = true;
@@ -99,6 +112,7 @@ export class ClaContractConfigModal {
     let claProject = {
       projectExternalID: this.claProject.projectExternalID,
       projectName: this.form.value.name,
+      projectDescription: this.form.value.description,
       projectCCLAEnabled: this.form.value.ccla,
       projectACL: [localStorage.getItem('userid')],
       projectCCLARequiresICLA: this.form.value.cclaAndIcla,
@@ -122,6 +136,7 @@ export class ClaContractConfigModal {
       projectID: this.claProject.projectID,
       projectExternalID: this.claProject.projectExternalID,
       projectName: this.form.value.name,
+      projectDescription: this.form.value.description,
       projectCCLAEnabled: this.form.value.ccla,
       projectCCLARequiresICLA: this.form.value.cclaAndIcla,
       projectICLAEnabled: this.form.value.icla
