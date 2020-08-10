@@ -1,13 +1,13 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, ViewChild } from '@angular/core';
-import { AlertController, Events, IonicPage, ModalController, Nav, NavController, NavParams } from 'ionic-angular';
-import { ClaService } from '../../../services/cla.service';
-import { RolesService } from '../../../services/roles.service';
-import { Restricted } from '../../../decorators/restricted';
-import { GithubOrganisationModel } from '../../../models/github-organisation-model';
-import { PlatformLocation } from '@angular/common';
+import {Component, ViewChild} from '@angular/core';
+import {AlertController, Events, IonicPage, ModalController, Nav, NavController, NavParams} from 'ionic-angular';
+import {ClaService} from '../../../services/cla.service';
+import {RolesService} from '../../../services/roles.service';
+import {Restricted} from '../../../decorators/restricted';
+import {GithubOrganisationModel} from '../../../models/github-organisation-model';
+import {PlatformLocation} from '@angular/common';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -261,7 +261,8 @@ export class ProjectClaPage {
           text: 'Cancel',
           role: 'cancel',
           cssClass: 'secondary',
-          handler: () => { }
+          handler: () => {
+          }
         },
         {
           text: 'Delete',
@@ -293,7 +294,8 @@ export class ProjectClaPage {
           text: 'Cancel',
           role: 'cancel',
           cssClass: 'secondary',
-          handler: () => { }
+          handler: () => {
+          }
         },
         {
           text: 'Delete',
@@ -316,7 +318,8 @@ export class ProjectClaPage {
           text: 'Cancel',
           role: 'cancel',
           cssClass: 'secondary',
-          handler: () => { }
+          handler: () => {
+          }
         },
         {
           text: 'Retry',
@@ -339,7 +342,8 @@ export class ProjectClaPage {
           text: 'Close',
           role: 'cancel',
           cssClass: 'secondary',
-          handler: () => { }
+          handler: () => {
+          }
         }
       ]
     });
@@ -354,8 +358,7 @@ export class ProjectClaPage {
       if (res.status === 204) {
         this.getClaProjects();
         this.deleteClaGroupSuccess(name);
-      }
-      else {
+      } else {
         this.deleteClaGroupError(name, id)
         this.loading.claProject = false;
       }
