@@ -11,9 +11,9 @@ type DBProjectModel struct {
 	ProjectID                        string                   `dynamodbav:"project_id"`
 	FoundationSFID                   string                   `dynamodbav:"foundation_sfid"`
 	RootProjectRepositoriesCount     int64                    `dynamodbav:"root_project_repositories_count"`
-	ProjectDescription               string                   `dynamodbav:"project_description"`
 	ProjectName                      string                   `dynamodbav:"project_name"`
 	ProjectNameLower                 string                   `dynamodbav:"project_name_lower"`
+	ProjectDescription               string                   `dynamodbav:"project_description"`
 	Version                          string                   `dynamodbav:"version"`
 	ProjectCclaEnabled               bool                     `dynamodbav:"project_ccla_enabled"`
 	ProjectCclaRequiresIclaSignature bool                     `dynamodbav:"project_ccla_requires_icla_signature"`

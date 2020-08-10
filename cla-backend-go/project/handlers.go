@@ -239,7 +239,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		return project.NewDeleteProjectByIDNoContent()
 	})
 
-	// Update Project By ID
+	// Update Project By Name
 	api.ProjectUpdateProjectHandler = project.UpdateProjectHandlerFunc(func(projectParams project.UpdateProjectParams, claUser *user.CLAUser) middleware.Responder {
 
 		exitingModel, getErr := service.GetCLAGroupByName(projectParams.Body.ProjectName)
@@ -253,11 +253,11 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		}
 
 		// If the project with the same name exists...
-		if exitingModel != nil {
-			msg := fmt.Sprintf("Project with same name exists: %s", projectParams.Body.ProjectName)
-			log.Warnf("Update Project Failed - %s", msg)
-			return project.NewCreateProjectConflict().WithPayload(&models.ErrorResponse{
-				Code:    "409",
+		if exitingModel == nil {
+			msg := fmt.Sprintf("unable to locate project with name: %s", projectParams.Body.ProjectName)
+			log.Warn(msg)
+			return project.NewUpdateProjectNotFound().WithPayload(&models.ErrorResponse{
+				Code:    "404",
 				Message: msg,
 			})
 		}
