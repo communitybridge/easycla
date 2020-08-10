@@ -115,19 +115,20 @@ func (t *TestBehaviour) RunGetCLAManagerToken() {
 }
 
 // RunCreateCompanyInvalid test
-func (t *TestBehaviour) RunCreateCompanyInvalid(companyName string) {
+func (t *TestBehaviour) RunCreateCompanyInvalid(invalidCompanyName string) {
 	url := fmt.Sprintf("%s/user/%s/company", t.apiURL, userID)
 	xACL, xACLErr := GetXACL()
 	if xACLErr != nil {
 		return
 	}
 
-	frisby.Create(fmt.Sprintf("Company - Create Company - Invalid - %s", companyName)).
-		Get(url).
+	frisby.Create(fmt.Sprintf("Company - Create Company - Invalid - %s", invalidCompanyName)).
+		Post(url).
 		SetHeaders(t.buildHeaders(xACL)).
 		SetJson(map[string]string{
-			"companyName":    companyName,
+			"companyName":    invalidCompanyName,
 			"companyWebsite": "https://www.ab.com",
+			"email":          "user@linuxfoundation.org",
 		}).
 		Send().
 		ExpectStatus(422)

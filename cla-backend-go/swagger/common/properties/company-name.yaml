@@ -1,7 +1,9 @@
 example: "Linux Foundation"
 type: string
 description: name of the company
+# Pattern aligns with UI and other platform services including Org Service
 pattern: '^([\w\d\s\-\,\./]+){2,255}$'
+# This one matches what we have in PROD...
 #pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
 minLength: 2
 maxLength: 255
