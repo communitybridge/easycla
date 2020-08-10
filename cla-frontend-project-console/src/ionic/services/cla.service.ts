@@ -114,7 +114,7 @@ export class ClaService {
     const url: URL = this.getV2Endpoint('/v2/user/' + userId);
     return this.http.get(url).map((res) => res.json());
   }
-  
+
   /**
    * GET /v3/signatures/project/{project_id}
    *
@@ -183,6 +183,7 @@ export class ClaService {
       {
         'project_external_id': '<proj-external-id>',
         'project_name': 'Project Name',
+        'project_description': 'Project Description....',
         'project_ccla_enabled': True,
         'project_ccla_requires_icla_signature': True,
         'project_icla_enabled': True
@@ -200,7 +201,11 @@ export class ClaService {
     /*
       {
         'project_id': '<project-id>',
-        'project_name': 'New Project Name'
+        'project_name': 'New Project Name',
+        'project_description': 'Project Description....',
+        'project_ccla_enabled': True,
+        'project_ccla_requires_icla_signature': True,
+        'project_icla_enabled': True
       }
      */
     const url: URL = this.getV3Endpoint('/v3/project');
