@@ -1034,10 +1034,14 @@ class DocuSign(signing_service_interface.SigningService):
             # Thus the email does not need to be sent.
             cla.log.debug(f'populate_sign_url - {sig_type} - generating a docusign signer object with '
                           f'name: {signatory_name}, email: {signatory_email}')
+
+            # Max length for emailSubject is 100 characters - guard/truncate if necessary
+            email_subject = f'EasyCLA: CLA Signature Request for {project.get_project_name()}'
+            email_subject = (email_subject[:97] + '...') if len(email_subject) > 100 else email_subject
             signer = pydocusign.Signer(email=signatory_email, name=signatory_name,
                                        recipientId=1, clientUserId=signature.get_signature_id(),
                                        tabs=tabs,
-                                       emailSubject=f'EasyCLA: CLA Signature Request for {project.get_project_name()}',
+                                       emailSubject=email_subject,
                                        emailBody='CLA Sign Request for {}'.format(user.get_user_email()),
                                        supportedLanguage='en',
                                        )
