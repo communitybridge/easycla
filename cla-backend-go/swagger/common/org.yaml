@@ -7,5 +7,5 @@ properties:
     type: string
     description: name of the organization
   organization_website:
-    type: string
+    $ref: './common/properties/website.yaml'
     description: website of the organization
