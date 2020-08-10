@@ -8,27 +8,42 @@ SPDX-License-Identifier: CC-BY-4.0
 
 ## Prerequisites
 
-- Go 1.14
+- Go 1.14.x
 - Python 3
 - Node 8/12+
 
 ## Node Setup
 
-The frontend UI still requires an older version of nodejs - version 8. This is
-due to compatibility issues with the Angular and Ionic toolchain. Use node
-version 8.x for the frontend source package installation and build/deploy commands.
-For all other folders which use node, use version 12.x+.  The serverless
-library picks up a newer version of semver which requires node 10+.
+NodeJS is used by [serverless](https://www.serverless.com/) to facilitate
+deployment and location testing. In all but few occasions, we use NodeJS v12+.
 
-In order to quickly switch between node versions, use
+The frontend UI still requires an older version of NodeJS - version 8. This is
+due to compatibility issues with the Angular and Ionic toolchain for the legacy
+UI. Use node version 8.x for the frontend source package installation
+(typically the `src` folder) and build/deploy commands.
+For all other folders which use node, use version 12.x+.
+
+In order to quickly switch between node versions, we recommend you use
 [Node Version Manager - nvm](https://github.com/nvm-sh/nvm). The CircleCI
-build configuration uses this approach to switch between node versions
-within the build.
+[build configuration](https://github.com/communitybridge/easycla/blob/master/.circleci/config.yml)
+uses this approach to switch between node versions within the build andx
+deployment.
 
 ## Building and Running the Python Backend
 
 These are the steps for setting up a local dev environment for the python
-backend (work in progress).
+backend (work in progress). The legacy Python backend is used for
+the Gerrit and GitHub interaction, Docusign workflows, and a few other API
+calls.
+
+Historical and Current Endpoints:
+
+- /v1 (us-east-1)
+- /v2 (us-east-1)
+- /v1/salesforce/projects - handles project management console project listing queries (us-east-1)
+- /v1/salesforce/project - handles project management console project queries (us-east-1)
+- /v2/github/installation - handles github bot installation (us-east-1)
+- /v2/github/activity - handles github activity callbacks to the product (us-east-1)
 
 ### Install Python
 
@@ -37,7 +52,7 @@ that we've updated the `hug` library.
 
 One easy way to install a Python runtime on a Mac is via the `pipenv` tool.
 Here, we'll use it to install a specific version of Python.  There are other
-apporaches to installing Python. Feel free to add your preferred approach to the
+approaches to installing Python. Feel free to add your preferred approach to the
 information below.
 
 ```bash
@@ -69,6 +84,7 @@ Now setup the virtual env using python 3.6+:
 ```bash
 # Check your version and grab the appropriate path
 python --version
+
 which python
 
 # Setup the virtual env
@@ -97,7 +113,8 @@ This will install the dependencies in the `.venv` path.
 
 ### Setup Environment Variables
 
-We'll need a few run-time environment variables to communicate with AWS.
+We'll need a few run-time environment variables to communicate with AWS when
+running locally.
 
 - `AWS_REGION` - the AWS region, normally this should be set to `us-east-1`
 - `AWS_ACCESS_KEY_ID` - AWS key, used to authenticate to AWS for DynamoDB and SSM
@@ -107,7 +124,7 @@ We'll need a few run-time environment variables to communicate with AWS.
 
 Optional environment variables:
 
-- `PORT` - optional, the HTTP port when running in local mode. The default is 5000.
+- `PORT` - optional, the HTTP port when running in the local mode. The default port is 5000.
 - `STAGE` - optional, specifies the environment stage. The default is typically `dev`.
 
 For testing locally, you'll want to point to the dev environment or stand up a
@@ -127,15 +144,12 @@ yarn install
 This will install the `serverless` tool and plugins.
 
 ```bash
-# If using local DynamoDB and local S3:
-node_modules/serverless/bin/serverless wsgi serve -s 'local' 
-
-# If pointing to a DEV cluster:
-node_modules/serverless/bin/serverless wsgi serve -s 'dev' 
-
-# Alternatively, you can simply run:
+# You can simply run this launcher:
 # ok to use node v12+
 yarn serve:dev
+
+# Or run it using this approach - points to the DEV database/environment
+node_modules/serverless/bin/serverless wsgi serve -s 'dev' 
 ```
 
 To test:
@@ -150,6 +164,12 @@ open http://localhost:5000/v2/user/<some_uuid_from_users_table>
 
 ## Building and Running the Go Backend
 
+Current Endpoints:
+
+- /v3 (us-east-1) - considered part of EasyCLA v1 which leverages the older (legacy) UI
+- /v4 (us-east-2) - considered EasyCLA v2 which leverages the newer LFX UI and LFX Admin Consoles - includes integration with other platform services
+- plus a number of support lambdas
+
 ### Install Go
 
 Follow the [Go Getting Started](https://golang.org/doc/install) guide to install the tool.
@@ -163,7 +183,7 @@ echo $GOROOT
 
 # And go should be in your path
 go version
-go version go1.14.5 darwin/amd64
+go version go1.14.6 darwin/amd64
 ```
 
 ### Setup Project Folders
@@ -224,7 +244,7 @@ and create/update the following file: `~/.gitconfig` to include the following:
   insteadOf = https://github.com/
 ```
 
-This GoLang build file (Makefile) will handling pulling dependencies from the private
+This GoLang build file (Makefile) will handle pulling dependencies from the private
 repositories.
 
 ### Building Go Source
@@ -235,43 +255,64 @@ pushd $GOPATH/src/github.com/communitybridge/easycla/cla-backend-go
 
 # First time only, you will need to install the dev tools.  Simply run:
 make setup
+```
 
-# Once the tools are installed, you can run a clean build with all
-# the bells and whistles. This will:
-# - remove the old binary
-# - generate go code based on the swagger specification (includes data models and API stuff)
-# - download external dependencies
-# - formats the code (should be already formatted) - run this before you checkin code - the linter will catch violations
-# - build the code - use `build` or `build-mac` based on your platform
-# - test will run unit tests
-# - lint will run lint checks (do this before checking in code to avoid CI/CD catching the violations later)
+Once the tools are installed, you can run a clean build with all
+the bells and whistles. This will:
 
-# Linux only:
+- remove the old binaries and support lambdas
+- combine the swagger specification fragments into a single compiled swagger file (one for v1, one for v2) - python doesn't generate APIs from a swagger
+- Runs swagger-go to generate the API and data models for both v1 and v2 APIs - validates swagger spec
+- Downloads Org Service, Project Service, User Service and ACS Service swagger - generates the client stubs
+- Downloads any external dependencies
+- Builds API server and support lambdas
+- formats the code (should be already formatted) - run this before you checkin code - the linter will catch violations
+- build the code - use `build` or `build-mac` based on your platform
+- test will run unit tests
+- lint will run lint checks (do this before checking in code to avoid CI/CD catching the violations later)
+
+Mac:
+
+```bash
+make all
+# or 
+make all-mac
+
+# or everything individually - including the extra lambdas
+make clean swagger deps fmt build-mac build-aws-lambda-mac build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-scheduler-lambda-mac build-zipbuilder-lambda-mac test lint
+```
+
+Linux:
+```bash
 make all-linux
 # or everything individually - including the extra lambdas
 make clean swagger deps fmt build-linux build-aws-lambda-linux build-metrics-lambda-linux build-dynamo-events-lambda-linux build-zipbuilder-scheduler-lambda-linux build-zipbuilder-lambda-linux test lint
+```
 
-# Mac only:
-make all-mac
-# or everything individually - including the extra lambdas
-make clean swagger deps fmt build-mac build-aws-lambda-mac build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-scheduler-lambda-mac build-zipbuilder-lambda-mac test lint
+After the above, you should have the binary now (Mac example):
 
-# After the above, you should have the binary now (Mac example):
+```bash
 ls -lhF cla
 -rwxr-xr-x  1 ddeal  staff    36M Jul 18 10:57 cla-mac*
+```
 
-# Type is based on your OS:
-# Mac example:
+The binary is based on your OS, Mac example:
+
+```bash
 file cla-mac
 cla-mac: Mach-O 64-bit executable x86_64
-# Linux example:
-file cla    
+```
+
+Linux example:
+
+```bash
+file cla
 cla: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, Go BuildID=9KJXkKLbz8QXVJiIStug/13hRaqNdkbT0_CJAC_96/pqAvGfgbdkRS-xcMCFwk/PEhC2JMjFKBawWbErcth, stripped
 ```
 
 ### Setup the Environment
 
-To run the Go backend, it requires a few environment variables to be set:
+To run the Go backend locally, it requires a few environment variables to be set:
 
 - `AWS_REGION` - the AWS region, normally this should be set to `us-east-1`
 - `AWS_ACCESS_KEY_ID` - AWS key, used to authenticate to AWS for DynamoDB and SSM
@@ -279,7 +320,7 @@ To run the Go backend, it requires a few environment variables to be set:
 
 Optional environment settings:
 
-- `PORT` - optional, the HTTP port when running in local mode. The default is 8080.
+- `PORT` - optional, the HTTP port when running in local mode. The default port is 8080.
 - `STAGE` - optional, specifies the environment stage. The default is `dev`.
 - `GH_ORG_VALIDATION` - set to `false` to test locally which will by-pass the GH auth checks and
    allow local functional tests (e.g. with cURL or Postman) - default is enabled/true
@@ -289,7 +330,10 @@ Optional environment settings:
 First build and setup the environment.  Then simply run it:
 
 ```bash
-./cla
+# Mac
+./cla-mac
+# or linux
+./cla 
 ```
 
 You should see the typical diagnostic details on startup indicating that it
@@ -298,10 +342,12 @@ configuration parameters. To confirm the service is up and running locally,
 connect to the health service using a browser, curl or PostMan:
 
 ```bash
+# Endpoints
 open http://localhost:8080/v3/ops/health
+open http://localhost:8080/v4/ops/health
 ```
 
-## Testing UI Locally
+## Testing the UI Locally
 
 If testing in local mode, set the `USE_LOCAL_SERVICES=true` environment variable
 and review the localhost values in the `cla.service.ts` implementation for each
