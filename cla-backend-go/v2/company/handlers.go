@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-openapi/strfmt"
-
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
@@ -295,7 +293,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 
 	api.CompanyContributorAssociationHandler = company.ContributorAssociationHandlerFunc(
 		func(params company.ContributorAssociationParams) middleware.Responder {
-			contributor, contributorErr := service.AssociateContributor(params.CompanySFID, strfmt.Email(params.Body.UserEmail).String())
+			contributor, contributorErr := service.AssociateContributor(params.CompanySFID, params.Body.UserEmail.String())
 			if contributorErr != nil {
 				if _, ok := contributorErr.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
 					formatErr := errors.New("user already assigned contributor role for company")
