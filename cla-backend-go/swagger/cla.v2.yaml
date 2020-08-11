@@ -1792,7 +1792,9 @@ paths:
                 description: claGroupID to be signed
                 type: string
               userEmail:
-                $ref: './common/properties/email.yaml'
+                type: string
+                example: "user@linuxfoundation.org"
+                format: email
                 description: Proposed CLA Manager email
               name:
                 type: string
@@ -1841,7 +1843,9 @@ paths:
                 type: string
                 pattern: '^[a-zA-Z0-9 ]{1,60}$'
               userEmail:
-                $ref: './common/properties/email.yaml'
+                type: string
+                example: "user@linuxfoundation.org"
+                format: email
                 description: CLA Manager Designee email
               contactAdmin:
                 type: boolean
@@ -1915,7 +1919,9 @@ paths:
             title: Contributor
             properties:
               userEmail:
-                $ref: './common/properties/email.yaml'
+                type: string
+                example: "user@linuxfoundation.org"
+                format: email
                 description: LfEmail for contributor getting associated
 
       responses:
@@ -1978,7 +1984,9 @@ paths:
             description: User object used for CLA Manager designee
             properties:
               userEmail:
-                $ref: './common/properties/email.yaml'
+                type: string
+                example: "user@linuxfoundation.org"
+                format: email
                 description: 'CLA Manager designee email address'
       responses:
         '200':
@@ -2019,7 +2027,9 @@ paths:
             description: User object used for CLA Manager designee
             properties:
               userEmail:
-                $ref: './common/properties/email.yaml'
+                type: string
+                example: "user@linuxfoundation.org"
+                format: email
                 description: 'CLA Manager designee email address'
       responses:
         '200':
