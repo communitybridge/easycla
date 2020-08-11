@@ -12,6 +12,10 @@ import log
 import yaml
 
 
+def append_path(current_path, item) -> str:
+    return "".join([current_path.rstrip("/"), "/", str(item)  ])
+
+
 def resolve_reference(reference: str, logger) -> dict:
     try:
         logger.debug(f'opening ref: {reference}')
@@ -22,12 +26,17 @@ def resolve_reference(reference: str, logger) -> dict:
         return dict()
 
 
-def resolve_references(data: dict, logger) -> dict:
+def resolve_references(data: dict, logger, path) -> dict:
+    logger.debug(f"checking path : {path}")
+    if not isinstance(data, dict):
+        logger.debug(f"path: {path} the root path is not dict we give up")
+        return data
+
     for key in data.keys():
-        logger.debug(f'key is: {key}')
+        logger.debug(f'path: {path} key is: {key}')
 
         if key == '$ref' and not data[key].startswith('#/'):
-            logger.debug(f'found ref: {key} -> {data[key]}')
+            logger.debug(f'path: {path} found ref: {key} -> {data[key]}')
             ref_value = data[key]
             resolved_value = resolve_reference(data[key], logger)
             # Remove the reference
@@ -37,11 +46,19 @@ def resolve_references(data: dict, logger) -> dict:
             logger.debug(f'replacing {ref_value} with {resolved_value}')
             data.update(resolved_value)
             # reprocess
-            return resolve_references(data, logger)
-
-        if isinstance(data[key], dict):
-            logger.debug(f'key \'{key}\' value is a dict')
-            data[key] = resolve_references(data[key], logger)
+            return resolve_references(data, logger, path)
+        elif isinstance(data[key], dict):
+            logger.debug(f'path: {path} key \'{key}\' value is a dict')
+            newpath = append_path(path, key)
+            resolved_val = resolve_references(data[key], logger, newpath)
+            logger.debug(f"updating value at path : {path} for key : {key}")
+            data[key] = resolved_val
+        elif isinstance(data[key], list):
+            logger.debug(f'path : {path} - key \'{key}\' value is a list')
+            for i, s in enumerate(data[key]):
+                newpath = append_path(path, str(i))
+                logger.debug(f"path: ${newpath} replacing list item")
+                data[key][i] = resolve_references(s, logger, newpath)
 
     return data
 
@@ -74,7 +91,7 @@ def main(spec_input_file, spec_output_file, log_dir):
         with open(spec_input_file, 'r') as stream:
             try:
                 data = yaml.load(stream, Loader=yaml.FullLoader)
-                data = resolve_references(data, logger)
+                data = resolve_references(data, logger, "/")
                 with open(spec_output_file, 'w') as yaml_file:
                     yaml.dump(data, yaml_file, sort_keys=False)
             except yaml.YAMLError as exc:
