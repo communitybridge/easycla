@@ -19,6 +19,8 @@ github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2 h1:ZLAgTj9+H3RTmjbRpUam
 github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2/go.mod h1:LQj48zwkRwdjVmDCqtPlviW/7IFaSKzz2gDhxRwVrA4=
 github.com/LF-Engineering/lfx-kit v0.1.17 h1:JGUVAbgwFXIOcVXkTPN1jqdUYMHCAas26YvknWtAE20=
 github.com/LF-Engineering/lfx-kit v0.1.17/go.mod h1:B+pko2SqvGNSG9hWDC35JNZ38nTPt+r5KB6k75xM5vY=
+github.com/LF-Engineering/lfx-kit v0.1.18 h1:nRUrk+iwSmjdKD2gN3wdTApHNhXdBahWw062E+knX0M=
+github.com/LF-Engineering/lfx-kit v0.1.18/go.mod h1:B+pko2SqvGNSG9hWDC35JNZ38nTPt+r5KB6k75xM5vY=
 github.com/LF-Engineering/lfx-models v0.6.9 h1:Jf1kmKc3EaQ/tU5zD2RldZH6q/x9aKOm/L/CaEpoomE=
 github.com/LF-Engineering/lfx-models v0.6.9/go.mod h1:AaV7psgE2IPXhaLXYXoFviobYoh09XJ2P/ALOU11OuE=
 github.com/Masterminds/semver v1.5.0/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
