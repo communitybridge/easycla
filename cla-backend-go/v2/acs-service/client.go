@@ -58,7 +58,7 @@ func GetClient() *Client {
 
 // SendUserInvite invites users to the LFX platform
 func (ac *Client) SendUserInvite(email *string,
-	roleName string, scope string, organizationID string, inviteType string, subject *string, emailContent *string) error {
+	roleName string, scope string, organizationID string, inviteType string, subject *string, emailContent *string, automate bool) error {
 	tok, err := token.GetToken()
 	if err != nil {
 		return err
@@ -66,6 +66,7 @@ func (ac *Client) SendUserInvite(email *string,
 	clientAuth := runtimeClient.BearerToken(tok)
 	params := &invite.CreateUserInviteParams{
 		SendInvite: &models.CreateInvite{
+			Automate: automate,
 			Email:    email,
 			Scope:    scope,
 			ScopeID:  organizationID,
