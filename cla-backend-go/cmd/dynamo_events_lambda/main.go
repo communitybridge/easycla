@@ -79,6 +79,9 @@ func init() {
 	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	project_service.InitClient(configFile.APIGatewayURL)
 
+	// Services
+	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo, projectClaGroupRepo)
+
 	type combinedRepo struct {
 		users.UserRepository
 		company.IRepository
@@ -91,7 +94,7 @@ func init() {
 	})
 	organization_service.InitClient(configFile.APIGatewayURL, eventsService)
 	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
-	dynamoEventsService = dynamo_events.NewService(stage, signaturesRepo, companyRepo, projectClaGroupRepo, eventsRepo, projectRepo)
+	dynamoEventsService = dynamo_events.NewService(stage, signaturesRepo, companyRepo, projectClaGroupRepo, eventsRepo, projectRepo, projectService)
 }
 
 func handler(ctx context.Context, event events.DynamoDBEvent) {

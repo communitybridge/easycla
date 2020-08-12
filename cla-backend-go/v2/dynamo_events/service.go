@@ -40,6 +40,7 @@ type service struct {
 	projectsClaGroupRepo projects_cla_groups.Repository
 	eventsRepo           claevent.Repository
 	projectRepo          project.ProjectRepository
+	projectService       project.Service
 }
 
 // Service implements DynamoDB stream event handler service
@@ -48,7 +49,7 @@ type Service interface {
 }
 
 // NewService creates DynamoDB stream event handler service
-func NewService(stage string, signatureRepo signatures.SignatureRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository, eventsRepo claevent.Repository, projectRepo project.ProjectRepository) Service {
+func NewService(stage string, signatureRepo signatures.SignatureRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository, eventsRepo claevent.Repository, projectRepo project.ProjectRepository, projService project.Service) Service {
 	SignaturesTable := fmt.Sprintf("cla-%s-signatures", stage)
 	eventsTable := fmt.Sprintf("cla-%s-events", stage)
 	projectsCLAGroupsTable := fmt.Sprintf("cla-%s-projects-cla-groups", stage)
@@ -61,6 +62,7 @@ func NewService(stage string, signatureRepo signatures.SignatureRepository, comp
 		projectsClaGroupRepo: pcgRepo,
 		eventsRepo:           eventsRepo,
 		projectRepo:          projectRepo,
+		projectService:       projService,
 	}
 	s.registerCallback(SignaturesTable, Modify, s.SignatureSignedEvent)
 	s.registerCallback(SignaturesTable, Modify, s.SignatureAddSigTypeSignedApprovedID)
