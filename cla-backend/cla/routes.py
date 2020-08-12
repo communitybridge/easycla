@@ -747,6 +747,8 @@ def get_project(project_id: hug.types.uuid):
     """
     # returns value as a dict
     project = cla.controllers.project.get_project(project_id)
+    if project.get("errors"):
+        return project
     # For public endpoint, don't show the project_external_id.
     if "project_external_id" in project:
         del project["project_external_id"]
