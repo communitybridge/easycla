@@ -45,13 +45,15 @@ export class ClaContractConfigModal {
         [
           Validators.required,
           Validators.minLength(2),
-          Validators.maxLength(100)
+          Validators.maxLength(100),
+          Validators.pattern(`^([\w\p{L}][\w\s\p{L}()\[\]\.\,+-_]*){2,100}$`)
         ])],
       description: [this.claProject.projectDescription, Validators.compose(
         [
           Validators.required,
           Validators.minLength(2),
-          Validators.maxLength(256)
+          Validators.maxLength(256),
+          Validators.pattern(`^([\w\p{L}][\w\s\p{L}()\[\]\.\,+-_]*){2,255}$`)
         ])],
       ccla: [this.claProject.projectCCLAEnabled],
       cclaAndIcla: [this.claProject.projectCCLARequiresICLA],
