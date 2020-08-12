@@ -287,7 +287,7 @@ func (osc *Client) GetScopeID(organizationID string, projectID string, roleName 
 
 // SearchOrganization search organization by name. It will return
 // array of organization matching with the orgName.
-func (osc *Client) SearchOrganization(orgName string, websiteName string) ([]*models.Organization, error) {
+func (osc *Client) SearchOrganization(orgName string, websiteName string, filter string) ([]*models.Organization, error) {
 	tok, err := token.GetToken()
 	if err != nil {
 		return nil, err
@@ -298,11 +298,12 @@ func (osc *Client) SearchOrganization(orgName string, websiteName string) ([]*mo
 	var orgs []*models.Organization
 	for {
 		params := &organizations.SearchOrgParams{
-			Name:     aws.String(orgName),
-			Website:  aws.StringValueSlice([]*string{&websiteName}),
-			Offset:   aws.String(strconv.FormatInt(offset, 10)),
-			PageSize: aws.String(strconv.FormatInt(pageSize, 10)),
-			Context:  context.TODO(),
+			Name:         aws.String(orgName),
+			Website:      aws.StringValueSlice([]*string{&websiteName}),
+			DollarFilter: aws.String(filter),
+			Offset:       aws.String(strconv.FormatInt(offset, 10)),
+			PageSize:     aws.String(strconv.FormatInt(pageSize, 10)),
+			Context:      context.TODO(),
 		}
 		result, err := osc.cl.Organizations.SearchOrg(params, clientAuth)
 		if err != nil {
@@ -383,7 +384,7 @@ func (osc *Client) CreateOrg(companyName string, companyWebsite string) (*models
 		return nil, err
 	}
 	// use linux foundation logo as default
-	linuxFoundation, err := osc.SearchOrganization("Linux Foundation", "")
+	linuxFoundation, err := osc.SearchOrganization("Linux Foundation", "", "")
 	if err != nil {
 		return nil, err
 	}
