@@ -43,8 +43,21 @@ const (
 	SignatureProjectIDTypeIndex                    = "signature-project-id-type-index"
 	SignatureReferenceIndex                        = "reference-signature-index"
 
+	// ReferenceTypeUser is the signature reference type for user signatures - individual and employee
+	ReferenceTypeUser = "user"
+	// ReferenceTypeCompany is the signature reference type for corporate signatures - signed by CLA Signatories, managed by CLA Managers
+	ReferenceTypeCompany = "company"
+
+	// SignatureTypeCLA is the cla signature type in the DB
+	SignatureTypeCLA = "cla"
+	// SignatureTypeCCLA is the ccla signature type in the DB
+	SignatureTypeCCLA = "ccla"
+
+	// ICLA represents individual contributor CLA records
 	ICLA = "icla"
+	// ECLA represents employee contributor CLA records (acknowledgements)
 	ECLA = "ecla"
+	// CCLA represents corporate CLA records (includes approval lists)
 	CCLA = "ccla"
 
 	HugePageSize = 10000
@@ -401,8 +414,8 @@ func (repo repository) GetIndividualSignature(claGroupID, userID string) (*model
 		"tableName":              repo.signatureTableName,
 		"claGroupID":             claGroupID,
 		"userID":                 userID,
-		"signatureType":          "cla",
-		"signatureReferenceType": "user",
+		"signatureType":          SignatureTypeCLA,
+		"signatureReferenceType": ReferenceTypeUser,
 		"signatureApproved":      "true",
 		"signatureSigned":        "true",
 	}
@@ -410,7 +423,7 @@ func (repo repository) GetIndividualSignature(claGroupID, userID string) (*model
 	// These are the keys we want to match for an ICLA Signature with a given CLA Group and User ID
 	condition := expression.Key("signature_project_id").Equal(expression.Value(claGroupID)).
 		And(expression.Key("signature_reference_id").Equal(expression.Value(userID)))
-	filter := expression.Name("signature_type").Equal(expression.Value("cla")).
+	filter := expression.Name("signature_type").Equal(expression.Value(SignatureTypeCLA)).
 		And(expression.Name("signature_reference_type").Equal(expression.Value("user"))).
 		And(expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true)))).
 		And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(true)))).
@@ -648,43 +661,67 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 	var filter expression.ConditionBuilder
 	var filterAdded bool
 
-	if params.SearchField != nil {
-		searchFieldExpression := expression.Name("signature_reference_type").Equal(expression.Value(params.SearchField))
-		filter = addConditionToFilter(filter, searchFieldExpression, &filterAdded)
-	}
+	if params.ClaType != nil {
+		filterAdded = true
+		if strings.ToLower(*params.ClaType) == ICLA {
+			filter = expression.Name("signature_type").Equal(expression.Value(SignatureTypeCLA)).
+				And(expression.Name("signature_reference_type").Equal(expression.Value(ReferenceTypeUser))).
+				And(expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true)))).
+				And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(true)))).
+				And(expression.Name("signature_user_ccla_company_id").AttributeNotExists())
 
-	if params.SignatureType != nil {
-		if params.SearchTerm != nil && (params.FullMatch != nil && !*params.FullMatch) {
-			indexName = SignatureProjectIDTypeIndex
-			condition = condition.And(expression.Key("signature_type").Equal(expression.Value(strings.ToLower(*params.SignatureType))))
-		} else {
-			signatureTypeExpression := expression.Name("signature_type").Equal(expression.Value(params.SignatureType))
-			filter = addConditionToFilter(filter, signatureTypeExpression, &filterAdded)
+		} else if strings.ToLower(*params.ClaType) == ECLA {
+			filter = expression.Name("signature_type").Equal(expression.Value(SignatureTypeCLA)).
+				And(expression.Name("signature_reference_type").Equal(expression.Value(ReferenceTypeUser))).
+				And(expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true)))).
+				And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(true)))).
+				And(expression.Name("signature_user_ccla_company_id").AttributeExists())
+		} else if strings.ToLower(*params.ClaType) == CCLA {
+			filter = expression.Name("signature_type").Equal(expression.Value(SignatureTypeCCLA)).
+				And(expression.Name("signature_reference_type").Equal(expression.Value(ReferenceTypeCompany))).
+				And(expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true)))).
+				And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(true)))).
+				And(expression.Name("signature_user_ccla_company_id").AttributeNotExists())
 		}
-		if *params.SignatureType == "ccla" {
-			signatureReferenceIDExpression := expression.Name("signature_reference_id").AttributeExists()
-			signatureUserCclaCompanyIDExpression := expression.Name("signature_user_ccla_company_id").AttributeNotExists()
-			filter = addConditionToFilter(filter, signatureReferenceIDExpression, &filterAdded)
-			filter = addConditionToFilter(filter, signatureUserCclaCompanyIDExpression, &filterAdded)
+	} else {
+		if params.SearchField != nil {
+			searchFieldExpression := expression.Name("signature_reference_type").Equal(expression.Value(params.SearchField))
+			filter = addConditionToFilter(filter, searchFieldExpression, &filterAdded)
 		}
-	}
 
-	if params.SearchTerm != nil {
-		if *params.FullMatch {
-			indexName = "reference-signature-search-index"
-			condition = condition.And(expression.Key("signature_reference_name_lower").Equal(expression.Value(strings.ToLower(*params.SearchTerm))))
-		} else {
-			searchTermExpression := expression.Name("signature_reference_name_lower").Contains(strings.ToLower(*params.SearchTerm))
-			filter = addConditionToFilter(filter, searchTermExpression, &filterAdded)
+		if params.SignatureType != nil {
+			if params.SearchTerm != nil && (params.FullMatch != nil && !*params.FullMatch) {
+				indexName = SignatureProjectIDTypeIndex
+				condition = condition.And(expression.Key("signature_type").Equal(expression.Value(strings.ToLower(*params.SignatureType))))
+			} else {
+				signatureTypeExpression := expression.Name("signature_type").Equal(expression.Value(params.SignatureType))
+				filter = addConditionToFilter(filter, signatureTypeExpression, &filterAdded)
+			}
+			if *params.SignatureType == "ccla" {
+				signatureReferenceIDExpression := expression.Name("signature_reference_id").AttributeExists()
+				signatureUserCclaCompanyIDExpression := expression.Name("signature_user_ccla_company_id").AttributeNotExists()
+				filter = addConditionToFilter(filter, signatureReferenceIDExpression, &filterAdded)
+				filter = addConditionToFilter(filter, signatureUserCclaCompanyIDExpression, &filterAdded)
+			}
 		}
+
+		if params.SearchTerm != nil {
+			if *params.FullMatch {
+				indexName = "reference-signature-search-index"
+				condition = condition.And(expression.Key("signature_reference_name_lower").Equal(expression.Value(strings.ToLower(*params.SearchTerm))))
+			} else {
+				searchTermExpression := expression.Name("signature_reference_name_lower").Contains(strings.ToLower(*params.SearchTerm))
+				filter = addConditionToFilter(filter, searchTermExpression, &filterAdded)
+			}
+		}
+
+		// Filter condition to cater for approved and signed signatures
+		signatureApprovedExpression := expression.Name("signature_approved").Equal(expression.Value(true))
+		filter = addConditionToFilter(filter, signatureApprovedExpression, &filterAdded)
+
+		signatureSignedExpression := expression.Name("signature_signed").Equal(expression.Value(true))
+		filter = addConditionToFilter(filter, signatureSignedExpression, &filterAdded)
 	}
-
-	// Filter condition to cater for approved and signed signatures
-	signatureApprovedExpression := expression.Name("signature_approved").Equal(expression.Value(true))
-	filter = addConditionToFilter(filter, signatureApprovedExpression, &filterAdded)
-
-	signatureSignedExpression := expression.Name("signature_signed").Equal(expression.Value(true))
-	filter = addConditionToFilter(filter, signatureSignedExpression, &filterAdded)
 
 	if filterAdded {
 		builder = builder.WithFilter(filter)
@@ -713,7 +750,7 @@ func (repo repository) GetProjectSignatures(params signatures.GetProjectSignatur
 
 	// If we have the next key, set the exclusive start key value
 	if params.NextKey != nil {
-		log.Debugf("Received a nextKey, value: %s", *params.NextKey)
+		log.Debugf("received a nextKey, value: %s", *params.NextKey)
 		// The primary key of the first item that this operation will evaluate.
 		// and the query key (if not the same)
 		queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
@@ -1922,8 +1959,26 @@ func (repo repository) buildProjectSignatureModels(results *dynamodb.QueryOutput
 	var wg sync.WaitGroup
 	wg.Add(len(dbSignatures))
 	for _, dbSignature := range dbSignatures {
+
+		// Set the signature type in the response
+		var claType = ""
+		// Corporate Signature
+		if dbSignature.SignatureReferenceType == ReferenceTypeCompany && dbSignature.SignatureType == SignatureTypeCCLA {
+			claType = CCLA
+		}
+		// Employee Signature
+		if dbSignature.SignatureReferenceType == ReferenceTypeUser && dbSignature.SignatureType == SignatureTypeCLA && dbSignature.SignatureUserCompanyID != "" {
+			claType = ECLA
+		}
+
+		// Individual Signature
+		if dbSignature.SignatureReferenceType == ReferenceTypeUser && dbSignature.SignatureType == SignatureTypeCLA && dbSignature.SignatureUserCompanyID == "" {
+			claType = ICLA
+		}
+
 		sig := &models.Signature{
 			SignatureID:                 strfmt.UUID4(dbSignature.SignatureID),
+			ClaType:                     claType,
 			SignatureCreated:            dbSignature.DateCreated,
 			SignatureModified:           dbSignature.DateModified,
 			SignatureType:               dbSignature.SignatureType,
@@ -2037,56 +2092,6 @@ func buildResponse(items []*dynamodb.AttributeValue) []models.GithubOrg {
 	}
 
 	return orgs
-}
-
-// buildProject is a helper function to build a common set of projection/columns for the query
-func buildProjection() expression.ProjectionBuilder {
-	// These are the columns we want returned
-	return expression.NamesList(
-		expression.Name("signature_id"),
-		expression.Name("date_created"),
-		expression.Name("date_modified"),
-		expression.Name("signature_acl"),
-		expression.Name("signature_approved"),
-		expression.Name("signature_document_major_version"),
-		expression.Name("signature_document_minor_version"),
-		expression.Name("signature_reference_id"),
-		expression.Name("signature_reference_name"),       // Added to support simplified UX queries
-		expression.Name("signature_reference_name_lower"), // Added to support case insensitive UX queries
-		expression.Name("signature_project_id"),
-		expression.Name("signature_reference_type"),       // user or company
-		expression.Name("signature_signed"),               // T/F
-		expression.Name("signature_type"),                 // ccla or cla
-		expression.Name("signature_user_ccla_company_id"), // reference to the company
-		expression.Name("email_whitelist"),
-		expression.Name("domain_whitelist"),
-		expression.Name("github_whitelist"),
-		expression.Name("github_org_whitelist"),
-		expression.Name("user_github_username"),
-		expression.Name("user_lf_username"),
-		expression.Name("user_name"),
-		expression.Name("user_email"),
-		expression.Name("signed_on"),
-		expression.Name("signatory_name"),
-	)
-}
-
-// buildSignatureACLProject is a helper function to build a signature ACL response/projection
-func buildSignatureACLProjection() expression.ProjectionBuilder {
-	// These are the columns we want returned
-	return expression.NamesList(
-		expression.Name("signature_id"),
-		expression.Name("signature_acl"),
-	)
-}
-
-// buildCompanyIDProjection is a helper function to build a simple projection with the signature id and the company id
-func buildCompanyIDProjection() expression.ProjectionBuilder {
-	// These are the columns we want returned
-	return expression.NamesList(
-		expression.Name("signature_id"),
-		expression.Name("signature_reference_id"),
-	)
 }
 
 // buildApprovalAttributeList builds the updated approval list based on the added and removed values

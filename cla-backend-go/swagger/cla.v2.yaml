@@ -1338,6 +1338,7 @@ paths:
         - $ref: '#/parameters/searchField'
         - $ref: '#/parameters/fullMatch'
         - $ref: '#/parameters/signatureType'
+        - $ref: '#/parameters/claType'
       responses:
         '200':
           description: 'Success'
@@ -2630,6 +2631,17 @@ parameters:
     type: string
     required: false
     enum: [ccla,cla]
+  claType:
+    name: claType
+    description: >
+      CLA Type query parameter - allows the caller to specify either individual, employee or corporate signature, valid options:
+      * `icla` - for individual contributor signature records (individuals not associated with a corporation)
+      * `ecla` - for employee contributor signature records (acknowledgements from corporate contributors)
+      * `ccla` - for corporate contributor signature records (created by CLA Signatories and managed by CLA Managers)
+    in: query
+    type: string
+    required: false
+    enum: [icla,ecla,ccla]
   foundationSFID:
     name: foundationSFID
     description: the Salesforce ID of the Foundation
