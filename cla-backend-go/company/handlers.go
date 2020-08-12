@@ -271,24 +271,15 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 	})
 
 	api.OrganizationSearchOrganizationHandler = organization.SearchOrganizationHandlerFunc(func(params organization.SearchOrganizationParams) middleware.Responder {
-		var companyName, websiteName string
-		if params.CompanyName == nil && params.WebsiteName == nil {
-			log.Debugf("CompanyName or WebsiteName atleast one required")
-			return organization.NewSearchOrganizationBadRequest().WithPayload(errorResponse(errors.New("companyName or websiteName atleast one required")))
-		}
-		if params.CompanyName == nil {
-			companyName = ""
-		} else {
-			companyName = *params.CompanyName
+
+		if params.CompanyName == nil && params.WebsiteName == nil && params.DollarFilter == nil {
+			log.Debugf("CompanyName or WebsiteName or filter atleast one required")
+			return organization.NewSearchOrganizationBadRequest().WithPayload(errorResponse(errors.New("companyName or websiteName or filter atleast one required")))
 		}
 
-		if params.WebsiteName == nil {
-			websiteName = ""
-		} else {
-			websiteName = *params.WebsiteName
-		}
+		companyName, websiteName, filter := validateParams(params)
 
-		result, err := service.SearchOrganizationByName(companyName, websiteName)
+		result, err := service.SearchOrganizationByName(companyName, websiteName, filter)
 		if err != nil {
 			log.Warnf("error occured while search org %s. error = %s", *params.CompanyName, err.Error())
 			return organization.NewSearchOrganizationInternalServerError().WithPayload(errorResponse(err))
@@ -313,4 +304,26 @@ func errorResponse(err error) *models.ErrorResponse {
 	}
 
 	return &e
+}
+
+func validateParams(params organization.SearchOrganizationParams) (string, string, string) {
+	var companyName, websiteName, filter string
+	if params.CompanyName == nil {
+		companyName = ""
+	} else {
+		companyName = *params.CompanyName
+	}
+
+	if params.WebsiteName == nil {
+		websiteName = ""
+	} else {
+		websiteName = *params.WebsiteName
+	}
+
+	if params.DollarFilter == nil {
+		filter = ""
+	} else {
+		filter = *params.DollarFilter
+	}
+	return companyName, websiteName, filter
 }
