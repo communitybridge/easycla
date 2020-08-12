@@ -28,6 +28,7 @@ type Service interface {
 	DeleteCLAGroup(projectID string) error
 	UpdateCLAGroup(projectModel *models.Project) (*models.Project, error)
 	GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error)
+	SignedAtFoundationLevel(list []*projects_cla_groups.ProjectClaGroup) bool
 }
 
 // service
@@ -90,7 +91,7 @@ func (s service) GetCLAGroupByID(projectID string) (*models.Project, error) {
 		}
 		log.WithFields(f).Debugf("loaded CLA Groups: %+v for foundation SFID: %s", pcgs, project.FoundationSFID)
 		log.WithFields(f).Debug("checking if signed at the foundation level...")
-		project.FoundationLevelCLA = signedAtFoundationLevel(pcgs)
+		project.FoundationLevelCLA = s.SignedAtFoundationLevel(pcgs)
 	}
 
 	return project, nil
@@ -189,7 +190,7 @@ func (s service) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDet
 }
 
 //signedAtFoundationLevel checks if project is signed at foundation Level else project Level
-func signedAtFoundationLevel(list []*projects_cla_groups.ProjectClaGroup) bool {
+func (s service) SignedAtFoundationLevel(list []*projects_cla_groups.ProjectClaGroup) bool {
 	claGroupMap := make(map[string][]string)
 
 	// Create claGroup map that determines level(Project,Foundation) signage
