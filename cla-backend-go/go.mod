@@ -6,7 +6,7 @@ replace github.com/awslabs/aws-lambda-go-api-proxy => github.com/LF-Engineering/
 
 require (
 	github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
-	github.com/LF-Engineering/lfx-kit v0.1.17
+	github.com/LF-Engineering/lfx-kit v0.1.18
 	github.com/LF-Engineering/lfx-models v0.6.9
 	github.com/aws/aws-lambda-go v1.17.0
 	github.com/aws/aws-sdk-go v1.30.14
