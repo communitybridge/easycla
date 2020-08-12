@@ -287,6 +287,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			SearchField:   params.SearchField,
 			SearchTerm:    params.SearchTerm,
 			SignatureType: params.SignatureType,
+			ClaType:       params.ClaType,
 		})
 		if err != nil {
 			log.Warnf("error retrieving project signatures for projectID: %s, error: %+v",
