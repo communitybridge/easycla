@@ -944,6 +944,7 @@ func sendEmailToUserWithNoLFID(projectName, requesterUsername, requesterEmail, u
 <p>User %s (%s) was trying to add you as a CLA Manager for Project %s but was unable to identify your account details in
 the EasyCLA system. In order to become a CLA Manager for Project %s, you will need to accept invite below.
 Once complete, notify the user %s and they will be able to add you as a CLA Manager.</p>
+<p> <a href="USERACCEPTLINK">AcceptInvite</a> </p>
 %s
 %s`,
 		userWithNoLFIDName, projectName,
@@ -952,7 +953,9 @@ Once complete, notify the user %s and they will be able to add you as a CLA Mana
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	acsClient := v2AcsService.GetClient()
-	acsErr := acsClient.SendUserInvite(&userWithNoLFIDEmail, "cla-manager", "organization", organizationID, "userinvite", &subject, &body)
+	automate := false
+
+	acsErr := acsClient.SendUserInvite(&userWithNoLFIDEmail, "cla-manager", "organization", organizationID, "userinvite", &subject, &body, automate)
 	if acsErr != nil {
 		return acsErr
 	}
