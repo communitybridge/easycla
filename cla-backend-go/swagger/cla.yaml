@@ -931,6 +931,7 @@ paths:
           description: the organization website
           x-omitempty: false
           pattern: "^((http|https):\\/\\/)?(www.)?[a-z0-9]+(\\.[a-z]{2,}){1,3}(#?\\/?[a-zA-Z0-9#]+)*\\/?(\\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$"
+        - $ref: '#/parameters/filter'
       responses:
         '200':
           description: 'Success'
@@ -1908,7 +1909,12 @@ parameters:
     exclusiveMinimum: true
   companyName:
     name: companyName
-    description: The optional company name filter
+    description: >-
+            Represent the name of the organization
+
+            #### <span style="color:red">$filter available</span>
+
+            e.g. `$filter=name eq Pinterest`
     in: query
     type: string
     required: false
@@ -2055,6 +2061,42 @@ parameters:
     description: return result created after this time.
     in: query
     type: string
+  filter:
+    name: $filter
+    in: query
+    type: string
+    description: >-
+        System query option to set custom on-demand criteria to condition the results of the resource requested
+
+         **Comparison Operators**
+
+          Operator | Description         | Example
+          -------- | ------------------- | -------
+          eq     | Equal                 | **$filter**=companyName **eq** Pinterest
+          ne     | Not Equal             | **$filter**=status **ne** Planned
+          gt     | Greater than          | **$filter**=startDate **gt** 06-22-2019
+          ge     | Greater than or equal | **$filter**=endDate **ge*8 06-22-2021
+          lt     | Less than             | **$filter**=price **lt** 100000
+          le     | Less than or equal    | **$filter**=EventYear **le** 2019
+
+
+        **Logical Operators** (comming soon)
+
+          Operator | Description    | Example
+          -------- | -------------- | -------
+          and    | Logical and      | **$filter**=status **eq** Active **and** startDate **gt** 01-01-2020
+          or     | Logical or       | **$filter**=status **eq** Active **or** Status **ne** Planned
+
+          **Filter Considerations**
+
+          * Filter can not be used con other request parameters, it will ignore all others
+
+          * If filter fails you won't get an error, it will return everything
+
+        <p style="color: #8a6d3b;background-color: #fcf8e3;padding: 5px">
+          <b>Note</b>: look up for fields in the response structure  with the description of <b><span style="color:red">$filter available</span></b>,
+          those are the available fields to use
+        </p>
 
 definitions:
   version:
