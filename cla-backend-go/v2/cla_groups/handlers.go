@@ -29,7 +29,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 	api.ClaGroupCreateClaGroupHandler = cla_group.CreateClaGroupHandlerFunc(func(params cla_group.CreateClaGroupParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		if !utils.IsUserAuthorizedForProject(authUser, *params.ClaGroupInput.FoundationSfid) {
+		if !utils.IsUserAuthorizedForProjectTree(authUser, *params.ClaGroupInput.FoundationSfid) {
 			return cla_group.NewCreateClaGroupForbidden().WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAGroup with Project scope of %s",
@@ -86,7 +86,8 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 					params.ClaGroupID, err),
 			})
 		}
-		if !utils.IsUserAuthorizedForProject(authUser, claGroupModel.FoundationSFID) {
+
+		if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) {
 			return cla_group.NewDeleteClaGroupForbidden().WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DeleteCLAGroup with Project scope of %s",
@@ -130,7 +131,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
 			})
 		}
-		if !utils.IsUserAuthorizedForProject(authUser, cg.FoundationSFID) {
+		if !utils.IsUserAuthorizedForProjectTree(authUser, cg.FoundationSFID) {
 			return cla_group.NewEnrollProjectsForbidden().WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DeleteCLAGroup with Project scope of %s",
@@ -164,7 +165,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 	api.ClaGroupListClaGroupsUnderFoundationHandler = cla_group.ListClaGroupsUnderFoundationHandlerFunc(func(params cla_group.ListClaGroupsUnderFoundationParams, authUser *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+		if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 			return cla_group.NewListClaGroupsUnderFoundationForbidden().WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to ListCLAGroupsUnderFoundation with Project scope of %s",
