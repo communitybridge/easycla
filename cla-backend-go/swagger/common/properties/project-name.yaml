@@ -1,0 +1,6 @@
+type: string
+description: The name of the project
+example: "Cloud Foundry Foundation"
+pattern: '^([\w\d\s\-\,\./]+){2,255}$'
+minLength: 2
+maxLength: 255
