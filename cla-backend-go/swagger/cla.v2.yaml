@@ -3051,7 +3051,7 @@ definitions:
         type: integer
         x-omitempty: false
       projectName:
-        type: string
+        $ref: './common/properties/project-name.yaml'
         x-omitempty: false
       claGroupName:
         $ref: './common/properties/cla-group-name.yaml'
@@ -3081,7 +3081,7 @@ definitions:
       externalProjectID:
         type: string
       projectName:
-        type: string
+        $ref: './common/properties/project-name.yaml'
       companiesCount:
         type: integer
         x-omitempty: false
@@ -3339,8 +3339,8 @@ definitions:
         type: string
       companyName:
         $ref: './common/properties/company-name.yaml'
-      projectName:
-        type: string
+      claGroupName:
+        $ref: './common/properties/cla-group-name.yaml'
 
   notify-cla-manager:
     type: object
