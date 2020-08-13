@@ -74,7 +74,7 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 					Message: "invalid gerritName parameter - expecting gerrit hostname",
 				})
 			}
-
+			params.AddGerritInput.Version = "v1"
 			// add the gerrit
 			result, err := service.AddGerrit(params.ProjectID, projectModel.ProjectExternalID, params.AddGerritInput)
 			if err != nil {
