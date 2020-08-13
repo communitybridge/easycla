@@ -564,7 +564,7 @@ func (s service) SearchOrganizationByName(orgName string, websiteName string, fi
 	if err != nil {
 		return nil, err
 	}
-	log.Debugf("Org details %+v", orgs[0].Name)
+
 	result := &models.OrgList{List: make([]*models.Org, 0, len(orgs))}
 	for _, org := range orgs {
 		result.List = append(result.List, &models.Org{
