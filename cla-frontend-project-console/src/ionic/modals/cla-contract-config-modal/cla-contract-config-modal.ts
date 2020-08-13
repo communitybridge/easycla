@@ -1,11 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {Events, IonicPage, NavController, NavParams, ViewController} from 'ionic-angular';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {ClaService} from '../../services/cla.service';
-import {PlatformLocation} from '@angular/common';
+import { Component } from '@angular/core';
+import { Events, IonicPage, NavController, NavParams, ViewController } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ClaService } from '../../services/cla.service';
+import { PlatformLocation } from '@angular/common';
+import { generalConstants } from '../../constants/general';
 
 @IonicPage({
   segment: 'cla-contract-config-modal'
@@ -46,14 +47,14 @@ export class ClaContractConfigModal {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(100),
-          Validators.pattern(`^([\w\p{L}][\w\s\p{L}()\[\]\.\,+-_]*){2,100}$`)
+          Validators.pattern(new RegExp(generalConstants.CLA_GROUP_NAME_REGEX))
         ])],
       description: [this.claProject.projectDescription, Validators.compose(
         [
           Validators.required,
           Validators.minLength(2),
-          Validators.maxLength(256),
-          Validators.pattern(`^([\w\p{L}][\w\s\p{L}()\[\]\.\,+-_]*){2,255}$`)
+          Validators.maxLength(255),
+          Validators.pattern(new RegExp(generalConstants.CLA_GROUP_DESCRIPTION_REGEX))
         ])],
       ccla: [this.claProject.projectCCLAEnabled],
       cclaAndIcla: [this.claProject.projectCCLARequiresICLA],
