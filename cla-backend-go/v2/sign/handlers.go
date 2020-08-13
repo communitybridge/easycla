@@ -25,7 +25,7 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 	api.SignRequestCorporateSignatureHandler = sign.RequestCorporateSignatureHandlerFunc(
 		func(params sign.RequestCorporateSignatureParams, user *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
-			if !utils.IsUserAuthorizedForProjectOrganization(user, utils.StringValue(params.Input.ProjectSfid), utils.StringValue(params.Input.CompanySfid)) {
+			if !utils.IsUserAuthorizedForProjectOrganizationTree(user, utils.StringValue(params.Input.ProjectSfid), utils.StringValue(params.Input.CompanySfid)) {
 				return sign.NewRequestCorporateSignatureForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Request Corporate Signature with Project|Organization scope of %s | %s",
