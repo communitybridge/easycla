@@ -8,11 +8,13 @@ properties:
     description: the gerrit name
     example: 'ONAP'
     minLength: 3
+    pattern: "^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$"
   gerritUrl:
     type: string
     description: the gerrit url
     example: 'https://gerrit.onap.org'
     minLength: 3
+    maxLength: 255
     format: uri
   groupIdCcla:
     type: string
@@ -26,3 +28,7 @@ properties:
     example: '1903'
     minLength: 3
     maxLength: 12
+  version:
+    type: string
+    description: the version associated with the gerrit record
+    example: 'v1'

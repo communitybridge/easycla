@@ -101,6 +101,7 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 				GerritURL:   params.AddGerritInput.GerritURL,
 				GroupIDCcla: params.AddGerritInput.GroupIDCcla,
 				GroupIDIcla: params.AddGerritInput.GroupIDIcla,
+				Version:     "v2",
 			}
 			result, err := v1Service.AddGerrit(params.ClaGroupID, params.ProjectSFID, addGerritInput)
 			if err != nil {
@@ -137,6 +138,18 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 						authUser.UserName, params.ProjectSFID),
 				})
 			}
+
+			ok, err := projectsClaGroupsRepo.IsAssociated(params.ProjectSFID, params.ClaGroupID)
+			if err != nil {
+				return gerrits.NewListGerritsBadRequest().WithPayload(errorResponse(err))
+			}
+			if !ok {
+				return gerrits.NewListGerritsBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "provided cla-group and project are not associated with each other",
+				})
+			}
+
 			result, err := v1Service.GetClaGroupGerrits(params.ClaGroupID, &params.ProjectSFID)
 			if err != nil {
 				return gerrits.NewListGerritsBadRequest().WithPayload(errorResponse(err))
