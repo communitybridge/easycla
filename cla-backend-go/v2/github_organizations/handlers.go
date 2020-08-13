@@ -21,7 +21,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 	api.GithubOrganizationsGetProjectGithubOrganizationsHandler = github_organizations.GetProjectGithubOrganizationsHandlerFunc(
 		func(params github_organizations.GetProjectGithubOrganizationsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_organizations.NewGetProjectGithubOrganizationsForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project Github Organizations with Project scope of %s",
@@ -37,7 +37,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 	api.GithubOrganizationsAddProjectGithubOrganizationHandler = github_organizations.AddProjectGithubOrganizationHandlerFunc(
 		func(params github_organizations.AddProjectGithubOrganizationParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_organizations.NewAddProjectGithubOrganizationForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Add Project GitHub Organizations with Project scope of %s",
@@ -70,7 +70,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 	api.GithubOrganizationsDeleteProjectGithubOrganizationHandler = github_organizations.DeleteProjectGithubOrganizationHandlerFunc(
 		func(params github_organizations.DeleteProjectGithubOrganizationParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_organizations.NewDeleteProjectGithubOrganizationForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Delete Project GitHub Organizations with Project scope of %s",

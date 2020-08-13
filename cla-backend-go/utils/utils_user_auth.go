@@ -32,10 +32,30 @@ func IsUserAuthorizedForProject(user *auth.User, projectSFID string) bool {
 	return true
 }
 
+// IsUserAuthorizedForProjectTree helper function for determining if the user is authorized for this project hierarchy/tree
+func IsUserAuthorizedForProjectTree(user *auth.User, projectSFID string) bool {
+	if !user.Admin {
+		if !user.Allowed || !user.IsUserAuthorized(auth.Project, projectSFID, true) {
+			return false
+		}
+	}
+	return true
+}
+
 // IsUserAuthorizedForProjectOrganization helper function for determining if the user is authorized for this project organization scope
 func IsUserAuthorizedForProjectOrganization(user *auth.User, projectSFID, companySFID string) bool {
 	if !user.Allowed || !user.IsUserAuthorizedByProject(projectSFID, companySFID) {
 		return false
+	}
+	return true
+}
+
+// IsUserAuthorizedForProjectOrganizationTree helper function for determining if the user is authorized for this project organization scope and nested projects/orgs
+func IsUserAuthorizedForProjectOrganizationTree(user *auth.User, projectSFID, companySFID string) bool {
+	if !user.Admin {
+		if !user.Allowed || !user.IsUserAuthorized(auth.ProjectOrganization, projectSFID+"|"+companySFID, true) {
+			return false
+		}
 	}
 	return true
 }

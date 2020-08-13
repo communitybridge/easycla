@@ -69,7 +69,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
 		// Must be in the Project|Organization Scope to see this
-		if !utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
+		if !utils.IsUserAuthorizedForProjectOrganizationTree(authUser, params.ProjectSFID, params.CompanySFID) {
 			msg := fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to update Project Company Approval List with Project|Organization scope of %s | %s",
 				authUser.UserName, params.ProjectSFID, params.CompanySFID)
 			log.Warn(msg)
@@ -419,7 +419,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				}
 				return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithPayload(errorResponse(err))
 			}
-			if !utils.IsUserAuthorizedForProject(authUser, claGroupModel.FoundationSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) {
 				return signatures.NewDownloadProjectSignatureEmployeeAsCSVForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DownloadProjectSignatureEmployeeAsCSV with project scope of %s",
@@ -462,7 +462,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				}
 				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithPayload(errorResponse(err))
 			}
-			if !utils.IsUserAuthorizedForProject(authUser, claGroupModel.FoundationSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) {
 				return signatures.NewDownloadProjectSignatureICLAAsCSVForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DownloadProjectSignatureICLAAsCSV with project scope of %s",
@@ -499,7 +499,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				}
 				return signatures.NewListClaGroupIclaSignatureInternalServerError().WithPayload(errorResponse(err))
 			}
-			if !utils.IsUserAuthorizedForProject(authUser, claGroupModel.FoundationSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) {
 				return signatures.NewListClaGroupIclaSignatureForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DownloadProjectSignatureICLAAsCSV with project scope of %s",
@@ -528,7 +528,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				}
 				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithPayload(errorResponse(err))
 			}
-			if !utils.IsUserAuthorizedForProject(authUser, claGroupModel.FoundationSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) {
 				return signatures.NewDownloadProjectSignatureICLAAsCSVForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to ListClaGroupCorporateContributors with project scope of %s",
@@ -587,7 +587,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				}
 				return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithPayload(errorResponse(err))
 			}
-			if !utils.IsUserAuthorizedForProject(authUser, claGroup.FoundationSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroup.FoundationSFID) {
 				return signatures.NewDownloadProjectSignatureCCLAsForbidden().WithPayload(&models.ErrorResponse{
 					Code:    "403",
 					Message: fmt.Sprintf("EasyCLA: 403 Forbidden : User does not have permission to access project : %s", claGroup.FoundationSFID),
@@ -622,7 +622,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				}
 				return signatures.NewDownloadProjectSignatureCCLAsInternalServerError().WithPayload(errorResponse(err))
 			}
-			if !utils.IsUserAuthorizedForProject(authUser, claGroup.FoundationSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroup.FoundationSFID) {
 				return signatures.NewDownloadProjectSignatureCCLAsForbidden().WithPayload(&models.ErrorResponse{
 					Code:    "403",
 					Message: fmt.Sprintf("EasyCLA: 403 Forbidden : User does not have permission to access project : %s", claGroup.FoundationSFID),
