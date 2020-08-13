@@ -84,16 +84,18 @@ func (s service) AddGerrit(claGroupID string, projectSFID string, params *models
 	if params.GroupIDIcla != "" {
 		group, err := s.lfGroup.GetGroup(params.GroupIDIcla)
 		if err != nil {
-			log.WithError(err).Warnf("unable to get LDAP ICLA Group: %s", params.GroupIDIcla)
-			return nil, err
+			message := fmt.Sprintf("unable to get LDAP ICLA Group: %s", params.GroupIDIcla)
+			log.WithError(err).Warnf(message)
+			return nil, errors.New(message)
 		}
 		groupNameIcla = group.Title
 	}
 	if params.GroupIDCcla != "" {
 		group, err := s.lfGroup.GetGroup(params.GroupIDCcla)
 		if err != nil {
-			log.WithError(err).Warnf("unable to get LDAP CCLA Group: %s", params.GroupIDCcla)
-			return nil, err
+			message := fmt.Sprintf("unable to get LDAP CCLA Group: %s", params.GroupIDCcla)
+			log.WithError(err).Warnf(message)
+			return nil, errors.New(message)
 		}
 		groupNameCcla = group.Title
 	}
@@ -106,6 +108,7 @@ func (s service) AddGerrit(claGroupID string, projectSFID string, params *models
 		GroupNameIcla: groupNameIcla,
 		ProjectID:     claGroupID,
 		ProjectSFID:   projectSFID,
+		Version:       params.Version,
 	}
 	return s.repo.AddGerrit(input)
 }
