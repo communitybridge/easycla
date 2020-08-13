@@ -2819,16 +2819,17 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
         self.model.delete()
 
     @property
-    def signed_at_foundation(self):
-        cla_group = {}
+    def signed_at_foundation(self) -> bool:
+        # use a 'set' so that we don't have any duplicates
+        unique_cla_groups = set()
         if self.model.foundation_sfid:
-            project_cla_groups = self.get_by_foundation_sfid(self.model.foundation_sfid)
-            for pcg in project_cla_groups:
-                if cla_group.get(self.model.cla_group_id):
-                    cla_group[self.model.cla_group_id] = cla_group[self.model.cla_group_id].append(self.model.project_sfid)
-                else:
-                    cla_group[self.model.cla_group_id] = [self.model.project_sfid]
-        return len(cla_group) == 1
+            # Get all records that might have the same foundation ID (including this current record)
+            for mapping in self.get_by_foundation_sfid(self.model.foundation_sfid):
+                # Add the CLA Group ID - no duplicates
+                unique_cla_groups.add(mapping.get_cla_group_id())
+
+        # if only CLA Group - we consider this at the Foundation Level
+        return len(unique_cla_groups) == 1
 
     def get_project_sfid(self):
         return self.model.project_sfid
