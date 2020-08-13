@@ -759,7 +759,13 @@ def get_project(project_id: hug.types.uuid):
     for project_cla_group in project_cla_group_list:
         sf_projects.append(project_cla_group.to_dict())
     project["projects"] = sf_projects
-    project["signed_at_foundation_level"] = project_cla_group_list[0].signed_at_foundation
+
+    # if we have at least one SF Project associated with this CLA Group
+    if len(project_cla_group_list) > 0:
+        project["signed_at_foundation_level"] = project_cla_group_list[0].signed_at_foundation
+    else:
+        # Default is false, common for v1 not to have any mappings
+        project["signed_at_foundation_level"] = False
 
     return project
 
