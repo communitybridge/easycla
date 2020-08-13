@@ -45,7 +45,7 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 				})
 			}
 			// verify user have access to the project
-			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return gerrits.NewDeleteGerritForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DeleteGerrit with Project scope of %s",
@@ -77,7 +77,7 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
 			// verify user have access to the project
-			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return gerrits.NewAddGerritForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to AddGerrit with Project scope of %s",
@@ -130,7 +130,7 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
 			// verify user have access to the project
-			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return gerrits.NewListGerritsForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to ListGerrits with Project scope of %s",

@@ -66,7 +66,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 	api.EventsGetFoundationEventsAsCSVHandler = events.GetFoundationEventsAsCSVHandlerFunc(
 		func(params events.GetFoundationEventsAsCSVParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !utils.IsUserAuthorizedForProject(authUser, params.FoundationSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.FoundationSFID) {
 				return WriteResponse(http.StatusForbidden, runtime.JSONMime, runtime.JSONProducer(), &models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Foundation Events for foundation %s.",
@@ -86,7 +86,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 	api.EventsGetFoundationEventsHandler = events.GetFoundationEventsHandlerFunc(
 		func(params events.GetFoundationEventsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !utils.IsUserAuthorizedForProject(authUser, params.FoundationSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.FoundationSFID) {
 				return events.NewGetRecentEventsForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Foundation Events for foundation %s.",
@@ -108,7 +108,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 	api.EventsGetProjectEventsAsCSVHandler = events.GetProjectEventsAsCSVHandlerFunc(
 		func(params events.GetProjectEventsAsCSVParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return WriteResponse(http.StatusForbidden, runtime.JSONMime, runtime.JSONProducer(), &models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project Events for project %s.",
@@ -139,7 +139,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 	api.EventsGetProjectEventsHandler = events.GetProjectEventsHandlerFunc(
 		func(params events.GetProjectEventsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return events.NewGetRecentEventsForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project Events for foundation %s.",
