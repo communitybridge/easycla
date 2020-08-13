@@ -162,12 +162,12 @@ func (repo *repo) AddGerrit(input *models.Gerrit) (*models.Gerrit, error) {
 		GerritName:    input.GerritName,
 		GerritURL:     input.GerritURL.String(),
 		GroupIDCcla:   input.GroupIDCcla,
-		GroupIDIcla:   input.GroupIDCcla,
+		GroupIDIcla:   input.GroupIDIcla,
 		GroupNameCcla: input.GroupNameCcla,
 		GroupNameIcla: input.GroupNameIcla,
 		ProjectID:     input.ProjectID,
 		ProjectSFID:   input.ProjectSFID,
-		Version:       "v1",
+		Version:       input.Version,
 	}
 	av, err := dynamodbattribute.MarshalMap(gerrit)
 	if err != nil {
