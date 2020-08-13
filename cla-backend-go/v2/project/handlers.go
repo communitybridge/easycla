@@ -62,7 +62,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewGetProjectByIDNotFound()
 		}
 
-		if !utils.IsUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
+		if !utils.IsUserAuthorizedForProjectTree(user, projectModel.ProjectExternalID) {
 			return project.NewGetProjectByIDForbidden().WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project By ID with Project scope of %s",
@@ -80,7 +80,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 
 	api.ProjectGetProjectsByExternalIDHandler = project.GetProjectsByExternalIDHandlerFunc(func(params project.GetProjectsByExternalIDParams, user *auth.User) middleware.Responder {
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
-		if !utils.IsUserAuthorizedForProject(user, params.ExternalID) {
+		if !utils.IsUserAuthorizedForProjectTree(user, params.ExternalID) {
 			return project.NewGetProjectsByExternalIDForbidden().WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Projects By External ID with Project scope of %s",
@@ -118,7 +118,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewGetProjectByNameNotFound()
 		}
 
-		if !utils.IsUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
+		if !utils.IsUserAuthorizedForProjectTree(user, projectModel.ProjectExternalID) {
 			return project.NewGetProjectByNameForbidden().WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project By Name with Project scope of %s",
@@ -151,7 +151,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
 
-		if !utils.IsUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
+		if !utils.IsUserAuthorizedForProjectTree(user, projectModel.ProjectExternalID) {
 			return project.NewDeleteProjectByIDForbidden().WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Delete Project By ID with Project scope of %s",
@@ -186,7 +186,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			}
 			return project.NewUpdateProjectNotFound().WithPayload(errorResponse(err))
 		}
-		if !utils.IsUserAuthorizedForProject(user, projectModel.ProjectExternalID) {
+		if !utils.IsUserAuthorizedForProjectTree(user, projectModel.ProjectExternalID) {
 			return project.NewUpdateProjectForbidden().WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Update Project By ID with Project scope of %s",
