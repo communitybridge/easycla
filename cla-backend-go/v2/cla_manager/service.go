@@ -43,15 +43,15 @@ const Lead = "lead"
 
 var (
 	//ErrSalesForceProjectNotFound returned error if salesForce Project not found
-	ErrSalesForceProjectNotFound = errors.New("salesforce Project not found")
+	ErrSalesForceProjectNotFound = errors.New("salesforce project not found")
 	//ErrCLACompanyNotFound returned if EasyCLA company not found
 	ErrCLACompanyNotFound = errors.New("company not found")
 	//ErrGitHubRepoNotFound returned if GH Repos is not found
-	ErrGitHubRepoNotFound = errors.New("gH Repo not found")
+	ErrGitHubRepoNotFound = errors.New("github repo not found")
 	//ErrCLAUserNotFound returned if EasyCLA User is not found
-	ErrCLAUserNotFound = errors.New("cLA User not found")
+	ErrCLAUserNotFound = errors.New("cla user not found")
 	//ErrCLAManagersNotFound when cla managers arent found for given  project and company
-	ErrCLAManagersNotFound = errors.New("cla Managers not found")
+	ErrCLAManagersNotFound = errors.New("cla managers not found")
 	//ErrLFXUserNotFound when user-service fails to find user
 	ErrLFXUserNotFound = errors.New("lfx user not found")
 	//ErrNoLFID thrown when users dont have an LFID
@@ -59,7 +59,7 @@ var (
 	//ErrNotInOrg when user is not in organization
 	ErrNotInOrg = errors.New("user not in organization")
 	//ErrNoOrgAdmins when No admins found for organization
-	ErrNoOrgAdmins = errors.New("no Admins in company ")
+	ErrNoOrgAdmins = errors.New("no admins in company")
 	//ErrRoleScopeConflict thrown if user already has role scope
 	ErrRoleScopeConflict = errors.New("user is already cla-manager-designee")
 	//ErrCLAManagerDesigneeConflict when user is already assigned cla-manager-designee role
@@ -837,25 +837,25 @@ func (s *service) NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerLi
 
 	log.Debugf("Sending notification emails to claManagers: %+v", notifyCLAManagers.List)
 	for _, claManager := range notifyCLAManagers.List {
-		sendEmailToCLAManager(claManager.Name, claManager.Email.String(), userModel.GithubUsername, notifyCLAManagers.CompanyName, notifyCLAManagers.ProjectName)
+		sendEmailToCLAManager(claManager.Name, claManager.Email.String(), userModel, notifyCLAManagers.CompanyName, notifyCLAManagers.ClaGroupName)
 	}
 
 	return nil
 }
 
-func sendEmailToCLAManager(manager string, managerEmail string, contributorName string, company string, project string) {
-	subject := fmt.Sprintf("EasyCLA: Approval Request for contributor: %s  ", contributorName)
+func sendEmailToCLAManager(manager string, managerEmail string, userModel *v1Models.User, company string, claGroupName string) {
+	subject := fmt.Sprintf("EasyCLA: Approval Request for contributor: %s  ", getBestUserName(userModel))
 	recipients := []string{managerEmail}
 	body := fmt.Sprintf(`
 	<p>Hello %s,</p>
 	<p>This is a notification email from EasyCLA regarding the organization %s.</p>
-	<p>The following contributor would like to submit a contribution to %s 
+	<p>The following contributor would like to submit a contribution to the %s CLA Group
 	   and is requesting to be approved as a contributor for your organization: </p>
 	<p>%s</p>
 	<p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
 	%s
     %s`,
-		manager, company, project, contributorName,
+		manager, company, claGroupName, getFormattedUserDetails(userModel),
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -863,6 +863,53 @@ func sendEmailToCLAManager(manager string, managerEmail string, contributorName 
 	} else {
 		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
 	}
+}
+
+// getBestUserName is a helper function to extract what information we can from the user record for purposes of displaying the user's name
+func getBestUserName(model *v1Models.User) string {
+	if model.Username != "" {
+		return model.Username
+	}
+
+	if model.GithubUsername != "" {
+		return model.GithubUsername
+	}
+
+	if model.LfUsername != "" {
+		return model.LfUsername
+	}
+
+	return "User Name Unknown"
+}
+
+// getFormattedUserDetails is a helper function to extract what information we can from the user record for purposes of displaying the user's information
+func getFormattedUserDetails(model *v1Models.User) string {
+	var details []string
+	if model.Username != "" {
+		details = append(details, fmt.Sprintf("User Name: %s, ", model.Username))
+	}
+
+	if model.GithubUsername != "" {
+		details = append(details, fmt.Sprintf("GitHub User Name: %s, ", model.GithubUsername))
+	}
+
+	if model.GithubID != "" {
+		details = append(details, fmt.Sprintf("GitHub ID: %s, ", model.GithubID))
+	}
+
+	if model.LfUsername != "" {
+		details = append(details, fmt.Sprintf("LF Login: %s, ", model.LfUsername))
+	}
+
+	if model.LfEmail != "" {
+		details = append(details, fmt.Sprintf("LF Email: %s, ", model.LfEmail))
+	}
+
+	if model.Emails != nil {
+		details = append(details, fmt.Sprintf("Emails: %s, ", strings.Join(model.Emails, ",")))
+	}
+
+	return strings.Join(details, ",")
 }
 
 // Helper function to check if project/claGroup is signed
