@@ -8,6 +8,9 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/communitybridge/easycla/cla-backend-go/approval_list"
+	"github.com/communitybridge/easycla/cla-backend-go/cla_manager"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
 	"github.com/communitybridge/easycla/cla-backend-go/project"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
@@ -75,6 +78,9 @@ func init() {
 	gerritRepo := gerrits.NewRepository(awsSession, stage)
 	projectRepo := project.NewRepository(awsSession, stage, repositoriesRepo, gerritRepo, projectClaGroupRepo)
 	eventsRepo := claevents.NewRepository(awsSession, stage)
+	claManagerRequestsRepo := cla_manager.NewRepository(awsSession, stage)
+	approvalListRequestsRepo := approval_list.NewRepository(awsSession, stage)
+
 	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
 	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	project_service.InitClient(configFile.APIGatewayURL)
@@ -94,7 +100,7 @@ func init() {
 	})
 	organization_service.InitClient(configFile.APIGatewayURL, eventsService)
 	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
-	dynamoEventsService = dynamo_events.NewService(stage, signaturesRepo, companyRepo, projectClaGroupRepo, eventsRepo, projectRepo, projectService)
+	dynamoEventsService = dynamo_events.NewService(stage, signaturesRepo, companyRepo, projectClaGroupRepo, eventsRepo, projectRepo, projectService, claManagerRequestsRepo, approvalListRequestsRepo)
 }
 
 func handler(ctx context.Context, event events.DynamoDBEvent) {

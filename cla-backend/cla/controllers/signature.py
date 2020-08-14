@@ -833,6 +833,7 @@ def get_cla_managers(username, signature_id):
 
     return get_managers_dict(signature_acl)
 
+
 def get_project(project_id):
     try:
         project = Project()
@@ -1049,6 +1050,9 @@ def get_managers_dict(signature_acl):
             managers_dict.append({
                 'name': user.get_user_name(),
                 'email': user.get_user_email(),
+                'alt_emails': user.get_user_emails(),
+                'github_user_id': user.get_user_github_id(),
+                'github_username': user.get_user_github_username(),
                 'lfid': user.get_lf_username()
             })
         else:
