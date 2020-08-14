@@ -7,6 +7,9 @@ import (
 	"errors"
 	"fmt"
 
+	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	"github.com/sirupsen/logrus"
+
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -25,6 +28,8 @@ type IRepository interface { //nolint
 	GetRequests(companyID, projectID string) (*CLAManagerRequests, error)
 	GetRequestsByUserID(companyID, projectID, userID string) (*CLAManagerRequests, error)
 	GetRequest(requestID string) (*CLAManagerRequest, error)
+	GetRequestsByCLAGroup(claGroupID string) ([]CLAManagerRequest, error)
+	UpdateRequestsByCLAGroup(model v1Models.Project) error
 
 	ApproveRequest(companyID, projectID, requestID string) (*CLAManagerRequest, error)
 	DenyRequest(companyID, projectID, requestID string) (*CLAManagerRequest, error)
@@ -36,6 +41,7 @@ type IRepository interface { //nolint
 type repository struct {
 	stage          string
 	dynamoDBClient *dynamodb.DynamoDB
+	tableName      string
 }
 
 // NewRepository creates a new company repository instance
@@ -43,12 +49,12 @@ func NewRepository(awsSession *session.Session, stage string) IRepository {
 	return repository{
 		stage:          stage,
 		dynamoDBClient: dynamodb.New(awsSession),
+		tableName:      fmt.Sprintf("cla-%s-cla-manager-requests", stage),
 	}
 }
 
 // CreateRequest generates a new request
 func (repo repository) CreateRequest(reqModel *CLAManagerRequest) (*CLAManagerRequest, error) {
-	tableName := fmt.Sprintf("cla-%s-cla-manager-requests", repo.stage)
 
 	requestID, err := uuid.NewV4()
 	if err != nil {
@@ -117,7 +123,7 @@ func (repo repository) CreateRequest(reqModel *CLAManagerRequest) (*CLAManagerRe
 
 	input := &dynamodb.PutItemInput{
 		Item:      itemMap,
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.tableName),
 	}
 
 	_, err = repo.dynamoDBClient.PutItem(input)
@@ -139,8 +145,6 @@ func (repo repository) CreateRequest(reqModel *CLAManagerRequest) (*CLAManagerRe
 
 // GetRequests returns the requests by Company ID and Project ID
 func (repo repository) GetRequests(companyID, projectID string) (*CLAManagerRequests, error) {
-	tableName := fmt.Sprintf("cla-%s-cla-manager-requests", repo.stage)
-
 	condition := expression.Key("company_id").Equal(expression.Value(companyID)).And(
 		expression.Key("project_id").Equal(expression.Value(projectID)))
 
@@ -162,7 +166,7 @@ func (repo repository) GetRequests(companyID, projectID string) (*CLAManagerRequ
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.tableName),
 		IndexName:                 aws.String("cla-manager-requests-company-project-index"),
 	}
 
@@ -190,8 +194,6 @@ func (repo repository) GetRequests(companyID, projectID string) (*CLAManagerRequ
 
 // GetRequestsByUserID returns the requests by Company ID and Project ID and User ID
 func (repo repository) GetRequestsByUserID(companyID, projectID, userID string) (*CLAManagerRequests, error) {
-	tableName := fmt.Sprintf("cla-%s-cla-manager-requests", repo.stage)
-
 	condition := expression.Key("company_id").Equal(expression.Value(companyID)).And(
 		expression.Key("project_id").Equal(expression.Value(projectID)))
 
@@ -216,7 +218,7 @@ func (repo repository) GetRequestsByUserID(companyID, projectID, userID string) 
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.tableName),
 		IndexName:                 aws.String("cla-manager-requests-company-project-index"),
 	}
 
@@ -244,8 +246,6 @@ func (repo repository) GetRequestsByUserID(companyID, projectID, userID string) 
 
 // GetRequest returns the request by Request ID
 func (repo repository) GetRequest(requestID string) (*CLAManagerRequest, error) {
-	tableName := fmt.Sprintf("cla-%s-cla-manager-requests", repo.stage)
-
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().
 		WithProjection(buildRequestProjection()).
@@ -263,7 +263,7 @@ func (repo repository) GetRequest(requestID string) (*CLAManagerRequest, error) 
 		},
 		ProjectionExpression:     expr.Projection(),
 		ExpressionAttributeNames: expr.Names(),
-		TableName:                aws.String(tableName),
+		TableName:                aws.String(repo.tableName),
 	}
 
 	result, errQuery := repo.dynamoDBClient.GetItem(queryInput)
@@ -293,13 +293,11 @@ func (repo repository) GetRequest(requestID string) (*CLAManagerRequest, error) 
 
 // DeleteRequest deletes the request by Request ID
 func (repo repository) DeleteRequest(requestID string) error {
-	tableName := fmt.Sprintf("cla-%s-cla-manager-requests", repo.stage)
-
 	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"request_id": {S: aws.String(requestID)},
 		},
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.tableName),
 	})
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -345,7 +343,7 @@ func (repo repository) updateRequestStatus(companyID, projectID, requestID, stat
 			},
 		},
 		UpdateExpression: aws.String("SET #S = :s, #M = :m"),
-		TableName:        aws.String(fmt.Sprintf("cla-%s-cla-manager-requests", repo.stage)),
+		TableName:        aws.String(repo.tableName),
 	}
 
 	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
@@ -381,23 +379,139 @@ func (repo repository) PendingRequest(companyID, projectID, requestID string) (*
 	return repo.updateRequestStatus(companyID, projectID, requestID, "pending")
 }
 
-// buildRequestProjection returns the database field projection for the table
-func buildRequestProjection() expression.ProjectionBuilder {
-	// These are the columns we want returned
-	return expression.NamesList(
-		expression.Name("request_id"),
-		expression.Name("company_id"),
-		//expression.Name("company_external_id"),
-		expression.Name("company_name"),
-		expression.Name("project_id"),
-		expression.Name("project_external_id"),
-		expression.Name("project_name"),
-		expression.Name("user_id"),
-		//expression.Name("user_external_id"),
-		expression.Name("user_name"),
-		expression.Name("user_email"),
-		expression.Name("status"),
-		expression.Name("date_created"),
-		expression.Name("date_modified"),
-	)
+func (repo repository) GetRequestsByCLAGroup(claGroupID string) ([]CLAManagerRequest, error) {
+	f := logrus.Fields{
+		"functionName": "GetRequestsByCLAGroup",
+		"claGroupID":   claGroupID,
+		"tableName":    repo.tableName,
+	}
+
+	// This is the key we want to match
+	condition := expression.Key("project_id").Equal(expression.Value(claGroupID))
+
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildRequestProjection()).Build()
+	if err != nil {
+		log.WithFields(f).Warnf("error building expression for project requests query, error: %v", err)
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(repo.tableName),
+		IndexName:                 aws.String("cla-manager-requests-project-index"),
+	}
+
+	var claManagerRequests []CLAManagerRequest
+	var lastEvaluatedKey string
+
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		if errQuery != nil {
+			log.WithFields(f).Warnf("error retrieving project requests, error: %v", errQuery)
+			return nil, errQuery
+		}
+
+		// The DB project model
+		var requests []CLAManagerRequest
+		err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &requests)
+		if err != nil {
+			log.Warnf("error unmarshalling cla manager requests from database, error: %v", err)
+			return nil, err
+		}
+
+		// Add to the project response models to the list
+		claManagerRequests = append(claManagerRequests, requests...)
+
+		if results.LastEvaluatedKey["request_id"] != nil {
+			lastEvaluatedKey = *results.LastEvaluatedKey["request_id"].S
+			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"request_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
+	}
+
+	return claManagerRequests, nil
+}
+
+func (repo repository) UpdateRequestsByCLAGroup(model v1Models.Project) error {
+	f := logrus.Fields{
+		"functionName": "UpdateRequestsByCLAGroup",
+		"claGroupID":   model.ProjectID,
+		"tableName":    repo.tableName,
+	}
+
+	requests, err := repo.GetRequestsByCLAGroup(model.ProjectID)
+	if err != nil {
+		log.WithFields(f).Warnf("unable to query approval list requests by CLA Group ID")
+	}
+
+	// For each request for this CLA Group...
+	for _, request := range requests {
+		// Only update if one of the fields that we have in our database column list
+		// is updated - no need to update if other internal CLA Group record stuff is
+		// updated as we don't care about those
+		if request.ProjectName == model.ProjectName && request.ProjectExternalID == model.ProjectExternalID {
+			log.WithFields(f).Debugf("ignoring update - project name or project external ID didn't change")
+			continue
+		}
+
+		_, currentTime := utils.CurrentTime()
+		expressionAttributeNames := map[string]*string{
+			"#M": aws.String("date_modified"),
+		}
+		expressionAttributeValues := map[string]*dynamodb.AttributeValue{
+			":m": {
+				S: aws.String(currentTime),
+			},
+		}
+		updateExpression := "SET #M = :m"
+
+		// CLA Group Name has been updated
+		if request.ProjectName != model.ProjectName {
+			expressionAttributeNames[":N"] = aws.String("project_name")
+			expressionAttributeValues[":n"] = &dynamodb.AttributeValue{
+				S: aws.String(model.ProjectName),
+			}
+			updateExpression = fmt.Sprintf("%s, %s", updateExpression, " #N = :n ")
+		}
+
+		// CLA Group External ID was added or updated
+		if request.ProjectExternalID != model.ProjectExternalID {
+			expressionAttributeNames[":E"] = aws.String("project_external_id")
+			expressionAttributeValues[":e"] = &dynamodb.AttributeValue{
+				S: aws.String(model.ProjectExternalID),
+			}
+			updateExpression = fmt.Sprintf("%s, %s", updateExpression, " #E = :e ")
+		}
+
+		input := &dynamodb.UpdateItemInput{
+			Key: map[string]*dynamodb.AttributeValue{
+				"request_id": {
+					S: aws.String(request.RequestID),
+				},
+			},
+			ExpressionAttributeNames:  expressionAttributeNames,
+			ExpressionAttributeValues: expressionAttributeValues,
+			UpdateExpression:          aws.String(updateExpression),
+			TableName:                 aws.String(repo.tableName),
+		}
+
+		_, err := repo.dynamoDBClient.UpdateItem(input)
+		if err != nil {
+			log.WithFields(f).Warnf("unable to update cla manager request with updated project information, error: %v",
+				err)
+			return err
+		}
+	}
+
+	return nil
 }

@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/approval_list"
+	"github.com/communitybridge/easycla/cla-backend-go/cla_manager"
+
 	claevent "github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/project"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
@@ -34,13 +37,15 @@ type EventHandlerFunc func(event events.DynamoDBEventRecord) error
 
 type service struct {
 	// key : tablename:action
-	functions            map[string][]EventHandlerFunc
-	signatureRepo        signatures.SignatureRepository
-	companyRepo          company.IRepository
-	projectsClaGroupRepo projects_cla_groups.Repository
-	eventsRepo           claevent.Repository
-	projectRepo          project.ProjectRepository
-	projectService       project.Service
+	functions                map[string][]EventHandlerFunc
+	signatureRepo            signatures.SignatureRepository
+	companyRepo              company.IRepository
+	projectsClaGroupRepo     projects_cla_groups.Repository
+	eventsRepo               claevent.Repository
+	projectRepo              project.ProjectRepository
+	projectService           project.Service
+	claManagerRequestsRepo   cla_manager.IRepository
+	approvalListRequestsRepo approval_list.IRepository
 }
 
 // Service implements DynamoDB stream event handler service
@@ -49,21 +54,33 @@ type Service interface {
 }
 
 // NewService creates DynamoDB stream event handler service
-func NewService(stage string, signatureRepo signatures.SignatureRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository, eventsRepo claevent.Repository, projectRepo project.ProjectRepository, projService project.Service) Service {
+func NewService(stage string,
+	signatureRepo signatures.SignatureRepository,
+	companyRepo company.IRepository,
+	pcgRepo projects_cla_groups.Repository,
+	eventsRepo claevent.Repository,
+	projectRepo project.ProjectRepository,
+	projService project.Service,
+	claManagerRequestsRepo cla_manager.IRepository,
+	approvalListRequestsRepo approval_list.IRepository) Service {
 	SignaturesTable := fmt.Sprintf("cla-%s-signatures", stage)
 	eventsTable := fmt.Sprintf("cla-%s-events", stage)
 	projectsCLAGroupsTable := fmt.Sprintf("cla-%s-projects-cla-groups", stage)
 	repositoryTableName := fmt.Sprintf("cla-%s-repositories", stage)
+	claGroupsTable := fmt.Sprintf("cla-%s-projects", stage)
 
 	s := &service{
-		functions:            make(map[string][]EventHandlerFunc),
-		signatureRepo:        signatureRepo,
-		companyRepo:          companyRepo,
-		projectsClaGroupRepo: pcgRepo,
-		eventsRepo:           eventsRepo,
-		projectRepo:          projectRepo,
-		projectService:       projService,
+		functions:                make(map[string][]EventHandlerFunc),
+		signatureRepo:            signatureRepo,
+		companyRepo:              companyRepo,
+		projectsClaGroupRepo:     pcgRepo,
+		eventsRepo:               eventsRepo,
+		projectRepo:              projectRepo,
+		projectService:           projService,
+		claManagerRequestsRepo:   claManagerRequestsRepo,
+		approvalListRequestsRepo: approvalListRequestsRepo,
 	}
+
 	s.registerCallback(SignaturesTable, Modify, s.SignatureSignedEvent)
 	s.registerCallback(SignaturesTable, Modify, s.SignatureAddSigTypeSignedApprovedID)
 	s.registerCallback(SignaturesTable, Insert, s.SignatureAddSigTypeSignedApprovedID)
@@ -76,6 +93,9 @@ func NewService(stage string, signatureRepo signatures.SignatureRepository, comp
 
 	s.registerCallback(repositoryTableName, Insert, s.GithubRepoAddedEvent)
 	s.registerCallback(repositoryTableName, Remove, s.GithubRepoDeletedEvent)
+
+	s.registerCallback(claGroupsTable, Modify, s.ProcessCLAGroupUpdateEvents)
+
 	return s
 }
 
@@ -91,11 +111,12 @@ func (s *service) ProcessEvents(events events.DynamoDBEvent) {
 		tableName := strings.Split(event.EventSourceArn, "/")[1]
 		fields := logrus.Fields{
 			"table_name": tableName,
-			"event":      event.EventName,
+			"eventID":    event.EventID,
+			"eventName":  event.EventName,
 		}
 		b, _ := json.Marshal(events) // nolint
 		fields["events_data"] = string(b)
-		log.WithFields(fields).Debug("Processing event")
+		log.WithFields(fields).Debug("processing event")
 		key := fmt.Sprintf("%s:%s", tableName, event.EventName)
 		for _, f := range s.functions[key] {
 			err := f(event)
