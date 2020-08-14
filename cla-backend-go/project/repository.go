@@ -211,7 +211,7 @@ func (repo *repo) GetCLAGroupsByExternalID(params *project.GetProjectsByExternal
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
 	if err != nil {
-		log.WithFields(f).Warnf("error building expression for project scan, error: %v", err)
+		log.WithFields(f).Warnf("error building expression for project query, error: %v", err)
 	}
 
 	// Assemble the query input parameters

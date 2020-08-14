@@ -844,7 +844,7 @@ func (s *service) NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerLi
 }
 
 func sendEmailToCLAManager(manager string, managerEmail string, userModel *v1Models.User, company string, claGroupName string) {
-	subject := fmt.Sprintf("EasyCLA: Approval Request for contributor: %s  ", getBestUserName(userModel))
+	subject := fmt.Sprintf("EasyCLA: Approval Request for contributor: %s", getBestUserName(userModel))
 	recipients := []string{managerEmail}
 	body := fmt.Sprintf(`
 	<p>Hello %s,</p>
@@ -886,27 +886,27 @@ func getBestUserName(model *v1Models.User) string {
 func getFormattedUserDetails(model *v1Models.User) string {
 	var details []string
 	if model.Username != "" {
-		details = append(details, fmt.Sprintf("User Name: %s, ", model.Username))
+		details = append(details, fmt.Sprintf("User Name: %s", model.Username))
 	}
 
 	if model.GithubUsername != "" {
-		details = append(details, fmt.Sprintf("GitHub User Name: %s, ", model.GithubUsername))
+		details = append(details, fmt.Sprintf("GitHub User Name: %s", model.GithubUsername))
 	}
 
 	if model.GithubID != "" {
-		details = append(details, fmt.Sprintf("GitHub ID: %s, ", model.GithubID))
+		details = append(details, fmt.Sprintf("GitHub ID: %s", model.GithubID))
 	}
 
 	if model.LfUsername != "" {
-		details = append(details, fmt.Sprintf("LF Login: %s, ", model.LfUsername))
+		details = append(details, fmt.Sprintf("LF Login: %s", model.LfUsername))
 	}
 
 	if model.LfEmail != "" {
-		details = append(details, fmt.Sprintf("LF Email: %s, ", model.LfEmail))
+		details = append(details, fmt.Sprintf("LF Email: %s", model.LfEmail))
 	}
 
 	if model.Emails != nil {
-		details = append(details, fmt.Sprintf("Emails: %s, ", strings.Join(model.Emails, ",")))
+		details = append(details, fmt.Sprintf("Emails: %s", strings.Join(model.Emails, ", ")))
 	}
 
 	return strings.Join(details, ",")

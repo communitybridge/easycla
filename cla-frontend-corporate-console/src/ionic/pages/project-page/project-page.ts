@@ -1,15 +1,15 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
-import { AlertController, IonicPage, ModalController, NavController, NavParams, ViewController } from 'ionic-angular';
-import { ClaService } from '../../services/cla.service';
-import { ClaCompanyModel } from '../../models/cla-company';
-import { ClaUserModel } from '../../models/cla-user';
-import { ClaSignatureModel } from '../../models/cla-signature';
-import { ClaManager } from '../../models/cla-manager';
-import { SortService } from '../../services/sort.service';
-import { Restricted } from '../../decorators/restricted';
+import {Component} from '@angular/core';
+import {AlertController, IonicPage, ModalController, NavController, NavParams, ViewController} from 'ionic-angular';
+import {ClaService} from '../../services/cla.service';
+import {ClaCompanyModel} from '../../models/cla-company';
+import {ClaUserModel} from '../../models/cla-user';
+import {ClaSignatureModel} from '../../models/cla-signature';
+import {ClaManager} from '../../models/cla-manager';
+import {SortService} from '../../services/sort.service';
+import {Restricted} from '../../decorators/restricted';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -135,8 +135,18 @@ export class ProjectPage {
 
   hasEditAccess() {
     for (let i = 0; i < this.managers.length; i++) {
+      // Check the user's authenticated email to see if we have a match with their primary email in the DB
       if (this.managers[i].email === this.userEmail) {
         return true;
+      }
+
+      // Check the user's authenticated email to see if we have a match with one of their alternate email addresses in the DB
+      if (this.managers[i].alt_emails != null && this.managers[i].alt_emails.length > 0) {
+        this.managers[i].alt_emails.forEach((alt_email) => {
+          if (alt_email === this.userEmail) {
+            return true;
+          }
+        });
       }
     }
     return false;
