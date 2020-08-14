@@ -136,18 +136,34 @@ func (repo *repo) GetClaGroupIDForProject(projectSFID string) (*ProjectClaGroup,
 		log.WithFields(f).Warnf("unable to lookup CLA Group associated with project, error: %+v", err)
 		return nil, err
 	}
-	if len(result.Item) == 0 {
-		log.WithFields(f).Warn("unable to lookup CLA Group associated with project - missing table entry")
-		return nil, ErrProjectNotAssociatedWithClaGroup
-	}
 
 	var out ProjectClaGroup
-	err = dynamodbattribute.UnmarshalMap(result.Item, &out)
-	if err != nil {
-		log.WithFields(f).Warnf("unable decode results from database, error: %+v", err)
-		return nil, err
+	if len(result.Item) == 0 {
+		//Query by foundation sfid index returns multiple results
+		f = logrus.Fields{"function": "GetClaGroupIDForProject", "tableName": repo.tableName, "foundationSFID": projectSFID}
+		pcgs, foundationErr := repo.GetProjectsIdsForFoundation(projectSFID)
+
+		if foundationErr != nil {
+			log.WithFields(f).Warnf("unable to lookup CLA Group associated with project, error: %+v", foundationErr)
+			return nil, err
+		}
+		if len(pcgs) == 0 {
+			log.WithFields(f).Warn("unable to lookup CLA Group associated with project - missing table entry")
+			return nil, ErrProjectNotAssociatedWithClaGroup
+		}
+		out = *pcgs[0]
 	}
+
+	if len(result.Item) == 0 {
+		err = dynamodbattribute.UnmarshalMap(result.Item, &out)
+		if err != nil {
+			log.WithFields(f).Warnf("unable decode results from database, error: %+v", err)
+			return nil, err
+		}
+	}
+
 	return &out, nil
+
 }
 
 func (repo *repo) GetProjectsIdsForClaGroup(claGroupID string) ([]*ProjectClaGroup, error) {
