@@ -66,7 +66,11 @@ func (s *service) SetInitialCLAManagerACSPermissions(signatureID string) error {
 
 func (s service) assignCLAManager(email, username, companySFID string, projectList []*projects_cla_groups.ProjectClaGroup) error {
 	// check if project is signed at foundation level
-	signedAtFoundation := s.projectService.SignedAtFoundationLevel(projectList)
+	foundationID := projectList[0].FoundationSFID
+	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(foundationID)
+	if signedErr != nil {
+		return signedErr
+	}
 	acsClient := v2AcsService.GetClient()
 	claManagerRoleID, roleErr := acsClient.GetRoleID(RoleCLAManager)
 	if roleErr != nil {
@@ -80,7 +84,6 @@ func (s service) assignCLAManager(email, username, companySFID string, projectLi
 	}
 
 	if signedAtFoundation {
-		foundationID := projectList[0].FoundationSFID
 		// add cla manager role at foundation level
 		err = orgService.CreateOrgUserRoleOrgScopeProjectOrg(email, foundationID, companySFID, claManagerRoleID)
 		if err != nil {

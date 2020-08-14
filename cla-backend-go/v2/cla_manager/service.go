@@ -191,7 +191,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	}
 
 	// Check if user exists in easyCLA DB, if not add User
-	log.Debugf("Checking user: %s in easyCLA records", user.Username)
+	log.Debugf("Checking user: %+v in easyCLA records", user)
 	claUser, claUserErr := s.easyCLAUserService.GetUserByLFUserName(user.Username)
 	if claUserErr != nil {
 		msg := fmt.Sprintf("Problem getting claUser by :%s, error: %+v ", user.Username, claUserErr)
@@ -227,17 +227,6 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 			}
 		}
 		log.Debugf("Created easyCLAUser %+v ", newUserModel)
-	}
-
-	// Check if user is part of org
-	log.Debugf("Check user: %s's organization ", user.Username)
-	if user.Account.ID != strings.TrimSpace(params.CompanySFID) {
-		msg := fmt.Sprintf("User : %s not in organization : %s ", user.Username, organizationSF.Name)
-		log.Warn(msg)
-		return nil, &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
 	}
 
 	// GetSFProject
