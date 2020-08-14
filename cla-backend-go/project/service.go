@@ -28,7 +28,7 @@ type Service interface {
 	DeleteCLAGroup(projectID string) error
 	UpdateCLAGroup(projectModel *models.Project) (*models.Project, error)
 	GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error)
-	SignedAtFoundationLevel(list []*projects_cla_groups.ProjectClaGroup) bool
+	SignedAtFoundationLevel(foundationSFID string) (bool, error)
 }
 
 // service
@@ -84,14 +84,11 @@ func (s service) GetCLAGroupByID(projectID string) (*models.Project, error) {
 	}
 
 	if project.FoundationSFID != "" {
-		log.WithFields(f).Debugf("checking for foundationSFID: %s CLA Groups", project.FoundationSFID)
-		pcgs, pcgErr := s.projectCGRepo.GetProjectsIdsForFoundation(project.FoundationSFID)
-		if pcgErr != nil {
-			return nil, pcgErr
+		signed, checkErr := s.SignedAtFoundationLevel(project.FoundationSFID)
+		if checkErr != nil {
+			return nil, checkErr
 		}
-		log.WithFields(f).Debugf("loaded CLA Groups: %+v for foundation SFID: %s", pcgs, project.FoundationSFID)
-		log.WithFields(f).Debug("checking if signed at the foundation level...")
-		project.FoundationLevelCLA = s.SignedAtFoundationLevel(pcgs)
+		project.FoundationLevelCLA = signed
 	}
 
 	return project, nil
@@ -190,19 +187,43 @@ func (s service) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDet
 }
 
 //signedAtFoundationLevel checks if project is signed at foundation Level else project Level
-func (s service) SignedAtFoundationLevel(list []*projects_cla_groups.ProjectClaGroup) bool {
-	claGroupMap := make(map[string][]string)
+// func (s service) SignedAtFoundationLevel(list []*projects_cla_groups.ProjectClaGroup) bool {
 
-	// Create claGroup map that determines level(Project,Foundation) signage
-	for _, in := range list {
-		_, ok := claGroupMap[in.ClaGroupID]
-		if !ok {
-			claGroupMap[in.ClaGroupID] = []string{in.ProjectSFID}
-		} else {
-			claGroupMap[in.ClaGroupID] = append(claGroupMap[in.ClaGroupID], in.ProjectSFID)
+// 	claGroupMap := make(map[string]struct{})
+// 	exists := struct{}{}
+
+// 	// Check for number of claGroups for foundation
+// 	for _, in := range list {
+// 		if _, ok := claGroupMap[in.ClaGroupID]; !ok {
+// 			claGroupMap[in.ClaGroupID] = exists
+// 		}
+// 	}
+
+// 	return len(claGroupMap) == 1
+
+// }
+
+//signedAtFoundationLevel checks if project is signed at foundation Level else project Level
+func (s service) SignedAtFoundationLevel(foundationSFID string) (bool, error) {
+
+	claGroupMap := make(map[string]struct{})
+	exists := struct{}{}
+
+	log.Debugf("checking for foundationSFID: %s CLA Groups", foundationSFID)
+	pcgs, pcgErr := s.projectCGRepo.GetProjectsIdsForFoundation(foundationSFID)
+	if pcgErr != nil {
+		return false, pcgErr
+	}
+	log.Debugf("loaded CLA Groups: %+v for foundation SFID: %s", pcgs, foundationSFID)
+	log.Debug("checking if signed at the foundation level...")
+
+	// Check for number of claGroups for foundation
+	for _, in := range pcgs {
+		if _, ok := claGroupMap[in.ClaGroupID]; !ok {
+			claGroupMap[in.ClaGroupID] = exists
 		}
 	}
 
-	return len(claGroupMap) == 1
+	return len(claGroupMap) == 1, nil
 
 }
