@@ -524,7 +524,7 @@ func (repo *repo) GetCLAGroups(params *project.GetProjectsParams) (*models.Proje
 			},
 		}
 	}
-
+	var pageSize int64
 	// If we have a page size, set the limit value - make sure it's a positive value
 	if params.PageSize != nil && *params.PageSize > 0 {
 		log.WithFields(f).Debugf("Received a pageSize parameter, value: %d", *params.PageSize)
@@ -533,7 +533,8 @@ func (repo *repo) GetCLAGroups(params *project.GetProjectsParams) (*models.Proje
 		scanInput.Limit = params.PageSize
 	} else {
 		// Default page size
-		*params.PageSize = 50
+		pageSize = 50
+		params.PageSize = &pageSize
 	}
 
 	var projects []models.Project
