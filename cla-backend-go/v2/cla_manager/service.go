@@ -477,12 +477,12 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 		return nil, ErrLFXUserNotFound
 	}
 
-	// Check if user is part of organization
-	if user.Account.ID != strings.TrimSpace(companyID) {
-		msg := fmt.Sprintf("User :%s does not belong to organization", userEmail)
-		log.Warn(msg)
-		return nil, ErrNotInOrg
-	}
+	// // Check if user is part of organization
+	// if user.Account.ID != strings.TrimSpace(companyID) {
+	// 	msg := fmt.Sprintf("User :%s does not belong to organization", userEmail)
+	// 	log.Warn(msg)
+	// 	return nil, ErrNotInOrg
+	// }
 
 	projectSF, projectErr := projectClient.GetProject(projectID)
 	if projectErr != nil {
@@ -636,7 +636,7 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 	claManagerDesignee, err := s.CreateCLAManagerDesignee(companyID, projectID, userEmail)
 	if err != nil {
 		// Check conflict for role scope
-		if err == err.(*organizations.CreateOrgUsrRoleScopesConflict) {
+		if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
 			return nil, ErrRoleScopeConflict
 		}
 		return nil, err
