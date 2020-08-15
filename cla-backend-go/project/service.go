@@ -178,6 +178,8 @@ func (s service) DeleteCLAGroup(projectID string) error {
 
 // UpdateCLAGroup service method
 func (s service) UpdateCLAGroup(projectModel *models.Project) (*models.Project, error) {
+	// Updates to the CLA Group "projects" table will cause a DB trigger handler (separate lambda) to also update other
+	// tables where we have the CLA Group name/description
 	return s.repo.UpdateCLAGroup(projectModel)
 }
 
