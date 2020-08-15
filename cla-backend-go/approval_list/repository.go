@@ -290,7 +290,7 @@ func (repo repository) GetRequestsByCLAGroup(claGroupID string) ([]CLARequestMod
 		ExpressionAttributeValues: expr.Values(),
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(repo.tableName),
-		IndexName:                 aws.String("cla-manager-requests-project-index"),
+		IndexName:                 aws.String("ccla-approval-list-request-project-id-index"),
 	}
 
 	var projectRequests []CLARequestModel
@@ -342,9 +342,12 @@ func (repo repository) UpdateRequestsByCLAGroup(model v1Models.Project) error {
 	if err != nil {
 		log.WithFields(f).Warnf("unable to query approval list requests by CLA Group ID")
 	}
+	log.WithFields(f).Debugf("updating %d contributor ccla authorization requests", len(requests))
 
 	// For each request for this CLA Group...
 	for _, request := range requests {
+		log.WithFields(f).Debugf("processing request: %+v", request)
+
 		// Only update if one of the fields that we have in our database column list
 		// is updated - no need to update if other internal CLA Group record stuff is
 		// updated as we don't care about those
@@ -366,6 +369,8 @@ func (repo repository) UpdateRequestsByCLAGroup(model v1Models.Project) error {
 
 		// CLA Group Name has been updated
 		if request.ProjectName != model.ProjectName {
+			log.WithFields(f).Debugf("project name differs: %s vs %s", request.ProjectName, model.ProjectName)
+
 			expressionAttributeNames[":N"] = aws.String("project_name")
 			expressionAttributeValues[":n"] = &dynamodb.AttributeValue{
 				S: aws.String(model.ProjectName),
@@ -375,6 +380,7 @@ func (repo repository) UpdateRequestsByCLAGroup(model v1Models.Project) error {
 
 		// CLA Group External ID was added or updated
 		if request.ProjectExternalID != model.ProjectExternalID {
+			log.WithFields(f).Debugf("project external ID differs: %s vs %s", request.ProjectExternalID, model.ProjectExternalID)
 			expressionAttributeNames[":E"] = aws.String("project_external_id")
 			expressionAttributeValues[":e"] = &dynamodb.AttributeValue{
 				S: aws.String(model.ProjectExternalID),
