@@ -4,7 +4,6 @@
 package cla_manager
 
 import (
-	"errors"
 	"fmt"
 
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -55,16 +54,30 @@ func NewRepository(awsSession *session.Session, stage string) IRepository {
 
 // CreateRequest generates a new request
 func (repo repository) CreateRequest(reqModel *CLAManagerRequest) (*CLAManagerRequest, error) {
+	f := logrus.Fields{
+		"functionName":      "CreateRequest",
+		"projectName":       reqModel.ProjectName,
+		"projectID":         reqModel.ProjectID,
+		"projectExternalID": reqModel.ProjectExternalID,
+		"companyName":       reqModel.CompanyName,
+		"companyID":         reqModel.CompanyID,
+		"companyExternalID": reqModel.CompanyExternalID,
+		"userID":            reqModel.UserID,
+		"userName":          reqModel.UserName,
+		"userEmail":         reqModel.UserEmail,
+		"userExternalID":    reqModel.UserExternalID,
+		"status":            reqModel.Status,
+	}
 
 	requestID, err := uuid.NewV4()
 	if err != nil {
-		log.Warnf("Unable to generate a UUID for a pending invite, error: %v", err)
+		log.WithFields(f).Warnf("Unable to generate a UUID for a pending invite, error: %v", err)
 		return nil, err
 	}
 
 	_, now := utils.CurrentTime()
 
-	log.Debugf("request model: %+v", reqModel)
+	log.WithFields(f).Debugf("request model: %+v", reqModel)
 
 	itemMap := map[string]*dynamodb.AttributeValue{
 		"request_id": {
@@ -128,14 +141,14 @@ func (repo repository) CreateRequest(reqModel *CLAManagerRequest) (*CLAManagerRe
 
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
-		log.Warnf("unable to create a new CLA Manager request, error: %v", err)
+		log.WithFields(f).Warnf("unable to create a new CLA Manager request, error: %v", err)
 		return nil, err
 	}
 
 	// Load the created record
 	createdRequest, err := repo.GetRequest(requestID.String())
 	if err != nil || createdRequest == nil {
-		log.Warnf("unable to query newly created CLA Manager request by id: %s, error: %v",
+		log.WithFields(f).Warnf("unable to query newly created CLA Manager request by id: %s, error: %v",
 			requestID.String(), err)
 		return nil, err
 	}
@@ -145,6 +158,12 @@ func (repo repository) CreateRequest(reqModel *CLAManagerRequest) (*CLAManagerRe
 
 // GetRequests returns the requests by Company ID and Project ID
 func (repo repository) GetRequests(companyID, projectID string) (*CLAManagerRequests, error) {
+	f := logrus.Fields{
+		"functionName": "GetRequests",
+		"companyID":    companyID,
+		"projectID":    projectID,
+	}
+
 	condition := expression.Key("company_id").Equal(expression.Value(companyID)).And(
 		expression.Key("project_id").Equal(expression.Value(projectID)))
 
@@ -154,8 +173,7 @@ func (repo repository) GetRequests(companyID, projectID string) (*CLAManagerRequ
 		WithProjection(buildRequestProjection()).
 		Build()
 	if err != nil {
-		log.Warnf("error building expression for cla manager request query using company ID: %s, project ID: %s, error: %v",
-			companyID, projectID, err)
+		log.WithFields(f).Warnf("error building expression for cla manager request query, error: %v", err)
 		return nil, err
 	}
 
@@ -172,8 +190,7 @@ func (repo repository) GetRequests(companyID, projectID string) (*CLAManagerRequ
 
 	results, errQuery := repo.dynamoDBClient.Query(queryInput)
 	if errQuery != nil {
-		log.Warnf("error running query for cla manager request query using company ID: %s, project ID: %s, error: %v",
-			companyID, projectID, err)
+		log.WithFields(f).Warnf("error running query for cla manager request query, error: %v", err)
 		return nil, errQuery
 	}
 
@@ -182,8 +199,7 @@ func (repo repository) GetRequests(companyID, projectID string) (*CLAManagerRequ
 	// Unmarshall the DB response
 	unmarshallErr := dynamodbattribute.UnmarshalListOfMaps(results.Items, &requests)
 	if unmarshallErr != nil {
-		log.Warnf("error converting DB model cla manager request query using company ID: %s, project ID: %s, error: %v",
-			companyID, projectID, unmarshallErr)
+		log.WithFields(f).Warnf("error converting DB model cla manager request query, error: %v", unmarshallErr)
 		return nil, unmarshallErr
 	}
 
@@ -194,6 +210,13 @@ func (repo repository) GetRequests(companyID, projectID string) (*CLAManagerRequ
 
 // GetRequestsByUserID returns the requests by Company ID and Project ID and User ID
 func (repo repository) GetRequestsByUserID(companyID, projectID, userID string) (*CLAManagerRequests, error) {
+	f := logrus.Fields{
+		"functionName": "GetRequestsByUserID",
+		"companyID":    companyID,
+		"projectID":    projectID,
+		"userID":       userID,
+	}
+
 	condition := expression.Key("company_id").Equal(expression.Value(companyID)).And(
 		expression.Key("project_id").Equal(expression.Value(projectID)))
 
@@ -206,8 +229,7 @@ func (repo repository) GetRequestsByUserID(companyID, projectID, userID string) 
 		WithProjection(buildRequestProjection()).
 		Build()
 	if err != nil {
-		log.Warnf("error building expression for cla manager request query using company ID: %s, project ID: %s, user ID: %s, error: %v",
-			companyID, projectID, userID, err)
+		log.WithFields(f).Warnf("error building expression for cla manager request query, error: %v", err)
 		return nil, err
 	}
 
@@ -224,8 +246,7 @@ func (repo repository) GetRequestsByUserID(companyID, projectID, userID string) 
 
 	results, errQuery := repo.dynamoDBClient.Query(queryInput)
 	if errQuery != nil {
-		log.Warnf("error running query for cla manager request query using company ID: %s, project ID: %s, user ID: %s, error: %v",
-			companyID, projectID, userID, err)
+		log.WithFields(f).Warnf("error running query for cla manager request query, error: %v", err)
 		return nil, errQuery
 	}
 
@@ -234,8 +255,7 @@ func (repo repository) GetRequestsByUserID(companyID, projectID, userID string) 
 	// Unmarshall the DB response
 	unmarshallErr := dynamodbattribute.UnmarshalListOfMaps(results.Items, &requests)
 	if unmarshallErr != nil {
-		log.Warnf("error converting DB model cla manager request query using company ID: %s, project ID: %s, user ID: %s, error: %v",
-			companyID, projectID, userID, unmarshallErr)
+		log.WithFields(f).Warnf("error converting DB model cla manager request query, error: %v", unmarshallErr)
 		return nil, unmarshallErr
 	}
 
@@ -246,13 +266,17 @@ func (repo repository) GetRequestsByUserID(companyID, projectID, userID string) 
 
 // GetRequest returns the request by Request ID
 func (repo repository) GetRequest(requestID string) (*CLAManagerRequest, error) {
+	f := logrus.Fields{
+		"functionName": "GetRequest",
+		"requestID":    requestID,
+	}
+
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().
 		WithProjection(buildRequestProjection()).
 		Build()
 	if err != nil {
-		log.Warnf("error building expression for cla manager request query using request ID: %s, error: %v",
-			requestID, err)
+		log.WithFields(f).Warnf("error building expression for cla manager request query, error: %v", err)
 		return nil, err
 	}
 
@@ -268,8 +292,7 @@ func (repo repository) GetRequest(requestID string) (*CLAManagerRequest, error) 
 
 	result, errQuery := repo.dynamoDBClient.GetItem(queryInput)
 	if errQuery != nil {
-		log.Warnf("error running query for cla manager request query using request ID: %s, error: %v",
-			requestID, err)
+		log.WithFields(f).Warnf("error running query for cla manager request query, error: %v", err)
 		return nil, errQuery
 	}
 
@@ -283,8 +306,7 @@ func (repo repository) GetRequest(requestID string) (*CLAManagerRequest, error) 
 	// Unmarshall the DB response
 	unmarshallErr := dynamodbattribute.UnmarshalMap(result.Item, &request)
 	if unmarshallErr != nil {
-		log.Warnf("error converting DB model cla manager request query using request ID: %s, error: %v",
-			requestID, unmarshallErr)
+		log.WithFields(f).Warnf("error converting DB model cla manager request query, error: %v", unmarshallErr)
 		return nil, unmarshallErr
 	}
 
@@ -293,6 +315,11 @@ func (repo repository) GetRequest(requestID string) (*CLAManagerRequest, error) 
 
 // DeleteRequest deletes the request by Request ID
 func (repo repository) DeleteRequest(requestID string) error {
+	f := logrus.Fields{
+		"functionName": "DeleteRequest",
+		"requestID":    requestID,
+	}
+
 	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"request_id": {S: aws.String(requestID)},
@@ -303,10 +330,10 @@ func (repo repository) DeleteRequest(requestID string) error {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeConditionalCheckFailedException:
-				return errors.New("request ID does not exist")
+				return fmt.Errorf("request ID %s does not exist", requestID)
 			}
 		}
-		log.Error(fmt.Sprintf("error deleting request with id: %s", requestID), err)
+		log.WithFields(f).Warnf("error deleting request, error: %+v", err)
 		return err
 	}
 	return nil
@@ -314,11 +341,18 @@ func (repo repository) DeleteRequest(requestID string) error {
 
 // ApproveRequest approves the specified request
 func (repo repository) updateRequestStatus(companyID, projectID, requestID, status string) (*CLAManagerRequest, error) {
+	f := logrus.Fields{
+		"functionName": "updateRequestStatus",
+		"companyID":    companyID,
+		"projectID":    projectID,
+		"requestID":    requestID,
+		"status":       status,
+	}
+
 	// First, let's check if we already have a previous request
 	requestModel, err := repo.GetRequest(requestID)
 	if err != nil || requestModel == nil {
-		log.Warnf("CLA Manager updateRequestStatus - unable to locate previous request with request ID: %s, company ID: %s, project ID: %s, error: %v",
-			requestID, companyID, projectID, err)
+		log.WithFields(f).Warnf("CLA Manager updateRequestStatus - unable to locate previous request, error: %v", err)
 		return nil, err
 	}
 
@@ -348,16 +382,15 @@ func (repo repository) updateRequestStatus(companyID, projectID, requestID, stat
 
 	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
 	if updateErr != nil {
-		log.Warnf("CLA Manager ApproveRequest - unable to update request with '%s' status for request ID: %s, company ID: %s, project ID: %s, error: %v",
-			status, requestID, companyID, projectID, updateErr)
+		log.WithFields(f).Warnf("CLA Manager ApproveRequest - unable to update request, error: %v", updateErr)
 		return nil, updateErr
 	}
 
 	// Load the updated document and return it
 	updatedRequestModel, err := repo.GetRequest(requestID)
 	if err != nil {
-		log.Warnf("CLA Manager updateRequestStatus - unable to locate previous request with request ID: %s, company ID: %s, project ID: %s, error: %v",
-			requestID, companyID, projectID, err)
+		log.WithFields(f).Warnf("CLA Manager updateRequestStatus - unable to locate previous request, error: %v",
+			err)
 		return nil, err
 	}
 
