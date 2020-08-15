@@ -960,6 +960,12 @@ function buildProjectsClaGroupsTable(importResources: boolean): aws.dynamodb.Tab
 }
 
 // DynamoDB trigger events handler functions
+const dynamoDBProjectsEventLambdaName = "cla-backend-" + stage + "-dynamo-projects-lambda";
+const dynamoDBProjectsEventLambdaArn = "arn:aws:lambda:" + aws.getRegion().name + ":" + accountID + ":function:" + dynamoDBProjectsEventLambdaName;
+projectsTable.onEvent("projectsStreamEvents",
+  aws.lambda.Function.get(dynamoDBProjectsEventLambdaName, dynamoDBProjectsEventLambdaArn),
+  { startingPosition: "LATEST" });
+
 const dynamoDBSignaturesEventLambdaName = "cla-backend-" + stage + "-dynamo-signatures-events-lambda";
 const dynamoDBSignaturesEventLambdaArn = "arn:aws:lambda:" + aws.getRegion().name + ":" + accountID + ":function:" + dynamoDBSignaturesEventLambdaName;
 signaturesTable.onEvent("signatureStreamEvents",
