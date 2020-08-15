@@ -325,6 +325,16 @@ functions:
       include:
         - ./backend-aws-lambda
 
+  dynamo-projects-events-lambda:
+    handler: dynamo-events-lambda
+    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-projects-lambda
+    description: "EasyCLA DynamoDB stream events handler for the projects table"
+    runtime: go1.x
+    package:
+      individually: true
+      include:
+        - ./dynamo-events-lambda
+
   dynamo-signatures-events-lambda:
     handler: dynamo-events-lambda
     name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-signatures-events-lambda
