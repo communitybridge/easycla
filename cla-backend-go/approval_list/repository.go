@@ -6,13 +6,15 @@ package approval_list
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/gofrs/uuid"
+	"github.com/sirupsen/logrus"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -34,11 +36,14 @@ type IRepository interface {
 	ApproveCclaWhitelistRequest(requestID string) error
 	RejectCclaWhitelistRequest(requestID string) error
 	ListCclaWhitelistRequest(companyID string, projectID, status, userID *string) (*models.CclaWhitelistRequestList, error)
+	GetRequestsByCLAGroup(claGroupID string) ([]CLARequestModel, error)
+	UpdateRequestsByCLAGroup(model v1Models.Project) error
 }
 
 type repository struct {
 	stage          string
 	dynamoDBClient *dynamodb.DynamoDB
+	tableName      string
 }
 
 // NewRepository creates a new instance of the whitelist service
@@ -46,25 +51,8 @@ func NewRepository(awsSession *session.Session, stage string) IRepository {
 	return repository{
 		stage:          stage,
 		dynamoDBClient: dynamodb.New(awsSession),
+		tableName:      fmt.Sprintf("cla-%s-ccla-whitelist-requests", stage),
 	}
-}
-
-// CclaWhitelistRequest data model
-type CclaWhitelistRequest struct {
-	RequestID          string   `dynamodbav:"request_id"`
-	RequestStatus      string   `dynamodbav:"request_status"`
-	CompanyID          string   `dynamodbav:"company_id"`
-	CompanyName        string   `dynamodbav:"company_name"`
-	ProjectID          string   `dynamodbav:"project_id"`
-	ProjectName        string   `dynamodbav:"project_name"`
-	UserID             string   `dynamodbav:"user_id"`
-	UserEmails         []string `dynamodbav:"user_emails"`
-	UserName           string   `dynamodbav:"user_name"`
-	UserGithubID       string   `dynamodbav:"user_github_id"`
-	UserGithubUsername string   `dynamodbav:"user_github_username"`
-	DateCreated        string   `dynamodbav:"date_created"`
-	DateModified       string   `dynamodbav:"date_modified"`
-	Version            string   `dynamodbav:"version"`
 }
 
 // AddCclaWhitelistRequest adds the specified request
@@ -77,10 +65,10 @@ func (repo repository) AddCclaWhitelistRequest(company *models.Company, project 
 		return status, err
 	}
 
-	currentTime := currentTime()
+	_, currentTime := utils.CurrentTime()
 	input := &dynamodb.PutItemInput{
 		Item:      map[string]*dynamodb.AttributeValue{},
-		TableName: aws.String(fmt.Sprintf("cla-%s-ccla-whitelist-requests", repo.stage)),
+		TableName: aws.String(repo.tableName),
 	}
 	addStringAttribute(input.Item, "request_id", requestID.String())
 	addStringAttribute(input.Item, "request_status", StatusPending)
@@ -115,10 +103,8 @@ func (repo repository) AddCclaWhitelistRequest(company *models.Company, project 
 
 // GetCclaWhitelistRequest fetches the specified request by ID
 func (repo repository) GetCclaWhitelistRequest(requestID string) (*CLARequestModel, error) {
-	tableName := fmt.Sprintf("cla-%s-ccla-whitelist-requests", repo.stage)
-
 	response, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.tableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"request_id": {
 				S: aws.String(requestID),
@@ -134,7 +120,7 @@ func (repo repository) GetCclaWhitelistRequest(requestID string) (*CLARequestMod
 	requestModel := CLARequestModel{}
 	err = dynamodbattribute.UnmarshalMap(response.Item, &requestModel)
 	if err != nil {
-		log.Warnf("error unmarshalling %s table response model data, error: %v", tableName, err)
+		log.Warnf("error unmarshalling %s table response model data, error: %v", repo.tableName, err)
 		return nil, err
 	}
 
@@ -143,6 +129,7 @@ func (repo repository) GetCclaWhitelistRequest(requestID string) (*CLARequestMod
 
 // ApproveCclaWhitelistRequest approves the specified request
 func (repo repository) ApproveCclaWhitelistRequest(requestID string) error {
+	_, currentTime := utils.CurrentTime()
 	input := &dynamodb.UpdateItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"request_id": {
@@ -158,11 +145,11 @@ func (repo repository) ApproveCclaWhitelistRequest(requestID string) error {
 				S: aws.String("approved"),
 			},
 			":m": {
-				S: aws.String(currentTime()),
+				S: aws.String(currentTime),
 			},
 		},
 		UpdateExpression: aws.String("SET #S = :s, #M = :m"),
-		TableName:        aws.String(fmt.Sprintf("cla-%s-ccla-whitelist-requests", repo.stage)),
+		TableName:        aws.String(repo.tableName),
 	}
 
 	_, err := repo.dynamoDBClient.UpdateItem(input)
@@ -177,6 +164,7 @@ func (repo repository) ApproveCclaWhitelistRequest(requestID string) error {
 
 // RejectCclaWhitelistRequest rejects the specified request
 func (repo repository) RejectCclaWhitelistRequest(requestID string) error {
+	_, currentTime := utils.CurrentTime()
 	input := &dynamodb.UpdateItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"request_id": {
@@ -192,11 +180,11 @@ func (repo repository) RejectCclaWhitelistRequest(requestID string) error {
 				S: aws.String("rejected"),
 			},
 			":m": {
-				S: aws.String(currentTime()),
+				S: aws.String(currentTime),
 			},
 		},
 		UpdateExpression: aws.String("SET #S = :s, #M = :m"),
-		TableName:        aws.String(fmt.Sprintf("cla-%s-ccla-whitelist-requests", repo.stage)),
+		TableName:        aws.String(repo.tableName),
 	}
 
 	_, err := repo.dynamoDBClient.UpdateItem(input)
@@ -217,7 +205,6 @@ func (repo repository) ListCclaWhitelistRequest(companyID string, projectID, sta
 
 	log.Debugf("ListCclaWhitelistRequest with Company ID: %s, Project ID: %+v, Status: %+v, User ID: %+v",
 		companyID, projectID, status, userID)
-	tableName := fmt.Sprintf("cla-%s-ccla-whitelist-requests", repo.stage)
 
 	// hashkey is company_id, range key is project_id
 	indexName := "company-id-project-id-index"
@@ -260,7 +247,7 @@ func (repo repository) ListCclaWhitelistRequest(companyID string, projectID, sta
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.tableName),
 		IndexName:                 aws.String(indexName),
 	}
 
@@ -279,86 +266,141 @@ func (repo repository) ListCclaWhitelistRequest(companyID string, projectID, sta
 	return &models.CclaWhitelistRequestList{List: list}, nil
 }
 
-// buildProjects builds the response model projection for a given query
-func buildProjection() expression.ProjectionBuilder {
-	// These are the columns we want returned
-	return expression.NamesList(
-		expression.Name("request_id"),
-		expression.Name("request_status"),
-		expression.Name("company_id"),
-		expression.Name("company_name"),
-		expression.Name("project_id"),
-		expression.Name("project_name"),
-		expression.Name("user_id"),
-		expression.Name("user_emails"),
-		expression.Name("user_name"),
-		expression.Name("user_github_id"),
-		expression.Name("user_github_username"),
-		expression.Name("date_created"),
-		expression.Name("date_modified"),
-		expression.Name("version"),
-	)
-}
+// GetRequestsByCLAGroup retrieves a list of requests for the specified CLA Group
+func (repo repository) GetRequestsByCLAGroup(claGroupID string) ([]CLARequestModel, error) {
+	f := logrus.Fields{
+		"functionName": "GetRequestsByCLAGroup",
+		"claGroupID":   claGroupID,
+		"tableName":    repo.tableName,
+	}
 
-// buildCclaWhitelistRequestsModels builds the request models
-func buildCclaWhitelistRequestsModels(results *dynamodb.QueryOutput) ([]models.CclaWhitelistRequest, error) {
-	requests := make([]models.CclaWhitelistRequest, 0)
+	// This is the key we want to match
+	condition := expression.Key("project_id").Equal(expression.Value(claGroupID))
 
-	var itemRequests []CclaWhitelistRequest
-
-	err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &itemRequests)
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
 	if err != nil {
-		log.Warnf("error unmarshalling CCLA Authorization Request from database, error: %v",
-			err)
-		return nil, err
+		log.WithFields(f).Warnf("error building expression for project requests query, error: %v", err)
 	}
-	for _, r := range itemRequests {
-		requests = append(requests, models.CclaWhitelistRequest{
-			CompanyID:          r.CompanyID,
-			CompanyName:        r.CompanyName,
-			DateCreated:        r.DateCreated,
-			DateModified:       r.DateModified,
-			ProjectID:          r.ProjectID,
-			ProjectName:        r.ProjectName,
-			RequestID:          r.RequestID,
-			RequestStatus:      r.RequestStatus,
-			UserEmails:         r.UserEmails,
-			UserGithubID:       r.UserGithubID,
-			UserGithubUsername: r.UserGithubUsername,
-			UserID:             r.UserID,
-			UserName:           r.UserName,
-			Version:            r.Version,
-		})
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		KeyConditionExpression:    expr.KeyCondition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(repo.tableName),
+		IndexName:                 aws.String("cla-manager-requests-project-index"),
 	}
-	return requests, nil
+
+	var projectRequests []CLARequestModel
+	var lastEvaluatedKey string
+
+	// Loop until we have all the records
+	for ok := true; ok; ok = lastEvaluatedKey != "" {
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		if errQuery != nil {
+			log.WithFields(f).Warnf("error retrieving project requests, error: %v", errQuery)
+			return nil, errQuery
+		}
+
+		// The DB project model
+		var requests []CLARequestModel
+		err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &requests)
+		if err != nil {
+			log.Warnf("error unmarshalling ccla contributor requests from database, error: %v", err)
+			return nil, err
+		}
+
+		// Add to the project response models to the list
+		projectRequests = append(projectRequests, requests...)
+
+		if results.LastEvaluatedKey["request_id"] != nil {
+			lastEvaluatedKey = *results.LastEvaluatedKey["request_id"].S
+			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
+				"request_id": {
+					S: aws.String(lastEvaluatedKey),
+				},
+			}
+		} else {
+			lastEvaluatedKey = ""
+		}
+	}
+
+	return projectRequests, nil
 }
 
-// addStringAttribute adds the specified attribute as a string
-func addStringAttribute(item map[string]*dynamodb.AttributeValue, key string, value string) {
-	if value != "" {
-		item[key] = &dynamodb.AttributeValue{S: aws.String(value)}
+// GetRequestsByCLAGroup retrieves a list of requests for the specified CLA Group
+func (repo repository) UpdateRequestsByCLAGroup(model v1Models.Project) error {
+	f := logrus.Fields{
+		"functionName": "UpdateRequestsByCLAGroup",
+		"claGroupID":   model.ProjectID,
+		"tableName":    repo.tableName,
 	}
-}
 
-// addStringSliceAttribute adds the specified attribute as a string slice
-func addStringSliceAttribute(item map[string]*dynamodb.AttributeValue, key string, value []string) {
-	if len(value) > 0 {
-		item[key] = &dynamodb.AttributeValue{SS: aws.StringSlice(value)}
+	requests, err := repo.GetRequestsByCLAGroup(model.ProjectID)
+	if err != nil {
+		log.WithFields(f).Warnf("unable to query approval list requests by CLA Group ID")
 	}
-}
 
-// addConditionToFilter - helper routine for adding a filter condition
-func addConditionToFilter(filter expression.ConditionBuilder, cond expression.ConditionBuilder, filterAdded *bool) expression.ConditionBuilder {
-	if !(*filterAdded) {
-		*filterAdded = true
-		filter = cond
-	} else {
-		filter = filter.And(cond)
+	// For each request for this CLA Group...
+	for _, request := range requests {
+		// Only update if one of the fields that we have in our database column list
+		// is updated - no need to update if other internal CLA Group record stuff is
+		// updated as we don't care about those
+		if request.ProjectName == model.ProjectName && request.ProjectExternalID == model.ProjectExternalID {
+			log.WithFields(f).Debugf("ignoring update - project name or project external ID didn't change")
+			continue
+		}
+
+		_, currentTime := utils.CurrentTime()
+		expressionAttributeNames := map[string]*string{
+			"#M": aws.String("date_modified"),
+		}
+		expressionAttributeValues := map[string]*dynamodb.AttributeValue{
+			":m": {
+				S: aws.String(currentTime),
+			},
+		}
+		updateExpression := "SET #M = :m"
+
+		// CLA Group Name has been updated
+		if request.ProjectName != model.ProjectName {
+			expressionAttributeNames[":N"] = aws.String("project_name")
+			expressionAttributeValues[":n"] = &dynamodb.AttributeValue{
+				S: aws.String(model.ProjectName),
+			}
+			updateExpression = fmt.Sprintf("%s, %s", updateExpression, " #N = :n ")
+		}
+
+		// CLA Group External ID was added or updated
+		if request.ProjectExternalID != model.ProjectExternalID {
+			expressionAttributeNames[":E"] = aws.String("project_external_id")
+			expressionAttributeValues[":e"] = &dynamodb.AttributeValue{
+				S: aws.String(model.ProjectExternalID),
+			}
+			updateExpression = fmt.Sprintf("%s, %s", updateExpression, " #E = :e ")
+		}
+
+		input := &dynamodb.UpdateItemInput{
+			Key: map[string]*dynamodb.AttributeValue{
+				"request_id": {
+					S: aws.String(request.RequestID),
+				},
+			},
+			ExpressionAttributeNames:  expressionAttributeNames,
+			ExpressionAttributeValues: expressionAttributeValues,
+			UpdateExpression:          aws.String(updateExpression),
+			TableName:                 aws.String(repo.tableName),
+		}
+
+		_, err := repo.dynamoDBClient.UpdateItem(input)
+		if err != nil {
+			log.WithFields(f).Warnf("unable to update contributor approval request with updated project information, error: %v",
+				err)
+			return err
+		}
 	}
-	return filter
-}
 
-// currentTime helper routine to return the date/time
-func currentTime() string {
-	return time.Now().UTC().Format(time.RFC3339)
+	return nil
 }

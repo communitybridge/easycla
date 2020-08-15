@@ -655,6 +655,13 @@ function buildCLAManagerRequestsTable(importResources: boolean): aws.dynamodb.Ta
           readCapacity: defaultReadCapacity,
           writeCapacity: defaultWriteCapacity,
         },
+        {
+          name: 'cla-manager-requests-project-index',
+          hashKey: 'project_id',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
+        },
       ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,
@@ -844,6 +851,13 @@ function buildCclaWhitelistRequestsTable(importResources: boolean): aws.dynamodb
           name: 'company-id-project-id-index',
           hashKey: 'company_id',
           rangeKey: "project_id",
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity
+        },
+        {
+          name: 'ccla-approval-list-request-project-id-index',
+          hashKey: 'project_id',
           projectionType: 'ALL',
           readCapacity: defaultReadCapacity,
           writeCapacity: defaultWriteCapacity
