@@ -290,7 +290,7 @@ func (repo repository) GetRequestsByCLAGroup(claGroupID string) ([]CLARequestMod
 		ExpressionAttributeValues: expr.Values(),
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(repo.tableName),
-		IndexName:                 aws.String("cla-manager-requests-project-index"),
+		IndexName:                 aws.String("ccla-approval-list-request-project-id-index"),
 	}
 
 	var projectRequests []CLARequestModel
