@@ -520,7 +520,7 @@ func (repo repository) UpdateRequestsByCLAGroup(model *project.DBProjectModel) e
 		if request.ProjectName != model.ProjectName {
 			log.WithFields(f).Debugf("project name differs: %s vs %s", request.ProjectName, model.ProjectName)
 
-			expressionAttributeNames[":N"] = aws.String("project_name")
+			expressionAttributeNames["#N"] = aws.String("project_name")
 			expressionAttributeValues[":n"] = &dynamodb.AttributeValue{
 				S: aws.String(model.ProjectName),
 			}
@@ -531,7 +531,7 @@ func (repo repository) UpdateRequestsByCLAGroup(model *project.DBProjectModel) e
 		if request.ProjectExternalID != model.ProjectExternalID {
 			log.WithFields(f).Debugf("project external ID differs: %s vs %s", request.ProjectExternalID, model.ProjectExternalID)
 
-			expressionAttributeNames[":E"] = aws.String("project_external_id")
+			expressionAttributeNames["#E"] = aws.String("project_external_id")
 			expressionAttributeValues[":e"] = &dynamodb.AttributeValue{
 				S: aws.String(model.ProjectExternalID),
 			}
