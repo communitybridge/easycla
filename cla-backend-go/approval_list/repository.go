@@ -28,6 +28,9 @@ const (
 	Version = "v1"
 	// StatusPending is status of CclaWhitelistRequest
 	StatusPending = "pending"
+
+	// ProjectIDIndex is the index for for the project_id secondary index
+	ProjectIDIndex = "ccla-approval-list-request-project-id-index"
 )
 
 // IRepository interface defines the functions for the whitelist service
@@ -273,15 +276,19 @@ func (repo repository) GetRequestsByCLAGroup(claGroupID string) ([]CLARequestMod
 		"functionName": "GetRequestsByCLAGroup",
 		"claGroupID":   claGroupID,
 		"tableName":    repo.tableName,
+		"indexName":    ProjectIDIndex,
 	}
 
-	// This is the key we want to match
-	condition := expression.Key("project_id").Equal(expression.Value(claGroupID))
+	log.WithFields(f).Debugf("querying contributor approval requests by CLA group id")
 
+	// This is the key we want to match
 	// Use the nice builder to create the expression
-	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	expr, err := expression.NewBuilder().
+		WithKeyCondition(expression.Key("project_id").Equal(expression.Value(claGroupID))).
+		WithProjection(buildProjection()).
+		Build()
 	if err != nil {
-		log.WithFields(f).Warnf("error building expression for project requests query, error: %v", err)
+		log.WithFields(f).Warnf("error building expression for contributor approval requests query by CLA gorup id, error: %+v", err)
 	}
 
 	// Assemble the query input parameters
@@ -291,7 +298,7 @@ func (repo repository) GetRequestsByCLAGroup(claGroupID string) ([]CLARequestMod
 		ExpressionAttributeValues: expr.Values(),
 		ProjectionExpression:      expr.Projection(),
 		TableName:                 aws.String(repo.tableName),
-		IndexName:                 aws.String("cla-manager-requests-project-index"),
+		IndexName:                 aws.String(ProjectIDIndex),
 	}
 
 	var projectRequests []CLARequestModel
@@ -301,7 +308,8 @@ func (repo repository) GetRequestsByCLAGroup(claGroupID string) ([]CLARequestMod
 	for ok := true; ok; ok = lastEvaluatedKey != "" {
 		results, errQuery := repo.dynamoDBClient.Query(queryInput)
 		if errQuery != nil {
-			log.WithFields(f).Warnf("error retrieving project requests, error: %v", errQuery)
+			log.WithFields(f).Warnf("error retrieving contributor approval requests by project ID, query: %+v, error: %+v",
+				queryInput, errQuery)
 			return nil, errQuery
 		}
 
@@ -309,7 +317,7 @@ func (repo repository) GetRequestsByCLAGroup(claGroupID string) ([]CLARequestMod
 		var requests []CLARequestModel
 		err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &requests)
 		if err != nil {
-			log.Warnf("error unmarshalling ccla contributor requests from database, error: %v", err)
+			log.Warnf("error unmarshalling contributor approval requests from database, error: %+v", err)
 			return nil, err
 		}
 
@@ -321,6 +329,9 @@ func (repo repository) GetRequestsByCLAGroup(claGroupID string) ([]CLARequestMod
 			queryInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
 				"request_id": {
 					S: aws.String(lastEvaluatedKey),
+				},
+				"project_id": {
+					S: aws.String(claGroupID),
 				},
 			}
 		} else {
