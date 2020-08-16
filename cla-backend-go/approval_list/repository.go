@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/project"
+
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -14,7 +16,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
-	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -37,7 +38,7 @@ type IRepository interface {
 	RejectCclaWhitelistRequest(requestID string) error
 	ListCclaWhitelistRequest(companyID string, projectID, status, userID *string) (*models.CclaWhitelistRequestList, error)
 	GetRequestsByCLAGroup(claGroupID string) ([]CLARequestModel, error)
-	UpdateRequestsByCLAGroup(model v1Models.Project) error
+	UpdateRequestsByCLAGroup(model *project.DBProjectModel) error
 }
 
 type repository struct {
@@ -331,7 +332,7 @@ func (repo repository) GetRequestsByCLAGroup(claGroupID string) ([]CLARequestMod
 }
 
 // GetRequestsByCLAGroup retrieves a list of requests for the specified CLA Group
-func (repo repository) UpdateRequestsByCLAGroup(model v1Models.Project) error {
+func (repo repository) UpdateRequestsByCLAGroup(model *project.DBProjectModel) error {
 	f := logrus.Fields{
 		"functionName": "UpdateRequestsByCLAGroup",
 		"claGroupID":   model.ProjectID,
