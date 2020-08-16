@@ -111,14 +111,18 @@ func (s *service) ProcessEvents(events events.DynamoDBEvent) {
 		tableName := strings.Split(event.EventSourceArn, "/")[1]
 		fields := logrus.Fields{
 			"table_name": tableName,
+			"event":      event,
 			"eventID":    event.EventID,
 			"eventName":  event.EventName,
 		}
 		b, _ := json.Marshal(events) // nolint
 		fields["events_data"] = string(b)
-		log.WithFields(fields).Debug("processing event")
+		log.WithFields(fields).Debug("processing event record")
 		key := fmt.Sprintf("%s:%s", tableName, event.EventName)
 		for _, f := range s.functions[key] {
+			fields["key"] = key
+			fields["functionType"] = fmt.Sprintf("%T", f)
+			log.WithFields(fields).Debug("invoking handler")
 			err := f(event)
 			if err != nil {
 				log.WithFields(fields).WithField("event", event).Error("unable to process event", err)
