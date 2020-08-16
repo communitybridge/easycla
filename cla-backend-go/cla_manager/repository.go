@@ -515,7 +515,9 @@ func (repo repository) UpdateRequestsByCLAGroup(model *project.DBProjectModel) e
 
 		// CLA Group Name has been updated
 		if request.ProjectName != model.ProjectName {
-			expressionAttributeNames[":N"] = aws.String("project_name")
+			log.WithFields(f).Debugf("project name differs: %s vs %s", request.ProjectName, model.ProjectName)
+
+			expressionAttributeNames["#N"] = aws.String("project_name")
 			expressionAttributeValues[":n"] = &dynamodb.AttributeValue{
 				S: aws.String(model.ProjectName),
 			}
@@ -524,7 +526,9 @@ func (repo repository) UpdateRequestsByCLAGroup(model *project.DBProjectModel) e
 
 		// CLA Group External ID was added or updated
 		if request.ProjectExternalID != model.ProjectExternalID {
-			expressionAttributeNames[":E"] = aws.String("project_external_id")
+			log.WithFields(f).Debugf("project external ID differs: %s vs %s", request.ProjectExternalID, model.ProjectExternalID)
+
+			expressionAttributeNames["#E"] = aws.String("project_external_id")
 			expressionAttributeValues[":e"] = &dynamodb.AttributeValue{
 				S: aws.String(model.ProjectExternalID),
 			}
