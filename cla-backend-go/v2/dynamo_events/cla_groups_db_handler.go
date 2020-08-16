@@ -12,12 +12,15 @@ import (
 
 func (s *service) ProcessCLAGroupUpdateEvents(event events.DynamoDBEventRecord) error {
 	f := logrus.Fields{
-		"functionName": "ProjectUpdatedEvent",
+		"functionName": "ProcessCLAGroupUpdateEvents",
+		"eventID":      event.EventID,
+		"eventName":    event.EventName,
+		"eventSource":  event.EventSource,
+		"event":        event,
+		"newImage":     event.Change.NewImage,
+		"oldImage":     event.Change.OldImage,
 	}
 
-	f["eventID"] = event.EventID
-	f["eventName"] = event.EventName
-	f["eventSource"] = event.EventSource
 	log.WithFields(f).Debug("processing event")
 	var updatedProject v1Models.Project
 	err := unmarshalStreamImage(event.Change.NewImage, &updatedProject)
