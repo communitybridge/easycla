@@ -467,6 +467,9 @@ func (repo repository) GetRequestsByCLAGroup(claGroupID string) ([]CLAManagerReq
 				"request_id": {
 					S: aws.String(lastEvaluatedKey),
 				},
+				"project_id": {
+					S: aws.String(claGroupID),
+				},
 			}
 		} else {
 			lastEvaluatedKey = ""
