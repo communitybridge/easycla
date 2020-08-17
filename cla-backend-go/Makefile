@@ -8,6 +8,7 @@ DYNAMO_EVENTS_BIN = dynamo-events-lambda
 ZIPBUILDER_SCHEDULER_BIN = zipbuilder-scheduler-lambda
 ZIPBUILDER_BIN = zipbuilder-lambda
 FUNCTIONAL_TESTS_BIN = functional-tests
+MAKEFILE_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 BUILD_TIME=`date +%FT%T%z`
 VERSION := $(shell sh -c 'git describe --always --tags')
 BRANCH := $(shell sh -c 'git rev-parse --abbrev-ref HEAD')
@@ -251,5 +252,6 @@ $(LINT_TOOL):
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(shell go env GOPATH)/bin $(LINT_VERSION)
 
 lint: $(LINT_TOOL)
-	$(LINT_TOOL) run --allow-parallel-runners --config=.golangci.yaml ./...
+	@cd $(MAKEFILE_DIR) && echo "Running lint..." && $(LINT_TOOL) run --allow-parallel-runners --config=.golangci.yaml ./... && echo "Lint check passed."
+	@cd $(MAKEFILE_DIR) && ./check-headers.sh
 
