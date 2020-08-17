@@ -1,2 +1,5 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
+
 click==7.1.2
 PyYAML==5.3.1
