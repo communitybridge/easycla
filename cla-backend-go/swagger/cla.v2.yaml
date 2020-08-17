@@ -3169,6 +3169,11 @@ definitions:
         description: 'the LF username'
         x-omitempty: false
         example: 'john.doe'
+      name:
+        type: string
+        description: 'name of the user'
+        example: 'john'
+        x-omitempty: false
       user_sfid:
         type: string
         description: 'the user SalesForce ID'

@@ -763,6 +763,8 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 		projectSFs = append(projectSFs, projectSF.Name)
 	}
 
+	var designeeScopes []*models.ClaManagerDesignee
+
 	// Check if sending cla manager request to company admin
 	if contactAdmin {
 		log.Debugf("Sending email to company Admin")
@@ -781,12 +783,15 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 			} else {
 				sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, organization.Name, projectSFs, contributor.UserGithubID, contributor.UserGithubUsername, LfxPortalURL)
 			}
-
+			designeeScope := models.ClaManagerDesignee{
+				Email: strfmt.Email(admin.Contact.EmailAddress),
+				Name:  admin.Contact.Name,
+			}
+			designeeScopes = append(designeeScopes, &designeeScope)
 		}
-		return nil, nil
+		return designeeScopes, nil
 	}
 
-	var designeeScopes []*models.ClaManagerDesignee
 	for _, pcg := range projectCLAGroups {
 		log.WithFields(f).Debugf("Create cla manager designee for Project SFID: %s", pcg.ProjectSFID)
 		claManagerDesignee, err := s.CreateCLAManagerDesignee(organization.ID, pcg.ProjectSFID, userEmail)
