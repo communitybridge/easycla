@@ -59,12 +59,6 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	})
 
 	api.SignaturesUpdateApprovalListHandler = signatures.UpdateApprovalListHandlerFunc(func(params signatures.UpdateApprovalListParams, authUser *auth.User) middleware.Responder {
-		if params.XEMAIL == nil || params.XUSERNAME == nil || params.XACL == "" {
-			msg := fmt.Sprintf("EasyCLA - 403 Forbidden - unknown user is not authorized to update project company signature approval list for project ID: %s, company ID: %s",
-				params.ProjectSFID, params.CompanySFID)
-			log.Warn(msg)
-			return signatures.NewUpdateApprovalListForbidden().WithPayload(errorResponse(errors.New(msg)))
-		}
 
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
