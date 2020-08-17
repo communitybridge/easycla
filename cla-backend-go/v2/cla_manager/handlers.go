@@ -200,10 +200,6 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		if err != nil {
 			return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(err)
 		}
-		// Check if admins successfully sent email
-		if len(claManagerDesignees) == 0 {
-			return cla_manager.NewInviteCompanyAdminNoContent()
-		}
 
 		// successfully created cla manager designee and sent invite
 		return cla_manager.NewInviteCompanyAdminOK().WithPayload(&models.ClaManagerDesignees{
