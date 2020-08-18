@@ -157,7 +157,7 @@ func (repo *repo) GetClaGroupIDForProject(projectSFID string) (*ProjectClaGroup,
 		out = *pcgs[0]
 	}
 
-	if len(result.Item) == 0 {
+	if len(result.Item) > 0 {
 		err = dynamodbattribute.UnmarshalMap(result.Item, &out)
 		if err != nil {
 			log.WithFields(f).Warnf("unable decode results from database, error: %+v", err)
