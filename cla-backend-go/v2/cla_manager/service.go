@@ -985,7 +985,7 @@ func sendEmailToUserWithNoLFID(projectName, requesterUsername, requesterEmail, u
 <p>User %s (%s) was trying to add you as a CLA Manager for Project %s but was unable to identify your account details in
 the EasyCLA system. In order to become a CLA Manager for Project %s, you will need to accept invite below.
 Once complete, notify the user %s and they will be able to add you as a CLA Manager.</p>
-<p> <a href="USERACCEPTLINK">AcceptInvite</a> </p>
+<p> <a href="USERACCEPTLINK">Accept Invite</a> </p>
 %s
 %s`,
 		userWithNoLFIDName, projectName,

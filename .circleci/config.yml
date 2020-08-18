@@ -106,6 +106,7 @@ jobs:
           name: lint
           command: |
             cd cla-backend
+            ./check-headers.sh
             # Lint will always pass for now - need to continue addressing lint issues
             pylint cla/*.py || true
       - run:
