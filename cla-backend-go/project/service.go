@@ -188,44 +188,28 @@ func (s service) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDet
 	return s.repo.GetClaGroupsByFoundationSFID(foundationSFID, loadRepoDetails)
 }
 
-//signedAtFoundationLevel checks if project is signed at foundation Level else project Level
-// func (s service) SignedAtFoundationLevel(list []*projects_cla_groups.ProjectClaGroup) bool {
-
-// 	claGroupMap := make(map[string]struct{})
-// 	exists := struct{}{}
-
-// 	// Check for number of claGroups for foundation
-// 	for _, in := range list {
-// 		if _, ok := claGroupMap[in.ClaGroupID]; !ok {
-// 			claGroupMap[in.ClaGroupID] = exists
-// 		}
-// 	}
-
-// 	return len(claGroupMap) == 1
-
-// }
-
-//signedAtFoundationLevel checks if project is signed at foundation Level else project Level
+// SignedAtFoundationLevel returns true if the specified foundation has a CLA Group at the foundation level, returns false otherwise.
 func (s service) SignedAtFoundationLevel(foundationSFID string) (bool, error) {
+	f := logrus.Fields{
+		"functionName":   "SignedAtFoundationLevel",
+		"foundationSFID": foundationSFID,
+	}
 
-	claGroupMap := make(map[string]struct{})
-	exists := struct{}{}
-
-	log.Debugf("checking for foundationSFID: %s CLA Groups", foundationSFID)
-	pcgs, pcgErr := s.projectCGRepo.GetProjectsIdsForFoundation(foundationSFID)
+	log.WithFields(f).Debug("querying foundation CLA Group entries...")
+	entries, pcgErr := s.projectCGRepo.GetProjectsIdsForFoundation(foundationSFID)
 	if pcgErr != nil {
 		return false, pcgErr
 	}
-	log.Debugf("loaded CLA Groups: %+v for foundation SFID: %s", pcgs, foundationSFID)
-	log.Debug("checking if signed at the foundation level...")
+	log.WithFields(f).Debugf("loaded %d CLA Group entries", len(entries))
 
 	// Check for number of claGroups for foundation
-	for _, in := range pcgs {
-		if _, ok := claGroupMap[in.ClaGroupID]; !ok {
-			claGroupMap[in.ClaGroupID] = exists
+	foundationLevelCLAGroup := false
+	for _, entry := range entries {
+		if entry.ClaGroupID == entry.FoundationSFID {
+			foundationLevelCLAGroup = true
+			break
 		}
 	}
 
-	return len(claGroupMap) == 1, nil
-
+	return foundationLevelCLAGroup, nil
 }

@@ -2820,16 +2820,16 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
 
     @property
     def signed_at_foundation(self) -> bool:
-        # use a 'set' so that we don't have any duplicates
-        unique_cla_groups = set()
+        foundation_level_cla = False
         if self.model.foundation_sfid:
-            # Get all records that might have the same foundation ID (including this current record)
+            # Get all records that have the same foundation ID (including this current record)
             for mapping in self.get_by_foundation_sfid(self.model.foundation_sfid):
-                # Add the CLA Group ID - no duplicates
-                unique_cla_groups.add(mapping.get_cla_group_id())
+                # Foundation level CLA means that we have an entry where the FoundationSFID == ProjectSFID
+                if mapping.get_foundation_sfid() == mapping.get_cla_group_id():
+                    foundation_level_cla = True
+                    break
 
-        # if only CLA Group - we consider this at the Foundation Level
-        return len(unique_cla_groups) == 1
+        return foundation_level_cla
 
     def get_project_sfid(self):
         return self.model.project_sfid
