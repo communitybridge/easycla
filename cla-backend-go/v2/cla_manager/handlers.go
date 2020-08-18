@@ -94,14 +94,6 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 	api.ClaManagerCreateCLAManagerDesigneeHandler = cla_manager.CreateCLAManagerDesigneeHandlerFunc(func(params cla_manager.CreateCLAManagerDesigneeParams, authUser *auth.User) middleware.Responder {
 		f := logrus.Fields{"functionName": "ClaManagerCreateCLAManagerDesigneeHandler", "CompanySFID": params.CompanySFID, "ProjectSFID": params.ProjectSFID, "authUser": *params.XUSERNAME}
 		log.WithFields(f).Debugf("processing CLA Manager Desginee request")
-		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-			return cla_manager.NewCreateCLAManagerDesigneeForbidden().WithPayload(&models.ErrorResponse{
-				Code: "403",
-				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAManagerDesignee with Organization scope of %s",
-					authUser.UserName, params.CompanySFID),
-			})
-		}
 
 		claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, params.ProjectSFID, params.Body.UserEmail.String())
 		if err != nil {
