@@ -8,7 +8,7 @@
 # Exits with a 1 if one or more source files are missing a license header
 
 # These are the file patterns we should exclude - these are typically transient files not checked into source control
-exclude_pattern='node_modules|.venv|organization-service.yaml|cla.compiled.yaml|project-service.yaml|acs-service.yaml|user-service.yaml|cla.v2.compiled.yaml|.vendor-new|.pytest_cache'
+exclude_pattern='node_modules|.venv|organization-service.yaml|cla.compiled.yaml|project-service.yaml|acs-service.yaml|user-service.yaml|cla.v2.compiled.yaml|.vendor-new|.pytest_cache|.serverless'
 
 echo "Scanning source code..."
 # Adjust this filters based on the source files you are interested in checking
