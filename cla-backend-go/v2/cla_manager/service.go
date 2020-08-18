@@ -85,7 +85,7 @@ type service struct {
 type Service interface {
 	CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername string) (*models.CompanyClaManager, *models.ErrorResponse)
 	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
-	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, name string, contributor *v1User.User, lFxPortalURL string) ([]*models.ClaManagerDesignee, *models.ErrorResponse)
+	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, name string, contributor *v1User.User, lFxPortalURL string) ([]*models.ClaManagerDesignee, error)
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
 	CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, requestEmail, LfxPortalURL string) (*models.ClaManagerDesignee, error)
 	NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerList) error
@@ -673,7 +673,7 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 	return claManagerDesignee, nil
 }
 
-func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, name string, contributor *v1User.User, LfxPortalURL string) ([]*models.ClaManagerDesignee, *models.ErrorResponse) {
+func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, name string, contributor *v1User.User, LfxPortalURL string) ([]*models.ClaManagerDesignee, error) {
 	orgService := v2OrgService.GetClient()
 	projectService := v2ProjectService.GetClient()
 	userService := v2UserService.GetClient()
@@ -696,10 +696,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	if companyErr != nil || companyModel.CompanyExternalID == "" {
 		msg := fmt.Sprintf("Problem getting company for companyID: %s ", companyID)
 		log.Warn(msg)
-		return nil, &models.ErrorResponse{
-			Code:    "404",
-			Message: msg,
-		}
+		return nil, companyErr
 	}
 
 	log.WithFields(f).Debugf("Getting CLA Project")
@@ -707,20 +704,15 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	if projErr != nil {
 		msg := fmt.Sprintf("Unable to get CLA Project: %s, error: %+v ", projectID, projErr)
 		log.WithFields(f).Warnf("unable to get claGroup")
-		return nil, &models.ErrorResponse{
-			Code:    "404",
-			Message: msg,
-		}
+		log.Warn(msg)
+		return nil, projErr
 	}
 
 	organization, orgErr := orgService.GetOrganization(companyModel.CompanyExternalID)
 	if orgErr != nil {
 		msg := fmt.Sprintf("Problem getting company by ID: %s ", companyID)
 		log.Warn(msg)
-		return nil, &models.ErrorResponse{
-			Code:    "400",
-			Message: msg,
-		}
+		return nil, orgErr
 	}
 
 	// Get suggested CLA Manager user details
@@ -738,15 +730,9 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 
 		sendErr := sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID)
 		if sendErr != nil {
-			return nil, &models.ErrorResponse{
-				Code:    "400",
-				Message: sendErr.Error(),
-			}
+			return nil, sendErr
 		}
-		return nil, &models.ErrorResponse{
-			Code:    "400",
-			Message: msg,
-		}
+		return nil, userErr
 	}
 	var projectSFs []string
 	for _, pcg := range projectCLAGroups {
@@ -755,10 +741,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 		if projectErr != nil {
 			msg := fmt.Sprintf("Problem getting salesforce Project ID: %s", pcg.ProjectSFID)
 			log.WithFields(f).Warn(msg)
-			return nil, &models.ErrorResponse{
-				Code:    "400",
-				Message: msg,
-			}
+			return nil, projectErr
 		}
 		projectSFs = append(projectSFs, projectSF.Name)
 	}
@@ -771,10 +754,8 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyModel.CompanyExternalID)
 		if listScopeErr != nil {
 			msg := fmt.Sprintf("Admin lookup error for organisation SFID: %s ", companyModel.CompanyExternalID)
-			return nil, &models.ErrorResponse{
-				Code:    "400",
-				Message: msg,
-			}
+			log.WithFields(f).Warn(msg)
+			return nil, listScopeErr
 		}
 		for _, admin := range scopes.Userroles {
 			// Check if is Gerrit User or GH User
@@ -798,10 +779,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 		if err != nil {
 			msg := fmt.Sprintf("Problem creating cla Manager Designee for user : %s, error: %+v ", userEmail, err)
 			log.WithFields(f).Warn(msg)
-			return nil, &models.ErrorResponse{
-				Code:    "400",
-				Message: msg,
-			}
+			return nil, err
 		}
 		designeeScopes = append(designeeScopes, claManagerDesignee)
 	}
