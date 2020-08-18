@@ -14,9 +14,15 @@ properties:
     pattern: "^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$"
   gerritUrl:
     type: string
-    description: the gerrit url
+    description: |
+      the gerrit url - must be one of the currently supported LF managed Gerrit instances:
+        https://gerrit.linuxfoundation.org
+        https://gerrit.onap.org
+        https://gerrit.o-ran-sc.org
+        https://gerrit.tungsten.io
+        https://gerrit.opnfv.org
     example: 'https://gerrit.onap.org'
-    minLength: 3
+    minLength: 10
     maxLength: 255
     format: uri
   groupIdCcla:
