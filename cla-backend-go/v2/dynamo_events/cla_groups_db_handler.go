@@ -29,6 +29,7 @@ func (s *service) ProcessCLAGroupUpdateEvents(event events.DynamoDBEventRecord) 
 		log.WithFields(f).Warnf("unable to unmarshal project model, error: %+v", err)
 		return err
 	}
+	log.WithFields(f).Debugf("decoded project record from stream: %+v", updatedProject)
 
 	// Update any DB records that have CLA Approval Requests from Contributors - need to update Name, etc. if that has changed
 	log.WithFields(f).Debugf("updating any CLA approval requests from contributors for this CLA Group")

@@ -491,9 +491,12 @@ func (repo repository) UpdateRequestsByCLAGroup(model *project.DBProjectModel) e
 	if err != nil {
 		log.WithFields(f).Warnf("unable to query approval list requests by CLA Group ID")
 	}
+	log.WithFields(f).Debugf("updating %d CLA Manager Requests for CLA Group", len(requests))
 
 	// For each request for this CLA Group...
 	for _, request := range requests {
+		log.WithFields(f).Debugf("processing request: %+v", request)
+
 		// Only update if one of the fields that we have in our database column list
 		// is updated - no need to update if other internal CLA Group record stuff is
 		// updated as we don't care about those

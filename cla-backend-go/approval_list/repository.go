@@ -354,9 +354,12 @@ func (repo repository) UpdateRequestsByCLAGroup(model *project.DBProjectModel) e
 	if err != nil {
 		log.WithFields(f).Warnf("unable to query approval list requests by CLA Group ID")
 	}
+	log.WithFields(f).Debugf("updating %d contributor ccla authorization requests", len(requests))
 
 	// For each request for this CLA Group...
 	for _, request := range requests {
+		log.WithFields(f).Debugf("processing request: %+v", request)
+
 		// Only update if one of the fields that we have in our database column list
 		// is updated - no need to update if other internal CLA Group record stuff is
 		// updated as we don't care about those
@@ -378,13 +381,9 @@ func (repo repository) UpdateRequestsByCLAGroup(model *project.DBProjectModel) e
 
 		// CLA Group Name has been updated
 		if request.ProjectName != model.ProjectName {
-<<<<<<< HEAD
-			expressionAttributeNames[":N"] = aws.String("project_name")
-=======
 			log.WithFields(f).Debugf("project name differs: %s vs %s", request.ProjectName, model.ProjectName)
 
 			expressionAttributeNames["#N"] = aws.String("project_name")
->>>>>>> Resolved Update DynamoDB Syntax
 			expressionAttributeValues[":n"] = &dynamodb.AttributeValue{
 				S: aws.String(model.ProjectName),
 			}
@@ -393,12 +392,8 @@ func (repo repository) UpdateRequestsByCLAGroup(model *project.DBProjectModel) e
 
 		// CLA Group External ID was added or updated
 		if request.ProjectExternalID != model.ProjectExternalID {
-<<<<<<< HEAD
-			expressionAttributeNames[":E"] = aws.String("project_external_id")
-=======
 			log.WithFields(f).Debugf("project external ID differs: %s vs %s", request.ProjectExternalID, model.ProjectExternalID)
 			expressionAttributeNames["#E"] = aws.String("project_external_id")
->>>>>>> Resolved Update DynamoDB Syntax
 			expressionAttributeValues[":e"] = &dynamodb.AttributeValue{
 				S: aws.String(model.ProjectExternalID),
 			}
