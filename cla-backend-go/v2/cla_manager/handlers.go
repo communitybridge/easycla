@@ -198,7 +198,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		claManagerDesignees, err := service.InviteCompanyAdmin(params.Body.ContactAdmin, params.Body.CompanyID, params.Body.ClaGroupID, params.Body.UserEmail.String(), params.Body.Name, &user, LfxPortalURL)
 
 		if err != nil {
-			if err == ErrNoOrgAdmins || err == ErrNoLFID {
+			if err == ErrNoOrgAdmins || err == ErrNoLFID || err == ErrCLACompanyNotFound {
 				return cla_manager.NewCreateCLAManagerRequestNotFound().WithPayload(
 					&models.ErrorResponse{
 						Message: err.Error(),
