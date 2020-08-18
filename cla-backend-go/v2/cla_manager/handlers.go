@@ -198,7 +198,29 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		claManagerDesignees, err := service.InviteCompanyAdmin(params.Body.ContactAdmin, params.Body.CompanyID, params.Body.ClaGroupID, params.Body.UserEmail.String(), params.Body.Name, &user, LfxPortalURL)
 
 		if err != nil {
-			return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(err)
+			if err == ErrNoOrgAdmins || err == ErrNoLFID {
+				return cla_manager.NewCreateCLAManagerRequestNotFound().WithPayload(
+					&models.ErrorResponse{
+						Message: err.Error(),
+						Code:    "404",
+					})
+			}
+			// Check if user is already assigned scope/role
+			if err == ErrRoleScopeConflict {
+				msg := fmt.Sprintf("User %s already has role scope assigned ", params.Body.UserEmail)
+				return cla_manager.NewCreateCLAManagerRequestConflict().WithPayload(
+					&models.ErrorResponse{
+						Message: msg,
+						Code:    "409",
+					})
+			}
+			// Return Bad Request
+			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(
+				&models.ErrorResponse{
+					Message: err.Error(),
+					Code:    "400",
+				})
+			//return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(err)
 		}
 
 		// successfully created cla manager designee and sent invite
