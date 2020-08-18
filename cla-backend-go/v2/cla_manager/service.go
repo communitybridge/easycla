@@ -696,6 +696,9 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	if companyErr != nil || companyModel.CompanyExternalID == "" {
 		msg := fmt.Sprintf("Problem getting company for companyID: %s ", companyID)
 		log.Warn(msg)
+		if companyErr.Error() == "company does not exist" {
+			return nil, ErrCLACompanyNotFound
+		}
 		return nil, companyErr
 	}
 
