@@ -28,6 +28,8 @@ const (
 	BadRequest = "400"
 	//Conflict error Response code
 	Conflict = "409"
+	// NotFound error Response code
+	NotFound = "404"
 )
 
 // Configure is the API handler routine for CLA Manager routes
@@ -45,7 +47,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		if err != nil {
 			if err == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
 				return cla_manager.NewCreateCLAManagerInternalServerError().WithPayload(&models.ErrorResponse{
-					Code:    "400",
+					Code:    BadRequest,
 					Message: fmt.Sprintf("EasyCLA - Bad Request. error = %s", "No cla group is associated with this project"),
 				})
 			}
@@ -78,7 +80,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		cginfo, err := projectClaGroupRepo.GetClaGroupIDForProject(params.ProjectSFID)
 		if err != nil {
 			return cla_manager.NewDeleteCLAManagerBadRequest().WithPayload(&models.ErrorResponse{
-				Code:    "400",
+				Code:    BadRequest,
 				Message: fmt.Sprintf("EasyCLA - Bad Request. No Cla Group associated with ProjectSFID: %s ", params.ProjectSFID),
 			})
 		}
@@ -109,7 +111,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(
 				&models.ErrorResponse{
 					Message: msg,
-					Code:    "400",
+					Code:    BadRequest,
 				})
 		}
 
@@ -145,7 +147,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				return cla_manager.NewCreateCLAManagerDesigneeByGroupBadRequest().WithPayload(
 					&models.ErrorResponse{
 						Message: msg,
-						Code:    "400",
+						Code:    BadRequest,
 					})
 			}
 			log.WithFields(f).Debugf("found %d project IDs for CLA group", len(projectCLAGroups))
@@ -155,7 +157,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				return cla_manager.NewCreateCLAManagerDesigneeByGroupNotFound().WithPayload(
 					&models.ErrorResponse{
 						Message: msg,
-						Code:    "400",
+						Code:    BadRequest,
 					})
 
 			}
@@ -170,7 +172,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 					return cla_manager.NewCreateCLAManagerDesigneeByGroupBadRequest().WithPayload(
 						&models.ErrorResponse{
 							Message: msg,
-							Code:    "400",
+							Code:    BadRequest,
 						})
 				}
 				designeeScopes = append(designeeScopes, claManagerDesignee)
@@ -190,7 +192,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 			msg := fmt.Sprintf("Problem getting user by ID : %s, error: %+v ", params.UserID, userErr)
 			return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(
 				&models.ErrorResponse{
-					Code:    "400",
+					Code:    BadRequest,
 					Message: msg,
 				})
 		}
@@ -198,27 +200,27 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		claManagerDesignees, err := service.InviteCompanyAdmin(params.Body.ContactAdmin, params.Body.CompanyID, params.Body.ClaGroupID, params.Body.UserEmail.String(), params.Body.Name, &user, LfxPortalURL)
 
 		if err != nil {
-			if err == ErrNoOrgAdmins || err == ErrNoLFID || err == ErrCLACompanyNotFound {
+			statusCode := buildErrorStatusCode(err)
+			if statusCode == NotFound {
 				return cla_manager.NewCreateCLAManagerRequestNotFound().WithPayload(
 					&models.ErrorResponse{
 						Message: err.Error(),
-						Code:    "404",
+						Code:    NotFound,
 					})
 			}
-			// Check if user is already assigned scope/role
-			if err == ErrRoleScopeConflict {
+			if statusCode == Conflict {
 				msg := fmt.Sprintf("User %s already has role scope assigned ", params.Body.UserEmail)
 				return cla_manager.NewCreateCLAManagerRequestConflict().WithPayload(
 					&models.ErrorResponse{
 						Message: msg,
-						Code:    "409",
+						Code:    Conflict,
 					})
 			}
-			// Return Bad Request
+
 			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(
 				&models.ErrorResponse{
 					Message: err.Error(),
-					Code:    "400",
+					Code:    BadRequest,
 				})
 			//return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(err)
 		}
@@ -245,27 +247,28 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 			params.Body.FullName, authUser, *params.XEMAIL, LfxPortalURL)
 
 		if err != nil {
-			if err == ErrNoOrgAdmins || err == ErrNoLFID {
+			statusCode := buildErrorStatusCode(err)
+			if statusCode == NotFound {
 				return cla_manager.NewCreateCLAManagerRequestNotFound().WithPayload(
 					&models.ErrorResponse{
 						Message: err.Error(),
-						Code:    "404",
+						Code:    NotFound,
 					})
 			}
-			// Check if user is already assigned scope/role
-			if err == ErrRoleScopeConflict {
+			if statusCode == Conflict {
 				msg := fmt.Sprintf("User %s already has role scope assigned ", params.Body.FullName)
 				return cla_manager.NewCreateCLAManagerRequestConflict().WithPayload(
 					&models.ErrorResponse{
 						Message: msg,
-						Code:    "409",
+						Code:    Conflict,
 					})
 			}
+
 			// Return Bad Request
 			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(
 				&models.ErrorResponse{
 					Message: err.Error(),
-					Code:    "400",
+					Code:    BadRequest,
 				})
 		}
 		if params.Body.ContactAdmin {
@@ -298,4 +301,17 @@ func buildErrorMessageCreate(params cla_manager.CreateCLAManagerParams, err erro
 func buildErrorMessageDelete(params cla_manager.DeleteCLAManagerParams, err error) string {
 	return fmt.Sprintf("problem deleting new CLA Manager Request using company SFID: %s, project SFID: %s, user ID: %s, error: %+v",
 		params.CompanySFID, params.ProjectSFID, params.UserLFID, err)
+}
+
+// buildErrorStatusCode helper function to build an error statusCodes
+func buildErrorStatusCode(err error) string {
+	if err == ErrNoLFID || err == ErrNoOrgAdmins || err == ErrCLACompanyNotFound {
+		return NotFound
+	}
+	// Check if user is already assigned scope/role
+	if err == ErrRoleScopeConflict {
+		return Conflict
+	}
+	// Return Bad Request
+	return BadRequest
 }
