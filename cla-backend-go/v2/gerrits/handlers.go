@@ -105,6 +105,9 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 			}
 			result, err := v1Service.AddGerrit(params.ClaGroupID, params.ProjectSFID, addGerritInput)
 			if err != nil {
+				if err.Error() == "gerrit_name already present in the system" {
+					return gerrits.NewAddGerritConflict().WithPayload(errorResponse(err))
+				}
 				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
 			}
 
