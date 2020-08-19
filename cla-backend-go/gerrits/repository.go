@@ -35,6 +35,8 @@ type Repository interface {
 	DeleteGerrit(gerritID string) error
 	GetGerrit(gerritID string) (*models.Gerrit, error)
 	AddGerrit(input *models.Gerrit) (*models.Gerrit, error)
+
+	ExistsByName(gerritName string) ([]*models.Gerrit, error)
 }
 
 // NewRepository create new Repository
@@ -48,6 +50,55 @@ func NewRepository(awsSession *session.Session, stage string) Repository {
 type repo struct {
 	stage          string
 	dynamoDBClient *dynamodb.DynamoDB
+}
+
+func (repo *repo) ExistsByName(gerritName string) ([]*models.Gerrit, error) {
+	resultList := make([]*models.Gerrit, 0)
+	tableName := fmt.Sprintf("cla-%s-gerrit-instances", repo.stage)
+	filter := expression.Name("gerrit_name").Equal(expression.Value(gerritName))
+
+	expr, err := expression.NewBuilder().WithFilter(filter).Build()
+	if err != nil {
+		log.Warnf("error building expression for gerrit instances scan, error: %v", err)
+		return nil, err
+	}
+	// Assemble the query input parameters
+	scanInput := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+	}
+
+	for {
+		results, err := repo.dynamoDBClient.Scan(scanInput)
+		if err != nil {
+			log.Warnf("error retrieving gerrit instances, error: %v", err)
+			return nil, err
+		}
+
+		var gerrits []*Gerrit
+
+		err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &gerrits)
+		if err != nil {
+			log.Warnf("error unmarshalling gerrit from database. error: %v", err)
+			return nil, err
+		}
+
+		for _, g := range gerrits {
+			resultList = append(resultList, g.toModel())
+		}
+
+		if len(results.LastEvaluatedKey) != 0 {
+			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			break
+		}
+	}
+	sort.Slice(resultList, func(i, j int) bool {
+		return resultList[i].GerritName < resultList[j].GerritName
+	})
+	return resultList, nil
 }
 
 func (repo repo) GetClaGroupGerrits(projectID string, projectSFID *string) (*models.GerritList, error) {
