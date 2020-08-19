@@ -542,13 +542,25 @@ function buildGerritInstancesTable(importResources: boolean): aws.dynamodb.Table
     'cla-' + stage + '-gerrit-instances',
     {
       name: 'cla-' + stage + '-gerrit-instances',
-      attributes: [{ name: 'gerrit_id', type: 'S' }],
+      attributes: [
+        { name: 'gerrit_id', type: 'S' },
+        { name: 'gerrit_name', type: 'S' }
+      ],
       hashKey: 'gerrit_id',
       billingMode: 'PROVISIONED',
       streamEnabled: true,
       streamViewType: "NEW_AND_OLD_IMAGES",
       readCapacity: defaultReadCapacity,
       writeCapacity: defaultWriteCapacity,
+      globalSecondaryIndexes: [
+        {
+          name: 'gerrit-name-index',
+          hashKey: 'gerrit_name',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
+        },
+      ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,
       },
@@ -991,40 +1003,22 @@ repositoriesTable.onEvent("repositoriesStreamEvents",
   { startingPosition: "LATEST" });
 
 // Export the name of the bucket
-export const logoBucketARN = logoBucket.arn;
 export const logoBucketName = logoBucket.bucket;
 export const logoBucketPolicyOutput = logoBucketPolicy.policy;
-export const signatureFilesBucketARN = signatureFilesBucket.arn;
 export const signatureFilesBucketName = signatureFilesBucket.bucket;
 export const projectsTableName = projectsTable.name;
-export const projectsTableARN = projectsTable.arn;
 export const companiesTableName = companiesTable.name;
-export const companiesTableARN = companiesTable.arn;
 export const usersTableName = usersTable.name;
-export const usersTableARN = usersTable.arn;
 export const signaturesTableName = signaturesTable.name;
-export const signaturesTableARN = signaturesTable.arn;
 export const repositoriesTableName = repositoriesTable.name;
-export const repositoriesTableARN = repositoriesTable.arn;
 export const gitHubOrgsTableName = gitHubOrgsTable.name;
-export const gitHubOrgTableARN = gitHubOrgsTable.arn;
 export const gerritInstancesTableName = gerritInstancesTable.name;
-export const gerritInstancesTableARN = gerritInstancesTable.arn;
 export const userPermissionsTableName = userPermissionsTable.name;
-export const userPermissionsTableARN = userPermissionsTable.arn;
 export const companyInvitesTableName = companyInvitesTable.name;
-export const companyInvitesTableARN = companyInvitesTable.arn;
 export const claManagerRequestsTableName = claManagerRequestsTable.name;
-export const claManagerRequestsTableARN = claManagerRequestsTable.arn;
 export const storeTableName = storeTable.name;
-export const storeTableARN = storeTable.arn;
 export const sessionStoreTableName = sessionStoreTable.name;
-export const sessionStoreTableARN = sessionStoreTable.arn;
 export const eventsTableName = eventsTable.name;
-export const eventsTableARN = eventsTable.arn;
 export const cclaWhitelistRequestsTableName = cclaWhitelistRequestsTable.name;
-export const cclaWhitelistRequestsTableARN = cclaWhitelistRequestsTable.arn;
 export const metricsTableName = metricsTable.name;
-export const metricsTableARN = metricsTable.arn;
 export const projectsClaGroupsTableName = projectsClaGroupsTable.name
-export const projectsClaGroupsTableARN = projectsClaGroupsTable.arn
