@@ -10,14 +10,15 @@
 # These are the file patterns we should exclude - these are typically transient files not checked into source control
 exclude_pattern='node_modules|.venv|organization-service.yaml|cla.compiled.yaml|project-service.yaml|acs-service.yaml|user-service.yaml|cla.v2.compiled.yaml|.vendor-new|.pytest_cache|.serverless'
 
+files=()
 echo "Scanning source code..."
 # Adjust this filters based on the source files you are interested in checking
 # Loads all the filenames into an array
 # We need optimize this, possibly use: -name '*.go' -o -name '*.txt' - not working as expected on mac
 echo "Searching go files..."
-files=($(find . -name '*.go' -print | egrep -v ${exclude_pattern}))
+files+=($(find . -name '*.go' -print | egrep -v ${exclude_pattern}))
 echo "Searching python files..."
-files=($(find . -name '*.py' -print | egrep -v ${exclude_pattern}))
+files+=($(find . -name '*.py' -print | egrep -v ${exclude_pattern}))
 echo "Searching sh files..."
 files+=($(find . -name '*.sh' -print | egrep -v ${exclude_pattern}))
 echo "Searching txt files..."
