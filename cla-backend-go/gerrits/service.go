@@ -71,15 +71,39 @@ func (s service) GetGerrit(gerritID string) (*models.Gerrit, error) {
 }
 
 func (s service) AddGerrit(claGroupID string, projectSFID string, params *models.AddGerritInput) (*models.Gerrit, error) {
-	if params.GroupIDIcla == "" && params.GroupIDCcla == "" {
+	f := logrus.Fields{"functionName": "AddGerrit", "claGroupID": claGroupID, "projectSFID": projectSFID}
+
+	if params.GroupIDIcla == "" && params.GroupIDCcla == "" || params.GroupIDIcla == params.GroupIDCcla {
 		return nil, errors.New("should specify at least a LDAP group for ICLA or CCLA")
 	}
 	if params.GerritName == nil {
 		return nil, errors.New("gerrit_name required")
 	}
+
+	gerritObject, err := s.repo.ExistsByName(*params.GerritName)
+	if err != nil {
+		message := fmt.Sprintf("unable to get gerrit by name : %s", *params.GerritName)
+		log.WithError(err).Warnf(message)
+	}
+
+	if len(gerritObject) > 0 {
+		return nil, errors.New("gerrit_name already present in the system")
+	}
+
 	if params.GerritURL == nil {
 		return nil, errors.New("gerrit_url required")
 	}
+
+	gerritHost, err := extractGerritHost(params.GerritURL.String(), f)
+	if err != nil {
+		return nil, err
+	}
+
+	_, gerritAPIPathErr := getGerritAPIPath(gerritHost)
+	if gerritAPIPathErr != nil {
+		return nil, gerritAPIPathErr
+	}
+
 	var groupNameCcla, groupNameIcla string
 	if params.GroupIDIcla != "" {
 		group, err := s.lfGroup.GetGroup(params.GroupIDIcla)
@@ -126,15 +150,9 @@ func (s service) GetClaGroupGerrits(claGroupID string, projectSFID *string) (*mo
 		log.WithFields(f).Debugf("Processing gerrit URL: %s", gerrit.GerritURL)
 
 		var gerritHost = gerrit.GerritURL.String()
-		if strings.HasPrefix(gerritHost, "http") {
-			log.WithFields(f).Debugf("extracting gerrit host from URL: %s", gerritHost)
-			u, urlErr := url.Parse(gerritHost)
-			if urlErr != nil {
-				log.WithFields(f).Warnf("problem converting gerrit URL: %s, error: %+v", gerritHost, err)
-				return nil, urlErr
-			}
-			gerritHost = u.Host
-			log.WithFields(f).Debugf("extracted gerrit host is: %s", gerritHost)
+		gerritHost, err = extractGerritHost(gerritHost, f)
+		if err != nil {
+			return nil, err
 		}
 
 		log.WithFields(f).Debugf("fetching gerrit repos from host: %s", gerritHost)
@@ -153,6 +171,20 @@ func (s service) GetClaGroupGerrits(claGroupID string, projectSFID *string) (*mo
 	}
 
 	return responseModel, err
+}
+
+func extractGerritHost(gerritHost string, f logrus.Fields) (string, error) {
+	if strings.HasPrefix(gerritHost, "http") {
+		log.WithFields(f).Debugf("extracting gerrit host from URL: %s", gerritHost)
+		u, urlErr := url.Parse(gerritHost)
+		if urlErr != nil {
+			log.WithFields(f).Warnf("problem converting gerrit URL: %s, error: %+v", gerritHost, urlErr)
+			return "", urlErr
+		}
+		gerritHost = u.Host
+		log.WithFields(f).Debugf("extracted gerrit host is: %s", gerritHost)
+	}
+	return gerritHost, nil
 }
 
 func (s service) GetGerritRepos(gerritHost string) (*models.GerritRepoList, error) {

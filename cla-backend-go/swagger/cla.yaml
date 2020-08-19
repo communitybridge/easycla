@@ -1895,6 +1895,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '409':
+          $ref: '#/responses/conflict'
       tags:
         - gerrits
 

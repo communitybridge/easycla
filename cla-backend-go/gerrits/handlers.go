@@ -81,6 +81,9 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 			// add the gerrit
 			result, err := service.AddGerrit(params.ProjectID, projectModel.ProjectExternalID, params.AddGerritInput)
 			if err != nil {
+				if err.Error() == "gerrit_name already present in the system" {
+					return gerrits.NewAddGerritConflict().WithPayload(errorResponse(err))
+				}
 				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
 			}
 			// record the event
