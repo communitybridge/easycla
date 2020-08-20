@@ -480,8 +480,11 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 	// Check if user is already CLA Manager designee of project|organization scope
 	hasRoleScope, hasRoleScopeErr := orgClient.IsUserHaveRoleScope("cla-manager-designee", user.ID, companyID, projectID)
 	if hasRoleScopeErr != nil {
-		log.Debugf("Failed to check roleScope: cla-manager-designee  for user: %s", user.Username)
-		return nil, hasRoleScopeErr
+		// Skip 404 for ListOrgUsrServiceScopes endpoint
+		if _, ok := hasRoleScopeErr.(*organizations.ListOrgUsrServiceScopesNotFound); !ok {
+			log.Debugf("Failed to check roleScope: cla-manager-designee  for user: %s", user.Username)
+			return nil, hasRoleScopeErr
+		}
 	}
 	if hasRoleScope {
 		log.Debugf("Conflict ")
