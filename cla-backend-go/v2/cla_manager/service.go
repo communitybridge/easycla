@@ -477,12 +477,16 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 		return nil, ErrLFXUserNotFound
 	}
 
-	// // Check if user is part of organization
-	// if user.Account.ID != strings.TrimSpace(companyID) {
-	// 	msg := fmt.Sprintf("User :%s does not belong to organization", userEmail)
-	// 	log.Warn(msg)
-	// 	return nil, ErrNotInOrg
-	// }
+	// Check if user is already CLA Manager designee of project|organization scope
+	hasRoleScope, hasRoleScopeErr := orgClient.IsUserHaveRoleScope("cla-manager-designee", user.ID, companyID, projectID)
+	if hasRoleScopeErr != nil {
+		log.Debugf("Failed to check roleScope: cla-manager-designee  for user: %s", user.Username)
+		return nil, hasRoleScopeErr
+	}
+	if hasRoleScope {
+		log.Debugf("Conflict ")
+		return nil, ErrCLAManagerDesigneeConflict
+	}
 
 	projectSF, projectErr := projectClient.GetProject(projectID)
 	if projectErr != nil {
