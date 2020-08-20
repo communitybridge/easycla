@@ -99,6 +99,14 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, params.ProjectSFID, params.Body.UserEmail.String())
 		if err != nil {
+			if err == ErrRoleScopeConflict {
+				msg := fmt.Sprintf("Conflict assigning cla manager designee role for Project SFID: %s ", params.ProjectSFID)
+				return cla_manager.NewCreateCLAManagerDesigneeByGroupConflict().WithPayload(
+					&models.ErrorResponse{
+						Message: msg,
+						Code:    Conflict,
+					})
+			}
 			msg := fmt.Sprintf("user :%s, error: %+v ", authUser.Email, err)
 			return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(
 				&models.ErrorResponse{
@@ -121,15 +129,6 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				"authUser":     *params.XUSERNAME,
 			}
 			log.WithFields(f).Debugf("processing CLA Manager Desginee by group request")
-			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				msg := fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAManagerDesignee with Organization scope of %s",
-					authUser.UserName, params.CompanySFID)
-				log.WithFields(f).Warn(msg)
-				return cla_manager.NewCreateCLAManagerDesigneeForbidden().WithPayload(&models.ErrorResponse{
-					Code:    "403",
-					Message: msg,
-				})
-			}
 
 			log.WithFields(f).Debugf("getting project IDs for CLA group")
 			projectCLAGroups, getErr := projectClaGroupRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
@@ -159,6 +158,14 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				log.WithFields(f).Debugf("creating CLA Manager Designee for Project SFID: %s", pcg.ProjectSFID)
 				claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, pcg.ProjectSFID, params.Body.UserEmail.String())
 				if err != nil {
+					if err == ErrRoleScopeConflict {
+						msg := fmt.Sprintf("Conflict assigning cla manager designee role for Project SFID: %s ", pcg.ProjectSFID)
+						return cla_manager.NewCreateCLAManagerDesigneeByGroupConflict().WithPayload(
+							&models.ErrorResponse{
+								Message: msg,
+								Code:    Conflict,
+							})
+					}
 					msg := fmt.Sprintf("Creating cla manager designee failed for Project SFID: %s ", pcg.ProjectSFID)
 					log.WithFields(f).Warn(msg)
 					return cla_manager.NewCreateCLAManagerDesigneeByGroupBadRequest().WithPayload(
