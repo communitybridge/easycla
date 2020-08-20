@@ -54,6 +54,7 @@ type repo struct {
 
 func (repo *repo) ExistsByName(gerritName string) ([]*models.Gerrit, error) {
 	resultList := make([]*models.Gerrit, 0)
+
 	var condition expression.KeyConditionBuilder
 	tableName := fmt.Sprintf("cla-%s-gerrit-instances", repo.stage)
 
@@ -105,6 +106,7 @@ func (repo *repo) ExistsByName(gerritName string) ([]*models.Gerrit, error) {
 
 		if len(results.LastEvaluatedKey) != 0 {
 			input.ExclusiveStartKey = results.LastEvaluatedKey
+
 		} else {
 			break
 		}
