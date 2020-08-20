@@ -764,13 +764,18 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 			log.WithFields(f).Warn(msg)
 			return nil, listScopeErr
 		}
+		// Search for Easy CLA User
+		log.Debugf("Getting user by ID: %s", contributor.UserID)
+		userModel, userErr := s.easyCLAUserService.GetUser(contributor.UserID)
+		if userErr != nil {
+			msg := fmt.Sprintf("Problem getting user by ID: %s ", contributor.UserID)
+			log.Warn(msg)
+			return nil, userErr
+		}
+
 		for _, admin := range scopes.Userroles {
 			// Check if is Gerrit User or GH User
-			if contributor.LFUsername != "" && contributor.LFEmail != "" {
-				sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, organization.Name, projectSFs, contributor.LFEmail, contributor.LFUsername, LfxPortalURL)
-			} else {
-				sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, organization.Name, projectSFs, contributor.UserGithubID, contributor.UserGithubUsername, LfxPortalURL)
-			}
+			contributorEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, organization.Name, projectSFs, userModel, LfxPortalURL)
 			designeeScope := models.ClaManagerDesignee{
 				Email: strfmt.Email(admin.Contact.EmailAddress),
 				Name:  admin.Contact.Name,
@@ -925,6 +930,30 @@ func sendEmailToOrgAdmin(adminEmail string, admin string, company string, projec
 %s
 %s`,
 		admin, projectNames, contributorName, contributorID, corporateConsole, projectNames,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
+
+	err := utils.SendEmail(subject, body, recipients)
+	if err != nil {
+		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+	} else {
+		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	}
+}
+
+func contributorEmailToOrgAdmin(adminEmail string, admin string, company string, projectNames []string, contributor *v1Models.User, corporateConsole string) {
+	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, getBestUserName(contributor))
+	recipients := []string{adminEmail}
+	body := fmt.Sprintf(`
+<p>Hello %s,</p>
+<p>This is a notification email from EasyCLA regarding the project(s) %s.</p>
+<p>The following contributor is requesting to sign CLA for organization: </p>
+<p>%s</p>
+<p>Before the user contribution can be accepted, your organization must sign a CLA.
+<p>Kindly login to this portal %s and sign the CLA for any of the projects %s. </p>
+<p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
+%s
+%s`,
+		admin, projectNames, getFormattedUserDetails(contributor), corporateConsole, projectNames,
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
