@@ -71,8 +71,6 @@ func (s service) GetGerrit(gerritID string) (*models.Gerrit, error) {
 }
 
 func (s service) AddGerrit(claGroupID string, projectSFID string, params *models.AddGerritInput) (*models.Gerrit, error) {
-	f := logrus.Fields{"functionName": "AddGerrit", "claGroupID": claGroupID, "projectSFID": projectSFID}
-
 	if params.GroupIDIcla == "" && params.GroupIDCcla == "" || params.GroupIDIcla == params.GroupIDCcla {
 		return nil, errors.New("should specify at least a LDAP group for ICLA or CCLA")
 	}
@@ -92,16 +90,6 @@ func (s service) AddGerrit(claGroupID string, projectSFID string, params *models
 
 	if params.GerritURL == nil {
 		return nil, errors.New("gerrit_url required")
-	}
-
-	gerritHost, err := extractGerritHost(params.GerritURL.String(), f)
-	if err != nil {
-		return nil, err
-	}
-
-	_, gerritAPIPathErr := getGerritAPIPath(gerritHost)
-	if gerritAPIPathErr != nil {
-		return nil, gerritAPIPathErr
 	}
 
 	var groupNameCcla, groupNameIcla string
@@ -125,7 +113,7 @@ func (s service) AddGerrit(claGroupID string, projectSFID string, params *models
 	}
 	input := &models.Gerrit{
 		GerritName:    utils.StringValue(params.GerritName),
-		GerritURL:     *params.GerritURL,
+		GerritURL:     strfmt.URI(*params.GerritURL),
 		GroupIDCcla:   params.GroupIDCcla,
 		GroupIDIcla:   params.GroupIDIcla,
 		GroupNameCcla: groupNameCcla,
@@ -159,7 +147,9 @@ func (s service) GetClaGroupGerrits(claGroupID string, projectSFID *string) (*mo
 		gerritRepoList, getRepoErr := s.GetGerritRepos(gerritHost)
 		if getRepoErr != nil {
 			log.WithFields(f).Warnf("problem fetching gerrit repos from host: %s, error: %+v", gerritHost, err)
-			return nil, getRepoErr
+			log.Error("skipping", getRepoErr)
+			continue
+			//return nil, getRepoErr
 		}
 
 		// Set the connected flag - for now, we just set this value to true

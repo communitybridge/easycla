@@ -54,27 +54,41 @@ type repo struct {
 
 func (repo *repo) ExistsByName(gerritName string) ([]*models.Gerrit, error) {
 	resultList := make([]*models.Gerrit, 0)
+	var condition expression.KeyConditionBuilder
 	tableName := fmt.Sprintf("cla-%s-gerrit-instances", repo.stage)
-	filter := expression.Name("gerrit_name").Equal(expression.Value(gerritName))
 
-	expr, err := expression.NewBuilder().WithFilter(filter).Build()
+	// hashkey is gerrit-name
+	indexName := "gerrit-name-index"
+
+	builder := expression.NewBuilder().WithProjection(buildProjection())
+
+	filter := expression.Name("gerrit_id").AttributeExists()
+	condition = expression.Key("gerrit_name").Equal(expression.Value(gerritName))
+
+	builder = builder.WithKeyCondition(condition).WithFilter(filter)
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
 	if err != nil {
-		log.Warnf("error building expression for gerrit instances scan, error: %v", err)
 		return nil, err
 	}
+
 	// Assemble the query input parameters
-	scanInput := &dynamodb.ScanInput{
+	input := &dynamodb.QueryInput{
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
 		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String(indexName),
+		ScanIndexForward:          aws.Bool(false),
 	}
 
 	for {
-		results, err := repo.dynamoDBClient.Scan(scanInput)
-		if err != nil {
-			log.Warnf("error retrieving gerrit instances, error: %v", err)
-			return nil, err
+		results, errQuery := repo.dynamoDBClient.Query(input)
+		if errQuery != nil {
+			log.Warnf("error retrieving Gerrit. error = %s", errQuery.Error())
+			return nil, errQuery
 		}
 
 		var gerrits []*Gerrit
@@ -90,7 +104,7 @@ func (repo *repo) ExistsByName(gerritName string) ([]*models.Gerrit, error) {
 		}
 
 		if len(results.LastEvaluatedKey) != 0 {
-			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
+			input.ExclusiveStartKey = results.LastEvaluatedKey
 		} else {
 			break
 		}
@@ -233,4 +247,22 @@ func (repo *repo) AddGerrit(input *models.Gerrit) (*models.Gerrit, error) {
 		return nil, err
 	}
 	return repo.GetGerrit(gerritID.String())
+}
+
+// buildProjection builds the query projection
+func buildProjection() expression.ProjectionBuilder {
+	// These are the columns we want returned
+	return expression.NamesList(
+		expression.Name("date_created"),
+		expression.Name("date_modified"),
+		expression.Name("gerrit_id"),
+		expression.Name("gerrit_name"),
+		expression.Name("gerrit_url"),
+		expression.Name("group_id_ccla"),
+		expression.Name("group_id_icla"),
+		expression.Name("group_name_ccla"),
+		expression.Name("group_name_icla"),
+		expression.Name("project_id"),
+		expression.Name("project_sfid"),
+	)
 }
