@@ -205,7 +205,7 @@ func (s service) SignedAtFoundationLevel(foundationSFID string) (bool, error) {
 	// Check for number of claGroups for foundation
 	foundationLevelCLAGroup := false
 	for _, entry := range entries {
-		if entry.ClaGroupID == entry.FoundationSFID {
+		if entry.ProjectSFID == entry.FoundationSFID {
 			foundationLevelCLAGroup = true
 			break
 		}
