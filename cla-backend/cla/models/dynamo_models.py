@@ -2825,7 +2825,7 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
             # Get all records that have the same foundation ID (including this current record)
             for mapping in self.get_by_foundation_sfid(self.model.foundation_sfid):
                 # Foundation level CLA means that we have an entry where the FoundationSFID == ProjectSFID
-                if mapping.get_foundation_sfid() == mapping.get_cla_group_id():
+                if mapping.get_foundation_sfid() == mapping.get_project_sfid():
                     foundation_level_cla = True
                     break
 

@@ -28,7 +28,7 @@ properties:
     items:
       type: string
   foundationLevelCLA:
-    description: Flag indicating whether CLA is signed at Foundation level or Project level - if set to true, then this CLA group is at the foundation level.
+    description: Flag indicating whether CLA is signed at Foundation level (true) or Project level (false)
     type: boolean
     x-omitempty: false 
   projectCCLAEnabled:

@@ -2423,7 +2423,7 @@ paths:
         - company
   /company/{companySFID}/project/{projectSFID}/cla:
     get:
-      summary: api returns company cla for all the cla_groups present in that project
+      summary: Returns the CLA Groups associated with the Project and Company
       operationId: getCompanyProjectCla
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -3250,6 +3250,10 @@ definitions:
     title: Enabled CLA list
     description: List of CLA enabled projects for a specified Foundation
     properties:
+      foundationLevelCLA:
+        description: Flag indicating whether CLA is signed at Foundation level (true) or Project level (false)
+        type: boolean
+        x-omitempty: false
       list:
         type: array
         items:
@@ -3262,10 +3266,17 @@ definitions:
     properties:
       project_name:
         type: string
+        description: the Project Name
         example: "Appium"
+        x-omitempty: false
+      foundation_sfid:
+        type: string
+        description: the Project Group (previously Foundation) SFID
+        example: "d9f17888888hyxsx4u"
         x-omitempty: false
       project_sfid:
         type: string
+        description: the Project SFID
         example: "a2g17000000hyxNABB"
         x-omitempty: false
       project_type:
