@@ -28,6 +28,11 @@ import (
 	"github.com/jinzhu/copier"
 )
 
+const (
+	// FoundationType the SF foundation type string - previously was "Foundation", now "Project Group"
+	FoundationType = "Project Group"
+)
+
 func v2EventList(eventList *v1Models.EventList) (*models.EventList, error) {
 	var dst models.EventList
 	err := copier.Copy(&dst, eventList)
@@ -187,12 +192,12 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 				return events.NewGetCompanyProjectEventsBadRequest().WithPayload(errorResponse(err))
 			}
 			var result *v1Models.EventList
-			if projectDetails.ProjectType == "Foundation" {
+			if projectDetails.ProjectType == FoundationType {
 				result, err = service.GetCompanyFoundationEvents(params.CompanySFID, params.ProjectSFID, params.NextKey, params.PageSize, aws.BoolValue(params.ReturnAllEvents))
 			} else {
 				pm, perr := projectsClaGroupsRepo.GetClaGroupIDForProject(params.ProjectSFID)
 				if perr != nil {
-					if err == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
+					if perr == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
 						return events.NewGetCompanyProjectEventsNotFound().WithPayload(&models.ErrorResponse{
 							Code: "404",
 							Message: fmt.Sprintf("EasyCLA - 404 Not found - project %s not found in cla",

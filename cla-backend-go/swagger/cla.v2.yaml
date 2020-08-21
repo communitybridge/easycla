@@ -599,36 +599,6 @@ paths:
       tags:
         - project
 
-  /project/summary:
-    # API to support the Member Portal Dashboard Summary View
-    # See: https://confluence.linuxfoundation.org/pages/viewpage.action?pageId=49907240
-    get:
-      summary: Get Projet Summary
-      description: Returns a list of Foundations and their child projects where CLAs are enabled
-      operationId: getProjectSummary
-      parameters:
-        - $ref: "#/parameters/x-request-id"
-        - $ref: "#/parameters/x-acl"
-        - $ref: "#/parameters/x-username"
-        - $ref: "#/parameters/x-email"
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            $ref: '#/definitions/project-summary'
-        '400':
-          $ref: '#/responses/invalid-request'
-        '401':
-          $ref: '#/responses/unauthorized'
-        '403':
-          $ref: '#/responses/forbidden'
-        '404':
-          $ref: '#/responses/not-found'
-        '500':
-          $ref: '#/responses/internal-server-error'
-      tags:
-        - project
-
   /project/enabled/{foundationSFID}:
     get:
       summary: Get CLA enabled projects
@@ -2793,9 +2763,6 @@ definitions:
   project:
     $ref: './common/project.yaml'
 
-  project-summary:
-    $ref: './common/project-summary.yaml'
-
   template:
     $ref: './common/template.yaml'
 
@@ -3407,8 +3374,8 @@ definitions:
 
   active-cla:
     type: object
-    title: Active cla of the company
-    description: details of active cla
+    title: Active CLA of the company
+    description: Details of the active CLA Group
     properties:
       signed_on:
         type: string
@@ -3416,22 +3383,27 @@ definitions:
         example: "2019-07-18T11:38:13.144674+0000"
       project_id:
         type: string
+        description: The CLA Group/Project ID
         x-omitempty: false
         example: "e1e30240-a722-4c82-a648-121681d959c7"
       project_sfid:
         type: string
+        description: The project SalesForce ID
         x-omitempty: false
         example: "a2g17000000hyxNAAA"
       project_name:
         type: string
+        description: The project name
         example: "Appium"
         x-omitempty: false
       project_type:
         type: string
-        example: "Foundation"
+        description: "The project type, typically either 'Project Group' (formerly Foundation) or 'Project'"
+        example: "Project Group"
         x-omitempty: false
       sub_projects:
         type: array
+        description: "The list of sub-projects"
         items:
           type: string
       signatory_name:
