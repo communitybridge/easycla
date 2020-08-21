@@ -99,7 +99,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, params.ProjectSFID, params.Body.UserEmail.String())
 		if err != nil {
-			if err == ErrRoleScopeConflict {
+			if err == ErrCLAManagerDesigneeConflict {
 				msg := fmt.Sprintf("Conflict assigning cla manager role for Project SFID: %s ", params.ProjectSFID)
 				return cla_manager.NewCreateCLAManagerDesigneeByGroupConflict().WithPayload(
 					&models.ErrorResponse{
