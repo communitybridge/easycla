@@ -22,7 +22,8 @@ import (
 
 // constants
 const (
-	Foundation = "Foundation"
+	// FoundationType the SF foundation type string - previously was "Foundation", now "Project Group"
+	FoundationType = "Project Group"
 )
 
 // Service interface defines function of Metrics service
@@ -293,7 +294,7 @@ func (s *service) ListCompanyProjectMetrics(companyID string, projectSFID string
 	if err != nil {
 		return nil, err
 	}
-	if project.ProjectType == Foundation {
+	if project.ProjectType == FoundationType {
 		cgmList, cgerr := s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(projectSFID)
 		if cgerr != nil {
 			return nil, err
