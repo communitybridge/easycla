@@ -7,6 +7,8 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -23,19 +25,26 @@ type Service interface {
 
 // service
 type service struct {
+	v1ProjectService  v1Project.Service
 	projectRepo       v1Project.ProjectRepository
 	projectsClaGroups projects_cla_groups.Repository
 }
 
 // NewService returns an instance of v2 project service
-func NewService(projectRepo v1Project.ProjectRepository, pcgRepo projects_cla_groups.Repository) Service {
+func NewService(v1ProjectService v1Project.Service, projectRepo v1Project.ProjectRepository, pcgRepo projects_cla_groups.Repository) Service {
 	return &service{
+		v1ProjectService:  v1ProjectService,
 		projectRepo:       projectRepo,
 		projectsClaGroups: pcgRepo,
 	}
 }
 
 func (s *service) GetCLAProjectsByID(foundationSFID string) (*models.EnabledClaList, error) {
+	f := logrus.Fields{
+		"functionName":   "v2 project/service/GetCLAProjectsByID",
+		"foundationSFID": foundationSFID,
+	}
+
 	enabledClas := make([]*models.EnabledCla, 0)
 	claGroupsMapping, err := s.projectsClaGroups.GetProjectsIdsForFoundation(foundationSFID)
 	if err != nil {
@@ -58,18 +67,21 @@ func (s *service) GetCLAProjectsByID(foundationSFID string) (*models.EnabledClaL
 			cla := &models.EnabledCla{
 				ProjectSfid: projectSFID,
 			}
+
 			psc := v2ProjectService.GetClient()
 			projectDetails, err := psc.GetProject(projectSFID)
 			if err != nil {
-				log.Warnf("unable to fetch project details of %s from project-service", projectSFID)
+				log.WithFields(f).Warnf("unable to fetch project details of %s from project-service", projectSFID)
 			} else {
 				cla.ProjectName = projectDetails.Name
 				cla.ProjectLogo = projectDetails.ProjectLogo
 				cla.ProjectType = projectDetails.ProjectType
+				cla.FoundationSfid = foundationSFID
 			}
+
 			claGroup, err := s.projectRepo.GetCLAGroupByID(claGroupID, v1Project.DontLoadRepoDetails)
 			if err != nil {
-				log.Warnf("unable to fetch cla-group details of %s", claGroupID)
+				log.WithFields(f).Warnf("unable to fetch cla-group details of %s", claGroupID)
 			} else {
 				cla.CclaEnabled = aws.Bool(claGroup.ProjectCCLAEnabled)
 				cla.IclaEnabled = aws.Bool(claGroup.ProjectICLAEnabled)
@@ -88,5 +100,15 @@ func (s *service) GetCLAProjectsByID(foundationSFID string) (*models.EnabledClaL
 		return enabledClas[i].ProjectName < enabledClas[j].ProjectName
 	})
 
-	return &models.EnabledClaList{List: enabledClas}, nil
+	// Add the foundation level CLA flag
+	foundationLevelCLA, svcErr := s.v1ProjectService.SignedAtFoundationLevel(foundationSFID)
+	if svcErr != nil {
+		log.WithFields(f).Warnf("unable to fetch foundation level CLA status, error: %+v", svcErr)
+		return nil, svcErr
+	}
+
+	return &models.EnabledClaList{
+		FoundationLevelCLA: foundationLevelCLA,
+		List:               enabledClas,
+	}, nil
 }

@@ -234,7 +234,7 @@ func server(localMode bool) http.Handler {
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
 	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo, projectClaGroupRepo)
-	v2ProjectService := v2Project.NewService(projectRepo, projectClaGroupRepo)
+	v2ProjectService := v2Project.NewService(projectService, projectRepo, projectClaGroupRepo)
 	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo, usersService)
 	v2CompanyService := v2Company.NewService(companyService, signaturesRepo, projectRepo, usersRepo, companyRepo, projectClaGroupRepo)
 	v2SignService := sign.NewService(configFile.ClaV1ApiURL, companyRepo, projectRepo, projectClaGroupRepo, companyService)
@@ -257,6 +257,14 @@ func server(localMode bool) http.Handler {
 	})
 	v2ClaGroupService := cla_groups.NewService(projectService, templateService, projectClaGroupRepo, v1ClaManagerService, signaturesService, metricsRepo, gerritService, repositoriesService, eventsService)
 
+	// Initialize the external platform services - these are external APIs that
+	// we download the swagger specification, generate the models, and have
+	//client helper functions
+	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
+	project_service.InitClient(configFile.APIGatewayURL)
+	organization_service.InitClient(configFile.APIGatewayURL, eventsService)
+	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
+
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
 		log.Fatalf("Unable to create new Dynastore session - Error: %v", err)
@@ -267,11 +275,6 @@ func server(localMode bool) http.Handler {
 	// Setup security handlers
 	api.OauthSecurityAuth = authorizer.SecurityAuth
 	v2API.LfAuthAuth = lfxAuth.SwaggerAuth
-
-	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
-	project_service.InitClient(configFile.APIGatewayURL)
-	organization_service.InitClient(configFile.APIGatewayURL, eventsService)
-	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 
 	// Setup our API handlers
 	users.Configure(api, usersService, eventsService)
