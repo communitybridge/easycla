@@ -55,6 +55,10 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
 		projectModel, err := service.GetCLAGroupByID(params.ProjectSfdcID)
 		if err != nil {
+
+			if err.Error() == "project does not exist" {
+				return project.NewGetProjectByIDNotFound().WithPayload(errorResponse(err))
+			}
 			return project.NewGetProjectByIDBadRequest().WithPayload(errorResponse(err))
 		}
 
@@ -102,6 +106,12 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		err = copier.Copy(results, projectModel)
 		if err != nil {
 			return project.NewGetProjectsByExternalIDInternalServerError().WithPayload(errorResponse(err))
+		}
+		if results.Projects == nil {
+			return project.NewGetProjectsByExternalIDNotFound().WithPayload(&models.ErrorResponse{
+				Code:    "404",
+				Message: fmt.Sprintf("project not found with id. [%s]", params.ExternalID),
+			})
 		}
 		return project.NewGetProjectsByExternalIDOK().WithPayload(results)
 	})

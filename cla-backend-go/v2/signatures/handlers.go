@@ -293,6 +293,13 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			return signatures.NewGetProjectSignaturesBadRequest()
 		}
 
+		if len(resp.Signatures) == 0 {
+			return signatures.NewGetProjectSignaturesNotFound().WithPayload(&models.ErrorResponse{
+				Code:    "404",
+				Message: fmt.Sprintf("Signatures not found with given clagroupID. [%s]", params.ClaGroupID),
+			})
+		}
+
 		return signatures.NewGetProjectSignaturesOK().WithPayload(resp)
 	})
 
