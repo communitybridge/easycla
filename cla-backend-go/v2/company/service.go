@@ -56,7 +56,8 @@ const (
 	HugePageSize = int64(10000)
 	// LoadRepoDetails     = true
 	DontLoadRepoDetails = false
-	FoundationType      = "Foundation"
+	// FoundationType the SF foundation type string - previously was "Foundation", now "Project Group"
+	FoundationType = "Project Group"
 	// ProjectType         = "Project"
 )
 
