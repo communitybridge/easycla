@@ -100,7 +100,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, params.ProjectSFID, params.Body.UserEmail.String())
 		if err != nil {
 			if err == ErrRoleScopeConflict {
-				msg := fmt.Sprintf("Conflict assigning cla manager designee role for Project SFID: %s ", params.ProjectSFID)
+				msg := fmt.Sprintf("Conflict assigning cla manager role for Project SFID: %s ", params.ProjectSFID)
 				return cla_manager.NewCreateCLAManagerDesigneeByGroupConflict().WithPayload(
 					&models.ErrorResponse{
 						Message: msg,
@@ -166,7 +166,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 								Code:    Conflict,
 							})
 					}
-					msg := fmt.Sprintf("Creating cla manager designee failed for Project SFID: %s ", pcg.ProjectSFID)
+					msg := fmt.Sprintf("Creating cla manager failed for Project SFID: %s ", pcg.ProjectSFID)
 					log.WithFields(f).Warn(msg)
 					return cla_manager.NewCreateCLAManagerDesigneeByGroupBadRequest().WithPayload(
 						&models.ErrorResponse{
