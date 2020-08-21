@@ -73,11 +73,20 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
 			if err != nil {
 				if err == v1Company.ErrCompanyDoesNotExist {
-					return company.NewGetCompanyProjectActiveClaNotFound()
+					return company.NewGetCompanyProjectActiveClaNotFound().WithPayload(&models.ErrorResponse{
+						Code:    "404",
+						Message: fmt.Sprintf("Company not found with given ID. [%s]", params.CompanySFID),
+					})
 				}
 			}
 			result, err := service.GetCompanyProjectActiveCLAs(comp.CompanyID, params.ProjectSFID)
 			if err != nil {
+				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
+					return company.NewGetCompanyProjectActiveClaNotFound().WithPayload(&models.ErrorResponse{
+						Code:    "404",
+						Message: fmt.Sprintf("clagroup not found with given ID. [%s]", params.ProjectSFID),
+					})
+				}
 				return company.NewGetCompanyProjectActiveClaBadRequest().WithPayload(errorResponse(err))
 			}
 			return company.NewGetCompanyProjectActiveClaOK().WithPayload(result)
