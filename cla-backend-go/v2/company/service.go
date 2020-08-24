@@ -233,26 +233,26 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userE
 	if lfErr != nil {
 		msg := fmt.Sprintf("User : %s has no LFID", userEmail)
 		log.Warn(msg)
-		return nil, ErrNoLfUsername
 	}
+	if lfUser != nil {
+		// Get Role ID
+		roleID, designeeErr := acsClient.GetRoleID("company-owner")
+		if designeeErr != nil {
+			msg := "Problem getting role ID for company-owner"
+			log.WithFields(f).Warn(msg)
+			return nil, designeeErr
+		}
 
-	// Get Role ID
-	roleID, designeeErr := acsClient.GetRoleID("company-owner")
-	if designeeErr != nil {
-		msg := "Problem getting role ID for company-owner"
-		log.WithFields(f).Warn(msg)
-		return nil, designeeErr
+		err = orgClient.CreateOrgUserRoleOrgScope(userEmail, org.ID, roleID)
+		if err != nil {
+			log.WithFields(f).Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", userEmail, err)
+			return nil, err
+		}
+		log.WithFields(f).Debugf("User :%s has been assigned the company-owner role to organization: %s ", userEmail, org.Name)
+		//Send Email to User with instructions to complete Company profile
+		log.WithFields(f).Debugf("Sending Email to user :%s to complete setup for newly created Org: %s ", userEmail, org.Name)
+		sendEmailToUserCompanyProfile(org.Name, userEmail, lfUser.Username, LFXPortalURL)
 	}
-
-	err = orgClient.CreateOrgUserRoleOrgScope(userEmail, org.ID, roleID)
-	if err != nil {
-		log.WithFields(f).Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", userEmail, err)
-		return nil, err
-	}
-	log.WithFields(f).Debugf("User :%s has been assigned the company-owner role to organization: %s ", userEmail, org.Name)
-	//Send Email to User with instructions to complete Company profile
-	log.WithFields(f).Debugf("Sending Email to user :%s to complete setup for newly created Org: %s ", userEmail, org.Name)
-	sendEmailToUserCompanyProfile(org.Name, userEmail, lfUser.Username, LFXPortalURL)
 
 	// Create Easy CLA Company
 	log.WithFields(f).Debugf("Creating EasyCLA company: %s ", companyName)
