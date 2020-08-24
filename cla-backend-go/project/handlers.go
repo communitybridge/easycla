@@ -252,9 +252,9 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 	// Update Project By Name
 	api.ProjectUpdateProjectHandler = project.UpdateProjectHandlerFunc(func(projectParams project.UpdateProjectParams, claUser *user.CLAUser) middleware.Responder {
 
-		exitingModel, getErr := service.GetCLAGroupByName(projectParams.Body.ProjectName)
+		exitingModel, getErr := service.GetCLAGroupByID(projectParams.Body.ProjectID)
 		if getErr != nil {
-			msg := fmt.Sprintf("Error querying the project by name, error: %+v", getErr)
+			msg := fmt.Sprintf("Error querying the project by ID, error: %+v", getErr)
 			log.Warnf("Update Project Failed - %s", msg)
 			return project.NewCreateProjectBadRequest().WithPayload(&models.ErrorResponse{
 				Code:    "500",
@@ -264,7 +264,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 		// If the project with the same name exists...
 		if exitingModel == nil {
-			msg := fmt.Sprintf("unable to locate project with name: %s", projectParams.Body.ProjectName)
+			msg := fmt.Sprintf("unable to locate project with ID: %s", projectParams.Body.ProjectID)
 			log.Warn(msg)
 			return project.NewUpdateProjectNotFound().WithPayload(&models.ErrorResponse{
 				Code:    "404",
