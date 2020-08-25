@@ -428,14 +428,14 @@ def get_contributor_whitelist_update_email_content(project, action, company_name
     if action == 'deleted':
         preposition = 'from'
     body = f"""
-<p>Hello,</p>
-<p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
-<p>You have been {action} {preposition} the Allow List of {company_name} for {project_name} by
-CLA Manager {cla_manager}. This means that you are now authorized to contribute to {project_name}
-on behalf of {company_name}.</p>
-<p>If you had previously submitted one or more pull requests to {project_name} that had failed, you should 
-close and re-open the pull request to force a recheck by the EasyCLA system.</p>
-{get_email_help_content(project.get_version() == 'v2')}
+<p>Hello,</p> \
+<p>This is a notification email from EasyCLA regarding the project {project_name}.</p> \
+<p>You have been {action} {preposition} the Allow List of {company_name} for {project_name} by \
+CLA Manager {cla_manager}. This means that you are now authorized to contribute to {project_name} \
+on behalf of {company_name}.</p> \
+<p>If you had previously submitted one or more pull requests to {project_name} that had failed, you should \
+close and re-open the pull request to force a recheck by the EasyCLA system.</p> \
+{get_email_help_content(project.get_version() == 'v2')} \
 {get_email_sign_off_content()}"""
     body = '<p>' + body.replace('\n', '<br>') + '</p>'
     recipients = [email]
@@ -449,13 +449,13 @@ def approval_list_change_email_content(project, company_name, project_name, cla_
     changes = ["<li>" + txt + "</li>" for txt in changes]
     change_string = "<ul>\n" + "\n".join(changes) + "\n</ul>\n"
     body = f"""
-<p>Hello,</p>
-<p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
-<p>The EasyCLA approval list for {company_name} for project {project_name} was modified.</p>
-<p>The modification was as follows:</p>
-{change_string}
-<p>Contributors with previously failed pull requests to {project_name} can close
-and re-open the pull request to force a recheck by the EasyCLA system.</p>
+<p>Hello,</p> \
+<p>This is a notification email from EasyCLA regarding the project {project_name}.</p> \
+<p>The EasyCLA approval list for {company_name} for project {project_name} was modified.</p> \
+<p>The modification was as follows:</p> \
+{change_string} \
+<p>Contributors with previously failed pull requests to {project_name} can close \
+and re-open the pull request to force a recheck by the EasyCLA system.</p> \
 {get_email_help_content(project.get_version() == 'v2')}
 {get_email_sign_off_content()}
 """
@@ -798,7 +798,7 @@ def get_project_employee_signatures(company_id, project_id):
     """
     Get all employee signatures for project specified and a company specified
 
-    :param company_id: The ID of the company in question
+    :param company_id: The ID of the company in question 
     :param project_id: The ID of the project in question
     :type company_id: string
     :type project_id: string
@@ -865,11 +865,11 @@ def add_cla_manager_email_content(lfid, project, company, managers):
     manager_list = ['%s <%s>' %(mgr.get('name', ' '), mgr.get('email', ' ')) for mgr in managers]
     manager_list_str = '-'.join(manager_list) + '\n'
     body = f"""
-    <p>Hello {lfid}, </p>
-    <p>This is a notification email from EasyCLA regarding the project {project.get_project_name()}.</p>
-    <p>You have been granted access to the project {project.get_project_name()} for the organization 
-       {company.get_company_name()}.</p>
-    <p> If you have further questions, please contact one of the existing CLA Managers: </p>
+    <p>Hello {lfid}, </p> \
+    <p>This is a notification email from EasyCLA regarding the project {project.get_project_name()}.</p> \
+    <p>You have been granted access to the project {project.get_project_name()} for the organization \
+       {company.get_company_name()}.</p> \
+    <p> If you have further questions, please contact one of the existing CLA Managers: </p> \
     {manager_list_str}
     {get_email_help_content(project.get_version() == 'v2')}
     {get_email_sign_off_content()}
@@ -891,11 +891,11 @@ def remove_cla_manager_email_content(lfid, project, company, managers):
     manager_list = ['%s <%s>' %(mgr.get('name', ' '), mgr.get('email', ' ')) for mgr in managers]
     manager_list_str = '-'.join(manager_list) + '\n'
     body = f"""
-    <p> Hello {lfid}, </p>
-    <p>This is a notification email from EasyCLA regarding the project {project.get_project_name()}.</p>
-    <p>You have been removed as a CLA Manager from the project: {project.get_project_name()} for the organization 
-       {company.get_company_name()} </p>
-    <p> If you have further questions, please contact one of the existing CLA Managers: </p>
+    <p> Hello {lfid}, </p> \
+    <p>This is a notification email from EasyCLA regarding the project {project.get_project_name()}.</p> \
+    <p>You have been removed as a CLA Manager from the project: {project.get_project_name()} for the organization \
+       {company.get_company_name()} </p> \
+    <p> If you have further questions, please contact one of the existing CLA Managers: </p> \
     {manager_list_str}
     {get_email_help_content(project.get_version() == 'v2')}
     {get_email_sign_off_content()}
