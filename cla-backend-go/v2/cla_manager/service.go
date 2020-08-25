@@ -903,7 +903,15 @@ func getFormattedUserDetails(model *v1Models.User) string {
 func (s *service) isSigned(companyID string, projectID string) (bool, error) {
 	isSigned := false
 	// Check for company CLA managers
-	claManagers, err := s.v2CompanyService.GetCompanyProjectCLAManagers(companyID, projectID)
+
+	v1Company, companyErr := s.companyService.GetCompanyByExternalID(companyID)
+	if companyErr != nil {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - %s", companyErr)
+		log.Warn(msg)
+		return isSigned, companyErr
+	}
+
+	claManagers, err := s.v2CompanyService.GetCompanyProjectCLAManagers(v1Company.CompanyID, projectID)
 	if err != nil {
 		msg := fmt.Sprintf("EasyCLA - 400 Bad Request : %v", err)
 		log.Warn(msg)
