@@ -21,3 +21,14 @@ func ValidCompanyName(name string) bool {
 	r := regexp.MustCompile(`^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$`)
 	return r.MatchString(name)
 }
+
+// ValidWebsite is a routine to indicate if the website is a valid URL
+func ValidWebsite(website string) bool {
+	if len(website) < 5 || len(website) > 255 {
+		return false
+	}
+
+	// \w represents any character from the class [A-Za-z0-9_], mnemonic: 'word'.
+	r := regexp.MustCompile(`^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$`)
+	return r.MatchString(website)
+}

@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestValidCompanyName is a collection of unit tests for the ValidCompanyName utility function
 func TestValidCompanyName(t *testing.T) {
 	// Valid company names
 	validInput := []string{
@@ -46,5 +47,51 @@ func TestValidCompanyName(t *testing.T) {
 
 	for _, str := range inValidInput {
 		assert.False(t, utils.ValidCompanyName(str), fmt.Sprintf("ValidCompanyName - %s", str))
+	}
+}
+
+// TestValidWebsite is a collection of unit tests for the ValidWebsite utility function
+func TestValidWebsite(t *testing.T) {
+	// Valid websites
+	validInput := []string{
+		"http://www.Augnewcompanynirupamav.com",
+		"https://Augnewcompanynirupamav.com",
+		"https://www.Augnewcompanynirupamav.com",
+		"http://www.Augnewcompanynirupamav.com?input=value&foo=bar",
+		"Augnewcompanynirupamav.com",
+		"Augnewcompanynirupamav.io",
+		"Augnewcompanynirupamav.edu",
+		"Augnewcompanynirupamav.in",
+	}
+
+	for _, str := range validInput {
+		utils.ValidWebsite(str)
+		assert.True(t, utils.ValidWebsite(str), fmt.Sprintf("ValidWebsite - %s", str))
+	}
+
+	var longString string
+	for i := 1; i <= 256; i++ {
+		longString += "a"
+	}
+	//log.Printf("longString = %d", len(longString))
+
+	// Invalid company names
+	inValidInput := []string{
+		"Augnewcompanynirupamav",
+		"yahoo",
+		"!invalid name",
+		".test",
+		"?ááÀÁ test",
+		"",         // min 5 chars
+		"1",        // min 5 chars
+		"12",       // min 5 chars
+		"123",      // min 5 chars
+		"1234",     // min 5 chars
+		"a.ai",     // min 5.chars
+		longString, // max 255 chars
+	}
+
+	for _, str := range inValidInput {
+		assert.False(t, utils.ValidWebsite(str), fmt.Sprintf("ValidWebsite - %s", str))
 	}
 }
