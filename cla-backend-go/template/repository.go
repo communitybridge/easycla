@@ -34,6 +34,7 @@ type Repository interface {
 	GetTemplates() ([]models.Template, error)
 	GetTemplate(templateID string) (models.Template, error)
 	GetCLAGroup(claGroupID string) (*models.Project, error)
+	GetCLADocuments(claGroupID string, claType string) ([]models.ProjectDocument, error)
 	UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template, pdfUrls models.TemplatePdfs, projectCCLAEnabled, projectICLAEnabled bool) error
 }
 
@@ -129,6 +130,62 @@ func (r repository) GetTemplate(templateID string) (models.Template, error) {
 // to connect to postgres
 func (r repository) GetCLAGroup(claGroupID string) (*models.Project, error) {
 	log.Debugf("GetCLAGroup - claGroupID: %s", claGroupID)
+
+	dbModel, err := r.fetchCLAGroup(claGroupID)
+	if err != nil {
+		return nil, err
+	}
+	return r.buildProjectModel(*dbModel), nil
+}
+
+// GetCLADocuments fetches the cla documents inside of the CLAgroup, it's separate method for perf reasons
+func (r repository) GetCLADocuments(claGroupID string, claType string) ([]models.ProjectDocument, error) {
+	log.Debugf("GetCLADocuments - claGroupID: %s - claType : %s", claGroupID, claType)
+	dbModel, err := r.fetchCLAGroup(claGroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	var projectDocuments []models.ProjectDocument
+
+	switch claType {
+	case "icla":
+		projectDocuments = r.buildProjectDocuments(dbModel.ProjectIndividualDocuments)
+	case "ccla":
+		projectDocuments = r.buildProjectDocuments(dbModel.ProjectCorporateDocuments)
+	default:
+		return nil, fmt.Errorf("not supported cla type supplied")
+	}
+
+	return projectDocuments, nil
+}
+
+func (r repository) buildProjectDocuments(dbProjectDocumentModels []DBProjectDocumentModel) []models.ProjectDocument {
+	if len(dbProjectDocumentModels) == 0 {
+		return nil
+	}
+
+	var projectDocuments []models.ProjectDocument
+	for _, dbProjectDocumentModel := range dbProjectDocumentModels {
+		projectDocuments = append(projectDocuments, models.ProjectDocument{
+			DocumentAuthorName:      dbProjectDocumentModel.DocumentAuthorName,
+			DocumentContentType:     dbProjectDocumentModel.DocumentContentType,
+			DocumentCreationDate:    dbProjectDocumentModel.DocumentCreationDate,
+			DocumentFileID:          dbProjectDocumentModel.DocumentFileID,
+			DocumentLegalEntityName: dbProjectDocumentModel.DocumentLegalEntityName,
+			DocumentMajorVersion:    dbProjectDocumentModel.DocumentMajorVersion,
+			DocumentMinorVersion:    dbProjectDocumentModel.DocumentMinorVersion,
+			DocumentName:            dbProjectDocumentModel.DocumentName,
+			DocumentPreamble:        dbProjectDocumentModel.DocumentPreamble,
+			DocumentS3URL:           dbProjectDocumentModel.DocumentS3URL,
+		})
+	}
+
+	return projectDocuments
+}
+
+// fetchCLAGroup brings back the CLA db model from dynamodb
+func (r repository) fetchCLAGroup(claGroupID string) (*DBProjectModel, error) {
 	var dbModel DBProjectModel
 	tableName := fmt.Sprintf("cla-%s-projects", r.stage)
 
@@ -150,7 +207,7 @@ func (r repository) GetCLAGroup(claGroupID string) (*models.Project, error) {
 		return nil, err
 	}
 
-	return r.buildProjectModel(dbModel), nil
+	return &dbModel, nil
 }
 
 // buildProjectModel maps the database model to the API response model

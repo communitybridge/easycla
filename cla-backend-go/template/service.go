@@ -10,6 +10,8 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/communitybridge/easycla/cla-backend-go/docraptor"
@@ -21,11 +23,17 @@ import (
 	"github.com/aymerick/raymond"
 )
 
+const (
+	claTypeICLA = "icla"
+	claTypeCCLA = "ccla"
+)
+
 // Service interface
 type Service interface {
 	GetTemplates(ctx context.Context) ([]models.Template, error)
 	CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaGroupTemplate) (models.TemplatePdfs, error)
 	CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemplate, templateFor string) ([]byte, error)
+	GetCLATemplatePreview(ctx context.Context, claGroupID, claType string, watermark bool) ([]byte, error)
 }
 
 type service struct {
@@ -91,9 +99,9 @@ func (s service) CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemp
 	}
 	var templateHTML string
 	switch templateFor {
-	case "icla":
+	case claTypeICLA:
 		templateHTML = iclaTemplateHTML
-	case "ccla":
+	case claTypeCCLA:
 		templateHTML = cclaTemplateHTML
 	default:
 		return nil, errors.New("invalid value of template_for")
@@ -133,7 +141,6 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	}
 
 	bucket := fmt.Sprintf("cla-signature-files-%s", s.stage)
-	fileNameTemplate := "contract-group/%s/template/%s"
 
 	// Create PDF
 	var pdfUrls models.TemplatePdfs
@@ -152,7 +159,7 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 				log.Warnf("error closing ICLA PDF, error: %v", closeErr)
 			}
 		}()
-		iclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "icla.pdf")
+		iclaFileName := s.generateTemplateS3FilePath(claGroupID, claTypeICLA)
 		iclaFileURL, err = s.SaveTemplateToS3(bucket, iclaFileName, iclaPdf)
 		if err != nil {
 			log.Warnf("Problem uploading ICLA PDF: %s to s3, error: %v - returning empty template PDFs", iclaFileName, err)
@@ -173,7 +180,7 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 				log.Warnf("error closing CCLA PDF, error: %v", closeErr)
 			}
 		}()
-		cclaFileName := fmt.Sprintf(fileNameTemplate, claGroupID, "ccla.pdf")
+		cclaFileName := s.generateTemplateS3FilePath(claGroupID, claTypeCCLA)
 		cclaFileURL, err = s.SaveTemplateToS3(bucket, cclaFileName, cclaPdf)
 		if err != nil {
 			log.Warnf("Problem uploading CCLA PDF: %s to s3, error: %v - returning empty template PDFs", cclaFileName, err)
@@ -205,6 +212,74 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	}
 
 	return pdfUrls, nil
+}
+
+func (s service) GetCLATemplatePreview(ctx context.Context, claGroupID, claType string, watermark bool) ([]byte, error) {
+	// Verify claGroupID matches an existing CLA Group
+	claGroup, err := s.templateRepo.GetCLAGroup(claGroupID)
+	if err != nil {
+		log.Warnf("unable to fetch CLA group by id: %s, error: %v - returning empty PDF", claGroupID, err)
+		return nil, err
+	}
+
+	var projectDocuments []models.ProjectDocument
+
+	switch claType {
+	case claTypeICLA:
+		if !claGroup.ProjectICLAEnabled {
+			err = fmt.Errorf("icla required for the group id : %s, but not enabled", claGroupID)
+			log.WithError(err)
+			return nil, err
+		}
+
+	case claTypeCCLA:
+		if !claGroup.ProjectCCLAEnabled {
+			err = fmt.Errorf("ccla required for the group id : %s, but not enabled", claGroupID)
+			log.WithError(err)
+			return nil, err
+		}
+
+	default:
+		err = fmt.Errorf("not supported cla type provided : %s", claType)
+		return nil, err
+	}
+
+	projectDocuments, err = s.templateRepo.GetCLADocuments(claGroupID, claType)
+	if err != nil {
+		log.Warnf("fetching icla document failed for claGroupID : %s : %v", claGroupID, err)
+		return nil, err
+	}
+
+	// process the documents and try to fetch the document from s3
+	if len(projectDocuments) == 0 {
+		err = fmt.Errorf("no documents found in groupID : %s", claGroupID)
+		return nil, err
+	}
+
+	doc := projectDocuments[0]
+	pdfS3URL := doc.DocumentS3URL
+	if pdfS3URL == "" {
+		err = fmt.Errorf("s3 url is empty for groupID : %s and document %s", claGroupID, doc.DocumentFileID)
+		return nil, err
+	}
+
+	//fetch the document from s3 at this stage
+	fileName := s.generateTemplateS3FilePath(claGroupID, claType)
+	b, err := utils.DownloadFromS3(fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	// do the watermarking here if enabled
+	if watermark {
+		b, err = utils.WatermarkPdf(b, "Not for Execution")
+		if err != nil {
+			log.WithError(err)
+			return nil, err
+		}
+	}
+
+	return b, nil
 }
 
 // InjectProjectInformationIntoTemplate
@@ -244,6 +319,21 @@ func (s service) InjectProjectInformationIntoTemplate(template models.Template, 
 	}
 
 	return iclaTemplateHTML, cclaTemplateHTML, nil
+}
+
+func (s service) generateTemplateS3FilePath(claGroupID, claType string) string {
+	fileNameTemplate := "contract-group/%s/template/%s"
+	var ext string
+	switch claType {
+	case claTypeICLA:
+		ext = "icla.pdf"
+	case claTypeCCLA:
+		ext = "ccla.pdf"
+	default:
+		return ""
+	}
+	fileName := fmt.Sprintf(fileNameTemplate, claGroupID, ext)
+	return fileName
 }
 
 // SaveTemplateToS3
