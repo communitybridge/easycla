@@ -564,7 +564,7 @@ func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAMa
 	if foundationSFID != "" {
 		claManagerDesignee, err := s.CreateCLAManagerDesignee(params.CompanySFID, foundationSFID, params.Body.UserEmail.String())
 		if err != nil {
-			if err == ErrRoleScopeConflict {
+			if err == ErrCLAManagerDesigneeConflict {
 				msg := fmt.Sprintf("Conflict assigning cla manager designee role for Foundation SFID: %s ", foundationSFID)
 				return nil, msg, err
 			}
@@ -579,7 +579,7 @@ func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAMa
 		if foundationSFID != pcg.ProjectSFID {
 			claManagerDesignee, err := s.CreateCLAManagerDesignee(params.CompanySFID, pcg.ProjectSFID, params.Body.UserEmail.String())
 			if err != nil {
-				if err == ErrRoleScopeConflict {
+				if err == ErrCLAManagerDesigneeConflict {
 					msg := fmt.Sprintf("Conflict assigning cla manager designee role for Project SFID: %s ", pcg.ProjectSFID)
 					return nil, msg, err
 				}
