@@ -6,6 +6,8 @@ package main
 import (
 	"os"
 
+	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/template"
+
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/company"
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/health"
 
@@ -91,6 +93,7 @@ func main() {
 
 	company.NewTestBehaviour(v2APIURL, auth0User1Config).RunAllTests()
 	health.NewTestBehaviour(v2APIURL, auth0User1Config).RunAllTests()
+	template.NewTestBehaviour(v2APIURL, auth0User1Config).RunAllTests()
 	cla_manager.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
 	signatures.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
 	approval_list.NewTestBehaviour(v2APIURL, auth0User1Config, auth0User2Config, auth0User3Config, auth0User4Config).RunAllTests()
