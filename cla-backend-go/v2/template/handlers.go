@@ -84,6 +84,21 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 			}
 		})
 	})
+
+	api.TemplateGetCLATemplatePreviewHandler = template.GetCLATemplatePreviewHandlerFunc(func(params template.GetCLATemplatePreviewParams, user *auth.User) middleware.Responder {
+		pdf, err := service.GetCLATemplatePreview(params.HTTPRequest.Context(), params.ClaGroupID, params.ClaType, *params.Watermark)
+		if err != nil {
+			log.Warnf("Error getting PDFs for provided clagroupID : %s, error: %v", params.ClaGroupID, err)
+			return writeResponse(http.StatusBadRequest, runtime.JSONMime, runtime.JSONProducer(), errorResponse(err))
+		}
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+			rw.WriteHeader(http.StatusOK)
+			_, err := rw.Write(pdf)
+			if err != nil {
+				log.Warnf("Error writing pdf, error: %v", err)
+			}
+		})
+	})
 }
 
 type codedResponse interface {
