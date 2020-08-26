@@ -155,7 +155,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 
 			designeeScopes, msg, err := service.CreateCLAManagerDesigneeByGroup(params, projectCLAGroups, f)
 			if err != nil {
-				if err == ErrRoleScopeConflict {
+				if err == ErrCLAManagerDesigneeConflict {
 					return cla_manager.NewCreateCLAManagerDesigneeByGroupConflict().WithPayload(
 						&models.ErrorResponse{
 							Message: msg,
