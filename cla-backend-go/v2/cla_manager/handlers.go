@@ -153,30 +153,22 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 
 			}
 
-			var designeeScopes []*models.ClaManagerDesignee
-			for _, pcg := range projectCLAGroups {
-				log.WithFields(f).Debugf("creating CLA Manager Designee for Project SFID: %s", pcg.ProjectSFID)
-				claManagerDesignee, err := service.CreateCLAManagerDesignee(params.CompanySFID, pcg.ProjectSFID, params.Body.UserEmail.String())
-				if err != nil {
-					if err == ErrRoleScopeConflict {
-						msg := fmt.Sprintf("Conflict assigning cla manager designee role for Project SFID: %s ", pcg.ProjectSFID)
-						return cla_manager.NewCreateCLAManagerDesigneeByGroupConflict().WithPayload(
-							&models.ErrorResponse{
-								Message: msg,
-								Code:    Conflict,
-							})
-					}
-					msg := fmt.Sprintf("Creating cla manager failed for Project SFID: %s ", pcg.ProjectSFID)
-					log.WithFields(f).Warn(msg)
-					return cla_manager.NewCreateCLAManagerDesigneeByGroupBadRequest().WithPayload(
+			designeeScopes, msg, err := service.CreateCLAManagerDesigneeByGroup(params, projectCLAGroups, f)
+			if err != nil {
+				if err == ErrRoleScopeConflict {
+					return cla_manager.NewCreateCLAManagerDesigneeByGroupConflict().WithPayload(
 						&models.ErrorResponse{
 							Message: msg,
-							Code:    BadRequest,
+							Code:    Conflict,
 						})
 				}
-				designeeScopes = append(designeeScopes, claManagerDesignee)
+				log.WithFields(f).Warn(msg)
+				return cla_manager.NewCreateCLAManagerDesigneeByGroupBadRequest().WithPayload(
+					&models.ErrorResponse{
+						Message: msg,
+						Code:    BadRequest,
+					})
 			}
-
 			return cla_manager.NewCreateCLAManagerDesigneeByGroupOK().WithPayload(&models.ClaManagerDesignees{
 				List: designeeScopes,
 			})

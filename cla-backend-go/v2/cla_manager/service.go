@@ -89,6 +89,7 @@ type Service interface {
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
 	CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, requestEmail, LfxPortalURL string) (*models.ClaManagerDesignee, error)
 	NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerList) error
+	CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error)
 }
 
 // NewService returns instance of CLA Manager service
@@ -554,6 +555,42 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 		ProjectName: projectSF.Name,
 	}
 	return claManagerDesignee, nil
+}
+
+//CreateCLAManagerDesigneeByGroup creates designee by group for cla manager prospect
+func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error) {
+	var designeeScopes []*models.ClaManagerDesignee
+	foundationSFID := projectCLAGroups[0].FoundationSFID
+	if foundationSFID != "" {
+		claManagerDesignee, err := s.CreateCLAManagerDesignee(params.CompanySFID, foundationSFID, params.Body.UserEmail.String())
+		if err != nil {
+			if err == ErrRoleScopeConflict {
+				msg := fmt.Sprintf("Conflict assigning cla manager designee role for Foundation SFID: %s ", foundationSFID)
+				return nil, msg, err
+			}
+			msg := fmt.Sprintf("Creating cla manager failed for Foundation SFID: %s ", foundationSFID)
+			return nil, msg, err
+		}
+		designeeScopes = append(designeeScopes, claManagerDesignee)
+	}
+
+	for _, pcg := range projectCLAGroups {
+		log.WithFields(f).Debugf("creating CLA Manager Designee for Project SFID: %s", pcg.ProjectSFID)
+		if foundationSFID != pcg.ProjectSFID {
+			claManagerDesignee, err := s.CreateCLAManagerDesignee(params.CompanySFID, pcg.ProjectSFID, params.Body.UserEmail.String())
+			if err != nil {
+				if err == ErrRoleScopeConflict {
+					msg := fmt.Sprintf("Conflict assigning cla manager designee role for Project SFID: %s ", pcg.ProjectSFID)
+					return nil, msg, err
+				}
+				msg := fmt.Sprintf("Creating cla manager failed for Project SFID: %s ", pcg.ProjectSFID)
+				return nil, msg, err
+			}
+			designeeScopes = append(designeeScopes, claManagerDesignee)
+		}
+
+	}
+	return designeeScopes, "", nil
 }
 
 func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, requestEmail, LfxPortalURL string) (*models.ClaManagerDesignee, error) {
