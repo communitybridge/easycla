@@ -214,6 +214,7 @@ provider:
 
   environment:
     STAGE: ${self:provider.stage}
+    HOME: /tmp
     REGION: us-east-1
     DYNAMODB_AWS_REGION: us-east-1
     GH_APP_PRIVATE_SECRET: ${file(./env.json):gh-app-private-key, ssm:/cla-gh-app-private-key-${opt:stage}~true}
