@@ -1849,7 +1849,9 @@ paths:
             properties:
               fullName:
                 type: string
-                pattern: '^[a-zA-Z0-9 ]{1,60}$'
+                pattern: '^(\w+( +\w+)*)$'
+                minLength: 1
+                maxLength: 60
               userEmail:
                 $ref: './common/properties/email.yaml'
                 description: CLA Manager Designee email
