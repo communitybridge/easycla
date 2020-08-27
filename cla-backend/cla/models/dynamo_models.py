@@ -474,6 +474,7 @@ class CLAGroupIDIndex(GlobalSecondaryIndex):
 
     cla_group_id = UnicodeAttribute(hash_key=True)
 
+
 class CompanyIDProjectIDIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying by company-id
@@ -485,7 +486,7 @@ class CompanyIDProjectIDIndex(GlobalSecondaryIndex):
         write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
         read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
         projection = AllProjection()
- 
+
     company_id = UnicodeAttribute(hash_key=True)
     project_id = UnicodeAttribute(range_key=True)
 
@@ -1857,6 +1858,8 @@ class RepositoryModel(BaseModel):
     project_sfid = UnicodeAttribute(null=True)
     repository_external_index = ExternalRepositoryIndex()
     repository_sfdc_index = SFDCRepositoryIndex()
+    enabled = BooleanAttribute(default=False)
+    note = UnicodeAttribute()
 
 
 class Repository(model_interfaces.Repository):
@@ -1930,6 +1933,12 @@ class Repository(model_interfaces.Repository):
     def get_repository_organization_name(self):
         return self.model.repository_organization_name
 
+    def get_enabled(self):
+        return self.model.enabled
+
+    def get_note(self):
+        return self.model.note
+
     def set_repository_id(self, repo_id):
         self.model.repository_id = str(repo_id)
 
@@ -1957,6 +1966,18 @@ class Repository(model_interfaces.Repository):
 
     def set_repository_organization_name(self, organization_name):
         self.model.repository_organization_name = organization_name
+
+    def set_enabled(self, enabled):
+        self.model.enabled = enabled
+
+    def set_note(self, note):
+        self.model.note = note
+
+    def add_note(self, note):
+        if self.model.note is None:
+            self.model.note = note
+        else:
+            self.model.note = self.model.note + ' ' + note
 
     def get_repositories_by_cla_group_id(self, cla_group_id):
         repository_generator = self.model.repository_project_index.query(str(cla_group_id))
@@ -2747,6 +2768,7 @@ class ProjectCLAGroupModel(BaseModel):
     """
     Represents the lookuptable for clagroup and salesforce projects
     """
+
     class Meta:
         """Meta class for ProjectCLAGroup. """
 
@@ -2770,6 +2792,7 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
     """
     ORM-agnostic wrapper for the DynamoDB ProjectCLAGroup model.
     """
+
     def __init__(self, project_sfid=None, project_name=None,
                  foundation_sfid=None, foundation_name=None,
                  cla_group_id=None, cla_group_name=None,
@@ -2801,7 +2824,6 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
             f"version: {self.model.version}",
         )
 
-    
     def to_dict(self):
         return dict(self.model)
 
@@ -3198,6 +3220,7 @@ class GitHubOrgModel(BaseModel):
     organization_sfid_index = GithubOrgSFIndex()
     organization_project_id = UnicodeAttribute(null=True)
     organization_company_id = UnicodeAttribute(null=True)
+    auto_enabled = BooleanAttribute(null=True)
 
 
 class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-methods
@@ -3206,7 +3229,7 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
     """
 
     def __init__(
-            self, organization_name=None, organization_installation_id=None, organization_sfid=None,
+            self, organization_name=None, organization_installation_id=None, organization_sfid=None, auto_enabled=False
     ):
         super(GitHubOrg).__init__()
         self.model = GitHubOrgModel()
@@ -3215,14 +3238,16 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
             self.model.organization_name_lower = self.model.organization_name.lower()
         self.model.organization_installation_id = organization_installation_id
         self.model.organization_sfid = organization_sfid
+        self.model.auto_enabled = auto_enabled
 
     def __str__(self):
         return (
-            f"organization id:{self.model.organization_name}, "
-            f"organization installation id: {self.model.organization_installation_id}, "
-            f"organization SFID: {self.model.organization_sfid}, "
-            f"organization project id: {self.model.organization_project_id}, "
-            f"organization company id: {self.model.organization_company_id}"
+            f'organization id:{self.model.organization_name}, '
+            f'organization installation id: {self.model.organization_installation_id}, '
+            f'organization SFID: {self.model.organization_sfid}, '
+            f'organization project id: {self.model.organization_project_id}, '
+            f'organization company id: {self.model.organization_company_id}, '
+            f'auto_enabled: {self.model.auto_enabled}'
         )
 
     def to_dict(self):
@@ -3261,6 +3286,9 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
     def get_organization_name_lower(self):
         return self.model.organization_name_lower
 
+    def get_auto_enabled(self):
+        return self.model.auto_enabled
+
     def set_organization_name(self, organization_name):
         self.model.organization_name = organization_name
         if self.model.organization_name:
@@ -3280,6 +3308,9 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
 
     def set_organization_name_lower(self, organization_name_lower):
         self.model.organization_name_lower = organization_name_lower
+
+    def set_auto_enabled(self, auto_enabled):
+        self.model.auto_enabled = auto_enabled
 
     def get_organization_by_sfid(self, sfid):
         organization_generator = self.model.organization_sfid_index.query(sfid)
@@ -3845,15 +3876,15 @@ class Event(model_interfaces.Event):
 
     @classmethod
     def create_event(
-        cls,
-        event_type=None,
-        event_project_id=None,
-        event_company_id=None,
-        event_project_name=None,
-        event_company_name=None,
-        event_data=None,
-        event_user_id=None,
-        contains_pii=False
+            cls,
+            event_type=None,
+            event_project_id=None,
+            event_company_id=None,
+            event_project_name=None,
+            event_company_name=None,
+            event_data=None,
+            event_user_id=None,
+            contains_pii=False
     ):
         """
         Creates an event returns the newly created event in dict format.
@@ -3914,6 +3945,7 @@ class Event(model_interfaces.Event):
         except Exception as err:
             return {"errors": {"event_id": str(err)}}
 
+
 class CCLAWhitelistRequestModel(BaseModel):
     """
     Represents a CCLAWhitelistRequest in the database
@@ -3925,7 +3957,7 @@ class CCLAWhitelistRequestModel(BaseModel):
         table_name = "cla-{}-ccla-whitelist-requests".format(stage)
         if stage == "local":
             host = "http://localhost:8000"
-        
+
     request_id = UnicodeAttribute(hash_key=True)
     company_id = UnicodeAttribute(null=True)
     company_name = UnicodeAttribute(null=True)
@@ -3938,7 +3970,7 @@ class CCLAWhitelistRequestModel(BaseModel):
     user_github_username = UnicodeAttribute(null=True)
     user_name = UnicodeAttribute(null=True)
     company_id_project_id_index = CompanyIDProjectIDIndex()
-        
+
 
 class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
     """
@@ -3987,13 +4019,13 @@ class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
             f"user_github_username:{self.model.user_github_username}, "
             f"user_name:{self.model.user_name}"
         )
-    
+
     def to_dict(self):
         return dict(self.model)
-    
+
     def save(self):
         return self.model.save()
-    
+
     def load(self, request_id):
         try:
             ccla_whitelist_request = self.model.get(str(request_id))
@@ -4008,67 +4040,67 @@ class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
 
     def get_company_id(self):
         return self.model.company_id
-    
+
     def get_company_name(self):
         return self.model.company_name
-    
+
     def get_project_id(self):
         return self.model.project_id
-    
+
     def get_project_name(self):
         return self.model.project_name
 
     def get_request_status(self):
         return self.model.request_status
-    
+
     def get_user_emails(self):
         return self.model.user_emails
-    
+
     def get_user_id(self):
         return self.model.user_id
-    
+
     def get_user_github_id(self):
         return self.model.user_github_id
-    
+
     def get_user_github_username(self):
         return self.model.user_github_username
-    
+
     def get_user_name(self):
         return self.model.user_name
-    
+
     def set_request_id(self, request_id):
         self.model.request_id = request_id
-    
+
     def set_company_id(self, company_id):
         self.model.company_id = company_id
-    
+
     def set_company_name(self, company_name):
         self.model.company_name = company_name
-    
+
     def set_project_id(self, project_id):
         self.model.project_id = project_id
-    
+
     def set_project_name(self, project_name):
         self.model.project_name = project_name
-    
+
     def set_request_status(self, request_status):
         self.model.request_status = request_status
-    
+
     def set_user_emails(self, user_emails):
         self.model.user_emails = user_emails
-    
+
     def set_user_id(self, user_id):
         self.model.user_id = user_id
-    
+
     def set_user_github_id(self, user_github_id):
         self.model.user_github_id = user_github_id
-    
+
     def set_user_github_username(self, user_github_username):
         self.model.user_github_username = user_github_username
-    
+
     def set_user_name(self, user_name):
         self.model.user_name = user_name
-    
+
     def all(self):
         ccla_whitelist_requests = self.model.scan()
         ret = []
