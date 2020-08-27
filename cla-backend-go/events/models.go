@@ -20,6 +20,7 @@ type Event struct {
 	EventTime              string `dynamodbav:"event_time"`
 	EventTimeEpoch         int64  `dynamodbav:"event_time_epoch"`
 	EventData              string `dynamodbav:"event_data"`
+	EventSummary           string `dynamodbav:"event_summary"`
 	EventFoundationSFID    string `dynamodbav:"event_foundation_sfid"`
 	EventSFProjectName     string `dynamodbav:"event_sf_project_name"`
 	EventProjectSFID       string `dynamodbav:"event_project_sfid"`
@@ -49,6 +50,7 @@ func (e *Event) toEvent() *models.Event { //nolint
 		EventCompanyID:         e.EventCompanyID,
 		EventCompanyName:       e.EventCompanyName,
 		EventData:              e.EventData,
+		EventSummary:           e.EventSummary,
 		EventID:                e.EventID,
 		EventProjectID:         e.EventProjectID,
 		EventProjectExternalID: e.EventProjectExternalID,

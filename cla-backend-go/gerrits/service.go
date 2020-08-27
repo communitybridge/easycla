@@ -71,9 +71,13 @@ func (s service) GetGerrit(gerritID string) (*models.Gerrit, error) {
 }
 
 func (s service) AddGerrit(claGroupID string, projectSFID string, params *models.AddGerritInput) (*models.Gerrit, error) {
-	if params.GroupIDIcla == "" && params.GroupIDCcla == "" || params.GroupIDIcla == params.GroupIDCcla {
+	if params.GroupIDIcla == "" && params.GroupIDCcla == "" {
 		return nil, errors.New("should specify at least a LDAP group for ICLA or CCLA")
 	}
+	if params.GroupIDIcla == params.GroupIDCcla {
+		return nil, errors.New("LDAP group for ICLA and CCLA are same")
+	}
+
 	if params.GerritName == nil {
 		return nil, errors.New("gerrit_name required")
 	}

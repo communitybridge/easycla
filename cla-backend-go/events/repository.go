@@ -111,6 +111,7 @@ func (repo *repository) CreateEvent(event *models.Event) error {
 	addAttribute(input.Item, "event_user_name_lower", strings.ToLower(event.UserName))
 	addAttribute(input.Item, "event_time", currentTimeString)
 	addAttribute(input.Item, "event_data", event.EventData)
+	addAttribute(input.Item, "event_summary", event.EventSummary)
 	addAttribute(input.Item, "event_company_id", event.EventCompanyID)
 	addAttribute(input.Item, "event_company_name", event.EventCompanyName)
 	addAttribute(input.Item, "event_company_name_lower", strings.ToLower(event.EventCompanyName))
@@ -523,6 +524,7 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("event_time"),
 		expression.Name("event_time_epoch"),
 		expression.Name("event_data"),
+		expression.Name("event_summary"),
 		expression.Name("event_project_external_id"),
 	)
 }
