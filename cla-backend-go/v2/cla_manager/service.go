@@ -87,7 +87,7 @@ type Service interface {
 	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
 	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, name string, contributor *v1User.User, lFxPortalURL string) ([]*models.ClaManagerDesignee, error)
 	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
-	CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, requestEmail, LfxPortalURL string) (*models.ClaManagerDesignee, error)
+	CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error)
 	NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerList) error
 	CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error)
 }
@@ -593,7 +593,7 @@ func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAMa
 	return designeeScopes, "", nil
 }
 
-func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, requestEmail, LfxPortalURL string) (*models.ClaManagerDesignee, error) {
+func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error) {
 	orgService := v2OrgService.GetClient()
 
 	isSigned, signedErr := s.isSigned(companyID, projectID)
@@ -670,7 +670,7 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 		msg := fmt.Sprintf("EasyCLA - 404 Not Found - User: %s does not have an LFID ", userEmail)
 		log.Warn(msg)
 		// Send email
-		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, requestEmail, fullName, userEmail, companyModel.ID, "cla-manager-designee")
+		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, authUser.Email, fullName, userEmail, companyModel.ID, "cla-manager-designee")
 		if sendEmailErr != nil {
 			return nil, sendEmailErr
 		}

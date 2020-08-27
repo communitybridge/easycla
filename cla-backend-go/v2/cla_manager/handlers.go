@@ -235,7 +235,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		}
 
 		claManagerDesignee, err := service.CreateCLAManagerRequest(params.Body.ContactAdmin, params.CompanySFID, params.ProjectSFID, params.Body.UserEmail.String(),
-			params.Body.FullName, authUser, *params.XEMAIL, LfxPortalURL)
+			params.Body.FullName, authUser, LfxPortalURL)
 
 		if err != nil {
 			statusCode := buildErrorStatusCode(err)
