@@ -43,4 +43,8 @@ class EventType(Enum):
     IndividualSignatureSigned = "Individual signature signed"
     EmployeeSignatureSigned = "Employee signature signed"
     CompanySignatureSigned = "Company signature signed"
+    RepositoryAdded = "Repository Added"
+    RepositoryRemoved = "Repository Removed"
+    RepositoryDisable = "Repository Disabled"
+    RepositoryEnabled = "Repository Enabled"
 
