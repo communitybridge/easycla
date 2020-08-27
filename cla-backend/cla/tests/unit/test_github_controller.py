@@ -698,10 +698,10 @@ class TestGitHubController(unittest.TestCase):
 
         self.assertEqual(len(sesClient.emails_sent), 2)
         msg1 = sesClient.emails_sent[0]
-        self.assertEqual(msg1['Subject'], 'EasyCLA: Unable to check PRs')
+        self.assertEqual(msg1['Subject'], 'EasyCLA: Unable to check GitHub Pull Requests for CLA Group: None')
         self.assertEqual(msg1['To'], ['pm1@linuxfoundation.org', 'pm2@linuxfoundation.org'])
         msg2 = sesClient.emails_sent[1]
-        self.assertEqual(msg2['Subject'], 'EasyCLA: Unable to check PRs')
+        self.assertEqual(msg2['Subject'], 'EasyCLA: Unable to check GitHub Pull Requests for CLA Group: None')
         self.assertEqual(msg2['To'], ['pm3@linuxfoundation.org'])
 
 

@@ -5,25 +5,43 @@ type: object
 properties:
   dateCreated:
     type: string
+    description: Created date/time
   dateModified:
     type: string
+    description: Last modified date/time
   repositoryExternalID:
     type: string
+    description: The repository ID from the external service
   repositoryID:
     type: string
+    description: The internal repository ID
   repositoryName:
     type: string
+    description: The repository name
   repositoryOrganizationName:
     type: string
+    description: The organization name associated with this repository
   repositoryProjectID:
     type: string
+    description: The CLA Group ID associated with this repository
   repositorySfdcID:
     type: string
   repositoryType:
     type: string
+    description: The repository type - typically github, gerrit or possibly gitlab
   repositoryUrl:
     type: string
+    description: The external repository URL
+  enabled:
+    type: boolean
+    description: Flag to indicate if this repository is enabled or not. Repositories may become disabled if they have been moved or deleted from GitHub.
+    x-omitempty: false
+  note:
+    type: string
+    description: An optional note field to store any additional information about this record.  Helpful for auditing.
   version:
     type: string
+    description: The version identifier for this repository record
   projectSFID:
     type: string
+    description: The project SFID associated with this repository
