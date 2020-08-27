@@ -3011,6 +3011,8 @@ definitions:
         type: string
       logoURL:
         type: string
+      companyID:
+        type: string
 
   cla-manager-distribution:
     type: object
