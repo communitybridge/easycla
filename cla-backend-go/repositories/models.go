@@ -7,18 +7,20 @@ import "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 
 // GithubRepository represent repositories table
 type GithubRepository struct {
-	DateCreated                string `json:"date_created,omitempty"`
-	DateModified               string `json:"date_modified,omitempty"`
-	RepositoryExternalID       string `json:"repository_external_id,omitempty"`
-	RepositoryID               string `json:"repository_id,omitempty"`
-	RepositoryName             string `json:"repository_name,omitempty"`
-	RepositoryOrganizationName string `json:"repository_organization_name,omitempty"`
-	RepositoryProjectID        string `json:"repository_project_id,omitempty"`
-	RepositorySfdcID           string `json:"repository_sfdc_id,omitempty"`
-	RepositoryType             string `json:"repository_type,omitempty"`
-	RepositoryURL              string `json:"repository_url,omitempty"`
-	ProjectSFID                string `json:"project_sfid,omitempty"`
-	Version                    string `json:"version,omitempty"`
+	DateCreated                string `dynamodbav:"date_created" json:"date_created,omitempty"`
+	DateModified               string `dynamodbav:"date_modified" json:"date_modified,omitempty"`
+	RepositoryExternalID       string `dynamodbav:"repository_external_id" json:"repository_external_id,omitempty"`
+	RepositoryID               string `dynamodbav:"repository_id" json:"repository_id,omitempty"`
+	RepositoryName             string `dynamodbav:"repository_name" json:"repository_name,omitempty"`
+	RepositoryOrganizationName string `dynamodbav:"repository_organization_name" json:"repository_organization_name,omitempty"`
+	RepositoryProjectID        string `dynamodbav:"repository_project_id" json:"repository_project_id,omitempty"`
+	RepositorySfdcID           string `dynamodbav:"repository_sfdc_id" json:"repository_sfdc_id,omitempty"`
+	RepositoryType             string `dynamodbav:"repository_type" json:"repository_type,omitempty"`
+	RepositoryURL              string `dynamodbav:"repository_url" json:"repository_url,omitempty"`
+	ProjectSFID                string `dynamodbav:"project_sfid" json:"project_sfid,omitempty"`
+	Enabled                    bool   `dynamodbav:"enabled" json:"enabled"`
+	Note                       string `dynamodbav:"note" json:"note,omitempty"`
+	Version                    string `dynamodbav:"version" json:"version,omitempty"`
 }
 
 func (gr *GithubRepository) toModel() *models.GithubRepository {
@@ -34,6 +36,8 @@ func (gr *GithubRepository) toModel() *models.GithubRepository {
 		RepositoryType:             gr.RepositoryType,
 		RepositoryURL:              gr.RepositoryURL,
 		ProjectSFID:                gr.ProjectSFID,
+		Enabled:                    gr.Enabled,
+		Note:                       gr.Note,
 		Version:                    gr.Version,
 	}
 }

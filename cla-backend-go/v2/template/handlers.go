@@ -85,7 +85,7 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 		})
 	})
 
-	api.TemplateGetCLATemplatePreviewHandler = template.GetCLATemplatePreviewHandlerFunc(func(params template.GetCLATemplatePreviewParams, user *auth.User) middleware.Responder {
+	api.TemplateGetCLATemplatePreviewHandler = template.GetCLATemplatePreviewHandlerFunc(func(params template.GetCLATemplatePreviewParams) middleware.Responder {
 		pdf, err := service.GetCLATemplatePreview(params.HTTPRequest.Context(), params.ClaGroupID, params.ClaType, *params.Watermark)
 		if err != nil {
 			log.Warnf("Error getting PDFs for provided clagroupID : %s, error: %v", params.ClaGroupID, err)

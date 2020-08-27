@@ -987,9 +987,10 @@ paths:
 
   /template/{claGroupID}/preview:
     get:
-      summary: Get Template pdf for given claGroupID with specified cla type
-      description: Endpoint to return the cla template
+      summary: Preview Template PDF
+      description: Get Template PDF for given CLA Group identifier with specified CLA type
       operationId: getCLATemplatePreview
+      security: []
       parameters:
         - $ref: "#/parameters/path-claGroupID"
         - $ref: "#/parameters/templateCLAType"
@@ -1809,7 +1810,7 @@ paths:
                 description: Proposed CLA Manager name
                 example: "Harold Wanyama"
                 pattern: "^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$"
-                minLength: 1 
+                minLength: 1
                 maxLength: 60
       responses:
         '200':
@@ -1910,7 +1911,7 @@ paths:
           $ref: '#/responses/internal-server-error'
       tags:
         - cla-manager
-  
+
   /company/{companySFID}/contributorAssociation:
     post:
       summary: Associates a contributor with a company
@@ -3145,7 +3146,7 @@ definitions:
         items:
           $ref:
             '#/definitions/cla-manager-designee'
-  
+
   contributor:
     type: object
     title: Contributor

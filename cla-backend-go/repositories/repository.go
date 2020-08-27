@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/gofrs/uuid"
 
@@ -88,7 +90,6 @@ func (repo repo) GetProjectRepositoriesGroupByOrgs(projectID string) ([]*models.
 // getProjectRepositories returns an array of GH repositories for the specified project ID
 func (repo repo) getProjectRepositories(projectID string) ([]*models.GithubRepository, error) {
 	var out []*models.GithubRepository
-	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
 	var condition expression.KeyConditionBuilder
 	builder := expression.NewBuilder()
 
@@ -107,7 +108,7 @@ func (repo repo) getProjectRepositories(projectID string) ([]*models.GithubRepos
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.repositoryTableName),
 		IndexName:                 aws.String(ProjectRepositoryIndex),
 	}
 
@@ -133,7 +134,6 @@ func (repo repo) getProjectRepositories(projectID string) ([]*models.GithubRepos
 // getRepositoriesByGithubOrg returns an array of GH repositories for the specified project ID
 func (repo repo) getRepositoriesByGithubOrg(githubOrgName string) ([]*models.GithubRepository, error) {
 	var out []*models.GithubRepository
-	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
 	builder := expression.NewBuilder()
 	filter := expression.Name("repository_organization_name").Equal(expression.Value(githubOrgName))
 	builder = builder.WithFilter(filter)
@@ -148,7 +148,7 @@ func (repo repo) getRepositoriesByGithubOrg(githubOrgName string) ([]*models.Git
 		ExpressionAttributeValues: expr.Values(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.repositoryTableName),
 	}
 
 	results, err := repo.dynamoDBClient.Scan(scanInput)
@@ -170,8 +170,14 @@ func (repo repo) getRepositoriesByGithubOrg(githubOrgName string) ([]*models.Git
 	return out, nil
 }
 
+// deleteGithubRepository updates the existing repository record by setting the enabled flag to false
 func (repo repo) deleteGithubRepository(externalProjectID, projectSFID, ghRepoID string) error {
-	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
+	f := logrus.Fields{
+		"functionName":      "deleteGithubRepository",
+		"externalProjectID": externalProjectID,
+		"projectSFID":       projectSFID,
+		"ghRepoID":          ghRepoID,
+	}
 	var attrName, attrVal string
 	if projectSFID != "" {
 		attrName = "project_sfid"
@@ -180,29 +186,43 @@ func (repo repo) deleteGithubRepository(externalProjectID, projectSFID, ghRepoID
 		attrName = "repository_sfdc_id"
 		attrVal = externalProjectID
 	}
-	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
+	_, now := utils.CurrentTime()
+	log.WithFields(f).Debug("updating repository record - setting enabled = False")
+	_, err := repo.dynamoDBClient.UpdateItem(&dynamodb.UpdateItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"repository_id": {S: aws.String(ghRepoID)},
+		},
 		ExpressionAttributeNames: map[string]*string{
-			"#id": aws.String(attrName),
+			"#id":           aws.String(attrName),
+			"#enabled":      aws.String("enabled"),
+			"#note":         aws.String("note"),
+			"#dateModified": aws.String("date_modified"),
 		},
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":val": {
 				S: aws.String(attrVal),
 			},
+			":enabledValue": {
+				BOOL: aws.Bool(false),
+			},
+			":noteValue": {
+				S: aws.String(fmt.Sprintf("disabled on %s due to delete request", now)),
+			},
+			":dateModifiedValue": {
+				S: aws.String(now),
+			},
 		},
-		ConditionExpression: aws.String("#id = :val"),
-		Key: map[string]*dynamodb.AttributeValue{
-			"repository_id": {S: aws.String(ghRepoID)},
-		},
-		TableName: aws.String(tableName),
+		UpdateExpression: aws.String("SET #enabled = :enabledValue, #note = :noteValue, #dateModified = :dateModifiedValue"),
+		TableName:        aws.String(repo.repositoryTableName),
 	})
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeConditionalCheckFailedException:
-				return errors.New("github repository does not exist or repository_sfdc_id does not match with specifiled project id")
+				return errors.New("github repository does not exist or repository_sfdc_id does not match with specified project id")
 			}
 		}
-		log.Error(fmt.Sprintf("error deleting github repository with id: %s", ghRepoID), err)
+		log.WithFields(f).Warnf("error disabling github repository with id: %s, error: %+v", ghRepoID, err)
 		return err
 	}
 	return nil
@@ -224,6 +244,11 @@ func (repo repo) DeleteRepositoriesOfGithubOrganization(externalProjectID, proje
 
 // List github repositories of project by external/salesforce project id
 func (repo repo) ListProjectRepositories(externalProjectID string, projectSFID string) (*models.ListGithubRepositories, error) {
+	f := logrus.Fields{
+		"functionName":      "ListProjectRepositories",
+		"externalProjectID": externalProjectID,
+		"projectSFID":       projectSFID,
+	}
 	var indexName string
 	out := &models.ListGithubRepositories{
 		List: make([]*models.GithubRepository, 0),
@@ -256,7 +281,7 @@ func (repo repo) ListProjectRepositories(externalProjectID string, projectSFID s
 
 	results, err := repo.dynamoDBClient.Query(queryInput)
 	if err != nil {
-		log.Warnf("unable to get project github repositories. error = %s", err.Error())
+		log.WithFields(f).Warnf("unable to get project github repositories. error = %s", err.Error())
 		return nil, err
 	}
 	if len(results.Items) == 0 {
@@ -298,6 +323,7 @@ func (repo repo) AddGithubRepository(externalProjectID string, projectSFID strin
 		RepositorySfdcID:           externalProjectID,
 		RepositoryType:             utils.StringValue(input.RepositoryType),
 		RepositoryURL:              utils.StringValue(input.RepositoryURL),
+		Enabled:                    true,
 		ProjectSFID:                projectSFID,
 		Version:                    "v1",
 	}
@@ -383,15 +409,13 @@ func (repo *repo) GetGithubRepository(repositoryID string) (*models.GithubReposi
 
 // Unassign project from given repository
 func (repo *repo) DeleteProject(repositoryID string) error {
-	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
-
 	input := &dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"repository_id": {
 				S: aws.String(repositoryID),
 			},
 		},
-		TableName: aws.String(tableName),
+		TableName: aws.String(repo.repositoryTableName),
 	}
 
 	_, err := repo.dynamoDBClient.DeleteItem(input)
@@ -405,7 +429,6 @@ func (repo *repo) DeleteProject(repositoryID string) error {
 
 // GetGithubRepositoryByCLAGroup gets GHRepo by project|ClaGroup ID
 func (repo *repo) GetGithubRepositoryByCLAGroup(claGroupID string) (*models.GithubRepository, error) {
-	tableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
 	builder := expression.NewBuilder()
 	condition := expression.Key("repository_project_id").Equal(expression.Value(claGroupID))
 
@@ -422,7 +445,7 @@ func (repo *repo) GetGithubRepositoryByCLAGroup(claGroupID string) (*models.Gith
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(tableName),
+		TableName:                 aws.String(repo.repositoryTableName),
 		IndexName:                 aws.String(ProjectRepositoryIndex),
 	}
 
