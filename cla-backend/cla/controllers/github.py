@@ -211,16 +211,28 @@ def get_github_activity_action(body: dict) -> Optional[str]:
 def activity(event_type, body):
     """
     Processes the GitHub activity event.
+    :param event_type: the event type string value
+    :type event_type: str
     :param body: the webhook body payload
     :type body: dict
     """
     cla.log.debug(f'github.activity - received github activity event of type: {event_type}')
-    cla.log.debug('github.activity - received github activity event, '
-                  f'action: {get_github_activity_action(body)}...')
+    action = get_github_activity_action(body)
+    cla.log.debug('github.activity - received github activity event, action: {action}...')
 
     # If we have the GitHub debug flag set/on...
     if bool(os.environ.get('GH_APP_DEBUG', '')):
         cla.log.debug(f'github.activity - body: {json.dumps(body)}')
+
+    # We no longer support two events which your GitHub Apps may rely on,
+    #   "integration_installation" and
+    #   "integration_installation_repositories".
+    #
+    # These events can be replaced with the:
+    #   "installation" and
+    #   "installation_repositories"
+    #
+    # events respectively.
 
     # GitHub Application Installation Event
     if event_type == 'installation':
@@ -285,9 +297,13 @@ def activity(event_type, body):
             result = service.received_activity(body)
             return result
 
-    if event_type == 'installation_repositories':
-        cla.log.debug('github.activity - processing github installation_repositories activity callback...')
+    # Note: The GitHub event type: 'integration_installation_repositories' is being deprecated on October 1st, 2020
+    # in favor of 'installation_repositories' - for now we will support both...payload is the same
+    # Event details: https://developer.github.com/webhooks/event-payloads/#installation_repositories
+    if event_type == 'installation_repositories' or event_type == 'integration_installation_repositories':
+
         if body['action'] == 'removed':
+            cla.log.debug('github.activity - processing github installation_repositories activity removed callback...')
             repository_removed = body['repositories_removed']
             repositories = []
             for repo in repository_removed:
@@ -295,7 +311,29 @@ def activity(event_type, body):
                 ghrepo = Repository().get_repository_by_external_id(repository_external_id, 'github')
                 if ghrepo is not None:
                     repositories.append(ghrepo)
+
+            # Notify the Project Managers that the following list of repositories were removed
             notify_project_managers(repositories)
+
+            # The following list of repositories were deleted/removed from GitHub - we need to remove
+            # the repo entry from our repos table
+            for repo in repositories:
+                cla.log.debug(f'Deleting repository {repo.get_repository_name()} '
+                              f'from GitHub organization : {repo.get_repository_organization_name()} '
+                              f'with URL: {repo.get_repository_url()} '
+                              'from the CLA configuration.')
+                repo.delete()
+
+        if body['action'] == 'added':
+            cla.log.debug('github.activity - processing github installation_repositories activity added callback...')
+            repository_added = body['repositories_added']
+            for repo in repository_added:
+                repository_external_id = repo['id']       # example: 271841254
+                repository_name = repo['name']            # example: PyImath
+                repository_full_name = repo['full_name']  # example: AcademySoftwareFoundation/PyImath
+                repository_private = repo['private']      # example: False
+                # Lookup GitHub Organization CLA Group project_id (from
+
         return
 
     cla.log.debug('github.activity - ignoring github activity event, '
@@ -325,6 +363,10 @@ def notify_project_managers(repositories):
         subject, body, recipients = unable_to_do_cla_check_email_content(
             project, managers, repositories)
         get_email_service().send(subject, body, recipients)
+        cla.log.debug('github.activity - sending unable to perform CLA Check email'
+                      f' to managers: {recipients}'
+                      f' for project {project} with '
+                      f' repositories: {repositories}')
 
 
 def unable_to_do_cla_check_email_content(project, managers, repositories):
