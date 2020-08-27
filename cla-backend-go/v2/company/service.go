@@ -277,6 +277,7 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userE
 		CompanyName:    org.Name,
 		CompanyWebsite: companyWebsite,
 		LogoURL:        org.LogoURL,
+		CompanyID:      org.ID,
 	}, nil
 }
 
