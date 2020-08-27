@@ -22,6 +22,7 @@ from cla.models.dynamo_models import User, Signature, Repository, \
     Company, Project, Document, \
     GitHubOrg, Gerrit, UserPermissions, Event, CompanyInvite, ProjectCLAGroup, CCLAWhitelistRequest
 from cla.models.event_types import EventType
+from datetime import datetime
 
 API_BASE_URL = os.environ.get('CLA_API_BASE', '')
 CLA_LOGO_URL = os.environ.get('CLA_BUCKET_LOGO_URL', '')
@@ -1458,3 +1459,20 @@ def get_email_sign_off_content() -> str:
         <p>Thanks,</p>
         <p>EasyCLA support team</p>
     """
+
+
+def get_current_time() -> str:
+    """
+    Helper function to return the current UTC datetime in an ISO standard format with timezone
+    :return:
+    """
+    now = datetime.utcnow()
+    return now.strftime("%Y-%m-%dT%H:%M:%S.%f%z") + "+0000"
+
+
+def get_formatted_time(the_time: datetime) -> str:
+    """
+    Helper function to return the specified datetime object in an ISO standard format with timezone
+    :return:
+    """
+    return the_time.strftime("%Y-%m-%dT%H:%M:%S.%f%z") + "+0000"

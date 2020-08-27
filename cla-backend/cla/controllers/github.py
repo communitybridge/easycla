@@ -71,7 +71,7 @@ def get_organization_model(organization_name):
         cla.log.debug(f'Loaded GitHub by organization name: {org}')
         return org
     except DoesNotExist as err:
-        cla.log.warning(f'organization name {organization_name} does not exist')
+        cla.log.warning(f'organization name {organization_name} does not exist, error: {err}')
         return None
 
 
@@ -82,13 +82,13 @@ def create_organization(auth_user, organization_name, organization_sfid):
     :param auth_user: authorization for this user.
     :type auth_user: AuthUser
     :param organization_name: The github organization name.
-    :type organization_name: string 
-    :param organization_sfid: The SFDC ID for the github organization. 
+    :type organization_name: string
+    :param organization_sfid: The SFDC ID for the github organization.
     :type organization_sfid: string/None
     :return: dict representation of the new github organization object.
     :rtype: dict
     """
-    # Validate user is authorized for this SFDC ID. 
+    # Validate user is authorized for this SFDC ID.
     can_access = check_user_authorization(auth_user, organization_sfid)
     if not can_access['valid']:
         return can_access['errors']
@@ -96,7 +96,7 @@ def create_organization(auth_user, organization_name, organization_sfid):
     github_organization = get_github_organization_instance()
     try:
         github_organization.load(str(organization_name))
-    except DoesNotExist as err:
+    except DoesNotExist:
         cla.log.debug('creating organization: {} with sfid: {}'.format(organization_name, organization_sfid))
         github_organization.set_organization_name(str(organization_name))
         github_organization.set_organization_sfid(str(organization_sfid))
@@ -150,7 +150,7 @@ def delete_organization(auth_user, organization_name):
     :param organization_name: The Name of the github organization.
     :type organization_name: Name
     """
-    # Retrieve SFDC ID for this organization 
+    # Retrieve SFDC ID for this organization
     github_organization = get_github_organization_instance()
     try:
         github_organization.load(str(organization_name))
@@ -160,12 +160,12 @@ def delete_organization(auth_user, organization_name):
 
     organization_sfid = github_organization.get_organization_sfid()
 
-    # Validate user is authorized for this SFDC ID. 
+    # Validate user is authorized for this SFDC ID.
     can_access = check_user_authorization(auth_user, organization_sfid)
     if not can_access['valid']:
         return can_access['errors']
 
-    # Find all repositories that are under this organization 
+    # Find all repositories that are under this organization
     repositories = Repository().get_repositories_by_organization(organization_name)
     for repository in repositories:
         repository.delete()
@@ -220,9 +220,9 @@ def get_github_activity_action(body: dict) -> Optional[str]:
     """
     Returns the action value from the github activity event.
 
-    :param body: the webhook body payload
+    :param body: the GitHub webhook body payload
     :type body: dict
-    :return:  a string representing the action, or None if it couldn't find the action value
+    :return: a string representing the action, or None if it couldn't find the action value
     """
     cla.log.debug(f'locating action attribute in body: {body}')
     try:
@@ -241,13 +241,18 @@ def activity(event_type, body):
     """
     cla.log.debug(f'github.activity - received github activity event of type: {event_type}')
     action = get_github_activity_action(body)
-    cla.log.debug('github.activity - received github activity event, action: {action}...')
+    if action is None:
+        cla.log.warning(f'github.activity - unable to determine action type from body: {json.dumps(body)}. '
+                        'Unable to process this request.')
+        return
+
+    cla.log.debug(f'github.activity - received github activity event, action: {action}...')
 
     # If we have the GitHub debug flag set/on...
     if bool(os.environ.get('GH_APP_DEBUG', '')):
         cla.log.debug(f'github.activity - body: {json.dumps(body)}')
 
-    # We no longer support two events which your GitHub Apps may rely on,
+    # From GitHub: Starting October 1st, 2020 - We no longer support two events which your GitHub Apps may rely on,
     #   "integration_installation" and
     #   "integration_installation_repositories".
     #
@@ -256,184 +261,262 @@ def activity(event_type, body):
     #   "installation_repositories"
     #
     # events respectively.
+    # see:
+    # https://docs.github.com/en/developers/webhooks-and-events/webhook-events-and-payloads#installation_repositories
 
     # GitHub Application Installation Event
-    if event_type == 'installation':
-        cla.log.debug('github.activity - processing github installation activity callback...')
-
-        # New Installations
-        if 'action' in body and body['action'] == 'created':
-            org_name = get_org_name_from_installation_event(body)
-            if org_name is None:
-                cla.log.warning('Unable to determine organization name from the github installation event '
-                                f'with action: {body["action"]}'
-                                f'event body: {json.dumps(body)}')
-                return {'status', f'GitHub installation {body["action"]} event malformed.'}
-
-            cla.log.debug(f'Locating organization using name: {org_name}')
-            existing = get_organization(org_name)
-            if 'errors' in existing:
-                cla.log.warning(f'Received github installation created event for organization: {org_name}, but '
-                                'the organization is not configured in EasyCLA')
-                # TODO: Need a way of keeping track of new organizations that don't have projects yet.
-                return {'status': 'Github Organization must be created through the Project Management Console.'}
-            elif not existing['organization_installation_id']:
-                update_organization(
-                    existing['organization_name'],
-                    existing['organization_sfid'],
-                    body['installation']['id'],
-                )
-                cla.log.info('github.activity - Organization enrollment completed: %s', existing['organization_name'])
-                return {'status': 'Organization Enrollment Completed. CLA System is operational'}
-            else:
-                cla.log.info('github.activity - Organization already enrolled: %s', existing['organization_name'])
-                cla.log.info('github.activity - Updating installation ID for github organization: %s',
-                             existing['organization_name'])
-                update_organization(
-                    existing['organization_name'],
-                    existing['organization_sfid'],
-                    body['installation']['id'],
-                )
-                return {'status': 'Already Enrolled Organization Updated. CLA System is operational'}
-        elif 'action' in body and body['action'] == 'deleted':
-            cla.log.debug('github.activity - processing github installation activity [deleted] callback...')
-            org_name = get_org_name_from_installation_event(body)
-            if org_name is None:
-                cla.log.warning('Unable to determine organization name from the github installation event '
-                                f'with action: {body["action"]}'
-                                f'event body: {json.dumps(body)}')
-                return {'status', f'GitHub installation {body["action"]} event malformed.'}
-            repositories = Repository().get_repositories_by_organization(org_name)
-            notify_project_managers(repositories)
-            return
-        else:
-            pass
-
-    # GitHub Pull Request Event
-    if event_type == 'pull_request':
-        cla.log.debug('github.activity - processing github pull_request activity callback...')
-
-        # New PR opened
-        if body['action'] == 'opened' or body['action'] == 'reopened' or body['action'] == 'synchronize':
-            # Copied from repository_service.py
-            service = cla.utils.get_repository_service('github')
-            result = service.received_activity(body)
-            return result
+    if event_type == 'installation' or event_type == 'integration_installation':
+        handle_installation_event(action, body)
 
     # Note: The GitHub event type: 'integration_installation_repositories' is being deprecated on October 1st, 2020
     # in favor of 'installation_repositories' - for now we will support both...payload is the same
     # Event details: https://developer.github.com/webhooks/event-payloads/#installation_repositories
-    if event_type == 'installation_repositories' or event_type == 'integration_installation_repositories':
+    elif event_type == 'installation_repositories' or event_type == 'integration_installation_repositories':
+        handle_installation_repositories_event(action, body)
 
-        if body['action'] == 'removed':
-            # Who triggered the event
-            user_login = body['sender']['login']
-            cla.log.debug('github.activity - processing github installation_repositories activity removed callback...')
-            repository_removed = body['repositories_removed']
-            repositories = []
-            for repo in repository_removed:
-                repository_external_id = repo['id']
-                ghrepo = Repository().get_repository_by_external_id(repository_external_id, 'github')
-                if ghrepo is not None:
-                    repositories.append(ghrepo)
+    # GitHub Pull Request Event
+    elif event_type == 'pull_request':
+        handle_pull_request_event(action, body)
 
-            # Notify the Project Managers that the following list of repositories were removed
-            notify_project_managers(repositories)
+    else:
+        cla.log.debug(f'github.activity - ignoring github activity event, action: {action}...')
 
-            # The following list of repositories were deleted/removed from GitHub - we need to remove
-            # the repo entry from our repos table
-            for repo in repositories:
-                msg = (f'Disabling repository {repo.get_repository_name()} '
-                       f'from GitHub organization : {repo.get_repository_organization_name()} '
-                       f'with URL: {repo.get_repository_url()} '
-                       'from the CLA configuration.')
-                cla.log.debug(msg)
-                # Disable the repo and add a note
-                repo.set_enabled(False)
-                repo.add_note(f'{datetime.now()}  - Disabling repository due to '
-                              'GitHub installation_repositories delete event.')
-                repo.save()
+
+def handle_installation_event(action: str, body: dict):
+    func_name = 'github.activity.handle_installation_event'
+    cla.log.debug(f'{func_name} - processing github [installation] activity callback...')
+
+    # New Installations
+    if action == 'created':
+        cla.log.debug(f'{func_name} - processing github installation activity for action: {action}')
+
+        org_name = get_org_name_from_installation_event(body)
+        if org_name is None:
+            cla.log.warning(f'{func_name} - Unable to determine organization name from the github installation event '
+                            f'with action: {action}'
+                            f'event body: {json.dumps(body)}')
+            return {'status', f'GitHub installation {action} event malformed.'}
+
+        cla.log.debug(f'Locating organization using name: {org_name}')
+        existing = get_organization(org_name)
+        if 'errors' in existing:
+            cla.log.warning(f'{func_name} - Received github installation created event for organization: {org_name}, '
+                            'but the organization is not configured in EasyCLA')
+            # TODO: Need a way of keeping track of new organizations that don't have projects yet.
+            return {'status': 'Github Organization must be created through the Project Management Console.'}
+        elif not existing['organization_installation_id']:
+            update_organization(
+                existing['organization_name'],
+                existing['organization_sfid'],
+                body['installation']['id'],
+            )
+            cla.log.info(f'{func_name} - Organization enrollment completed: {existing["organization_name"]}')
+            return {'status': 'Organization Enrollment Completed. CLA System is operational'}
+        else:
+            cla.log.info(f'{func_name} - Organization already enrolled: {existing["organization_name"]}')
+            cla.log.info(f'{func_name} - Updating installation ID for '
+                         f'github organization: {existing["organization_name"]}')
+            update_organization(
+                existing['organization_name'],
+                existing['organization_sfid'],
+                body['installation']['id'],
+            )
+            return {'status': 'Already Enrolled Organization Updated. CLA System is operational'}
+
+    elif action == 'deleted':
+        cla.log.debug(f'{func_name} - processing github installation activity for action: {action}')
+        org_name = get_org_name_from_installation_event(body)
+        if org_name is None:
+            cla.log.warning('Unable to determine organization name from the github installation event '
+                            f'with action: {action}'
+                            f'event body: {json.dumps(body)}')
+            return {'status', f'GitHub installation {action} event malformed.'}
+        repositories = Repository().get_repositories_by_organization(org_name)
+        notify_project_managers(repositories)
+        return
+    else:
+        cla.log.debug(f'{func_name} - ignoring github installation activity for action: {action}')
+
+
+def handle_pull_request_event(action: str, body: dict):
+    func_name = 'github.activity.handle_pull_request_event'
+    cla.log.debug(f'{func_name} - processing github pull_request activity callback...')
+
+    # New PR opened
+    if action == 'opened' or action == 'reopened' or action == 'synchronize':
+        cla.log.debug(f'{func_name} - processing github pull_request activity for action: {action}')
+        # Copied from repository_service.py
+        service = cla.utils.get_repository_service('github')
+        result = service.received_activity(body)
+        return result
+    else:
+        cla.log.debug(f'{func_name} - ignoring github pull_request activity for action: {action}')
+
+
+def handle_installation_repositories_event(action: str, body: dict):
+    func_name = 'github.activity.handle_installation_repositories_event'
+    if action == 'added':
+        handle_installation_repositories_added_event(action, body)
+    elif action == 'removed':
+        handle_installation_repositories_removed_event(action, body)
+    else:
+        cla.log.info(f'{func_name} - unhandled action type: {action} - ignoring')
+
+
+def handle_installation_repositories_added_event(action: str, body: dict):
+    func_name = 'github.activity.handle_installation_repositories_added_event'
+    # Who triggered the event
+    user_login = body['sender']['login']
+    cla.log.debug(f'{func_name} - processing github [installation_repositories] '
+                  f'activity {action} callback created by GitHub user {user_login}.')
+    # Grab the list of repositories added from the event model
+    repository_added = body.get('repositories_added', [])
+    # Create a unique list of repositories for the email that we need to send out
+    repository_list = set([repo.get('full_name', None) for repo in repository_added])
+    # All the repos in the message should be under the same GitHub Organization
+    organization_name = ''
+    for repo in repository_added:
+        # Grab the information
+        repository_external_id = repo['id']  # example: 271841254
+        repository_name = repo['name']  # example: PyImath
+        repository_full_name = repo['full_name']  # example: AcademySoftwareFoundation/PyImath
+        organization_name = repository_full_name.split('/')[0]  # example: AcademySoftwareFoundation
+        # repository_private = repo['private']      # example: False
+
+        # Lookup the GitHub Organization in our table - should be there already
+        cla.log.debug(f'{func_name} - Locating organization using name: {organization_name}')
+        org_model = get_organization_model(organization_name)
+
+        if org_model is None:
+            cla.log.warning(f'Unable to locate GitHub Organization {organization_name} in our database')
+            continue
+
+        # Check to see if the auto enabled flag is set
+        if org_model.get_auto_enabled():
+            # We need to check that we only have 1 CLA Group - auto-enable only works when the entire
+            # Organization falls under a single CLA Group - otherwise, how would we know which CLA Group
+            # to add them to? First we query all the existing repositories associated with this Github Org -
+            # they should all point the the single CLA Group - let's verify this...
+            existing_github_repositories = Repository().get_repositories_by_organization(organization_name)
+            cla_group_ids = set(())  # hoping for only 1 unique value - set collection discards duplicates
+            cla_group_repo_sfids = set(())  # keep track of the existing SFDC IDs from existing repos
+            for existing_repo in existing_github_repositories:
+                cla_group_ids.add(existing_repo.get_repository_project_id())
+                cla_group_repo_sfids.add(existing_repo.get_repository_sfdc_id())
+
+            # We should only have one...
+            if len(cla_group_ids) != 1 or len(cla_group_repo_sfids) != 1:
+                cla.log.warning(f'{func_name} - Auto Enabled set for Organization {organization_name}, '
+                                f'but we found repositories or SFIDs that belong to multiple CLA Groups. '
+                                'Auto Enable only works when all repositories under a given '
+                                'GitHub Organization are associated with a single CLA Group. This '
+                                f'organization is associated with {len(cla_group_ids)} CLA Groups and '
+                                f'{len(cla_group_repo_sfids)} SFIDs.')
+                return
+
+            cla_group_id = cla_group_ids.pop()
+
+            project_model = get_project_instance()
+            try:
+                project_model.load(project_id=cla_group_id)
+            except DoesNotExist as err:
+                cla.log.warning(f'{func_name} - unable to load project (cla_group) by '
+                                f'project_id: {cla_group_id}, error: {err}')
+
+            cla.log.debug(f'{func_name} - Organization {organization_name} has auto_enabled set - '
+                          f'adding repository: {repository_name} to '
+                          f'CLA Group: {project_model.get_project_name()}')
+            try:
+                # Create the new repository entry and associate it with the CLA Group
+                new_repository = Repository(
+                    repository_id=str(uuid.uuid4()),
+                    repository_project_id=cla_group_id,
+                    repository_name=repository_full_name,
+                    repository_type='github',
+                    repository_url='https://github.com/' + repository_full_name,
+                    repository_organization_name=organization_name,
+                    repository_external_id=repository_external_id,
+                    repository_sfdc_id=cla_group_repo_sfids.pop()
+                )
+                new_repository.save()
 
                 # Log the event
+                msg = (f'Adding repository {repository_full_name} '
+                       f'from GitHub organization : {organization_name} '
+                       f'with URL: https://github.com/{repository_full_name} '
+                       'to the CLA configuration. GitHub organization was set to auto-enable.')
                 Event.create_event(
-                    event_type=EventType.RepositoryDisable,
-                    event_project_id=repo.get_repository_project_id(),
-                    event_project_name='',
+                    event_type=EventType.RepositoryAdded,
+                    event_project_id=cla_group_id,
+                    event_project_name=project_model.get_project_name(),
                     event_company_id=None,
                     event_data=msg,
                     event_user_id=user_login,
                     contains_pii=False,
                 )
+            except Exception as err:
+                cla.log.warning(f'{func_name} - Could not create GitHub repository: {err}')
+                return
 
-        if body['action'] == 'added':
-            cla.log.debug('github.activity - processing github installation_repositories activity added callback...')
-            repository_added = body.get('repositories_added', [])
-            repository_list = set([repo.get('full_name', None) for repo in repository_added])
-            # All the repos in the message should be under the same GitHub Organization
-            organization_name = ''
-            for repo in repository_added:
-                # Grab the information
-                repository_external_id = repo['id']  # example: 271841254
-                repository_name = repo['name']  # example: PyImath
-                repository_full_name = repo['full_name']  # example: AcademySoftwareFoundation/PyImath
-                organization_name = repository_full_name.split('/')[0]  # example: AcademySoftwareFoundation
-                # repository_private = repo['private']      # example: False
+        else:
+            cla.log.debug(f'{func_name} - Auto enabled NOT set for GitHub Organization {organization_name} - '
+                          f'not auto-adding repository: {repository_full_name}')
+            return
 
-                # Lookup GitHub Organization in our table - should be there already
-                cla.log.debug(f'Locating organization using name: {organization_name}')
-                org_model = get_organization_model(organization_name)
+    # Notify the Project Managers
+    notify_project_managers_auto_enabled(organization_name, repository_list)
 
-                # Check to see if the auto enabled flag is set
-                if org_model is not None and org_model.get_auto_enabled():
-                    # We need to check that we only have 1 CLA Group - auto-enable only works when the entire
-                    # Organization falls under a single CLA Group - otherwise, how would we know which CLA Group
-                    # to add them to? First we query all the existing repositories associated with this Github Org -
-                    # they should all point the the single CLA Group - let's verify this...
-                    existing_github_repositories = Repository().get_repositories_by_organization(organization_name)
-                    cla_group_ids = set(())  # hoping for only 1 unique value - set collection discards duplicates
-                    cla_group_repo_sfids = set(())  # keep track of the existing SFDC IDs from existing repos
-                    for existing_repo in existing_github_repositories:
-                        cla_group_ids.add(existing_repo.get_repository_project_id())
-                        cla_group_repo_sfids.add(existing_repo.get_repository_sfdc_id())
 
-                    # We should only have one...
-                    if len(cla_group_ids) != 1 or len(cla_group_repo_sfids) != 1:
-                        cla.log.warning(f'Auto Enabled set for Organization {organization_name}, '
-                                        f'but we found repositories or SFIDs that belong to multiple CLA Groups. '
-                                        'Auto Enable only works when all repositories under a given '
-                                        'GitHub Organization are associated with a single CLA Group. This '
-                                        f'organization is associated with {len(cla_group_ids)} CLA Groups and '
-                                        f'{len(cla_group_repo_sfids)} SFIDs.')
-                        return
+def handle_installation_repositories_removed_event(action: str, body: dict):
+    func_name = 'github.activity.handle_installation_repositories_removed_event'
+    # Who triggered the event
+    user_login = body['sender']['login']
+    cla.log.debug(f'{func_name} - processing github [installation_repositories] '
+                  f'activity {action} callback created by GitHub user {user_login}.')
+    repository_removed = body['repositories_removed']
+    repositories = []
+    for repo in repository_removed:
+        repository_external_id = repo['id']
+        ghrepo = Repository().get_repository_by_external_id(repository_external_id, 'github')
+        if ghrepo is not None:
+            repositories.append(ghrepo)
 
-                    cla.log.debug(f'Organization {organization_name} has auto_enabled set - '
-                                  f'adding repository: {repository_name} ')
-                    try:
-                        # Create the new repository entry and associate it with the CLA Group
-                        new_repository = Repository(
-                            repository_id=str(uuid.uuid4()),
-                            repository_project_id=cla_group_ids.pop(),
-                            repository_name=repository_full_name,
-                            repository_type='github',
-                            repository_url='https://github.com/' + repository_full_name,
-                            repository_organization_name=organization_name,
-                            repository_external_id=repository_external_id,
-                            repository_sfdc_id=cla_group_repo_sfids.pop()
-                        )
-                        new_repository.save()
-                    except Exception as err:
-                        cla.log.warning('Could not create GitHub repository: %s', str(err))
-                        return
+    # Notify the Project Managers that the following list of repositories were removed
+    notify_project_managers(repositories)
 
-                else:
-                    cla.log.debug(f'Auto enabled NOT set for GitHub Organization {organization_name} - '
-                                  f'not auto-adding repository: {repository_full_name}')
-                    return
+    # The following list of repositories were deleted/removed from GitHub - we need to remove
+    # the repo entry from our repos table
+    for repo in repositories:
 
-            # Notify the Project Managers
-            notify_project_managers_auto_enabled(organization_name, repository_list)
+        project_model = get_project_instance()
+        try:
+            project_model.load(project_id=repo.get_repository_project_id())
+        except DoesNotExist as err:
+            cla.log.warning(f'{func_name} - unable to load project (cla_group) by '
+                            f'project_id: {repo.get_repository_project_id()}, error: {err}')
 
-    cla.log.debug(f'github.activity - ignoring github activity event, action: {action}...')
+        msg = (f'Disabling repository {repo.get_repository_name()} '
+               f'from GitHub organization : {repo.get_repository_organization_name()} '
+               f'with URL: {repo.get_repository_url()} '
+               'from the CLA configuration.')
+        cla.log.debug(msg)
+        # Disable the repo and add a note
+        repo.set_enabled(False)
+        repo.add_note(f'{datetime.now()}  - Disabling repository due to '
+                      'GitHub installation_repositories delete event '
+                      f'for CLA Group {project_model.get_project_name()}')
+        repo.save()
+
+        # Log the event
+        Event.create_event(
+            event_type=EventType.RepositoryDisable,
+            event_project_id=repo.get_repository_project_id(),
+            event_project_name=project_model.get_project_name(),
+            event_company_id=None,
+            event_data=msg,
+            event_user_id=user_login,
+            contains_pii=False,
+        )
 
 
 def notify_project_managers(repositories):
