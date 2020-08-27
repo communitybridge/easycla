@@ -179,6 +179,7 @@ provider:
 
   environment:
     STAGE: ${self:provider.stage}
+    HOME: /tmp
     REGION: us-east-2
     # Currently, we use DynamoDB in the us-east-1 region
     DYNAMODB_AWS_REGION: us-east-1
