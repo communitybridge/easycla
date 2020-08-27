@@ -41,6 +41,9 @@ properties:
   EventData:
     type: string
     description: data related to the event
+  EventSummary:
+    type: string
+    description: data related to the event summary
   EventProjectExternalID:
     type: string
     description: the external Project ID related to this event

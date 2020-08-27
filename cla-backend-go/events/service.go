@@ -214,12 +214,14 @@ func (s *service) LogEvent(args *LogEventArgs) {
 		log.Error("unable to load details for event", err)
 		return
 	}
-	eventData, containsPII := args.EventData.GetEventString(args)
+	eventData, containsPII := args.EventData.GetEventDetailsString(args)
+	eventSummary, _ := args.EventData.GetEventSummaryString(args)
 	event := models.Event{
 		ContainsPII:            containsPII,
 		EventCompanyID:         args.CompanyID,
 		EventCompanyName:       args.companyName,
 		EventData:              eventData,
+		EventSummary:           eventSummary,
 		EventProjectExternalID: args.ExternalProjectID,
 		EventProjectID:         args.ProjectID,
 		EventProjectName:       args.projectName,
