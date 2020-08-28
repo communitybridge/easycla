@@ -38,7 +38,7 @@ func (s service) AddGithubOrganization(externalProjectID string, input *models.C
 }
 
 func (s service) DeleteGithubOrganization(externalProjectID string, githubOrgName string) error {
-	err := s.ghRepository.DeleteRepositoriesOfGithubOrganization(externalProjectID, "", githubOrgName)
+	err := s.ghRepository.DisableRepositoriesOfGithubOrganization(externalProjectID, githubOrgName)
 	if err != nil {
 		return err
 	}

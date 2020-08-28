@@ -37,11 +37,11 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
 			eventService.LogEvent(&events.LogEventArgs{
-				EventType:         events.GithubRepositoryAdded,
+				EventType:         events.RepositoryAdded,
 				ProjectID:         utils.StringValue(params.GithubRepositoryInput.RepositoryProjectID),
 				ExternalProjectID: params.ProjectSFID,
 				UserID:            claUser.UserID,
-				EventData: &events.GithubRepositoryAddedEventData{
+				EventData: &events.RepositoryAddedEventData{
 					RepositoryName: utils.StringValue(params.GithubRepositoryInput.RepositoryName),
 				},
 			})
@@ -53,23 +53,23 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 			if !claUser.IsAuthorizedForProject(params.ProjectSFID) {
 				return github_repositories.NewDeleteProjectGithubRepositoryUnauthorized()
 			}
-			ghRepo, err := service.GetGithubRepository(params.RepositoryID)
+			ghRepo, err := service.GetRepository(params.RepositoryID)
 			if err != nil {
 				if err == ErrGithubRepositoryNotFound {
 					return github_repositories.NewDeleteProjectGithubRepositoryNotFound()
 				}
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
-			err = service.DeleteGithubRepository(params.ProjectSFID, params.RepositoryID)
+			err = service.DisableRepository(params.RepositoryID)
 			if err != nil {
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
 			eventService.LogEvent(&events.LogEventArgs{
-				EventType:         events.GithubRepositoryDeleted,
+				EventType:         events.RepositoryDisabled,
 				ExternalProjectID: params.ProjectSFID,
 				ProjectID:         ghRepo.RepositoryProjectID,
 				UserID:            claUser.UserID,
-				EventData: &events.GithubRepositoryDeletedEventData{
+				EventData: &events.RepositoryDisabledEventData{
 					RepositoryName: ghRepo.RepositoryName,
 				},
 			})

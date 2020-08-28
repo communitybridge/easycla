@@ -103,7 +103,7 @@ func (s service) GetGithubOrganizations(projectSFID string) (*models.ProjectGith
 			}
 		}
 	}
-	repos, err := s.ghRepository.ListProjectRepositories("", projectSFID)
+	repos, err := s.ghRepository.ListProjectRepositories("", projectSFID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func (s service) AddGithubOrganization(projectSFID string, input *models.CreateG
 }
 
 func (s service) DeleteGithubOrganization(projectSFID string, githubOrgName string) error {
-	err := s.ghRepository.DeleteRepositoriesOfGithubOrganization("", projectSFID, githubOrgName)
+	err := s.ghRepository.DisableRepositoriesOfGithubOrganization(projectSFID, githubOrgName)
 	if err != nil {
 		return err
 	}

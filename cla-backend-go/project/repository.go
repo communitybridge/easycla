@@ -788,7 +788,7 @@ func (repo *repo) buildCLAGroupModel(dbModel DBProjectModel, loadRepoDetails boo
 			go func() {
 				defer wg.Done()
 				var err error
-				ghOrgs, err = repo.ghRepo.GetProjectRepositoriesGroupByOrgs(dbModel.ProjectID)
+				ghOrgs, err = repo.ghRepo.GetCLAGroupRepositoriesGroupByOrgs(dbModel.ProjectID, true)
 				if err != nil {
 					log.Warnf("buildPCLAGroupModel - unable to load GH organizations by project ID: %s, error: %+v",
 						dbModel.ProjectID, err)

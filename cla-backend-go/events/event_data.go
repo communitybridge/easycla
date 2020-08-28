@@ -13,13 +13,13 @@ type EventData interface {
 	GetEventSummaryString(args *LogEventArgs) (eventData string, containsPII bool)
 }
 
-// GithubRepositoryAddedEventData . . .
-type GithubRepositoryAddedEventData struct {
+// RepositoryAddedEventData . . .
+type RepositoryAddedEventData struct {
 	RepositoryName string
 }
 
-// GithubRepositoryDeletedEventData . . .
-type GithubRepositoryDeletedEventData struct {
+// RepositoryDisabledEventData . . .
+type RepositoryDisabledEventData struct {
 	RepositoryName string
 }
 
@@ -312,13 +312,13 @@ type ClaManagerRoleDeletedData struct {
 }
 
 // GetEventDetailsString . . .
-func (ed *GithubRepositoryAddedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+func (ed *RepositoryAddedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user [%s] added github repository [%s] to project [%s]", args.userName, ed.RepositoryName, args.projectName)
 	return data, true
 }
 
 // GetEventDetailsString . . .
-func (ed *GithubRepositoryDeletedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+func (ed *RepositoryDisabledEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user [%s] deleted github repository [%s] from project [%s]", args.userName, ed.RepositoryName, args.projectName)
 	return data, true
 }
@@ -647,13 +647,13 @@ func (ed *ClaManagerRoleDeletedData) GetEventDetailsString(args *LogEventArgs) (
 // Event Summary started
 
 // GetEventSummaryString . . .
-func (ed *GithubRepositoryAddedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+func (ed *RepositoryAddedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user %s added github repository %s to project %s", args.userName, ed.RepositoryName, args.projectName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
-func (ed *GithubRepositoryDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+func (ed *RepositoryDisabledEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user %s deleted github repository %s from project %s", args.userName, ed.RepositoryName, args.projectName)
 	return data, true
 }

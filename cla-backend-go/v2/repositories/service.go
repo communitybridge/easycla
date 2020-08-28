@@ -25,10 +25,11 @@ import (
 // Service contains functions of Github Repository service
 type Service interface {
 	AddGithubRepository(projectSFID string, input *models.GithubRepositoryInput) (*v1Models.GithubRepository, error)
-	DeleteGithubRepository(projectSFID string, repositoryID string) error
+	EnableRepository(repositoryID string) error
+	DisableRepository(repositoryID string) error
 	ListProjectRepositories(projectSFID string) (*v1Models.ListGithubRepositories, error)
-	GetGithubRepository(repositoryID string) (*v1Models.GithubRepository, error)
-	DeleteCLAGroupRepositories(claGroupID string) error
+	GetRepository(repositoryID string) (*v1Models.GithubRepository, error)
+	DisableCLAGroupRepositories(claGroupID string) error
 }
 
 // GithubOrgRepo provide method to get github organization by name
@@ -103,20 +104,25 @@ func (s *service) AddGithubRepository(projectSFID string, input *models.GithubRe
 	return s.repo.AddGithubRepository(externalProjectID, projectSFID, in)
 }
 
-func (s *service) DeleteGithubRepository(projectSFID string, repositoryID string) error {
-	return s.repo.DeleteGithubRepository("", projectSFID, repositoryID)
+func (s *service) EnableRepository(repositoryID string) error {
+	return s.repo.EnableRepository(repositoryID)
 }
+
+func (s *service) DisableRepository(repositoryID string) error {
+	return s.repo.DisableRepository(repositoryID)
+}
+
 func (s *service) ListProjectRepositories(projectSFID string) (*v1Models.ListGithubRepositories, error) {
-	return s.repo.ListProjectRepositories("", projectSFID)
+	return s.repo.ListProjectRepositories("", projectSFID, true)
 }
 
-func (s *service) GetGithubRepository(repositoryID string) (*v1Models.GithubRepository, error) {
-	return s.repo.GetGithubRepository(repositoryID)
+func (s *service) GetRepository(repositoryID string) (*v1Models.GithubRepository, error) {
+	return s.repo.GetRepository(repositoryID)
 }
 
-func (s *service) DeleteCLAGroupRepositories(claGroupID string) error {
+func (s *service) DisableCLAGroupRepositories(claGroupID string) error {
 	var deleteErr error
-	ghOrgs, err := s.repo.GetProjectRepositoriesGroupByOrgs(claGroupID)
+	ghOrgs, err := s.repo.GetCLAGroupRepositoriesGroupByOrgs(claGroupID, true)
 	if err != nil {
 		return err
 	}
@@ -124,7 +130,7 @@ func (s *service) DeleteCLAGroupRepositories(claGroupID string) error {
 		log.Debugf("Deleting repositories for cla-group :%s", claGroupID)
 		for _, ghOrg := range ghOrgs {
 			for _, item := range ghOrg.List {
-				deleteErr = s.repo.DeleteProject(item.RepositoryID)
+				deleteErr = s.repo.DisableRepository(item.RepositoryID)
 				if deleteErr != nil {
 					log.Warnf("Unable to remove repository: %s for project :%s error :%v", item.RepositoryID, claGroupID, deleteErr)
 				}
