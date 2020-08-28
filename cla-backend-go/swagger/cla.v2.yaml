@@ -1940,6 +1940,44 @@ paths:
       tags:
         - company
 
+  /company/{companySFID}/claGroup/{claGroupID}/contributorAssociation:
+    post:
+      summary: Associates a contributor with a company and Project
+      description: Associates a contributor with a company and Project
+      security: []
+      operationId: contributorRoleScopAssociation
+      parameters:
+        - $ref: "#/parameters/path-companySFID"
+        - $ref: "#/parameters/path-claGroupID"
+        - name: body
+          in: body
+          schema:
+            type: object
+            x-nullable: false
+            title: Contributor
+            properties:
+              userEmail:
+                $ref: './common/properties/email.yaml'
+                description: LfEmail for contributor getting associated
+
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/contributors'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - company
+
   /company/{companySFID}/project/{projectSFID}/cla-manager/{userLFID}:
     delete:
       summary: Removes the CLA Manager from ACL for specified Company and Project
@@ -3143,6 +3181,17 @@ definitions:
         items:
           $ref:
             '#/definitions/cla-manager-designee'
+  
+  contributors:
+    type: object
+    title: contributors
+    description: List of contributor roles for a user
+    properties:
+      list:
+        type: array
+        items:
+          $ref:
+            '#/definitions/contributor'
 
   contributor:
     type: object

@@ -5,6 +5,7 @@ package company
 
 import (
 	"github.com/communitybridge/easycla/cla-backend-go/company"
+	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/users"
@@ -17,6 +18,7 @@ type service struct {
 	userRepo             users.UserRepository
 	companyRepo          company.IRepository
 	projectClaGroupsRepo projects_cla_groups.Repository
+	eventService         events.Service
 }
 
 type claGroupModel struct {
