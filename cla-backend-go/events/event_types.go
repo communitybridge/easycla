@@ -36,8 +36,8 @@ const (
 	UserUpdated        = "user.updated"
 	UserDeleted        = "user.deleted"
 
-	GithubRepositoryAdded   = "github_repository.added"
-	GithubRepositoryDeleted = "github_repository.deleted"
+	RepositoryAdded    = "repository.added"
+	RepositoryDisabled = "repository.disabled"
 
 	GerritRepositoryAdded   = "gerrit_repository.added"
 	GerritRepositoryDeleted = "gerrit_repository.deleted"
