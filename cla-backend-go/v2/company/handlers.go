@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+	"github.com/sirupsen/logrus"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
 	v1Company "github.com/communitybridge/easycla/cla-backend-go/company"
@@ -20,8 +22,17 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
+const (
+	//BadRequest error Response code
+	BadRequest = "400"
+	//Conflict error Response code
+	Conflict = "409"
+	// NotFound error Response code
+	NotFound = "404"
+)
+
 // Configure sets up the middleware handlers
-func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository, LFXPortalURL string) { // nolint
+func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository, projectClaGroupRepo projects_cla_groups.Repository, LFXPortalURL string) { // nolint
 
 	api.CompanyGetCompanyProjectClaManagersHandler = company.GetCompanyProjectClaManagersHandlerFunc(
 		func(params company.GetCompanyProjectClaManagersParams, authUser *auth.User) middleware.Responder {
@@ -311,6 +322,61 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				return company.NewContributorAssociationBadRequest().WithPayload(errorResponse(contributorErr))
 			}
 			return company.NewContributorAssociationOK().WithPayload(contributor)
+		})
+
+	api.CompanyContributorRoleScopAssociationHandler = company.ContributorRoleScopAssociationHandlerFunc(
+		func(params company.ContributorRoleScopAssociationParams) middleware.Responder {
+			f := logrus.Fields{
+				"functionName": "CompanyContributorRoleScopAssociationHandler",
+				"CompanySFID":  params.CompanySFID,
+				"ClaGroupID":   params.ClaGroupID,
+				"Email":        params.Body.UserEmail.String(),
+				//"authUser":     *params.XUSERNAME,
+			}
+			log.WithFields(f).Debugf("processing CLA Manager Desginee by group request")
+
+			log.WithFields(f).Debugf("getting project IDs for CLA group")
+			projectCLAGroups, getErr := projectClaGroupRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
+			if getErr != nil {
+				msg := fmt.Sprintf("Error getting SF projects for claGroup: %s ", params.ClaGroupID)
+				log.WithFields(f).Warn(msg)
+				return company.NewContributorRoleScopAssociationBadRequest().WithPayload(
+					&models.ErrorResponse{
+						Message: msg,
+						Code:    BadRequest,
+					})
+			}
+			log.WithFields(f).Debugf("found %d project IDs for CLA group", len(projectCLAGroups))
+			if len(projectCLAGroups) == 0 {
+				msg := fmt.Sprintf("no projects associated with CLA Group: %s", params.ClaGroupID)
+				log.WithFields(f).Warn(msg)
+				return company.NewContributorRoleScopAssociationNotFound().WithPayload(
+					&models.ErrorResponse{
+						Message: msg,
+						Code:    BadRequest,
+					})
+
+			}
+
+			contributor, msg, err := service.AssociateContributorByGroup(params.CompanySFID, params.Body.UserEmail.String(), projectCLAGroups, f, params.ClaGroupID)
+			if err != nil {
+				if err == ErrContributorConflict {
+					return company.NewContributorRoleScopAssociationConflict().WithPayload(
+						&models.ErrorResponse{
+							Message: msg,
+							Code:    Conflict,
+						})
+				}
+				log.WithFields(f).Warn(msg)
+				return company.NewContributorRoleScopAssociationBadRequest().WithPayload(
+					&models.ErrorResponse{
+						Message: msg,
+						Code:    BadRequest,
+					})
+			}
+			return company.NewContributorRoleScopAssociationOK().WithPayload(&models.Contributors{
+				List: contributor,
+			})
 		})
 }
 
