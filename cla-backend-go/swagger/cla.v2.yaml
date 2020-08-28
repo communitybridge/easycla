@@ -995,10 +995,6 @@ paths:
       parameters:
         - $ref: "#/parameters/path-claGroupID"
         - $ref: "#/parameters/templateCLAType"
-        - $ref: "#/parameters/x-request-id"
-        - $ref: "#/parameters/x-acl"
-        - $ref: "#/parameters/x-username"
-        - $ref: "#/parameters/x-email"
         - in: query
           type: boolean
           name: watermark
