@@ -1111,6 +1111,7 @@ paths:
           $ref: '#/responses/forbidden'
       tags:
         - github-organizations
+
   /project/{projectSFID}/github/repositories:
     post:
       summary: API to add the GitHub repository
@@ -1173,6 +1174,7 @@ paths:
           $ref: '#/responses/internal-server-error'
       tags:
         - github-repositories
+
   /project/{projectSFID}/github/repositories/{repositoryID}:
     delete:
       summary: API to remove the GitHub repository from the project

@@ -59,11 +59,11 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			}
 
 			eventService.LogEvent(&events.LogEventArgs{
-				EventType:         events.GithubRepositoryAdded,
+				EventType:         events.RepositoryAdded,
 				ProjectID:         utils.StringValue(params.GithubRepositoryInput.ClaGroupID),
 				ExternalProjectID: params.ProjectSFID,
 				LfUsername:        authUser.UserName,
-				EventData: &events.GithubRepositoryAddedEventData{
+				EventData: &events.RepositoryAddedEventData{
 					RepositoryName: result.RepositoryName,
 				},
 			})
@@ -88,7 +88,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
-			ghRepo, err := service.GetGithubRepository(params.RepositoryID)
+			ghRepo, err := service.GetRepository(params.RepositoryID)
 			if err != nil {
 				if err == repositories.ErrGithubRepositoryNotFound {
 					return github_repositories.NewDeleteProjectGithubRepositoryNotFound()
@@ -96,17 +96,17 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
 
-			err = service.DeleteGithubRepository(params.ProjectSFID, params.RepositoryID)
+			err = service.DisableRepository(params.RepositoryID)
 			if err != nil {
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
 
 			eventService.LogEvent(&events.LogEventArgs{
-				EventType:         events.GithubRepositoryDeleted,
+				EventType:         events.RepositoryDisabled,
 				ExternalProjectID: params.ProjectSFID,
 				ProjectID:         ghRepo.RepositoryProjectID,
 				LfUsername:        authUser.UserName,
-				EventData: &events.GithubRepositoryDeletedEventData{
+				EventData: &events.RepositoryDisabledEventData{
 					RepositoryName: ghRepo.RepositoryName,
 				},
 			})
