@@ -114,6 +114,15 @@ func (s *service) ValidateCLAGroup(input *models.ClaGroupValidationRequest) (boo
 // if foundation_sfid is root project i.e project without parent and if it does not have subprojects then return boolean
 // flag would be true
 func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool, error) {
+	f := logrus.Fields{
+		"functionName":     "validateClaGroupInput",
+		"foundationSFID":   *input.FoundationSfid,
+		"claGroupName":     *input.ClaGroupName,
+		"iclaEnabled":      *input.IclaEnabled,
+		"cclaEnabled":      *input.CclaEnabled,
+		"cclaRequiresIcla": *input.CclaRequiresIcla,
+	}
+	log.WithFields(f).Debug("validating CLA Group input...")
 	if *input.FoundationSfid == "" {
 		return false, fmt.Errorf("bad request: foundation_sfid cannot be empty")
 	}
@@ -133,6 +142,7 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 		return false, fmt.Errorf("bad request: cla_group with name %s already exist", *input.ClaGroupName)
 	}
 
+	log.WithFields(f).Debug("looking up project in project service by Foundation SFID...")
 	psc := v2ProjectService.GetClient()
 	rootProjectDetails, err := psc.GetProject(*input.FoundationSfid)
 	if err != nil {
@@ -142,13 +152,17 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 		return false, err
 	}
 
+	// No parent or children
 	if rootProjectDetails.Parent == "" && len(rootProjectDetails.Projects) == 0 {
 		// this is standalone project
 		if len(input.ProjectSfidList) != 0 {
 			return false, fmt.Errorf("bad request: invalid project_sfid_list. This project does not have subprojects")
 		}
+		log.WithFields(f).Debug("foundation doesn't have a parent or any children project - this is a standalone project")
 		return true, nil
 	}
+
+	log.WithFields(f).Debug("validating enrolled projects...")
 	err = s.validateEnrollProjectsInput(*input.FoundationSfid, input.ProjectSfidList)
 	if err != nil {
 		return false, err
@@ -170,13 +184,13 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFID
 	}
 
 	if rootProjectDetails.Parent != "" {
-		return fmt.Errorf("bad request: invalid input foundation_sfid. It have parent project")
+		return fmt.Errorf("bad request: invalid input foundation_sfid. it has a parent project")
 	}
 	if len(rootProjectDetails.Projects) == 0 {
-		return fmt.Errorf("bad request: invalid input to enroll projects. project does not have subprojects")
+		return fmt.Errorf("bad request: invalid input to enroll projects. project does not have any subprojects")
 	}
 
-	// check if all enrolled projects are part of foundation
+	// Check to see if all the provided enrolled projects are part of this foundation
 	foundationProjectList := utils.NewStringSet()
 	for _, pr := range rootProjectDetails.Projects {
 		foundationProjectList.Add(pr.ID)
@@ -207,7 +221,7 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFID
 		}
 	}
 	if invalidProjectSFIDs.Length() != 0 {
-		return fmt.Errorf("bad request: invalid project_sfid passed : %v. These project is already enrolled in one of the cla_group", invalidProjectSFIDs.List())
+		return fmt.Errorf("bad request: invalid project_sfid provided: %v. These projects are already enrolled in an existing cla_group", invalidProjectSFIDs.List())
 	}
 
 	return nil
@@ -232,7 +246,7 @@ func (s *service) enrollProjects(claGroupID string, foundationSFID string, proje
 }
 
 func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error) {
-	f := logrus.Fields{"function": "CreateCLAGroup"}
+	f := logrus.Fields{"function": "CreateCLAGroup", "input": input, "projectManagerLFID": projectManagerLFID}
 	// Validate the input
 	log.WithFields(f).WithField("input", input).Debugf("validating create cla group input")
 	if input.IclaEnabled == nil ||
@@ -329,6 +343,7 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 	}
 
 	return &models.ClaGroup{
+		FoundationLevelCLA:  isFoundationLevelCLA(*input.FoundationSfid, subProjectList),
 		CclaEnabled:         claGroup.ProjectCCLAEnabled,
 		CclaPdfURL:          pdfUrls.CorporatePDFURL,
 		CclaRequiresIcla:    claGroup.ProjectCCLARequiresICLA,
@@ -615,10 +630,10 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 	if err != nil {
 		return nil, err
 	}
+	var foundationLevelCLA = false
 	for _, cgproject := range cgprojects {
 		if cgproject.ProjectSFID == cgproject.FoundationSFID {
-			// dont include itself as subproject
-			continue
+			foundationLevelCLA = true
 		}
 		cg, ok := m[cgproject.ClaGroupID]
 		if !ok {
@@ -631,6 +646,7 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 			RepositoriesCount: cgproject.RepositoriesCount,
 		})
 		cg.RepositoriesCount += cgproject.RepositoriesCount
+		cg.FoundationLevelCLA = foundationLevelCLA
 	}
 	cgmetrics := s.getMetrics(claGroupIDList.List())
 
@@ -734,4 +750,16 @@ func toFoundationMapping(list []*projects_cla_groups.ProjectClaGroup) *models.Fo
 		}
 	}
 	return out
+}
+
+// isFoundationLevelCLA is a helper function to determine if the list of projects includes the Foundation ID - if it does
+// it is considered a foundation level CLA - meaning that the foundation and all the projects under it are part of the
+// same CLA group. The way we can tell is if the Foundation was selected as part of the project list.
+func isFoundationLevelCLA(foundationSFID string, projects []*projects_cla_groups.ProjectClaGroup) bool {
+	for _, project := range projects {
+		if project.ProjectSFID == foundationSFID {
+			return true
+		}
+	}
+	return false
 }

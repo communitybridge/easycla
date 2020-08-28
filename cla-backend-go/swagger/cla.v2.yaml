@@ -340,6 +340,7 @@ paths:
           $ref: '#/responses/internal-server-error'
       tags:
         - cla-group
+
   /cla-group/{claGroupID}:
     delete:
       summary: Delete an EasyCLA CLA Group
@@ -3595,6 +3596,10 @@ definitions:
   cla-group:
     type: object
     properties:
+      foundationLevelCLA:
+        description: Flag indicating whether CLA is signed at Foundation level (true) or Project level (false)
+        type: boolean
+        x-omitempty: false
       cla_group_id:
         type: string
         example: 'b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f'
