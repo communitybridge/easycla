@@ -15,6 +15,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 
 	"github.com/jinzhu/copier"
@@ -35,7 +36,9 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
+
 	orgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 	v2ProjectServiceModels "github.com/communitybridge/easycla/cla-backend-go/v2/project-service/models"
 	v2UserService "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
@@ -48,6 +51,15 @@ var (
 	ErrCLAUserNotFound = errors.New("claUser not found")
 	ErrNoLfUsername    = errors.New("user has no LF username")
 	// ErrNoValidEmail    = errors.New("user with no valid email")
+
+	//ErrProjectSigned returns error if project already signed
+	ErrProjectSigned = errors.New("project already signed")
+	//ErrLFXUserNotFound when user-service fails to find user
+	ErrLFXUserNotFound = errors.New("lfx user not found")
+	//ErrContributorConflict when user is already assigned contributor role
+	ErrContributorConflict = errors.New("user already assigned contributor")
+	//ErrRoleScopeConflict thrown if user already has role scope
+	ErrRoleScopeConflict = errors.New("user is already contributor")
 )
 
 // constants
@@ -59,6 +71,9 @@ const (
 	// FoundationType the SF foundation type string - previously was "Foundation", now "Project Group"
 	FoundationType = "Project Group"
 	// ProjectType         = "Project"
+
+	// Lead representing type of user
+	Lead = "lead"
 )
 
 // Service functions for company
@@ -75,6 +90,7 @@ type Service interface {
 	DeleteCompanyBySFID(companySFID string) error
 	GetCompanyCLAGroupManagers(companyID, claGroupID string) (*models.CompanyClaManagers, error)
 	AssociateContributor(companySFID, userEmail string) (*models.Contributor, error)
+	AssociateContributorByGroup(companySFID, userEmail string, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields, ClaGroupID string) ([]*models.Contributor, string, error)
 }
 
 // ProjectRepo contains project repo methods
@@ -84,7 +100,7 @@ type ProjectRepo interface {
 }
 
 // NewService returns instance of company service
-func NewService(v1CompanyService v1Company.IService, sigRepo signatures.SignatureRepository, projectRepo ProjectRepo, usersRepo users.UserRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository) Service {
+func NewService(v1CompanyService v1Company.IService, sigRepo signatures.SignatureRepository, projectRepo ProjectRepo, usersRepo users.UserRepository, companyRepo company.IRepository, pcgRepo projects_cla_groups.Repository, evService events.Service) Service {
 	return &service{
 		v1CompanyService:     v1CompanyService,
 		signatureRepo:        sigRepo,
@@ -92,6 +108,7 @@ func NewService(v1CompanyService v1Company.IService, sigRepo signatures.Signatur
 		userRepo:             usersRepo,
 		companyRepo:          companyRepo,
 		projectClaGroupsRepo: pcgRepo,
+		eventService:         evService,
 	}
 }
 
@@ -366,7 +383,181 @@ func (s *service) AssociateContributor(companySFID string, userEmail string) (*m
 	}
 
 	return contributor, nil
+}
 
+//CreateContibutor creates contributor for contributor prospect
+func (s *service) CreateContibutor(companyID string, projectID string, userEmail string, ClaGroupID string) (*models.Contributor, error) {
+	// integrate user,acs,org and project services
+	userClient := v2UserService.GetClient()
+	acServiceClient := acs_service.GetClient()
+	orgClient := orgService.GetClient()
+
+	isSigned, signedErr := s.isSigned(companyID, projectID)
+	if signedErr != nil {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request- %s", signedErr)
+		log.Warn(msg)
+		return nil, signedErr
+	}
+
+	if isSigned {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project :%s is already signed ", projectID)
+		log.Warn(msg)
+		return nil, ErrProjectSigned
+	}
+
+	user, userErr := userClient.SearchUserByEmail(userEmail)
+	if userErr != nil {
+		log.Debugf("Failed to get user by email: %s , error: %+v", userEmail, userErr)
+		return nil, ErrLFXUserNotFound
+	}
+
+	// Check if user is already contributor of project|organization scope
+	hasRoleScope, hasRoleScopeErr := orgClient.IsUserHaveRoleScope("contributor", user.ID, companyID, projectID)
+	if hasRoleScopeErr != nil {
+		// Skip 404 for ListOrgUsrServiceScopes endpoint
+		if _, ok := hasRoleScopeErr.(*organizations.ListOrgUsrServiceScopesNotFound); !ok {
+			log.Debugf("Failed to check roleScope: contributor  for user: %s", user.Username)
+			return nil, hasRoleScopeErr
+		}
+	}
+	if hasRoleScope {
+		log.Debugf("Conflict ")
+		return nil, ErrContributorConflict
+	}
+
+	roleID, designeeErr := acServiceClient.GetRoleID("contributor")
+	if designeeErr != nil {
+		msg := "Problem getting role ID for contributor"
+		log.Warn(msg)
+		return nil, designeeErr
+	}
+
+	scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(userEmail, projectID, companyID, roleID)
+	if scopeErr != nil {
+		msg := fmt.Sprintf("Problem creating projectOrg scope for email: %s , projectID: %s, companyID: %s", userEmail, projectID, companyID)
+		log.Warn(msg)
+		if _, ok := scopeErr.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
+			return nil, ErrRoleScopeConflict
+		}
+		return nil, scopeErr
+	}
+
+	v1Company, companyErr := s.v1CompanyService.GetCompanyByExternalID(companyID)
+	if companyErr != nil {
+		log.Error("company not found", companyErr)
+	}
+
+	projectModel, projErr := s.projectRepo.GetCLAGroupByID(ClaGroupID, DontLoadRepoDetails)
+	if projErr != nil {
+		msg := fmt.Sprintf("unable to query CLA Group ID: %s, error: %+v", ClaGroupID, projErr)
+		log.Warnf(msg)
+	}
+
+	// Log Event
+	s.eventService.LogEvent(
+		&events.LogEventArgs{
+			EventType:         events.AssignUserRoleScopeType,
+			LfUsername:        user.Username,
+			UserID:            user.ID,
+			ExternalProjectID: projectID,
+			CompanyModel:      v1Company,
+			ProjectModel:      projectModel,
+			UserModel:         &v1Models.User{LfUsername: user.Username, UserID: user.ID},
+			EventData: &events.AssignRoleScopeData{
+				Role:  "contributor",
+				Scope: fmt.Sprintf("%s|%s", projectID, companyID),
+			},
+		})
+
+	if user.Type == Lead {
+		log.Debugf("Converting user: %s from lead to contact ", userEmail)
+		contactErr := userClient.ConvertToContact(user.ID)
+		if contactErr != nil {
+			log.Debugf("failed to convert user: %s to contact ", userEmail)
+			return nil, contactErr
+		}
+		// Log user conversion event
+		s.eventService.LogEvent(&events.LogEventArgs{
+			EventType:         events.ConvertUserToContactType,
+			LfUsername:        user.Username,
+			ExternalProjectID: projectID,
+			EventData:         &events.UserConvertToContactData{},
+		})
+	}
+
+	contributor := &models.Contributor{
+		LfUsername:  user.Username,
+		UserSfid:    user.ID,
+		AssignedOn:  time.Now().String(),
+		Email:       strfmt.Email(userEmail),
+		CompanySfid: companyID,
+		Role:        *aws.String("contributor"),
+	}
+	return contributor, nil
+}
+
+// Helper function to check if project/claGroup is signed
+func (s *service) isSigned(companyID string, projectID string) (bool, error) {
+	isSigned := false
+	// Check for company contributor
+
+	v1Company, companyErr := s.v1CompanyService.GetCompanyByExternalID(companyID)
+	if companyErr != nil {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - %s", companyErr)
+		log.Warn(msg)
+		return isSigned, companyErr
+	}
+
+	claManagers, err := s.GetCompanyProjectCLAManagers(v1Company.CompanyID, projectID)
+	if err != nil {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request : %v", err)
+		log.Warn(msg)
+		return isSigned, err
+	}
+
+	if len(claManagers.List) > 0 {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - CLA Group signed for company: %s and project : %s", companyID, projectID)
+		log.Warn(msg)
+		isSigned = true
+	}
+
+	return isSigned, nil
+}
+
+//AssociateContributorByGroup creates contributor by group for contributor prospect
+func (s *service) AssociateContributorByGroup(companySFID, userEmail string, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields, ClaGroupID string) ([]*models.Contributor, string, error) {
+	var contributors []*models.Contributor
+	foundationSFID := projectCLAGroups[0].FoundationSFID
+	if foundationSFID != "" {
+		contributor, err := s.CreateContibutor(companySFID, foundationSFID, userEmail, ClaGroupID)
+		if err != nil {
+			if err == ErrContributorConflict {
+				msg := fmt.Sprintf("Conflict assigning contributor role for Foundation SFID: %s ", foundationSFID)
+				return nil, msg, err
+			}
+			msg := fmt.Sprintf("Creating contributor failed for Foundation SFID: %s ", foundationSFID)
+			return nil, msg, err
+		}
+		contributors = append(contributors, contributor)
+	}
+
+	for _, pcg := range projectCLAGroups {
+		log.WithFields(f).Debugf("creating contributor for Project SFID: %s", pcg.ProjectSFID)
+		if foundationSFID != pcg.ProjectSFID {
+			contributor, err := s.CreateContibutor(companySFID, pcg.ProjectSFID, userEmail, ClaGroupID)
+			if err != nil {
+				if err == ErrContributorConflict {
+					msg := fmt.Sprintf("Conflict assigning contributor role for Project SFID: %s ", pcg.ProjectSFID)
+					return nil, msg, err
+				}
+				msg := fmt.Sprintf("Creating contributor failed for Project SFID: %s ", pcg.ProjectSFID)
+				return nil, msg, err
+			}
+			contributors = append(contributors, contributor)
+		}
+
+	}
+	return contributors, "", nil
 }
 
 // GetCompanyBySFID retrieves the company by external SFID
