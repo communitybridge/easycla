@@ -516,12 +516,19 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 		return nil, scopeErr
 	}
 
+	v1Company, companyErr := s.companyService.GetCompanyByExternalID(companyID)
+	if companyErr != nil {
+		log.Error("company not found", companyErr)
+	}
+
 	// Log Event
 	s.eventService.LogEvent(
 		&events.LogEventArgs{
 			EventType:         events.AssignUserRoleScopeType,
 			LfUsername:        user.Username,
 			ExternalProjectID: projectID,
+			CompanyModel:      v1Company,
+			UserModel:         &v1Models.User{LfUsername: user.Username, UserID: user.ID},
 			EventData: &events.AssignRoleScopeData{
 				Role:  "cla-manager-designee",
 				Scope: fmt.Sprintf("%s|%s", projectID, companyID),
