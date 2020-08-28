@@ -5,8 +5,8 @@ package repositories
 
 import "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 
-// GithubRepository represent repositories table
-type GithubRepository struct {
+// RepositoryDBModel represent repositories table
+type RepositoryDBModel struct {
 	DateCreated                string `dynamodbav:"date_created" json:"date_created,omitempty"`
 	DateModified               string `dynamodbav:"date_modified" json:"date_modified,omitempty"`
 	RepositoryExternalID       string `dynamodbav:"repository_external_id" json:"repository_external_id,omitempty"`
@@ -23,7 +23,16 @@ type GithubRepository struct {
 	Version                    string `dynamodbav:"version" json:"version,omitempty"`
 }
 
-func (gr *GithubRepository) toModel() *models.GithubRepository {
+func convertModels(dbModels []*RepositoryDBModel) []*models.GithubRepository {
+	var responseModels []*models.GithubRepository
+	for _, dbModel := range dbModels {
+		responseModels = append(responseModels, dbModel.toModel())
+
+	}
+	return responseModels
+}
+
+func (gr *RepositoryDBModel) toModel() *models.GithubRepository {
 	return &models.GithubRepository{
 		DateCreated:                gr.DateCreated,
 		DateModified:               gr.DateModified,

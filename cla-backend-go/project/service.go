@@ -144,7 +144,7 @@ func (s service) fillRepoInfo(project *models.Project) {
 	go func() {
 		defer wg.Done()
 		var err error
-		ghrepos, err = s.repositoriesRepo.GetProjectRepositoriesGroupByOrgs(project.ProjectID)
+		ghrepos, err = s.repositoriesRepo.GetCLAGroupRepositoriesGroupByOrgs(project.ProjectID, true)
 		if err != nil {
 			log.Error("unable to get github repositories for project.", err)
 			return

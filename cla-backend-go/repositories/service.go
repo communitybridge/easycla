@@ -11,23 +11,22 @@ import (
 // Service contains functions of Github Repository service
 type Service interface {
 	AddGithubRepository(externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
-	DeleteGithubRepository(externalProjectID string, repositoryID string) error
+	EnableRepository(repositoryID string) error
+	DisableRepository(repositoryID string) error
 	ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error)
-	GetGithubRepository(repositoryID string) (*models.GithubRepository, error)
-	DeleteProject(projectID string) (int, error)
-	GetGithubRepositoryByCLAGroup(claGroupID string) (*models.GithubRepository, error)
+	GetRepository(repositoryID string) (*models.GithubRepository, error)
+	DisableRepositoriesByProjectID(projectID string) (int, error)
+	GetRepositoriesByCLAGroup(claGroupID string) ([]*models.GithubRepository, error)
 }
 
 type service struct {
 	repo Repository
-	//projectRepository project.Repository
 }
 
 // NewService creates a new githubOrganizations service
 func NewService(repo Repository) Service {
 	return &service{
 		repo: repo,
-		//projectRepository: projectRepository,
 	}
 }
 
@@ -35,20 +34,27 @@ func (s *service) AddGithubRepository(externalProjectID string, input *models.Gi
 	projectSFID := externalProjectID
 	return s.repo.AddGithubRepository(externalProjectID, projectSFID, input)
 }
-func (s *service) DeleteGithubRepository(externalProjectID string, repositoryID string) error {
-	return s.repo.DeleteGithubRepository(externalProjectID, "", repositoryID)
-}
-func (s *service) ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error) {
-	return s.repo.ListProjectRepositories(externalProjectID, "")
-}
-func (s *service) GetGithubRepository(repositoryID string) (*models.GithubRepository, error) {
-	return s.repo.GetGithubRepository(repositoryID)
+
+func (s *service) EnableRepository(repositoryID string) error {
+	return s.repo.EnableRepository(repositoryID)
 }
 
-// DeleteProject removes the repositories by Organizations
-func (s *service) DeleteProject(projectID string) (int, error) {
+func (s *service) DisableRepository(repositoryID string) error {
+	return s.repo.DisableRepository(repositoryID)
+}
+
+func (s *service) ListProjectRepositories(externalProjectID string) (*models.ListGithubRepositories, error) {
+	return s.repo.ListProjectRepositories(externalProjectID, "", true)
+}
+func (s *service) GetRepository(repositoryID string) (*models.GithubRepository, error) {
+	return s.repo.GetRepository(repositoryID)
+}
+
+// DisableRepositoriesByProjectID disables the repositories by project ID
+func (s *service) DisableRepositoriesByProjectID(projectID string) (int, error) {
 	var deleteErr error
-	ghOrgs, err := s.repo.GetProjectRepositoriesGroupByOrgs(projectID)
+	// Return the list of GitHub repositories by CLA Group for those that are currently enabled
+	ghOrgs, err := s.repo.GetCLAGroupRepositoriesGroupByOrgs(projectID, true)
 	if err != nil {
 		return 0, err
 	}
@@ -56,7 +62,7 @@ func (s *service) DeleteProject(projectID string) (int, error) {
 		log.Debugf("Deleting repositories for project :%s", projectID)
 		for _, ghOrg := range ghOrgs {
 			for _, item := range ghOrg.List {
-				deleteErr = s.repo.DeleteProject(item.RepositoryID)
+				deleteErr = s.repo.DisableRepository(item.RepositoryID)
 				if deleteErr != nil {
 					log.Warnf("Unable to remove repository: %s for project :%s error :%v", item.RepositoryID, projectID, deleteErr)
 				}
@@ -67,6 +73,8 @@ func (s *service) DeleteProject(projectID string) (int, error) {
 	return len(ghOrgs), nil
 }
 
-func (s *service) GetGithubRepositoryByCLAGroup(claGroupID string) (*models.GithubRepository, error) {
-	return s.repo.GetGithubRepositoryByCLAGroup(claGroupID)
+// GetRepositoriesByCLAGroup returns the list of repositories for the specified CLA Group
+func (s *service) GetRepositoriesByCLAGroup(claGroupID string) ([]*models.GithubRepository, error) {
+	// Return the list of github repositories that are enabled
+	return s.repo.GetRepositoriesByCLAGroup(claGroupID, true)
 }
