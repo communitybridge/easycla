@@ -134,7 +134,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		if !utils.IsUserAuthorizedForProjectTree(authUser, cg.FoundationSFID) {
 			return cla_group.NewEnrollProjectsForbidden().WithPayload(&models.ErrorResponse{
 				Code: "403",
-				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DeleteCLAGroup with Project scope of %s",
+				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to enroll with Project scope of %s",
 					authUser.UserName, cg.FoundationSFID),
 			})
 		}
@@ -161,6 +161,56 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		})
 
 		return cla_group.NewEnrollProjectsOK()
+	})
+
+	api.ClaGroupUnenrollProjectsHandler = cla_group.UnenrollProjectsHandlerFunc(func(params cla_group.UnenrollProjectsParams, authUser *auth.User) middleware.Responder {
+		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+		cg, err := v1ProjectService.GetCLAGroupByID(params.ClaGroupID)
+		if err != nil {
+			if err == v1Project.ErrProjectDoesNotExist {
+				return cla_group.NewUnenrollProjectsNotFound().WithPayload(&models.ErrorResponse{
+					Code: "404",
+					Message: fmt.Sprintf("EasyCLA - 404 Not Found - cla_group %s not found",
+						params.ClaGroupID),
+				})
+			}
+			return cla_group.NewUnenrollProjectsInternalServerError().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+			})
+		}
+		if !utils.IsUserAuthorizedForProjectTree(authUser, cg.FoundationSFID) {
+			return cla_group.NewUnenrollProjectsForbidden().WithPayload(&models.ErrorResponse{
+				Code: "403",
+				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to unenroll with Project scope of %s",
+					authUser.UserName, cg.FoundationSFID),
+			})
+		}
+
+		err = service.UnenrollProjectsInClaGroup(params.ClaGroupID, cg.FoundationSFID, params.ProjectSFIDList)
+		if err != nil {
+			if strings.Contains(err.Error(), "bad request") {
+				return cla_group.NewUnenrollProjectsBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: fmt.Sprintf("EasyCLA - 400 %s", err.Error()),
+				})
+			}
+			return cla_group.NewUnenrollProjectsInternalServerError().WithPayload(&models.ErrorResponse{
+				Code:    "500",
+				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+			})
+		}
+
+		// TODO: Project Service - remove CLA Enabled flag
+
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:    events.CLAGroupUpdated,
+			ProjectModel: cg,
+			LfUsername:   authUser.UserName,
+			EventData:    &events.CLAGroupUpdatedEventData{},
+		})
+
+		return cla_group.NewUnenrollProjectsOK()
 	})
 
 	api.ClaGroupListClaGroupsUnderFoundationHandler = cla_group.ListClaGroupsUnderFoundationHandlerFunc(func(params cla_group.ListClaGroupsUnderFoundationParams, authUser *auth.User) middleware.Responder {

@@ -367,11 +367,43 @@ paths:
           $ref: '#/responses/internal-server-error'
       tags:
         - cla-group
+
   /cla-group/{claGroupID}/enroll-projects:
     put:
       summary: Enroll projects in an EasyCLA CLA Group
       description: Enroll projects in  CLA Group
       operationId: enrollProjects
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+        - name: projectSFIDList
+          in: body
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - cla-group
+
+  /cla-group/{claGroupID}/unenroll-projects:
+    put:
+      summary: Unenroll projects in an EasyCLA CLA Group
+      description: Unenroll projects in  CLA Group
+      operationId: unenrollProjects
       parameters:
         - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/x-acl"

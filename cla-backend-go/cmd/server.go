@@ -230,6 +230,15 @@ func server(localMode bool) http.Handler {
 		companyRepo,
 		projectRepo,
 	})
+
+	// Initialize the external platform services - these are external APIs that
+	// we download the swagger specification, generate the models, and have
+	//client helper functions
+	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
+	project_service.InitClient(configFile.APIGatewayURL)
+	organization_service.InitClient(configFile.APIGatewayURL, eventsService)
+	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
+
 	usersService := users.NewService(usersRepo, eventsService)
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
@@ -256,14 +265,6 @@ func server(localMode bool) http.Handler {
 		RefreshToken: configFile.LFGroup.RefreshToken,
 	})
 	v2ClaGroupService := cla_groups.NewService(projectService, templateService, projectClaGroupRepo, v1ClaManagerService, signaturesService, metricsRepo, gerritService, repositoriesService, eventsService)
-
-	// Initialize the external platform services - these are external APIs that
-	// we download the swagger specification, generate the models, and have
-	//client helper functions
-	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
-	project_service.InitClient(configFile.APIGatewayURL)
-	organization_service.InitClient(configFile.APIGatewayURL, eventsService)
-	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
