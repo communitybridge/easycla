@@ -37,7 +37,9 @@ var (
 
 // errors
 var (
-	ErrRoleNotFound = errors.New("role not found")
+	ErrRoleNotFound     = errors.New("role not found")
+	ErrProjectIDMissing = errors.New("project ID missing")
+	ProjectOrgScope     = "project|organization"
 )
 
 // InitClient initializes the acs_service client
@@ -61,7 +63,7 @@ func GetClient() *Client {
 
 // SendUserInvite invites users to the LFX platform
 func (ac *Client) SendUserInvite(email *string,
-	roleName string, scope string, organizationID string, inviteType string, subject *string, emailContent *string, automate bool) error {
+	roleName string, scope string, projectID *string, organizationID string, inviteType string, subject *string, emailContent *string, automate bool) error {
 	tok, err := token.GetToken()
 	if err != nil {
 		return err
@@ -72,11 +74,20 @@ func (ac *Client) SendUserInvite(email *string,
 			Automate: automate,
 			Email:    email,
 			Scope:    scope,
-			ScopeID:  organizationID,
 			RoleName: roleName,
 			Type:     inviteType,
 		},
 		Context: context.Background(),
+	}
+	if scope == ProjectOrgScope && projectID == nil {
+		log.Error("Project required for project|organization scope", ErrProjectIDMissing)
+		return ErrProjectIDMissing
+	}
+	if scope == ProjectOrgScope {
+		// Set project|organization scope
+		params.SendInvite.ScopeID = fmt.Sprintf("%s|%s", *projectID, organizationID)
+	} else {
+		params.SendInvite.ScopeID = organizationID
 	}
 	if subject != nil {
 		params.SendInvite.Subject = *subject
