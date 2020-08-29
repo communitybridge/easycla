@@ -177,7 +177,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		designeeEmail := params.Body.UserEmail.String()
 		msg := fmt.Sprintf("User does not have an LFID account and has been sent an email invite: %s.", *params.Body.UserEmail)
 		log.Warn(msg)
-		sendEmailErr := sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, *managerUser.Emails[0].EmailAddress, designeeName, designeeEmail, organizationSF.ID, "cla-manager")
+		sendEmailErr := sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, *managerUser.Emails[0].EmailAddress, designeeName, designeeEmail, organizationSF.ID, nil, "cla-manager")
 		if sendEmailErr != nil {
 			emailMessage := fmt.Sprintf("Failed to send email to user : %s ", designeeEmail)
 			return nil, &models.ErrorResponse{
@@ -677,8 +677,9 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - User: %s does not have an LFID ", userEmail)
 		log.Warn(msg)
 		// Send email
-		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, authUser.Email, fullName, userEmail, companyModel.ID, "cla-manager-designee")
+		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, authUser.Email, fullName, userEmail, companyModel.ID, &projectSF.ID, "cla-manager-designee")
 		if sendEmailErr != nil {
+			log.Error("Error sending email ", sendEmailErr)
 			return nil, sendEmailErr
 		}
 		return nil, ErrNoLFID
@@ -782,7 +783,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 			contributorEmail = &contributor.LFEmail
 		}
 
-		sendErr := sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, "cla-manager-designee")
+		sendErr := sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, nil, "cla-manager-designee")
 		if sendErr != nil {
 			return nil, sendErr
 		}
@@ -1045,7 +1046,7 @@ func sendEmailToCLAManagerDesignee(corporateConsole string, companyName string, 
 }
 
 // sendEmailToUserWithNoLFID helper function to send email to a given user with no LFID
-func sendEmailToUserWithNoLFID(projectName, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail, organizationID string, role string) error {
+func sendEmailToUserWithNoLFID(projectName, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail, organizationID string, projectID *string, role string) error {
 	// subject string, body string, recipients []string
 	subject := "EasyCLA: Invitation to create LFID and complete process of becoming CLA Manager"
 	body := fmt.Sprintf(`
@@ -1065,7 +1066,7 @@ Once complete, notify the user %s and they will be able to add you as a CLA Mana
 	acsClient := v2AcsService.GetClient()
 	automate := false
 
-	acsErr := acsClient.SendUserInvite(&userWithNoLFIDEmail, role, "organization", organizationID, "userinvite", &subject, &body, automate)
+	acsErr := acsClient.SendUserInvite(&userWithNoLFIDEmail, role, "project|organization", projectID, organizationID, "userinvite", &subject, &body, automate)
 	if acsErr != nil {
 		return acsErr
 	}
