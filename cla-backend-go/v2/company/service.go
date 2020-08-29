@@ -266,6 +266,9 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userE
 			return nil, err
 		}
 		log.WithFields(f).Debugf("User :%s has been assigned the company-owner role to organization: %s ", userEmail, org.Name)
+		// Associate User with Newly created org
+		lfUser.Account.ID = org.ID
+
 		//Send Email to User with instructions to complete Company profile
 		log.WithFields(f).Debugf("Sending Email to user :%s to complete setup for newly created Org: %s ", userEmail, org.Name)
 		sendEmailToUserCompanyProfile(org.Name, userEmail, lfUser.Username, LFXPortalURL)
