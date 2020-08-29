@@ -271,8 +271,15 @@ func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID st
 
 // RemoveProjectAssociatedWithClaGroup removes all associated project with cla_group
 func (repo *repo) RemoveProjectAssociatedWithClaGroup(claGroupID string, projectSFIDList []string, all bool) error {
+	f := logrus.Fields{
+		"functionName":    "RemoveProjectAssociatedWithClaGroup",
+		"claGroupID":      claGroupID,
+		"projectSFIDList": projectSFIDList,
+		"all":             all,
+	}
 	list, err := repo.GetProjectsIdsForClaGroup(claGroupID)
 	if err != nil {
+		log.WithFields(f).Warnf("unable to fetch projects IDs for CLA Group, error: %+v", err)
 		return err
 	}
 	var projectFilter *utils.StringSet
@@ -292,10 +299,12 @@ func (repo *repo) RemoveProjectAssociatedWithClaGroup(claGroupID string, project
 			TableName: aws.String(repo.tableName),
 		})
 		if err != nil {
-			log.Warnf("unable to delete cla_group_association cla_group_id:%s project_sfid:%s", claGroupID, pr.ProjectSFID)
+			log.WithFields(f).Warnf("unable to delete cla_group_association cla_group_id: %s, project_sfid: %s",
+				claGroupID, pr.ProjectSFID)
 			errs = append(errs, err.Error())
 		}
 	}
+
 	if len(errs) != 0 {
 		return errors.New(strings.Join(errs, ","))
 	}
