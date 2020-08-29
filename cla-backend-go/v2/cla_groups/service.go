@@ -19,6 +19,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 	signatureService "github.com/communitybridge/easycla/cla-backend-go/signatures"
 	organization_service "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
+	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 
 	"github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
 
@@ -59,6 +60,7 @@ type service struct {
 type Service interface {
 	CreateCLAGroup(input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error)
 	EnrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error
+	UnenrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error
 	DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth.User) error
 	ListClaGroupsForFoundationOrProject(foundationSFID string) (*models.ClaGroupList, error)
 	ValidateCLAGroup(input *models.ClaGroupValidationRequest) (bool, []string)
@@ -274,6 +276,22 @@ func (s *service) enrollProjects(claGroupID string, foundationSFID string, proje
 	return nil
 }
 
+func (s *service) unenrollProjects(claGroupID string, foundationSFID string, projectSFIDList []string) error {
+	f := logrus.Fields{
+		"function":        "unenrollProjects",
+		"claGroupID":      claGroupID,
+		"foundationSFID":  foundationSFID,
+		"projectSFIDList": projectSFIDList,
+	}
+
+	deleteErr := s.projectsClaGroupsRepo.RemoveProjectAssociatedWithClaGroup(claGroupID, projectSFIDList, false)
+	if deleteErr != nil {
+		log.WithFields(f).Warnf("problem disassociating projects with CLA Group, error: %+v", deleteErr)
+		return deleteErr
+	}
+
+	return nil
+}
 func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error) {
 	f := logrus.Fields{"function": "CreateCLAGroup", "input": input, "projectManagerLFID": projectManagerLFID}
 	// Validate the input
@@ -388,21 +406,89 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 }
 
 func (s *service) EnrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error {
-	f := logrus.Fields{"cla_group_id": claGroupID, "foundation_sfid": foundationSFID, "project_sfid_list": projectSFIDList}
+	f := logrus.Fields{
+		"functionName":    "EnrollProjectsInClaGroup",
+		"claGroupID":      claGroupID,
+		"foundationSFID":  foundationSFID,
+		"projectSFIDList": projectSFIDList,
+	}
+
 	log.WithFields(f).Debug("validating enroll project input")
 	err := s.validateEnrollProjectsInput(foundationSFID, projectSFIDList)
 	if err != nil {
 		log.WithFields(f).Errorf("validating enroll project input failed. error = %s", err)
 		return err
 	}
-	log.WithFields(f).Debug("validating enroll project input passed")
+
 	log.WithFields(f).Debug("enrolling projects in cla_group")
 	err = s.enrollProjects(claGroupID, foundationSFID, projectSFIDList)
 	if err != nil {
 		log.WithFields(f).Errorf("enrolling projects in cla_group failed. error = %s", err)
 		return err
 	}
+
+	log.WithFields(f).Debug("enabling CLA service in platform project service")
+	// Run this in parallel...
+	var wg sync.WaitGroup
+	wg.Add(len(projectSFIDList))
+	psc := project_service.GetClient()
+	for _, projectSFID := range projectSFIDList {
+		// Execute as a go routine
+		go func(psc *project_service.Client, projectSFID string) {
+			defer wg.Done()
+			enableProjectErr := psc.EnableCLA(projectSFID)
+			if enableProjectErr != nil {
+				log.WithFields(f).Warnf("unable to enable CLA service for project: %s, error: %+v",
+					projectSFID, enableProjectErr)
+			} else {
+				log.WithFields(f).Debugf("enabled CLA service for project: %s", projectSFID)
+			}
+		}(psc, projectSFID)
+	}
+	// Wait until all go routines are done
+	wg.Wait()
+
 	log.WithFields(f).Debug("projects enrolled successfully in cla_group")
+	return nil
+}
+
+func (s *service) UnenrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error {
+	f := logrus.Fields{"cla_group_id": claGroupID, "foundation_sfid": foundationSFID, "project_sfid_list": projectSFIDList}
+	log.WithFields(f).Debug("validating unenroll project input")
+	err := s.validateEnrollProjectsInput(foundationSFID, projectSFIDList)
+	if err != nil {
+		log.WithFields(f).Errorf("validating unenroll project input failed. error = %s", err)
+		return err
+	}
+	log.WithFields(f).Debug("unenrolling projects in cla_group")
+	err = s.unenrollProjects(claGroupID, foundationSFID, projectSFIDList)
+	if err != nil {
+		log.WithFields(f).Errorf("unenrolling projects in cla_group failed. error = %s", err)
+		return err
+	}
+
+	log.WithFields(f).Debug("disabling CLA service in platform project service")
+	// Run this in parallel...
+	var wg sync.WaitGroup
+	wg.Add(len(projectSFIDList))
+	psc := project_service.GetClient()
+	for _, projectSFID := range projectSFIDList {
+		// Execute as a go routine
+		go func(psc *project_service.Client, projectSFID string) {
+			defer wg.Done()
+			disableProjectErr := psc.DisableCLA(projectSFID)
+			if disableProjectErr != nil {
+				log.WithFields(f).Warnf("unable to disable CLA service for project: %s, error: %+v",
+					projectSFID, disableProjectErr)
+			} else {
+				log.WithFields(f).Debugf("disabled CLA service for project: %s", projectSFID)
+			}
+		}(psc, projectSFID)
+	}
+	// Wait until all go routines are done
+	wg.Wait()
+
+	log.WithFields(f).Debug("projects unenrolled successfully in cla_group")
 	return nil
 }
 
