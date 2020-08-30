@@ -91,6 +91,7 @@ type Service interface {
 	GetCompanyCLAGroupManagers(companyID, claGroupID string) (*models.CompanyClaManagers, error)
 	AssociateContributor(companySFID, userEmail string) (*models.Contributor, error)
 	AssociateContributorByGroup(companySFID, userEmail string, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields, ClaGroupID string) ([]*models.Contributor, string, error)
+	GetCompanyAdmins(companyID string) (*models.CompanyAdminList, error)
 }
 
 // ProjectRepo contains project repo methods
@@ -158,6 +159,37 @@ func (s *service) GetCompanyProjectCLAManagers(companyID string, projectSFID str
 		return claManagers[i].Name < claManagers[j].Name
 	})
 	return &models.CompanyClaManagers{List: claManagers}, nil
+}
+
+func (s *service) GetCompanyAdmins(companySFID string) (*models.CompanyAdminList, error) {
+	f := logrus.Fields{"companySFID": companySFID}
+	orgClient := orgService.GetClient()
+
+	log.WithFields(f).Info("Getting user admins for company")
+	admins, adminErr := orgClient.ListOrgUserAdminScopes(companySFID)
+	adminList := make([]*models.AdminSf, 0)
+	if adminErr != nil {
+		if _, ok := adminErr.(*organizations.ListOrgUsrAdminScopesNotFound); ok {
+			log.WithFields(f).Info(" No admins found ")
+			return &models.CompanyAdminList{
+				List: adminList,
+			}, nil
+		}
+		return nil, adminErr
+	}
+
+	// if 404 and no error parse the userroles list
+	for _, userRole := range admins.Userroles {
+		adminList = append(adminList, &models.AdminSf{
+			Email:    userRole.Contact.EmailAddress,
+			Username: userRole.Contact.Username,
+			ID:       userRole.Contact.ID,
+		})
+	}
+
+	return &models.CompanyAdminList{
+		List: adminList,
+	}, nil
 }
 
 func (s *service) GetCompanyProjectActiveCLAs(companyID string, projectSFID string) (*models.ActiveClaList, error) {
