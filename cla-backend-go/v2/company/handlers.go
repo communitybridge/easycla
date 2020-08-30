@@ -324,6 +324,15 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			return company.NewContributorAssociationOK().WithPayload(contributor)
 		})
 
+	api.CompanyGetCompanyAdminsHandler = company.GetCompanyAdminsHandlerFunc(
+		func(params company.GetCompanyAdminsParams) middleware.Responder {
+			adminList, adminErr := service.GetCompanyAdmins(params.CompanySFID)
+			if adminErr != nil {
+				return company.NewGetCompanyAdminsBadRequest().WithPayload(errorResponse(adminErr))
+			}
+			return company.NewGetCompanyAdminsOK().WithPayload(adminList)
+		})
+
 	api.CompanyContributorRoleScopAssociationHandler = company.ContributorRoleScopAssociationHandlerFunc(
 		func(params company.ContributorRoleScopAssociationParams) middleware.Responder {
 			f := logrus.Fields{
