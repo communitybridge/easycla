@@ -2530,6 +2530,24 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - company
+  
+  /company/{companySFID}/admin:
+    get:
+      summary: Returns a list of Company Admins (salesforce)
+      operationId: getCompanyAdmins
+      security: []
+      parameters:
+        - $ref: "#/parameters/path-companySFID"
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company-admin-list'
+        '400':
+          $ref: '#/responses/invalid-request'
+      tags:
+        - company
+
   /company/{companySFID}/project/{projectSFID}/cla:
     get:
       summary: Returns the CLA Groups associated with the Project and Company
@@ -3477,7 +3495,31 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/unsigned_project'
-
+  
+  company-admin-list:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/admin_sf'
+  
+  admin_sf:
+    type: object
+    title: salesforce company admin
+    description: salesforce company admin
+    properties:
+      id:
+        type: string
+        x-omitempty: false
+      username:
+        type: string
+        x-omitempty: false
+      email:
+        type: string
+        x-omitempty: false
+      
+  
   unsigned_project:
     type: object
     title: unsigned project
