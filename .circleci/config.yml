@@ -77,7 +77,7 @@ jobs:
   # Builds
   buildBackend: &buildBackendAnchor
     docker:
-      - image: circleci/python:3.7.4-node
+      - image: circleci/python:3.7.9-node
     steps:
       - checkout
       - add_ssh_keys:
@@ -240,7 +240,7 @@ jobs:
   # Deploys
   deployBackend: &deployBackendAnchor
     docker:
-      - image: circleci/python:3.7.4-node
+      - image: circleci/python:3.7.9-node
     steps:
       - attach_workspace:
           at: ~/
