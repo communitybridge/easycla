@@ -229,6 +229,11 @@ provider:
     LOG_FORMAT: json
     # GH_ORG_VALIDATION: true       # default is true/enabled
     # COMPANY_USER_VALIDATION: true # default is true/enabled
+    # 08/31/2020 - SETUPTOOLS needs to be set for the Python run-time + Debian/Ubuntu (current lambda run-time),
+    # See:
+    # https://github.com/pypa/setuptools/issues/2350 and
+    # https://github.com/pypa/setuptools/issues/2232
+    SETUPTOOLS_USE_DISTUTILS: stdlib
 
   stackTags:
     Name: ${self:service}
