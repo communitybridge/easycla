@@ -77,6 +77,7 @@ func (s *service) ProjectDeletedEvent(event events.DynamoDBEventRecord) error {
 	eventErr := s.eventsRepo.CreateEvent(&models.Event{
 		ContainsPII:            false,
 		EventData:              fmt.Sprintf("disabled CLA service for Project: %s", oldProject.ProjectSFID),
+		EventSummary:           fmt.Sprintf("disabled CLA service for Project: %s", oldProject.ProjectSFID),
 		EventFoundationSFID:    oldProject.FoundationSFID,
 		EventProjectExternalID: oldProject.ProjectSFID,
 		EventProjectID:         oldProject.ClaGroupID,
