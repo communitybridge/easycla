@@ -5,7 +5,7 @@
   "author": "The Linux Foundation",
   "scripts": {
     "sls": "./node_modules/serverless/bin/serverless.js",
-    "serve:dev": "./node_modules/serverless/bin/serverless.js wsgi serve -s 'dev'",
+    "serve:dev": "./node_modules/serverless/bin/serverless.js wsgi serve -s 'dev' -r us-east-1 --verbose",
     "deploy:dev": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless.js deploy -s dev -r us-east-1 --verbose",
     "prune:dev": "SLS_DEBUG=* time ./node_modules/serverless/bin/serverless.js prune -n 10 -s dev -r us-east-1 --verbose",
     "offline:dev": "./node_modules/serverless/bin/serverless.js offline -s dev -r us-east-1 start",
@@ -25,7 +25,6 @@
     "node.extend": "^2.0.2",
     "request": "^2.88.0",
     "serverless": "^1.80.0",
-    "serverless-dynamodb-local": "^0.2.38",
     "serverless-finch": "^2.3.2",
     "serverless-layers": "^1.4.3",
     "serverless-offline": "^6.1.5",
@@ -33,7 +32,6 @@
     "serverless-prune-plugin": "^1.4.2",
     "serverless-pseudo-parameters": "^2.5.0",
     "serverless-python-requirements": "^4.2.5",
-    "serverless-s3-local": "^0.3.17",
     "serverless-wsgi": "^1.5.2"
   }
 }

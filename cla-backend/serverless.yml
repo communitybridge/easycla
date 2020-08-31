@@ -31,18 +31,6 @@ custom:
     app: cla.routes.__hug_wsgi__
     pythonBin: python
     packRequirements: false
-  dynamodb:
-    # Region where dynamodb is installed
-    region: us-east-1
-    stages:
-      - local
-    start:
-      port: 8000
-      migrate: true
-  s3:
-    host: 0.0.0.0
-    port: 8001
-    directory: /tmp
   # Config for serverless-prune-plugin - remove all but the 10 most recent
   # versions to avoid the "Code storage limit exceeded" error
   prune:
@@ -289,8 +277,6 @@ provider:
 
 plugins:
   - serverless-python-requirements
-  - serverless-dynamodb-local
-  - serverless-s3-local
   - serverless-wsgi
   - serverless-plugin-tracing
   - serverless-pseudo-parameters
