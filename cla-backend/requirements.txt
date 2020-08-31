@@ -47,10 +47,6 @@ requests==2.22.0
 requests-oauthlib==1.2.0
 rsa==4.0
 s3transfer==0.2.1
-# Python 3.7 + OS setup tools is causeing hug load problem. Resolution is to
-# manually add setuptools >=49.1.0 per:
-# https://github.com/pypa/setuptools/issues/2232
-setuptools==49.1.0
 sentinels==1.0.0
 six==1.13.0
 soupsieve==1.9.5
