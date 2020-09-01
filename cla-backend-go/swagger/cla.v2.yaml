@@ -1278,6 +1278,82 @@ paths:
       tags:
         - github-repositories
 
+  /project/{projectSFID}/github/repositories/{repositoryID}/branch-protection:
+    post:
+      summary: API to manage github branch protection for given repository
+      description: Endpoint to set branch protection options for the given branch, defaults to repository's default branch
+      operationId: updateProjectGithubRepositoryBranchProtection
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+        - name: repositoryID
+          in: path
+          type: string
+          required: true
+        - in: body
+          name: github-repository-branch-protection-input
+          schema:
+            $ref: '#/definitions/github-repository-branch-protection-input'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/github-repository-branch-protection'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - github-repositories
+
+    get:
+      summary: API to manage github branch protection for given repository
+      description: Endpoint to get branch protection options for the given branch, defaults to repository's default branch
+      operationId: getProjectGithubRepositoryBranchProtection
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+        - name: repositoryID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/github-repository-branch-protection'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - github-repositories
+
   /cla-group/{claGroupID}/icla/signatures:
     get:
       summary: List icla signatures for cla group
@@ -3003,6 +3079,50 @@ definitions:
         type: string
       cla_group_id:
         type: string
+
+  github-repository-branch-protection-status-checks:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        description: check status name
+        example: EasyCLA
+      enabled:
+        type: boolean
+        default: false
+
+  github-repository-branch-protection:
+    type: object
+    required:
+      - branch_name
+      - protection_enabled
+      - enforce_admin
+    properties:
+      branch_name:
+        type: string
+      protection_enabled:
+        type: boolean
+        default: false
+      enforce_admin:
+        type: boolean
+        default: false
+      status_checks:
+        type: array
+        items:
+          $ref: '#/definitions/github-repository-branch-protection-status-checks'
+
+  github-repository-branch-protection-input:
+    type: object
+    properties:
+      enforce_admin:
+        type: boolean
+        default: false
+      status_checks:
+        type: array
+        items:
+          $ref: '#/definitions/github-repository-branch-protection-status-checks'
 
   github-repository:
     $ref: './common/github-repository.yaml'

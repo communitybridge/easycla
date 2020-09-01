@@ -19,7 +19,7 @@ var (
 
 // GetOrganization gets github organization
 func GetOrganization(organizationName string) (*github.Organization, error) {
-	client := newGithubOauthClient()
+	client := NewGithubOauthClient()
 	org, resp, err := client.Organizations.Get(context.TODO(), organizationName)
 	if err != nil {
 		logging.Warnf("GetOrganization %s failed. error = %s", organizationName, err.Error())
