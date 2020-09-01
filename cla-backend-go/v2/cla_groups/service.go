@@ -124,6 +124,7 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 	}
 	foundationSFID := *input.FoundationSfid
 	claGroupName := *input.ClaGroupName
+
 	f := logrus.Fields{
 		"functionName":     "validateClaGroupInput",
 		"foundationSFID":   foundationSFID,
@@ -153,7 +154,7 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 		return false, err
 	}
 	if claGroupModel != nil {
-		return false, fmt.Errorf("bad request: cla_group with name %s already exist", claGroupName)
+		return false, fmt.Errorf("bad request: cla_group with name '%s' already exists", claGroupName)
 	}
 
 	log.WithFields(f).Debug("looking up project in project service by Foundation SFID...")
@@ -168,6 +169,7 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 	}
 
 	// Look up any existing configuration with this foundation SFID in our database...
+	log.WithFields(f).Debug("loading existing project IDs by foundation SFID...")
 	claGroupProjectModels, lookupErr := s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(foundationSFID)
 	if lookupErr != nil {
 		log.WithFields(f).Warnf("problem looking up foundation level CLA group using foundation ID: %s, error: %+v", foundationSFID, lookupErr)
@@ -176,6 +178,7 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 
 	// Do we have an existing Foundation Level CLA Group? We can't create a new CLA Group if we have an existing
 	// Foundation Level CLA Group setup
+	log.WithFields(f).Debug("checking for existing Foundation Level CLA Groups...")
 	for _, projectCLAGroupModel := range claGroupProjectModels {
 		// Do we have an existing Foundation Level setup? No need to check the input foundation SFID against this list
 		// since we did the query based on the foundation SFID.
@@ -185,9 +188,11 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 			return false, errors.New(msg)
 		}
 	}
+	log.WithFields(f).Debug("no existing Foundation Level CLA Groups found...")
 
 	// Are we trying to create a Foundation Level CLA Group, but one or more of the sub-projects already in a CLA Group?
 	if isFoundationIDInList(foundationSFID, input.ProjectSfidList) {
+		log.WithFields(f).Debug("we have a Foundation Level CLA Group request - checking if any CLA Groups include sub-projects from the foundation...")
 		// Only do this comparison if we have a input foundation level CLA group situation...
 		exists, existingProjectIDs := anySubProjectsAlreadyConfigured(input.ProjectSfidList, claGroupProjectModels)
 		if exists {
@@ -199,10 +204,13 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 			return false, errors.New(msg)
 		}
 	}
+	log.WithFields(f).Debug("we have a Foundation Level CLA Group request - good, no CLA Groups include sub-projects from the foundation...")
 
 	// If the foundation details in the platform project service indicates that this foundation has no parent or no
 	// children/sub-project... (stand alone project situation)
+	log.WithFields(f).Debug("checking to see if we have a standalone project...")
 	if foundationProjectDetails.Parent == "" && len(foundationProjectDetails.Projects) == 0 {
+		log.WithFields(f).Debug("we have a standalone project...")
 		// Did the user actually pass in any projects?  If none - add the foundation ID to the list and return to
 		// indicate it is a "standalone project"
 		if len(input.ProjectSfidList) == 0 {
@@ -220,6 +228,7 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 		}
 
 		// oops, not allowed - send error
+		log.WithFields(f).Warn("this project does not have subprojects defined in SF but some are provided as input")
 		return false, fmt.Errorf("bad request: invalid project_sfid_list. This project does not have subprojects defined in SF but some are provided as input")
 	}
 
@@ -233,23 +242,33 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 }
 
 func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFIDList []string) error {
+	f := logrus.Fields{
+		"functionName":    "validateEnrollProjectsInput",
+		"foundationSFID":  foundationSFID,
+		"projectSFIDList": projectSFIDList,
+	}
+
 	psc := v2ProjectService.GetClient()
 
 	if len(projectSFIDList) == 0 {
+		log.WithFields(f).Warn("validation failure - there should be at least one subproject associated...")
 		return fmt.Errorf("bad request: there should be at least one subproject associated")
 	}
 
 	// fetch foundation and its sub projects
 	foundationProjectDetails, err := psc.GetProject(foundationSFID)
 	if err != nil {
+		log.WithFields(f).Warnf("validation failure - problem fetching project details from project service, error: %+v", err)
 		return err
 	}
 
 	if foundationProjectDetails.Parent != "" {
+		log.WithFields(f).Warn("validation failure - foundation has a parent - invalid foundation SFID")
 		return fmt.Errorf("bad request: invalid input foundation_sfid. it has a parent project")
 	}
 
 	if len(foundationProjectDetails.Projects) == 0 {
+		log.WithFields(f).Warn("validation failure - project does not have any subprojects")
 		return fmt.Errorf("bad request: invalid input to enroll projects. project does not have any subprojects")
 	}
 
@@ -272,7 +291,8 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFID
 	}
 
 	if invalidProjectSFIDs.Length() != 0 {
-		return fmt.Errorf("bad request: invalid project_sfid: %v. These projects are not under the SF foundation", invalidProjectSFIDs.List())
+		log.WithFields(f).Warnf("validation failure - provided projects are not under the SF foundation: %+v", invalidProjectSFIDs.List())
+		return fmt.Errorf("bad request: invalid project_sfid: %+v. These projects are not under the SF foundation", invalidProjectSFIDs.List())
 	}
 
 	// check if projects are not already enabled
@@ -296,6 +316,7 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFID
 		}
 	}
 	if invalidProjectSFIDs.Length() != 0 {
+		log.WithFields(f).Warnf("validation failure - projects are already enrolled in an existing CLA Group: %+v", invalidProjectSFIDs.List())
 		return fmt.Errorf("bad request: invalid project_sfid provided: %v. These projects are already enrolled in an existing cla_group", invalidProjectSFIDs.List())
 	}
 
@@ -400,17 +421,20 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 	// Associate projects with cla group
 
 	if standaloneProject {
-		// for standalone project, root_project_sfid i.e foundation_sfid and project_sfid
-		// would be same
-		input.ProjectSfidList = append(input.ProjectSfidList, *input.FoundationSfid)
+		// For standalone projects, root_project_sfid i.e foundation_sfid and project_sfid will be same - make sure it's
+		// in our project list as this will be a Foundation Level CLA Group
+		if !isFoundationIDInList(*input.FoundationSfid, input.ProjectSfidList) {
+			input.ProjectSfidList = append(input.ProjectSfidList, *input.FoundationSfid)
+		}
 	}
 
 	err = s.enrollProjects(claGroup.ProjectID, *input.FoundationSfid, input.ProjectSfidList)
 	if err != nil {
+		// Oops, roll back logic
 		log.WithFields(f).Debug("deleting created cla group")
 		deleteErr := s.v1ProjectService.DeleteCLAGroup(claGroup.ProjectID)
 		if deleteErr != nil {
-			log.WithFields(f).Error("deleting created cla group failed.", deleteErr)
+			log.WithFields(f).Error("deleting created cla group failed - manual cleanup required.", deleteErr)
 		}
 		return nil, err
 	}
