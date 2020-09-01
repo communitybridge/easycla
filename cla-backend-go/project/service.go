@@ -28,6 +28,7 @@ type Service interface {
 	DeleteCLAGroup(projectID string) error
 	UpdateCLAGroup(projectModel *models.Project) (*models.Project, error)
 	GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error)
+	GetClaGroupByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Project, error)
 	SignedAtFoundationLevel(foundationSFID string) (bool, error)
 }
 
@@ -186,6 +187,11 @@ func (s service) UpdateCLAGroup(projectModel *models.Project) (*models.Project, 
 // GetClaGroupsByFoundationSFID service method
 func (s service) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error) {
 	return s.repo.GetClaGroupsByFoundationSFID(foundationSFID, loadRepoDetails)
+}
+
+// GetClaGroupByProjectSFID( service method
+func (s service) GetClaGroupByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Project, error) {
+	return s.repo.GetClaGroupByProjectSFID(projectSFID, loadRepoDetails)
 }
 
 // SignedAtFoundationLevel returns true if the specified foundation has a CLA Group at the foundation level, returns false otherwise.
