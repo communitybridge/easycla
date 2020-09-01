@@ -40,18 +40,6 @@ var (
 	ErrCLAGroupDoesNotExist             = errors.New("cla group does not exist")
 )
 
-// ProjectClaGroup is database model for projects_cla_group table
-type ProjectClaGroup struct {
-	ProjectSFID       string `json:"project_sfid"`
-	ProjectName       string `json:"project_name"`
-	ClaGroupID        string `json:"cla_group_id"`
-	ClaGroupName      string `json:"cla_group_name"`
-	FoundationSFID    string `json:"foundation_sfid"`
-	FoundationName    string `json:"foundation_name"`
-	RepositoriesCount int64  `json:"repositories_count"`
-	Version           string `json:"version"`
-}
-
 // Repository provides interface for interacting with project_cla_groups table
 type Repository interface {
 	GetClaGroupIDForProject(projectSFID string) (*ProjectClaGroup, error)
@@ -62,6 +50,7 @@ type Repository interface {
 	RemoveProjectAssociatedWithClaGroup(claGroupID string, projectSFIDList []string, all bool) error
 	getCLAGroupNameByID(claGroupID string) (string, error)
 
+	IsExistingFoundationLevelCLAGroup(foundationSFID string) (bool, error)
 	IsAssociated(projectSFID string, claGroupID string) (bool, error)
 	UpdateRepositoriesCount(projectSFID string, diff int64) error
 }
@@ -180,6 +169,7 @@ func (repo *repo) GetProjectsIdsForFoundation(foundationSFID string) ([]*Project
 }
 
 func (repo *repo) GetProjectsIdsForAllFoundation() ([]*ProjectClaGroup, error) {
+	f := logrus.Fields{"function": "GetProjectsIdsForAllFoundation", "tableName": repo.tableName}
 	scanInput := &dynamodb.ScanInput{
 		TableName: aws.String(repo.tableName),
 	}
@@ -187,7 +177,7 @@ func (repo *repo) GetProjectsIdsForAllFoundation() ([]*ProjectClaGroup, error) {
 	for {
 		results, err := repo.dynamoDBClient.Scan(scanInput) //nolint
 		if err != nil {
-			log.Warnf("error retrieving %s, error: %v", repo.tableName, err)
+			log.WithFields(f).Warnf("error retrieving %s, error: %v", repo.tableName, err)
 			return nil, err
 		}
 		resultList = append(resultList, results.Items...)
@@ -200,7 +190,7 @@ func (repo *repo) GetProjectsIdsForAllFoundation() ([]*ProjectClaGroup, error) {
 	var output []*ProjectClaGroup
 	err := dynamodbattribute.UnmarshalListOfMaps(resultList, &output)
 	if err != nil {
-		log.Warnf("error unmarshalling %s from database. error: %v", repo.tableName, err)
+		log.WithFields(f).Warnf("error unmarshalling %s from database. error: %v", repo.tableName, err)
 		return nil, err
 	}
 	return output, nil
@@ -208,12 +198,20 @@ func (repo *repo) GetProjectsIdsForAllFoundation() ([]*ProjectClaGroup, error) {
 
 // AssociateClaGroupWithProject creates entry in db to track cla_group association with project/foundation
 func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID string, foundationSFID string) error {
+	f := logrus.Fields{
+		"functionName":   "AssociateClaGroupWithProject",
+		"claGroupID":     claGroupID,
+		"projectSFID":    projectSFID,
+		"foundationSFID": foundationSFID,
+		"tableName":      repo.tableName,
+		"stage":          repo.stage,
+	}
 	var foundationName = NotDefined
 	// Lookup the foundation name
 	projectServiceModel, projErr := v2ProjectService.GetClient().GetProject(foundationSFID)
 	if projErr != nil {
-		log.Warnf("unable to lookup foundation SFID: %s - error: %+v - using '%s'",
-			foundationSFID, projErr, NotDefined)
+		log.WithFields(f).Warnf("unable to lookup foundation by SFID from the platform project service, error: %+v - using value of: '%s'",
+			projErr, NotDefined)
 	} else {
 		foundationName = projectServiceModel.Name
 	}
@@ -222,8 +220,8 @@ func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID st
 	var projectName = NotDefined
 	projectServiceModel, projErr = v2ProjectService.GetClient().GetProject(projectSFID)
 	if projErr != nil {
-		log.Warnf("unable to lookup project SFID: %s - error: %+v - using '%s'",
-			projectSFID, projErr, NotDefined)
+		log.WithFields(f).Warnf("unable to lookup project by SFID from the platform project service, error: %+v - using '%s'",
+			projErr, NotDefined)
 	} else {
 		projectName = projectServiceModel.Name
 	}
@@ -232,8 +230,8 @@ func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID st
 	claGroupName, claGroupLookupErr := repo.getCLAGroupNameByID(claGroupID)
 	if claGroupLookupErr != nil {
 		claGroupName = NotDefined
-		log.Warnf("unable to lookup CLA Group ID/Project ID: %s - error: %+v - using '%s'",
-			claGroupID, claGroupLookupErr, NotDefined)
+		log.Warnf("unable to lookup CLA Group/Project by ID, error: %+v - using '%s'",
+			claGroupLookupErr, NotDefined)
 	}
 
 	input := &ProjectClaGroup{
@@ -250,14 +248,26 @@ func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID st
 	if err != nil {
 		return err
 	}
+
+	log.WithFields(f).Debug("Locating records with matching projectSFID...")
+	existingRecord, lookupErr := repo.GetClaGroupIDForProject(projectSFID)
+	if lookupErr != nil {
+		log.WithFields(f).Warnf("cannot lookup record by projectSFID, error: %+v", lookupErr)
+	}
+	if existingRecord == nil {
+		log.WithFields(f).Debug("no record found with matching projectSFID")
+	} else {
+		log.WithFields(f).Debugf("record found with matching projectSFID: %+v", existingRecord)
+	}
+
+	log.WithFields(f).Debugf("adding entry into the %s table with: %+v", repo.tableName, input)
 	_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item:                av,
 		TableName:           aws.String(repo.tableName),
 		ConditionExpression: aws.String("attribute_not_exists(project_sfid)"),
 	})
 	if err != nil {
-		log.Error(fmt.Sprintf("cannot put association entry of cla_group_id: %s, project_sfid: %s in dynamodb",
-			claGroupID, projectSFID), err)
+		log.WithFields(f).Warnf("cannot create association entry of CLA Group and project SFID in the database, error: %+v", err)
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeConditionalCheckFailedException:
@@ -266,6 +276,7 @@ func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID st
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -329,12 +340,6 @@ func (repo *repo) getCLAGroupNameByID(claGroupID string) (string, error) {
 		return NotFound, ErrCLAGroupDoesNotExist
 	}
 
-	// Quick model to grab the bare minimum values
-	type claGroupIDNameModel struct {
-		ProjectID   string `dynamodbav:"project_id"`
-		ProjectName string `dynamodbav:"project_name"`
-	}
-
 	var claGroupModel claGroupIDNameModel
 	err = dynamodbattribute.UnmarshalMap(result.Item, &claGroupModel)
 	if err != nil {
@@ -361,6 +366,24 @@ func (repo *repo) UpdateRepositoriesCount(projectSFID string, diff int64) error 
 	return err
 }
 
+// IsExistingFoundationLevelCLAGroup is a query helper function to determine if the
+// specified foundation SFID has an entry in the mapping table to signify that
+// it's a foundation level CLA Group (foundationSFID == projectSFID)
+func (repo *repo) IsExistingFoundationLevelCLAGroup(foundationSFID string) (bool, error) {
+	projectCLAGroupModels, err := repo.GetProjectsIdsForFoundation(foundationSFID)
+	if err != nil {
+		return false, err
+	}
+
+	for _, projectCLAGroupModel := range projectCLAGroupModels {
+		if projectCLAGroupModel.FoundationSFID == foundationSFID && projectCLAGroupModel.ProjectSFID == foundationSFID {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func (repo *repo) IsAssociated(projectSFID string, claGroupID string) (bool, error) {
 	pmlist, err := repo.GetProjectsIdsForClaGroup(claGroupID)
 	if err != nil {
@@ -374,6 +397,6 @@ func (repo *repo) IsAssociated(projectSFID string, claGroupID string) (bool, err
 			return true, nil
 		}
 	}
-	return false, nil
 
+	return false, nil
 }
