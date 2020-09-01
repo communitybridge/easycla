@@ -37,6 +37,7 @@ type Repository interface {
 	AddGerrit(input *models.Gerrit) (*models.Gerrit, error)
 
 	ExistsByName(gerritName string) ([]*models.Gerrit, error)
+	ExistsByID(gerritID string) ([]*models.Gerrit, error)
 }
 
 // NewRepository create new Repository
@@ -65,6 +66,72 @@ func (repo *repo) ExistsByName(gerritName string) ([]*models.Gerrit, error) {
 
 	filter := expression.Name("gerrit_id").AttributeExists()
 	condition = expression.Key("gerrit_name").Equal(expression.Value(gerritName))
+
+	builder = builder.WithKeyCondition(condition).WithFilter(filter)
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	input := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String(indexName),
+		ScanIndexForward:          aws.Bool(false),
+	}
+
+	for {
+		results, errQuery := repo.dynamoDBClient.Query(input)
+		if errQuery != nil {
+			log.Warnf("error retrieving Gerrit. error = %s", errQuery.Error())
+			return nil, errQuery
+		}
+
+		var gerrits []*Gerrit
+
+		err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &gerrits)
+		if err != nil {
+			log.Warnf("error unmarshalling gerrit from database. error: %v", err)
+			return nil, err
+		}
+
+		for _, g := range gerrits {
+			resultList = append(resultList, g.toModel())
+		}
+
+		if len(results.LastEvaluatedKey) != 0 {
+			input.ExclusiveStartKey = results.LastEvaluatedKey
+
+		} else {
+			break
+		}
+	}
+	sort.Slice(resultList, func(i, j int) bool {
+		return resultList[i].GerritName < resultList[j].GerritName
+	})
+	return resultList, nil
+}
+
+func (repo *repo) ExistsByID(gerritID string) ([]*models.Gerrit, error) {
+	resultList := make([]*models.Gerrit, 0)
+
+	var condition expression.KeyConditionBuilder
+	tableName := fmt.Sprintf("cla-%s-gerrit-instances", repo.stage)
+
+	// hashkey is gerrit-name
+	indexName := "gerrit-id-index"
+
+	builder := expression.NewBuilder().WithProjection(buildProjection())
+
+	filter := expression.Name("gerrit_id").AttributeExists()
+	condition = expression.Key("group_id_icla").Equal(expression.Value(gerritID))
+	//condition = expression.Key("group_id_ccla").Equal(expression.Value(gerritID))
 
 	builder = builder.WithKeyCondition(condition).WithFilter(filter)
 	// Use the nice builder to create the expression
