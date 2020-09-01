@@ -660,14 +660,16 @@ def user_signed_project_signature(user: User, project: Project):
                     for signature in user_signatures:
                         signature.set_signature_approved(False)
                         signature.save()
+                        event_data = (f'employee signature of user {user.get_user_name()} '
+                                      f'disapproved for project {project.get_project_name()} '
+                                      f'and company {company.get_company_name()}')
                         Event.create_event(
                             event_type=EventType.EmployeeSignatureDisapproved,
                             event_project_id=project.get_project_id(),
                             event_company_id=company.get_company_id(),
                             event_user_id=user.get_user_id(),
-                            event_data=(f'employee signature of user {user.get_user_name()} '
-                                        f'disapproved for project {project.get_project_name()} '
-                                        f'and company {company.get_company_name()}'),
+                            event_data=event_data,
+                            event_summary=event_data,
                             contains_pii=True,
                         )
 

@@ -44,6 +44,7 @@ def test_create_signature(mock_event, create_event_signature, project):
     )
     mock_event.assert_called_once_with(
         event_data=event_data,
+        event_summary=event_data,
         event_type=event_type,
         event_project_id=project_id,
         contains_pii=False,
@@ -66,6 +67,7 @@ def test_update_signature(mock_event, auth_user, create_event_signature, signatu
     event_data = f'signature {signature_instance.get_signature_id()} updates: \n signature_reference_type updated to type \n'
     mock_event.assert_called_once_with(
         event_data=event_data,
+        event_summary=event_data,
         event_type=event_type,
         contains_pii=True,
     )
@@ -80,6 +82,7 @@ def test_delete_signature(mock_event, create_event_signature, signature_instance
     )
     mock_event.assert_called_once_with(
         event_data=event_data,
+        event_summary=event_data,
         event_type=event_type,
         contains_pii=False,
     )
@@ -109,6 +112,7 @@ def test_add_cla_manager(mock_event, auth_user, signature_instance, create_event
 
     mock_event.assert_called_once_with(
         event_data=event_data,
+        event_summary=event_data,
         event_type=EventType.AddCLAManager,
         contains_pii=True,
     )
@@ -134,6 +138,7 @@ def test_remove_cla_manager(mock_event, signature_instance, create_event_signatu
     event_data = f'User with lfid {lfid} removed from project ACL with signature {signature_instance.get_signature_id()}'
     mock_event.assert_called_once_with(
         event_data=event_data,
+        event_summary=event_data,
         event_type=event_type,
         contains_pii=True,
     )
