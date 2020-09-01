@@ -566,7 +566,18 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 
 //CreateCLAManagerDesigneeByGroup creates designee by group for cla manager prospect
 func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error) {
+	acsClient := v2AcsService.GetClient()
+	orgClient := v2OrgService.GetClient()
+	userEmail := params.Body.UserEmail.String()
+
 	var designeeScopes []*models.ClaManagerDesignee
+
+	org, orgErr := orgClient.GetOrganization(params.CompanySFID)
+	if orgErr != nil {
+		msg := fmt.Sprintf("Getting organization by ID: %s failed", params.CompanySFID)
+		return nil, msg, orgErr
+	}
+
 	foundationSFID := projectCLAGroups[0].FoundationSFID
 	if foundationSFID != "" {
 		claManagerDesignee, err := s.CreateCLAManagerDesignee(params.CompanySFID, foundationSFID, params.Body.UserEmail.String())
@@ -596,6 +607,23 @@ func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAMa
 			designeeScopes = append(designeeScopes, claManagerDesignee)
 		}
 
+	}
+
+	// Assign company owner role
+
+	//Get Role ID
+	roleID, designeeErr := acsClient.GetRoleID("company-owner")
+	if designeeErr != nil {
+		msg := "Problem getting role ID for company-owner"
+		log.WithFields(f).Warn(msg)
+		return nil, msg, designeeErr
+	}
+
+	err := orgClient.CreateOrgUserRoleOrgScope(userEmail, org.ID, roleID)
+	if err != nil {
+		msg := "Failed to assign company-owner role to user"
+		log.WithFields(f).Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", userEmail, err)
+		return nil, msg, err
 	}
 	return designeeScopes, "", nil
 }
