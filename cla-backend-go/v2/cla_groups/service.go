@@ -719,11 +719,14 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 			return nil, prjerr
 		}
 		v1ClaGroups.Projects = append(v1ClaGroups.Projects, *v1ClaGroupsByProject)
-	} else {
+	} else if projectDetails.ProjectType == "Project Group" {
 		v1ClaGroups, err = s.v1ProjectService.GetClaGroupsByFoundationSFID(foundationSFID, DontLoadDetails)
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		log.Warn("invalid foundation/project SFID")
+		return nil, errors.New("invalid foundation/project SFID")
 	}
 
 	m := make(map[string]*models.ClaGroup)
