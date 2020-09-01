@@ -128,7 +128,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				"Email":        params.Body.UserEmail.String(),
 				"authUser":     *params.XUSERNAME,
 			}
-			log.WithFields(f).Debugf("processing CLA Manager Desginee by group request")
+			log.WithFields(f).Debugf("processing CLA Manager Designee by group request")
 
 			log.WithFields(f).Debugf("getting project IDs for CLA group")
 			projectCLAGroups, getErr := projectClaGroupRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
