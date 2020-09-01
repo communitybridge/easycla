@@ -422,6 +422,12 @@ class DocuSign(signing_service_interface.SigningService):
         # TODO: DAD - we should check to see if they already have a company id assigned
         if user.get_user_company_id() != company_id:
             user.set_user_company_id(str(company_id))
+            event_data = (f'user {user.get_user_name()}/'
+                            f'{user.get_github_username()}/'
+                            f'{user.get_user_github_id()}/'
+                            f'{user.get_user_id()} '
+                            f'associated with company {company.get_company_name()} for '
+                            f'project {project.get_project_name()}')
             Event.create_event(
                 event_type=EventType.UserAssociatedWithCompany,
                 event_company_id=company_id,
@@ -429,12 +435,8 @@ class DocuSign(signing_service_interface.SigningService):
                 event_project_id=project_id,
                 event_project_name=project.get_project_name(),
                 event_user_id=user.get_user_id(),
-                event_data=(f'user {user.get_user_name()}/'
-                            f'{user.get_github_username()}/'
-                            f'{user.get_user_github_id()}/'
-                            f'{user.get_user_id()} '
-                            f'associated with company {company.get_company_name()} for '
-                            f'project {project.get_project_name()}'),
+                event_data=event_data,
+                event_summary=event_data,
                 contains_pii=True,
             )
 
@@ -529,13 +531,15 @@ class DocuSign(signing_service_interface.SigningService):
         # Save signature
         new_signature.save()
         cla.log.info(f'Set and saved signature for: {request_info}')
+        event_data = 'employee signature created for user {}, company {}, project {}'.
+                     format(user.get_user_name(), company.get_company_name(), project.get_project_name())
         Event.create_event(
             event_type=EventType.EmployeeSignatureCreated,
             event_company_id=company_id,
             event_project_id=project_id,
             event_user_id=user_id,
-            event_data='employee signature created for user {}, company {}, project {}'.
-                format(user.get_user_name(), company.get_company_name(), project.get_project_name()),
+            event_data=event_data,
+            event_summary=event_data,
             contains_pii=True,
         )
 
@@ -624,13 +628,15 @@ class DocuSign(signing_service_interface.SigningService):
         # Save signature before adding user to the LDAP Group.
         new_signature.save()
         cla.log.info(f'Set and saved signature for: {request_info}')
+        event_data='employee signature created for user {}, company {}, project {}'.
+                    format(user.get_user_name(), company.get_company_name(), project.get_project_name())
         Event.create_event(
             event_type=EventType.EmployeeSignatureCreated,
             event_company_id=company_id,
             event_project_id=project_id,
             event_user_id=user_id,
-            event_data='employee signature created for user {}, company {}, project {}'.
-                format(user.get_user_name(), company.get_company_name(), project.get_project_name()),
+            event_data=event_data,
+            event_summary=event_summary,
             contains_pii=True,
         )
 
@@ -1158,13 +1164,15 @@ class DocuSign(signing_service_interface.SigningService):
                 # Load the Project by ID and send audit event
                 project = Project()
                 project.load(signature.get_signature_project_id())
+                event_data = (f'individual signature of user {user.get_user_name()} '
+                              f'signed for project {project.get_project_name()}')
                 Event.create_event(
                     event_type=EventType.IndividualSignatureSigned,
                     event_project_id=signature.get_signature_project_id(),
                     event_company_id=None,
                     event_user_id=signature.get_signature_reference_id(),
-                    event_data=(f'individual signature of user {user.get_user_name()} '
-                                f'signed for project {project.get_project_name()}'),
+                    event_data=event_data,
+                    event_summary=event_data,
                     contains_pii=False,
                 )
             except DoesNotExist as err:
@@ -1213,13 +1221,15 @@ class DocuSign(signing_service_interface.SigningService):
             project = Project()
             try:
                 project.load(signature.get_signature_project_id())
+                event_data = (f'individual signature of user {user.get_user_name()} '
+                                f'signed for project {project.get_project_name()}')
                 Event.create_event(
                     event_type=EventType.IndividualSignatureSigned,
                     event_project_id=signature.get_signature_project_id(),
                     event_company_id=None,
                     event_user_id=user.get_user_id(),
-                    event_data=(f'individual signature of user {user.get_user_name()} '
-                                f'signed for project {project.get_project_name()}'),
+                    event_data=event_data,
+                    event_summary=event_summary,
                     contains_pii=False,
                 )
             except DoesNotExist as err:
@@ -1351,25 +1361,29 @@ class DocuSign(signing_service_interface.SigningService):
 
             # Update our event/activity log
             if signature.get_signature_reference_type() == 'user':
+                event_data = (f'individual signature of user {user.get_user_name()} '
+                                f'signed for project {project.get_project_name()}')
                 Event.create_event(
                     event_type=EventType.IndividualSignatureSigned,
                     event_project_id=project_id,
                     event_company_id=None,
                     event_user_id=user.get_user_id(),
-                    event_data=(f'individual signature of user {user.get_user_name()} '
-                                f'signed for project {project.get_project_name()}'),
+                    event_data=event_data,
+                    event_summary=event_data,
                     contains_pii=False,
                 )
             elif signature.get_signature_reference_type() == 'company':
+                event_data = (f'corporate signature '
+                                f'signed for project {project.get_project_name()} '
+                                f'and company {company.get_company_name()} '
+                                f'by user {user.get_user_name()}')
                 Event.create_event(
                     event_type=EventType.CompanySignatureSigned,
                     event_project_id=project_id,
                     event_company_id=company.get_company_id(),
                     event_user_id=user.get_user_id(),
-                    event_data=(f'corporate signature '
-                                f'signed for project {project.get_project_name()} '
-                                f'and company {company.get_company_name()} '
-                                f'by user {user.get_user_name()}'),
+                    event_data=event_data,
+                    event_summary=event_data,
                     contains_pii=False,
                 )
 

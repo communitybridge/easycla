@@ -24,6 +24,7 @@ def test_event_user_id(user_instance):
     response = Event.create_event(
         event_type=event_types.EventType.CreateProject,
         event_data=event_data,
+        event_summary=event_data,
         event_user_id=user_instance.get_user_id()
     )
     assert 'data' in response
@@ -37,6 +38,7 @@ def test_event_company_id(company):
     response = Event.create_event(
         event_type=event_types.EventType.DeleteCompany,
         event_data=event_data,
+        event_summary=event_data,
         event_company_id=company.get_company_id()
     )
     assert 'data' in response
@@ -48,6 +50,7 @@ def test_event_project_id(project):
     event_data = 'project id loaded'
     response = Event.create_event(
         event_data=event_data,
+        event_summary=event_data,
         event_type=event_types.EventType.DeleteProject,
         event_project_id=project.get_project_id()
     )

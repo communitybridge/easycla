@@ -52,6 +52,7 @@ def test_request_company_whitelist(mock_event, create_event_user, project, compa
        event_company_id=company.get_company_id(),
        event_type=event_type,
        event_data=event_data,
+       event_summary=event_data,
        contains_pii=True,
     )
 
@@ -102,6 +103,7 @@ def test_request_company_ccla(mock_event, create_event_user, user, project, comp
     )
     mock_event.assert_called_once_with(
         event_data=event_data,
+        event_summary=event_data,
         event_type=EventType.RequestCCLA,
         event_user_id=user.get_user_id(),
         event_company_id=company.get_company_id(),

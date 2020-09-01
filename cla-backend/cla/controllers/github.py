@@ -451,6 +451,7 @@ def handle_installation_repositories_added_event(action: str, body: dict):
                     event_project_name=project_model.get_project_name(),
                     event_company_id=None,
                     event_data=msg,
+                    event_summary=msg,
                     event_user_id=user_login,
                     contains_pii=False,
                 )
@@ -514,6 +515,7 @@ def handle_installation_repositories_removed_event(action: str, body: dict):
             event_project_name=project_model.get_project_name(),
             event_company_id=None,
             event_data=msg,
+            event_summary=msg,
             event_user_id=user_login,
             contains_pii=False,
         )

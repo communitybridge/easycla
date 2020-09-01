@@ -35,6 +35,7 @@ def test_event_delete_project(mock_event, project):
         event_type=expected_event_type,
         event_project_id=project_id,
         event_data=expected_event_data,
+        event_summary=expected_event_data,
         contains_pii=False,
     )
 
@@ -71,6 +72,7 @@ def test_event_create_project(mock_event):
         event_type=event_type,
         event_project_id=project_id,
         event_data=expected_event_data,
+        event_summary=expected_event_data,
         contains_pii=False,
     )
 
@@ -98,6 +100,7 @@ def test_event_update_project(mock_event, project):
     mock_event.assert_called_with(
         event_type=event_type,
         event_data=expected_event_data,
+        event_summary=expected_event_data,
         event_project_id=project_id,
         contains_pii=False,
     )
@@ -136,7 +139,7 @@ def test_create_project_document(mock_event, project):
         new_major_version=False,
     )
     mock_event.assert_called_with(
-        event_type=event_type, event_project_id=project_id, event_data=event_data, contains_pii=False,
+        event_type=event_type, event_project_id=project_id, event_data=event_data, event_summary=event_data, contains_pii=False,
     )
 
 @patch('cla.controllers.project.Event.create_event')
@@ -175,7 +178,7 @@ def test_create_project_document_template(mock_event, project):
     )
 
     mock_event.assert_called_with(
-        event_type=event_type, event_project_id=project_id, event_data=event_data, contains_pii=False,
+        event_type=event_type, event_project_id=project_id, event_data=event_data, event_summary=event_data, contains_pii=False,
     )
 
 @patch('cla.controllers.project.Event.create_event')
@@ -205,7 +208,7 @@ def test_delete_project_document(mock_event):
     )
 
     mock_event.assert_called_with(
-        event_type=event_type, event_project_id=project_id, event_data=event_data, contains_pii = False,
+        event_type=event_type, event_project_id=project_id, event_data=event_data, event_summary=event_data, contains_pii = False,
     )
 
 @patch('cla.controllers.project.Event.create_event')
@@ -238,6 +241,7 @@ def test_project_add_permission_existing_user(mock_event, project):
     mock_event.assert_called_with(
         event_type=event_type,
         event_data=event_data,
+        event_summary=event_data,
         event_project_id=project_sfdc_id,
         contains_pii=True,
     )
@@ -273,6 +277,7 @@ def test_project_remove_permission(mock_event):
     mock_event.assert_called_with(
         event_type=event_type,
         event_data=event_data,
+        event_summary=event_data,
         event_project_id=project_sfdc_id,
         contains_pii=True,
     )
@@ -302,6 +307,7 @@ def test_add_project_manager(mock_event, project):
     mock_event.assert_called_with(
         event_type=event_type,
         event_data=event_data,
+        event_summary=event_data,
         event_project_id=project.get_project_id(),
         contains_pii=True,
     )
@@ -324,6 +330,7 @@ def test_remove_project_manager(mock_event, project):
     mock_event.assert_called_once_with(
         event_type=event_type,
         event_data=event_data,
+        event_summary=event_data,
         event_project_id=project.get_project_id(),
         contains_pii=True,
     )

@@ -197,6 +197,7 @@ repository. This will permit them to begin contributing to {project_name} on beh
         event_company_id=company_id,
         event_type=EventType.RequestCompanyWL,
         event_data=event_data,
+        event_summary=event_data,
         contains_pii=True,
     )
 
@@ -259,6 +260,7 @@ def invite_cla_manager(contributor_id, contributor_name, contributor_email, cla_
         event_user_id=contributor_id,
         event_project_name=project_name,
         event_data=log_msg,
+        event_sumamry=log_msg,
         event_type=EventType.InviteAdmin,
         contains_pii=True,
     )
@@ -299,6 +301,7 @@ def request_company_ccla(user_id, user_email, company_id, project_id):
     event_data = f'Sent email to sign ccla for {project.get_project_name()}'
     Event.create_event(
         event_data=event_data,
+        event_summary=event_data,
         event_type=EventType.RequestCCLA,
         event_user_id=user_id,
         event_company_id=company_id,
@@ -439,6 +442,7 @@ def get_or_create_user(auth_user):
         event_data = f'CLA user added for {auth_user.username}'
         Event.create_event(
             event_data=event_data,
+            event_summary=event_data,
             event_type=EventType.CreateUser,
             contains_pii=True,
         )
