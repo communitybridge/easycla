@@ -400,7 +400,7 @@ var templateMap = map[string]models.Template{
 			},
 			{
 				Name:             "Contact Email Address",
-				Description:      "The E-Mail Address of the Person managing the CLA. ",
+				Description:      "The E-Mail Address of the Person managing the CLA.",
 				TemplateVariable: "CONTACT_EMAIL",
 			},
 		},
