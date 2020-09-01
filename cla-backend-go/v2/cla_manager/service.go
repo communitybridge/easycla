@@ -55,7 +55,7 @@ var (
 	//ErrLFXUserNotFound when user-service fails to find user
 	ErrLFXUserNotFound = errors.New("lfx user not found")
 	//ErrNoLFID thrown when users dont have an LFID
-	ErrNoLFID = errors.New("user has no LFID")
+	ErrNoLFID = errors.New("user has no LF Login")
 	//ErrNotInOrg when user is not in organization
 	ErrNotInOrg = errors.New("user not in organization")
 	//ErrNoOrgAdmins when No admins found for organization
@@ -175,7 +175,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	if userErr != nil {
 		designeeName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
 		designeeEmail := params.Body.UserEmail.String()
-		msg := fmt.Sprintf("User does not have an LFID account and has been sent an email invite: %s.", *params.Body.UserEmail)
+		msg := fmt.Sprintf("User does not have an LF Login account and has been sent an email invite: %s.", *params.Body.UserEmail)
 		log.Warn(msg)
 		sendEmailErr := sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, *managerUser.Emails[0].EmailAddress, designeeName, designeeEmail, organizationSF.ID, nil, "cla-manager")
 		if sendEmailErr != nil {
@@ -204,7 +204,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	}
 
 	if claUser == nil {
-		msg := fmt.Sprintf("User not found when searching by LFID: %s and shall be created", user.Username)
+		msg := fmt.Sprintf("User not found when searching by LF Login: %s and shall be created", user.Username)
 		log.Debug(msg)
 		userName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
 		_, currentTimeString := utils.CurrentTime()
@@ -702,7 +702,7 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 	userService := v2UserService.GetClient()
 	lfxUser, userErr := userService.SearchUserByEmail(userEmail)
 	if userErr != nil {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - User: %s does not have an LFID ", userEmail)
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - User: %s does not have an LF Login", userEmail)
 		log.Warn(msg)
 		// Send email
 		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, authUser.Email, fullName, userEmail, companyModel.ID, &projectSF.ID, "cla-manager-designee")
@@ -801,7 +801,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	// Get suggested CLA Manager user details
 	user, userErr := userService.SearchUserByEmail(userEmail)
 	if userErr != nil {
-		msg := fmt.Sprintf("UserEmail: %s has no LFID and has been sent an invite email to create an account , error: %+v", userEmail, userErr)
+		msg := fmt.Sprintf("UserEmail: %s has no LF Login and has been sent an invite email to create an account , error: %+v", userEmail, userErr)
 		log.Warn(msg)
 		// Send Email
 		var contributorEmail *string
@@ -1076,7 +1076,7 @@ func sendEmailToCLAManagerDesignee(corporateConsole string, companyName string, 
 // sendEmailToUserWithNoLFID helper function to send email to a given user with no LFID
 func sendEmailToUserWithNoLFID(projectName, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail, organizationID string, projectID *string, role string) error {
 	// subject string, body string, recipients []string
-	subject := "EasyCLA: Invitation to create LFID and complete process of becoming CLA Manager"
+	subject := "EasyCLA: Invitation to create LF Login and complete process of becoming CLA Manager"
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the Project %s in the EasyCLA system.</p>
