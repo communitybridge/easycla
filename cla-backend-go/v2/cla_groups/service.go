@@ -705,10 +705,28 @@ func getS3Url(claGroupID string, docs []v1Models.ProjectDocument) string {
 
 // ListClaGroupsForFoundationOrProject returns the CLA Group list for the specified foundation ID
 func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*models.ClaGroupList, error) {
+	var v1ClaGroups = new(v1Models.Projects)
 	out := &models.ClaGroupList{List: make([]*models.ClaGroup, 0)}
-	v1ClaGroups, err := s.v1ProjectService.GetClaGroupsByFoundationSFID(foundationSFID, DontLoadDetails)
-	if err != nil {
-		return nil, err
+	var err error
+
+	projectDetails, projDetailsErr := v2ProjectService.GetClient().GetProject(foundationSFID)
+	if projDetailsErr != nil {
+		log.Warnf("unable to lookup foundation/project SFID: %s - error: %+v", foundationSFID, projDetailsErr)
+	}
+	if projectDetails.ProjectType == "Project" {
+		v1ClaGroupsByProject, prjerr := s.v1ProjectService.GetClaGroupByProjectSFID(foundationSFID, DontLoadDetails)
+		if prjerr != nil {
+			return nil, prjerr
+		}
+		v1ClaGroups.Projects = append(v1ClaGroups.Projects, *v1ClaGroupsByProject)
+	} else if projectDetails.ProjectType == "Project Group" {
+		v1ClaGroups, err = s.v1ProjectService.GetClaGroupsByFoundationSFID(foundationSFID, DontLoadDetails)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		log.Warn("invalid foundation/project SFID")
+		return nil, errors.New("invalid foundation/project SFID")
 	}
 
 	m := make(map[string]*models.ClaGroup)
@@ -724,7 +742,11 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 		} else {
 			foundationName = projectServiceModel.Name
 		}
-
+		projectList := make([]*models.ClaGroupProject, 0)
+		projectList = append(projectList, &models.ClaGroupProject{
+			ProjectSfid: projectDetails.ProjectOutput.ID,
+			ProjectName: projectDetails.ProjectCommon.Name,
+		})
 		cg := &models.ClaGroup{
 			CclaEnabled:         v1ClaGroup.ProjectCCLAEnabled,
 			CclaRequiresIcla:    v1ClaGroup.ProjectCCLARequiresICLA,
@@ -736,7 +758,7 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 			IclaEnabled:         v1ClaGroup.ProjectICLAEnabled,
 			CclaPdfURL:          getS3Url(v1ClaGroup.ProjectID, v1ClaGroup.ProjectCorporateDocuments),
 			IclaPdfURL:          getS3Url(v1ClaGroup.ProjectID, v1ClaGroup.ProjectIndividualDocuments),
-			ProjectList:         make([]*models.ClaGroupProject, 0),
+			ProjectList:         projectList,
 			// Add root_project_repositories_count to repositories_count initially
 			RepositoriesCount:            v1ClaGroup.RootProjectRepositoriesCount,
 			RootProjectRepositoriesCount: v1ClaGroup.RootProjectRepositoriesCount,
