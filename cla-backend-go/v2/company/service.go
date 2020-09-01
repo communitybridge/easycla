@@ -70,10 +70,10 @@ const (
 	DontLoadRepoDetails = false
 	// FoundationType the SF foundation type string - previously was "Foundation", now "Project Group"
 	FoundationType = "Project Group"
-	// ProjectType         = "Project"
-
 	// Lead representing type of user
 	Lead = "lead"
+	//NoAccount
+	NoAccount = "Individual - No Account"
 )
 
 // Service functions for company
@@ -275,7 +275,7 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userE
 		return nil, err
 	}
 
-	acsClient := acs_service.GetClient()
+	// acsClient := acs_service.GetClient()
 	userClient := v2UserService.GetClient()
 
 	lfUser, lfErr := userClient.SearchUserByEmail(userEmail)
@@ -284,22 +284,12 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userE
 		log.Warn(msg)
 	}
 	if lfUser != nil {
-		// Get Role ID
-		roleID, designeeErr := acsClient.GetRoleID("company-owner")
-		if designeeErr != nil {
-			msg := "Problem getting role ID for company-owner"
-			log.WithFields(f).Warn(msg)
-			return nil, designeeErr
-		}
 
-		err = orgClient.CreateOrgUserRoleOrgScope(userEmail, org.ID, roleID)
-		if err != nil {
-			log.WithFields(f).Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", userEmail, err)
-			return nil, err
-		}
 		log.WithFields(f).Debugf("User :%s has been assigned the company-owner role to organization: %s ", userEmail, org.Name)
-		// Associate User with Newly created org
-		lfUser.Account.ID = org.ID
+		// Associate User (Not associated) with Newly created org
+		if lfUser.Account.ID == NoAccount {
+			lfUser.Account.ID = org.ID
+		}
 
 		//Send Email to User with instructions to complete Company profile
 		log.WithFields(f).Debugf("Sending Email to user :%s to complete setup for newly created Org: %s ", userEmail, org.Name)
