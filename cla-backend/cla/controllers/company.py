@@ -114,6 +114,7 @@ def create_company(auth_user,
         event_type=EventType.CreateCompany,
         event_company_id=company.get_company_id(),
         event_data=event_data,
+        event_summary=event_data,
         event_user_id=user_id,
         contains_pii=False,
     )
@@ -162,6 +163,7 @@ def update_company(company_id, # pylint: disable=too-many-arguments
     event_data = update_str
     Event.create_event(
         event_data=event_data,
+        event_summary=event_data,
         event_type=EventType.UpdateCompany,
         event_company_id=company_id,
         contains_pii = False,
@@ -215,6 +217,7 @@ def delete_company(company_id, username=None):
     event_data = f'Company- {company.get_company_name()} deleted'
     Event.create_event(
         event_data=event_data,
+        event_summary=event_data,
         event_type=EventType.DeleteCompany,
         event_company_id=company_id,
         contains_pii=False,
@@ -243,6 +246,7 @@ def add_permission(auth_user: AuthUser, username: str, company_id: str, ignore_a
     event_data = f'Permissions added to user {username} for Company {company.get_company_name()}'
     Event.create_event(
         event_data=event_data,
+        event_summary=event_data,
         event_type=EventType.AddCompanyPermission,
         event_company_id=company_id,
         contains_pii=True,
@@ -266,6 +270,7 @@ def remove_permission(auth_user: AuthUser, username: str, company_id: str):
     event_data = 'company ({}) removed for ({}) by {}'.format(company_id, username, auth_user.username)
     Event.create_event(
         event_data=event_data,
+        event_summary=event_data,
         event_company_id=company_id,
         event_type=EventType.RemoveCompanyPermission,
         contains_pii=True,

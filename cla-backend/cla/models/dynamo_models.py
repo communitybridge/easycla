@@ -3646,6 +3646,7 @@ class EventModel(BaseModel):
     event_time = UTCDateTimeAttribute(default=datetime.datetime.now())
     event_time_epoch = NumberAttribute(default=int(time.time()))
     event_data = UnicodeAttribute(null=True)
+    event_summary = UnicodeAttribute(null=True)
     event_date = UnicodeAttribute(null=True)
     event_project_external_id = UnicodeAttribute(null=True)
     event_date_and_contains_pii = UnicodeAttribute(null=True)
@@ -3668,6 +3669,7 @@ class Event(model_interfaces.Event):
             event_project_id=None,
             event_company_id=None,
             event_data=None,
+            event_summary=None,
             event_company_name=None,
             event_user_name=None,
             event_project_name=None,
@@ -3682,6 +3684,7 @@ class Event(model_interfaces.Event):
         self.model.event_project_id = event_project_id
         self.model.event_company_id = event_company_id
         self.model.event_data = event_data
+        self.model.event_summary = event_summary
         self.model.event_company_name = event_company_name
         self.model.contains_pii = contains_pii
         if self.model.event_company_name:
@@ -3703,6 +3706,7 @@ class Event(model_interfaces.Event):
             f"event time: {self.model.event_time}, "
             f"event time epoch: {self.model.event_time_epoch}, "
             f"event data: {self.model.event_data}, "
+            f"event summary: {self.model.event_summary}, "
             f"event company name: {self.model.event_company_name}, "
             f"event project name: {self.model.event_project_name}, "
             f"event user name: {self.model.event_user_name},"
@@ -3735,6 +3739,9 @@ class Event(model_interfaces.Event):
 
     def get_event_data(self):
         return self.model.event_data
+    
+    def get_event_summary(self):
+        return self.model.event_summary
 
     def get_event_date(self):
         return self.model.event_date
@@ -3797,6 +3804,9 @@ class Event(model_interfaces.Event):
 
     def set_event_data(self, event_data):
         self.model.event_data = event_data
+    
+    def set_event_summary(self, event_summary):
+        self.model.event_summary = event_summary
 
     def set_event_id(self, event_id):
         self.model.event_id = event_id
@@ -3883,6 +3893,7 @@ class Event(model_interfaces.Event):
             event_project_name=None,
             event_company_name=None,
             event_data=None,
+            event_summary=None,
             event_user_id=None,
             contains_pii=False
     ):
@@ -3935,6 +3946,7 @@ class Event(model_interfaces.Event):
             if event_type:
                 event.set_event_type(event_type.name)
             event.set_event_project_name(event_project_name)
+            event.set_event_summary(event_summary)
             event.set_event_company_name(event_company_name)
             event.set_event_data(event_data)
             event.set_event_date_and_contains_pii(contains_pii)
