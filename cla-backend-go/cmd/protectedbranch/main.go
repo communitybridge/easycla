@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	github2 "github.com/communitybridge/easycla/cla-backend-go/github"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/utils/github"
 	"os"
@@ -40,7 +41,7 @@ func main() {
 
 	//log.Printf("the org info is like : %+v\n", org)
 
-	owner, err := github.GetOwnerName(ctx, client, *orgName, *repoName)
+	owner, err := github2.GetOwnerName(ctx, client, *orgName, *repoName)
 	if err != nil {
 		log.Fatalf("fetching the owner name : %v", err)
 	}
@@ -48,16 +49,16 @@ func main() {
 	branchName := *branch
 
 	if branchName == ""{
-		branchName, err = github.GetDefaultBranchForRepo(ctx, client, owner, *repoName)
+		branchName, err = github2.GetDefaultBranchForRepo(ctx, client, owner, *repoName)
 		if err != nil {
 			log.Fatalf("default branch : %v", err)
 		}
 	}
 
 	protected := true
-	protectedBranch, err := github.GetProtectedBranch(ctx, client, owner, *repoName, branchName)
+	protectedBranch, err := github2.GetProtectedBranch(ctx, client, owner, *repoName, branchName)
 	if err != nil {
-		if !errors.Is(err, github.BranchNotProtectedError){
+		if !errors.Is(err, github2.BranchNotProtectedError){
 			log.Fatalf("fetching the protected branch : %v", err)
 		}
 		protected = false
@@ -69,13 +70,13 @@ func main() {
 	}
 
 	if protected{
-		if github.IsEnforceAdminEnabled(protectedBranch){
+		if github2.IsEnforceAdminEnabled(protectedBranch){
 			log.Println("enforce admin is enabled")
 		}else{
 			log.Println("enforce admin is disabled")
 		}
 
-		if github.AreStatusChecksEnabled(protectedBranch, []string{"ci/circleci: run"}){
+		if github2.AreStatusChecksEnabled(protectedBranch, []string{"ci/circleci: run"}){
 			log.Println("status checks are enabled")
 		}else{
 			log.Println("status checks are disabled or not all of them enabled")
@@ -83,7 +84,7 @@ func main() {
 	}
 
 	if *enable{
-		err = github.EnableBranchProtection(ctx, client, owner, *repoName, branchName, true, []string{"ci/circleci: run"})
+		err = github2.EnableBranchProtection(ctx, client, owner, *repoName, branchName, true, []string{"ci/circleci: run"})
 		if err != nil {
 			log.Fatalf("enabling branch protection failed : %v", err)
 		}

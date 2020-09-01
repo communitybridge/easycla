@@ -113,6 +113,29 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 
 			return github_repositories.NewDeleteProjectGithubRepositoryNoContent()
 		})
+
+	api.GithubRepositoriesGetProjectGithubRepositoryBranchProtectionHandler = github_repositories.GetProjectGithubRepositoryBranchProtectionHandlerFunc(
+		func(params github_repositories.GetProjectGithubRepositoryBranchProtectionParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
+				return github_repositories.NewDeleteProjectGithubRepositoryForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Delete GitHub Repository with Project scope of %s",
+						authUser.UserName, params.ProjectSFID),
+				})
+			}
+
+			protectedBranch, err := service.GetProtectedBranch(params.RepositoryID)
+			if err != nil {
+				if err == repositories.ErrGithubRepositoryNotFound {
+					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionNotFound()
+				}
+				return github_repositories.NewGetProjectGithubRepositoryBranchProtectionBadRequest().WithPayload(errorResponse(err))
+			}
+
+			return github_repositories.NewGetProjectGithubRepositoryBranchProtectionOK().WithPayload(protectedBranch)
+		})
+
 }
 
 // codedResponse interface

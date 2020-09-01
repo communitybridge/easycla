@@ -10,18 +10,9 @@ import (
 
 var (
 	BranchNotProtectedError = errors.New("not protected")
-	branchNotFoundError     = errors.New("not found")
 )
 
-func GetOrganization(ctx context.Context, client *githubpkg.Client, orgName string) (*githubpkg.Organization, error) {
-	org, _, err := client.Organizations.Get(ctx, orgName)
-	if err != nil {
-		return nil, err
-	}
-
-	return org, nil
-}
-
+// GetOwnerName retrieves the owner name of the given org and repo name
 func GetOwnerName(ctx context.Context, client *githubpkg.Client, orgName, repoName string) (string, error) {
 	repos, _, err := client.Repositories.ListByOrg(ctx, orgName, nil)
 	if err != nil {
@@ -75,6 +66,8 @@ func GetProtectedBranch(ctx context.Context, client *githubpkg.Client, owner, re
 	return protection, err
 }
 
+//EnableBranchProtection enables branch protection if not enabled and makes sure passed arguments such as enforceAdmin
+//statusChecks are applied. The operation makes sure it doesn't override the existing checks.
 func EnableBranchProtection(ctx context.Context, client *githubpkg.Client, owner, repoName, branchName string, enforceAdmin bool, statusChecks []string) error {
 	protectedBranch, err := GetProtectedBranch(ctx, client, owner, repoName, branchName)
 
@@ -86,7 +79,7 @@ func EnableBranchProtection(ctx context.Context, client *githubpkg.Client, owner
 	if protectedBranch != nil {
 		currentChecks = protectedBranch.RequiredStatusChecks
 	}
-	requiredStatusChecks := MergeStatusChecks(currentChecks, statusChecks)
+	requiredStatusChecks := mergeStatusChecks(currentChecks, statusChecks)
 
 	_, _, err = client.Repositories.UpdateBranchProtection(ctx, owner, repoName, branchName, &githubpkg.ProtectionRequest{
 		EnforceAdmins:        enforceAdmin,
@@ -95,7 +88,8 @@ func EnableBranchProtection(ctx context.Context, client *githubpkg.Client, owner
 	return err
 }
 
-func MergeStatusChecks(currentCheck *githubpkg.RequiredStatusChecks, contexts []string) *githubpkg.RequiredStatusChecks {
+//mergeStatusChecks merges the current checks with the new ones
+func mergeStatusChecks(currentCheck *githubpkg.RequiredStatusChecks, contexts []string) *githubpkg.RequiredStatusChecks {
 
 	if currentCheck == nil || len(currentCheck.Contexts) == 0 {
 		return &githubpkg.RequiredStatusChecks{
@@ -125,6 +119,7 @@ func MergeStatusChecks(currentCheck *githubpkg.RequiredStatusChecks, contexts []
 	return currentCheck
 }
 
+//IsEnforceAdminEnabled checks if enforce admin option is enabled for the branch protection
 func IsEnforceAdminEnabled(protection *githubpkg.Protection) bool {
 	if protection.EnforceAdmins == nil {
 		return false
@@ -133,6 +128,7 @@ func IsEnforceAdminEnabled(protection *githubpkg.Protection) bool {
 	return protection.EnforceAdmins.Enabled
 }
 
+//AreStatusChecksEnabled checks if all of the status checks are enabled
 func AreStatusChecksEnabled(protection *githubpkg.Protection, checks []string) bool {
 	if len(checks) == 0 {
 		return false

@@ -14,7 +14,7 @@ import (
 
 // GetUserDetails return github users details
 func GetUserDetails(user string) (*github.User, error) {
-	client := newGithubOauthClient()
+	client := NewGithubOauthClient()
 	userResp, _, err := client.Users.Get(context.TODO(), user)
 	if err != nil {
 		logging.Warnf("GetUserDetails failed for user : %s, error = %s\n", user, err.Error())

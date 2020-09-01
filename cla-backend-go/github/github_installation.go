@@ -15,7 +15,7 @@ import (
 
 // GetInstallationRepositories returns list of repositories for github app installation
 func GetInstallationRepositories(installationID int64) ([]*github.Repository, error) {
-	client, err := newGithubAppClient(installationID)
+	client, err := NewGithubAppClient(installationID)
 	if err != nil {
 		return nil, errors.New("cannot create github client")
 	}

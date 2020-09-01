@@ -4,6 +4,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	v2Models "github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	v1Repositories "github.com/communitybridge/easycla/cla-backend-go/repositories"
@@ -30,6 +32,7 @@ type Service interface {
 	ListProjectRepositories(projectSFID string) (*v1Models.ListGithubRepositories, error)
 	GetRepository(repositoryID string) (*v1Models.GithubRepository, error)
 	DisableCLAGroupRepositories(claGroupID string) error
+	GetProtectedBranch(repositoryID string) (*v2Models.GithubRepositoryBranchProtection, error)
 }
 
 // GithubOrgRepo provide method to get github organization by name
@@ -118,6 +121,61 @@ func (s *service) ListProjectRepositories(projectSFID string) (*v1Models.ListGit
 
 func (s *service) GetRepository(repositoryID string) (*v1Models.GithubRepository, error) {
 	return s.repo.GetRepository(repositoryID)
+}
+
+func (s *service) GetProtectedBranch(repositoryID string) (*v2Models.GithubRepositoryBranchProtection, error) {
+	githubRepository, err := s.GetRepository(repositoryID)
+	if err != nil {
+		return nil, err
+	}
+
+	githubOrgName := githubRepository.RepositoryOrganizationName
+	githubRepoName := githubRepository.RepositoryName
+
+	githubOrg, err := s.ghOrgRepo.GetGithubOrganization(githubOrgName)
+	if err != nil {
+		return nil, err
+	}
+
+	githubClient, err := github.NewGithubAppClient(githubOrg.OrganizationInstallationID)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	owner, err := github.GetOwnerName(ctx, githubClient, githubOrgName, githubRepoName)
+	if err != nil {
+		return nil, err
+	}
+
+	branchName, err := github.GetDefaultBranchForRepo(ctx, githubClient, owner, githubRepoName)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &v2Models.GithubRepositoryBranchProtection{
+		BranchName: branchName,
+	}
+	branchProtection, err := github.GetProtectedBranch(ctx, githubClient, owner, githubRepoName, branchName)
+	if err != nil {
+		if errors.Is(err, github.BranchNotProtectedError) {
+			return result, nil
+		}
+		return nil, err
+	}
+
+	if github.IsEnforceAdminEnabled(branchProtection) {
+		result.EnforceAdmin = true
+	}
+
+	//checks := []string{"EasyCLA"}
+	//
+	//TODO: fix the status checks here ?
+	//if github.AreStatusChecksEnabled(branchProtection, []string{"EasyCLA"}){
+	//
+	//}
+
+	return result, nil
 }
 
 func (s *service) DisableCLAGroupRepositories(claGroupID string) error {

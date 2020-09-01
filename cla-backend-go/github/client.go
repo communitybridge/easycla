@@ -12,7 +12,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func newGithubAppClient(installationID int64) (*github.Client, error) {
+// NewGithubAppClient creates a new github client from the supplied installationID
+func NewGithubAppClient(installationID int64) (*github.Client, error) {
 	itr, err := ghinstallation.New(http.DefaultTransport, int64(getGithubAppID()), installationID, []byte(getGithubAppPrivateKey()))
 	if err != nil {
 		return nil, err
@@ -20,7 +21,8 @@ func newGithubAppClient(installationID int64) (*github.Client, error) {
 	return github.NewClient(&http.Client{Transport: itr}), nil
 }
 
-func newGithubOauthClient() *github.Client {
+// NewGithubOauthClient creates github client from global accessToken
+func NewGithubOauthClient() *github.Client {
 	ctx := context.TODO()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: getSecretAccessToken()},

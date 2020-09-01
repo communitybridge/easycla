@@ -1239,6 +1239,42 @@ paths:
       tags:
         - github-repositories
 
+  /project/{projectSFID}/github/repositories/{repositoryID}/branch-protection:
+    get:
+      summary: API to manage github branch protection for given repository
+      description: Endpoint to get branch protection options for the given branch, defaults to repository's default branch
+      operationId: getProjectGithubRepositoryBranchProtection
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - name: projectSFID
+          in: path
+          type: string
+          required: true
+        - name: repositoryID
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/github-repository-branch-protection'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - github-repositories
+
   /cla-group/{claGroupID}/icla/signatures:
     get:
       summary: List icla signatures for cla group
@@ -2885,6 +2921,30 @@ definitions:
         type: string
       cla_group_id:
         type: string
+
+  github-repository-branch-protection-status-checks:
+    type: object
+    properties:
+      name:
+        type: string
+        description: check status name
+        example: EasyCLA
+      enabled:
+        type: boolean
+
+  github-repository-branch-protection:
+    type: object
+    properties:
+      branch_name:
+        type: string
+      protection_enabled:
+        type: boolean
+      enforce_admin:
+        type: boolean
+      status_checks:
+        type: array
+        items:
+          $ref: '#/definitions/github-repository-branch-protection-status-checks'
 
   github-repository:
     $ref: './common/github-repository.yaml'
