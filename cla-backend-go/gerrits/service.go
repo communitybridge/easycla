@@ -92,6 +92,16 @@ func (s service) AddGerrit(claGroupID string, projectSFID string, params *models
 		return nil, errors.New("gerrit_name already present in the system")
 	}
 
+	gerritIDObject, err := s.repo.ExistsByID(*params.GerritName)
+	if err != nil {
+		message := fmt.Sprintf("unable to get gerrit by name : %s", *params.GerritName)
+		log.WithError(err).Warnf(message)
+	}
+
+	if len(gerritIDObject) > 0 {
+		return nil, errors.New("gerrit_ID already present in the system")
+	}
+
 	if params.GerritURL == nil {
 		return nil, errors.New("gerrit_url required")
 	}
