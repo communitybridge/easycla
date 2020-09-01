@@ -13,10 +13,7 @@ import time
 import uuid
 from typing import Optional, List
 
-import cla
 import dateutil.parser
-from cla.models import model_interfaces, key_value_store_interface, DoesNotExist
-from cla.models.model_interfaces import User, Signature
 from pynamodb.attributes import (
     UTCDateTimeAttribute,
     UnicodeSetAttribute,
@@ -30,6 +27,10 @@ from pynamodb.attributes import (
 from pynamodb.expressions.condition import Condition
 from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
 from pynamodb.models import Model
+
+import cla
+from cla.models import model_interfaces, key_value_store_interface, DoesNotExist
+from cla.models.model_interfaces import User, Signature
 
 stage = os.environ.get("STAGE", "")
 cla_logo_url = os.environ.get("CLA_BUCKET_LOGO_URL", "")
@@ -1859,7 +1860,7 @@ class RepositoryModel(BaseModel):
     repository_external_index = ExternalRepositoryIndex()
     repository_sfdc_index = SFDCRepositoryIndex()
     enabled = BooleanAttribute(default=False)
-    note = UnicodeAttribute()
+    note = UnicodeAttribute(null=True)
 
 
 class Repository(model_interfaces.Repository):
