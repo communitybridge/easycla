@@ -37,6 +37,7 @@ type Repository interface {
 	AddGerrit(input *models.Gerrit) (*models.Gerrit, error)
 
 	ExistsByName(gerritName string) ([]*models.Gerrit, error)
+	GetGerritsByID(ID string, IDType string) (*models.GerritList, error)
 }
 
 // NewRepository create new Repository
@@ -117,6 +118,72 @@ func (repo *repo) ExistsByName(gerritName string) ([]*models.Gerrit, error) {
 	return resultList, nil
 }
 
+func (repo *repo) ExistsByID(gerritID string) ([]*models.Gerrit, error) {
+	resultList := make([]*models.Gerrit, 0)
+
+	var condition expression.KeyConditionBuilder
+	tableName := fmt.Sprintf("cla-%s-gerrit-instances", repo.stage)
+
+	// hashkey is gerrit-name
+	indexName := "gerrit-id-index"
+
+	builder := expression.NewBuilder().WithProjection(buildProjection())
+
+	filter := expression.Name("gerrit_id").AttributeExists()
+	condition = expression.Key("group_id_icla").Equal(expression.Value(gerritID))
+	//condition = expression.Key("group_id_ccla").Equal(expression.Value(gerritID))
+
+	builder = builder.WithKeyCondition(condition).WithFilter(filter)
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	input := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+		IndexName:                 aws.String(indexName),
+		ScanIndexForward:          aws.Bool(false),
+	}
+
+	for {
+		results, errQuery := repo.dynamoDBClient.Query(input)
+		if errQuery != nil {
+			log.Warnf("error retrieving Gerrit. error = %s", errQuery.Error())
+			return nil, errQuery
+		}
+
+		var gerrits []*Gerrit
+
+		err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &gerrits)
+		if err != nil {
+			log.Warnf("error unmarshalling gerrit from database. error: %v", err)
+			return nil, err
+		}
+
+		for _, g := range gerrits {
+			resultList = append(resultList, g.toModel())
+		}
+
+		if len(results.LastEvaluatedKey) != 0 {
+			input.ExclusiveStartKey = results.LastEvaluatedKey
+
+		} else {
+			break
+		}
+	}
+	sort.Slice(resultList, func(i, j int) bool {
+		return resultList[i].GerritName < resultList[j].GerritName
+	})
+	return resultList, nil
+}
+
 func (repo repo) GetClaGroupGerrits(projectID string, projectSFID *string) (*models.GerritList, error) {
 	resultList := make([]*models.Gerrit, 0)
 	tableName := fmt.Sprintf("cla-%s-gerrit-instances", repo.stage)
@@ -124,6 +191,64 @@ func (repo repo) GetClaGroupGerrits(projectID string, projectSFID *string) (*mod
 	if projectSFID != nil {
 		filter = filter.And(expression.Name("project_sfid").Equal(expression.Value(*projectSFID)))
 	}
+	expr, err := expression.NewBuilder().WithFilter(filter).Build()
+	if err != nil {
+		log.Warnf("error building expression for gerrit instances scan, error: %v", err)
+		return nil, err
+	}
+	// Assemble the query input parameters
+	scanInput := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(tableName),
+	}
+
+	for {
+		results, err := repo.dynamoDBClient.Scan(scanInput)
+		if err != nil {
+			log.Warnf("error retrieving gerrit instances, error: %v", err)
+			return nil, err
+		}
+
+		var gerrits []*Gerrit
+
+		err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &gerrits)
+		if err != nil {
+			log.Warnf("error unmarshalling gerrit from database. error: %v", err)
+			return nil, err
+		}
+
+		for _, g := range gerrits {
+			resultList = append(resultList, g.toModel())
+		}
+
+		if len(results.LastEvaluatedKey) != 0 {
+			scanInput.ExclusiveStartKey = results.LastEvaluatedKey
+		} else {
+			break
+		}
+	}
+	sort.Slice(resultList, func(i, j int) bool {
+		return resultList[i].GerritName < resultList[j].GerritName
+	})
+	return &models.GerritList{List: resultList}, nil
+}
+
+func (repo repo) GetGerritsByID(ID string, IDType string) (*models.GerritList, error) {
+	var filter expression.ConditionBuilder
+	resultList := make([]*models.Gerrit, 0)
+	tableName := fmt.Sprintf("cla-%s-gerrit-instances", repo.stage)
+
+	if IDType == "ICLA" {
+		filter = expression.Name("group_id_icla").Equal(expression.Value(ID))
+	} else if IDType == "CCLA" {
+		filter = expression.Name("group_id_ccla").Equal(expression.Value(ID))
+	} else {
+		return nil, errors.New("invalid IDType")
+	}
+	// filter = filter.And(expression.Name("project_sfid").Equal(expression.Value(*projectSFID)))
+
 	expr, err := expression.NewBuilder().WithFilter(filter).Build()
 	if err != nil {
 		log.Warnf("error building expression for gerrit instances scan, error: %v", err)
