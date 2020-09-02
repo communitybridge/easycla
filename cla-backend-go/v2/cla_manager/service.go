@@ -306,15 +306,40 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		}
 	}
 
-	for _, projectCG := range projectCLAGroups {
+	// Check if Project is signed at Foundation or Project Level
+	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(claGroupID)
 
-		scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(params.Body.UserEmail.String(), projectCG.ProjectSFID, params.CompanySFID, roleID)
+	if signedErr != nil {
+		msg := buildErrorMessageCreate(params, signedErr)
+		log.Warn(msg)
+		return nil, &models.ErrorResponse{
+			Message: msg,
+			Code:    "400",
+		}
+	}
+
+	if signedAtFoundation {
+		foundationSFID := projectCLAGroups[0].FoundationSFID
+		scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(params.Body.UserEmail.String(), foundationSFID, params.CompanySFID, roleID)
 		if scopeErr != nil {
 			msg := buildErrorMessageCreate(params, scopeErr)
 			log.Warn(msg)
 			return nil, &models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
+			}
+		}
+
+	} else {
+		for _, projectCG := range projectCLAGroups {
+			scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(params.Body.UserEmail.String(), projectCG.ProjectSFID, params.CompanySFID, roleID)
+			if scopeErr != nil {
+				msg := buildErrorMessageCreate(params, scopeErr)
+				log.Warn(msg)
+				return nil, &models.ErrorResponse{
+					Message: msg,
+					Code:    "400",
+				}
 			}
 		}
 	}

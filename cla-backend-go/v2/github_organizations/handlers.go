@@ -5,6 +5,7 @@ package github_organizations
 
 import (
 	"fmt"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
