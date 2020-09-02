@@ -44,6 +44,7 @@ const (
 
 	GithubOrganizationAdded   = "github_organization.added"
 	GithubOrganizationDeleted = "github_organization.deleted"
+	GithubOrganizationUpdated = "github_organization.updated"
 
 	CompanyACLUserAdded       = "company_acl.user_added"
 	CompanyACLRequestAdded    = "company_acl.request_added"

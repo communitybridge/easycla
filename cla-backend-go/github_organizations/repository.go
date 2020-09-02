@@ -42,6 +42,7 @@ type Repository interface {
 	GetGithubOrganizations(externalProjectID string, projectSFID string) (*models.GithubOrganizations, error)
 	AddGithubOrganization(externalProjectID string, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
 	DeleteGithubOrganization(externalProjectID string, projectSFID string, githubOrgName string) error
+	UpdateGithubOrganization(projectSFID string, organizationName string, autoEnabled bool) error
 	GetGithubOrganization(githubOrganizationName string) (*models.GithubOrganization, error)
 }
 
@@ -65,10 +66,11 @@ func (repo repository) AddGithubOrganization(externalProjectID string, projectSF
 		DateCreated:                currentTime,
 		DateModified:               currentTime,
 		OrganizationInstallationID: 0,
-		OrganizationName:           input.OrganizationName,
-		OrganizationNameLower:      strings.ToLower(input.OrganizationName),
+		OrganizationName:           *input.OrganizationName,
+		OrganizationNameLower:      strings.ToLower(*input.OrganizationName),
 		OrganizationSfid:           externalProjectID,
 		ProjectSFID:                projectSFID,
+		AutoEnabled:                aws.BoolValue(input.AutoEnabled),
 		Version:                    "v1",
 	}
 	av, err := dynamodbattribute.MarshalMap(githubOrg)
@@ -122,6 +124,60 @@ func (repo repository) DeleteGithubOrganization(externalProjectID string, projec
 		log.Warnf(errMsg)
 		return errors.New(errMsg)
 	}
+	return nil
+}
+
+// UpdateGithubOrganization updates the specified GitHub organization based on the update model provided
+func (repo repository) UpdateGithubOrganization(projectSFID string, organizationName string, autoEnabled bool) error {
+	f := logrus.Fields{
+		"functionName":     "UpdateGithubOrganization",
+		"projectSFID":      projectSFID,
+		"organizationName": organizationName,
+		"autoEnabled":      autoEnabled,
+		"tableName":        repo.githubOrgTableName,
+	}
+
+	_, currentTime := utils.CurrentTime()
+	githubOrg, lookupErr := repo.GetGithubOrganization(organizationName)
+	if lookupErr != nil {
+		log.WithFields(f).Warnf("error looking up github organization by name, error: %+v", lookupErr)
+		return lookupErr
+	}
+	if githubOrg == nil {
+		lookupErr := errors.New("unable to lookup github organization by name")
+		log.WithFields(f).Warnf("error looking up github organization, error: %+v", lookupErr)
+		return lookupErr
+	}
+
+	log.WithFields(f).Debug("updating github organization record")
+	input := &dynamodb.UpdateItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"organization_name": {
+				S: aws.String(githubOrg.OrganizationName),
+			},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#A": aws.String("auto_enabled"),
+			"#M": aws.String("date_modified"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":a": {
+				BOOL: aws.Bool(autoEnabled),
+			},
+			":m": {
+				S: aws.String(currentTime),
+			},
+		},
+		UpdateExpression: aws.String("SET #A = :a, #M = :m"),
+		TableName:        aws.String(repo.githubOrgTableName),
+	}
+
+	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
+	if updateErr != nil {
+		log.Warnf("unable to update github organization record, error: %+v", updateErr)
+		return updateErr
+	}
+
 	return nil
 }
 

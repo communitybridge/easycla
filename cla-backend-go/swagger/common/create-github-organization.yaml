@@ -2,7 +2,19 @@
 # SPDX-License-Identifier: MIT
 
 type: object
+required:
+  - organizationName
 properties:
   organizationName:
     type: string
+    description: The GitHub Organization name
     example: "kubernetes"
+    # Pattern aligns with UI and other platform services including Org Service
+    # \w Any word character (alphanumeric & underscore), dashes, periods
+    pattern: '^([\w\-\.]+){2,255}$'
+    minLength: 2
+    maxLength: 255
+  autoEnabled:
+    type: boolean
+    description: Flag to indicate if auto-enabled flag should be enabled. Organizations with auto-enable turned on will automatically include any new repositories to the EasyCLA configuration.
+    default: false
