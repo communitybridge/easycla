@@ -30,8 +30,8 @@ const (
 	Conflict = "409"
 	// NotFound error Response code
 	NotFound = "404"
-	//NoContent Response code
-	NoContent = "204"
+	//Accepted Response code
+	Accepted = "202"
 )
 
 // Configure is the API handler routine for CLA Manager routes
@@ -195,7 +195,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		if err != nil {
 			statusCode := buildErrorStatusCode(err)
 			if statusCode == NotFound {
-				return cla_manager.NewCreateCLAManagerRequestNotFound().WithPayload(
+				return cla_manager.NewInviteCompanyAdminNotFound().WithPayload(
 					&models.ErrorResponse{
 						Message: err.Error(),
 						Code:    NotFound,
@@ -203,17 +203,22 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 			}
 			if statusCode == Conflict {
 				msg := fmt.Sprintf("User %s already has role scope assigned ", params.Body.UserEmail)
-				return cla_manager.NewCreateCLAManagerRequestConflict().WithPayload(
+				return cla_manager.NewInviteCompanyAdminConflict().WithPayload(
 					&models.ErrorResponse{
 						Message: msg,
 						Code:    Conflict,
 					})
 			}
-			if statusCode == NoContent {
-				return cla_manager.NewCreateCLAManagerRequestNoContent()
+			if statusCode == Accepted {
+				msg := fmt.Sprintf("User %s has no LF Login account ", params.Body.UserEmail)
+				return cla_manager.NewInviteCompanyAdminAccepted().WithPayload(
+					&models.SuccessResponse{
+						Message: msg,
+						Code:    Accepted,
+					})
 			}
 
-			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithPayload(
+			return cla_manager.NewInviteCompanyAdminBadRequest().WithPayload(
 				&models.ErrorResponse{
 					Message: err.Error(),
 					Code:    BadRequest,
@@ -257,6 +262,14 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 					&models.ErrorResponse{
 						Message: msg,
 						Code:    Conflict,
+					})
+			}
+			if statusCode == Accepted {
+				msg := fmt.Sprintf("User %s has no LF Login account ", params.Body.UserEmail)
+				return cla_manager.NewCreateCLAManagerRequestAccepted().WithPayload(
+					&models.SuccessResponse{
+						Message: msg,
+						Code:    Accepted,
 					})
 			}
 
@@ -310,7 +323,7 @@ func buildErrorStatusCode(err error) string {
 	}
 	// Check if user does not exiss
 	if err == ErrNoLFID {
-		return NoContent
+		return Accepted
 	}
 	// Return Bad Request
 	return BadRequest

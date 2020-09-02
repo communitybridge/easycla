@@ -1848,12 +1848,16 @@ paths:
           description: 'Success'
           schema:
             $ref: '#/definitions/cla-manager-designees'
+        '202':
+          $ref: '#/responses/accepted-request'
         '204':
           description: 'Success'
         '400':
           $ref: '#/responses/invalid-request'
         '403':
           $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
         '409':
           $ref: '#/responses/conflict'
       tags:
@@ -1894,6 +1898,8 @@ paths:
           description: 'Success'
           schema:
             $ref: "#/definitions/cla-manager-designee"
+        '202':
+          $ref: '#/responses/accepted-request'
         '204':
           description: 'Success'
         '400':
@@ -2664,6 +2670,10 @@ responses:
     description: Duplicate Resource
     schema:
       $ref: '#/definitions/error-response'
+  accepted-request:
+    description: Accepted request
+    schema:
+      $ref: '#/definitions/success-response'
   unprocessable-entity:
     description: Unprocessable Entity - Validation Failure
     schema:
@@ -3919,12 +3929,27 @@ definitions:
     x-nullable: false
     title: Error Response
     description: Standard error format
-    properties:
+    properties: 
       Code:
         description: The error code
         example: "404"
         type: string
       Message:
         description: The error message
+        example: "unable to find project Acme, Inc."
+        type: string
+  
+  success-response:
+    type: object
+    x-nullable: false
+    title: Success Response
+    description: Standard success format
+    properties: 
+      Code:
+        description: The success code
+        example: "202"
+        type: string
+      Message:
+        description: The success message
         example: "unable to find project Acme, Inc."
         type: string
