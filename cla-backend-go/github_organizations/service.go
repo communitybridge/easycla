@@ -13,6 +13,7 @@ type Service interface {
 	GetGithubOrganizations(externalProjectID string) (*models.GithubOrganizations, error)
 	AddGithubOrganization(externalProjectID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
 	DeleteGithubOrganization(externalProjectID string, githubOrgName string) error
+	UpdateGithubOrganization(projectSFID string, organizationName string, autoEnabled bool) error
 }
 
 type service struct {
@@ -43,4 +44,8 @@ func (s service) DeleteGithubOrganization(externalProjectID string, githubOrgNam
 		return err
 	}
 	return s.repo.DeleteGithubOrganization(externalProjectID, "", githubOrgName)
+}
+
+func (s service) UpdateGithubOrganization(projectSFID string, organizationName string, autoEnabled bool) error {
+	return s.repo.UpdateGithubOrganization(projectSFID, organizationName, autoEnabled)
 }

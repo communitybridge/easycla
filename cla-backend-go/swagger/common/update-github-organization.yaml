@@ -1,0 +1,10 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
+
+type: object
+required:
+  - autoEnabled
+properties:
+  autoEnabled:
+    type: boolean
+    description: Flag to indicate if auto-enabled flag should be enabled. Organizations with auto-enable turned on will automatically include any new repositories to the EasyCLA configuration.
