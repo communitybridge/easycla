@@ -91,11 +91,18 @@ type CLATemplateCreatedEventData struct{}
 // GithubOrganizationAddedEventData . . .
 type GithubOrganizationAddedEventData struct {
 	GithubOrganizationName string
+	AutoEnabled            bool
 }
 
 // GithubOrganizationDeletedEventData . . .
 type GithubOrganizationDeletedEventData struct {
 	GithubOrganizationName string
+}
+
+// GithubOrganizationUpdatedEventData . . .
+type GithubOrganizationUpdatedEventData struct {
+	GithubOrganizationName string
+	AutoEnabled            bool
 }
 
 // CCLAApprovalListRequestCreatedEventData . . .
@@ -376,8 +383,8 @@ func (ed *CLATemplateCreatedEventData) GetEventDetailsString(args *LogEventArgs)
 
 // GetEventDetailsString . . .
 func (ed *GithubOrganizationAddedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user [%s] added github organization [%s]",
-		args.userName, ed.GithubOrganizationName)
+	data := fmt.Sprintf("user [%s] added github organization [%s] with auto-enabled: %t",
+		args.userName, ed.GithubOrganizationName, ed.AutoEnabled)
 	return data, true
 }
 
@@ -385,6 +392,13 @@ func (ed *GithubOrganizationAddedEventData) GetEventDetailsString(args *LogEvent
 func (ed *GithubOrganizationDeletedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user [%s] deleted github organization [%s]",
 		args.userName, ed.GithubOrganizationName)
+	return data, true
+}
+
+// GetEventDetailsString . . .
+func (ed *GithubOrganizationUpdatedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user [%s] updated github organization [%s] with auto-enabled: %t",
+		args.userName, ed.GithubOrganizationName, ed.AutoEnabled)
 	return data, true
 }
 
@@ -711,8 +725,8 @@ func (ed *CLATemplateCreatedEventData) GetEventSummaryString(args *LogEventArgs)
 
 // GetEventSummaryString . . .
 func (ed *GithubOrganizationAddedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s added github organization %s",
-		args.userName, ed.GithubOrganizationName)
+	data := fmt.Sprintf("user %s added github organization %s with auto-enabled: %t",
+		args.userName, ed.GithubOrganizationName, ed.AutoEnabled)
 	return data, true
 }
 
@@ -720,6 +734,13 @@ func (ed *GithubOrganizationAddedEventData) GetEventSummaryString(args *LogEvent
 func (ed *GithubOrganizationDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user %s deleted github organization %s",
 		args.userName, ed.GithubOrganizationName)
+	return data, true
+}
+
+// GetEventSummaryString . . .
+func (ed *GithubOrganizationUpdatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("user %s deleted github organization %s with auto-enabled: %t",
+		args.userName, ed.GithubOrganizationName, ed.AutoEnabled)
 	return data, true
 }
 
