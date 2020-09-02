@@ -27,7 +27,7 @@ type Service interface {
 	DeleteClaGroupGerrits(claGroupID string) (int, error)
 	DeleteGerrit(gerritID string) error
 	GetGerrit(gerritID string) (*models.Gerrit, error)
-	AddGerrit(claGroupID string, projectSFID string, input *models.AddGerritInput) (*models.Gerrit, error)
+	AddGerrit(claGroupID string, projectSFID string, input *models.AddGerritInput, projectModel *models.Project) (*models.Gerrit, error)
 	GetClaGroupGerrits(claGroupID string, projectSFID *string) (*models.GerritList, error)
 	GetGerritRepos(gerritName string) (*models.GerritRepoList, error)
 }
@@ -70,10 +70,31 @@ func (s service) GetGerrit(gerritID string) (*models.Gerrit, error) {
 	return s.repo.GetGerrit(gerritID)
 }
 
-func (s service) AddGerrit(claGroupID string, projectSFID string, params *models.AddGerritInput) (*models.Gerrit, error) {
+func (s service) AddGerrit(claGroupID string, projectSFID string, params *models.AddGerritInput, projectModel *models.Project) (*models.Gerrit, error) {
 	if params.GroupIDIcla == "" && params.GroupIDCcla == "" {
 		return nil, errors.New("should specify at least a LDAP group for ICLA or CCLA")
 	}
+
+	log.Debugf("cla groupID %s", claGroupID)
+	log.Debugf("project Model %+v", projectModel)
+
+	if projectModel.ProjectCCLAEnabled && projectModel.ProjectICLAEnabled {
+		if params.GroupIDCcla == "" {
+			return nil, errors.New("please provide GroupIDCcla")
+		}
+		if params.GroupIDIcla == "" {
+			return nil, errors.New("please provide GroupIDIcla")
+		}
+	} else if projectModel.ProjectCCLAEnabled {
+		if params.GroupIDCcla == "" {
+			return nil, errors.New("please provide GroupIDCcla")
+		}
+	} else if projectModel.ProjectICLAEnabled {
+		if params.GroupIDIcla == "" {
+			return nil, errors.New("please provide GroupIDIcla")
+		}
+	}
+
 	if params.GroupIDIcla == params.GroupIDCcla {
 		return nil, errors.New("LDAP group for ICLA and CCLA are same")
 	}
