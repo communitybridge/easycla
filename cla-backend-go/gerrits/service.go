@@ -92,14 +92,24 @@ func (s service) AddGerrit(claGroupID string, projectSFID string, params *models
 		return nil, errors.New("gerrit_name already present in the system")
 	}
 
-	gerritIDObject, err := s.repo.ExistsByID(*params.GerritName)
+	gerritCcla, err := s.repo.GetGerritsByID(params.GroupIDCcla, "CCLA")
 	if err != nil {
-		message := fmt.Sprintf("unable to get gerrit by name : %s", *params.GerritName)
+		message := fmt.Sprintf("unable to get gerrit by ccla id : %s", params.GroupIDCcla)
 		log.WithError(err).Warnf(message)
 	}
 
-	if len(gerritIDObject) > 0 {
-		return nil, errors.New("gerrit_ID already present in the system")
+	if len(gerritCcla.List) > 0 {
+		return nil, errors.New("gerrit_ccla id already present in the system")
+	}
+
+	gerritIcla, err := s.repo.GetGerritsByID(params.GroupIDIcla, "ICLA")
+	if err != nil {
+		message := fmt.Sprintf("unable to get gerrit by icla : %s", params.GroupIDIcla)
+		log.WithError(err).Warnf(message)
+	}
+
+	if len(gerritIcla.List) > 0 {
+		return nil, errors.New("gerrit_icla id already present in the system")
 	}
 
 	if params.GerritURL == nil {
