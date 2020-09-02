@@ -27,7 +27,7 @@ type Service interface {
 	DeleteClaGroupGerrits(claGroupID string) (int, error)
 	DeleteGerrit(gerritID string) error
 	GetGerrit(gerritID string) (*models.Gerrit, error)
-	AddGerrit(claGroupID string, projectSFID string, input *models.AddGerritInput) (*models.Gerrit, error)
+	AddGerrit(claGroupID string, projectSFID string, input *models.AddGerritInput, projectModel *models.Project) (*models.Gerrit, error)
 	GetClaGroupGerrits(claGroupID string, projectSFID *string) (*models.GerritList, error)
 	GetGerritRepos(gerritName string) (*models.GerritRepoList, error)
 }
@@ -70,10 +70,31 @@ func (s service) GetGerrit(gerritID string) (*models.Gerrit, error) {
 	return s.repo.GetGerrit(gerritID)
 }
 
-func (s service) AddGerrit(claGroupID string, projectSFID string, params *models.AddGerritInput) (*models.Gerrit, error) {
+func (s service) AddGerrit(claGroupID string, projectSFID string, params *models.AddGerritInput, projectModel *models.Project) (*models.Gerrit, error) {
 	if params.GroupIDIcla == "" && params.GroupIDCcla == "" {
 		return nil, errors.New("should specify at least a LDAP group for ICLA or CCLA")
 	}
+
+	log.Debugf("cla groupID %s", claGroupID)
+	log.Debugf("project Model %+v", projectModel)
+
+	if projectModel.ProjectCCLAEnabled && projectModel.ProjectICLAEnabled {
+		if params.GroupIDCcla == "" {
+			return nil, errors.New("please provide GroupIDCcla")
+		}
+		if params.GroupIDIcla == "" {
+			return nil, errors.New("please provide GroupIDIcla")
+		}
+	} else if projectModel.ProjectCCLAEnabled {
+		if params.GroupIDCcla == "" {
+			return nil, errors.New("please provide GroupIDCcla")
+		}
+	} else if projectModel.ProjectICLAEnabled {
+		if params.GroupIDIcla == "" {
+			return nil, errors.New("please provide GroupIDIcla")
+		}
+	}
+
 	if params.GroupIDIcla == params.GroupIDCcla {
 		return nil, errors.New("LDAP group for ICLA and CCLA are same")
 	}
@@ -90,6 +111,26 @@ func (s service) AddGerrit(claGroupID string, projectSFID string, params *models
 
 	if len(gerritObject) > 0 {
 		return nil, errors.New("gerrit_name already present in the system")
+	}
+
+	gerritCcla, err := s.repo.GetGerritsByID(params.GroupIDCcla, "CCLA")
+	if err != nil {
+		message := fmt.Sprintf("unable to get gerrit by ccla id : %s", params.GroupIDCcla)
+		log.WithError(err).Warnf(message)
+	}
+
+	if len(gerritCcla.List) > 0 {
+		return nil, errors.New("gerrit_ccla id already present in the system")
+	}
+
+	gerritIcla, err := s.repo.GetGerritsByID(params.GroupIDIcla, "ICLA")
+	if err != nil {
+		message := fmt.Sprintf("unable to get gerrit by icla : %s", params.GroupIDIcla)
+		log.WithError(err).Warnf(message)
+	}
+
+	if len(gerritIcla.List) > 0 {
+		return nil, errors.New("gerrit_icla id already present in the system")
 	}
 
 	if params.GerritURL == nil {
