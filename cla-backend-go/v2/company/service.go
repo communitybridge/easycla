@@ -417,19 +417,6 @@ func (s *service) CreateContibutor(companyID string, projectID string, userEmail
 	acServiceClient := acs_service.GetClient()
 	orgClient := orgService.GetClient()
 
-	isSigned, signedErr := s.isSigned(companyID, projectID)
-	if signedErr != nil {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request- %s", signedErr)
-		log.Warn(msg)
-		return nil, signedErr
-	}
-
-	if isSigned {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project :%s is already signed ", projectID)
-		log.Warn(msg)
-		return nil, ErrProjectSigned
-	}
-
 	user, userErr := userClient.SearchUserByEmail(userEmail)
 	if userErr != nil {
 		log.Debugf("Failed to get user by email: %s , error: %+v", userEmail, userErr)
@@ -519,34 +506,6 @@ func (s *service) CreateContibutor(companyID string, projectID string, userEmail
 		Role:        *aws.String("contributor"),
 	}
 	return contributor, nil
-}
-
-// Helper function to check if project/claGroup is signed
-func (s *service) isSigned(companyID string, projectID string) (bool, error) {
-	isSigned := false
-	// Check for company contributor
-
-	v1Company, companyErr := s.v1CompanyService.GetCompanyByExternalID(companyID)
-	if companyErr != nil {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - %s", companyErr)
-		log.Warn(msg)
-		return isSigned, companyErr
-	}
-
-	claManagers, err := s.GetCompanyProjectCLAManagers(v1Company.CompanyID, projectID)
-	if err != nil {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request : %v", err)
-		log.Warn(msg)
-		return isSigned, err
-	}
-
-	if len(claManagers.List) > 0 {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - CLA Group signed for company: %s and project : %s", companyID, projectID)
-		log.Warn(msg)
-		isSigned = true
-	}
-
-	return isSigned, nil
 }
 
 //AssociateContributorByGroup creates contributor by group for contributor prospect
