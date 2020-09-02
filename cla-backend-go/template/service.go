@@ -11,6 +11,8 @@ import (
 	"io/ioutil"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
@@ -116,10 +118,16 @@ func (s service) CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemp
 
 // CreateCLAGroupTemplate
 func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaGroupTemplate) (models.TemplatePdfs, error) {
+	f := logrus.Fields{
+		"functionName":   "CreateCLAGroupTemplate",
+		"claGroupID":     claGroupID,
+		"claGroupFields": claGroupFields,
+	}
+
 	// Verify claGroupID matches an existing CLA Group
 	claGroup, err := s.templateRepo.GetCLAGroup(claGroupID)
 	if err != nil {
-		log.Warnf("Unable to fetch CLA group by id: %s, error: %v - returning empty template PDFs", claGroupID, err)
+		log.WithFields(f).Warnf("Unable to fetch CLA group by id: %s, error: %v - returning empty template PDFs", claGroupID, err)
 		return models.TemplatePdfs{}, err
 	}
 
@@ -128,7 +136,7 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	// Get Template
 	template, err := s.templateRepo.GetTemplate(claGroupFields.TemplateID)
 	if err != nil {
-		log.Warnf("Unable to fetch template fields: %s, error: %v - returning empty template PDFs",
+		log.WithFields(f).Warnf("Unable to fetch template fields: %s, error: %v - returning empty template PDFs",
 			claGroupFields.TemplateID, err)
 		return models.TemplatePdfs{}, err
 	}
@@ -136,7 +144,7 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	// Apply template fields
 	iclaTemplateHTML, cclaTemplateHTML, err := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
 	if err != nil {
-		log.Warnf("Unable to inject metadata details into template, error: %v - returning empty template PDFs", err)
+		log.WithFields(f).Warnf("Unable to inject metadata details into template, error: %v - returning empty template PDFs", err)
 		return models.TemplatePdfs{}, err
 	}
 
@@ -147,46 +155,68 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	var iclaFileURL string
 	var cclaFileURL string
 
+	// Use an error group to keep track of errors thrown in the below go routines
+	// Using go routines sped up the logic from ~8 seconds to ~5 seconds as we wait for the generation to complete
+	var eg errgroup.Group
+
 	if claGroup.ProjectICLAEnabled {
-		iclaPdf, iclaErr := s.docraptorClient.CreatePDF(iclaTemplateHTML)
-		if iclaErr != nil {
-			log.Warnf("Problem generating ICLA template via docraptor client, error: %v - returning empty template PDFs", err)
-			return models.TemplatePdfs{}, err
-		}
-		defer func() {
-			closeErr := iclaPdf.Close()
-			if closeErr != nil {
-				log.Warnf("error closing ICLA PDF, error: %v", closeErr)
+		// Invoke the go routine - any errors will be handled below
+		eg.Go(func() error {
+			log.WithFields(f).Debugf("Creating PDF for %s", claTypeICLA)
+			iclaPdf, iclaErr := s.docraptorClient.CreatePDF(iclaTemplateHTML)
+			if iclaErr != nil {
+				log.WithFields(f).Warnf("Problem generating ICLA template via docraptor client, error: %v - returning empty template PDFs", err)
+				return err
 			}
-		}()
-		iclaFileName := s.generateTemplateS3FilePath(claGroupID, claTypeICLA)
-		iclaFileURL, err = s.SaveTemplateToS3(bucket, iclaFileName, iclaPdf)
-		if err != nil {
-			log.Warnf("Problem uploading ICLA PDF: %s to s3, error: %v - returning empty template PDFs", iclaFileName, err)
-			return models.TemplatePdfs{}, err
-		}
-		template.IclaHTMLBody = iclaTemplateHTML
+			defer func() {
+				closeErr := iclaPdf.Close()
+				if closeErr != nil {
+					log.WithFields(f).Warnf("error closing ICLA PDF, error: %v", closeErr)
+				}
+			}()
+			iclaFileName := s.generateTemplateS3FilePath(claGroupID, claTypeICLA)
+			iclaFileURL, err = s.SaveTemplateToS3(bucket, iclaFileName, iclaPdf)
+			if err != nil {
+				log.WithFields(f).Warnf("Problem uploading ICLA PDF: %s to s3, error: %v - returning empty template PDFs", iclaFileName, err)
+				return err
+			}
+
+			template.IclaHTMLBody = iclaTemplateHTML
+			return nil
+		})
 	}
 
 	if claGroup.ProjectCCLAEnabled {
-		cclaPdf, cclaErr := s.docraptorClient.CreatePDF(cclaTemplateHTML)
-		if cclaErr != nil {
-			log.Warnf("Problem generating CCLA template via docraptor client, error: %v - returning empty template PDFs", err)
-			return models.TemplatePdfs{}, err
-		}
-		defer func() {
-			closeErr := cclaPdf.Close()
-			if closeErr != nil {
-				log.Warnf("error closing CCLA PDF, error: %v", closeErr)
+		// Invoke the go routine - any errors will be handled below
+		eg.Go(func() error {
+			log.WithFields(f).Debugf("Creating PDF for %s", claTypeCCLA)
+			cclaPdf, cclaErr := s.docraptorClient.CreatePDF(cclaTemplateHTML)
+			if cclaErr != nil {
+				log.WithFields(f).Warnf("Problem generating CCLA template via docraptor client, error: %v - returning empty template PDFs", err)
+				return err
 			}
-		}()
-		cclaFileName := s.generateTemplateS3FilePath(claGroupID, claTypeCCLA)
-		cclaFileURL, err = s.SaveTemplateToS3(bucket, cclaFileName, cclaPdf)
-		if err != nil {
-			log.Warnf("Problem uploading CCLA PDF: %s to s3, error: %v - returning empty template PDFs", cclaFileName, err)
-			return models.TemplatePdfs{}, err
-		}
-		template.CclaHTMLBody = cclaTemplateHTML
+			defer func() {
+				closeErr := cclaPdf.Close()
+				if closeErr != nil {
+					log.WithFields(f).Warnf("error closing CCLA PDF, error: %v", closeErr)
+				}
+			}()
+			cclaFileName := s.generateTemplateS3FilePath(claGroupID, claTypeCCLA)
+			cclaFileURL, err = s.SaveTemplateToS3(bucket, cclaFileName, cclaPdf)
+			if err != nil {
+				log.WithFields(f).Warnf("Problem uploading CCLA PDF: %s to s3, error: %v - returning empty template PDFs", cclaFileName, err)
+				return err
+			}
+
+			template.CclaHTMLBody = cclaTemplateHTML
+			return nil
+		})
+	}
+
+	// Wait for the go routines to finish
+	log.WithFields(f).Debug("Waiting for PDF generation to complete...")
+	if pdfErr := eg.Wait(); pdfErr != nil {
+		return models.TemplatePdfs{}, pdfErr
 	}
 
 	if claGroup.ProjectICLAEnabled && claGroup.ProjectCCLAEnabled {
@@ -207,7 +237,7 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	// Save Template to DynamoDB
 	err = s.templateRepo.UpdateDynamoContractGroupTemplates(ctx, claGroupID, template, pdfUrls, claGroup.ProjectCCLAEnabled, claGroup.ProjectICLAEnabled)
 	if err != nil {
-		log.Warnf("Problem updating the database with ICLA/CCLA new PDF details, error: %v - returning empty template PDFs", err)
+		log.WithFields(f).Warnf("Problem updating the database with ICLA/CCLA new PDF details, error: %v - returning empty template PDFs", err)
 		return models.TemplatePdfs{}, err
 	}
 
