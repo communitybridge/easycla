@@ -40,6 +40,7 @@ type Service interface {
 	GetGithubOrganizations(projectSFID string) (*models.ProjectGithubOrganizations, error)
 	AddGithubOrganization(projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
 	DeleteGithubOrganization(projectSFID string, githubOrgName string) error
+	UpdateGithubOrganization(projectSFID string, organizationName string, autoEnabled bool) error
 }
 
 type service struct {
@@ -189,4 +190,8 @@ func (s service) DeleteGithubOrganization(projectSFID string, githubOrgName stri
 		return err
 	}
 	return s.repo.DeleteGithubOrganization("", projectSFID, githubOrgName)
+}
+
+func (s service) UpdateGithubOrganization(projectSFID string, organizationName string, autoEnabled bool) error {
+	return s.repo.UpdateGithubOrganization(projectSFID, organizationName, autoEnabled)
 }

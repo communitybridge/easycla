@@ -34,6 +34,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			}
 			return github_organizations.NewGetProjectGithubOrganizationsOK().WithPayload(result)
 		})
+
 	api.GithubOrganizationsAddProjectGithubOrganizationHandler = github_organizations.AddProjectGithubOrganizationHandlerFunc(
 		func(params github_organizations.AddProjectGithubOrganizationParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
@@ -45,7 +46,14 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
-			_, err := github.GetOrganization(params.Body.OrganizationName)
+			if params.Body.OrganizationName == nil {
+				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: fmt.Sprintf("EasyCLA - 400 Bad Request - missing organization name in body: %+v", params.Body),
+				})
+			}
+
+			_, err := github.GetOrganization(*params.Body.OrganizationName)
 			if err != nil {
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
@@ -60,7 +68,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				EventType:         events.GithubOrganizationAdded,
 				ExternalProjectID: params.ProjectSFID,
 				EventData: &events.GithubOrganizationAddedEventData{
-					GithubOrganizationName: params.Body.OrganizationName,
+					GithubOrganizationName: *params.Body.OrganizationName,
 				},
 			})
 
@@ -92,6 +100,41 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				},
 			})
 			return github_organizations.NewDeleteProjectGithubOrganizationNoContent()
+		})
+
+	api.GithubOrganizationsUpdateProjectGithubOrganizationConfigHandler = github_organizations.UpdateProjectGithubOrganizationConfigHandlerFunc(
+		func(params github_organizations.UpdateProjectGithubOrganizationConfigParams, authUser *auth.User) middleware.Responder {
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
+				return github_organizations.NewUpdateProjectGithubOrganizationConfigForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Update Project GitHub Organizations with Project scope of %s",
+						authUser.UserName, params.ProjectSFID),
+				})
+			}
+
+			if params.Body.AutoEnabled == nil {
+				return github_organizations.NewUpdateProjectGithubOrganizationConfigBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA - 400 Bad Request - missing auto enable value in body",
+				})
+			}
+
+			err := service.UpdateGithubOrganization(params.ProjectSFID, params.OrgName, *params.Body.AutoEnabled)
+			if err != nil {
+				return github_organizations.NewUpdateProjectGithubOrganizationConfigBadRequest().WithPayload(errorResponse(err))
+			}
+
+			eventService.LogEvent(&events.LogEventArgs{
+				LfUsername:        authUser.UserName,
+				EventType:         events.GithubOrganizationUpdated,
+				ExternalProjectID: params.ProjectSFID,
+				EventData: &events.GithubOrganizationUpdatedEventData{
+					GithubOrganizationName: params.OrgName,
+					AutoEnabled:            *params.Body.AutoEnabled,
+				},
+			})
+			return github_organizations.NewUpdateProjectGithubOrganizationConfigOK()
 		})
 }
 
