@@ -29,12 +29,25 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 			if err != nil {
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
+			if params.Body.OrganizationName == nil {
+				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA - 400 Bad Request - Missing input Organization Name",
+				})
+			}
+
+			autoEnabled := false
+			if params.Body.AutoEnabled != nil {
+				autoEnabled = *params.Body.AutoEnabled
+			}
 			eventService.LogEvent(&events.LogEventArgs{
 				UserID:            claUser.UserID,
 				EventType:         events.GithubOrganizationAdded,
 				ExternalProjectID: params.ProjectSFID,
+				LfUsername:        claUser.LFUsername,
 				EventData: &events.GithubOrganizationAddedEventData{
-					GithubOrganizationName: params.Body.OrganizationName,
+					GithubOrganizationName: *params.Body.OrganizationName,
+					AutoEnabled:            autoEnabled,
 				},
 			})
 			return github_organizations.NewAddProjectGithubOrganizationOK().WithPayload(result)
@@ -50,11 +63,40 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 				UserID:            claUser.UserID,
 				EventType:         events.GithubOrganizationDeleted,
 				ExternalProjectID: params.ProjectSFID,
+				LfUsername:        claUser.LFUsername,
 				EventData: &events.GithubOrganizationDeletedEventData{
 					GithubOrganizationName: params.OrgName,
 				},
 			})
 			return github_organizations.NewDeleteProjectGithubOrganizationOK()
+		})
+
+	api.GithubOrganizationsUpdateProjectGithubOrganizationConfigHandler = github_organizations.UpdateProjectGithubOrganizationConfigHandlerFunc(
+		func(params github_organizations.UpdateProjectGithubOrganizationConfigParams, claUser *user.CLAUser) middleware.Responder {
+			if params.Body.AutoEnabled == nil {
+				return github_organizations.NewUpdateProjectGithubOrganizationConfigBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA - 400 Bad Request - missing auto enable value in body",
+				})
+			}
+
+			err := service.UpdateGithubOrganization(params.ProjectSFID, params.OrgName, *params.Body.AutoEnabled)
+			if err != nil {
+				return github_organizations.NewUpdateProjectGithubOrganizationConfigBadRequest().WithPayload(errorResponse(err))
+			}
+
+			eventService.LogEvent(&events.LogEventArgs{
+				UserID:            claUser.UserID,
+				EventType:         events.GithubOrganizationUpdated,
+				ExternalProjectID: params.ProjectSFID,
+				LfUsername:        claUser.LFUsername,
+				EventData: &events.GithubOrganizationUpdatedEventData{
+					GithubOrganizationName: params.OrgName,
+					AutoEnabled:            *params.Body.AutoEnabled,
+				},
+			})
+
+			return github_organizations.NewUpdateProjectGithubOrganizationConfigOK()
 		})
 }
 
