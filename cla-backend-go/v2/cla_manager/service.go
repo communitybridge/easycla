@@ -702,7 +702,7 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 	userService := v2UserService.GetClient()
 	lfxUser, userErr := userService.SearchUserByEmail(userEmail)
 	if userErr != nil {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - User: %s does not have an LF Login", userEmail)
+		msg := fmt.Sprintf("User: %s does not have an LF Login ", userEmail)
 		log.Warn(msg)
 		// Send email
 		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, authUser.Email, fullName, userEmail, companyModel.ID, &projectSF.ID, "cla-manager-designee")
