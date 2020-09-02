@@ -95,6 +95,11 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 				})
 			}
 
+			projectModel, err := projectService.GetCLAGroupByID(params.ClaGroupID)
+			if err != nil {
+				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
+			}
+
 			// add the gerrit
 			addGerritInput := &v1Models.AddGerritInput{
 				GerritName:  params.AddGerritInput.GerritName,
@@ -103,7 +108,7 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 				GroupIDIcla: params.AddGerritInput.GroupIDIcla,
 				Version:     "v2",
 			}
-			result, err := v1Service.AddGerrit(params.ClaGroupID, params.ProjectSFID, addGerritInput)
+			result, err := v1Service.AddGerrit(params.ClaGroupID, params.ProjectSFID, addGerritInput, projectModel)
 			if err != nil {
 				if err.Error() == "gerrit_name already present in the system" {
 					return gerrits.NewAddGerritConflict().WithPayload(errorResponse(err))

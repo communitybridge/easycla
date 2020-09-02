@@ -79,7 +79,7 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 			}
 			params.AddGerritInput.Version = "v1"
 			// add the gerrit
-			result, err := service.AddGerrit(params.ProjectID, projectModel.ProjectExternalID, params.AddGerritInput)
+			result, err := service.AddGerrit(params.ProjectID, projectModel.ProjectExternalID, params.AddGerritInput, projectModel)
 			if err != nil {
 				if err.Error() == "gerrit_name already present in the system" {
 					return gerrits.NewAddGerritConflict().WithPayload(errorResponse(err))
