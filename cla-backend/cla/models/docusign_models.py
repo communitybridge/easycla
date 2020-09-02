@@ -531,8 +531,7 @@ class DocuSign(signing_service_interface.SigningService):
         # Save signature
         new_signature.save()
         cla.log.info(f'Set and saved signature for: {request_info}')
-        event_data = 'employee signature created for user {}, company {}, project {}'.
-                     format(user.get_user_name(), company.get_company_name(), project.get_project_name())
+        event_data = 'employee signature created for user {}, company {}, project {}'.format(user.get_user_name(), company.get_company_name(), project.get_project_name())
         Event.create_event(
             event_type=EventType.EmployeeSignatureCreated,
             event_company_id=company_id,
@@ -628,8 +627,7 @@ class DocuSign(signing_service_interface.SigningService):
         # Save signature before adding user to the LDAP Group.
         new_signature.save()
         cla.log.info(f'Set and saved signature for: {request_info}')
-        event_data='employee signature created for user {}, company {}, project {}'.
-                    format(user.get_user_name(), company.get_company_name(), project.get_project_name())
+        event_data ='employee signature created for user {}, company {}, project {}'.format(user.get_user_name(), company.get_company_name(), project.get_project_name())
         Event.create_event(
             event_type=EventType.EmployeeSignatureCreated,
             event_company_id=company_id,
