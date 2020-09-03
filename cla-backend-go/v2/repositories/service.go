@@ -59,7 +59,7 @@ func (s *service) AddGithubRepository(projectSFID string, input *models.GithubRe
 		return nil, err
 	}
 	var externalProjectID string
-	if project.Parent == "" {
+	if project.Parent == "" || project.Parent == utils.TheLinuxFoundation {
 		externalProjectID = projectSFID
 	} else {
 		externalProjectID = project.Parent
