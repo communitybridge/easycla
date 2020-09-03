@@ -6,6 +6,7 @@ package dynamo_events
 import (
 	"github.com/aws/aws-lambda-go/events"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 )
 
@@ -28,7 +29,7 @@ func (s *service) GithubRepoAddedEvent(event events.DynamoDBEventRecord) error {
 		return err
 	}
 	var uerr error
-	if project.Parent == "" {
+	if project.Parent == "" || project.Parent == utils.TheLinuxFoundation {
 		log.Debugf("incrementing root_project_repositories_count of cla_group_id %s", newGithubOrg.ClaGroupID)
 		uerr = s.projectRepo.UpdateRootCLAGroupRepositoriesCount(newGithubOrg.ClaGroupID, 1)
 	} else {
@@ -54,7 +55,7 @@ func (s *service) GithubRepoDeletedEvent(event events.DynamoDBEventRecord) error
 		return err
 	}
 	var uerr error
-	if project.Parent == "" {
+	if project.Parent == "" || project.Parent == utils.TheLinuxFoundation {
 		log.Debugf("decrementing root_project_repositories_count of cla_group_id %s", oldGithubOrg.ClaGroupID)
 		uerr = s.projectRepo.UpdateRootCLAGroupRepositoriesCount(oldGithubOrg.ClaGroupID, -1)
 	} else {

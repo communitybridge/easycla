@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/labstack/gommon/log"
 
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -172,7 +174,7 @@ func (s service) AddGithubOrganization(projectSFID string, input *models.CreateG
 		return nil, err
 	}
 	var externalProjectID string
-	if project.Parent == "" {
+	if project.Parent == "" || project.Parent == utils.TheLinuxFoundation {
 		externalProjectID = projectSFID
 	} else {
 		externalProjectID = project.Parent

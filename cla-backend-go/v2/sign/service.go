@@ -135,7 +135,7 @@ func (s *service) RequestCorporateSignature(lfUsername string, authorizationHead
 		return nil, err
 	}
 	var claGroupID string
-	if project.Parent == "" {
+	if project.Parent == "" || project.Parent == utils.TheLinuxFoundation {
 		// this is root project
 		cgmlist, perr := s.projectClaGroupsRepo.GetProjectsIdsForFoundation(utils.StringValue(input.ProjectSfid))
 		if perr != nil {
