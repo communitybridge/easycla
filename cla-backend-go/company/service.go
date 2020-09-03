@@ -17,6 +17,7 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 	organization_service "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
 )
 
 type service struct {
@@ -639,20 +640,24 @@ func getCompanyAdmin(companySFID string) (*models.User, error) {
 	osc := organization_service.GetClient()
 	result, err := osc.ListOrgUserAdminScopes(companySFID)
 	if err != nil {
-		log.WithField("companySFID", companySFID).Errorf("getting company-admin failed. error = %s", err.Error())
-		return nil, err
+		if _, ok := err.(*organizations.ListOrgUsrAdminScopesNotFound); !ok {
+			log.WithField("companySFID", companySFID).Errorf("getting company-admin failed. error = %s", err.Error())
+			return nil, err
+		}
 	}
-	for _, usc := range result.Userroles {
-		for _, rs := range usc.RoleScopes {
-			if rs.RoleName == "company-admin" {
-				companyAdmin := &models.User{
-					LfEmail:        usc.Contact.EmailAddress,
-					LfUsername:     usc.Contact.Username,
-					UserExternalID: usc.Contact.ID,
-					Username:       usc.Contact.Name,
+	if result != nil {
+		for _, usc := range result.Userroles {
+			for _, rs := range usc.RoleScopes {
+				if rs.RoleName == "company-admin" {
+					companyAdmin := &models.User{
+						LfEmail:        usc.Contact.EmailAddress,
+						LfUsername:     usc.Contact.Username,
+						UserExternalID: usc.Contact.ID,
+						Username:       usc.Contact.Name,
+					}
+					log.WithFields(logrus.Fields{"companySFID": companySFID, "company-admin": companyAdmin}).Debug("company-admin found")
+					return companyAdmin, nil
 				}
-				log.WithFields(logrus.Fields{"companySFID": companySFID, "company-admin": companyAdmin}).Debug("company-admin found")
-				return companyAdmin, nil
 			}
 		}
 	}
