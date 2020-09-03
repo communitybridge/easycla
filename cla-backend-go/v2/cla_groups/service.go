@@ -211,7 +211,7 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 	// If the foundation details in the platform project service indicates that this foundation has no parent or no
 	// children/sub-project... (stand alone project situation)
 	log.WithFields(f).Debug("checking to see if we have a standalone project...")
-	if foundationProjectDetails.Parent == "" && len(foundationProjectDetails.Projects) == 0 {
+	if (foundationProjectDetails.Parent == "" || foundationProjectDetails.Parent == utils.TheLinuxFoundation) && len(foundationProjectDetails.Projects) == 0 {
 		log.WithFields(f).Debug("we have a standalone project...")
 		// Did the user actually pass in any projects?  If none - add the foundation ID to the list and return to
 		// indicate it is a "standalone project"
