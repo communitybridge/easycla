@@ -836,7 +836,9 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 			contributorEmail = &contributor.LFEmail
 		}
 
-		sendErr := sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, nil, "cla-manager-designee")
+		// Use FoundationSFID
+		foundationSFID := projectCLAGroups[0].FoundationSFID
+		sendErr := sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, &foundationSFID, "cla-manager-designee")
 		if sendErr != nil {
 			return nil, sendErr
 		}
