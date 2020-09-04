@@ -325,6 +325,90 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFID
 	return nil
 }
 
+func (s *service) validateUnenrollProjectsInput(foundationSFID string, projectSFIDList []string) error {
+	f := logrus.Fields{
+		"functionName":    "validateUnenrollProjectsInput",
+		"foundationSFID":  foundationSFID,
+		"projectSFIDList": projectSFIDList,
+	}
+
+	psc := v2ProjectService.GetClient()
+
+	if len(projectSFIDList) == 0 {
+		log.WithFields(f).Warn("validation failure - there should be at least one subproject associated...")
+		return fmt.Errorf("bad request: there should be at least one subproject associated")
+	}
+
+	// fetch foundation and its sub projects
+	foundationProjectDetails, err := psc.GetProject(foundationSFID)
+	if err != nil {
+		log.WithFields(f).Warnf("validation failure - problem fetching project details from project service, error: %+v", err)
+		return err
+	}
+
+	if foundationProjectDetails.Parent != "" {
+		log.WithFields(f).Warn("validation failure - foundation has a parent - invalid foundation SFID")
+		return fmt.Errorf("bad request: invalid input foundation_sfid. it has a parent project")
+	}
+
+	if len(foundationProjectDetails.Projects) == 0 {
+		log.WithFields(f).Warn("validation failure - project does not have any subprojects")
+		return fmt.Errorf("bad request: invalid input to enroll projects. project does not have any subprojects")
+	}
+
+	// Check to see if all the provided enrolled projects are part of this foundation
+	foundationProjectIDList := utils.NewStringSet()
+	for _, pr := range foundationProjectDetails.Projects {
+		foundationProjectIDList.Add(pr.ID)
+	}
+	invalidProjectSFIDs := utils.NewStringSet()
+	for _, projectSFID := range projectSFIDList {
+		// Ok to have foundation ID in the project list - this means it's a Foundation Level CLA Group
+		if foundationSFID == projectSFID {
+			continue
+		}
+
+		// If the input/provided project ID is not in the SF project list...
+		if !foundationProjectIDList.Include(projectSFID) {
+			invalidProjectSFIDs.Add(projectSFID)
+		}
+	}
+
+	if invalidProjectSFIDs.Length() != 0 {
+		log.WithFields(f).Warnf("validation failure - provided projects are not under the SF foundation: %+v", invalidProjectSFIDs.List())
+		return fmt.Errorf("bad request: invalid project_sfid: %+v. These projects are not under the SF foundation", invalidProjectSFIDs.List())
+	}
+
+	// check if projects are already enrolled/enabled
+	enabledProjects, err := s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(foundationSFID)
+	if err != nil {
+		return err
+	}
+	enabledProjectList := utils.NewStringSet()
+	for _, pr := range enabledProjects {
+		enabledProjectList.Add(pr.ProjectSFID)
+	}
+	invalidProjectSFIDs = utils.NewStringSet()
+	for _, projectSFID := range projectSFIDList {
+		// Ok to have foundation ID in the project list - no need to check if it's already in the sub-project enabled list
+		if foundationSFID == projectSFID {
+			continue
+		}
+
+		// If one of our provided project IDs are not already in our list
+		if !enabledProjectList.Include(projectSFID) {
+			invalidProjectSFIDs.Add(projectSFID)
+		}
+	}
+
+	if invalidProjectSFIDs.Length() != 0 {
+		log.WithFields(f).Warnf("validation failure - projects are not enrolled in an existing CLA Group: %+v", invalidProjectSFIDs.List())
+		return fmt.Errorf("bad request: invalid project_sfid provided: %v. These projects are not enrolled in an existing cla_group", invalidProjectSFIDs.List())
+	}
+
+	return nil
+}
+
 func (s *service) enrollProjects(claGroupID string, foundationSFID string, projectSFIDList []string) error {
 	f := logrus.Fields{"function": "enrollProjects"}
 
@@ -339,7 +423,7 @@ func (s *service) enrollProjects(claGroupID string, foundationSFID string, proje
 			log.WithFields(f).Debugf("associating cla_group with project : %s", projectSFID)
 			err := s.projectsClaGroupsRepo.AssociateClaGroupWithProject(claGroupID, projectSFID, foundationSFID)
 			if err != nil {
-				log.WithFields(f).Errorf("associating cla_group with project : %s failed", projectSFID)
+				log.WithFields(f).Warnf("associating cla_group with project : %s failed", projectSFID)
 				log.WithFields(f).Debug("deleting stale entries from cla_group project association")
 				deleteErr := s.projectsClaGroupsRepo.RemoveProjectAssociatedWithClaGroup(claGroupID, projectSFIDList, false)
 				if deleteErr != nil {
@@ -421,7 +505,7 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 		Version:                 "v2",
 	})
 	if err != nil {
-		log.WithFields(f).Errorf("creating cla group failed. error = %s", err.Error())
+		log.WithFields(f).Warnf("creating cla group failed. error = %s", err.Error())
 		return nil, err
 	}
 	log.WithFields(f).WithField("cla_group", claGroup).Debugf("cla group created")
@@ -509,14 +593,14 @@ func (s *service) EnrollProjectsInClaGroup(claGroupID string, foundationSFID str
 	log.WithFields(f).Debug("validating enroll project input")
 	err := s.validateEnrollProjectsInput(foundationSFID, projectSFIDList)
 	if err != nil {
-		log.WithFields(f).Errorf("validating enroll project input failed. error = %s", err)
+		log.WithFields(f).Warnf("validating enroll project input failed. error = %s", err)
 		return err
 	}
 
 	log.WithFields(f).Debug("enrolling projects in cla_group")
 	err = s.enrollProjects(claGroupID, foundationSFID, projectSFIDList)
 	if err != nil {
-		log.WithFields(f).Errorf("enrolling projects in cla_group failed. error = %s", err)
+		log.WithFields(f).Warnf("enrolling projects in cla_group failed. error = %s", err)
 		return err
 	}
 
@@ -548,15 +632,15 @@ func (s *service) EnrollProjectsInClaGroup(claGroupID string, foundationSFID str
 func (s *service) UnenrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error {
 	f := logrus.Fields{"cla_group_id": claGroupID, "foundation_sfid": foundationSFID, "project_sfid_list": projectSFIDList}
 	log.WithFields(f).Debug("validating unenroll project input")
-	err := s.validateEnrollProjectsInput(foundationSFID, projectSFIDList)
+	err := s.validateUnenrollProjectsInput(foundationSFID, projectSFIDList)
 	if err != nil {
-		log.WithFields(f).Errorf("validating unenroll project input failed. error = %s", err)
+		log.WithFields(f).Warnf("validating unenroll project input failed. error = %s", err)
 		return err
 	}
 	log.WithFields(f).Debug("unenrolling projects in cla_group")
 	err = s.unenrollProjects(claGroupID, foundationSFID, projectSFIDList)
 	if err != nil {
-		log.WithFields(f).Errorf("unenrolling projects in cla_group failed. error = %s", err)
+		log.WithFields(f).Warnf("unenrolling projects in cla_group failed. error = %s", err)
 		return err
 	}
 
@@ -764,7 +848,7 @@ func (s *service) DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth
 	log.WithFields(f).Debug("finally, deleting cla_group from dynamodb")
 	err = s.v1ProjectService.DeleteCLAGroup(claGroupModel.ProjectID)
 	if err != nil {
-		log.WithFields(f).Errorf("deleting cla_group from dynamodb failed. error = %s", err.Error())
+		log.WithFields(f).Warnf("deleting cla_group from dynamodb failed. error = %s", err.Error())
 		return err
 	}
 
@@ -797,10 +881,10 @@ func getS3Url(claGroupID string, docs []v1Models.ProjectDocument) string {
 }
 
 // ListClaGroupsForFoundationOrProject returns the CLA Group list for the specified foundation ID
-func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*models.ClaGroupList, error) {
+func (s *service) ListClaGroupsForFoundationOrProject(projectOrFoundationSFID string) (*models.ClaGroupList, error) {
 	f := logrus.Fields{
-		"functionName":   "ListClaGroupsForFoundationOrProject",
-		"foundationSFID": foundationSFID,
+		"functionName":            "ListClaGroupsForFoundationOrProject",
+		"projectOrFoundationSFID": projectOrFoundationSFID,
 	}
 
 	// Our list of CLA Groups associated with this foundation (could be > 1) or project (only 1)
@@ -810,33 +894,37 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 
 	// Lookup this foundation or project in the Platform Project Service/SFDC database
 	log.WithFields(f).Debug("looking up foundation/project in platform project service...")
-	sfProjectModelDetails, projDetailsErr := v2ProjectService.GetClient().GetProject(foundationSFID)
+	sfProjectModelDetails, projDetailsErr := v2ProjectService.GetClient().GetProject(projectOrFoundationSFID)
 	if projDetailsErr != nil {
 		log.WithFields(f).Warnf("unable to lookup foundation/project, error: %+v", projDetailsErr)
 	}
 
 	if sfProjectModelDetails == nil {
-		return nil, fmt.Errorf("unable to find foundation by ID: %s", foundationSFID)
+		return nil, fmt.Errorf("unable to find foundation by ID: %s", projectOrFoundationSFID)
 	}
 
 	// Lookup the foundation name - need this if we were a project - need to lookup parent ID/Name
+	var foundationID = sfProjectModelDetails.ID
 	var foundationName = sfProjectModelDetails.Name
 
 	// If it's a project...
 	if sfProjectModelDetails.ProjectType == "Project" {
-		// Since this is a project and not a foundation, we'll want to lookup the parent foundation name - we'll use it
-		// for the output model down below
-		projectServiceModel, projErr := v2ProjectService.GetClient().GetProject(foundationSFID)
-		if projErr != nil {
-			log.Warnf("unable to lookup foundation SFID: %s - error: %+v - using 'Not Defined' as the default value",
-				foundationSFID, projErr)
+		// Since this is a project and not a foundation, we'll want to set he parent foundation ID and name (which is
+		// our parent in this case)
+		log.WithFields(f).Debug("found 'project' in platform project service.")
+		if sfProjectModelDetails.ProjectOutput.Foundation != nil {
+			foundationID = sfProjectModelDetails.ProjectOutput.Foundation.ID
+			foundationName = sfProjectModelDetails.ProjectOutput.Foundation.Name
+			log.WithFields(f).Debugf("using parent foundation ID: %s and name: %s", foundationID, foundationName)
 		} else {
-			foundationName = projectServiceModel.Name
+			// Project with no parent - must be a standalone - use our ID and Name as the foundation
+			foundationID = sfProjectModelDetails.ID
+			foundationName = sfProjectModelDetails.Name
+			log.WithFields(f).Debugf("no parent - using project as foundation ID: %s and name: %s", foundationID, foundationName)
 		}
 
-		log.WithFields(f).Debug("found 'project' in platform project service.")
 		log.WithFields(f).Debug("locating CLA Group mapping...")
-		projectCLAGroup, lookupErr := s.projectsClaGroupsRepo.GetClaGroupIDForProject(foundationSFID)
+		projectCLAGroup, lookupErr := s.projectsClaGroupsRepo.GetClaGroupIDForProject(projectOrFoundationSFID)
 		if lookupErr != nil {
 			log.WithFields(f).Warnf("problem locating CLA group by project id, error: %+v", lookupErr)
 			return nil, lookupErr
@@ -844,7 +932,7 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 
 		log.WithFields(f).Debugf("loading CLA Group by ID: %s", projectCLAGroup.ClaGroupID)
 		v1ClaGroupsByProject, claGroupLoadErr := s.v1ProjectService.GetCLAGroupByID(projectCLAGroup.ClaGroupID)
-		//v1ClaGroupsByProject, prjerr := s.v1ProjectService.GetClaGroupByProjectSFID(foundationSFID, DontLoadDetails)
+		//v1ClaGroupsByProject, prjerr := s.v1ProjectService.GetClaGroupByProjectSFID(projectOrFoundationSFID, DontLoadDetails)
 		if claGroupLoadErr != nil {
 			log.WithFields(f).Warnf("problem loading CLA group by id, error: %+v", claGroupLoadErr)
 			return nil, claGroupLoadErr
@@ -854,7 +942,7 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 
 	} else if sfProjectModelDetails.ProjectType == "Project Group" {
 		log.WithFields(f).Debug("found 'project group' in platform project service. Locating CLA Groups for foundation...")
-		projectCLAGroups, lookupErr := s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(foundationSFID)
+		projectCLAGroups, lookupErr := s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(projectOrFoundationSFID)
 		if lookupErr != nil {
 			log.WithFields(f).Warnf("problem locating CLA group by project id, error: %+v", lookupErr)
 			return nil, lookupErr
@@ -941,7 +1029,8 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 				ProjectName:       cgproject.ProjectName,
 				RepositoriesCount: cgproject.RepositoriesCount,
 			})
-			if cgproject.ProjectSFID == sfProjectModelDetails.ID {
+
+			if cgproject.ProjectSFID == foundationID {
 				foundationLevelCLA = true
 			}
 		}
