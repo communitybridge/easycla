@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/communitybridge/easycla/cla-backend-go/template"
 	"github.com/sirupsen/logrus"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/foundation"
@@ -39,15 +38,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 		claGroup, err := service.CreateCLAGroup(params.ClaGroupInput, utils.StringValue(params.XUSERNAME))
 		if err != nil {
-			if strings.Contains(err.Error(), "bad request") || err == template.ErrTemplateNotFound {
-				return cla_group.NewCreateClaGroupBadRequest().WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", err.Error()),
-				})
-			}
-			return cla_group.NewCreateClaGroupInternalServerError().WithPayload(&models.ErrorResponse{
-				Code:    "500",
-				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+			return cla_group.NewCreateClaGroupBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", err.Error()),
 			})
 		}
 
