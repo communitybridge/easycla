@@ -247,7 +247,7 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFID
 	f := logrus.Fields{
 		"functionName":    "validateEnrollProjectsInput",
 		"foundationSFID":  foundationSFID,
-		"projectSFIDList": projectSFIDList,
+		"projectSFIDList": strings.Join(projectSFIDList, ","),
 	}
 
 	psc := v2ProjectService.GetClient()
@@ -264,7 +264,7 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFID
 		return err
 	}
 
-	if foundationProjectDetails.Parent != "" {
+	if foundationProjectDetails.Parent != "" && foundationProjectDetails.Parent != utils.TheLinuxFoundation {
 		log.WithFields(f).Warn("validation failure - foundation has a parent - invalid foundation SFID")
 		return fmt.Errorf("bad request: invalid input foundation_sfid. it has a parent project")
 	}
@@ -294,7 +294,7 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFID
 
 	if invalidProjectSFIDs.Length() != 0 {
 		log.WithFields(f).Warnf("validation failure - provided projects are not under the SF foundation: %+v", invalidProjectSFIDs.List())
-		return fmt.Errorf("bad request: invalid project_sfid: %+v. These projects are not under the SF foundation", invalidProjectSFIDs.List())
+		return fmt.Errorf("bad request: invalid project_sfid: %+v. One or more provided projects are not under the SF foundation", invalidProjectSFIDs.List())
 	}
 
 	// check if projects are not already enabled
@@ -319,7 +319,7 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFID
 	}
 	if invalidProjectSFIDs.Length() != 0 {
 		log.WithFields(f).Warnf("validation failure - projects are already enrolled in an existing CLA Group: %+v", invalidProjectSFIDs.List())
-		return fmt.Errorf("bad request: invalid project_sfid provided: %v. These projects are already enrolled in an existing cla_group", invalidProjectSFIDs.List())
+		return fmt.Errorf("bad request: invalid project_sfid provided: %v. One or more of the provided projects are already enrolled in an existing cla_group", invalidProjectSFIDs.List())
 	}
 
 	return nil
@@ -329,7 +329,7 @@ func (s *service) validateUnenrollProjectsInput(foundationSFID string, projectSF
 	f := logrus.Fields{
 		"functionName":    "validateUnenrollProjectsInput",
 		"foundationSFID":  foundationSFID,
-		"projectSFIDList": projectSFIDList,
+		"projectSFIDList": strings.Join(projectSFIDList, ","),
 	}
 
 	psc := v2ProjectService.GetClient()
@@ -339,6 +339,12 @@ func (s *service) validateUnenrollProjectsInput(foundationSFID string, projectSF
 		return fmt.Errorf("bad request: there should be at least one subproject associated")
 	}
 
+	log.WithFields(f).Debug("checking to see if foundation is in project list...")
+	if isFoundationIDInList(foundationSFID, projectSFIDList) {
+		log.WithFields(f).Warn("validation failure - unable to unenroll Project Group from CLA Group")
+		return fmt.Errorf("bad request: unable to unenroll Project Group from CLA Group")
+	}
+
 	// fetch foundation and its sub projects
 	foundationProjectDetails, err := psc.GetProject(foundationSFID)
 	if err != nil {
@@ -346,7 +352,7 @@ func (s *service) validateUnenrollProjectsInput(foundationSFID string, projectSF
 		return err
 	}
 
-	if foundationProjectDetails.Parent != "" {
+	if foundationProjectDetails.Parent != "" && foundationProjectDetails.Parent != utils.TheLinuxFoundation {
 		log.WithFields(f).Warn("validation failure - foundation has a parent - invalid foundation SFID")
 		return fmt.Errorf("bad request: invalid input foundation_sfid. it has a parent project")
 	}
@@ -376,7 +382,7 @@ func (s *service) validateUnenrollProjectsInput(foundationSFID string, projectSF
 
 	if invalidProjectSFIDs.Length() != 0 {
 		log.WithFields(f).Warnf("validation failure - provided projects are not under the SF foundation: %+v", invalidProjectSFIDs.List())
-		return fmt.Errorf("bad request: invalid project_sfid: %+v. These projects are not under the SF foundation", invalidProjectSFIDs.List())
+		return fmt.Errorf("bad request: invalid project_sfid: %+v. One or more of the provided projects are not under the SF foundation", invalidProjectSFIDs.List())
 	}
 
 	// check if projects are already enrolled/enabled
@@ -403,7 +409,7 @@ func (s *service) validateUnenrollProjectsInput(foundationSFID string, projectSF
 
 	if invalidProjectSFIDs.Length() != 0 {
 		log.WithFields(f).Warnf("validation failure - projects are not enrolled in an existing CLA Group: %+v", invalidProjectSFIDs.List())
-		return fmt.Errorf("bad request: invalid project_sfid provided: %v. These projects are not enrolled in an existing cla_group", invalidProjectSFIDs.List())
+		return fmt.Errorf("bad request: invalid project_sfid provided: %v. One or more of the provided projects are not enrolled in an existing cla_group", invalidProjectSFIDs.List())
 	}
 
 	return nil
@@ -587,7 +593,7 @@ func (s *service) EnrollProjectsInClaGroup(claGroupID string, foundationSFID str
 		"functionName":    "EnrollProjectsInClaGroup",
 		"claGroupID":      claGroupID,
 		"foundationSFID":  foundationSFID,
-		"projectSFIDList": projectSFIDList,
+		"projectSFIDList": strings.Join(projectSFIDList, ","),
 	}
 
 	log.WithFields(f).Debug("validating enroll project input")
@@ -630,7 +636,12 @@ func (s *service) EnrollProjectsInClaGroup(claGroupID string, foundationSFID str
 }
 
 func (s *service) UnenrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error {
-	f := logrus.Fields{"cla_group_id": claGroupID, "foundation_sfid": foundationSFID, "project_sfid_list": projectSFIDList}
+	f := logrus.Fields{
+		"functionName":    "UnenrollProjectsInClaGroup",
+		"claGroupID":      claGroupID,
+		"foundationSFID":  foundationSFID,
+		"projectSFIDList": strings.Join(projectSFIDList, ","),
+	}
 	log.WithFields(f).Debug("validating unenroll project input")
 	err := s.validateUnenrollProjectsInput(foundationSFID, projectSFIDList)
 	if err != nil {
@@ -1076,6 +1087,10 @@ func (s *service) ListClaGroupsForFoundationOrProject(projectOrFoundationSFID st
 }
 
 func (s *service) getMetrics(claGroupIDList []string) map[string]*metrics.ProjectMetric {
+	f := logrus.Fields{
+		"functionName":   "getMetrics",
+		"claGroupIDList": strings.Join(claGroupIDList, ","),
+	}
 	m := make(map[string]*metrics.ProjectMetric)
 	type result struct {
 		claGroupID string
@@ -1102,7 +1117,9 @@ func (s *service) getMetrics(claGroupIDList []string) map[string]*metrics.Projec
 	}
 	for r := range rchan {
 		if r.err != nil {
-			log.WithField("cla_group_id", r.claGroupID).Error("unable to get cla_group metrics")
+			f["cla_group_id"] = r.claGroupID
+			log.WithFields(f).Error("unable to get cla_group metrics")
+			delete(f, "cla_group_id")
 			continue
 		}
 		m[r.claGroupID] = r.metric
