@@ -376,10 +376,26 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 		return nil, err
 	}
 
+	if standaloneProject {
+		// For standalone projects, root_project_sfid i.e foundation_sfid and project_sfid will be same - make sure it's
+		// in our project list as this will be a Foundation Level CLA Group
+		if !isFoundationIDInList(*input.FoundationSfid, input.ProjectSfidList) {
+			input.ProjectSfidList = append(input.ProjectSfidList, *input.FoundationSfid)
+		}
+	}
+
+	// Standalone projects are, by definition, Foundation Level CLA Groups
+	foundationLevelCLA := standaloneProject
+	// If not a standalone, but we have the Foundation ID in our Project list -> Foundation Level CLA Group
+	if !standaloneProject && isFoundationIDInList(*input.FoundationSfid, input.ProjectSfidList) {
+		foundationLevelCLA = true
+	}
+
 	// Create cla group
 	log.WithFields(f).WithField("input", input).Debugf("creating cla group")
 	claGroup, err := s.v1ProjectService.CreateCLAGroup(&v1Models.Project{
 		FoundationSFID:          *input.FoundationSfid,
+		FoundationLevelCLA:      foundationLevelCLA,
 		ProjectDescription:      input.ClaGroupDescription,
 		ProjectCCLAEnabled:      *input.CclaEnabled,
 		ProjectCCLARequiresICLA: *input.CclaRequiresIcla,
@@ -420,16 +436,7 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 	}
 	log.WithFields(f).Debug("cla_group_template attached", pdfUrls)
 
-	// Associate projects with cla group
-
-	if standaloneProject {
-		// For standalone projects, root_project_sfid i.e foundation_sfid and project_sfid will be same - make sure it's
-		// in our project list as this will be a Foundation Level CLA Group
-		if !isFoundationIDInList(*input.FoundationSfid, input.ProjectSfidList) {
-			input.ProjectSfidList = append(input.ProjectSfidList, *input.FoundationSfid)
-		}
-	}
-
+	// Associate projects with our new CLA Group
 	err = s.enrollProjects(claGroup.ProjectID, *input.FoundationSfid, input.ProjectSfidList)
 	if err != nil {
 		// Oops, roll back logic
@@ -449,16 +456,16 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 	projectList := make([]*models.ClaGroupProject, 0)
 	for _, p := range subProjectList {
 		foundationName = p.FoundationName
-		if p.ProjectSFID == p.FoundationSFID {
-			// For standalone project, we dont need to return same project as subproject
-			continue
-		}
 		projectList = append(projectList, &models.ClaGroupProject{
 			ProjectName:       p.ProjectName,
 			ProjectSfid:       p.ProjectSFID,
 			RepositoriesCount: p.RepositoriesCount,
 		})
 	}
+	// Sort the project list based on the project name
+	sort.Slice(projectList, func(i, j int) bool {
+		return projectList[i].ProjectName < projectList[j].ProjectName
+	})
 
 	return &models.ClaGroup{
 		FoundationLevelCLA:  isFoundationLevelCLA(*input.FoundationSfid, subProjectList),
@@ -793,6 +800,10 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 		log.WithFields(f).Warnf("unable to lookup foundation/project, error: %+v", projDetailsErr)
 	}
 
+	if sfProjectModelDetails == nil {
+		return nil, fmt.Errorf("unable to find foundation by ID: %s", foundationSFID)
+	}
+
 	// Lookup the foundation name - need this if we were a project - need to lookup parent ID/Name
 	var foundationName = sfProjectModelDetails.Name
 
@@ -833,12 +844,23 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 			log.WithFields(f).Warnf("problem locating CLA group by project id, error: %+v", lookupErr)
 			return nil, lookupErr
 		}
+		log.WithFields(f).Debugf("discovered %d projects based on foundation SFID...", len(projectCLAGroups))
 
+		claGroupsMap := map[string]bool{}
 		// Load these CLA Group records in parallel
 		var eg errgroup.Group
 		for _, projectCLAGroup := range projectCLAGroups {
+			// No need to re-process the same CLA group
+			if _, ok := claGroupsMap[projectCLAGroup.ClaGroupID]; ok {
+				continue
+			}
+
+			// Add entry into our map - so we know not to re-process this CLA Group
+			claGroupsMap[projectCLAGroup.ClaGroupID] = true
+
 			// Invoke the go routine - any errors will be handled below
 			eg.Go(func() error {
+				log.WithFields(f).Debugf("loading CLA Group by ID: %s", projectCLAGroup.ClaGroupID)
 				claGroupModel, claGroupLookupErr := s.v1ProjectService.GetCLAGroupByID(projectCLAGroup.ClaGroupID)
 				if claGroupLookupErr != nil {
 					log.WithFields(f).Warnf("problem locating CLA group by project id, error: %+v", claGroupLookupErr)
@@ -909,6 +931,10 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 
 		// Update the response model
 		cg.FoundationLevelCLA = foundationLevelCLA
+		// Sort the project list based on the project name
+		sort.Slice(projectList, func(i, j int) bool {
+			return projectList[i].ProjectName < projectList[j].ProjectName
+		})
 		cg.ProjectList = projectList
 
 		// Add this CLA Group to our response model
