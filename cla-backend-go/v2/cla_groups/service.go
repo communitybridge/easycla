@@ -327,18 +327,33 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFID
 
 func (s *service) enrollProjects(claGroupID string, foundationSFID string, projectSFIDList []string) error {
 	f := logrus.Fields{"function": "enrollProjects"}
+
+	// Load the projectSFIDList records in parallel
+	var eg errgroup.Group
 	for _, projectSFID := range projectSFIDList {
-		log.WithFields(f).Debugf("associating cla_group with project : %s", projectSFID)
-		err := s.projectsClaGroupsRepo.AssociateClaGroupWithProject(claGroupID, projectSFID, foundationSFID)
-		if err != nil {
-			log.WithFields(f).Errorf("associating cla_group with project : %s failed", projectSFID)
-			log.WithFields(f).Debug("deleting stale entries from cla_group project association")
-			deleteErr := s.projectsClaGroupsRepo.RemoveProjectAssociatedWithClaGroup(claGroupID, projectSFIDList, false)
-			if deleteErr != nil {
-				log.WithFields(f).Error("deleting stale entries from cla_group project association failed", deleteErr)
+		// ensure that following goroutine gets a copy of projectSFID
+		projectSFID := projectSFID
+
+		// Invoke the go routine - any errors will be handled below
+		eg.Go(func() error {
+			log.WithFields(f).Debugf("associating cla_group with project : %s", projectSFID)
+			err := s.projectsClaGroupsRepo.AssociateClaGroupWithProject(claGroupID, projectSFID, foundationSFID)
+			if err != nil {
+				log.WithFields(f).Errorf("associating cla_group with project : %s failed", projectSFID)
+				log.WithFields(f).Debug("deleting stale entries from cla_group project association")
+				deleteErr := s.projectsClaGroupsRepo.RemoveProjectAssociatedWithClaGroup(claGroupID, projectSFIDList, false)
+				if deleteErr != nil {
+					log.WithFields(f).Error("deleting stale entries from cla_group project association failed", deleteErr)
+				}
+				return err
 			}
-			return err
-		}
+			return nil
+		})
+	}
+	// Wait for the go routines to finish
+	log.WithFields(f).Debug("waiting for projectSFIDList to load...")
+	if loadErr := eg.Wait(); loadErr != nil {
+		return loadErr
 	}
 	return nil
 }
@@ -850,18 +865,20 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 		// Load these CLA Group records in parallel
 		var eg errgroup.Group
 		for _, projectCLAGroup := range projectCLAGroups {
+			// ensure that following goroutine gets a copy of projectSFID
+			projectCLAGroupClaGroupID := projectCLAGroup.ClaGroupID
 			// No need to re-process the same CLA group
-			if _, ok := claGroupsMap[projectCLAGroup.ClaGroupID]; ok {
+			if _, ok := claGroupsMap[projectCLAGroupClaGroupID]; ok {
 				continue
 			}
 
 			// Add entry into our map - so we know not to re-process this CLA Group
-			claGroupsMap[projectCLAGroup.ClaGroupID] = true
+			claGroupsMap[projectCLAGroupClaGroupID] = true
 
 			// Invoke the go routine - any errors will be handled below
 			eg.Go(func() error {
-				log.WithFields(f).Debugf("loading CLA Group by ID: %s", projectCLAGroup.ClaGroupID)
-				claGroupModel, claGroupLookupErr := s.v1ProjectService.GetCLAGroupByID(projectCLAGroup.ClaGroupID)
+				log.WithFields(f).Debugf("loading CLA Group by ID: %s", projectCLAGroupClaGroupID)
+				claGroupModel, claGroupLookupErr := s.v1ProjectService.GetCLAGroupByID(projectCLAGroupClaGroupID)
 				if claGroupLookupErr != nil {
 					log.WithFields(f).Warnf("problem locating CLA group by project id, error: %+v", claGroupLookupErr)
 					return claGroupLookupErr
