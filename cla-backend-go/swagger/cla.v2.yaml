@@ -2809,24 +2809,40 @@ parameters:
     in: path
     type: string
     required: true
+    # \w - Any word character (alphanumeric & underscore), dashes, periods
+    pattern: '^(\w)([\w\-.])+$'
+    minLength: 5
+    maxLength: 255
   path-foundationSFID:
     name: foundationSFID
     description: the Salesforce ID of the Foundation
     in: path
     type: string
     required: true
+    # \w - Any word character (alphanumeric & underscore), dashes, periods
+    pattern: '^(\w)([\w\-.])+$'
+    minLength: 5
+    maxLength: 255
   path-projectSFID:
     name: projectSFID
     description: the Salesforce ID of the project
     in: path
     type: string
     required: true
+    # \w - Any word character (alphanumeric & underscore), dashes, periods
+    pattern: '^(\w)([\w\-.])+$'
+    minLength: 5
+    maxLength: 255
   path-userID:
     name: userID
     description: v1 EasyCLA user Admin ID
     in: path
     type: string
     required: true
+    # \w - Any word character (alphanumeric & underscore), dashes, periods
+    pattern: '^(\w)([\w\-.])+$'
+    minLength: 5
+    maxLength: 255
   path-userLFID:
     name: userLFID
     description: LFID of the user
@@ -2839,12 +2855,20 @@ parameters:
     in: path
     type: string
     required: true
+    # \w - Any word character (alphanumeric & underscore), dashes, periods
+    pattern: '^(\w)([\w\-.])+$'
+    minLength: 5
+    maxLength: 255
   path-companySFID:
     name: companySFID
     description: salesforce id of the company
     in: path
     type: string
     required: true
+    # \w - Any word character (alphanumeric & underscore), dashes, periods
+    pattern: '^(\w)([\w\-.])+$'
+    minLength: 5
+    maxLength: 255
   path-companyName:
     name: companyName
     description: the company name
@@ -2858,6 +2882,10 @@ parameters:
     in: path
     type: string
     required: true
+    # \w - Any word character (alphanumeric & underscore), dashes, periods
+    pattern: '^(\w)([\w\-.])+$'
+    minLength: 5
+    maxLength: 255
   companySFID:
     name: companySFID
     description: salesforce id of the company
