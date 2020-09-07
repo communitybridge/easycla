@@ -61,7 +61,12 @@ export class AddManagerModal {
         }
       },
       (exception) => {
-        this.errorMsg = 'User not found with given LFID.';
+        // Added trick to indentify error meesage as no diffrent status code present.
+        if (exception._body.indexOf('manager already in signature ACL') >= 0) {
+          this.errorMsg = 'CLA manager already in signature ACL';
+        } else {
+          this.errorMsg = 'User not found with given LFID.';
+        }
       }
     );
   }
