@@ -44,6 +44,7 @@ import (
 const (
 	DontLoadDetails = false
 	LoadDetails     = true
+	foundationLevel = "Project Group"
 )
 
 type service struct {
@@ -852,7 +853,7 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 
 		v1ClaGroups.Projects = append(v1ClaGroups.Projects, *v1ClaGroupsByProject)
 
-	} else if sfProjectModelDetails.ProjectType == "Project Group" {
+	} else if sfProjectModelDetails.ProjectType == foundationLevel {
 		log.WithFields(f).Debug("found 'project group' in platform project service. Locating CLA Groups for foundation...")
 		projectCLAGroups, lookupErr := s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(foundationSFID)
 		if lookupErr != nil {
@@ -927,7 +928,7 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 		}
 
 		// How many SF projects are associated with this CLA Group?
-		cgprojects, err := s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(v1ClaGroup.FoundationSFID)
+		cgprojects, err := s.projectsClaGroupsRepo.GetProjectsIdsForClaGroup(v1ClaGroup.ProjectID)
 		if err != nil {
 			return nil, err
 		}
@@ -941,8 +942,10 @@ func (s *service) ListClaGroupsForFoundationOrProject(foundationSFID string) (*m
 				ProjectName:       cgproject.ProjectName,
 				RepositoriesCount: cgproject.RepositoriesCount,
 			})
-			if cgproject.ProjectSFID == sfProjectModelDetails.ID {
-				foundationLevelCLA = true
+			if sfProjectModelDetails.ProjectType == foundationLevel {
+				if cgproject.ProjectSFID == sfProjectModelDetails.ID {
+					foundationLevelCLA = true
+				}
 			}
 		}
 
