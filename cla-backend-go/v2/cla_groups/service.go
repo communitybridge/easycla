@@ -1041,16 +1041,9 @@ func (s *service) ListClaGroupsForFoundationOrProject(projectOrFoundationSFID st
 				ProjectName:       cgproject.ProjectName,
 				RepositoriesCount: cgproject.RepositoriesCount,
 			})
-<<<<<<< HEAD
 
 			if cgproject.ProjectSFID == foundationID {
 				foundationLevelCLA = true
-=======
-			if sfProjectModelDetails.ProjectType == foundationLevel {
-				if cgproject.ProjectSFID == sfProjectModelDetails.ID {
-					foundationLevelCLA = true
-				}
->>>>>>> a722409267d2f04483f934f4a579332c6683ba31
 			}
 		}
 
