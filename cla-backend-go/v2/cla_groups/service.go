@@ -442,7 +442,7 @@ func (s *service) enrollProjects(claGroupID string, foundationSFID string, proje
 		})
 	}
 	// Wait for the go routines to finish
-	log.WithFields(f).Debug("waiting for projectSFIDList to load...")
+	log.WithFields(f).Debug("waiting for associate cla_group with project...")
 	if loadErr := eg.Wait(); loadErr != nil {
 		return loadErr
 	}
