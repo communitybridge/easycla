@@ -834,7 +834,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 		if sendErr != nil {
 			return nil, sendErr
 		}
-		return nil, userErr
+		return nil, ErrNoLFID
 	}
 	var projectSFs []string
 	for _, pcg := range projectCLAGroups {
