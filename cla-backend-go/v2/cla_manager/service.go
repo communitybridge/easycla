@@ -911,7 +911,8 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	if contributor.LFUsername != "" && contributor.LFEmail != "" && len(projectSFs) > 0 {
 		sendEmailToCLAManagerDesignee(LfxPortalURL, organization.Name, projectSFs, userEmail, user.Name, contributor.LFEmail, contributor.LFUsername)
 	} else {
-		sendEmailToCLAManagerDesignee(LfxPortalURL, organization.Name, projectSFs, userEmail, user.Name, contributor.UserGithubID, contributor.UserGithubUsername)
+		contributorUserName, contributorEmail := getContributorPublicEmail(contributor)
+		sendEmailToCLAManagerDesignee(LfxPortalURL, organization.Name, projectSFs, userEmail, user.Name, contributorUserName, contributorEmail)
 	}
 
 	log.Debugf("CLA Manager designee created : %+v", designeeScopes)
@@ -1021,6 +1022,31 @@ func getBestUserName(model *v1Models.User) string {
 	}
 
 	return "User Name Unknown"
+}
+
+func getContributorPublicEmail(model *v1User.User) (string, string) {
+	var contributorUserName, contributorEmail string
+	if model.LFUsername != "" {
+		contributorUserName = model.LFUsername
+	}
+
+	if model.LFEmail != "" {
+		contributorEmail = model.LFEmail
+	}
+
+	if contributorUserName == "" {
+		contributorUserName = model.UserGithubUsername
+	}
+
+	if contributorEmail == "" && len(model.UserEmails) > 0 {
+		for _, email := range model.UserEmails {
+			if strings.Contains(email, "users.noreply.github.com") {
+				continue
+			}
+			contributorEmail = email
+		}
+	}
+	return contributorUserName, contributorEmail
 }
 
 // getFormattedUserDetails is a helper function to extract what information we can from the user record for purposes of displaying the user's information
@@ -1137,13 +1163,13 @@ func sendEmailToCLAManagerDesignee(corporateConsole string, companyName string, 
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project(s) %s.</p>
 <p>The following contributor is requesting to sign CLA for organization: </p>
-<p> %s %s </p>
+<p> %s (%s) </p>
 <p>Before the user contribution can be accepted, your organization must sign a CLA.
 <p>Kindly login to this portal %s and sign the CLA for one of the project(s) %s. </p>
 <p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
 %s
 %s`,
-		designeeName, projectNames, contributorName, contributorID, corporateConsole, projectNames,
+		designeeName, projectNames, contributorID, contributorName, corporateConsole, projectNames,
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
