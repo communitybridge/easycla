@@ -83,6 +83,30 @@ func (osc *Client) CreateOrgUserRoleOrgScope(emailID string, organizationID stri
 	return nil
 }
 
+// IsCompanyOwner checks if User is company owner
+func (osc *Client) IsCompanyOwner(userSFID string, organizationID string) (bool, error) {
+	tok, err := token.GetToken()
+	if err != nil {
+		return false, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	params := &organizations.ListOrgUsrServiceScopesParams{
+		SalesforceID: organizationID,
+		Rolename:     []string{"company-owner"},
+		Context:      context.Background(),
+	}
+	result, scopeErr := osc.cl.Organizations.ListOrgUsrServiceScopes(params, clientAuth)
+	if scopeErr != nil {
+		msg := fmt.Sprintf("error : %+v ", scopeErr)
+		log.Warn(msg)
+		return false, scopeErr
+	}
+
+	msg := fmt.Sprintf("CompanyOwner ServiceScopes Result :%+v ", result.Payload.Userroles[0])
+	log.Info(msg)
+	return true, nil
+}
+
 // IsUserHaveRoleScope checks if user have required role and scope
 func (osc *Client) IsUserHaveRoleScope(rolename string, userSFID string, organizationID string, projectSFID string) (bool, error) {
 	objectID := fmt.Sprintf("%s|%s", projectSFID, organizationID)

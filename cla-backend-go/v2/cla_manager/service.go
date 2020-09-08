@@ -949,34 +949,38 @@ func (s *service) setOwnerRole(userEmail string, organizationID string) error {
 		return userErr
 	}
 
-	if (user.Account.Name != v2Company.NoAccount) && (user.Account.ID != organizationID) {
-		msg := fmt.Sprintf("User :%s already associated with another organization : %s ", userEmail, user.Account.Name)
-		log.Info(msg)
-		return ErrNotInOrg
-	}
-
-	_, scopeErr := orgClient.ListOrgUserScopes(organizationID, []string{"company_owner"})
-	if scopeErr != nil {
-		// Only assign if company owner doesnt exist
-		if _, ok := scopeErr.(*organizations.ListOrgUsrServiceScopesNotFound); ok {
-			//Get Role ID
-			roleID, designeeErr := acsClient.GetRoleID("company-owner")
-			if designeeErr != nil {
-				msg := "Problem getting role ID for company-owner"
-				log.Warn(msg)
-				return designeeErr
-			}
-
-			err := orgClient.CreateOrgUserRoleOrgScope(userEmail, organizationID, roleID)
-			if err != nil {
-				log.Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", userEmail, err)
-				return err
-			}
-			// When role is assigned successfully skip 404 issue
-			return nil
+	hasOwnerScope, hasScopeErr := orgClient.IsCompanyOwner(user.ID, organizationID)
+	if hasScopeErr != nil {
+		if _, ok := hasScopeErr.(*organizations.ListOrgUsrAdminScopesNotFound); !ok {
+			return hasScopeErr
 		}
-		return scopeErr
 	}
+
+	if !hasOwnerScope {
+		_, scopeErr := orgClient.ListOrgUserScopes(organizationID, []string{"company-owner"})
+		if scopeErr != nil {
+			// Only assign if company owner doesnt exist
+			if _, ok := scopeErr.(*organizations.ListOrgUsrServiceScopesNotFound); ok {
+				//Get Role ID
+				roleID, designeeErr := acsClient.GetRoleID("company-owner")
+				if designeeErr != nil {
+					msg := "Problem getting role ID for company-owner"
+					log.Warn(msg)
+					return designeeErr
+				}
+
+				err := orgClient.CreateOrgUserRoleOrgScope(userEmail, organizationID, roleID)
+				if err != nil {
+					log.Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", userEmail, err)
+					return err
+				}
+				// When role is assigned successfully skip 404 issue
+				return nil
+			}
+			return scopeErr
+		}
+	}
+
 	return nil
 }
 
