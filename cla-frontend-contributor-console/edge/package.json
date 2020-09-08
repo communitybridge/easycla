@@ -1,6 +1,7 @@
 {
   "name": "edge",
   "version": "1.0.0",
+  "author": "The Linux Foundation",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
@@ -13,7 +14,7 @@
     "graceful-fs": "^4.2.2"
   },
   "resolutions": {
-    "mem": "^4.0.0"
+    "yargs-parser": "^13.1.2"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",

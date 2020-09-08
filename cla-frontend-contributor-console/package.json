@@ -1,6 +1,7 @@
 {
   "name": "cla-frontend-contributor-console",
   "version": "0.0.0",
+  "author": "The Linux Foundation",
   "license": "MIT",
   "scripts": {
     "deploy": "../scripts/deploy-frontend.sh",
