@@ -89,22 +89,26 @@ func (osc *Client) IsCompanyOwner(userSFID string, organizationID string) (bool,
 	if err != nil {
 		return false, err
 	}
-	clientAuth := runtimeClient.BearerToken(tok)
 	params := &organizations.ListOrgUsrServiceScopesParams{
 		SalesforceID: organizationID,
-		Rolename:     []string{"company-owner"},
 		Context:      context.Background(),
 	}
-	result, scopeErr := osc.cl.Organizations.ListOrgUsrServiceScopes(params, clientAuth)
-	if scopeErr != nil {
-		msg := fmt.Sprintf("error : %+v ", scopeErr)
-		log.Warn(msg)
-		return false, scopeErr
+	clientAuth := runtimeClient.BearerToken(tok)
+	result, err := osc.cl.Organizations.ListOrgUsrServiceScopes(params, clientAuth)
+	if err != nil {
+		return false, err
 	}
-
-	msg := fmt.Sprintf("CompanyOwner ServiceScopes Result :%+v ", result.Payload.Userroles[0])
-	log.Info(msg)
-	return true, nil
+	data := result.Payload
+	for _, userRole := range data.Userroles {
+		if userRole.Contact.ID == userSFID {
+			for _, roleScopes := range userRole.RoleScopes {
+				if roleScopes.RoleName == "company-owner" {
+					return true, nil
+				}
+			}
+		}
+	}
+	return false, nil
 }
 
 // IsUserHaveRoleScope checks if user have required role and scope
