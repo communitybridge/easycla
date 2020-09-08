@@ -951,7 +951,7 @@ func (s *service) setOwnerRole(userEmail string, organizationID string) error {
 
 	hasOwnerScope, hasScopeErr := orgClient.IsCompanyOwner(user.ID, organizationID)
 	if hasScopeErr != nil {
-		if _, ok := hasScopeErr.(*organizations.ListOrgUsrAdminScopesNotFound); !ok {
+		if _, ok := hasScopeErr.(*organizations.ListOrgUsrServiceScopesNotFound); !ok {
 			return hasScopeErr
 		}
 	}
