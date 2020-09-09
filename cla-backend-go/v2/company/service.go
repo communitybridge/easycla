@@ -166,7 +166,7 @@ func (s *service) GetCompanyAdmins(companySFID string) (*models.CompanyAdminList
 	orgClient := orgService.GetClient()
 
 	log.WithFields(f).Info("Getting user admins for company")
-	admins, adminErr := orgClient.ListOrgUserAdminScopes(companySFID)
+	admins, adminErr := orgClient.ListOrgUserAdminScopes(companySFID, nil)
 	adminList := make([]*models.AdminSf, 0)
 	if adminErr != nil {
 		if _, ok := adminErr.(*organizations.ListOrgUsrAdminScopesNotFound); ok {
