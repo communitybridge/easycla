@@ -136,6 +136,29 @@ func (usc *Client) SearchUsers(firstName string, lastName string, email string) 
 	return nil, errors.New("user not found")
 }
 
+// SearchUsersByEmail returns a single user based on the email parameter
+func (usc *Client) SearchUsersByEmail(email string) (*models.User, error) {
+	params := &user.FindUsersParams{
+		Email:   &email,
+		Context: context.Background(),
+	}
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	result, err := usc.cl.User.FindUsers(params, clientAuth)
+	if err != nil {
+		return nil, err
+	}
+	users := result.Payload.Data
+
+	if len(users) == 0 {
+		return nil, ErrUserNotFound
+	}
+	return users[0], nil
+}
+
 func getUsers(body []byte) ([]*models.User, error) {
 	var users = new(models.UserList)
 	err := json.Unmarshal(body, &users)
