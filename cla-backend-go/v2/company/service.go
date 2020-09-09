@@ -30,7 +30,6 @@ import (
 	v1SignatureParams "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	v2Models "github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
-	"github.com/communitybridge/easycla/cla-backend-go/logging"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/users"
@@ -114,18 +113,35 @@ func NewService(v1CompanyService v1Company.IService, sigRepo signatures.Signatur
 }
 
 func (s *service) GetCompanyProjectCLAManagers(companyID string, projectSFID string) (*models.CompanyClaManagers, error) {
-	f := logrus.Fields{"projectSFID": projectSFID, "companyID": companyID}
+	f := logrus.Fields{
+		"functionName": "GetCompanyProjectCLAManagers",
+		"projectSFID":  projectSFID,
+		"companyID":    companyID,
+	}
+	log.WithFields(f).Debugf("locating CLA Group(s) under project or foundation...")
 	var err error
 	claGroups, err := s.getCLAGroupsUnderProjectOrFoundation(projectSFID)
 	if err != nil {
 		log.WithFields(f).Warnf("problem fetching CLA Groups under project or foundation, error: %+v", err)
 		return nil, err
 	}
-	sigs, err := s.getAllCCLASignatures(companyID)
-	if err != nil {
-		log.WithFields(f).Warnf("problem fetching CLA signatures, error: %+v", err)
-		return nil, err
+
+	signed, approved := true, true
+	maxLoad := int64(10)
+	var sigs []*v1Models.Signature
+	for _, claGroup := range claGroups {
+		var sigErr error
+		// Should only have 1 per CLA Group/Company pair
+		sig, sigErr := s.signatureRepo.GetProjectCompanySignature(companyID, claGroup.ClaGroupID, &signed, &approved, nil, &maxLoad)
+		if sigErr != nil {
+			log.WithFields(f).Warnf("problem fetching CLA signatures, error: %+v", sigErr)
+			return nil, sigErr
+		}
+		if sig != nil {
+			sigs = append(sigs, sig)
+		}
 	}
+
 	claManagers := make([]*models.CompanyClaManager, 0)
 	lfUsernames := utils.NewStringSet()
 	// Get CLA managers
@@ -150,14 +166,18 @@ func (s *service) GetCompanyProjectCLAManagers(companyID string, projectSFID str
 		log.WithFields(f).Warnf("problem fetching users information, error: %+v", err)
 		return nil, err
 	}
+
 	// fill user info
 	fillUsersInfo(claManagers, usermap)
 	// fill project info
 	fillProjectInfo(claManagers, claGroups)
+
+	log.WithFields(f).Debug("sorting response for client")
 	// sort result by cla manager name
 	sort.Slice(claManagers, func(i, j int) bool {
 		return claManagers[i].Name < claManagers[j].Name
 	})
+
 	return &models.CompanyClaManagers{List: claManagers}, nil
 }
 
@@ -454,7 +474,7 @@ func (s *service) CreateContibutor(companyID string, projectID string, userEmail
 		return nil, scopeErr
 	}
 
-	v1Company, companyErr := s.v1CompanyService.GetCompanyByExternalID(companyID)
+	v1CompanyModel, companyErr := s.v1CompanyService.GetCompanyByExternalID(companyID)
 	if companyErr != nil {
 		log.Error("company not found", companyErr)
 	}
@@ -472,7 +492,7 @@ func (s *service) CreateContibutor(companyID string, projectID string, userEmail
 			LfUsername:        user.Username,
 			UserID:            user.ID,
 			ExternalProjectID: projectID,
-			CompanyModel:      v1Company,
+			CompanyModel:      v1CompanyModel,
 			ProjectModel:      projectModel,
 			UserModel:         &v1Models.User{LfUsername: user.Username, UserID: user.ID},
 			EventData: &events.AssignRoleScopeData{
@@ -817,6 +837,7 @@ func (s *service) getCLAGroupsUnderProjectOrFoundation(id string) (map[string]*c
 				return
 			}
 			claGroup.ClaGroupName = cginfo.ProjectName
+			claGroup.ClaGroupID = cginfo.ProjectID
 			claGroup.IclaEnabled = cginfo.ProjectICLAEnabled
 			claGroup.CclaEnabled = cginfo.ProjectCCLAEnabled
 
@@ -889,10 +910,15 @@ func getUsersInfo(lfUsernames []string) (map[string]*v2UserServiceModels.User, e
 }
 
 func fillUsersInfo(claManagers []*models.CompanyClaManager, usermap map[string]*v2UserServiceModels.User) {
+	f := logrus.Fields{
+		"functionName": "fillUsersInfo",
+	}
+	log.WithFields(f).Debug("filling users info...")
+
 	for _, cm := range claManagers {
 		user, ok := usermap[cm.LfUsername]
 		if !ok {
-			logging.Warnf("Unable to get user with username %s", cm.LfUsername)
+			log.WithFields(f).Warnf("Unable to get user with username %s", cm.LfUsername)
 			continue
 		}
 		cm.Name = user.Name
@@ -908,6 +934,10 @@ func fillUsersInfo(claManagers []*models.CompanyClaManager, usermap map[string]*
 }
 
 func fillProjectInfo(claManagers []*models.CompanyClaManager, claGroups map[string]*claGroupModel) {
+	f := logrus.Fields{
+		"functionName": "fillProjectInfo",
+	}
+	log.WithFields(f).Debug("filling project info...")
 	for _, claManager := range claManagers {
 		cg, ok := claGroups[claManager.ProjectID]
 		if !ok {

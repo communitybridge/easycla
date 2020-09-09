@@ -41,6 +41,12 @@ import (
 // Lead representing type of user
 const Lead = "lead"
 
+// CLADesigneeRole CLA manager designee role identifier
+const CLADesigneeRole = "cla-manager-designee"
+
+// CLAManagerRole CLA manager role identifier
+const CLAManagerRole = "cla-manager"
+
 var (
 	//ErrSalesForceProjectNotFound returned error if salesForce Project not found
 	ErrSalesForceProjectNotFound = errors.New("salesforce project not found")
@@ -110,11 +116,20 @@ func NewService(compService company.IService, projService project.Service, mgrSe
 
 // CreateCLAManager creates Cla Manager
 func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername string) (*models.CompanyClaManager, *models.ErrorResponse) {
+	f := logrus.Fields{
+		"functionName": "CreateCLAManager",
+		"claGroupID":   claGroupID,
+		"projectSFID":  params.ProjectSFID,
+		"companySFID":  params.CompanySFID,
+		"authUsername": authUsername,
+		"xUserName":    params.XUSERNAME,
+		"xEmail":       params.XEMAIL,
+	}
 
 	re := regexp.MustCompile(`^\w{1,30}$`)
 	if !re.MatchString(*params.Body.FirstName) || !re.MatchString(*params.Body.LastName) {
 		msg := "Firstname and last Name values should not exceed 30 characters in length"
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -122,7 +137,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	}
 	if *params.Body.UserEmail == "" {
 		msg := "UserEmail cannot be empty"
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -130,11 +145,11 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	}
 
 	// Search for salesForce Company aka external Company
-	log.Debugf("Getting company by external ID : %s", params.CompanySFID)
+	log.WithFields(f).Debugf("Getting company by external ID : %s", params.CompanySFID)
 	companyModel, companyErr := s.companyService.GetCompanyByExternalID(params.CompanySFID)
 	if companyErr != nil || companyModel == nil {
 		msg := buildErrorMessage("company lookup error", claGroupID, params, companyErr)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -144,7 +159,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	claGroup, err := s.projectService.GetCLAGroupByID(claGroupID)
 	if err != nil || claGroup == nil {
 		msg := buildErrorMessage("cla group search by ID failure", claGroupID, params, err)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -156,14 +171,14 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	managerUser, mgrErr := userServiceClient.GetUserByUsername(authUsername)
 	if mgrErr != nil || managerUser == nil {
 		msg := fmt.Sprintf("Failed to get Lfx User with username : %s ", authUsername)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 	}
 	// GetSF Org
 	orgClient := v2OrgService.GetClient()
 	organizationSF, orgErr := orgClient.GetOrganization(params.CompanySFID)
 	if orgErr != nil {
 		msg := buildErrorMessage("organization service lookup error", claGroupID, params, orgErr)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -176,8 +191,8 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		designeeName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
 		designeeEmail := params.Body.UserEmail.String()
 		msg := fmt.Sprintf("User does not have an LF Login account and has been sent an email invite: %s.", *params.Body.UserEmail)
-		log.Warn(msg)
-		sendEmailErr := sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, *managerUser.Emails[0].EmailAddress, designeeName, designeeEmail, organizationSF.ID, nil, "cla-manager")
+		log.WithFields(f).Warn(msg)
+		sendEmailErr := sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, *managerUser.Emails[0].EmailAddress, designeeName, designeeEmail, organizationSF.ID, nil, CLAManagerRole)
 		if sendEmailErr != nil {
 			emailMessage := fmt.Sprintf("Failed to send email to user : %s ", designeeEmail)
 			return nil, &models.ErrorResponse{
@@ -192,11 +207,11 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	}
 
 	// Check if user exists in easyCLA DB, if not add User
-	log.Debugf("Checking user: %+v in easyCLA records", user)
+	log.WithFields(f).Debugf("Checking user: %+v in easyCLA records", user)
 	claUser, claUserErr := s.easyCLAUserService.GetUserByLFUserName(user.Username)
 	if claUserErr != nil {
 		msg := fmt.Sprintf("Problem getting claUser by :%s, error: %+v ", user.Username, claUserErr)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -205,7 +220,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 
 	if claUser == nil {
 		msg := fmt.Sprintf("User not found when searching by LF Login: %s and shall be created", user.Username)
-		log.Debug(msg)
+		log.WithFields(f).Debug(msg)
 		userName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
 		_, currentTimeString := utils.CurrentTime()
 		claUserModel := &v1Models.User{
@@ -221,13 +236,13 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		newUserModel, userModelErr := s.easyCLAUserService.CreateUser(claUserModel, nil)
 		if userModelErr != nil {
 			msg := fmt.Sprintf("Failed to create user : %+v", claUserModel)
-			log.Warn(msg)
+			log.WithFields(f).Warn(msg)
 			return nil, &models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
 			}
 		}
-		log.Debugf("Created easyCLAUser %+v ", newUserModel)
+		log.WithFields(f).Debugf("Created easyCLAUser %+v ", newUserModel)
 	}
 
 	// GetSFProject
@@ -235,7 +250,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	projectSF, projectErr := ps.GetProject(params.ProjectSFID)
 	if projectErr != nil {
 		msg := buildErrorMessage("project service lookup error", claGroupID, params, projectErr)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -246,7 +261,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	signature, addErr := s.managerService.AddClaManager(companyModel.CompanyID, claGroupID, user.Username)
 	if addErr != nil {
 		msg := buildErrorMessageCreate(params, addErr)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -254,40 +269,41 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	}
 	if signature == nil {
 		sigMsg := fmt.Sprintf("Signature not found for project: %s and company: %s ", claGroupID, companyModel.CompanyID)
-		log.Warn(sigMsg)
+		log.WithFields(f).Warn(sigMsg)
 		return nil, &models.ErrorResponse{
 			Message: sigMsg,
 			Code:    "400",
 		}
 	}
 
-	log.Warn("Getting role")
+	log.WithFields(f).Debug("Getting role")
 	// Get RoleID for cla-manager
 
-	roleID, roleErr := acsClient.GetRoleID("cla-manager")
+	roleID, roleErr := acsClient.GetRoleID(CLAManagerRole)
 	if roleErr != nil {
 		msg := buildErrorMessageCreate(params, roleErr)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
 		}
 	}
-	log.Debugf("Role ID for cla-manager-role : %s", roleID)
-	log.Debugf("Creating user role Scope for user : %s ", *params.Body.UserEmail)
+	log.WithFields(f).Debugf("Role ID for %s: %s", CLAManagerRole, roleID)
+	log.WithFields(f).Debugf("Creating user role Scope for user: %s ", *params.Body.UserEmail)
 
-	hasScope, err := orgClient.IsUserHaveRoleScope("cla-manager", user.ID, params.CompanySFID, params.ProjectSFID)
+	hasScope, err := orgClient.IsUserHaveRoleScope(CLAManagerRole, user.ID, params.CompanySFID, params.ProjectSFID)
 	if err != nil {
 		msg := buildErrorMessageCreate(params, err)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
 		}
 	}
 	if hasScope {
-		msg := fmt.Sprintf("User %s is already cla-manager for Company: %s and Project: %s", user.Username, params.CompanySFID, params.ProjectSFID)
-		log.Warn(msg)
+		msg := fmt.Sprintf("User %s is already %s for Company: %s and Project: %s",
+			user.Username, CLAManagerRole, params.CompanySFID, params.ProjectSFID)
+		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "409",
@@ -295,11 +311,11 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	}
 
 	projectCLAGroups, getErr := s.projectCGRepo.GetProjectsIdsForClaGroup(claGroupID)
-	log.Debugf("Getting associated SF projects for claGroup: %s ", claGroupID)
+	log.WithFields(f).Debugf("Getting associated SF projects for claGroup: %s ", claGroupID)
 
 	if getErr != nil {
 		msg := buildErrorMessageCreate(params, getErr)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -311,7 +327,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 
 	if signedErr != nil {
 		msg := buildErrorMessageCreate(params, signedErr)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -323,7 +339,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(params.Body.UserEmail.String(), foundationSFID, params.CompanySFID, roleID)
 		if scopeErr != nil {
 			msg := buildErrorMessageCreate(params, scopeErr)
-			log.Warn(msg)
+			log.WithFields(f).Warn(msg)
 			return nil, &models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
@@ -335,7 +351,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 			scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(params.Body.UserEmail.String(), projectCG.ProjectSFID, params.CompanySFID, roleID)
 			if scopeErr != nil {
 				msg := buildErrorMessageCreate(params, scopeErr)
-				log.Warn(msg)
+				log.WithFields(f).Warn(msg)
 				return nil, &models.ErrorResponse{
 					Message: msg,
 					Code:    "400",
@@ -346,11 +362,11 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 
 	if user.Type == Lead {
 		// convert user to contact
-		log.Debug("converting lead to contact")
+		log.WithFields(f).Debug("converting lead to contact")
 		err := userServiceClient.ConvertToContact(user.ID)
 		if err != nil {
 			msg := fmt.Sprintf("converting lead to contact failed: %v", err)
-			log.Warn(msg)
+			log.WithFields(f).Warn(msg)
 			return nil, &models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
@@ -375,12 +391,20 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 }
 
 func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse {
+	f := logrus.Fields{
+		"functionName": "DeleteCLAManager",
+		"projectSFID":  params.ProjectSFID,
+		"companySFID":  params.CompanySFID,
+		"xUserName":    params.XUSERNAME,
+		"xEmail":       params.XEMAIL,
+	}
 	// Get user by firstname,lastname and email parameters
 	userServiceClient := v2UserService.GetClient()
 	user, userErr := userServiceClient.GetUserByUsername(params.UserLFID)
 
 	if userErr != nil {
 		msg := fmt.Sprintf("Failed to get user when searching by username: %s , error: %v ", params.UserLFID, userErr)
+		log.WithFields(f).Warn(msg)
 		return &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -391,7 +415,7 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 	companyModel, companyErr := s.companyService.GetCompanyByExternalID(params.CompanySFID)
 	if companyErr != nil || companyModel == nil {
 		msg := buildErrorMessageDelete(params, companyErr)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -403,19 +427,19 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 	roleID, roleErr := acsClient.GetRoleID("cla-manager")
 	if roleErr != nil {
 		msg := buildErrorMessageDelete(params, roleErr)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
 		}
 	}
-	log.Debugf("Role ID for cla-manager-role : %s", roleID)
+	log.WithFields(f).Debugf("Role ID for cla-manager-role : %s", roleID)
 
 	projectCLAGroups, getErr := s.projectCGRepo.GetProjectsIdsForClaGroup(claGroupID)
 
 	if getErr != nil {
 		msg := buildErrorMessageDelete(params, getErr)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -428,7 +452,7 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 		scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, projectCG.ProjectSFID, "cla-manager", "project|organization", params.UserLFID)
 		if scopeErr != nil {
 			msg := buildErrorMessageDelete(params, scopeErr)
-			log.Warn(msg)
+			log.WithFields(f).Warn(msg)
 			return &models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
@@ -436,7 +460,7 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 		}
 		if scopeID == "" {
 			msg := buildErrorMessageDelete(params, ErrScopeNotFound)
-			log.Warn(msg)
+			log.WithFields(f).Warn(msg)
 			return &models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
@@ -446,7 +470,7 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 		deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(params.CompanySFID, roleID, scopeID, &user.Username, &email)
 		if deleteErr != nil {
 			msg := buildErrorMessageDelete(params, deleteErr)
-			log.Warn(msg)
+			log.WithFields(f).Warn(msg)
 			return &models.ErrorResponse{
 				Message: msg,
 				Code:    "400",
@@ -458,7 +482,7 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 
 	if deleteErr != nil {
 		msg := buildErrorMessageDelete(params, deleteErr)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -466,7 +490,7 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 	}
 	if signature == nil {
 		msg := fmt.Sprintf("Not found signature for project: %s and company: %s ", claGroupID, companyModel.CompanyID)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
@@ -477,92 +501,112 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 }
 
 //CreateCLAManagerDesignee creates designee for cla manager prospect
-func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error) {
+func (s *service) CreateCLAManagerDesignee(companySFID string, projectSFID string, userEmail string) (*models.ClaManagerDesignee, error) {
+	f := logrus.Fields{
+		"functionName": "CreateCLAManagerDesignee",
+		"companySFID":  companySFID,
+		"projectSFID":  projectSFID,
+		"userEmail":    userEmail,
+	}
 	// integrate user,acs,org and project services
 	userClient := v2UserService.GetClient()
 	acServiceClient := v2AcsService.GetClient()
 	orgClient := v2OrgService.GetClient()
 	projectClient := v2ProjectService.GetClient()
 
-	isSigned, signedErr := s.isSigned(companyID, projectID)
+	log.WithFields(f).Debugf("loading company by external ID...")
+	v1CompanyModel, companyErr := s.companyService.GetCompanyByExternalID(companySFID)
+	if companyErr != nil {
+		log.WithFields(f).Warnf("company not found, error: %+v", companyErr)
+		return nil, companyErr
+	}
+
+	log.WithFields(f).Debugf("checking if company/project is signed with CLA managers...")
+	isSigned, signedErr := s.isSigned(v1CompanyModel, projectSFID)
 	if signedErr != nil {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request- %s", signedErr)
-		log.Warn(msg)
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - %s", signedErr)
+		log.WithFields(f).Warn(msg)
 		return nil, signedErr
 	}
 
 	if isSigned {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project :%s is already signed ", projectID)
-		log.Warn(msg)
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project: %s is already signed", projectSFID)
+		log.WithFields(f).Warn(msg)
 		return nil, ErrProjectSigned
 	}
 
-	user, userErr := userClient.SearchUserByEmail(userEmail)
+	userService := v2UserService.GetClient()
+	log.WithFields(f).Debug("searching user in user service...")
+	// This routine is taking 24-29 seconds when running locally -> User service in DEV
+	//lfxUser, userErr := userService.SearchUserByEmail(userEmail)
+	// This routine is taking 4 seconds when running locally -> User service in DEV
+	lfxUser, userErr := userService.SearchUsersByEmail(userEmail)
 	if userErr != nil {
-		log.Debugf("Failed to get user by email: %s , error: %+v", userEmail, userErr)
+		log.WithFields(f).Debugf("Failed to get user by email: %s, error: %+v", userEmail, userErr)
 		return nil, ErrLFXUserNotFound
 	}
 
+	log.WithFields(f).Debugf("checking if user has %s role scope...", CLADesigneeRole)
 	// Check if user is already CLA Manager designee of project|organization scope
-	hasRoleScope, hasRoleScopeErr := orgClient.IsUserHaveRoleScope("cla-manager-designee", user.ID, companyID, projectID)
+	hasRoleScope, hasRoleScopeErr := orgClient.IsUserHaveRoleScope(CLADesigneeRole, lfxUser.ID, companySFID, projectSFID)
 	if hasRoleScopeErr != nil {
 		// Skip 404 for ListOrgUsrServiceScopes endpoint
 		if _, ok := hasRoleScopeErr.(*organizations.ListOrgUsrServiceScopesNotFound); !ok {
-			log.Debugf("Failed to check roleScope: cla-manager-designee  for user: %s", user.Username)
+			log.WithFields(f).Debugf("Failed to check roleScope: %s for user: %s", CLADesigneeRole, lfxUser.Username)
 			return nil, hasRoleScopeErr
 		}
 	}
 	if hasRoleScope {
-		log.Debugf("Conflict ")
+		log.WithFields(f).Warnf("Conflict - user has role scope: %s", CLADesigneeRole)
 		return nil, ErrCLAManagerDesigneeConflict
 	}
 
-	projectSF, projectErr := projectClient.GetProject(projectID)
+	log.WithFields(f).Debug("loading project by SFID...")
+	projectSF, projectErr := projectClient.GetProject(projectSFID)
 	if projectErr != nil {
-		msg := fmt.Sprintf("Problem getting project :%s ", projectID)
-		log.Debug(msg)
+		log.WithFields(f).Debugf("problem getting project: %s from the project service, error: %+v", projectSFID, projectErr)
 		return nil, projectErr
 	}
 
-	roleID, designeeErr := acServiceClient.GetRoleID("cla-manager-designee")
+	log.WithFields(f).Debugf("loading role ID for %s...", CLADesigneeRole)
+	roleID, designeeErr := acServiceClient.GetRoleID(CLADesigneeRole)
 	if designeeErr != nil {
-		msg := "Problem getting role ID for cla-manager-designee"
-		log.Warn(msg)
+		log.WithFields(f).Warnf("Problem getting role ID for cla-manager-designee, error: %+v", designeeErr)
 		return nil, designeeErr
 	}
 
-	scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(userEmail, projectID, companyID, roleID)
+	log.WithFields(f).Debugf("creating user role organization scope for user: %s, with role: %s with role ID: %s using project|org: %s|%s...",
+		userEmail, CLADesigneeRole, roleID, projectSFID, companySFID)
+	scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(userEmail, projectSFID, companySFID, roleID)
 	if scopeErr != nil {
-		msg := fmt.Sprintf("Problem creating projectOrg scope for email: %s , projectID: %s, companyID: %s", userEmail, projectID, companyID)
+		msg := fmt.Sprintf("Problem creating projectOrg scope for email: %s , projectSFID: %s, companyID: %s", userEmail, projectSFID, companySFID)
 		log.Warn(msg)
 		if _, ok := scopeErr.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
 			return nil, ErrRoleScopeConflict
 		}
 		return nil, scopeErr
 	}
-
-	v1Company, companyErr := s.companyService.GetCompanyByExternalID(companyID)
-	if companyErr != nil {
-		log.Error("company not found", companyErr)
-	}
+	log.WithFields(f).Debugf("created user role organization scope for user: %s, with role: %s with role ID: %s using project|org: %s|%s...",
+		userEmail, CLADesigneeRole, roleID, projectSFID, companySFID)
 
 	// Log Event
 	s.eventService.LogEvent(
 		&events.LogEventArgs{
 			EventType:         events.AssignUserRoleScopeType,
-			LfUsername:        user.Username,
-			ExternalProjectID: projectID,
-			CompanyModel:      v1Company,
-			UserModel:         &v1Models.User{LfUsername: user.Username, UserID: user.ID},
+			LfUsername:        lfxUser.Username,
+			ExternalProjectID: projectSFID,
+			CompanyModel:      v1CompanyModel,
+			CompanyID:         v1CompanyModel.CompanyID,
+			UserModel:         &v1Models.User{LfUsername: lfxUser.Username, UserID: lfxUser.ID},
 			EventData: &events.AssignRoleScopeData{
 				Role:  "cla-manager-designee",
-				Scope: fmt.Sprintf("%s|%s", projectID, companyID),
+				Scope: fmt.Sprintf("%s|%s", projectSFID, companySFID),
 			},
 		})
 
-	if user.Type == Lead {
+	if lfxUser.Type == Lead {
 		log.Debugf("Converting user: %s from lead to contact ", userEmail)
-		contactErr := userClient.ConvertToContact(user.ID)
+		contactErr := userClient.ConvertToContact(lfxUser.ID)
 		if contactErr != nil {
 			log.Debugf("failed to convert user: %s to contact ", userEmail)
 			return nil, contactErr
@@ -570,22 +614,23 @@ func (s *service) CreateCLAManagerDesignee(companyID string, projectID string, u
 		// Log user conversion event
 		s.eventService.LogEvent(&events.LogEventArgs{
 			EventType:         events.ConvertUserToContactType,
-			LfUsername:        user.Username,
-			ExternalProjectID: projectID,
+			LfUsername:        lfxUser.Username,
+			ExternalProjectID: projectSFID,
 			EventData:         &events.UserConvertToContactData{},
 		})
 	}
 
 	claManagerDesignee := &models.ClaManagerDesignee{
-		LfUsername:  user.Username,
-		UserSfid:    user.ID,
-		Type:        user.Type,
+		LfUsername:  lfxUser.Username,
+		UserSfid:    lfxUser.ID,
+		Type:        lfxUser.Type,
 		AssignedOn:  time.Now().String(),
 		Email:       strfmt.Email(userEmail),
-		ProjectSfid: projectID,
-		CompanySfid: companyID,
+		ProjectSfid: projectSFID,
+		CompanySfid: companySFID,
 		ProjectName: projectSF.Name,
 	}
+
 	return claManagerDesignee, nil
 }
 
@@ -652,67 +697,84 @@ func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAMa
 	return designeeScopes, "", nil
 }
 
-func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error) {
+// CreateCLAManagerRequest service method
+func (s *service) CreateCLAManagerRequest(contactAdmin bool, companySFID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error) {
+	f := logrus.Fields{
+		"functionName":  "CreateCLAManagerRequest",
+		"contactAdmin":  contactAdmin,
+		"companySFID":   companySFID,
+		"projectID":     projectID,
+		"userEmail":     userEmail,
+		"fullName":      fullName,
+		"authUserName":  authUser.UserName,
+		"authUserEmail": authUser.Email,
+	}
+
 	orgService := v2OrgService.GetClient()
 
-	isSigned, signedErr := s.isSigned(companyID, projectID)
-	if signedErr != nil {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request- %s", signedErr)
+	log.WithFields(f).Debugf("loading company by external ID...")
+	// Search for salesForce Company aka external Company
+	v1CompanyModel, companyErr := s.companyService.GetCompanyByExternalID(companySFID)
+	if companyErr != nil {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - %s", companyErr)
 		log.Warn(msg)
+		return nil, companyErr
+	}
+
+	// Determine if the CCLA is already signed or not
+	log.WithFields(f).Debugf("checking if company/project is signed with CLA managers...")
+	isSigned, signedErr := s.isSigned(v1CompanyModel, projectID)
+	if signedErr != nil {
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - %s", signedErr)
+		log.WithFields(f).Warn(msg)
 		return nil, signedErr
 	}
 
 	if isSigned {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project :%s is already signed ", projectID)
-		log.Warn(msg)
+		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project: %s is already signed ", projectID)
+		log.WithFields(f).Warn(msg)
 		return nil, ErrProjectSigned
 	}
 
+	log.WithFields(f).Debugf("querying project service for project details...")
 	// GetSFProject
 	ps := v2ProjectService.GetClient()
 	projectSF, projectErr := ps.GetProject(projectID)
 	if projectErr != nil {
 		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project service lookup error for SFID: %s, error : %+v",
 			projectID, projectErr)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, projectErr
-	}
-
-	// Search for salesForce Company aka external Company
-	companyModel, companyErr := orgService.GetOrganization(companyID)
-	if companyErr != nil || companyModel == nil {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Problem getting company by SFID: %s, error: %+v",
-			companyID, companyErr)
-		log.Warn(msg)
-		return nil, companyErr
 	}
 
 	// Check if sending cla manager request to company admin
 	if contactAdmin {
-		log.Debugf("Sending email to company Admin")
-		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyID)
+		log.WithFields(f).Debug("sending email to company Admin")
+		log.WithFields(f).Debug("querying user admin scopes...")
+		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companySFID)
 		if listScopeErr != nil {
 			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Admin lookup error for organisation SFID: %s, error: %+v ",
-				companyID, listScopeErr)
-			log.Warn(msg)
+				companySFID, listScopeErr)
+			log.WithFields(f).Warn(msg)
 			return nil, listScopeErr
 		}
 
 		if len(scopes.Userroles) == 0 {
 			msg := fmt.Sprintf("EasyCLA - 404 NotFound - No admins for organization SFID: %s",
-				companyID)
-			log.Warn(msg)
+				companySFID)
+			log.WithFields(f).Warn(msg)
 			return nil, ErrNoOrgAdmins
 		}
 
 		for _, admin := range scopes.Userroles {
-			sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, companyModel.Name, []string{projectSF.Name}, authUser.Email, authUser.UserName, LfxPortalURL)
+			log.WithFields(f).Debugf("sending email to organization admin: %+v", admin)
+			sendEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, v1CompanyModel.CompanyName, []string{projectSF.Name}, authUser.Email, authUser.UserName, LfxPortalURL)
 			// Make a note in the event log
 			s.eventService.LogEvent(&events.LogEventArgs{
 				EventType:         events.ContributorNotifyCompanyAdminType,
 				LfUsername:        authUser.UserName,
 				ExternalProjectID: projectID,
-				CompanyID:         companyModel.ID,
+				CompanyID:         v1CompanyModel.CompanyID,
 				EventData: &events.ContributorNotifyCompanyAdminData{
 					AdminName:  admin.Contact.Name,
 					AdminEmail: admin.Contact.EmailAddress,
@@ -722,58 +784,69 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companyID string, p
 
 		return nil, nil
 	}
+	log.WithFields(f).Debug("not sending admin email...")
 
 	userService := v2UserService.GetClient()
-	lfxUser, userErr := userService.SearchUserByEmail(userEmail)
+	log.WithFields(f).Debug("searching user in user service...")
+	// This routine is taking 24-29 seconds when running locally -> User service in DEV
+	//lfxUser, userErr := userService.SearchUserByEmail(userEmail)
+	// This routine is taking 4 seconds when running locally -> User service in DEV
+	lfxUser, userErr := userService.SearchUsersByEmail(userEmail)
 	if userErr != nil {
-		msg := fmt.Sprintf("User: %s does not have an LF Login ", userEmail)
-		log.Warn(msg)
+		msg := fmt.Sprintf("User: %s does not have an LF Login", userEmail)
+		log.WithFields(f).Warn(msg)
 		// Send email
-		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, authUser.Email, fullName, userEmail, companyModel.ID, &projectSF.ID, "cla-manager-designee")
+		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, authUser.Email, fullName, userEmail, v1CompanyModel.CompanyID, &projectSF.ID, CLADesigneeRole)
 		if sendEmailErr != nil {
-			log.Error("Error sending email ", sendEmailErr)
+			log.WithFields(f).Warnf("Error sending email: %+v", sendEmailErr)
 			return nil, sendEmailErr
 		}
 		return nil, ErrNoLFID
 	}
 
-	claManagerDesignee, err := s.CreateCLAManagerDesignee(companyID, projectID, userEmail)
+	log.WithFields(f).Debug("sending CLA manager designee request...")
+	claManagerDesignee, err := s.CreateCLAManagerDesignee(companySFID, projectID, userEmail)
 	if err != nil {
 		// Check conflict for role scope
 		if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
+			log.WithFields(f).Warn("problem creating organization role scope for designee - role exists")
 			return nil, ErrRoleScopeConflict
 		}
+		log.WithFields(f).Warnf("problem creating organization role scope for designee, error: %+v", err)
 		return nil, err
 	}
 
+	log.WithFields(f).Debug("creating a contributor assigned CLA designee log event...")
 	// Make a note in the event log
 	s.eventService.LogEvent(&events.LogEventArgs{
 		EventType:         events.ContributorAssignCLADesigneeType,
 		LfUsername:        authUser.UserName,
 		ExternalProjectID: projectID,
-		CompanyID:         companyModel.ID,
+		CompanyID:         v1CompanyModel.CompanyID,
 		EventData: &events.ContributorAssignCLADesignee{
 			DesigneeName:  claManagerDesignee.LfUsername,
 			DesigneeEmail: claManagerDesignee.Email.String(),
 		},
 	})
 
-	log.Debugf("Sending Email to CLA Manager Designee email: %s ", userEmail)
+	log.WithFields(f).Debugf("sending Email to CLA Manager Designee email: %s ", userEmail)
 	designeeName := fmt.Sprintf("%s %s", lfxUser.FirstName, lfxUser.LastName)
-	sendEmailToCLAManagerDesignee(LfxPortalURL, companyModel.Name, []string{projectSF.Name}, userEmail, designeeName, authUser.Email, authUser.UserName)
+	sendEmailToCLAManagerDesignee(LfxPortalURL, v1CompanyModel.CompanyName, []string{projectSF.Name}, userEmail, designeeName, authUser.Email, authUser.UserName)
+
+	log.WithFields(f).Debug("creating a contributor notify CLA designee log event...")
 	// Make a note in the event log
 	s.eventService.LogEvent(&events.LogEventArgs{
 		EventType:         events.ContributorNotifyCLADesigneeType,
 		LfUsername:        authUser.UserName,
 		ExternalProjectID: projectID,
-		CompanyID:         companyModel.ID,
+		CompanyID:         v1CompanyModel.CompanyID,
 		EventData: &events.ContributorNotifyCLADesignee{
 			DesigneeName:  claManagerDesignee.LfUsername,
 			DesigneeEmail: claManagerDesignee.Email.String(),
 		},
 	})
 
-	log.Debugf("CLA Manager designee created : %+v", claManagerDesignee)
+	log.WithFields(f).Debugf("CLA Manager designee created: %+v", claManagerDesignee)
 	return claManagerDesignee, nil
 }
 
@@ -1079,32 +1152,32 @@ func getFormattedUserDetails(model *v1Models.User) string {
 	return strings.Join(details, ",")
 }
 
-// Helper function to check if project/claGroup is signed
-func (s *service) isSigned(companyID string, projectID string) (bool, error) {
-	isSigned := false
-	// Check for company CLA managers
-
-	v1Company, companyErr := s.companyService.GetCompanyByExternalID(companyID)
-	if companyErr != nil {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - %s", companyErr)
-		log.Warn(msg)
-		return isSigned, companyErr
+// isSigned is a helper function to check if project/claGroup is signed
+func (s *service) isSigned(companyModel *v1Models.Company, projectID string) (bool, error) {
+	f := logrus.Fields{
+		"functionName": "isSigned",
+		"companyID":    companyModel.CompanyID,
+		"companyName":  companyModel.CompanyName,
+		"companySFID":  companyModel.CompanyExternalID,
+		"projectID":    projectID,
 	}
 
-	claManagers, err := s.v2CompanyService.GetCompanyProjectCLAManagers(v1Company.CompanyID, projectID)
+	f["companyID"] = companyModel.CompanyID
+	f["companyName"] = companyModel.CompanyName
+	log.WithFields(f).Debug("loading CLA Managers for company/project")
+	claManagers, err := s.v2CompanyService.GetCompanyProjectCLAManagers(companyModel.CompanyID, projectID)
 	if err != nil {
 		msg := fmt.Sprintf("EasyCLA - 400 Bad Request : %v", err)
-		log.Warn(msg)
-		return isSigned, err
+		log.WithFields(f).Warn(msg)
+		return false, err
 	}
 
 	if len(claManagers.List) > 0 {
-		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - CLA Group signed for company: %s and project : %s", companyID, projectID)
-		log.Warn(msg)
-		isSigned = true
+		log.WithFields(f).Warnf("CLA Group signed for company/project - %d CLA Managers", len(claManagers.List))
+		return true, nil
 	}
 
-	return isSigned, nil
+	return false, nil
 }
 
 func sendEmailToOrgAdmin(adminEmail string, admin string, company string, projectNames []string, contributorID string, contributorName string, corporateConsole string) {
