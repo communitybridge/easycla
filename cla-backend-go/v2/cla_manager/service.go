@@ -76,6 +76,11 @@ var (
 	ErrProjectSigned = errors.New("project already signed")
 )
 
+const (
+	// NoAccount represents user with no company
+	NoAccount = "Individual - No Account"
+)
+
 type service struct {
 	companyService      company.IService
 	projectService      project.Service
@@ -751,7 +756,7 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companySFID string,
 	if contactAdmin {
 		log.WithFields(f).Debug("sending email to company Admin")
 		log.WithFields(f).Debug("querying user admin scopes...")
-		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companySFID)
+		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companySFID, nil)
 		if listScopeErr != nil {
 			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Admin lookup error for organisation SFID: %s, error: %+v ",
 				companySFID, listScopeErr)
@@ -941,7 +946,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	// Check if sending cla manager request to company admin
 	if contactAdmin {
 		log.Debugf("Sending email to company Admin")
-		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyModel.CompanyExternalID)
+		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyModel.CompanyExternalID, nil)
 		if listScopeErr != nil {
 			msg := fmt.Sprintf("Admin lookup error for organisation SFID: %s ", companyModel.CompanyExternalID)
 			log.WithFields(f).Warn(msg)
@@ -1016,25 +1021,42 @@ func (s *service) setOwnerRole(userEmail string, organizationID string) error {
 	orgClient := v2OrgService.GetClient()
 	acsClient := v2AcsService.GetClient()
 	userClient := v2UserService.GetClient()
-	user, userErr := userClient.SearchUserByEmail(userEmail)
-	if userErr != nil {
+	user, err := userClient.SearchUserByEmail(userEmail)
+	if err != nil {
 		msg := fmt.Sprintf("Failed searching user by email :%s ", userEmail)
 		log.Warn(msg)
-		return userErr
+		return err
 	}
 
-	hasOwnerScope, hasScopeErr := orgClient.IsCompanyOwner(user.ID, organizationID)
-	if hasScopeErr != nil {
-		if _, ok := hasScopeErr.(*organizations.ListOrgUsrServiceScopesNotFound); !ok {
-			return hasScopeErr
+	log.Info(fmt.Sprintf("Check if user : %s is a company owner ", userEmail))
+	var hasOwnerScope bool
+	if user.Account.Name == NoAccount {
+		// flag company owner scope if user is not associated with an org
+		hasOwnerScope = false
+	} else {
+		// Check if user is in organization
+		var userOrg string
+		if user.Account.ID != organizationID {
+			userOrg = user.Account.ID
+		} else {
+			userOrg = organizationID
+		}
+		log.Info(fmt.Sprintf("Checking company-owner against company: %s ", userOrg))
+		hasOwnerScope, err = orgClient.IsCompanyOwner(user.ID, userOrg)
+		if err != nil {
+			return err
 		}
 	}
 
+	log.Info(fmt.Sprintf("User :%s isCompanyOwner: %t", userEmail, hasOwnerScope))
+
 	if !hasOwnerScope {
-		_, scopeErr := orgClient.ListOrgUserScopes(organizationID, []string{"company-owner"})
+		companyOwner := "company-owner"
+		// Check if company has company owner
+		_, scopeErr := orgClient.ListOrgUserAdminScopes(organizationID, &companyOwner)
 		if scopeErr != nil {
 			// Only assign if company owner doesnt exist
-			if _, ok := scopeErr.(*organizations.ListOrgUsrServiceScopesNotFound); ok {
+			if _, ok := scopeErr.(*organizations.ListOrgUsrAdminScopesNotFound); ok {
 				//Get Role ID
 				roleID, designeeErr := acsClient.GetRoleID("company-owner")
 				if designeeErr != nil {
