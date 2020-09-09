@@ -89,14 +89,19 @@ func (osc *Client) IsCompanyOwner(userSFID string, organizationID string) (bool,
 	if err != nil {
 		return false, err
 	}
-	params := &organizations.ListOrgUsrServiceScopesParams{
+	clientAuth := runtimeClient.BearerToken(tok)
+	params := &organizations.ListOrgUsrAdminScopesParams{
 		SalesforceID: organizationID,
 		Context:      context.Background(),
 	}
-	clientAuth := runtimeClient.BearerToken(tok)
-	result, err := osc.cl.Organizations.ListOrgUsrServiceScopes(params, clientAuth)
-	if err != nil {
-		return false, err
+	result, scopeErr := osc.cl.Organizations.ListOrgUsrAdminScopes(params, clientAuth)
+	if scopeErr != nil {
+		msg := fmt.Sprintf("error : %+v ", scopeErr)
+		log.Warn(msg)
+		if _, ok := scopeErr.(*organizations.ListOrgUsrAdminScopesNotFound); ok {
+			return false, nil
+		}
+		return false, scopeErr
 	}
 	data := result.Payload
 	for _, userRole := range data.Userroles {
@@ -366,7 +371,7 @@ func (osc *Client) GetOrganization(orgID string) (*models.Organization, error) {
 }
 
 // ListOrgUserAdminScopes returns admin role scope of organization
-func (osc *Client) ListOrgUserAdminScopes(orgID string) (*models.UserrolescopesList, error) {
+func (osc *Client) ListOrgUserAdminScopes(orgID string, role *string) (*models.UserrolescopesList, error) {
 	tok, err := token.GetToken()
 	if err != nil {
 		return nil, err
@@ -375,6 +380,9 @@ func (osc *Client) ListOrgUserAdminScopes(orgID string) (*models.UserrolescopesL
 	params := &organizations.ListOrgUsrAdminScopesParams{
 		SalesforceID: orgID,
 		Context:      context.Background(),
+	}
+	if role != nil {
+		params.Rolename = []string{*role}
 	}
 	result, err := osc.cl.Organizations.ListOrgUsrAdminScopes(params, clientAuth)
 	if err != nil {
