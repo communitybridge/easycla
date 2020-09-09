@@ -129,12 +129,14 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 	claGroupName := *input.ClaGroupName
 
 	f := logrus.Fields{
-		"functionName":     "validateClaGroupInput",
-		"foundationSFID":   foundationSFID,
-		"claGroupName":     claGroupName,
-		"iclaEnabled":      *input.IclaEnabled,
-		"cclaEnabled":      *input.CclaEnabled,
-		"cclaRequiresIcla": *input.CclaRequiresIcla,
+		"function":            "validateClaGroupInput",
+		"ClaGroupName":        claGroupName,
+		"ClaGroupDescription": input.ClaGroupDescription,
+		"FoundationSfid":      foundationSFID,
+		"IclaEnabled":         *input.IclaEnabled,
+		"CclaEnabled":         *input.CclaEnabled,
+		"CclaRequiresIcla":    *input.CclaRequiresIcla,
+		"ProjectSfidList":     strings.Join(input.ProjectSfidList, ","),
 	}
 
 	log.WithFields(f).Debug("validating CLA Group input...")
@@ -152,6 +154,7 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 	}
 
 	// Ensure we don't have a duplicate CLA Group Name
+	log.WithFields(f).Debug("checking for duplicate CLA Group name...")
 	claGroupModel, err := s.v1ProjectService.GetCLAGroupByName(claGroupName)
 	if err != nil {
 		return false, err
@@ -203,6 +206,20 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 			// but we have at least one project that is currently in an existing CLA group (other than the one just provided)
 			// so....we don't allow this (we don't migrate or merge - just reject)
 			msg := fmt.Sprintf("found existing sub-project(s) under foundation ID: %s which are already associated with an existing CLA Group - unable to create a new foundationl level CLA Group - project IDs: %+v", foundationSFID, existingProjectIDs)
+			log.WithFields(f).Warn(msg)
+			return false, errors.New(msg)
+		}
+
+		// Do we have any existing CLA Groups associated with this foundation?  Since this is a Foundation Level CLA
+		// Group, we can't create it if we have existing CLA groups already in place for this foundation
+		if len(claGroupProjectModels) > 0 {
+			// Create a string array to hold the existing CLA details for the error message
+			var claGroupString []string
+			for _, claGroupProjectModel := range claGroupProjectModels {
+				claGroupString = append(claGroupString, fmt.Sprintf("%s - %s", claGroupProjectModel.ClaGroupName, claGroupProjectModel.ClaGroupID))
+			}
+			msg := fmt.Sprintf("found existing CLA Groups under foundation ID: %s - unable to create a new foundationl level CLA Group - existing CLA Group(s): [%s]",
+				foundationSFID, strings.Join(claGroupString, ","))
 			log.WithFields(f).Warn(msg)
 			return false, errors.New(msg)
 		}
@@ -466,9 +483,8 @@ func (s *service) unenrollProjects(claGroupID string, foundationSFID string, pro
 	return nil
 }
 func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error) {
-	f := logrus.Fields{"function": "CreateCLAGroup", "input": input, "projectManagerLFID": projectManagerLFID}
 	// Validate the input
-	log.WithFields(f).WithField("input", input).Debugf("validating create cla group input")
+	log.WithField("input", input).Debugf("validating create cla group input")
 	if input.IclaEnabled == nil ||
 		input.CclaEnabled == nil ||
 		input.CclaRequiresIcla == nil ||
@@ -476,6 +492,19 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 		input.FoundationSfid == nil {
 		return nil, fmt.Errorf("bad request: required parameters are not passed")
 	}
+
+	f := logrus.Fields{
+		"function":            "CreateCLAGroup",
+		"ClaGroupName":        *input.ClaGroupName,
+		"ClaGroupDescription": input.ClaGroupDescription,
+		"FoundationSfid":      *input.FoundationSfid,
+		"IclaEnabled":         *input.IclaEnabled,
+		"CclaEnabled":         *input.CclaEnabled,
+		"CclaRequiresIcla":    *input.CclaRequiresIcla,
+		"ProjectSfidList":     strings.Join(input.ProjectSfidList, ","),
+		"projectManagerLFID":  projectManagerLFID,
+	}
+
 	standaloneProject, err := s.validateClaGroupInput(input)
 	if err != nil {
 		log.WithFields(f).Warnf("validation of create cla group input failed")
