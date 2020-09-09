@@ -28,6 +28,7 @@ type claGroupModel struct {
 	ProjectType  string
 	SubProjects  []string
 	ClaGroupName string
+	ClaGroupID   string
 	IclaEnabled  bool
 	CclaEnabled  bool
 
