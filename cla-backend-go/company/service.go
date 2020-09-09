@@ -638,7 +638,7 @@ func (s service) CreateOrgFromExternalID(companySFID string) (*models.Company, e
 // getCompanyAdmin is helper function which queries org-service to get first company-admin
 func getCompanyAdmin(companySFID string) (*models.User, error) {
 	osc := organization_service.GetClient()
-	result, err := osc.ListOrgUserAdminScopes(companySFID)
+	result, err := osc.ListOrgUserAdminScopes(companySFID, nil)
 	if err != nil {
 		if _, ok := err.(*organizations.ListOrgUsrAdminScopesNotFound); !ok {
 			log.WithField("companySFID", companySFID).Errorf("getting company-admin failed. error = %s", err.Error())
