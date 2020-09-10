@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-openapi/strfmt"
@@ -632,26 +633,7 @@ func (s *service) CreateCLAManagerDesignee(companySFID string, projectSFID strin
 
 //CreateCLAManagerDesigneeByGroup creates designee by group for cla manager prospect
 func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error) {
-	orgClient := v2OrgService.GetClient()
-	userEmail := params.Body.UserEmail.String()
-
 	var designeeScopes []*models.ClaManagerDesignee
-
-	org, orgErr := orgClient.GetOrganization(params.CompanySFID)
-	if orgErr != nil {
-		msg := fmt.Sprintf("Getting organization by ID: %s failed", params.CompanySFID)
-		return nil, msg, orgErr
-	}
-
-	// Assign company owner role
-	// Set Company owner role for cla manager designee
-
-	err := s.setOwnerRole(userEmail, org.ID)
-	if err != nil {
-		msg := fmt.Sprintf("Problem assigning company owner role for user: %s and organization: %s , error: %+v", userEmail, org.ID, err)
-		log.WithFields(f).Warn(msg)
-		return nil, msg, err
-	}
 
 	claGroupID := projectCLAGroups[0].ClaGroupID
 	signedAtFoundationLevel, signedErr := s.projectService.SignedAtFoundationLevel(claGroupID)
@@ -675,18 +657,56 @@ func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAMa
 			designeeScopes = append(designeeScopes, claManagerDesignee)
 		}
 	} else {
+		// Channel result
+		type result struct {
+			designee *models.ClaManagerDesignee
+			msg      string
+			err      error
+		}
+		designeeChan := make(chan *result)
+		var wg sync.WaitGroup
+		wg.Add(len(projectCLAGroups))
+
+		go func() {
+			wg.Wait()
+			close(designeeChan)
+		}()
+
 		for _, pcg := range projectCLAGroups {
-			log.WithFields(f).Debugf("creating CLA Manager Designee for Project SFID: %s", pcg.ProjectSFID)
-			claManagerDesignee, err := s.CreateCLAManagerDesignee(params.CompanySFID, pcg.ProjectSFID, params.Body.UserEmail.String())
-			if err != nil {
-				if err == ErrCLAManagerDesigneeConflict {
-					msg := fmt.Sprintf("Conflict assigning cla manager role for Project SFID: %s, error: %s ", pcg.ProjectSFID, err)
-					return nil, msg, err
+			go func(swg *sync.WaitGroup, pcg *projects_cla_groups.ProjectClaGroup, designeeChannel chan *result) {
+				defer swg.Done()
+				log.WithFields(f).Debugf("creating CLA Manager Designee for Project SFID: %s", pcg.ProjectSFID)
+				claManagerDesignee, err := s.CreateCLAManagerDesignee(params.CompanySFID, pcg.ProjectSFID, params.Body.UserEmail.String())
+				var output result
+				if err != nil {
+					if err == ErrCLAManagerDesigneeConflict {
+						msg := fmt.Sprintf("Conflict assigning cla manager role for Project SFID: %s, error: %s ", pcg.ProjectSFID, err)
+						output = result{
+							designee: nil,
+							msg:      msg,
+							err:      ErrCLAManagerDesigneeConflict,
+						}
+					}
+					msg := fmt.Sprintf("Creating cla manager failed for Project SFID: %s, error: %s ", pcg.ProjectSFID, err)
+					output = result{
+						designee: nil,
+						msg:      msg,
+						err:      err,
+					}
 				}
-				msg := fmt.Sprintf("Creating cla manager failed for Project SFID: %s, error: %s ", pcg.ProjectSFID, err)
-				return nil, msg, err
+				output = result{
+					designee: claManagerDesignee,
+					msg:      "",
+					err:      nil,
+				}
+				designeeChannel <- &output
+			}(&wg, pcg, designeeChan)
+		}
+		for resultCh := range designeeChan {
+			if resultCh.err != nil {
+				return nil, resultCh.msg, resultCh.err
 			}
-			designeeScopes = append(designeeScopes, claManagerDesignee)
+			designeeScopes = append(designeeScopes, resultCh.designee)
 		}
 	}
 
@@ -910,6 +930,10 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 		if sendErr != nil {
 			return nil, sendErr
 		}
+		sendErr = sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, &foundationSFID, "company-owner")
+		if sendErr != nil {
+			return nil, sendErr
+		}
 		return nil, ErrNoLFID
 	}
 	var projectSFs []string
@@ -922,14 +946,6 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 			return nil, projectErr
 		}
 		projectSFs = append(projectSFs, projectSF.Name)
-	}
-
-	// Set Company owner role for cla manager designee
-	err := s.setOwnerRole(userEmail, organization.ID)
-	if err != nil {
-		msg := fmt.Sprintf("Problem assigning company owner role for user: %s and organization: %s , error: %+v", userEmail, organization.ID, err)
-		log.WithFields(f).Warn(msg)
-		return nil, err
 	}
 
 	var designeeScopes []*models.ClaManagerDesignee
@@ -1002,70 +1018,6 @@ func (s *service) NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerLi
 	log.Debugf("Sending notification emails to claManagers: %+v", notifyCLAManagers.List)
 	for _, claManager := range notifyCLAManagers.List {
 		sendEmailToCLAManager(claManager.Name, claManager.Email.String(), userModel, notifyCLAManagers.CompanyName, notifyCLAManagers.ClaGroupName)
-	}
-
-	return nil
-}
-
-// Utility function that sets company owner role
-func (s *service) setOwnerRole(userEmail string, organizationID string) error {
-	orgClient := v2OrgService.GetClient()
-	acsClient := v2AcsService.GetClient()
-	userClient := v2UserService.GetClient()
-	user, err := userClient.SearchUserByEmail(userEmail)
-	if err != nil {
-		msg := fmt.Sprintf("Failed searching user by email :%s ", userEmail)
-		log.Warn(msg)
-		return err
-	}
-
-	log.Info(fmt.Sprintf("Check if user : %s is a company owner ", userEmail))
-	var hasOwnerScope bool
-	if user.Account.Name == NoAccount {
-		// flag company owner scope if user is not associated with an org
-		hasOwnerScope = false
-	} else {
-		// Check if user is in organization
-		var userOrg string
-		if user.Account.ID != organizationID {
-			userOrg = user.Account.ID
-		} else {
-			userOrg = organizationID
-		}
-		log.Info(fmt.Sprintf("Checking company-owner against company: %s ", userOrg))
-		hasOwnerScope, err = orgClient.IsCompanyOwner(user.ID, userOrg)
-		if err != nil {
-			return err
-		}
-	}
-
-	log.Info(fmt.Sprintf("User :%s isCompanyOwner: %t", userEmail, hasOwnerScope))
-
-	if !hasOwnerScope {
-		companyOwner := "company-owner"
-		// Check if company has company owner
-		_, scopeErr := orgClient.ListOrgUserAdminScopes(organizationID, &companyOwner)
-		if scopeErr != nil {
-			// Only assign if company owner doesnt exist
-			if _, ok := scopeErr.(*organizations.ListOrgUsrAdminScopesNotFound); ok {
-				//Get Role ID
-				roleID, designeeErr := acsClient.GetRoleID("company-owner")
-				if designeeErr != nil {
-					msg := "Problem getting role ID for company-owner"
-					log.Warn(msg)
-					return designeeErr
-				}
-
-				err := orgClient.CreateOrgUserRoleOrgScope(userEmail, organizationID, roleID)
-				if err != nil {
-					log.Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", userEmail, err)
-					return err
-				}
-				// When role is assigned successfully skip 404 issue
-				return nil
-			}
-			return scopeErr
-		}
 	}
 
 	return nil
@@ -1269,7 +1221,7 @@ func sendEmailToCLAManagerDesignee(corporateConsole string, companyName string, 
 // sendEmailToUserWithNoLFID helper function to send email to a given user with no LFID
 func sendEmailToUserWithNoLFID(projectName, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail, organizationID string, projectID *string, role string) error {
 	// subject string, body string, recipients []string
-	subject := "EasyCLA: Invitation to create LF Login and complete process of becoming CLA Manager"
+	subject := fmt.Sprintf("EasyCLA: Invitation to create LF Login and complete process of becoming CLA Manager with %s role", role)
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the Project %s in the EasyCLA system.</p>

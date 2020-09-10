@@ -387,6 +387,25 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				List: contributor,
 			})
 		})
+
+	api.CompanyAssignCompanyOwnerHandler = company.AssignCompanyOwnerHandlerFunc(
+		func(params company.AssignCompanyOwnerParams, authUser *auth.User) middleware.Responder {
+			f := logrus.Fields{
+				"functionName": "CompanyCompanyAssignCompanyOwnerHandler",
+				"CompanySFID":  params.CompanySFID,
+				"Email":        params.Body.UserEmail.String(),
+			}
+			log.WithFields(f).Debugf("processing Assigning Company owner role to user")
+			companyOwner, ownerErr := service.AssignCompanyOwner(params.CompanySFID, params.Body.UserEmail.String())
+			if ownerErr != nil {
+				if _, ok := ownerErr.(*organizations.ListOrgUsrAdminScopesNotFound); !ok {
+					log.WithFields(f).Debugf("Problem assigning company owner , error: %+v ", ownerErr)
+					return company.NewAssignCompanyOwnerBadRequest()
+				}
+			}
+			log.WithFields(f).Debugf("processed Assigning Company owner role to user")
+			return company.NewAssignCompanyOwnerOK().WithPayload(companyOwner)
+		})
 }
 
 type codedResponse interface {
