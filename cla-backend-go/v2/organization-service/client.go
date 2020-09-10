@@ -249,7 +249,7 @@ func (osc *Client) DeleteRolePermissions(organizationID, projectID, role string,
 							UserID:            authUser.UserName,
 							UserModel:         nil,
 							ExternalProjectID: projectID,
-							EventData: &events.ClaManagerRoleCreatedData{
+							EventData: &events.ClaManagerRoleDeletedData{
 								Role:      role,                 // cla-manager
 								Scope:     scope.ObjectTypeName, // project|organization
 								UserName:  userName,             // bstonedev
