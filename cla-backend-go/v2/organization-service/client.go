@@ -163,6 +163,13 @@ func (osc *Client) IsUserHaveRoleScope(rolename string, userSFID string, organiz
 
 // CreateOrgUserRoleOrgScopeProjectOrg assigns role scope to user
 func (osc *Client) CreateOrgUserRoleOrgScopeProjectOrg(emailID string, projectID string, organizationID string, roleID string) error {
+	f := logrus.Fields{
+		"functionName":   "CreateOrgUserRoleOrgScopeProjectOrg",
+		"projectID":      projectID,
+		"organizationID": organizationID,
+		"roleID":         roleID,
+		"emailID":        emailID,
+	}
 
 	params := &organizations.CreateOrgUsrRoleScopesParams{
 		CreateRoleScopes: &models.CreateRolescopes{
@@ -176,6 +183,7 @@ func (osc *Client) CreateOrgUserRoleOrgScopeProjectOrg(emailID string, projectID
 	}
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
 		return err
 	}
 
@@ -183,10 +191,11 @@ func (osc *Client) CreateOrgUserRoleOrgScopeProjectOrg(emailID string, projectID
 	log.Debugf("CreateOrgUserRoleScope: called with args emailID: %s, projectID: %s, organizationID: %s, roleID: %s", emailID, projectID, organizationID, roleID)
 	result, err := osc.cl.Organizations.CreateOrgUsrRoleScopes(params, clientAuth)
 	if err != nil {
-		log.Error("CreateOrgUserRoleScope failed", err)
+		log.WithFields(f).Warnf("CreateOrgUserRoleScope failed, error: %+v", err)
 		return err
 	}
-	log.Debugf("CreateOrgUserRoleOrgScope: result: %#v\n", result)
+
+	log.Debugf("result: %#v", result)
 	return nil
 }
 
@@ -219,6 +228,8 @@ func (osc *Client) DeleteRolePermissions(organizationID, projectID, role string,
 				// check objectID having project|organization scope
 				if len(objectList) == 2 {
 					if scope.ObjectTypeName == projectOrganization && projectID == objectList[0] {
+						log.WithFields(f).Debugf("removing user from role: %s with scope: %s for project: %s and organization: %s",
+							roleScopes.RoleName, scope.ObjectName, projectID, organizationID)
 						delErr := osc.DeleteOrgUserRoleOrgScopeProjectOrg(organizationID, roleID, scope.ScopeID, &userName, &userEmail)
 						if delErr != nil {
 							f["userName"] = userName
@@ -256,6 +267,15 @@ func (osc *Client) DeleteRolePermissions(organizationID, projectID, role string,
 // DeleteOrgUserRoleOrgScopeProjectOrg removes role scope for user
 func (osc *Client) DeleteOrgUserRoleOrgScopeProjectOrg(organizationID string, roleID string, scopeID string, userName *string, userEmail *string) error {
 
+	f := logrus.Fields{
+		"functionName":   "DeleteOrgUserRoleOrgScopeProjectOrg",
+		"organizationID": organizationID,
+		"roleID":         roleID,
+		"scopeID":        scopeID,
+		"userName":       *userName,
+		"userEmail":      *userEmail,
+	}
+
 	params := &organizations.DeleteOrgUsrRoleScopesParams{
 		SalesforceID: organizationID,
 		RoleID:       roleID,
@@ -266,17 +286,20 @@ func (osc *Client) DeleteOrgUserRoleOrgScopeProjectOrg(organizationID string, ro
 	}
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
 		return err
 	}
 
 	clientAuth := runtimeClient.BearerToken(tok)
-	log.Debugf("DeleteOrgUserRoleOrgScopeProjectOrg called with organizationID: %s, roleID: %s, scopeID: %s", organizationID, roleID, scopeID)
+	log.WithFields(f).Debugf("removing organization user roles with organizationID: %s, roleID: %s, scopeID: %s",
+		organizationID, roleID, scopeID)
 	result, deleteErr := osc.cl.Organizations.DeleteOrgUsrRoleScopes(params, clientAuth)
 	if deleteErr != nil {
-		log.Error("DeleteOrgUserRoleOrgScopeProjectOrg failed", deleteErr)
+		log.WithFields(f).Warnf("DeleteOrgUserRoleOrgScopeProjectOrg failed, error: %+v", deleteErr)
 		return deleteErr
 	}
-	log.Debugf("CreateOrgUserRoleOrgScope: result: %#v\n", result)
+
+	log.WithFields(f).Debugf("result: %#v", result)
 	return nil
 }
 
