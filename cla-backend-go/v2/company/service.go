@@ -91,6 +91,7 @@ type Service interface {
 	AssociateContributor(companySFID, userEmail string) (*models.Contributor, error)
 	AssociateContributorByGroup(companySFID, userEmail string, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields, ClaGroupID string) ([]*models.Contributor, string, error)
 	GetCompanyAdmins(companyID string) (*models.CompanyAdminList, error)
+	AssignCompanyOwner(companySFID string, userEmail string) (*models.CompanyOwner, error)
 }
 
 // ProjectRepo contains project repo methods
@@ -755,6 +756,76 @@ func (s *service) GetCompanyCLAGroupManagers(companyID, claGroupID string) (*mod
 	}
 
 	return &models.CompanyClaManagers{List: claManagers}, nil
+}
+
+func (s *service) AssignCompanyOwner(companySFID string, userEmail string) (*models.CompanyOwner, error) {
+	orgClient := orgService.GetClient()
+	acsClient := acs_service.GetClient()
+	userClient := v2UserService.GetClient()
+	user, err := userClient.SearchUserByEmail(userEmail)
+	if err != nil {
+		msg := fmt.Sprintf("Failed searching user by email :%s ", userEmail)
+		log.Warn(msg)
+		return nil, err
+	}
+
+	log.Info(fmt.Sprintf("Check if user : %s is a company owner ", userEmail))
+	var hasOwnerScope bool
+	if user.Account.Name == NoAccount {
+		// flag company owner scope if user is not associated with an org
+		hasOwnerScope = false
+	} else {
+		// Check if user is in organization
+		var userOrg string
+		if user.Account.ID != companySFID {
+			userOrg = user.Account.ID
+		} else {
+			userOrg = companySFID
+		}
+		log.Info(fmt.Sprintf("Checking company-owner against company: %s ", userOrg))
+		hasOwnerScope, err = orgClient.IsCompanyOwner(user.ID, userOrg)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	log.Info(fmt.Sprintf("User :%s isCompanyOwner: %t", userEmail, hasOwnerScope))
+
+	if !hasOwnerScope {
+		companyOwner := "company-owner"
+		// Check if company has company owner
+		_, scopeErr := orgClient.ListOrgUserAdminScopes(companySFID, &companyOwner)
+		if scopeErr != nil {
+			// Only assign if company owner doesnt exist
+			if _, ok := scopeErr.(*organizations.ListOrgUsrAdminScopesNotFound); ok {
+				//Get Role ID
+				roleID, designeeErr := acsClient.GetRoleID("company-owner")
+				if designeeErr != nil {
+					msg := "Problem getting role ID for company-owner"
+					log.Warn(msg)
+					return nil, designeeErr
+				}
+
+				err := orgClient.CreateOrgUserRoleOrgScope(userEmail, companySFID, roleID)
+				if err != nil {
+					log.Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", userEmail, err)
+					return nil, err
+				}
+				return &models.CompanyOwner{
+					LfUsername:  user.Username,
+					Name:        user.Name,
+					UserSfid:    user.ID,
+					AssignedOn:  time.Now().String(),
+					Email:       strfmt.Email(userEmail),
+					CompanySfid: companySFID,
+				}, nil
+			}
+			return nil, scopeErr
+		}
+	}
+
+	return nil, nil
+
 }
 
 func v2ProjectToMap(projectDetails *v2ProjectServiceModels.ProjectOutputDetailed) (map[string]*v2ProjectServiceModels.ProjectOutput, error) {
