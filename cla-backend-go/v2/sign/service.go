@@ -121,6 +121,8 @@ func validateCorporateSignatureInput(input *models.CorporateSignatureInput) erro
 }
 
 func (s *service) RequestCorporateSignature(lfUsername string, authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error) {
+	usc := userService.GetClient()
+
 	err := validateCorporateSignatureInput(input)
 	if err != nil {
 		return nil, err
@@ -176,6 +178,26 @@ func (s *service) RequestCorporateSignature(lfUsername string, authorizationHead
 	if input.SendAsEmail {
 		// this would be used only in case of cla-signatory
 		err = prepareUserForSigning(input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		var currentUserEmail string
+
+		userModel, userErr := usc.GetUserByUsername(lfUsername)
+		if userErr != nil {
+			return nil, userErr
+		}
+
+		if userModel != nil {
+			for _, email := range userModel.Emails {
+				if email != nil && *email.IsPrimary {
+					currentUserEmail = *email.EmailAddress
+				}
+			}
+		}
+
+		err = prepareUserForSigning(currentUserEmail, utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
 		if err != nil {
 			return nil, err
 		}
