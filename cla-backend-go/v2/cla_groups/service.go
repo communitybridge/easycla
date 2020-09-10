@@ -169,7 +169,7 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 	foundationProjectDetails, err := psc.GetProject(foundationSFID)
 	if err != nil {
 		if _, ok := err.(*psproject.GetProjectNotFound); ok {
-			return false, fmt.Errorf("bad request: invalid foundation_sfid - unable to location foundation by ID: %s", foundationSFID)
+			return false, fmt.Errorf("bad request: invalid foundation_sfid - unable to locate foundation by ID: %s", foundationSFID)
 		}
 		return false, err
 	}
@@ -936,26 +936,13 @@ func (s *service) DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth
 		}
 	}
 
-	go func(projectSFID string) {
-		log.WithFields(f).Debug("deleting cla_group project associations")
-		err := s.projectsClaGroupsRepo.RemoveProjectAssociatedWithClaGroup(projectSFID, []string{}, true)
-		if err != nil {
-			log.WithFields(f).Warn(err)
-			errChan <- err
-			return
-		}
-
-		// No errors - nice...return nil
-		errChan <- nil
-	}(claGroupModel.ProjectID)
-	goRoutineCount++
-
 	// Process the results
 	log.WithFields(f).Debugf("waiting for %d go routines to complete...", goRoutineCount)
 	for i := 0; i < goRoutineCount; i++ {
 		errFromFunc := <-errChan
 		if errFromFunc != nil {
 			log.WithFields(f).Warnf("problem removing removing requests or removing permissions, error: %+v - continuing with CLA Group delete", errFromFunc)
+			return errFromFunc
 		}
 	}
 
