@@ -19,7 +19,7 @@ from cla.auth import AuthUser
 from cla.controllers.github_application import GitHubInstallation
 from cla.controllers.project import check_user_authorization
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import Event, UserPermissions, Repository
+from cla.models.dynamo_models import Event, UserPermissions, Repository, GitHubOrg
 from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client, get_email_service, \
     get_email_sign_off_content, get_email_help_content, get_project_instance
 from cla.models.event_types import EventType
@@ -55,7 +55,7 @@ def get_organization(organization_name):
     return org.to_dict()
 
 
-def get_organization_model(organization_name):
+def get_organization_model(organization_name) -> Optional[GitHubOrg]:
     """
     Returns a GitHubOrg model based on the the CLA github organization name.
 
@@ -388,8 +388,15 @@ def handle_installation_repositories_added_event(action: str, body: dict):
         org_model = get_organization_model(organization_name)
 
         if org_model is None:
+            # Should we create since it's missing?
             cla.log.warning(f'Unable to locate GitHub Organization {organization_name} in our database')
             continue
+
+        # Should we update to ensure the installation_id is set?
+        if org_model.get_organization_installation_id() is None:
+            # Update the installation ID
+            org_model.set_organization_installation_id(body.get('installation', {}).get('id', None))
+            org_model.save()
 
         # Check to see if the auto enabled flag is set
         if org_model.get_auto_enabled():
