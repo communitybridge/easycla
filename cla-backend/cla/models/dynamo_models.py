@@ -3260,6 +3260,7 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
         return ret
 
     def save(self):
+        self.model.date_modified = datetime.datetime.utcnow()
         self.model.save()
 
     def load(self, organization_name):
