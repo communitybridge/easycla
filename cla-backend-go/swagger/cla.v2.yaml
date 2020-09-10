@@ -2056,6 +2056,45 @@ paths:
           $ref: '#/responses/conflict'
       tags:
         - company
+  
+
+
+  /company/{companySFID}/company-owner:
+    post:
+      operationId: assignCompanyOwner
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-companySFID"
+        - name: body
+          in: body
+          schema:
+            type: object
+            x-nullable: false
+            title: CompanyOwner
+            properties:
+              userEmail:
+                $ref: './common/properties/email.yaml'
+                description: LfEmail for company owner getting associated
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/company-owner'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - company
 
   /company/{companySFID}/project/{projectSFID}/cla-manager/{userLFID}:
     delete:
@@ -2083,6 +2122,8 @@ paths:
           $ref: '#/responses/conflict'
       tags:
         - cla-manager
+  
+
 
   /company/{companySFID}/claGroup/{claGroupID}/cla-manager-designee:
     post:
@@ -3355,6 +3396,42 @@ definitions:
         description: 'The role association with company'
         example: 'contributor'
         x-omitempty: false
+
+  company-owner:
+    type: object
+    title: Company Owner
+    description: Company Owner
+    properties:
+      lf_username:
+        type: string
+        description: 'the LF username'
+        x-omitempty: false
+        example: 'username'
+      name:
+        type: string
+        description: 'name of the user'
+        example: 'john'
+        x-omitempty: false
+      user_sfid:
+        type: string
+        description: 'the user SalesForce ID'
+        x-omitempty: false
+      email:
+        $ref: './common/properties/email.yaml'
+        x-omitempty: false
+      type:
+        type: string
+        x-omitempty: false
+        example: 'contact'
+      assigned_on:
+        type: string
+        x-omitempty: false
+      company_sfid:
+        type: string
+        description: 'the Organization SalesForce ID'
+        x-omitempty: false
+        example: 'abc134234adsdf43'
+    
 
   cla-manager-designee:
     type: object
