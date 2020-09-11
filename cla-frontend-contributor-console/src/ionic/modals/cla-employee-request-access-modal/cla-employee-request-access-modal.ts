@@ -1,11 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {AlertController, IonicPage, ModalController, NavParams, ViewController} from 'ionic-angular';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {EmailValidator} from '../../validators/email';
-import {ClaService} from '../../services/cla.service';
+import { Component } from '@angular/core';
+import { AlertController, IonicPage, ModalController, NavParams, ViewController } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { EmailValidator } from '../../validators/email';
+import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
   segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company/contact'
@@ -25,7 +25,7 @@ export class ClaEmployeeRequestAccessModal {
   managers: any;
   formErrors: any[];
 
-  userEmails: Array<string>;
+  userEmails: Array<string> = [];
 
   form: FormGroup;
   submitAttempt: boolean = false;
@@ -104,12 +104,15 @@ export class ClaEmployeeRequestAccessModal {
   ngOnInit() {
     this.getUser(this.userId, this.authenticated).subscribe((user) => {
       if (user) {
-        if (user.user_emails.length === 1) {
-          this.form.controls['user_email'].setValue(user.user_emails[0]);
-        }
+        // For Gerrit user user_emails is always null and only have a LF_email.
         this.userEmails = user.user_emails || [];
+
         if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
           this.userEmails.push(user.lf_email);
+        }
+
+        if (this.userEmails.length === 1) {
+          this.form.controls['user_email'].setValue(user.user_emails[0]);
         }
       }
     });
