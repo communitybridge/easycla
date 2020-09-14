@@ -4,6 +4,7 @@
 import { Component } from '@angular/core';
 import { IonicPage, ModalController, NavController, NavParams } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
+import { generalConstants } from '../../constants/general';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId'
@@ -58,6 +59,7 @@ export class ClaLandingPage {
 
   getUser(userId) {
     this.claService.getUser(userId).subscribe((response) => {
+      localStorage.setItem(generalConstants.USER_MODEL, JSON.stringify(response));
       this.user = response;
     });
   }
