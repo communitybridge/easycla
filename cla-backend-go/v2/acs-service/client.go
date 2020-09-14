@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/token"
 
@@ -64,8 +66,27 @@ func GetClient() *Client {
 // SendUserInvite invites users to the LFX platform
 func (ac *Client) SendUserInvite(email *string,
 	roleName string, scope string, projectID *string, organizationID string, inviteType string, subject *string, emailContent *string, automate bool) error {
+	f := logrus.Fields{
+		"functionName":   "SendUserInvite",
+		"roleName":       roleName,
+		"scope":          scope,
+		"organizationID": organizationID,
+		"inviteType":     inviteType,
+	}
+
+	if email != nil {
+		f["email"] = *email
+	}
+	if projectID != nil {
+		f["projectID"] = *projectID
+	}
+	if subject != nil {
+		f["subject"] = *subject
+	}
+
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
 		return err
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
@@ -80,7 +101,7 @@ func (ac *Client) SendUserInvite(email *string,
 		Context: context.Background(),
 	}
 	if scope == ProjectOrgScope && projectID == nil {
-		log.Error("Project required for project|organization scope", ErrProjectIDMissing)
+		log.WithFields(f).Warnf("Project ID required for project|organization scope, error: %+v", ErrProjectIDMissing)
 		return ErrProjectIDMissing
 	}
 	if scope == ProjectOrgScope {
@@ -90,6 +111,7 @@ func (ac *Client) SendUserInvite(email *string,
 		params.SendInvite.ScopeID = organizationID
 	}
 	if subject != nil {
+		f["subject"] = *subject
 		params.SendInvite.Subject = *subject
 	}
 	// Pass emailContent if passed in the args
@@ -100,34 +122,42 @@ func (ac *Client) SendUserInvite(email *string,
 	log.Debugf("CreateUserinvite called with args email: %s, scope: %s, roleName: %s, type: %s, scopeID: %s",
 		*email, scope, roleName, inviteType, organizationID)
 	if inviteErr != nil {
-		log.Error("CreateUserInvite failed", inviteErr)
+		log.WithFields(f).Error("CreateUserInvite failed", inviteErr)
 		return nil
 	}
-	log.Debugf("CreatedUserInvite :%+v", result.Payload)
+
+	log.WithFields(f).Debugf("CreatedUserInvite :%+v", result.Payload)
 	return nil
 }
 
 // GetRoleID will return roleID for the provided role name
 func (ac *Client) GetRoleID(roleName string) (string, error) {
+	f := logrus.Fields{
+		"functionName": "GetRoleID",
+		"roleName":     roleName,
+	}
 	url := fmt.Sprintf("%s/acs/v1/api/roles?search=%s", ac.apiGwURL, roleName)
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
 		return "", err
 	}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
+		log.WithFields(f).Warnf("problem making a new GET request for url: %s, error: %+v", url, err)
 		return "", err
 	}
 	req.Header.Set("X-API-KEY", ac.apiKey)
 	req.Header.Set("Authorization", "Bearer "+tok)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		log.WithFields(f).Warnf("problem invoking http GET request to url: %s, error: %+v", url, err)
 		return "", err
 	}
 	defer func() {
 		closeErr := resp.Body.Close()
 		if closeErr != nil {
-			log.Warnf("error closing resource: %+v", closeErr)
+			log.WithFields(f).Warnf("error closing resource: %+v", closeErr)
 		}
 	}()
 	var roles []struct {
@@ -136,10 +166,12 @@ func (ac *Client) GetRoleID(roleName string) (string, error) {
 	}
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		log.WithFields(f).Warnf("problem reading response body, error: %+v", err)
 		return "", err
 	}
 	err = json.Unmarshal(b, &roles)
 	if err != nil {
+		log.WithFields(f).Warnf("problem unmarshalling response body, error: %+v", err)
 		return "", err
 	}
 	for _, role := range roles {
@@ -147,5 +179,6 @@ func (ac *Client) GetRoleID(roleName string) (string, error) {
 			return role.RoleID, nil
 		}
 	}
+
 	return "", ErrRoleNotFound
 }

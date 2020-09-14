@@ -1333,7 +1333,7 @@ class DocuSign(signing_service_interface.SigningService):
             cla_manager_list = list(signature.get_signature_acl())
 
             # Load the user record of the initial CLA Manager
-            if len(cla_manager_list) > 0 :
+            if len(cla_manager_list) > 0:
                 user_list = user.get_user_by_username(cla_manager_list[0])
                 if user_list is None:
                     msg = f'signed_corporate_callback - CLA Manager not assign for signature: {signature}'
@@ -1360,7 +1360,7 @@ class DocuSign(signing_service_interface.SigningService):
             # Update our event/activity log
             if signature.get_signature_reference_type() == 'user':
                 event_data = (f'individual signature of user {user.get_user_name()} '
-                                f'signed for project {project.get_project_name()}')
+                              f'signed for project {project.get_project_name()}')
                 Event.create_event(
                     event_type=EventType.IndividualSignatureSigned,
                     event_project_id=project_id,
@@ -1372,9 +1372,9 @@ class DocuSign(signing_service_interface.SigningService):
                 )
             elif signature.get_signature_reference_type() == 'company':
                 event_data = (f'corporate signature '
-                                f'signed for project {project.get_project_name()} '
-                                f'and company {company.get_company_name()} '
-                                f'by user {user.get_user_name()}')
+                              f'signed for project {project.get_project_name()} '
+                              f'and company {company.get_company_name()} '
+                              f'by user {user.get_user_name()}')
                 Event.create_event(
                     event_type=EventType.CompanySignatureSigned,
                     event_project_id=project_id,
