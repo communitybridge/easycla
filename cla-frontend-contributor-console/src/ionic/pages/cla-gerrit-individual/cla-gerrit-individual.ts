@@ -7,6 +7,7 @@ import { ClaService } from '../../services/cla.service';
 import { RolesService } from '../../services/roles.service';
 import { AuthService } from '../../services/auth.service';
 import { Restricted } from '../../decorators/restricted';
+import { generalConstants } from '../../constants/general';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -77,11 +78,11 @@ export class ClaGerritIndividualPage {
       //retrieve project info with project Id
       this.claService.getProjectWithAuthToken(gerrit.project_id).subscribe((project) => {
         this.project = project;
-
+        localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(project));
         // retrieve userInfo from auth0 service
         this.claService.postOrGetUserForGerrit().subscribe((user) => {
           this.userId = user.user_id;
-
+          localStorage.setItem(generalConstants.USER_MODEL, JSON.stringify(user));
           // get signatureIntent object, similar to the Github flow.
           this.postSignatureRequest();
         });

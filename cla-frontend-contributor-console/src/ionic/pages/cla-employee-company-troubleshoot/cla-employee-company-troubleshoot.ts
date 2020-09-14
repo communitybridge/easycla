@@ -53,31 +53,28 @@ export class ClaEmployeeCompanyTroubleshootPage {
   }
 
   ngOnInit() {
-    this.getProject(this.projectId);
-    this.getCompany(this.companyId);
-    this.getProjectSignatures(this.projectId, this.companyId);
+    this.getProject();
+    this.getCompany();
+    this.getProjectSignatures();
   }
 
-  getProject(projectId: string) {
-    this.loading.projects = true;
-    this.claService.getProject(projectId).subscribe((response) => {
-      this.loading.projects = false;
-      this.project = response;
-    });
+  getProject() {
+    this.project = JSON.parse(localStorage.getItem(generalConstants.PROJECT_MODEL));
+    this.loading.projects = false;
   }
 
-  getCompany(companyId: string) {
+  getCompany() {
     this.loading.companies = true;
-    this.claService.getCompany(companyId).subscribe((response) => {
+    this.claService.getCompany(this.companyId).subscribe((response) => {
       this.loading.companies = true;
       this.company = response;
     });
   }
 
-  getProjectSignatures(projectId: string, companyId: string) {
+  getProjectSignatures() {
     // Get CCLA Company Signatures - should just be one
     this.loading.signatures = true;
-    this.claService.getCompanyProjectSignatures(companyId, projectId).subscribe(
+    this.claService.getCompanyProjectSignatures(this.companyId, this.projectId).subscribe(
       (response) => {
         this.loading.signatures = false;
         if (response.signatures) {

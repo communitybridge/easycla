@@ -7,6 +7,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EmailValidator } from '../../validators/email';
 import { ClaService } from '../../services/cla.service';
 import { Content } from 'ionic-angular';
+import { generalConstants } from '../../constants/general';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/invite-company-admin'
@@ -53,34 +54,21 @@ export class ClaCompanyAdminSendEmailModal {
   }
 
   ngOnInit() {
-    this.getUser();
+    this.getUserEmails();
   }
 
-  getUser() {
-    if (this.authenticated) {
-      // Gerrit Users
-      this.claService.getUserWithAuthToken(this.userId).subscribe((user) => {
-        if (user) {
-          this.userEmails = user.user_emails || [];
-          if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
-            this.userEmails.push(user.lf_email);
-          }
-        } else {
-          console.warn('Unable to retrieve user.');
-        }
-      });
+  getUserEmails() {
+    const user = JSON.parse(localStorage.getItem(generalConstants.USER_MODEL));
+    if (user) {
+      this.userEmails = user.user_emails || [];
+      if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
+        this.userEmails.push(user.lf_email);
+      }
     } else {
-      // Github Users
-      this.claService.getUser(this.userId).subscribe((user) => {
-        if (user) {
-          this.userEmails = user.user_emails || [];
-        } else {
-          console.warn('Unable to retrieve user.');
-        }
-      });
+      console.warn('Unable to retrieve user.');
     }
   }
-
+  
   dismiss() {
     this.viewCtrl.dismiss();
   }
