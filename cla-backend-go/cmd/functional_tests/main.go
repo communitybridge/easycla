@@ -96,6 +96,6 @@ func main() {
 	signatures.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
 	approval_list.NewTestBehaviour(v2APIURL, auth0User1Config, auth0User2Config, auth0User3Config, auth0User4Config).RunAllTests()
 	cla_group.NewTestBehaviour(v2APIURL, auth0User5Config).RunAllTests()
-	repositories.NewTestBehaviour(v2APIURL, auth0User2Config).RunAllTests()
+	repositories.NewTestBehaviour(v2APIURL, auth0User5Config).RunAllTests()
 	frisby.Global.PrintReport()
 }
