@@ -61,9 +61,9 @@ export class ClaGerritCorporatePage {
     return this.authService.isAuthenticated;
   }
 
-  dismiss() {
-    this.viewCtrl.dismiss();
-  }
+  // dismiss() {
+  //   this.viewCtrl.dismiss();
+  // }
 
   getCompanies() {
     this.claService.getGerrit(this.gerritId).subscribe((gerrit) => {
