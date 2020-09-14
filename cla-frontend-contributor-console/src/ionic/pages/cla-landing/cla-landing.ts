@@ -4,6 +4,7 @@
 import { Component } from '@angular/core';
 import { IonicPage, ModalController, NavController, NavParams } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
+import { generalConstants } from '../../constants/general';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId'
@@ -36,8 +37,8 @@ export class ClaLandingPage {
   }
 
   ngOnInit() {
-    this.getUser(this.userId);
-    this.getProject(this.projectId);
+    this.getUser();
+    this.getProject();
   }
 
   openClaIndividualPage() {
@@ -56,14 +57,16 @@ export class ClaLandingPage {
     modal.present();
   }
 
-  getUser(userId) {
-    this.claService.getUser(userId).subscribe((response) => {
+  getUser() {
+    this.claService.getUser(this.userId).subscribe((response) => {
+      localStorage.setItem(generalConstants.USER_MODEL, JSON.stringify(response));
       this.user = response;
     });
   }
 
-  getProject(projectId) {
-    this.claService.getProject(projectId).subscribe((response) => {
+  getProject() {
+    this.claService.getProject(this.projectId).subscribe((response) => {
+      localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(response));
       this.project = response;
     });
   }

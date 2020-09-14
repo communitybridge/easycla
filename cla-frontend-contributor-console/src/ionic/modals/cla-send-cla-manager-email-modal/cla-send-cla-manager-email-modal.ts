@@ -1,11 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {AlertController, IonicPage, NavParams, ViewController} from 'ionic-angular';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {EmailValidator} from '../../validators/email';
-import {ClaService} from '../../services/cla.service';
+import { Component } from '@angular/core';
+import { AlertController, IonicPage, NavParams, ViewController } from 'ionic-angular';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { EmailValidator } from '../../validators/email';
+import { ClaService } from '../../services/cla.service';
+import { generalConstants } from '../../constants/general';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/employee/company/contact'
@@ -57,33 +58,20 @@ export class ClaSendClaManagerEmailModal {
   }
 
   ngOnInit() {
-    this.getUser();
+    this.project = JSON.parse(localStorage.getItem(generalConstants.PROJECT_MODEL));
+    this.getUserEmails();
     this.getCompany();
-    this.getProject(this.projectId)
   }
 
-  getUser() {
-    if (this.authenticated) {
-      // Gerrit Users
-      this.claService.getUserWithAuthToken(this.userId).subscribe((user) => {
-        if (user) {
-          this.userEmails = user.user_emails || [];
-          if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
-            this.userEmails.push(user.lf_email);
-          }
-        } else {
-          console.error('Unable to retrieve user.');
-        }
-      });
+  getUserEmails() {
+    const user = JSON.parse(localStorage.getItem(generalConstants.USER_MODEL));
+    if (user) {
+      this.userEmails = user.user_emails || [];
+      if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
+        this.userEmails.push(user.lf_email);
+      }
     } else {
-      // Github Users
-      this.claService.getUser(this.userId).subscribe((user) => {
-        if (user) {
-          this.userEmails = user.user_emails || [];
-        } else {
-          console.error('Unable to retrieve user.');
-        }
-      });
+      console.error('Unable to retrieve user.');
     }
   }
 
@@ -120,12 +108,6 @@ export class ClaSendClaManagerEmailModal {
         this.hasRequestError = true;
       }
     );
-  }
-
-  getProject(projectId) {
-    this.claService.getProject(projectId).subscribe((response) => {
-      this.project = response;
-    });
   }
 
   emailSent() {
