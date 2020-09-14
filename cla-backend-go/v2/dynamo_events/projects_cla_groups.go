@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -24,19 +26,32 @@ type ProjectClaGroup struct {
 }
 
 func (s *service) ProjectAddedEvent(event events.DynamoDBEventRecord) error {
-	log.Debug("ProjectAddedEvent called")
+	f := logrus.Fields{
+		"functionName": "ProjectAddedEvent",
+		"eventID":      event.EventID,
+		"eventName":    event.EventName,
+		"eventSource":  event.EventSource,
+	}
+	log.WithFields(f).Debug("ProjectAddedEvent called")
 	var newProject ProjectClaGroup
 	err := unmarshalStreamImage(event.Change.NewImage, &newProject)
 	if err != nil {
+		log.WithFields(f).Warnf("project decoding add event, error: %+v", err)
 		return err
 	}
+
+	f["projectSFID"] = newProject.ProjectSFID
+	f["claGroupID"] = newProject.ClaGroupID
+	f["foundationSFID"] = newProject.FoundationSFID
+
 	psc := v2ProjectService.GetClient()
-	log.WithField("project_sfid", newProject.ProjectSFID).Debug("enabling CLA service")
+	log.WithFields(f).Debug("enabling CLA service...")
 	err = psc.EnableCLA(newProject.ProjectSFID)
 	if err != nil {
-		log.WithField("project_sfid", newProject.ProjectSFID).Error("enabling CLA service failed")
+		log.WithFields(f).Warnf("enabling CLA service failed, error: %+v", err)
 		return err
 	}
+
 	return nil
 }
 
@@ -48,7 +63,7 @@ func (s *service) ProjectDeletedEvent(event events.DynamoDBEventRecord) error {
 		"eventName":    event.EventName,
 		"eventSource":  event.EventSource,
 	}
-	log.Debug("ProjectDeletedEvent called")
+	log.WithFields(f).Debug("ProjectDeletedEvent called")
 	var oldProject ProjectClaGroup
 	err := unmarshalStreamImage(event.Change.OldImage, &oldProject)
 	if err != nil {
@@ -66,12 +81,11 @@ func (s *service) ProjectDeletedEvent(event events.DynamoDBEventRecord) error {
 	before, _ := utils.CurrentTime()
 	log.WithFields(f).Debug("disabling CLA service")
 	err = psc.DisableCLA(oldProject.ProjectSFID)
-	log.WithFields(f).Debugf("disabling CLA service took %s", time.Since(before).String())
-
 	if err != nil {
 		log.WithFields(f).Warnf("disabling CLA service failed, error: %+v", err)
 		return err
 	}
+	log.WithFields(f).Debugf("disabling CLA service took %s", time.Since(before).String())
 
 	// Log the event
 	eventErr := s.eventsRepo.CreateEvent(&models.Event{
@@ -93,6 +107,58 @@ func (s *service) ProjectDeletedEvent(event events.DynamoDBEventRecord) error {
 		log.WithFields(f).Warnf("problem logging event for disabling CLA service, error: %+v", eventErr)
 		// Ok - don't fail for now
 	}
+
+	// remove any CLA related permissions
+	permErr := s.removeCLAPermissions(oldProject.ProjectSFID)
+	if permErr != nil {
+		log.WithFields(f).Warnf("problem removing CLA permissions for projectSFID, error: %+v", permErr)
+		// Ok - don't fail for now
+	}
+
+	return nil
+}
+
+// ProjectDeleteEvent handles the CLA Group (projects table) delete event
+func (s *service) removeCLAPermissions(projectSFID string) error {
+	f := logrus.Fields{
+		"functionName": "removeCLAPermissions",
+		"projectSFID":  projectSFID,
+	}
+	log.WithFields(f).Debug("removing CLA permissions...")
+
+	roleErr := s.removeCLAPermissionsByRole(projectSFID, utils.CLAManagerRole)
+	if roleErr != nil {
+		return roleErr
+	}
+	roleErr = s.removeCLAPermissionsByRole(projectSFID, utils.CLADesigneeRole)
+	if roleErr != nil {
+		return roleErr
+	}
+	roleErr = s.removeCLAPermissionsByRole(projectSFID, utils.CLASignatoryRole)
+	if roleErr != nil {
+		return roleErr
+	}
+
+	return nil
+}
+
+// ProjectDeleteEvent handles the CLA Group (projects table) delete event
+func (s *service) removeCLAPermissionsByRole(projectSFID, roleName string) error {
+	f := logrus.Fields{
+		"functionName": "removeCLAPermissionsByRole",
+		"projectSFID":  projectSFID,
+		"roleName":     roleName,
+	}
+	log.WithFields(f).Debugf("removing CLA permissions for %s...", roleName)
+	client := acs_service.GetClient()
+	//roleID, roleLookupErr := client.GetRoleID(roleName)
+	_, roleLookupErr := client.GetRoleID(roleName)
+	if roleLookupErr != nil {
+		log.WithFields(f).Warnf("problem looking up role ID for %s, error: %+v", roleName, roleLookupErr)
+		return roleLookupErr
+	}
+
+	// TODO: figure out how to query ACS for the list of role assignments matching the provided projectSFID and roleID
 
 	return nil
 }
