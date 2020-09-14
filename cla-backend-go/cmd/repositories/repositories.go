@@ -146,8 +146,8 @@ func (t *TestBehaviour) RunGetProtectedBranch(assertBranchProtection *models.Git
 				return
 			}
 
-			if *response.BranchName != "master" {
-				F.AddError(fmt.Sprintf("Get Protected Branch - Default Branch Name expected : %s", *response.BranchName))
+			if response.BranchName == nil || *response.BranchName != "master" {
+				F.AddError("Get Protected Branch - Default Branch Name expected : master")
 			}
 
 			if len(response.StatusChecks) == 0 {
