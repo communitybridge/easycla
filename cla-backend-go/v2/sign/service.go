@@ -17,6 +17,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	acsService "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
 
 	organizationService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 
@@ -179,7 +180,9 @@ func (s *service) RequestCorporateSignature(lfUsername string, authorizationHead
 		// this would be used only in case of cla-signatory
 		err = prepareUserForSigning(input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
 		if err != nil {
-			return nil, err
+			if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); !ok {
+				return nil, err
+			}
 		}
 	} else {
 		var currentUserEmail string
@@ -199,7 +202,10 @@ func (s *service) RequestCorporateSignature(lfUsername string, authorizationHead
 
 		err = prepareUserForSigning(currentUserEmail, utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
 		if err != nil {
-			return nil, err
+			if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); !ok {
+				return nil, err
+			}
+
 		}
 	}
 	out, err := requestCorporateSignature(authorizationHeader, s.ClaV1ApiURL, &requestCorporateSignatureInput{
