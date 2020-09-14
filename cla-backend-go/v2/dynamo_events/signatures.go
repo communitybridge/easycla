@@ -64,7 +64,7 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 	if !oldSignature.SignatureSigned && newSignature.SignatureSigned {
 		err = s.signatureRepo.AddSignedOn(newSignature.SignatureID)
 		if err != nil {
-			log.WithField("signature_id", newSignature.SignatureID).Warnf("failed to add signed_on on signature")
+			log.WithField("signature_id", newSignature.SignatureID).Warnf("failed to add signed_on date/time to signature")
 		}
 		if newSignature.SignatureType == CCLASignatureType {
 			err = s.SetInitialCLAManagerACSPermissions(newSignature.SignatureID)
@@ -73,6 +73,7 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 			}
 		}
 	}
+
 	return nil
 }
 
