@@ -68,14 +68,8 @@ export class ClaEmployeeCompanyConfirmPage {
 
   ngOnInit() {
     this.user = JSON.parse(localStorage.getItem(generalConstants.USER_MODEL));
-    this.getProject(this.projectId);
+    this.project = JSON.parse(localStorage.getItem(generalConstants.PROJECT_MODEL));
     this.getCompany(this.companyId);
-  }
-
-  getProject(projectId) {
-    this.claService.getProject(projectId).subscribe((response) => {
-      this.project = response;
-    });
   }
 
   getCompany(companyId) {

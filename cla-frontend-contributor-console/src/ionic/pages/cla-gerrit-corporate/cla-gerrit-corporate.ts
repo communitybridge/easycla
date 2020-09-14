@@ -51,7 +51,7 @@ export class ClaGerritCorporatePage {
   ngOnInit() {
     this.getCompanies();
     this.getUserInfo();
-    this.getProject(this.gerritId);
+    this.getProject();
   }
 
   ionViewCanEnter() {
@@ -79,7 +79,6 @@ export class ClaGerritCorporatePage {
   getUserInfo() {
     // retrieve userInfo from auth0 service
     this.claService.postOrGetUserForGerrit().subscribe((user) => {
-      console.log(user);
       localStorage.setItem(generalConstants.USER_MODEL, JSON.stringify(user));
       this.userId = user.user_id;
     }, (error) => {
@@ -157,9 +156,13 @@ export class ClaGerritCorporatePage {
     });
   }
 
-  getProject(gerritId) {
-    this.claService.getGerrit(gerritId).subscribe((gerrit) => {
+  getProject() {
+    this.claService.getGerrit(this.gerritId).subscribe((gerrit) => {
       this.projectId = gerrit.project_id;
+
+      this.claService.getProjectWithAuthToken(gerrit.project_id).subscribe((project) => {
+        localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(project));
+      });
     });
   }
 }
