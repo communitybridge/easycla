@@ -18,7 +18,7 @@ var (
 
 // GetRepositoryByExternalID finds gitub repository by github repository id
 func GetRepositoryByExternalID(installationID, id int64) (*github.Repository, error) {
-	client, err := newGithubAppClient(installationID)
+	client, err := NewGithubAppClient(installationID)
 	if err != nil {
 		return nil, err
 	}

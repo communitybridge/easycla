@@ -75,6 +75,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 			})
 			return github_repositories.NewDeleteProjectGithubRepositoryOK()
 		})
+
 }
 
 // codedResponse interface
