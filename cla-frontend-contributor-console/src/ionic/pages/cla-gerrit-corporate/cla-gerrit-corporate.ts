@@ -6,6 +6,7 @@ import { NavController, NavParams, ViewController, ModalController, IonicPage } 
 import { ClaService } from '../../services/cla.service';
 import { AuthService } from '../../services/auth.service';
 import { Restricted } from '../../decorators/restricted';
+import { generalConstants } from '../../constants/general';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -78,6 +79,8 @@ export class ClaGerritCorporatePage {
   getUserInfo() {
     // retrieve userInfo from auth0 service
     this.claService.postOrGetUserForGerrit().subscribe((user) => {
+      console.log(user);
+      localStorage.setItem(generalConstants.USER_MODEL, JSON.stringify(user));
       this.userId = user.user_id;
     }, (error) => {
       // Got an auth error, redirect to the login

@@ -6,6 +6,7 @@ import { AlertController, IonicPage, ModalController, NavParams, ViewController 
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EmailValidator } from '../../validators/email';
 import { ClaService } from '../../services/cla.service';
+import { generalConstants } from '../../constants/general';
 
 @IonicPage({
   segment: 'cla/project/:projectId/repository/:repositoryId/user/:userId/employee/company/contact'
@@ -102,32 +103,25 @@ export class ClaEmployeeRequestAccessModal {
   }
 
   ngOnInit() {
-    this.getUser(this.userId, this.authenticated).subscribe((user) => {
-      if (user) {
-        // For Gerrit user user_emails is always null and only have a LF_email.
-        this.userEmails = user.user_emails || [];
-
-        if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
-          this.userEmails.push(user.lf_email);
-        }
-
-        if (this.userEmails.length === 1) {
-          this.form.controls['user_email'].setValue(user.user_emails[0]);
-        }
-      }
-    });
+    this.getUser();
     this.getProject(this.projectId);
     this.getCompany(this.companyId);
     this.getProjectSignatures(this.projectId, this.companyId);
   }
 
-  getUser(userId: string, authenticated: boolean) {
-    if (authenticated) {
-      // Gerrit Users
-      return this.claService.getUserWithAuthToken(userId);
-    } else {
-      // Github Users
-      return this.claService.getUser(userId);
+  getUser() {
+    const user = JSON.parse(localStorage.getItem(generalConstants.USER_MODEL));
+    if (user) {
+      // For Gerrit user user_emails is always null and only have a LF_email.
+      this.userEmails = user.user_emails || [];
+
+      if (user.lf_email && this.userEmails.indexOf(user.lf_email) == -1) {
+        this.userEmails.push(user.lf_email);
+      }
+
+      if (this.userEmails.length === 1) {
+        this.form.controls['user_email'].setValue(user.user_emails[0]);
+      }
     }
   }
 

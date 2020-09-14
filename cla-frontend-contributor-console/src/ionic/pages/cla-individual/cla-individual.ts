@@ -43,15 +43,9 @@ export class ClaIndividualPage {
   }
 
   ngOnInit() {
-    this.getUser(this.userId);
+    this.user = JSON.parse(localStorage.getItem(generalConstants.USER_MODEL));
     this.getProject(this.projectId);
     this.getUserSignatureIntent(this.userId);
-  }
-
-  getUser(userId) {
-    this.claService.getUser(userId).subscribe((response) => {
-      this.user = response;
-    });
   }
 
   getProject(projectId) {
