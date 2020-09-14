@@ -6,17 +6,15 @@ package main
 import (
 	"os"
 
-	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/template"
-
+	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/approval_list"
+	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/cla_group"
+	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/cla_manager"
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/company"
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/health"
-
-	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/cla_group"
-
-	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/cla_manager"
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/signatures"
+	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/template"
 
-	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/approval_list"
+	"github.com/communitybridge/easycla/cla-backend-go/cmd/repositories"
 
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/test_models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -98,5 +96,6 @@ func main() {
 	signatures.NewTestBehaviour(apiURL, auth0User1Config, auth0User2Config).RunAllTests()
 	approval_list.NewTestBehaviour(v2APIURL, auth0User1Config, auth0User2Config, auth0User3Config, auth0User4Config).RunAllTests()
 	cla_group.NewTestBehaviour(v2APIURL, auth0User5Config).RunAllTests()
+	repositories.NewTestBehaviour(v2APIURL, auth0User2Config).RunAllTests()
 	frisby.Global.PrintReport()
 }

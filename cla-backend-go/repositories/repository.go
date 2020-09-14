@@ -27,10 +27,10 @@ import (
 
 // index
 const (
-	ProjectRepositoryIndex                    = "project-repository-index"
-	SFDCRepositoryIndex                       = "sfdc-repository-index"
-	ExternalRepositoryIndex                   = "external-repository-index"
-	ProjectSFIDRepositoryOrgnizationNameIndex = "project-sfid-repository-organization-name-index"
+	ProjectRepositoryIndex                     = "project-repository-index"
+	SFDCRepositoryIndex                        = "sfdc-repository-index"
+	ExternalRepositoryIndex                    = "external-repository-index"
+	ProjectSFIDRepositoryOrganizationNameIndex = "project-sfid-repository-organization-name-index"
 )
 
 // errors
@@ -297,7 +297,7 @@ func (repo repo) ListProjectRepositories(externalProjectID string, projectSFID s
 		indexName = SFDCRepositoryIndex
 	} else {
 		condition = expression.Key("project_sfid").Equal(expression.Value(projectSFID))
-		indexName = ProjectSFIDRepositoryOrgnizationNameIndex
+		indexName = ProjectSFIDRepositoryOrganizationNameIndex
 	}
 
 	// Add the enabled filter
