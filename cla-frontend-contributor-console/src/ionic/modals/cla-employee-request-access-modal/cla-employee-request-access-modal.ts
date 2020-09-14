@@ -103,13 +103,13 @@ export class ClaEmployeeRequestAccessModal {
   }
 
   ngOnInit() {
-    this.getUser();
-    this.getProject(this.projectId);
-    this.getCompany(this.companyId);
-    this.getProjectSignatures(this.projectId, this.companyId);
+    this.project = JSON.parse(localStorage.getItem(generalConstants.PROJECT_MODEL));
+    this.getUserEmails();
+    this.getCompany();
+    this.getProjectSignatures();
   }
 
-  getUser() {
+  getUserEmails() {
     const user = JSON.parse(localStorage.getItem(generalConstants.USER_MODEL));
     if (user) {
       // For Gerrit user user_emails is always null and only have a LF_email.
@@ -125,14 +125,8 @@ export class ClaEmployeeRequestAccessModal {
     }
   }
 
-  getProject(projectId: string) {
-    this.claService.getProject(projectId).subscribe((response) => {
-      this.project = response;
-    });
-  }
-
-  getCompany(companyId: string) {
-    this.claService.getCompany(companyId).subscribe((response) => {
+  getCompany() {
+    this.claService.getCompany(this.companyId).subscribe((response) => {
       this.company = response;
     });
   }
@@ -144,10 +138,10 @@ export class ClaEmployeeRequestAccessModal {
     });
   }
 
-  getProjectSignatures(projectId: string, companyId: string) {
+  getProjectSignatures() {
     // Get CCLA Company Signatures - should just be one
     this.loading = true;
-    this.claService.getCompanyProjectSignatures(companyId, projectId).subscribe(
+    this.claService.getCompanyProjectSignatures(this.companyId, this.projectId).subscribe(
       (response) => {
         this.loading = false;
         if (response.signatures) {

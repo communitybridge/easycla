@@ -78,7 +78,7 @@ export class ClaGerritIndividualPage {
       //retrieve project info with project Id
       this.claService.getProjectWithAuthToken(gerrit.project_id).subscribe((project) => {
         this.project = project;
-
+        localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(project));
         // retrieve userInfo from auth0 service
         this.claService.postOrGetUserForGerrit().subscribe((user) => {
           this.userId = user.user_id;

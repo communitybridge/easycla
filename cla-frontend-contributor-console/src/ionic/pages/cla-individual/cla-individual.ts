@@ -44,19 +44,13 @@ export class ClaIndividualPage {
 
   ngOnInit() {
     this.user = JSON.parse(localStorage.getItem(generalConstants.USER_MODEL));
-    this.getProject(this.projectId);
-    this.getUserSignatureIntent(this.userId);
+    this.project = JSON.parse(localStorage.getItem(generalConstants.PROJECT_MODEL));
+    this.getUserSignatureIntent();
   }
 
-  getProject(projectId) {
-    this.claService.getProject(projectId).subscribe((response) => {
-      this.project = response;
-    });
-  }
-
-  getUserSignatureIntent(userId) {
+  getUserSignatureIntent() {
     this.loadingSignature = true;
-    this.claService.getUserSignatureIntent(userId).subscribe((response) => {
+    this.claService.getUserSignatureIntent(this.userId).subscribe((response) => {
       this.signatureIntent = response;
       if (this.signatureIntent !== null) {
         this.postSignatureRequest();

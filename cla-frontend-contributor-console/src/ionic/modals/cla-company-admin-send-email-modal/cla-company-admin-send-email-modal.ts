@@ -54,10 +54,10 @@ export class ClaCompanyAdminSendEmailModal {
   }
 
   ngOnInit() {
-    this.getUser();
+    this.getUserEmails();
   }
 
-  getUser() {
+  getUserEmails() {
     const user = JSON.parse(localStorage.getItem(generalConstants.USER_MODEL));
     if (user) {
       this.userEmails = user.user_emails || [];

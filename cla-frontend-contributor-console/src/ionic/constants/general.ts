@@ -11,6 +11,7 @@ export const generalConstants = {
     easyCLAHelpURL: 'https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/easycla-faqs',
     githubEmailURL: 'https://github.com/settings/emails',
     easyCLADocURL: 'https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla',
-    USER_MODEL: 'userModel'
+    USER_MODEL: 'userModel',
+    PROJECT_MODEL: 'projectModel'
 
 } 

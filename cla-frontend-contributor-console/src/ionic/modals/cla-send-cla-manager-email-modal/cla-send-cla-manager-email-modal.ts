@@ -58,12 +58,12 @@ export class ClaSendClaManagerEmailModal {
   }
 
   ngOnInit() {
-    this.getUser();
+    this.project = JSON.parse(localStorage.getItem(generalConstants.PROJECT_MODEL));
+    this.getUserEmails();
     this.getCompany();
-    this.getProject(this.projectId)
   }
 
-  getUser() {
+  getUserEmails() {
     const user = JSON.parse(localStorage.getItem(generalConstants.USER_MODEL));
     if (user) {
       this.userEmails = user.user_emails || [];
@@ -108,12 +108,6 @@ export class ClaSendClaManagerEmailModal {
         this.hasRequestError = true;
       }
     );
-  }
-
-  getProject(projectId) {
-    this.claService.getProject(projectId).subscribe((response) => {
-      this.project = response;
-    });
   }
 
   emailSent() {
