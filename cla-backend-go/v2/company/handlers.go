@@ -389,7 +389,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 		})
 
 	api.CompanyAssignCompanyOwnerHandler = company.AssignCompanyOwnerHandlerFunc(
-		func(params company.AssignCompanyOwnerParams, authUser *auth.User) middleware.Responder {
+		func(params company.AssignCompanyOwnerParams) middleware.Responder {
 			f := logrus.Fields{
 				"functionName": "CompanyCompanyAssignCompanyOwnerHandler",
 				"CompanySFID":  params.CompanySFID,

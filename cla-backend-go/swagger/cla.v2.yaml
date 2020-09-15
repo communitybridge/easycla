@@ -2138,11 +2138,8 @@ paths:
   /company/{companySFID}/company-owner:
     post:
       operationId: assignCompanyOwner
+      security: []
       parameters:
-        - $ref: "#/parameters/x-request-id"
-        - $ref: "#/parameters/x-acl"
-        - $ref: "#/parameters/x-username"
-        - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-companySFID"
         - name: body
           in: body
