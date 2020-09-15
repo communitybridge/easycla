@@ -502,22 +502,6 @@ func (s *service) CreateContibutor(companyID string, projectID string, userEmail
 			},
 		})
 
-	if user.Type == Lead {
-		log.Debugf("Converting user: %s from lead to contact ", userEmail)
-		contactErr := userClient.ConvertToContact(user.ID)
-		if contactErr != nil {
-			log.Debugf("failed to convert user: %s to contact ", userEmail)
-			return nil, contactErr
-		}
-		// Log user conversion event
-		s.eventService.LogEvent(&events.LogEventArgs{
-			EventType:         events.ConvertUserToContactType,
-			LfUsername:        user.Username,
-			ExternalProjectID: projectID,
-			EventData:         &events.UserConvertToContactData{},
-		})
-	}
-
 	contributor := &models.Contributor{
 		LfUsername:  user.Username,
 		UserSfid:    user.ID,
