@@ -1239,11 +1239,7 @@ Once complete, notify the user %s and they will be able to add you as a CLA Mana
 	acsClient := v2AcsService.GetClient()
 	automate := false
 
-	acsErr := acsClient.SendUserInvite(&userWithNoLFIDEmail, role, "project|organization", projectID, organizationID, "userinvite", &subject, &body, automate)
-	if acsErr != nil {
-		return acsErr
-	}
-	return nil
+	return acsClient.SendUserInvite(&userWithNoLFIDEmail, role, "project|organization", projectID, organizationID, "userinvite", &subject, &body, automate)
 }
 
 // buildErrorMessage helper function to build an error message

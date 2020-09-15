@@ -123,7 +123,7 @@ func (ac *Client) SendUserInvite(email *string,
 		*email, scope, roleName, inviteType, organizationID)
 	if inviteErr != nil {
 		log.WithFields(f).Error("CreateUserInvite failed", inviteErr)
-		return nil
+		return inviteErr
 	}
 
 	log.WithFields(f).Debugf("CreatedUserInvite :%+v", result.Payload)
