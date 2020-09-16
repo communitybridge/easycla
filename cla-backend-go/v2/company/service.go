@@ -747,6 +747,8 @@ func (s *service) AssignCompanyOwner(companySFID string, userEmail string) (*mod
 	acsClient := acs_service.GetClient()
 	userClient := v2UserService.GetClient()
 	user, err := userClient.SearchUserByEmail(userEmail)
+	//Orgs to check whether user is company-owner
+	orgs := []string{companySFID}
 	if err != nil {
 		msg := fmt.Sprintf("Failed searching user by email :%s ", userEmail)
 		log.Warn(msg)
@@ -762,12 +764,10 @@ func (s *service) AssignCompanyOwner(companySFID string, userEmail string) (*mod
 		// Check if user is in organization
 		var userOrg string
 		if user.Account.ID != companySFID {
-			userOrg = user.Account.ID
-		} else {
-			userOrg = companySFID
+			orgs = append(orgs, user.Account.ID)
 		}
 		log.Info(fmt.Sprintf("Checking company-owner against company: %s ", userOrg))
-		hasOwnerScope, err = orgClient.IsCompanyOwner(user.ID, userOrg)
+		hasOwnerScope, err = orgClient.IsCompanyOwner(user.ID, orgs)
 		if err != nil {
 			return nil, err
 		}
@@ -793,7 +793,7 @@ func (s *service) AssignCompanyOwner(companySFID string, userEmail string) (*mod
 				err := orgClient.CreateOrgUserRoleOrgScope(userEmail, companySFID, roleID)
 				if err != nil {
 					log.Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", userEmail, err)
-					return nil, err
+					return nil, nil
 				}
 				return &models.CompanyOwner{
 					LfUsername:  user.Username,
