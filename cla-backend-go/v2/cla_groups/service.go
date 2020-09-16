@@ -733,6 +733,13 @@ func (s *service) DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth
 		log.WithFields(f).Warnf("unable to fetch project IDs for CLA Group, error: %+v", projErr)
 		return projErr
 	}
+	log.WithFields(f).Debugf("loading %d Project CLA Group entries", len(projectCLAGroupEntries))
+
+	projectIDList := utils.NewStringSet()
+	for _, projectCLAGroupEntry := range projectCLAGroupEntries {
+		// Add the project ID to our list - we'll remove the entry in the Project CLA Group in a bit...
+		projectIDList.Add(projectCLAGroupEntry.ProjectSFID)
+	}
 
 	// Note: most of these delete/cleanup calls are done in a go routine
 	// Error channel to send back the results
@@ -872,23 +879,8 @@ func (s *service) DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth
 		}(signatureCompanyIDModel.CompanyID, claGroupModel.ProjectID)
 		goRoutineCount++
 
-		// Delete the CLA Group Project association table entries
-		go func(claGroupID string) {
-			log.WithFields(f).Debug("deleting cla_group project associations")
-			err := s.projectsClaGroupsRepo.RemoveProjectAssociatedWithClaGroup(claGroupID, []string{}, true)
-			if err != nil {
-				log.WithFields(f).Warn(err)
-				errChan <- err
-				return
-			}
-
-			// No errors - nice...return nil
-			errChan <- nil
-		}(claGroupModel.ProjectID)
-		goRoutineCount++
-
 		// For each project associated with the CLA Group...
-		for _, projectCLAGroupEntry := range projectCLAGroupEntries {
+		for _, pID := range projectIDList.List() {
 
 			// Remove CLA Manager role
 			go func(companySFID, projectSFID string, authUser *auth.User) {
@@ -902,7 +894,7 @@ func (s *service) DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth
 
 				// No errors - nice...return nil
 				errChan <- nil
-			}(signatureCompanyIDModel.CompanySFID, projectCLAGroupEntry.ProjectSFID, authUser)
+			}(signatureCompanyIDModel.CompanySFID, pID, authUser)
 			goRoutineCount++
 
 			// Remove CLA Manager Designee
@@ -916,7 +908,7 @@ func (s *service) DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth
 				}
 				// No errors - nice...return nil
 				errChan <- nil
-			}(signatureCompanyIDModel.CompanySFID, projectCLAGroupEntry.ProjectSFID, authUser)
+			}(signatureCompanyIDModel.CompanySFID, pID, authUser)
 			goRoutineCount++
 
 			// Remove CLA signatories role
@@ -931,7 +923,7 @@ func (s *service) DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth
 
 				// No errors - nice...return nil
 				errChan <- nil
-			}(signatureCompanyIDModel.CompanySFID, projectCLAGroupEntry.ProjectSFID, authUser)
+			}(signatureCompanyIDModel.CompanySFID, pID, authUser)
 			goRoutineCount++
 		}
 	}
@@ -946,11 +938,18 @@ func (s *service) DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth
 		}
 	}
 
+	log.WithFields(f).Debugf("removing %d project cla group entries...", projectIDList.Length())
+	projDeleteErr := s.projectsClaGroupsRepo.RemoveProjectAssociatedWithClaGroup(claGroupModel.ProjectID, projectIDList.List(), true)
+	if projDeleteErr != nil {
+		log.WithFields(f).Warnf("problem deleting project CLA Group entries, error: %+v", projDeleteErr)
+		return projDeleteErr
+	}
+
 	// Finally, delete the CLA Group last...
 	log.WithFields(f).Debug("finally, deleting cla_group from dynamodb")
 	err := s.v1ProjectService.DeleteCLAGroup(claGroupModel.ProjectID)
 	if err != nil {
-		log.WithFields(f).Warnf("deleting cla_group from dynamodb failed. error = %s", err.Error())
+		log.WithFields(f).Warnf("problem deleting cla_group, error: %+v", err)
 		return err
 	}
 
@@ -999,11 +998,11 @@ func (s *service) ListClaGroupsForFoundationOrProject(projectOrFoundationSFID st
 	log.WithFields(f).Debug("looking up foundation/project in platform project service...")
 	sfProjectModelDetails, projDetailsErr := v2ProjectService.GetClient().GetProject(projectOrFoundationSFID)
 	if projDetailsErr != nil {
-		log.WithFields(f).Warnf("unable to lookup foundation/project, error: %+v", projDetailsErr)
+		log.WithFields(f).Warnf("unable to lookup CLA Group by foundation or project, error: %+v", projDetailsErr)
 	}
 
 	if sfProjectModelDetails == nil {
-		return nil, fmt.Errorf("unable to find foundation by ID: %s", projectOrFoundationSFID)
+		return nil, nil
 	}
 
 	// Lookup the foundation name - need this if we were a project - need to lookup parent ID/Name
