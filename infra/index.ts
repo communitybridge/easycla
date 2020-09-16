@@ -495,6 +495,7 @@ function buildGitHubOrgsTable(importResources: boolean): aws.dynamodb.Table {
       name: 'cla-' + stage + '-github-orgs',
       attributes: [
         { name: 'organization_name', type: 'S' },
+        { name: 'organization_name_lower', type: 'S' },
         { name: 'organization_sfid', type: 'S' },
         { name: 'project_sfid', type: 'S' },
       ],
@@ -516,6 +517,13 @@ function buildGitHubOrgsTable(importResources: boolean): aws.dynamodb.Table {
           name: 'project-sfid-organization-name-index',
           hashKey: 'project_sfid',
           rangeKey: 'organization_name',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
+        },
+        {
+          name: 'organization-name-lower-search-index',
+          hashKey: 'organization_name_lower',
           projectionType: 'ALL',
           readCapacity: defaultReadCapacity,
           writeCapacity: defaultWriteCapacity,
