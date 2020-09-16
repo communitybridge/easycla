@@ -8,6 +8,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/health"
 	v1Health "github.com/communitybridge/easycla/cla-backend-go/health"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/jinzhu/copier"
 )
@@ -16,6 +17,7 @@ import (
 func Configure(api *operations.EasyclaAPI, service v1Health.Service) {
 
 	api.HealthHealthCheckHandler = health.HealthCheckHandlerFunc(func(params health.HealthCheckParams) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
 		result, err := service.HealthCheck(params.HTTPRequest.Context())
 		if err != nil {
 			return health.NewHealthCheckBadRequest().WithPayload(errorResponse(err))
@@ -25,7 +27,7 @@ func Configure(api *operations.EasyclaAPI, service v1Health.Service) {
 		if err != nil {
 			return health.NewHealthCheckBadRequest().WithPayload(errorResponse(err))
 		}
-		return health.NewHealthCheckOK().WithPayload(&response)
+		return health.NewHealthCheckOK().WithXRequestID(reqID).WithPayload(&response)
 	})
 }
 

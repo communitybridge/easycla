@@ -46,9 +46,15 @@ paths:
       description: Returns the API health status
       security: []
       operationId: healthCheck
+      parameters:
+        - $ref: "#/parameters/x-request-id"
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/health'
         '503':
@@ -105,6 +111,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/cla-manager-distribution'
         '400':
@@ -129,6 +139,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/total-count-metrics'
         '400':
@@ -158,6 +172,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/company-metric'
         '400':
@@ -182,6 +200,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/top-companies'
         '400':
@@ -206,6 +228,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/top-projects'
         '400':
@@ -243,6 +269,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/sf-project-metric'
         '400':
@@ -267,6 +297,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/list-project-metric'
         '400':
@@ -293,6 +327,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/company-project-metrics'
         '400':
@@ -324,6 +362,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/cla-group'
         '400':
@@ -355,6 +397,10 @@ paths:
       responses:
         '204':
           description: 'Resource Deleted'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -388,6 +434,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '403':
@@ -419,6 +469,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '403':
@@ -444,6 +498,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/cla-group-list'
         '400':
@@ -471,6 +529,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/foundation-mapping-list'
         '400':
@@ -501,6 +563,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/cla-group-validation-response'
         '400':
@@ -533,6 +599,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/project'
         '400':
@@ -564,6 +634,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/projects'
         '400':
@@ -595,6 +669,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/project'
         '400':
@@ -621,6 +699,10 @@ paths:
       responses:
         '204':
           description: 'Resource Deleted'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -648,6 +730,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/enabled-cla-list'
         '400':
@@ -682,6 +768,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/projects'
         '400':
@@ -714,6 +804,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/project'
         '400':
@@ -745,6 +839,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/event-list'
         '400':
@@ -776,6 +874,10 @@ paths:
       responses:
         '200':
           description: 'The events for the SFDC foundation as a CSV document'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -807,6 +909,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/event-list'
         '400':
@@ -840,6 +946,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/event-list'
         '400':
@@ -871,6 +981,10 @@ paths:
       responses:
         '200':
           description: 'The events for the SFDC project as a CSV document'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -904,6 +1018,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/event-list'
         '400':
@@ -932,6 +1050,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             type: array
             items:
@@ -966,6 +1088,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/template-pdfs'
         '400':
@@ -1007,6 +1133,10 @@ paths:
       responses:
         '200':
           description: 'A PDF file'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1037,6 +1167,10 @@ paths:
       responses:
         '200':
           description: 'A PDF File'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1073,6 +1207,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/github-organization'
         '400':
@@ -1101,6 +1239,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/project-github-organizations'
         '400':
@@ -1140,6 +1282,10 @@ paths:
       responses:
         '200':
           description: 'Resource Updated'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1172,6 +1318,10 @@ paths:
       responses:
         '204':
           description: 'Updated Deleted'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1205,6 +1355,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/github-repository'
         '400':
@@ -1233,6 +1387,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/list-github-repositories'
         '400':
@@ -1267,6 +1425,10 @@ paths:
       responses:
         '204':
           description: 'Resource Deleted'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1304,6 +1466,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/github-repository-branch-protection'
         '400':
@@ -1339,6 +1505,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/github-repository-branch-protection'
         '400':
@@ -1369,6 +1539,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/icla-signatures'
         '400':
@@ -1398,6 +1572,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/corporate-contributor-list'
         '400':
@@ -1429,6 +1607,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/signature'
         '400':
@@ -1462,6 +1644,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/signed_document'
         '400':
@@ -1496,6 +1682,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/signatures'
         '400':
@@ -1530,6 +1720,10 @@ paths:
       responses:
         '200':
           description: 'The CLA Group ICLAs as a zip'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/url-object'
         '400':
@@ -1562,6 +1756,10 @@ paths:
       responses:
         '200':
           description: 'The CLA Group ICLAs as a CSV file'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1592,6 +1790,10 @@ paths:
       responses:
         '200':
           description: "The user's ICLA as a PDF document"
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1622,6 +1824,10 @@ paths:
       responses:
         '200':
           description: 'The CLA Group CCLAs as a zip'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/url-object'
         '400':
@@ -1653,6 +1859,10 @@ paths:
       responses:
         '200':
           description: 'The CLA Group corporate CLAs as a CSV file'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1681,6 +1891,10 @@ paths:
       responses:
         '200':
           description: 'The corporate CLA as a PDF document'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -1713,6 +1927,10 @@ paths:
       responses:
         '200':
           description: "The CLA Group employee CLA's as a CSV file"
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '404':
@@ -1741,6 +1959,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/signatures'
         '400':
@@ -1776,6 +1998,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/signatures'
         '400':
@@ -1812,6 +2038,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/signatures'
         '400':
@@ -1850,6 +2080,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/signatures'
         '400':
@@ -1887,6 +2121,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/signature'
         '400':
@@ -1917,6 +2155,10 @@ paths:
       responses:
         '204':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '404':
           $ref: '#/responses/not-found'
         '400':
@@ -1961,6 +2203,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/cla-manager-designees'
         '202':
@@ -2011,6 +2257,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: "#/definitions/cla-manager-designee"
         '202':
@@ -2049,6 +2299,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/company-cla-manager'
         '400':
@@ -2086,6 +2340,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/contributor'
         '400':
@@ -2118,6 +2376,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/contributors'
         '400':
@@ -2154,6 +2416,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/company-owner'
         '400':
@@ -2185,6 +2451,10 @@ paths:
       responses:
         '204':
           description: 'Resource Deleted'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -2224,6 +2494,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/cla-manager-designees'
         '400':
@@ -2265,6 +2539,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/cla-manager-designee'
         '400':
@@ -2295,6 +2573,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             type: array
             items:
@@ -2329,6 +2611,10 @@ paths:
       responses:
         '204':
           description: 'Resource Deleted'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             type: array
             items:
@@ -2363,6 +2649,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             type: array
             items:
@@ -2392,6 +2682,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/gerrit-repo-list'
         '400':
@@ -2424,6 +2718,10 @@ paths:
       responses:
         '204':
           description: 'Resource Deleted'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '404':
@@ -2450,6 +2748,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/gerrit-list'
         '400':
@@ -2479,6 +2781,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/gerrit'
         '400':
@@ -2508,6 +2814,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/company'
         '400':
@@ -2539,6 +2849,10 @@ paths:
       responses:
         '204':
           description: 'Resource Deleted'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -2568,6 +2882,10 @@ paths:
       responses:
         '204':
           description: 'Resource Deleted'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -2596,6 +2914,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/company-cla-managers'
         '400':
@@ -2621,6 +2943,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/company-cla-managers'
         '400':
@@ -2649,6 +2975,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/active-cla-list'
         '400':
@@ -2677,6 +3007,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/corporate-contributor-list'
         '400':
@@ -2700,6 +3034,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/company-admin-list'
         '400':
@@ -2721,6 +3059,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/company-project-cla-list'
         '400':
@@ -2750,6 +3092,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/company-output'
         '400':
@@ -2781,6 +3127,10 @@ paths:
       responses:
         '200':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/corporate-signature-output'
         '400':
@@ -2801,34 +3151,66 @@ paths:
 responses:
   unauthorized:
     description: Unauthorized
+    headers:
+      x-request-id:
+        type: string
+        description: The unique request ID value - assigned/set by the API Gateway based on the session
     schema:
       $ref: '#/definitions/error-response'
   invalid-request:
     description: Invalid request
+    headers:
+      x-request-id:
+        type: string
+        description: The unique request ID value - assigned/set by the API Gateway based on the session
     schema:
       $ref: '#/definitions/error-response'
   forbidden:
     description: Insufficient privilege to execute action
+    headers:
+      x-request-id:
+        type: string
+        description: The unique request ID value - assigned/set by the API Gateway based on the session
     schema:
       $ref: '#/definitions/error-response'
   not-found:
     description: Not found
+    headers:
+      x-request-id:
+        type: string
+        description: The unique request ID value - assigned/set by the API Gateway based on the session
     schema:
       $ref: '#/definitions/error-response'
   internal-server-error:
     description: Internal server error
+    headers:
+      x-request-id:
+        type: string
+        description: The unique request ID value - assigned/set by the API Gateway based on the session
     schema:
       $ref: '#/definitions/error-response'
   conflict:
     description: Duplicate Resource
+    headers:
+      x-request-id:
+        type: string
+        description: The unique request ID value - assigned/set by the API Gateway based on the session
     schema:
       $ref: '#/definitions/error-response'
   accepted-request:
     description: Accepted request
+    headers:
+      x-request-id:
+        type: string
+        description: The unique request ID value - assigned/set by the API Gateway based on the session
     schema:
       $ref: '#/definitions/success-response'
   unprocessable-entity:
     description: Unprocessable Entity - Validation Failure
+    headers:
+      x-request-id:
+        type: string
+        description: The unique request ID value - assigned/set by the API Gateway based on the session
     schema:
       $ref: '#/definitions/error-response'
 
@@ -4201,7 +4583,7 @@ definitions:
     x-nullable: false
     title: Error Response
     description: Standard error format
-    properties: 
+    properties:
       Code:
         description: The error code
         example: "404"
@@ -4216,7 +4598,7 @@ definitions:
     x-nullable: false
     title: Success Response
     description: Standard success format
-    properties: 
+    properties:
       Code:
         description: The success code
         example: "202"
