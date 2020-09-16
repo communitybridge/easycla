@@ -81,7 +81,7 @@ type Service interface {
 	GetCompanyProjectActiveCLAs(companyID string, projectSFID string) (*models.ActiveClaList, error)
 	GetCompanyProjectContributors(projectSFID string, companySFID string, searchTerm string) (*models.CorporateContributorList, error)
 	GetCompanyProjectCLA(authUser *auth.User, companySFID, projectSFID string) (*models.CompanyProjectClaList, error)
-	CreateCompany(companyName string, companyWebsite string, userEmail string, userID string, LFXPortalURL string) (*models.CompanyOutput, error)
+	CreateCompany(companyName string, companyWebsite string, userEmail string, userID string) (*models.CompanyOutput, error)
 	GetCompanyByName(companyName string) (*models.Company, error)
 	GetCompanyByID(companyID string) (*models.Company, error)
 	GetCompanyBySFID(companySFID string) (*models.Company, error)
@@ -91,7 +91,7 @@ type Service interface {
 	AssociateContributor(companySFID, userEmail string) (*models.Contributor, error)
 	AssociateContributorByGroup(companySFID, userEmail string, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields, ClaGroupID string) ([]*models.Contributor, string, error)
 	GetCompanyAdmins(companyID string) (*models.CompanyAdminList, error)
-	AssignCompanyOwner(companySFID string, userEmail string) (*models.CompanyOwner, error)
+	AssignCompanyOwner(companySFID string, userEmail string, LFXPortalURL string) (*models.CompanyOwner, error)
 }
 
 // ProjectRepo contains project repo methods
@@ -283,8 +283,8 @@ func (s *service) GetCompanyProjectContributors(projectSFID string, companySFID 
 	}, nil
 }
 
-func (s *service) CreateCompany(companyName string, companyWebsite string, userEmail string, userID string, LFXPortalURL string) (*models.CompanyOutput, error) {
-	f := logrus.Fields{"companyName": companyName, "companyWebsite": companyWebsite, "userID": userID, "LFXPortalURL": LFXPortalURL}
+func (s *service) CreateCompany(companyName string, companyWebsite string, userEmail string, userID string) (*models.CompanyOutput, error) {
+	f := logrus.Fields{"companyName": companyName, "companyWebsite": companyWebsite, "userID": userID}
 	var lfUser *v2UserServiceModels.User
 
 	// Create Sales Force company
@@ -312,9 +312,6 @@ func (s *service) CreateCompany(companyName string, companyWebsite string, userE
 			lfUser.Account.ID = org.ID
 		}
 
-		//Send Email to User with instructions to complete Company profile
-		log.WithFields(f).Debugf("Sending Email to user :%s to complete setup for newly created Org: %s ", userEmail, org.Name)
-		sendEmailToUserCompanyProfile(org.Name, userEmail, lfUser.Username, LFXPortalURL)
 	}
 
 	// Create Easy CLA Company
@@ -742,7 +739,7 @@ func (s *service) GetCompanyCLAGroupManagers(companyID, claGroupID string) (*mod
 	return &models.CompanyClaManagers{List: claManagers}, nil
 }
 
-func (s *service) AssignCompanyOwner(companySFID string, userEmail string) (*models.CompanyOwner, error) {
+func (s *service) AssignCompanyOwner(companySFID string, userEmail string, LFXPortalURL string) (*models.CompanyOwner, error) {
 	orgClient := orgService.GetClient()
 	acsClient := acs_service.GetClient()
 	userClient := v2UserService.GetClient()
@@ -795,6 +792,14 @@ func (s *service) AssignCompanyOwner(companySFID string, userEmail string) (*mod
 					log.Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", userEmail, err)
 					return nil, nil
 				}
+				org, orgErr := orgClient.GetOrganization(companySFID)
+				if orgErr != nil {
+					log.Warnf("Failed to get company by SFID: %s, error: %+v", companySFID, orgErr)
+					return nil, orgErr
+				}
+				//Send Email to User with instructions to complete Company profile
+				log.Debugf("Sending Email to user :%s to complete setup for newly created Org: %s ", userEmail, org.Name)
+				sendEmailToUserCompanyProfile(org.Name, userEmail, user.Username, LFXPortalURL)
 				return &models.CompanyOwner{
 					LfUsername:  user.Username,
 					Name:        user.Name,
@@ -1230,6 +1235,7 @@ func sendEmailToUserCompanyProfile(orgName string, userEmail string, username st
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the newly created Salesforce Organization %s.</p>
+<p> You have been assigned as the company owner for this new organization </p>
 <p>The organization profile can be completed via <a href="%s/company/manage/" target="_blank">clicking this link</a>
 %s
 %s`,
