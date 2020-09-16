@@ -812,7 +812,7 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companySFID string,
 		msg := fmt.Sprintf("User: %s does not have an LF Login", userEmail)
 		log.WithFields(f).Warn(msg)
 		// Send email
-		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, authUser.Email, fullName, userEmail, v1CompanyModel.CompanyID, &projectSF.ID, utils.CLADesigneeRole)
+		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, authUser.Email, fullName, userEmail, companySFID, &projectSF.ID, utils.CLADesigneeRole)
 		if sendEmailErr != nil {
 			log.WithFields(f).Warnf("Error sending email: %+v", sendEmailErr)
 			return nil, sendEmailErr
