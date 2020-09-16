@@ -634,6 +634,8 @@ func (s *service) CreateCLAManagerDesignee(companySFID string, projectSFID strin
 //CreateCLAManagerDesigneeByGroup creates designee by group for cla manager prospect
 func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error) {
 	var designeeScopes []*models.ClaManagerDesignee
+	userEmail := params.Body.UserEmail.String()
+	userService := v2UserService.GetClient()
 
 	claGroupID := projectCLAGroups[0].ClaGroupID
 	signedAtFoundationLevel, signedErr := s.projectService.SignedAtFoundationLevel(claGroupID)
@@ -645,7 +647,7 @@ func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAMa
 	if signedAtFoundationLevel {
 		foundationSFID := projectCLAGroups[0].FoundationSFID
 		if foundationSFID != "" {
-			claManagerDesignee, err := s.CreateCLAManagerDesignee(params.CompanySFID, foundationSFID, params.Body.UserEmail.String())
+			claManagerDesignee, err := s.CreateCLAManagerDesignee(params.CompanySFID, foundationSFID, userEmail)
 			if err != nil {
 				if err == ErrCLAManagerDesigneeConflict {
 					msg := fmt.Sprintf("Conflict assigning cla manager role for Foundation SFID: %s ", foundationSFID)
@@ -676,7 +678,7 @@ func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAMa
 			go func(swg *sync.WaitGroup, pcg *projects_cla_groups.ProjectClaGroup, designeeChannel chan *result) {
 				defer swg.Done()
 				log.WithFields(f).Debugf("creating CLA Manager Designee for Project SFID: %s", pcg.ProjectSFID)
-				claManagerDesignee, err := s.CreateCLAManagerDesignee(params.CompanySFID, pcg.ProjectSFID, params.Body.UserEmail.String())
+				claManagerDesignee, err := s.CreateCLAManagerDesignee(params.CompanySFID, pcg.ProjectSFID, userEmail)
 				var output result
 				if err != nil {
 					if err == ErrCLAManagerDesigneeConflict {
@@ -708,6 +710,27 @@ func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAMa
 			}
 			designeeScopes = append(designeeScopes, resultCh.designee)
 		}
+	}
+
+	lfxUser, userErr := userService.SearchUsersByEmail(userEmail)
+	if userErr != nil {
+		msg := fmt.Sprintf("Failed to get user by email: %s, error: %+v", userEmail, userErr)
+		return nil, msg, ErrLFXUserNotFound
+	}
+
+	if lfxUser.Type == utils.Lead {
+		log.Debugf("Converting user: %s from lead to contact ", userEmail)
+		contactErr := userService.ConvertToContact(lfxUser.ID)
+		if contactErr != nil {
+			msg := fmt.Sprintf("failed to convert user: %s to contact ", userEmail)
+			return nil, msg, contactErr
+		}
+		// Log user conversion event
+		s.eventService.LogEvent(&events.LogEventArgs{
+			EventType:  events.ConvertUserToContactType,
+			LfUsername: lfxUser.Username,
+			EventData:  &events.UserConvertToContactData{},
+		})
 	}
 
 	return designeeScopes, "", nil
