@@ -158,7 +158,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				})
 			}
 
-			companyModel, err := service.CreateCompany(*params.Input.CompanyName, *params.Input.CompanyWebsite, params.Input.UserEmail.String(), params.UserID, LFXPortalURL)
+			companyModel, err := service.CreateCompany(*params.Input.CompanyName, *params.Input.CompanyWebsite, params.Input.UserEmail.String(), params.UserID)
 			if err != nil {
 				log.Warnf("error returned from create company api: %+v", err)
 				if strings.Contains(err.Error(), "website already exists") {
@@ -396,7 +396,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				"Email":        params.Body.UserEmail.String(),
 			}
 			log.WithFields(f).Debugf("processing Assigning Company owner role to user")
-			companyOwner, ownerErr := service.AssignCompanyOwner(params.CompanySFID, params.Body.UserEmail.String())
+			companyOwner, ownerErr := service.AssignCompanyOwner(params.CompanySFID, params.Body.UserEmail.String(), LFXPortalURL)
 			if ownerErr != nil {
 				if _, ok := ownerErr.(*organizations.ListOrgUsrAdminScopesNotFound); !ok {
 					log.WithFields(f).Debugf("Problem assigning company owner , error: %+v ", ownerErr)
