@@ -84,35 +84,42 @@ func (osc *Client) CreateOrgUserRoleOrgScope(emailID string, organizationID stri
 }
 
 // IsCompanyOwner checks if User is company owner
-func (osc *Client) IsCompanyOwner(userSFID string, organizationID string) (bool, error) {
+func (osc *Client) IsCompanyOwner(userSFID string, orgs []string) (bool, error) {
 	tok, err := token.GetToken()
 	if err != nil {
 		return false, err
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
-	params := &organizations.ListOrgUsrAdminScopesParams{
-		SalesforceID: organizationID,
-		Context:      context.Background(),
-	}
-	result, scopeErr := osc.cl.Organizations.ListOrgUsrAdminScopes(params, clientAuth)
-	if scopeErr != nil {
-		msg := fmt.Sprintf("error : %+v ", scopeErr)
-		log.Warn(msg)
-		if _, ok := scopeErr.(*organizations.ListOrgUsrAdminScopesNotFound); ok {
-			return false, nil
+	for index, org := range orgs {
+		params := &organizations.ListOrgUsrAdminScopesParams{
+			SalesforceID: org,
+			Context:      context.Background(),
 		}
-		return false, scopeErr
-	}
-	data := result.Payload
-	for _, userRole := range data.Userroles {
-		if userRole.Contact.ID == userSFID {
-			for _, roleScopes := range userRole.RoleScopes {
-				if roleScopes.RoleName == "company-owner" {
-					return true, nil
+		result, scopeErr := osc.cl.Organizations.ListOrgUsrAdminScopes(params, clientAuth)
+		if scopeErr != nil {
+			msg := fmt.Sprintf("error : %+v ", scopeErr)
+			log.Warn(msg)
+			//Ensure to check the 2 organizations in question
+			if index == 0 {
+				continue
+			}
+			if _, ok := scopeErr.(*organizations.ListOrgUsrAdminScopesNotFound); ok {
+				return false, nil
+			}
+			return false, scopeErr
+		}
+		data := result.Payload
+		for _, userRole := range data.Userroles {
+			if userRole.Contact.ID == userSFID {
+				for _, roleScopes := range userRole.RoleScopes {
+					if roleScopes.RoleName == "company-owner" {
+						return true, nil
+					}
 				}
 			}
 		}
 	}
+
 	return false, nil
 }
 
