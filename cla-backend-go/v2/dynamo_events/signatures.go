@@ -4,6 +4,7 @@
 package dynamo_events
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -111,6 +112,8 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 				log.WithFields(f).Warn(msg)
 				return errors.New(msg)
 			}
+			log.WithFields(f).Debugf("loaded company '%s' from signature by companyID: %s with companySFID: %s...",
+				companyModel.CompanyName, companyModel.CompanyID, companyModel.CompanyExternalID)
 
 			// We should have the company SFID...
 			if companyModel.CompanyExternalID == "" {
@@ -128,7 +131,7 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 			eg.Go(func() error {
 				// Set the CLA manager permissions
 				log.WithFields(f).Debug("assigning the initial CLA manager")
-				err = s.SetInitialCLAManagerACSPermissions(newSignature.SignatureID)
+				err = s.SetInitialCLAManagerACSPermissions(context.Background(), newSignature.SignatureID)
 				if err != nil {
 					log.WithFields(f).Warnf("failed to set initial cla manager, error: %+v", err)
 					return err
@@ -139,17 +142,18 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 			// Load the list of SF projects associated with this CLA Group
 			log.WithFields(f).Debugf("querying SF projects for CLA Group: %s", newSignature.SignatureProjectID)
 			projectCLAGroups, err := s.projectsClaGroupRepo.GetProjectsIdsForClaGroup(newSignature.SignatureProjectID)
+			log.WithFields(f).Debugf("found %d SF projects for CLA Group: %s", len(projectCLAGroups), newSignature.SignatureProjectID)
 
 			// Kick off a set of go routines to adjust the roles
 			for _, projectCLAGroup := range projectCLAGroups {
 				eg.Go(func() error {
 					// Remove any roles that were previously assigned for cla-manager-designee
-					log.WithFields(f).Debugf("removing %s role for project: %s (%s)", utils.CLADesigneeRole,
-						projectCLAGroup.ProjectName, projectCLAGroup.ProjectSFID)
+					log.WithFields(f).Debugf("removing %s role for project: '%s' (%s) and company: '%s' (%s)",
+						utils.CLADesigneeRole, projectCLAGroup.ProjectName, projectCLAGroup.ProjectSFID, companyModel.CompanyName, companyModel.CompanyExternalID)
 					err = s.removeCLAPermissionsByProjectOrganizationRole(projectCLAGroup.ProjectSFID, companyModel.CompanyExternalID, utils.CLADesigneeRole)
 					if err != nil {
-						log.WithFields(f).Warnf("failed to remove %s roles for project: %s (%s), error: %+v",
-							utils.CLADesigneeRole, projectCLAGroup.ProjectName, projectCLAGroup.ProjectSFID, err)
+						log.WithFields(f).Warnf("failed to remove %s roles for project: '%s' (%s) and company: '%s' (%s), error: %+v",
+							utils.CLADesigneeRole, projectCLAGroup.ProjectName, projectCLAGroup.ProjectSFID, companyModel.CompanyName, companyModel.CompanyExternalID, err)
 						return err
 					}
 

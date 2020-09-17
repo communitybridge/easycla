@@ -4,6 +4,7 @@
 package gerrits
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -22,31 +23,33 @@ import (
 )
 
 type ProjectService interface { //nolint
-	GetCLAGroupByID(projectID string) (*v1Models.Project, error)
+	GetCLAGroupByID(ctx context.Context, projectID string) (*v1Models.Project, error)
 }
 
 // Configure the Gerrit api
 func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectService ProjectService, eventService events.Service, projectsClaGroupsRepo projects_cla_groups.Repository) {
 	api.GerritsDeleteGerritHandler = gerrits.DeleteGerritHandlerFunc(
 		func(params gerrits.DeleteGerritParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			//ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
 			gerrit, err := v1Service.GetGerrit(params.GerritID)
 			if err != nil {
 				if err == v1Gerrits.ErrGerritNotFound {
-					return gerrits.NewDeleteGerritNotFound().WithPayload(errorResponse(err))
+					return gerrits.NewDeleteGerritNotFound().WithXRequestID(reqID).WithPayload(errorResponse(err))
 				}
-				return gerrits.NewDeleteGerritInternalServerError().WithPayload(errorResponse(err))
+				return gerrits.NewDeleteGerritInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 			if gerrit.ProjectSFID != params.ProjectSFID || gerrit.ProjectID != params.ClaGroupID {
-				return gerrits.NewDeleteGerritBadRequest().WithPayload(&models.ErrorResponse{
+				return gerrits.NewDeleteGerritBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "400",
 					Message: "EasyCLA - 403 Bad Request - projectSFID or claGroupID does not match with provided gerrit record",
 				})
 			}
 			// verify user have access to the project
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
-				return gerrits.NewDeleteGerritForbidden().WithPayload(&models.ErrorResponse{
+				return gerrits.NewDeleteGerritForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DeleteGerrit with Project scope of %s",
 						authUser.UserName, gerrit.ProjectSFID),
@@ -56,7 +59,7 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 			// delete the gerrit
 			err = v1Service.DeleteGerrit(params.GerritID)
 			if err != nil {
-				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
+				return gerrits.NewDeleteGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 
 			// record the event
@@ -69,16 +72,18 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 				},
 			})
 
-			return gerrits.NewDeleteGerritNoContent()
+			return gerrits.NewDeleteGerritNoContent().WithXRequestID(reqID)
 		})
 
 	api.GerritsAddGerritHandler = gerrits.AddGerritHandlerFunc(
 		func(params gerrits.AddGerritParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
 			// verify user have access to the project
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
-				return gerrits.NewAddGerritForbidden().WithPayload(&models.ErrorResponse{
+				return gerrits.NewAddGerritForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to AddGerrit with Project scope of %s",
 						authUser.UserName, params.ProjectSFID),
@@ -86,18 +91,18 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 			}
 			ok, err := projectsClaGroupsRepo.IsAssociated(params.ProjectSFID, params.ClaGroupID)
 			if err != nil {
-				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
+				return gerrits.NewAddGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 			if !ok {
-				return gerrits.NewAddGerritBadRequest().WithPayload(&models.ErrorResponse{
+				return gerrits.NewAddGerritBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "400",
 					Message: "provided cla-group and project are not associated with each other",
 				})
 			}
 
-			projectModel, err := projectService.GetCLAGroupByID(params.ClaGroupID)
+			projectModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
 			if err != nil {
-				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
+				return gerrits.NewDeleteGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 
 			// add the gerrit
@@ -111,9 +116,9 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 			result, err := v1Service.AddGerrit(params.ClaGroupID, params.ProjectSFID, addGerritInput, projectModel)
 			if err != nil {
 				if err.Error() == "gerrit_name already present in the system" {
-					return gerrits.NewAddGerritConflict().WithPayload(errorResponse(err))
+					return gerrits.NewAddGerritConflict().WithXRequestID(reqID).WithPayload(errorResponse(err))
 				}
-				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
+				return gerrits.NewAddGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 
 			// record the event
@@ -129,18 +134,20 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 			var response models.Gerrit
 			err = copier.Copy(&response, result)
 			if err != nil {
-				return gerrits.NewAddGerritInternalServerError().WithPayload(errorResponse(err))
+				return gerrits.NewAddGerritInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
-			return gerrits.NewAddGerritOK().WithPayload(&response)
+			return gerrits.NewAddGerritOK().WithXRequestID(reqID).WithPayload(&response)
 		})
 
 	api.GerritsListGerritsHandler = gerrits.ListGerritsHandlerFunc(
 		func(params gerrits.ListGerritsParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			//ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
 			// verify user have access to the project
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
-				return gerrits.NewListGerritsForbidden().WithPayload(&models.ErrorResponse{
+				return gerrits.NewListGerritsForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to ListGerrits with Project scope of %s",
 						authUser.UserName, params.ProjectSFID),
@@ -149,10 +156,10 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 
 			ok, err := projectsClaGroupsRepo.IsAssociated(params.ProjectSFID, params.ClaGroupID)
 			if err != nil {
-				return gerrits.NewListGerritsBadRequest().WithPayload(errorResponse(err))
+				return gerrits.NewListGerritsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 			if !ok {
-				return gerrits.NewListGerritsBadRequest().WithPayload(&models.ErrorResponse{
+				return gerrits.NewListGerritsBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "400",
 					Message: "provided cla-group and project are not associated with each other",
 				})
@@ -160,33 +167,35 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 
 			result, err := v1Service.GetClaGroupGerrits(params.ClaGroupID, &params.ProjectSFID)
 			if err != nil {
-				return gerrits.NewListGerritsBadRequest().WithPayload(errorResponse(err))
+				return gerrits.NewListGerritsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 
 			var response models.GerritList
 			err = copier.Copy(&response, result)
 			if err != nil {
-				return gerrits.NewListGerritsInternalServerError().WithPayload(errorResponse(err))
+				return gerrits.NewListGerritsInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
-			return gerrits.NewListGerritsOK().WithPayload(&response)
+			return gerrits.NewListGerritsOK().WithXRequestID(reqID).WithPayload(&response)
 		})
 
 	api.GerritsGetGerritReposHandler = gerrits.GetGerritReposHandlerFunc(
 		func(params gerrits.GetGerritReposParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			//ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
 			// No specific permissions required
 
 			// Validate input
 			if params.GerritHost == nil {
-				return gerrits.NewGetGerritReposBadRequest().WithPayload(&models.ErrorResponse{
+				return gerrits.NewGetGerritReposBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "400",
 					Message: "missing gerritHost query parameter - expecting gerrit hostname",
 				})
 			}
 
 			if len(strings.TrimSpace(params.GerritHost.String())) == 0 {
-				return gerrits.NewGetGerritReposBadRequest().WithPayload(&models.ErrorResponse{
+				return gerrits.NewGetGerritReposBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "400",
 					Message: "invalid gerritHost query parameter - expecting gerrit hostname",
 				})
@@ -194,16 +203,16 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 
 			result, err := v1Service.GetGerritRepos(params.GerritHost.String())
 			if err != nil {
-				return gerrits.NewGetGerritReposBadRequest().WithPayload(errorResponse(err))
+				return gerrits.NewGetGerritReposBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 
 			var response models.GerritRepoList
 			err = copier.Copy(&response, result)
 			if err != nil {
-				return gerrits.NewAddGerritInternalServerError().WithPayload(errorResponse(err))
+				return gerrits.NewAddGerritInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 
-			return gerrits.NewGetGerritReposOK().WithPayload(&response)
+			return gerrits.NewGetGerritReposOK().WithXRequestID(reqID).WithPayload(&response)
 		})
 }
 

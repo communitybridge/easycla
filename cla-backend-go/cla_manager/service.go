@@ -4,6 +4,7 @@
 package cla_manager
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -30,8 +31,8 @@ type IService interface {
 	PendingRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error)
 	DeleteRequest(requestID string) error
 
-	AddClaManager(companyID string, projectID string, LFID string) (*models.Signature, error)
-	RemoveClaManager(companyID string, projectID string, LFID string) (*models.Signature, error)
+	AddClaManager(ctx context.Context, companyID string, projectID string, LFID string) (*models.Signature, error)
+	RemoveClaManager(ctx context.Context, companyID string, projectID string, LFID string) (*models.Signature, error)
 }
 
 type service struct {
@@ -180,7 +181,7 @@ func (s service) DeleteRequest(requestID string) error {
 }
 
 // AddClaManager Adds LFID to Signature Access Control List list
-func (s service) AddClaManager(companyID string, projectID string, LFID string) (*models.Signature, error) {
+func (s service) AddClaManager(ctx context.Context, companyID string, projectID string, LFID string) (*models.Signature, error) {
 
 	userModel, userErr := s.usersService.GetUserByLFUserName(LFID)
 	if userErr != nil || userModel == nil {
@@ -191,7 +192,7 @@ func (s service) AddClaManager(companyID string, projectID string, LFID string) 
 		return nil, companyErr
 	}
 
-	projectModel, projectErr := s.projectService.GetCLAGroupByID(projectID)
+	projectModel, projectErr := s.projectService.GetCLAGroupByID(ctx, projectID)
 	if projectErr != nil || projectModel == nil {
 		return nil, projectErr
 	}
@@ -278,7 +279,7 @@ func (s service) getCompanySignature(companyID string, projectID string) (*model
 }
 
 // RemoveClaManager removes lfid from signature acl with given company and project
-func (s service) RemoveClaManager(companyID string, projectID string, LFID string) (*models.Signature, error) {
+func (s service) RemoveClaManager(ctx context.Context, companyID string, projectID string, LFID string) (*models.Signature, error) {
 
 	userModel, userErr := s.usersService.GetUserByLFUserName(LFID)
 	if userErr != nil || userModel == nil {
@@ -289,7 +290,7 @@ func (s service) RemoveClaManager(companyID string, projectID string, LFID strin
 		return nil, companyErr
 	}
 
-	projectModel, projectErr := s.projectService.GetCLAGroupByID(projectID)
+	projectModel, projectErr := s.projectService.GetCLAGroupByID(ctx, projectID)
 	if projectErr != nil || projectModel == nil {
 		return nil, projectErr
 	}

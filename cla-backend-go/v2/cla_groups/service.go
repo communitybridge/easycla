@@ -61,13 +61,13 @@ type service struct {
 
 // Service interface
 type Service interface {
-	CreateCLAGroup(input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error)
-	EnrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error
-	UnenrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error
-	DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth.User) error
-	ListClaGroupsForFoundationOrProject(foundationSFID string) (*models.ClaGroupList, error)
-	ValidateCLAGroup(input *models.ClaGroupValidationRequest) (bool, []string)
-	ListAllFoundationClaGroups(foundationID *string) (*models.FoundationMappingList, error)
+	CreateCLAGroup(ctx context.Context, input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error)
+	EnrollProjectsInClaGroup(ctx context.Context, claGroupID string, foundationSFID string, projectSFIDList []string) error
+	UnenrollProjectsInClaGroup(ctx context.Context, claGroupID string, foundationSFID string, projectSFIDList []string) error
+	DeleteCLAGroup(ctx context.Context, claGroupModel *v1Models.Project, authUser *auth.User) error
+	ListClaGroupsForFoundationOrProject(ctx context.Context, foundationSFID string) (*models.ClaGroupList, error)
+	ValidateCLAGroup(ctx context.Context, input *models.ClaGroupValidationRequest) (bool, []string)
+	ListAllFoundationClaGroups(ctx context.Context, foundationID *string) (*models.FoundationMappingList, error)
 }
 
 // NewService returns instance of CLA group service
@@ -86,7 +86,7 @@ func NewService(projectService v1Project.Service, templateService v1Template.Ser
 }
 
 // ValidateCLAGroup is the service handler for validating a CLA Group
-func (s *service) ValidateCLAGroup(input *models.ClaGroupValidationRequest) (bool, []string) {
+func (s *service) ValidateCLAGroup(ctx context.Context, input *models.ClaGroupValidationRequest) (bool, []string) {
 
 	var valid = true
 	var validationErrors []string
@@ -97,7 +97,7 @@ func (s *service) ValidateCLAGroup(input *models.ClaGroupValidationRequest) (boo
 
 	// Note: CLA Group Name Min/Max Character Length validated via Swagger Spec restrictions
 	if input.ClaGroupName != nil {
-		claGroupModel, err := s.v1ProjectService.GetCLAGroupByName(*input.ClaGroupName)
+		claGroupModel, err := s.v1ProjectService.GetCLAGroupByName(ctx, *input.ClaGroupName)
 		if err != nil {
 			valid = false
 			validationErrors = append(validationErrors, fmt.Sprintf("unable to query project service - error: %+v", err))
@@ -118,7 +118,7 @@ func (s *service) ValidateCLAGroup(input *models.ClaGroupValidationRequest) (boo
 // validateClaGroupInput validates the cla group input. It there is validation error then it returns the error
 // if foundation_sfid is root project i.e project without parent and if it does not have subprojects then return boolean
 // flag would be true
-func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool, error) {
+func (s *service) validateClaGroupInput(ctx context.Context, input *models.CreateClaGroupInput) (bool, error) {
 	if input.FoundationSfid == nil {
 		return false, fmt.Errorf("missing foundation ID parameter")
 	}
@@ -130,6 +130,7 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 
 	f := logrus.Fields{
 		"function":            "validateClaGroupInput",
+		utils.XREQUESTID:      ctx.Value(utils.XREQUESTID),
 		"ClaGroupName":        claGroupName,
 		"ClaGroupDescription": input.ClaGroupDescription,
 		"FoundationSfid":      foundationSFID,
@@ -155,7 +156,7 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 
 	// Ensure we don't have a duplicate CLA Group Name
 	log.WithFields(f).Debug("checking for duplicate CLA Group name...")
-	claGroupModel, err := s.v1ProjectService.GetCLAGroupByName(claGroupName)
+	claGroupModel, err := s.v1ProjectService.GetCLAGroupByName(ctx, claGroupName)
 	if err != nil {
 		return false, err
 	}
@@ -254,16 +255,17 @@ func (s *service) validateClaGroupInput(input *models.CreateClaGroupInput) (bool
 
 	// Any of the projects in an existing CLA Group?
 	log.WithFields(f).Debug("validating enrolled projects...")
-	err = s.validateEnrollProjectsInput(foundationSFID, input.ProjectSfidList)
+	err = s.validateEnrollProjectsInput(ctx, foundationSFID, input.ProjectSfidList)
 	if err != nil {
 		return false, err
 	}
 	return false, nil
 }
 
-func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFIDList []string) error {
+func (s *service) validateEnrollProjectsInput(ctx context.Context, foundationSFID string, projectSFIDList []string) error {
 	f := logrus.Fields{
 		"functionName":    "validateEnrollProjectsInput",
+		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
 		"foundationSFID":  foundationSFID,
 		"projectSFIDList": strings.Join(projectSFIDList, ","),
 	}
@@ -343,9 +345,10 @@ func (s *service) validateEnrollProjectsInput(foundationSFID string, projectSFID
 	return nil
 }
 
-func (s *service) validateUnenrollProjectsInput(foundationSFID string, projectSFIDList []string) error {
+func (s *service) validateUnenrollProjectsInput(ctx context.Context, foundationSFID string, projectSFIDList []string) error {
 	f := logrus.Fields{
 		"functionName":    "validateUnenrollProjectsInput",
+		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
 		"foundationSFID":  foundationSFID,
 		"projectSFIDList": strings.Join(projectSFIDList, ","),
 	}
@@ -433,8 +436,11 @@ func (s *service) validateUnenrollProjectsInput(foundationSFID string, projectSF
 	return nil
 }
 
-func (s *service) enrollProjects(claGroupID string, foundationSFID string, projectSFIDList []string) error {
-	f := logrus.Fields{"function": "enrollProjects"}
+func (s *service) enrollProjects(ctx context.Context, claGroupID string, foundationSFID string, projectSFIDList []string) error {
+	f := logrus.Fields{
+		"function":       "enrollProjects",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
 
 	// Load the projectSFIDList records in parallel
 	var eg errgroup.Group
@@ -466,9 +472,10 @@ func (s *service) enrollProjects(claGroupID string, foundationSFID string, proje
 	return nil
 }
 
-func (s *service) unenrollProjects(claGroupID string, foundationSFID string, projectSFIDList []string) error {
+func (s *service) unenrollProjects(ctx context.Context, claGroupID string, foundationSFID string, projectSFIDList []string) error {
 	f := logrus.Fields{
 		"function":        "unenrollProjects",
+		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
 		"claGroupID":      claGroupID,
 		"foundationSFID":  foundationSFID,
 		"projectSFIDList": projectSFIDList,
@@ -482,7 +489,7 @@ func (s *service) unenrollProjects(claGroupID string, foundationSFID string, pro
 
 	return nil
 }
-func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error) {
+func (s *service) CreateCLAGroup(ctx context.Context, input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroup, error) {
 	// Validate the input
 	log.WithField("input", input).Debugf("validating create cla group input")
 	if input.IclaEnabled == nil ||
@@ -495,6 +502,7 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 
 	f := logrus.Fields{
 		"function":            "CreateCLAGroup",
+		utils.XREQUESTID:      ctx.Value(utils.XREQUESTID),
 		"ClaGroupName":        *input.ClaGroupName,
 		"ClaGroupDescription": input.ClaGroupDescription,
 		"FoundationSfid":      *input.FoundationSfid,
@@ -505,7 +513,7 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 		"projectManagerLFID":  projectManagerLFID,
 	}
 
-	standaloneProject, err := s.validateClaGroupInput(input)
+	standaloneProject, err := s.validateClaGroupInput(ctx, input)
 	if err != nil {
 		log.WithFields(f).Warnf("validation of create cla group input failed")
 		return nil, err
@@ -528,7 +536,7 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 
 	// Create cla group
 	log.WithFields(f).WithField("input", input).Debugf("creating cla group")
-	claGroup, err := s.v1ProjectService.CreateCLAGroup(&v1Models.Project{
+	claGroup, err := s.v1ProjectService.CreateCLAGroup(ctx, &v1Models.Project{
 		FoundationSFID:          *input.FoundationSfid,
 		FoundationLevelCLA:      foundationLevelCLA,
 		ProjectDescription:      input.ClaGroupDescription,
@@ -563,7 +571,7 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 	if err != nil {
 		log.WithFields(f).Warnf("attaching cla_group_template failed, error: %+v", err)
 		log.WithFields(f).Debugf("rolling back creation - deleting previously created CLA Group: %s", *input.ClaGroupName)
-		deleteErr := s.v1ProjectService.DeleteCLAGroup(claGroup.ProjectID)
+		deleteErr := s.v1ProjectService.DeleteCLAGroup(ctx, claGroup.ProjectID)
 		if deleteErr != nil {
 			log.WithFields(f).Warnf("deleting previously created CLA Group failed, error: %+v", deleteErr)
 		}
@@ -572,11 +580,11 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 	log.WithFields(f).Debug("cla_group_template attached", pdfUrls)
 
 	// Associate projects with our new CLA Group
-	err = s.enrollProjects(claGroup.ProjectID, *input.FoundationSfid, input.ProjectSfidList)
+	err = s.enrollProjects(ctx, claGroup.ProjectID, *input.FoundationSfid, input.ProjectSfidList)
 	if err != nil {
 		// Oops, roll back logic
 		log.WithFields(f).Debug("deleting created cla group")
-		deleteErr := s.v1ProjectService.DeleteCLAGroup(claGroup.ProjectID)
+		deleteErr := s.v1ProjectService.DeleteCLAGroup(ctx, claGroup.ProjectID)
 		if deleteErr != nil {
 			log.WithFields(f).Error("deleting created cla group failed - manual cleanup required.", deleteErr)
 		}
@@ -618,23 +626,24 @@ func (s *service) CreateCLAGroup(input *models.CreateClaGroupInput, projectManag
 	}, nil
 }
 
-func (s *service) EnrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error {
+func (s *service) EnrollProjectsInClaGroup(ctx context.Context, claGroupID string, foundationSFID string, projectSFIDList []string) error {
 	f := logrus.Fields{
 		"functionName":    "EnrollProjectsInClaGroup",
+		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
 		"claGroupID":      claGroupID,
 		"foundationSFID":  foundationSFID,
 		"projectSFIDList": strings.Join(projectSFIDList, ","),
 	}
 
 	log.WithFields(f).Debug("validating enroll project input")
-	err := s.validateEnrollProjectsInput(foundationSFID, projectSFIDList)
+	err := s.validateEnrollProjectsInput(ctx, foundationSFID, projectSFIDList)
 	if err != nil {
 		log.WithFields(f).Warnf("validating enroll project input failed. error = %s", err)
 		return err
 	}
 
 	log.WithFields(f).Debug("enrolling projects in cla_group")
-	err = s.enrollProjects(claGroupID, foundationSFID, projectSFIDList)
+	err = s.enrollProjects(ctx, claGroupID, foundationSFID, projectSFIDList)
 	if err != nil {
 		log.WithFields(f).Warnf("enrolling projects in cla_group failed. error = %s", err)
 		return err
@@ -665,21 +674,22 @@ func (s *service) EnrollProjectsInClaGroup(claGroupID string, foundationSFID str
 	return nil
 }
 
-func (s *service) UnenrollProjectsInClaGroup(claGroupID string, foundationSFID string, projectSFIDList []string) error {
+func (s *service) UnenrollProjectsInClaGroup(ctx context.Context, claGroupID string, foundationSFID string, projectSFIDList []string) error {
 	f := logrus.Fields{
 		"functionName":    "UnenrollProjectsInClaGroup",
+		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
 		"claGroupID":      claGroupID,
 		"foundationSFID":  foundationSFID,
 		"projectSFIDList": strings.Join(projectSFIDList, ","),
 	}
 	log.WithFields(f).Debug("validating unenroll project input")
-	err := s.validateUnenrollProjectsInput(foundationSFID, projectSFIDList)
+	err := s.validateUnenrollProjectsInput(ctx, foundationSFID, projectSFIDList)
 	if err != nil {
 		log.WithFields(f).Warnf("validating unenroll project input failed. error = %s", err)
 		return err
 	}
 	log.WithFields(f).Debug("unenrolling projects in cla_group")
-	err = s.unenrollProjects(claGroupID, foundationSFID, projectSFIDList)
+	err = s.unenrollProjects(ctx, claGroupID, foundationSFID, projectSFIDList)
 	if err != nil {
 		log.WithFields(f).Warnf("unenrolling projects in cla_group failed. error = %s", err)
 		return err
@@ -711,9 +721,10 @@ func (s *service) UnenrollProjectsInClaGroup(claGroupID string, foundationSFID s
 }
 
 // DeleteCLAGroup handles deleting and invalidating the CLA group, removing permissions, cleaning up pending requests, etc.
-func (s *service) DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth.User) error {
+func (s *service) DeleteCLAGroup(ctx context.Context, claGroupModel *v1Models.Project, authUser *auth.User) error {
 	f := logrus.Fields{
 		"functionName":             "DeleteCLAGroup",
+		utils.XREQUESTID:           ctx.Value(utils.XREQUESTID),
 		"claGroupID":               claGroupModel.ProjectID,
 		"claGroupExternalID":       claGroupModel.ProjectExternalID,
 		"claGroupName":             claGroupModel.ProjectName,
@@ -947,7 +958,7 @@ func (s *service) DeleteCLAGroup(claGroupModel *v1Models.Project, authUser *auth
 
 	// Finally, delete the CLA Group last...
 	log.WithFields(f).Debug("finally, deleting cla_group from dynamodb")
-	err := s.v1ProjectService.DeleteCLAGroup(claGroupModel.ProjectID)
+	err := s.v1ProjectService.DeleteCLAGroup(ctx, claGroupModel.ProjectID)
 	if err != nil {
 		log.WithFields(f).Warnf("problem deleting cla_group, error: %+v", err)
 		return err
@@ -983,9 +994,10 @@ func getS3Url(claGroupID string, docs []v1Models.ProjectDocument) string {
 }
 
 // ListClaGroupsForFoundationOrProject returns the CLA Group list for the specified foundation ID
-func (s *service) ListClaGroupsForFoundationOrProject(projectOrFoundationSFID string) (*models.ClaGroupList, error) {
+func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, projectOrFoundationSFID string) (*models.ClaGroupList, error) {
 	f := logrus.Fields{
 		"functionName":            "ListClaGroupsForFoundationOrProject",
+		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
 		"projectOrFoundationSFID": projectOrFoundationSFID,
 	}
 
@@ -1033,7 +1045,7 @@ func (s *service) ListClaGroupsForFoundationOrProject(projectOrFoundationSFID st
 		}
 
 		log.WithFields(f).Debugf("loading CLA Group by ID: %s", projectCLAGroup.ClaGroupID)
-		v1ClaGroupsByProject, claGroupLoadErr := s.v1ProjectService.GetCLAGroupByID(projectCLAGroup.ClaGroupID)
+		v1ClaGroupsByProject, claGroupLoadErr := s.v1ProjectService.GetCLAGroupByID(ctx, projectCLAGroup.ClaGroupID)
 		//v1ClaGroupsByProject, prjerr := s.v1ProjectService.GetClaGroupByProjectSFID(projectOrFoundationSFID, DontLoadDetails)
 		if claGroupLoadErr != nil {
 			log.WithFields(f).Warnf("problem loading CLA group by id, error: %+v", claGroupLoadErr)
@@ -1068,7 +1080,7 @@ func (s *service) ListClaGroupsForFoundationOrProject(projectOrFoundationSFID st
 			// Invoke the go routine - any errors will be handled below
 			eg.Go(func() error {
 				log.WithFields(f).Debugf("loading CLA Group by ID: %s", projectCLAGroupClaGroupID)
-				claGroupModel, claGroupLookupErr := s.v1ProjectService.GetCLAGroupByID(projectCLAGroupClaGroupID)
+				claGroupModel, claGroupLookupErr := s.v1ProjectService.GetCLAGroupByID(ctx, projectCLAGroupClaGroupID)
 				if claGroupLookupErr != nil {
 					log.WithFields(f).Warnf("problem locating CLA group by project id, error: %+v", claGroupLookupErr)
 					return claGroupLookupErr
@@ -1150,7 +1162,7 @@ func (s *service) ListClaGroupsForFoundationOrProject(projectOrFoundationSFID st
 	}
 
 	// One more pass to update the metrics - bulk lookup the metrics and update the response model
-	claGroupMetrics := s.getMetrics(claGroupIDList.List())
+	claGroupMetrics := s.getMetrics(ctx, claGroupIDList.List())
 	log.WithFields(f).Debugf("Loading metrics for %d CLA Groups - updating response", len(claGroupIDList.List()))
 	for _, responseEntry := range responseModel.List {
 		metricForCLAGroup, ok := claGroupMetrics[responseEntry.ClaGroupID]
@@ -1177,9 +1189,10 @@ func (s *service) ListClaGroupsForFoundationOrProject(projectOrFoundationSFID st
 	return responseModel, nil
 }
 
-func (s *service) getMetrics(claGroupIDList []string) map[string]*metrics.ProjectMetric {
+func (s *service) getMetrics(ctx context.Context, claGroupIDList []string) map[string]*metrics.ProjectMetric {
 	f := logrus.Fields{
 		"functionName":   "getMetrics",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"claGroupIDList": strings.Join(claGroupIDList, ","),
 	}
 	m := make(map[string]*metrics.ProjectMetric)
@@ -1218,7 +1231,13 @@ func (s *service) getMetrics(claGroupIDList []string) map[string]*metrics.Projec
 	return m
 }
 
-func (s *service) ListAllFoundationClaGroups(foundationID *string) (*models.FoundationMappingList, error) {
+func (s *service) ListAllFoundationClaGroups(ctx context.Context, foundationID *string) (*models.FoundationMappingList, error) {
+	f := logrus.Fields{
+		"functionName":   "ListAllFoundationClaGroups",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"foundationID":   foundationID,
+	}
+	log.WithFields(f).Debug("listing all foundation CLA groups...")
 	var out []*projects_cla_groups.ProjectClaGroup
 	var err error
 	if foundationID != nil {

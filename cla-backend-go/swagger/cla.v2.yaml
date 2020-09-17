@@ -2149,6 +2149,7 @@ paths:
       security: []
       operationId: notifyCLAManagers
       parameters:
+        - $ref: "#/parameters/x-request-id"
         - name: body
           in: body
           schema:
@@ -2175,6 +2176,7 @@ paths:
       security: []
       operationId: inviteCompanyAdmin
       parameters:
+        - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/path-userID"
         - name: body
           in: body
@@ -2215,6 +2217,11 @@ paths:
           $ref: '#/responses/accepted-request'
         '204':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway
+                based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '403':
@@ -2269,6 +2276,11 @@ paths:
           $ref: '#/responses/accepted-request'
         '204':
           description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway
+                based on the session
         '400':
           $ref: '#/responses/invalid-request'
         '404':
@@ -2327,6 +2339,7 @@ paths:
       security: []
       operationId: contributorAssociation
       parameters:
+        - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/path-companySFID"
         - name: body
           in: body
@@ -2362,6 +2375,7 @@ paths:
       security: []
       operationId: contributorRoleScopAssociation
       parameters:
+        - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/path-companySFID"
         - $ref: "#/parameters/path-claGroupID"
         - name: body
@@ -2404,6 +2418,7 @@ paths:
       operationId: assignCompanyOwner
       security: []
       parameters:
+        - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/path-companySFID"
         - name: body
           in: body
