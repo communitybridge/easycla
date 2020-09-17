@@ -4,7 +4,10 @@
 package project
 
 import (
+	"context"
 	"sync"
+
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/sirupsen/logrus"
 
@@ -19,17 +22,17 @@ import (
 
 // Service interface defines the project service methods/functions
 type Service interface {
-	CreateCLAGroup(project *models.Project) (*models.Project, error)
-	GetCLAGroups(params *project.GetProjectsParams) (*models.Projects, error)
-	GetCLAGroupByID(projectID string) (*models.Project, error)
-	GetCLAGroupsByExternalSFID(projectSFID string) (*models.Projects, error)
-	GetCLAGroupsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error)
-	GetCLAGroupByName(projectName string) (*models.Project, error)
-	DeleteCLAGroup(projectID string) error
-	UpdateCLAGroup(projectModel *models.Project) (*models.Project, error)
-	GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error)
-	GetClaGroupByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Project, error)
-	SignedAtFoundationLevel(foundationSFID string) (bool, error)
+	CreateCLAGroup(ctx context.Context, project *models.Project) (*models.Project, error)
+	GetCLAGroups(ctx context.Context, params *project.GetProjectsParams) (*models.Projects, error)
+	GetCLAGroupByID(ctx context.Context, projectID string) (*models.Project, error)
+	GetCLAGroupsByExternalSFID(ctx context.Context, projectSFID string) (*models.Projects, error)
+	GetCLAGroupsByExternalID(ctx context.Context, params *project.GetProjectsByExternalIDParams) (*models.Projects, error)
+	GetCLAGroupByName(ctx context.Context, projectName string) (*models.Project, error)
+	DeleteCLAGroup(ctx context.Context, projectID string) error
+	UpdateCLAGroup(ctx context.Context, projectModel *models.Project) (*models.Project, error)
+	GetClaGroupsByFoundationSFID(ctx context.Context, foundationSFID string, loadRepoDetails bool) (*models.Projects, error)
+	GetClaGroupByProjectSFID(ctx context.Context, projectSFID string, loadRepoDetails bool) (*models.Project, error)
+	SignedAtFoundationLevel(ctx context.Context, foundationSFID string) (bool, error)
 }
 
 // service
@@ -51,19 +54,20 @@ func NewService(projectRepo ProjectRepository, repositoriesRepo repositories.Rep
 }
 
 // CreateProject service method
-func (s service) CreateCLAGroup(projectModel *models.Project) (*models.Project, error) {
+func (s service) CreateCLAGroup(ctx context.Context, projectModel *models.Project) (*models.Project, error) {
 	return s.repo.CreateCLAGroup(projectModel)
 }
 
 // GetCLAGroups service method
-func (s service) GetCLAGroups(params *project.GetProjectsParams) (*models.Projects, error) {
+func (s service) GetCLAGroups(ctx context.Context, params *project.GetProjectsParams) (*models.Projects, error) {
 	return s.repo.GetCLAGroups(params)
 }
 
 // GetProjectByID service method
-func (s service) GetCLAGroupByID(projectID string) (*models.Project, error) {
+func (s service) GetCLAGroupByID(ctx context.Context, projectID string) (*models.Project, error) {
 	f := logrus.Fields{
 		"functionName":    "GetCLAGroupByID",
+		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
 		"projectID":       projectID,
 		"loadRepoDetails": LoadRepoDetails,
 	}
@@ -85,7 +89,7 @@ func (s service) GetCLAGroupByID(projectID string) (*models.Project, error) {
 	}
 
 	if project.FoundationSFID != "" {
-		signed, checkErr := s.SignedAtFoundationLevel(project.FoundationSFID)
+		signed, checkErr := s.SignedAtFoundationLevel(ctx, project.FoundationSFID)
 		if checkErr != nil {
 			return nil, checkErr
 		}
@@ -96,8 +100,8 @@ func (s service) GetCLAGroupByID(projectID string) (*models.Project, error) {
 }
 
 // GetCLAGroupsByExternalSFID returns a list of projects based on the external SFID parameter
-func (s service) GetCLAGroupsByExternalSFID(projectSFID string) (*models.Projects, error) {
-	return s.GetCLAGroupsByExternalID(&project.GetProjectsByExternalIDParams{
+func (s service) GetCLAGroupsByExternalSFID(ctx context.Context, projectSFID string) (*models.Projects, error) {
+	return s.GetCLAGroupsByExternalID(ctx, &project.GetProjectsByExternalIDParams{
 		HTTPRequest: nil,
 		NextKey:     nil,
 		PageSize:    nil,
@@ -106,12 +110,13 @@ func (s service) GetCLAGroupsByExternalSFID(projectSFID string) (*models.Project
 }
 
 // GetCLAGroupsByExternalID returns a list of projects based on the external ID parameters
-func (s service) GetCLAGroupsByExternalID(params *project.GetProjectsByExternalIDParams) (*models.Projects, error) {
+func (s service) GetCLAGroupsByExternalID(ctx context.Context, params *project.GetProjectsByExternalIDParams) (*models.Projects, error) {
 	f := logrus.Fields{
-		"functionName": "GetCLAGroupsByExternalID",
-		"projectSFID":  params.ProjectSFID,
-		"NextKey":      params.NextKey,
-		"PageSize":     params.PageSize}
+		"functionName":   "GetCLAGroupsByExternalID",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectSFID":    params.ProjectSFID,
+		"NextKey":        params.NextKey,
+		"PageSize":       params.PageSize}
 	log.Debugf("Project Service Handler - GetCLAGroupsByExternalID")
 	projects, err := s.repo.GetCLAGroupsByExternalID(params, LoadRepoDetails)
 	if err != nil {
@@ -168,36 +173,37 @@ func (s service) fillRepoInfo(project *models.Project) {
 }
 
 // GetCLAGroupByName service method
-func (s service) GetCLAGroupByName(projectName string) (*models.Project, error) {
+func (s service) GetCLAGroupByName(ctx context.Context, projectName string) (*models.Project, error) {
 	return s.repo.GetCLAGroupByName(projectName)
 }
 
 // DeleteCLAGroup service method
-func (s service) DeleteCLAGroup(projectID string) error {
+func (s service) DeleteCLAGroup(ctx context.Context, projectID string) error {
 	return s.repo.DeleteCLAGroup(projectID)
 }
 
 // UpdateCLAGroup service method
-func (s service) UpdateCLAGroup(projectModel *models.Project) (*models.Project, error) {
+func (s service) UpdateCLAGroup(ctx context.Context, projectModel *models.Project) (*models.Project, error) {
 	// Updates to the CLA Group "projects" table will cause a DB trigger handler (separate lambda) to also update other
 	// tables where we have the CLA Group name/description
 	return s.repo.UpdateCLAGroup(projectModel)
 }
 
 // GetClaGroupsByFoundationSFID service method
-func (s service) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error) {
+func (s service) GetClaGroupsByFoundationSFID(ctx context.Context, foundationSFID string, loadRepoDetails bool) (*models.Projects, error) {
 	return s.repo.GetClaGroupsByFoundationSFID(foundationSFID, loadRepoDetails)
 }
 
 // GetClaGroupByProjectSFID( service method
-func (s service) GetClaGroupByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Project, error) {
+func (s service) GetClaGroupByProjectSFID(ctx context.Context, projectSFID string, loadRepoDetails bool) (*models.Project, error) {
 	return s.repo.GetClaGroupByProjectSFID(projectSFID, loadRepoDetails)
 }
 
 // SignedAtFoundationLevel returns true if the specified foundation has a CLA Group at the foundation level, returns false otherwise.
-func (s service) SignedAtFoundationLevel(foundationSFID string) (bool, error) {
+func (s service) SignedAtFoundationLevel(ctx context.Context, foundationSFID string) (bool, error) {
 	f := logrus.Fields{
 		"functionName":   "SignedAtFoundationLevel",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"foundationSFID": foundationSFID,
 	}
 

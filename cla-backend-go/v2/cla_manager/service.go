@@ -4,6 +4,7 @@
 package cla_manager
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -86,13 +87,13 @@ type service struct {
 
 // Service interface
 type Service interface {
-	CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername string) (*models.CompanyClaManager, *models.ErrorResponse)
-	DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
-	InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, name string, contributor *v1User.User, lFxPortalURL string) ([]*models.ClaManagerDesignee, error)
-	CreateCLAManagerDesignee(companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
-	CreateCLAManagerRequest(contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error)
-	NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerList) error
-	CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error)
+	CreateCLAManager(ctx context.Context, claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername string) (*models.CompanyClaManager, *models.ErrorResponse)
+	DeleteCLAManager(ctx context.Context, claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse
+	InviteCompanyAdmin(ctx context.Context, contactAdmin bool, companyID string, projectID string, userEmail string, name string, contributor *v1User.User, lFxPortalURL string) ([]*models.ClaManagerDesignee, error)
+	CreateCLAManagerDesignee(ctx context.Context, companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
+	CreateCLAManagerRequest(ctx context.Context, contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error)
+	NotifyCLAManagers(ctx context.Context, otifyCLAManagers *models.NotifyClaManagerList) error
+	CreateCLAManagerDesigneeByGroup(ctx context.Context, params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error)
 }
 
 // NewService returns instance of CLA Manager service
@@ -112,15 +113,16 @@ func NewService(compService company.IService, projService project.Service, mgrSe
 }
 
 // CreateCLAManager creates Cla Manager
-func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername string) (*models.CompanyClaManager, *models.ErrorResponse) {
+func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, params cla_manager.CreateCLAManagerParams, authUsername string) (*models.CompanyClaManager, *models.ErrorResponse) {
 	f := logrus.Fields{
-		"functionName": "CreateCLAManager",
-		"claGroupID":   claGroupID,
-		"projectSFID":  params.ProjectSFID,
-		"companySFID":  params.CompanySFID,
-		"authUsername": authUsername,
-		"xUserName":    params.XUSERNAME,
-		"xEmail":       params.XEMAIL,
+		"functionName":   "CreateCLAManager",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"claGroupID":     claGroupID,
+		"projectSFID":    params.ProjectSFID,
+		"companySFID":    params.CompanySFID,
+		"authUsername":   authUsername,
+		"xUserName":      params.XUSERNAME,
+		"xEmail":         params.XEMAIL,
 	}
 
 	re := regexp.MustCompile(`^\w{1,30}$`)
@@ -153,7 +155,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		}
 	}
 
-	claGroup, err := s.projectService.GetCLAGroupByID(claGroupID)
+	claGroup, err := s.projectService.GetCLAGroupByID(ctx, claGroupID)
 	if err != nil || claGroup == nil {
 		msg := buildErrorMessage("cla group search by ID failure", claGroupID, params, err)
 		log.WithFields(f).Warn(msg)
@@ -255,7 +257,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	}
 
 	// Add CLA Manager to Database
-	signature, addErr := s.managerService.AddClaManager(companyModel.CompanyID, claGroupID, user.Username)
+	signature, addErr := s.managerService.AddClaManager(ctx, companyModel.CompanyID, claGroupID, user.Username)
 	if addErr != nil {
 		msg := buildErrorMessageCreate(params, addErr)
 		log.WithFields(f).Warn(msg)
@@ -320,7 +322,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	}
 
 	// Check if Project is signed at Foundation or Project Level
-	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(claGroupID)
+	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, claGroupID)
 
 	if signedErr != nil {
 		msg := buildErrorMessageCreate(params, signedErr)
@@ -387,13 +389,14 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 	return claCompanyManager, nil
 }
 
-func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse {
+func (s *service) DeleteCLAManager(ctx context.Context, claGroupID string, params cla_manager.DeleteCLAManagerParams) *models.ErrorResponse {
 	f := logrus.Fields{
-		"functionName": "DeleteCLAManager",
-		"projectSFID":  params.ProjectSFID,
-		"companySFID":  params.CompanySFID,
-		"xUserName":    params.XUSERNAME,
-		"xEmail":       params.XEMAIL,
+		"functionName":   "DeleteCLAManager",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectSFID":    params.ProjectSFID,
+		"companySFID":    params.CompanySFID,
+		"xUserName":      params.XUSERNAME,
+		"xEmail":         params.XEMAIL,
 	}
 	// Get user by firstname,lastname and email parameters
 	userServiceClient := v2UserService.GetClient()
@@ -475,7 +478,7 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 		}
 	}
 
-	signature, deleteErr := s.managerService.RemoveClaManager(companyModel.CompanyID, claGroupID, params.UserLFID)
+	signature, deleteErr := s.managerService.RemoveClaManager(ctx, companyModel.CompanyID, claGroupID, params.UserLFID)
 
 	if deleteErr != nil {
 		msg := buildErrorMessageDelete(params, deleteErr)
@@ -498,12 +501,13 @@ func (s *service) DeleteCLAManager(claGroupID string, params cla_manager.DeleteC
 }
 
 //CreateCLAManagerDesignee creates designee for cla manager prospect
-func (s *service) CreateCLAManagerDesignee(companySFID string, projectSFID string, userEmail string) (*models.ClaManagerDesignee, error) {
+func (s *service) CreateCLAManagerDesignee(ctx context.Context, companySFID string, projectSFID string, userEmail string) (*models.ClaManagerDesignee, error) {
 	f := logrus.Fields{
-		"functionName": "CreateCLAManagerDesignee",
-		"companySFID":  companySFID,
-		"projectSFID":  projectSFID,
-		"userEmail":    userEmail,
+		"functionName":   "CreateCLAManagerDesignee",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companySFID":    companySFID,
+		"projectSFID":    projectSFID,
+		"userEmail":      userEmail,
 	}
 	// integrate user,acs,org and project services
 	userClient := v2UserService.GetClient()
@@ -519,7 +523,7 @@ func (s *service) CreateCLAManagerDesignee(companySFID string, projectSFID strin
 	}
 
 	log.WithFields(f).Debugf("checking if company/project is signed with CLA managers...")
-	isSigned, signedErr := s.isSigned(v1CompanyModel, projectSFID)
+	isSigned, signedErr := s.isSigned(ctx, v1CompanyModel, projectSFID)
 	if signedErr != nil {
 		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - %s", signedErr)
 		log.WithFields(f).Warn(msg)
@@ -632,13 +636,13 @@ func (s *service) CreateCLAManagerDesignee(companySFID string, projectSFID strin
 }
 
 //CreateCLAManagerDesigneeByGroup creates designee by group for cla manager prospect
-func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error) {
+func (s *service) CreateCLAManagerDesigneeByGroup(ctx context.Context, params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error) {
 	var designeeScopes []*models.ClaManagerDesignee
 	userEmail := params.Body.UserEmail.String()
 	userService := v2UserService.GetClient()
 
 	claGroupID := projectCLAGroups[0].ClaGroupID
-	signedAtFoundationLevel, signedErr := s.projectService.SignedAtFoundationLevel(claGroupID)
+	signedAtFoundationLevel, signedErr := s.projectService.SignedAtFoundationLevel(ctx, claGroupID)
 	if signedErr != nil {
 		msg := fmt.Sprintf("Problem getting level of CLA Group Signature for claGroup: %s ", claGroupID)
 		return nil, msg, signedErr
@@ -647,7 +651,7 @@ func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAMa
 	if signedAtFoundationLevel {
 		foundationSFID := projectCLAGroups[0].FoundationSFID
 		if foundationSFID != "" {
-			claManagerDesignee, err := s.CreateCLAManagerDesignee(params.CompanySFID, foundationSFID, userEmail)
+			claManagerDesignee, err := s.CreateCLAManagerDesignee(ctx, params.CompanySFID, foundationSFID, userEmail)
 			if err != nil {
 				if err == ErrCLAManagerDesigneeConflict {
 					msg := fmt.Sprintf("Conflict assigning cla manager role for Foundation SFID: %s ", foundationSFID)
@@ -678,7 +682,7 @@ func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAMa
 			go func(swg *sync.WaitGroup, pcg *projects_cla_groups.ProjectClaGroup, designeeChannel chan *result) {
 				defer swg.Done()
 				log.WithFields(f).Debugf("creating CLA Manager Designee for Project SFID: %s", pcg.ProjectSFID)
-				claManagerDesignee, err := s.CreateCLAManagerDesignee(params.CompanySFID, pcg.ProjectSFID, userEmail)
+				claManagerDesignee, err := s.CreateCLAManagerDesignee(ctx, params.CompanySFID, pcg.ProjectSFID, userEmail)
 				var output result
 				if err != nil {
 					if err == ErrCLAManagerDesigneeConflict {
@@ -737,16 +741,17 @@ func (s *service) CreateCLAManagerDesigneeByGroup(params cla_manager.CreateCLAMa
 }
 
 // CreateCLAManagerRequest service method
-func (s *service) CreateCLAManagerRequest(contactAdmin bool, companySFID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error) {
+func (s *service) CreateCLAManagerRequest(ctx context.Context, contactAdmin bool, companySFID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error) {
 	f := logrus.Fields{
-		"functionName":  "CreateCLAManagerRequest",
-		"contactAdmin":  contactAdmin,
-		"companySFID":   companySFID,
-		"projectID":     projectID,
-		"userEmail":     userEmail,
-		"fullName":      fullName,
-		"authUserName":  authUser.UserName,
-		"authUserEmail": authUser.Email,
+		"functionName":   "CreateCLAManagerRequest",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"contactAdmin":   contactAdmin,
+		"companySFID":    companySFID,
+		"projectID":      projectID,
+		"userEmail":      userEmail,
+		"fullName":       fullName,
+		"authUserName":   authUser.UserName,
+		"authUserEmail":  authUser.Email,
 	}
 
 	orgService := v2OrgService.GetClient()
@@ -762,7 +767,7 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companySFID string,
 
 	// Determine if the CCLA is already signed or not
 	log.WithFields(f).Debugf("checking if company/project is signed with CLA managers...")
-	isSigned, signedErr := s.isSigned(v1CompanyModel, projectID)
+	isSigned, signedErr := s.isSigned(ctx, v1CompanyModel, projectID)
 	if signedErr != nil {
 		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - %s", signedErr)
 		log.WithFields(f).Warn(msg)
@@ -844,7 +849,7 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companySFID string,
 	}
 
 	log.WithFields(f).Debug("sending CLA manager designee request...")
-	claManagerDesignee, err := s.CreateCLAManagerDesignee(companySFID, projectID, userEmail)
+	claManagerDesignee, err := s.CreateCLAManagerDesignee(ctx, companySFID, projectID, userEmail)
 	if err != nil {
 		// Check conflict for role scope
 		if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
@@ -889,14 +894,17 @@ func (s *service) CreateCLAManagerRequest(contactAdmin bool, companySFID string,
 	return claManagerDesignee, nil
 }
 
-func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projectID string, userEmail string, name string, contributor *v1User.User, LfxPortalURL string) ([]*models.ClaManagerDesignee, error) {
+func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, companyID string, projectID string, userEmail string, name string, contributor *v1User.User, LfxPortalURL string) ([]*models.ClaManagerDesignee, error) {
 	orgService := v2OrgService.GetClient()
 	projectService := v2ProjectService.GetClient()
 	userService := v2UserService.GetClient()
-	f := logrus.Fields{"companyID": companyID,
-		"claGroupID": projectID,
-		"userEmail":  userEmail,
-		"name":       name}
+	f := logrus.Fields{
+		"functionName":   "InviteCompanyAdmin",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companyID":      companyID,
+		"claGroupID":     projectID,
+		"userEmail":      userEmail,
+		"name":           name}
 
 	// Get project cla Group records
 	log.WithFields(f).Debugf("Getting SalesForce Projects for claGroup: %s ", projectID)
@@ -919,7 +927,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 	}
 
 	log.WithFields(f).Debugf("Getting CLA Project")
-	project, projErr := s.projectService.GetCLAGroupByID(projectID)
+	project, projErr := s.projectService.GetCLAGroupByID(ctx, projectID)
 	if projErr != nil {
 		msg := fmt.Sprintf("Unable to get CLA Project: %s, error: %+v ", projectID, projErr)
 		log.WithFields(f).Warnf("unable to get claGroup")
@@ -1006,7 +1014,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 
 	for _, pcg := range projectCLAGroups {
 		log.WithFields(f).Debugf("Create cla manager designee for Project SFID: %s", pcg.ProjectSFID)
-		claManagerDesignee, err := s.CreateCLAManagerDesignee(organization.ID, pcg.ProjectSFID, userEmail)
+		claManagerDesignee, err := s.CreateCLAManagerDesignee(ctx, organization.ID, pcg.ProjectSFID, userEmail)
 		if err != nil {
 			msg := fmt.Sprintf("Problem creating cla Manager Designee for user : %s, error: %+v ", userEmail, err)
 			log.WithFields(f).Warn(msg)
@@ -1029,7 +1037,7 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 
 }
 
-func (s *service) NotifyCLAManagers(notifyCLAManagers *models.NotifyClaManagerList) error {
+func (s *service) NotifyCLAManagers(ctx context.Context, notifyCLAManagers *models.NotifyClaManagerList) error {
 	// Search for Easy CLA User
 	log.Debugf("Getting user by ID: %s", notifyCLAManagers.UserID)
 	userModel, userErr := s.easyCLAUserService.GetUser(notifyCLAManagers.UserID)
@@ -1142,13 +1150,14 @@ func getFormattedUserDetails(model *v1Models.User) string {
 }
 
 // isSigned is a helper function to check if project/claGroup is signed
-func (s *service) isSigned(companyModel *v1Models.Company, projectID string) (bool, error) {
+func (s *service) isSigned(ctx context.Context, companyModel *v1Models.Company, projectID string) (bool, error) {
 	f := logrus.Fields{
-		"functionName": "isSigned",
-		"companyID":    companyModel.CompanyID,
-		"companyName":  companyModel.CompanyName,
-		"companySFID":  companyModel.CompanyExternalID,
-		"projectID":    projectID,
+		"functionName":   "isSigned",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companyID":      companyModel.CompanyID,
+		"companyName":    companyModel.CompanyName,
+		"companySFID":    companyModel.CompanyExternalID,
+		"projectID":      projectID,
 	}
 
 	f["companyID"] = companyModel.CompanyID

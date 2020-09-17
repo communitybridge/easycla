@@ -4,8 +4,11 @@
 package project
 
 import (
+	"context"
 	"sort"
 	"sync"
+
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/sirupsen/logrus"
 
@@ -20,7 +23,7 @@ import (
 
 // Service interface defines the v2 project service methods
 type Service interface {
-	GetCLAProjectsByID(foundationSFID string) (*models.EnabledClaList, error)
+	GetCLAProjectsByID(ctx context.Context, foundationSFID string) (*models.EnabledClaList, error)
 }
 
 // service
@@ -39,9 +42,10 @@ func NewService(v1ProjectService v1Project.Service, projectRepo v1Project.Projec
 	}
 }
 
-func (s *service) GetCLAProjectsByID(foundationSFID string) (*models.EnabledClaList, error) {
+func (s *service) GetCLAProjectsByID(ctx context.Context, foundationSFID string) (*models.EnabledClaList, error) {
 	f := logrus.Fields{
 		"functionName":   "v2 project/service/GetCLAProjectsByID",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"foundationSFID": foundationSFID,
 	}
 
@@ -101,7 +105,7 @@ func (s *service) GetCLAProjectsByID(foundationSFID string) (*models.EnabledClaL
 	})
 
 	// Add the foundation level CLA flag
-	foundationLevelCLA, svcErr := s.v1ProjectService.SignedAtFoundationLevel(foundationSFID)
+	foundationLevelCLA, svcErr := s.v1ProjectService.SignedAtFoundationLevel(ctx, foundationSFID)
 	if svcErr != nil {
 		log.WithFields(f).Warnf("unable to fetch foundation level CLA status, error: %+v", svcErr)
 		return nil, svcErr
