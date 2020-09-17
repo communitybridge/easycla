@@ -59,13 +59,23 @@ func NewService(repo v1GithubOrg.Repository, ghRepository v1Repositories.Reposit
 }
 
 const (
-	Connected         = "connected"
+	// Connected status
+	Connected = "connected"
+	// PartialConnection status
 	PartialConnection = "partial_connection"
+	// ConnectionFailure status
 	ConnectionFailure = "connection_failure"
-	NoConnection      = "no_connection"
+	// NoConnection status
+	NoConnection = "no_connection"
 )
 
 func (s service) GetGithubOrganizations(projectSFID string) (*models.ProjectGithubOrganizations, error) {
+	psc := v2ProjectService.GetClient()
+	_, err := psc.GetProject(projectSFID)
+	if err != nil {
+		return nil, err
+	}
+
 	orgs, err := s.repo.GetGithubOrganizations("", projectSFID)
 	if err != nil {
 		return nil, err
@@ -187,6 +197,11 @@ func (s service) AddGithubOrganization(projectSFID string, input *models.CreateG
 }
 
 func (s service) DeleteGithubOrganization(projectSFID string, githubOrgName string) error {
+	psc := v2ProjectService.GetClient()
+	_, projecterr := psc.GetProject(projectSFID)
+	if projecterr != nil {
+		return projecterr
+	}
 	err := s.ghRepository.DisableRepositoriesOfGithubOrganization(projectSFID, githubOrgName)
 	if err != nil {
 		return err
