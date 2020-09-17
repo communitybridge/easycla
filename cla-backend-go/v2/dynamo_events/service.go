@@ -113,10 +113,12 @@ func (s *service) ProcessEvents(events events.DynamoDBEvent) {
 	for _, event := range events.Records {
 		tableName := strings.Split(event.EventSourceArn, "/")[1]
 		fields := logrus.Fields{
-			"table_name": tableName,
-			"event":      event,
-			"eventID":    event.EventID,
-			"eventName":  event.EventName,
+			"table_name":  tableName,
+			"eventID":     event.EventID,
+			"eventName":   event.EventName,
+			"eventSource": event.EventSource,
+			// Dumping the event is super verbose
+			// "event":      event,
 		}
 		b, _ := json.Marshal(events) // nolint
 		fields["events_data"] = string(b)
