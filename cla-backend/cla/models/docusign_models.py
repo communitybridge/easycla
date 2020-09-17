@@ -22,13 +22,13 @@ from pydocusign.exceptions import DocuSignException  # type: ignore
 
 import cla
 from cla.controllers.lf_group import LFGroup
-from cla.utils import get_email_help_content, get_email_sign_off_content
 from cla.models import signing_service_interface, DoesNotExist
 from cla.models.dynamo_models import Signature, User, \
     Project, Company, Gerrit, \
     Document, Event
 from cla.models.event_types import EventType
 from cla.models.s3_storage import S3Storage
+from cla.utils import get_email_help_content, get_email_sign_off_content
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
@@ -423,11 +423,11 @@ class DocuSign(signing_service_interface.SigningService):
         if user.get_user_company_id() != company_id:
             user.set_user_company_id(str(company_id))
             event_data = (f'user {user.get_user_name()}/'
-                            f'{user.get_github_username()}/'
-                            f'{user.get_user_github_id()}/'
-                            f'{user.get_user_id()} '
-                            f'associated with company {company.get_company_name()} for '
-                            f'project {project.get_project_name()}')
+                          f'{user.get_github_username()}/'
+                          f'{user.get_user_github_id()}/'
+                          f'{user.get_user_id()} '
+                          f'associated with company {company.get_company_name()} for '
+                          f'project {project.get_project_name()}')
             Event.create_event(
                 event_type=EventType.UserAssociatedWithCompany,
                 event_company_id=company_id,
@@ -531,7 +531,9 @@ class DocuSign(signing_service_interface.SigningService):
         # Save signature
         new_signature.save()
         cla.log.info(f'Set and saved signature for: {request_info}')
-        event_data = 'employee signature created for user {}, company {}, project {}'.format(user.get_user_name(), company.get_company_name(), project.get_project_name())
+        event_data = 'employee signature created for user {}, company {}, project {}'.format(user.get_user_name(),
+                                                                                             company.get_company_name(),
+                                                                                             project.get_project_name())
         Event.create_event(
             event_type=EventType.EmployeeSignatureCreated,
             event_company_id=company_id,
@@ -627,14 +629,16 @@ class DocuSign(signing_service_interface.SigningService):
         # Save signature before adding user to the LDAP Group.
         new_signature.save()
         cla.log.info(f'Set and saved signature for: {request_info}')
-        event_data ='employee signature created for user {}, company {}, project {}'.format(user.get_user_name(), company.get_company_name(), project.get_project_name())
+        event_data = 'employee signature created for user {}, company {}, project {}'.format(user.get_user_name(),
+                                                                                             company.get_company_name(),
+                                                                                             project.get_project_name())
         Event.create_event(
             event_type=EventType.EmployeeSignatureCreated,
             event_company_id=company_id,
             event_project_id=project_id,
             event_user_id=user_id,
             event_data=event_data,
-            event_summary=event_summary,
+            event_summary=event_data,
             contains_pii=True,
         )
 
@@ -1220,14 +1224,14 @@ class DocuSign(signing_service_interface.SigningService):
             try:
                 project.load(signature.get_signature_project_id())
                 event_data = (f'individual signature of user {user.get_user_name()} '
-                                f'signed for project {project.get_project_name()}')
+                              f'signed for project {project.get_project_name()}')
                 Event.create_event(
                     event_type=EventType.IndividualSignatureSigned,
                     event_project_id=signature.get_signature_project_id(),
                     event_company_id=None,
                     event_user_id=user.get_user_id(),
                     event_data=event_data,
-                    event_summary=event_summary,
+                    event_summary=event_data,
                     contains_pii=False,
                 )
             except DoesNotExist as err:
@@ -1274,7 +1278,9 @@ class DocuSign(signing_service_interface.SigningService):
         Will be called on CCLA signature callback, but also when a document has been
         opened by a user - no action required then.
         """
-        cla.log.debug(f'signed_corporate_callback - DocuSign CCLA signed callback POST data: {content}')
+        param_str = f'project_id={project_id}, company_id={company_id}'
+        cla.log.debug(f'signed_corporate_callback - DocuSign CCLA signed callback POST data: {content} '
+                      f'with params: {param_str}')
         tree = ET.fromstring(content)
         # Get envelope ID.
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
@@ -1284,7 +1290,7 @@ class DocuSign(signing_service_interface.SigningService):
         try:
             project.load(project_id)
         except DoesNotExist as err:
-            msg = (f'signed_corporate_callback - Docusign callback failed: invalid project ID: {project_id}, '
+            msg = (f'signed_corporate_callback - Docusign callback failed: invalid project ID, params: {param_str}, '
                    f'error: {err}')
             cla.log.warning(msg)
             return {'errors': {'error': msg}}
@@ -1294,7 +1300,7 @@ class DocuSign(signing_service_interface.SigningService):
         try:
             company.load(str(company_id))
         except DoesNotExist as err:
-            msg = (f'signed_corporate_callback - Docusign callback failed: invalid company ID: {company_id}, '
+            msg = (f'signed_corporate_callback - Docusign callback failed: invalid company ID, params: {param_str}, '
                    f'error: {err}')
             cla.log.warning(msg)
             return {'errors': {'error': msg}}
@@ -1307,8 +1313,8 @@ class DocuSign(signing_service_interface.SigningService):
             try:
                 signature.load(signature_id)
             except DoesNotExist as err:
-                msg = (f'signed_corporate_callback - ocuSign callback returned signed info on '
-                       f'invalid signature: {content}')
+                msg = (f'signed_corporate_callback - DocuSign callback returned signed info on an '
+                       f'invalid signature: {content} with params: {param_str}')
                 cla.log.warning(msg)
                 return {'errors': {'error': msg}}
         else:
@@ -1322,30 +1328,34 @@ class DocuSign(signing_service_interface.SigningService):
         if signature.get_signature_reference_type() == 'user':
             # ICLA
             cla.log.debug(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
-                          f'loading user by id: {signature.get_signature_reference_id()}')
+                          f'loading user by id: {signature.get_signature_reference_id()} for params: {param_str}')
             user.load(signature.get_signature_reference_id())
         elif signature.get_signature_reference_type() == 'company':
             # CCLA
             cla.log.debug(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
-                          'loading CLA Managers...')
+                          f'loading CLA Managers with params: {param_str}...')
             # Should have only 1 CLA Manager assigned at this point - grab the list of cla managers from the signature
             # record
             cla_manager_list = list(signature.get_signature_acl())
 
             # Load the user record of the initial CLA Manager
             if len(cla_manager_list) > 0:
+                cla.log.debug(f'signed_corporate_callback - loading user: {cla_manager_list[0]} '
+                              f'with params: {param_str}...')
                 user_list = user.get_user_by_username(cla_manager_list[0])
                 if user_list is None:
-                    msg = f'signed_corporate_callback - CLA Manager not assign for signature: {signature}'
+                    msg = (f'signed_corporate_callback - CLA Manager not assign for signature: {signature} '
+                           f'with params: {param_str}')
                     cla.log.warning(msg)
                     return {'errors': {'error': msg}}
                 else:
                     user = user_list[0]
             else:
-                msg = f'signed_corporate_callback - CLA Manager not assign for signature: {signature}'
+                msg = (f'signed_corporate_callback - CLA Manager not assign for signature: {signature} '
+                       f'with params: {param_str}')
                 cla.log.warning(msg)
                 return {'errors': {'error': msg}}
-        
+
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] +
                          '/' + self.TAGS['recipient_status'])
@@ -1353,14 +1363,18 @@ class DocuSign(signing_service_interface.SigningService):
 
         if status == 'Completed' and not signature.get_signature_signed():
             cla.log.info(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
-                         f'CLA signature signed ({signature_id}) - setting signature signed attribute to true')
+                         f'CLA signature signed ({signature_id}) - setting signature signed attribute to true, '
+                         f'params: {param_str}')
+            # Note: cla-manager role assignment and cla-manager-designee cleanup is handled in the DB trigger handler
+            # upon save with the signature signed flag transition to true...
             signature.set_signature_signed(True)
             signature.save()
 
             # Update our event/activity log
             if signature.get_signature_reference_type() == 'user':
                 event_data = (f'individual signature of user {user.get_user_name()} '
-                              f'signed for project {project.get_project_name()}')
+                              f'signed for project {project.get_project_name()}, '
+                              f'params: {param_str}')
                 Event.create_event(
                     event_type=EventType.IndividualSignatureSigned,
                     event_project_id=project_id,
@@ -1374,7 +1388,8 @@ class DocuSign(signing_service_interface.SigningService):
                 event_data = (f'corporate signature '
                               f'signed for project {project.get_project_name()} '
                               f'and company {company.get_company_name()} '
-                              f'by user {user.get_user_name()}')
+                              f'by user {user.get_user_name()}, '
+                              f'params: {param_str}')
                 Event.create_event(
                     event_type=EventType.CompanySignatureSigned,
                     event_project_id=project_id,
@@ -1404,7 +1419,8 @@ class DocuSign(signing_service_interface.SigningService):
                         lf_group.add_user_to_group(group_id, lf_username)
                     except Exception as e:
                         cla.log.error(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
-                                      f'Failed in adding user to the LDAP group: {e}')
+                                      f'Failed in adding user to the LDAP group: {e}, '
+                                      f'params: {param_str}')
                         return
 
             # Get signed document - will be either:
@@ -1417,14 +1433,15 @@ class DocuSign(signing_service_interface.SigningService):
             # verify company_id is not none
             if company_id is None:
                 cla.log.warning('signed_corporate_callback - '
-                                'Missing company_id on CCLA for saving signed file on s3 storage')
+                                'Missing company_id on CCLA for saving signed file on s3 storage, '
+                                f'params: {param_str}')
                 raise SigningError('Missing company_id on CCLA for saving signed file on s3 storage.')
 
             # Store document on S3
-            cla.log.debug('signed_corporate_callback - uploading CCLA document to s3...')
+            cla.log.debug(f'signed_corporate_callback - uploading CCLA document to s3, params: {param_str}...')
             self.send_to_s3(document_data, project_id, signature_id, 'ccla', company_id)
-            cla.log.debug('signed_corporate_callback - uploaded CCLA document to s3')
-            cla.log.debug('signed_corporate_callback - DONE!')
+            cla.log.debug(f'signed_corporate_callback - uploaded CCLA document to s3, params: {param_str}')
+            cla.log.debug(f'signed_corporate_callback - DONE!, params: {param_str}')
 
     def get_signed_document(self, envelope_id, user):
         """Helper method to get the signed document from DocuSign."""

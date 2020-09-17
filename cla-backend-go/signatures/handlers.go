@@ -4,6 +4,7 @@
 package signatures
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -24,12 +25,14 @@ import (
 func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *dynastore.Store, eventsService events.Service) { // nolint
 
 	api.SignaturesGetSignedICLADocumentHandler = signatures.GetSignedICLADocumentHandlerFunc(func(params signatures.GetSignedICLADocumentParams) middleware.Responder {
-		signatureModel, sigErr := service.GetIndividualSignature(params.ClaGroupID, params.UserID)
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		signatureModel, sigErr := service.GetIndividualSignature(ctx, params.ClaGroupID, params.UserID)
 		if sigErr != nil {
 			msg := fmt.Sprintf("EasyCLA - 500 Internal Server Error -  error retrieving signature using ClaGroupID: %s, userID: %s, error: %+v",
 				params.ClaGroupID, params.UserID, sigErr)
 			log.Warn(msg)
-			return signatures.NewGetSignedICLADocumentInternalServerError().WithPayload(&models.ErrorResponse{
+			return signatures.NewGetSignedICLADocumentInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "500",
 				Message: msg,
 			})
@@ -39,7 +42,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			msg := fmt.Sprintf("EasyCLA - 404 Not Found - -  error retrieving signature using claGroupID: %s, userID: %s",
 				params.ClaGroupID, params.UserID)
 			log.Warn(msg)
-			return signatures.NewGetSignedICLADocumentNotFound().WithPayload(&models.ErrorResponse{
+			return signatures.NewGetSignedICLADocumentNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "404",
 				Message: msg,
 			})
@@ -53,7 +56,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			msg := fmt.Sprintf("EasyCLA - 500 Internal Server Error -  unable to locate PDF from source using ClaGroupID: %s, userID: %s, s3 error: %+v",
 				params.ClaGroupID, params.UserID, s3Err)
 			log.Warn(msg)
-			return signatures.NewGetSignedICLADocumentInternalServerError().WithPayload(&models.ErrorResponse{
+			return signatures.NewGetSignedICLADocumentInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "500",
 				Message: msg,
 			})
@@ -61,6 +64,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			rw.Header().Set("Content-type", "text/html")
+			rw.Header().Set("x-request-id", reqID)
 			rw.WriteHeader(200)
 			redirectDocument := generateHTMLRedirectPage(downloadLink, "ICLA")
 			bytesWritten, writeErr := rw.Write([]byte(redirectDocument))
@@ -74,12 +78,14 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 	})
 
 	api.SignaturesGetSignedCCLADocumentHandler = signatures.GetSignedCCLADocumentHandlerFunc(func(params signatures.GetSignedCCLADocumentParams) middleware.Responder {
-		signatureModel, sigErr := service.GetCorporateSignature(params.ClaGroupID, params.CompanyID)
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		signatureModel, sigErr := service.GetCorporateSignature(ctx, params.ClaGroupID, params.CompanyID)
 		if sigErr != nil {
 			msg := fmt.Sprintf("EasyCLA - 500 Internal Server Error -  error retrieving signature using ClaGroupID: %s, CompanyID: %s, error: %+v",
 				params.ClaGroupID, params.CompanyID, sigErr)
 			log.Warn(msg)
-			return signatures.NewGetSignedCCLADocumentInternalServerError().WithPayload(&models.ErrorResponse{
+			return signatures.NewGetSignedCCLADocumentInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "500",
 				Message: msg,
 			})
@@ -90,7 +96,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			msg := fmt.Sprintf("EasyCLA - 404 Not Found - -  error retrieving signature using ClaGroupID: %s, CompanyID: %s",
 				params.ClaGroupID, params.CompanyID)
 			log.Warn(msg)
-			return signatures.NewGetSignedCCLADocumentNotFound().WithPayload(&models.ErrorResponse{
+			return signatures.NewGetSignedCCLADocumentNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "404",
 				Message: msg,
 			})
@@ -104,7 +110,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			msg := fmt.Sprintf("EasyCLA - 500 Internal Server Error -  unable to locate PDF from source using ClaGroupID: %s, CompanyID: %s, s3 error: %+v",
 				params.ClaGroupID, params.CompanyID, s3Err)
 			log.Warn(msg)
-			return signatures.NewGetSignedCCLADocumentInternalServerError().WithPayload(&models.ErrorResponse{
+			return signatures.NewGetSignedCCLADocumentInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "500",
 				Message: msg,
 			})
@@ -112,6 +118,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			rw.Header().Set("Content-type", "text/html")
+			rw.Header().Set("x-request-id", reqID)
 			rw.WriteHeader(200)
 			redirectDocument := generateHTMLRedirectPage(downloadLink, "CCLA")
 			bytesWritten, writeErr := rw.Write([]byte(redirectDocument))
@@ -126,26 +133,27 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 
 	// Get Signature
 	api.SignaturesGetSignatureHandler = signatures.GetSignatureHandlerFunc(func(params signatures.GetSignatureParams, claUser *user.CLAUser) middleware.Responder {
-
+		reqID := utils.GetRequestID(params.XREQUESTID)
 		signature, err := service.GetSignature(params.SignatureID)
 		if err != nil {
 			log.Warnf("error retrieving signature metrics, error: %+v", err)
-			return signatures.NewGetSignatureBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewGetSignatureBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
 		if signature == nil {
-			return signatures.NewGetSignatureNotFound()
+			return signatures.NewGetSignatureNotFound().WithXRequestID(reqID)
 		}
 
-		return signatures.NewGetSignatureOK().WithPayload(signature)
+		return signatures.NewGetSignatureOK().WithXRequestID(reqID).WithPayload(signature)
 	})
 
 	// Retrieve GitHub Approval List Entries
 	api.SignaturesGetGitHubOrgWhitelistHandler = signatures.GetGitHubOrgWhitelistHandlerFunc(func(params signatures.GetGitHubOrgWhitelistParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
 			log.Warnf("error retrieving session from the session store, error: %+v", err)
-			return signatures.NewGetGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewGetGitHubOrgWhitelistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
 		githubAccessToken, ok := session.Values["github_access_token"].(string)
@@ -158,18 +166,19 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		if err != nil {
 			log.Warnf("error fetching github organization approval list entries v using signature_id: %s, error: %+v",
 				params.SignatureID, err)
-			return signatures.NewGetGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewGetGitHubOrgWhitelistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
-		return signatures.NewGetGitHubOrgWhitelistOK().WithPayload(ghApprovalList)
+		return signatures.NewGetGitHubOrgWhitelistOK().WithXRequestID(reqID).WithPayload(ghApprovalList)
 	})
 
 	// Add GitHub Approval List Entries
 	api.SignaturesAddGitHubOrgWhitelistHandler = signatures.AddGitHubOrgWhitelistHandlerFunc(func(params signatures.AddGitHubOrgWhitelistParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
 			log.Warnf("error retrieving session from the session store, error: %+v", err)
-			return signatures.NewAddGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewAddGitHubOrgWhitelistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
 		githubAccessToken, ok := session.Values["github_access_token"].(string)
@@ -182,7 +191,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		if err != nil {
 			log.Warnf("error adding github organization %s using signature_id: %s to the whitelist, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
-			return signatures.NewAddGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewAddGitHubOrgWhitelistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
 		// Create an event
@@ -207,16 +216,17 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			},
 		})
 
-		return signatures.NewAddGitHubOrgWhitelistOK().WithPayload(ghApprovalList)
+		return signatures.NewAddGitHubOrgWhitelistOK().WithXRequestID(reqID).WithPayload(ghApprovalList)
 	})
 
 	// Delete GitHub Approval List Entries
 	api.SignaturesDeleteGitHubOrgWhitelistHandler = signatures.DeleteGitHubOrgWhitelistHandlerFunc(func(params signatures.DeleteGitHubOrgWhitelistParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
 
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
 			log.Warnf("error retrieving session from the session store, error: %+v", err)
-			return signatures.NewDeleteGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewDeleteGitHubOrgWhitelistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
 		githubAccessToken, ok := session.Values["github_access_token"].(string)
@@ -229,7 +239,7 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		if err != nil {
 			log.Warnf("error deleting github organization %s using signature_id: %s from the whitelist, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
-			return signatures.NewDeleteGitHubOrgWhitelistBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewDeleteGitHubOrgWhitelistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
 		// Create an event
@@ -255,11 +265,12 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			},
 		})
 
-		return signatures.NewDeleteGitHubOrgWhitelistNoContent().WithPayload(ghApprovalList)
+		return signatures.NewDeleteGitHubOrgWhitelistNoContent().WithXRequestID(reqID).WithPayload(ghApprovalList)
 	})
 
 	// Get Project Signatures
 	api.SignaturesGetProjectSignaturesHandler = signatures.GetProjectSignaturesHandlerFunc(func(params signatures.GetProjectSignaturesParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
 		projectSignatures, err := service.GetProjectSignatures(params)
 		if err != nil {
 			log.Warnf("error retrieving project signatures for projectID: %s, error: %+v",
@@ -267,17 +278,18 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			return signatures.NewGetProjectSignaturesBadRequest().WithPayload(errorResponse(err))
 		}
 
-		return signatures.NewGetProjectSignaturesOK().WithPayload(projectSignatures)
+		return signatures.NewGetProjectSignaturesOK().WithXRequestID(reqID).WithPayload(projectSignatures)
 	})
 
 	// Get Project Company Signatures
 	api.SignaturesGetProjectCompanySignaturesHandler = signatures.GetProjectCompanySignaturesHandlerFunc(func(params signatures.GetProjectCompanySignaturesParams) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
 		signed, approved := true, true
 		projectSignature, err := service.GetProjectCompanySignature(params.CompanyID, params.ProjectID, &signed, &approved, params.NextKey, params.PageSize)
 		if err != nil {
 			log.Warnf("error retrieving project signatures for project: %s, company: %s, error: %+v",
 				params.ProjectID, params.CompanyID, err)
-			return signatures.NewGetProjectCompanySignaturesBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewGetProjectCompanySignaturesBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
 		count := int64(1)
@@ -291,41 +303,44 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			Signatures:     []*models.Signature{projectSignature},
 			TotalCount:     count,
 		}
-		return signatures.NewGetProjectCompanySignaturesOK().WithPayload(&response)
+		return signatures.NewGetProjectCompanySignaturesOK().WithXRequestID(reqID).WithPayload(&response)
 	})
 
 	// Get Employee Project Company Signatures
 	api.SignaturesGetProjectCompanyEmployeeSignaturesHandler = signatures.GetProjectCompanyEmployeeSignaturesHandlerFunc(func(params signatures.GetProjectCompanyEmployeeSignaturesParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
 		projectSignatures, err := service.GetProjectCompanyEmployeeSignatures(params)
 		if err != nil {
 			log.Warnf("error retrieving employee project signatures for project: %s, company: %s, error: %+v",
 				params.ProjectID, params.CompanyID, err)
-			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
-		return signatures.NewGetProjectCompanyEmployeeSignaturesOK().WithPayload(projectSignatures)
+		return signatures.NewGetProjectCompanyEmployeeSignaturesOK().WithXRequestID(reqID).WithPayload(projectSignatures)
 	})
 
 	// Get Company Signatures
 	api.SignaturesGetCompanySignaturesHandler = signatures.GetCompanySignaturesHandlerFunc(func(params signatures.GetCompanySignaturesParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
 		companySignatures, err := service.GetCompanySignatures(params)
 		if err != nil {
 			log.Warnf("error retrieving company signatures for companyID: %s, error: %+v", params.CompanyID, err)
-			return signatures.NewGetCompanySignaturesBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewGetCompanySignaturesBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
-		return signatures.NewGetCompanySignaturesOK().WithPayload(companySignatures)
+		return signatures.NewGetCompanySignaturesOK().WithXRequestID(reqID).WithPayload(companySignatures)
 	})
 
 	// Get User Signatures
 	api.SignaturesGetUserSignaturesHandler = signatures.GetUserSignaturesHandlerFunc(func(params signatures.GetUserSignaturesParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
 		userSignatures, err := service.GetUserSignatures(params)
 		if err != nil {
 			log.Warnf("error retrieving user signatures for userID: %s, error: %+v", params.UserID, err)
-			return signatures.NewGetUserSignaturesBadRequest().WithPayload(errorResponse(err))
+			return signatures.NewGetUserSignaturesBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
-		return signatures.NewGetUserSignaturesOK().WithPayload(userSignatures)
+		return signatures.NewGetUserSignaturesOK().WithXRequestID(reqID).WithPayload(userSignatures)
 	})
 }
 

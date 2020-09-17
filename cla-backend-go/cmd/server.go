@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/communitybridge/easycla/cla-backend-go/approval_list"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/cla_groups"
 	openapi_runtime "github.com/go-openapi/runtime"
@@ -319,7 +321,7 @@ func server(localMode bool) http.Handler {
 	// The middleware configuration is for the handler executors. These do not apply to the swagger.json document.
 	// The middleware executes after routing but before authentication, binding and validation
 	middlewareSetupfunc := func(handler http.Handler) http.Handler {
-		return responseLoggingMiddleware(userCreaterMiddleware(handler))
+		return setRequestIDHandler(responseLoggingMiddleware(userCreaterMiddleware(handler)))
 	}
 
 	v2API.CsvProducer = openapi_runtime.ProducerFunc(func(w io.Writer, data interface{}) error {
@@ -491,6 +493,22 @@ func (lrw *LoggingResponseWriter) Write(content []byte) (int, error) {
 func (lrw *LoggingResponseWriter) WriteHeader(statusCode int) {
 	lrw.StatusCode = statusCode
 	lrw.wrapped.WriteHeader(statusCode)
+}
+
+// setRequestIDHandler adds the x-request-id header, if missing
+func setRequestIDHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set the x-request-id header value if it doesn't exist...
+		if r.Header.Get("x-request-id") == "" {
+			requestID, err := uuid.NewV4()
+			if err != nil {
+				log.Warnf("unable to generate a UUID for x-request-id header, error: %v", err)
+			} else {
+				r.Header.Set("x-request-id", requestID.String())
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // responseLoggingMiddleware logs the responses from API endpoints
