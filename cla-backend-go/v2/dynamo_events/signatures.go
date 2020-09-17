@@ -7,6 +7,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/aws/aws-lambda-go/events"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
@@ -51,26 +55,114 @@ type Signature struct {
 
 // should be called when we modify signature
 func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
+	f := logrus.Fields{
+		"functionName": "SignatureSignedEvent",
+	}
+
+	// Decode the pre-update and post-update signature record details
 	var newSignature, oldSignature Signature
 	err := unmarshalStreamImage(event.Change.OldImage, &oldSignature)
 	if err != nil {
+		log.WithFields(f).Warnf("problem decoding pre-update signature, error: %+v", err)
 		return err
 	}
 	err = unmarshalStreamImage(event.Change.NewImage, &newSignature)
 	if err != nil {
+		log.WithFields(f).Warnf("problem decoding post-update signature, error: %+v", err)
 		return err
 	}
+
+	// Add some details for our logger
+	f["id"] = newSignature.SignatureID
+	f["type"] = newSignature.SignatureType
+	f["referenceID"] = newSignature.SignatureReferenceID
+	f["referenceName"] = newSignature.SignatureReferenceName
+	f["referenceType"] = newSignature.SignatureReferenceType
+	f["projectID"] = newSignature.SignatureProjectID
+	f["approved"] = newSignature.SignatureApproved
+	f["signed"] = newSignature.SignatureSigned
+
 	// check if signature signed event is received
 	if !oldSignature.SignatureSigned && newSignature.SignatureSigned {
+		// Update the signed on date
 		err = s.signatureRepo.AddSignedOn(newSignature.SignatureID)
 		if err != nil {
-			log.WithField("signature_id", newSignature.SignatureID).Warnf("failed to add signed_on date/time to signature")
+			log.WithFields(f).Warnf("failed to add signed_on date/time to signature, error: %+v", err)
 		}
+
+		// If a CCLA signature...
 		if newSignature.SignatureType == CCLASignatureType {
-			err = s.SetInitialCLAManagerACSPermissions(newSignature.SignatureID)
-			if err != nil {
-				log.WithField("signature_id", newSignature.SignatureID).Warnf("failed to set initial cla manager")
+
+			if len(newSignature.SignatureACL) == 0 {
+				log.WithFields(f).Warn("initial cla manager details not found")
+				return errors.New("initial cla manager details not found")
 			}
+
+			log.WithFields(f).Debugf("loading company from signature by companyID: %s...", newSignature.SignatureReferenceID)
+			companyModel, err := s.companyRepo.GetCompany(newSignature.SignatureReferenceID)
+			if err != nil {
+				log.WithFields(f).Warnf("failed to lookup company from signature by companyID: %s, error: %+v",
+					newSignature.SignatureReferenceID, err)
+				return err
+			}
+			if companyModel == nil {
+				msg := fmt.Sprintf("failed to lookup company from signature by companyID: %s, not found",
+					newSignature.SignatureReferenceID)
+				log.WithFields(f).Warn(msg)
+				return errors.New(msg)
+			}
+
+			// We should have the company SFID...
+			if companyModel.CompanyExternalID == "" {
+				msg := fmt.Sprintf("company %s (%s) does not have a SF Organization ID - unable to update permissions",
+					companyModel.CompanyName, companyModel.CompanyID)
+				log.WithFields(f).Warn(msg)
+				return errors.New(msg)
+			}
+
+			var eg errgroup.Group
+
+			// We have a separate routine to help assign the CLA Manager Role - it's a bit wasteful as it
+			// loads the signature and other details again.
+			// Kick off a go routine to set the cla manager role
+			eg.Go(func() error {
+				// Set the CLA manager permissions
+				log.WithFields(f).Debug("assigning the initial CLA manager")
+				err = s.SetInitialCLAManagerACSPermissions(newSignature.SignatureID)
+				if err != nil {
+					log.WithFields(f).Warnf("failed to set initial cla manager, error: %+v", err)
+					return err
+				}
+				return nil
+			})
+
+			// Load the list of SF projects associated with this CLA Group
+			log.WithFields(f).Debugf("querying SF projects for CLA Group: %s", newSignature.SignatureProjectID)
+			projectCLAGroups, err := s.projectsClaGroupRepo.GetProjectsIdsForClaGroup(newSignature.SignatureProjectID)
+
+			// Kick off a set of go routines to adjust the roles
+			for _, projectCLAGroup := range projectCLAGroups {
+				eg.Go(func() error {
+					// Remove any roles that were previously assigned for cla-manager-designee
+					log.WithFields(f).Debugf("removing %s role for project: %s (%s)", utils.CLADesigneeRole,
+						projectCLAGroup.ProjectName, projectCLAGroup.ProjectSFID)
+					err = s.removeCLAPermissionsByProjectOrganizationRole(projectCLAGroup.ProjectSFID, companyModel.CompanyExternalID, utils.CLADesigneeRole)
+					if err != nil {
+						log.WithFields(f).Warnf("failed to remove %s roles for project: %s (%s), error: %+v",
+							utils.CLADesigneeRole, projectCLAGroup.ProjectName, projectCLAGroup.ProjectSFID, err)
+						return err
+					}
+
+					return nil
+				})
+			}
+
+			// Wait for the go routines to finish
+			log.WithFields(f).Debug("waiting for role assignment and cleanup...")
+			if loadErr := eg.Wait(); loadErr != nil {
+				return loadErr
+			}
+			return nil
 		}
 	}
 

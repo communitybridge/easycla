@@ -3,11 +3,11 @@
 
 package utils
 
-// constants
-const (
-	// TheLinuxFoundation is the name of the super parent for many Salesforce Foundations/Project Groups
-	TheLinuxFoundation = "The Linux Foundation"
-)
+// TheLinuxFoundation is the name of the super parent for many Salesforce Foundations/Project Groups
+const TheLinuxFoundation = "The Linux Foundation"
+
+// XREQUESTID is the client request id - used to trace a client request through the system/logs
+const XREQUESTID = "x-request-id"
 
 // CLADesigneeRole CLA manager designee role identifier
 const CLADesigneeRole = "cla-manager-designee"
@@ -20,3 +20,6 @@ const CLASignatoryRole = "cla-signatory"
 
 // Lead representing type of user
 const Lead = "lead"
+
+// ProjectOrgScope is the ACS project + organiztion scope
+const ProjectOrgScope = "project|organization"

@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/sirupsen/logrus"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -41,7 +43,6 @@ var (
 var (
 	ErrRoleNotFound     = errors.New("role not found")
 	ErrProjectIDMissing = errors.New("project ID missing")
-	ProjectOrgScope     = "project|organization"
 )
 
 // InitClient initializes the acs_service client
@@ -100,11 +101,11 @@ func (ac *Client) SendUserInvite(email *string,
 		},
 		Context: context.Background(),
 	}
-	if scope == ProjectOrgScope && projectID == nil {
+	if scope == utils.ProjectOrgScope && projectID == nil {
 		log.WithFields(f).Warnf("Project ID required for project|organization scope, error: %+v", ErrProjectIDMissing)
 		return ErrProjectIDMissing
 	}
-	if scope == ProjectOrgScope {
+	if scope == utils.ProjectOrgScope {
 		// Set project|organization scope
 		params.SendInvite.ScopeID = fmt.Sprintf("%s|%s", *projectID, organizationID)
 	} else {
@@ -136,12 +137,14 @@ func (ac *Client) GetRoleID(roleName string) (string, error) {
 		"functionName": "GetRoleID",
 		"roleName":     roleName,
 	}
-	url := fmt.Sprintf("%s/acs/v1/api/roles?search=%s", ac.apiGwURL, roleName)
+
 	tok, err := token.GetToken()
 	if err != nil {
 		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
 		return "", err
 	}
+
+	url := fmt.Sprintf("%s/acs/v1/api/roles?search=%s", ac.apiGwURL, roleName)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.WithFields(f).Warnf("problem making a new GET request for url: %s, error: %+v", url, err)
@@ -181,4 +184,163 @@ func (ac *Client) GetRoleID(roleName string) (string, error) {
 	}
 
 	return "", ErrRoleNotFound
+}
+
+// GetObjectTypeIDByName will return object type ID for the provided role name
+func (ac *Client) GetObjectTypeIDByName(objectType string) (string, error) {
+	f := logrus.Fields{
+		"functionName": "GetObjectTypeID",
+		"objectType":   objectType,
+	}
+
+	tok, err := token.GetToken()
+	if err != nil {
+		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
+		return "", err
+	}
+
+	url := fmt.Sprintf("%s/acs/v1/api/object-types", ac.apiGwURL)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.WithFields(f).Warnf("problem making a new GET request for url: %s, error: %+v", url, err)
+		return "", err
+	}
+	req.Header.Set("X-API-KEY", ac.apiKey)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.WithFields(f).Warnf("problem invoking http GET request to url: %s, error: %+v", url, err)
+		return "", err
+	}
+	defer func() {
+		closeErr := resp.Body.Close()
+		if closeErr != nil {
+			log.WithFields(f).Warnf("error closing resource: %+v", closeErr)
+		}
+	}()
+	var objectTypes []struct {
+		TypeID    string `json:"type_id"`
+		Name      string `json:"name"`
+		CreatedAt string `json:"created_at"`
+		UpdatedAt string `json:"updated_at"`
+	}
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.WithFields(f).Warnf("problem reading response body, error: %+v", err)
+		return "", err
+	}
+	err = json.Unmarshal(b, &objectTypes)
+	if err != nil {
+		log.WithFields(f).Warnf("problem unmarshalling response body, error: %+v", err)
+		return "", err
+	}
+
+	for _, role := range objectTypes {
+		if role.Name == objectType {
+			return role.TypeID, nil
+		}
+	}
+
+	return "", ErrRoleNotFound
+}
+
+// GetAssignedRoles will return assigned roles based on the roleName, project and organization SFID
+func (ac *Client) GetAssignedRoles(roleName, projectSFID, organizationSFID string) (*models.ObjectRoleScope, error) {
+	f := logrus.Fields{
+		"functionName":     "GetAssignedRole",
+		"roleName":         roleName,
+		"projectSFID":      projectSFID,
+		"organizationSFID": organizationSFID,
+	}
+
+	tok, err := token.GetToken()
+	if err != nil {
+		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
+		return nil, err
+	}
+
+	// Lookup the Project|Organization type
+	objectTypeID, err := ac.GetObjectTypeIDByName(utils.ProjectOrgScope)
+	if err != nil {
+		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
+		return nil, err
+	}
+	url := fmt.Sprintf("%s/acs/v1/api/object-types/%s/roles?ojectid=%s|%s", ac.apiGwURL, objectTypeID, projectSFID, organizationSFID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.WithFields(f).Warnf("problem making a new GET request for url: %s, error: %+v", url, err)
+		return nil, err
+	}
+	req.Header.Set("X-API-KEY", ac.apiKey)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.WithFields(f).Warnf("problem invoking http GET request to url: %s, error: %+v", url, err)
+		return nil, err
+	}
+	defer func() {
+		closeErr := resp.Body.Close()
+		if closeErr != nil {
+			log.WithFields(f).Warnf("error closing resource: %+v", closeErr)
+		}
+	}()
+
+	var response *models.ObjectRoleScope
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.WithFields(f).Warnf("problem reading response body, error: %+v", err)
+		return nil, err
+	}
+	err = json.Unmarshal(b, response)
+	if err != nil {
+		log.WithFields(f).Warnf("problem unmarshalling response body, error: %+v", err)
+		return nil, err
+	}
+
+	return response, nil
+}
+
+// DeleteRoleByID will delete the specified role by ID
+func (ac *Client) DeleteRoleByID(roleID string) error {
+	f := logrus.Fields{
+		"functionName": "DeleteRoleByID",
+		"roleID":       roleID,
+	}
+
+	if roleID == "" {
+		log.WithFields(f).Warn("unable to delete role by ID - role ID is empty")
+		return errors.New("empty role ID")
+	}
+
+	tok, err := token.GetToken()
+	if err != nil {
+		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
+		return err
+	}
+
+	url := fmt.Sprintf("%s/acs/v1/api/roles/%s", ac.apiGwURL, roleID)
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		log.WithFields(f).Warnf("problem making a new DELETE request for url: %s, error: %+v", url, err)
+		return err
+	}
+	req.Header.Set("X-API-KEY", ac.apiKey)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.WithFields(f).Warnf("problem invoking http DELETE request to url: %s, error: %+v", url, err)
+		return err
+	}
+	defer func() {
+		closeErr := resp.Body.Close()
+		if closeErr != nil {
+			log.WithFields(f).Warnf("error closing resource: %+v", closeErr)
+		}
+	}()
+
+	if resp.StatusCode != 204 {
+		log.WithFields(f).Warnf("non-success status code returned from delete operation: %d", resp.StatusCode)
+	}
+
+	return nil
 }

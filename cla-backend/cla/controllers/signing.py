@@ -32,7 +32,7 @@ def request_individual_signature(project_id, user_id, return_url_type, return_ur
         return signing_service.request_individual_signature(str(project_id), str(user_id), return_url)
 
 
-def request_corporate_signature(auth_user, project_id, company_id, send_as_email=False, 
+def request_corporate_signature(auth_user, project_id, company_id, send_as_email=False,
                                 authority_name=None, authority_email=None, return_url_type=None, return_url=None):
     """
     Creates CCLA signature object that represents a company signing a CCLA.
@@ -79,7 +79,8 @@ def request_employee_signature(project_id, company_id, user_id, return_url_type,
 
     signing_service = get_signing_service()
     if return_url_type == "Gerrit":
-        return signing_service.request_employee_signature_gerrit(str(project_id), str(company_id), str(user_id), return_url)
+        return signing_service.request_employee_signature_gerrit(str(project_id), str(company_id), str(user_id),
+                                                                 return_url)
     elif return_url_type == "Github":
         return signing_service.request_employee_signature(str(project_id), str(company_id), str(user_id), return_url)
 
@@ -120,10 +121,11 @@ Please read the agreement carefully and sign the attached file.
     
 
 - Linux Foundation CLA System
-''' %(authority_name, company_name, project_name)
+''' % (authority_name, company_name, project_name)
     recipient = authority_email
     email_service = get_email_service()
     email_service.send(subject, body, recipient)
+
 
 def post_individual_signed(content, installation_id, github_repository_id, change_request_id):
     """
@@ -139,6 +141,7 @@ def post_individual_signed(content, installation_id, github_repository_id, chang
     """
     get_signing_service().signed_individual_callback(content, installation_id, github_repository_id, change_request_id)
 
+
 def post_individual_signed_gerrit(content, user_id):
     """
     Handle the posted callback from the signing service after ICLA signature for Gerrit.
@@ -149,6 +152,7 @@ def post_individual_signed_gerrit(content, user_id):
     :type user_id: string
     """
     get_signing_service().signed_individual_callback_gerrit(content, user_id)
+
 
 def post_corporate_signed(content, project_id, company_id):
     """
@@ -163,7 +167,8 @@ def post_corporate_signed(content, project_id, company_id):
     """
     get_signing_service().signed_corporate_callback(content, project_id, company_id)
 
-def return_url(signature_id, event=None): # pylint: disable=unused-argument
+
+def return_url(signature_id, event=None):  # pylint: disable=unused-argument
     """
     Handle the GET request from the user once they have successfully signed.
 
@@ -172,7 +177,7 @@ def return_url(signature_id, event=None): # pylint: disable=unused-argument
     :param event: The event GET flag sent back from the signing service provider.
     :type event: string | None
     """
-    try: # Load the signature based on ID.
+    try:  # Load the signature based on ID.
         signature = get_signature_instance()
         signature.load(str(signature_id))
     except DoesNotExist as err:
