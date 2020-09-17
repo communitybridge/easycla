@@ -4,6 +4,7 @@
 package dynamo_events
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -18,10 +19,11 @@ import (
 )
 
 // SetInitialCLAManagerACSPermissions
-func (s *service) SetInitialCLAManagerACSPermissions(signatureID string) error {
+func (s *service) SetInitialCLAManagerACSPermissions(ctx context.Context, signatureID string) error {
 	f := logrus.Fields{
-		"functionName": "SetInitialCLAManagerACSPermissions",
-		"signatureID":  signatureID,
+		"functionName":   "SetInitialCLAManagerACSPermissions",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"signatureID":    signatureID,
 	}
 
 	sig, err := s.signatureRepo.GetSignature(signatureID)
@@ -135,7 +137,7 @@ func (s *service) SetInitialCLAManagerACSPermissions(signatureID string) error {
 
 	// Assign cla manager role based on level
 	log.WithFields(f).Debugf("assigning %s role for projects: %s", utils.CLAManagerRole, projectInfoMsg)
-	err = s.assignCLAManager(email, claManager.Username, company.CompanyExternalID, projectList)
+	err = s.assignCLAManager(ctx, email, claManager.Username, company.CompanyExternalID, projectList)
 	if err != nil {
 		log.WithFields(f).Warnf("unable to assign CLA Manager %s for company: %s, error: %+v",
 			claManager.Username, company.CompanyExternalID, err)
@@ -145,19 +147,20 @@ func (s *service) SetInitialCLAManagerACSPermissions(signatureID string) error {
 	return nil
 }
 
-func (s service) assignCLAManager(email, username, companySFID string, projectList []*projects_cla_groups.ProjectClaGroup) error {
+func (s service) assignCLAManager(ctx context.Context, email, username, companySFID string, projectList []*projects_cla_groups.ProjectClaGroup) error {
 	f := logrus.Fields{
-		"functionName": "assignCLAManager",
-		"email":        email,
-		"username":     username,
-		"companySFID":  companySFID,
+		"functionName":   "assignCLAManager",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"email":          email,
+		"username":       username,
+		"companySFID":    companySFID,
 	}
 
 	// check if project is signed at foundation level
 	foundationID := projectList[0].FoundationSFID
 	f["foundationID"] = projectList[0].FoundationSFID
 	log.WithFields(f).Debugf("determining if this project happens to be signed at the foundation level, foundationID: %s", foundationID)
-	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(foundationID)
+	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, foundationID)
 	if signedErr != nil {
 		return signedErr
 	}
