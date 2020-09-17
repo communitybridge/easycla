@@ -4,6 +4,7 @@
 package signatures
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sort"
@@ -71,8 +72,8 @@ type SignatureRepository interface {
 	InvalidateProjectRecord(signatureID string, projectName string) error
 
 	GetSignature(signatureID string) (*models.Signature, error)
-	GetIndividualSignature(claGroupID, userID string) (*models.Signature, error)
-	GetCorporateSignature(claGroupID, companyID string) (*models.Signature, error)
+	GetIndividualSignature(ctx context.Context, claGroupID, userID string) (*models.Signature, error)
+	GetCorporateSignature(ctx context.Context, claGroupID, companyID string) (*models.Signature, error)
 	GetSignatureACL(signatureID string) ([]string, error)
 	GetProjectSignatures(params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetProjectCompanySignature(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signature, error)
@@ -281,7 +282,7 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(signatureID, Github
 		// nooooo, that would be too easy. Instead:
 		// We need to set the value to NULL to clear it out (otherwise we'll get a validation error like:)
 		// ValidationException: ExpressionAttributeValues contains invalid value: Supplied AttributeValue
-		// is empty, must contain exactly one of the supported datatypes for key)
+		// is empty, must contain exactly one of the supported data types for the key)
 
 		log.Debugf("clearing out github org whitelist for organization: %s for signature: %s - list is empty",
 			GithubOrganizationID, signatureID)
@@ -408,9 +409,10 @@ func (repo repository) GetSignature(signatureID string) (*models.Signature, erro
 }
 
 // GetIndividualSignature returns the signature record for the specified CLA Group and User
-func (repo repository) GetIndividualSignature(claGroupID, userID string) (*models.Signature, error) {
+func (repo repository) GetIndividualSignature(ctx context.Context, claGroupID, userID string) (*models.Signature, error) {
 	f := logrus.Fields{
 		"functionName":           "GetIndividualSignature",
+		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
 		"tableName":              repo.signatureTableName,
 		"claGroupID":             claGroupID,
 		"userID":                 userID,
@@ -501,9 +503,10 @@ func (repo repository) GetIndividualSignature(claGroupID, userID string) (*model
 }
 
 // GetCorporateSignature returns the signature record for the specified CLA Group and Company ID
-func (repo repository) GetCorporateSignature(claGroupID, companyID string) (*models.Signature, error) {
+func (repo repository) GetCorporateSignature(ctx context.Context, claGroupID, companyID string) (*models.Signature, error) {
 	f := logrus.Fields{
 		"functionName":           "GetCorporateSignature",
+		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
 		"tableName":              repo.signatureTableName,
 		"claGroupID":             claGroupID,
 		"companyID":              companyID,
@@ -552,9 +555,7 @@ func (repo repository) GetCorporateSignature(claGroupID, companyID string) (*mod
 	// Loop until we have all the records
 	for ok := true; ok; ok = lastEvaluatedKey != "" {
 		// Make the DynamoDB Query API call
-		//log.Debugf("Running signature project query using queryInput: %+v", queryInput)
 		results, errQuery := repo.dynamoDBClient.Query(queryInput)
-		//log.Debugf("Ran signature project query, results: %+v, error: %+v", results, errQuery)
 		if errQuery != nil {
 			log.WithFields(f).Warnf("error retrieving project CCLA signature, error: %v", errQuery)
 			return nil, errQuery
@@ -631,7 +632,7 @@ func (repo repository) GetSignatureACL(signatureID string) ([]string, error) {
 	// Unmarshall the DB response
 	unmarshallErr := dynamodbattribute.UnmarshalMap(result.Item, &dbModel)
 	if unmarshallErr != nil {
-		log.Warnf("error converting DB model signature query using siganture ID: %s, error: %v",
+		log.Warnf("error converting DB model signature query using signature ID: %s, error: %v",
 			signatureID, unmarshallErr)
 		return nil, unmarshallErr
 	}
@@ -1622,11 +1623,16 @@ func (repo repository) RemoveCLAManager(signatureID, claManagerID string) (*mode
 
 // UpdateApprovalList updates the specified project/company signature with the updated approval list information
 func (repo repository) UpdateApprovalList(projectID, companyID string, params *models.ApprovalList) (*models.Signature, error) { // nolint
-	log.Debugf("querying database for approval list details using project ID: %s, company ID: %s", projectID, companyID)
+	f := logrus.Fields{
+		"functionName": "UpdateApprovalList",
+		"projectID":    projectID,
+		"companyID":    companyID,
+	}
+	log.WithFields(f).Debug("querying database for approval list details")
 
 	signed, approved := true, true
 	pageSize := int64(10)
-	log.Debugf("querying database for approval list details using company ID: %s project ID: %s, type: ccla, signed: true, approved: true",
+	log.WithFields(f).Debugf("querying database for approval list details using company ID: %s project ID: %s, type: ccla, signed: true, approved: true",
 		companyID, projectID)
 	sigs, sigErr := repo.GetProjectCompanySignatures(companyID, projectID, &signed, &approved, nil, &pageSize)
 	if sigErr != nil {
@@ -1636,12 +1642,12 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 	if sigs == nil || sigs.Signatures == nil {
 		msg := fmt.Sprintf("unable to locate signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
 			companyID, projectID, signed, approved)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, errors.New(msg)
 	}
 
 	if len(sigs.Signatures) > 1 {
-		log.Warnf("more than 1 CCLA signature returned for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t - expecting zero or 1 - using first record",
+		log.WithFields(f).Warnf("more than 1 CCLA signature returned for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t - expecting zero or 1 - using first record",
 			companyID, projectID, signed, approved)
 	}
 
@@ -1663,7 +1669,7 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 			if rmColErr != nil {
 				msg := fmt.Sprintf("unable to remove column %s for signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
 					columnName, companyID, projectID, signed, approved)
-				log.Warn(msg)
+				log.WithFields(f).Warn(msg)
 				return nil, errors.New(msg)
 			}
 		} else {
@@ -1684,7 +1690,7 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 			if rmColErr != nil {
 				msg := fmt.Sprintf("unable to remove column %s for signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
 					columnName, companyID, projectID, signed, approved)
-				log.Warn(msg)
+				log.WithFields(f).Warn(msg)
 				return nil, errors.New(msg)
 			}
 		} else {
@@ -1705,7 +1711,7 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 			if rmColErr != nil {
 				msg := fmt.Sprintf("unable to remove column %s for signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
 					columnName, companyID, projectID, signed, approved)
-				log.Warn(msg)
+				log.WithFields(f).Warn(msg)
 				return nil, errors.New(msg)
 			}
 		} else {
@@ -1726,7 +1732,7 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 			if rmColErr != nil {
 				msg := fmt.Sprintf("unable to remove column %s for signature for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
 					columnName, companyID, projectID, signed, approved)
-				log.Warn(msg)
+				log.WithFields(f).Warn(msg)
 				return nil, errors.New(msg)
 			}
 		} else {
@@ -1739,7 +1745,7 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 
 	// Ensure at least one value is set for us to update
 	if !haveAdditions {
-		log.Debugf("no updates required to any of the approved list values company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t - expecting at least something to update",
+		log.WithFields(f).Debugf("no updates required to any of the approved list values company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t - expecting at least something to update",
 			companyID, projectID, signed, approved)
 		return sig, nil
 	}
@@ -1760,17 +1766,17 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 		UpdateExpression:          aws.String(updateExpression), //aws.String("SET #L = :l"),
 	}
 
-	log.Debugf("updating approval list for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
+	log.WithFields(f).Debugf("updating approval list for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
 		companyID, projectID, signed, approved)
 
 	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
 	if updateErr != nil {
-		log.Warnf("error updating approval lists for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t, error: %v",
+		log.WithFields(f).Warnf("error updating approval lists for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t, error: %v",
 			companyID, projectID, signed, approved, updateErr)
 		return nil, updateErr
 	}
 
-	log.Debugf("querying database for approval list details after update using company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
+	log.WithFields(f).Debugf("querying database for approval list details after update using company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
 		companyID, projectID, signed, approved)
 
 	updatedSig, sigErr := repo.GetProjectCompanySignatures(companyID, projectID, &signed, &approved, nil, &pageSize)
@@ -1781,12 +1787,12 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 	if updatedSig == nil || updatedSig.Signatures == nil {
 		msg := fmt.Sprintf("unable to locate signature after update for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
 			companyID, projectID, signed, approved)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, errors.New(msg)
 	}
 
 	if len(updatedSig.Signatures) > 1 {
-		log.Warnf("more than 1 CCLA signature returned after update for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t - expecting zero or 1 - using first record",
+		log.WithFields(f).Warnf("more than 1 CCLA signature returned after update for company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t - expecting zero or 1 - using first record",
 			companyID, projectID, signed, approved)
 	}
 
@@ -1796,7 +1802,12 @@ func (repo repository) UpdateApprovalList(projectID, companyID string, params *m
 
 // removeColumn is a helper function to remove a given column when we need to zero out the column value - typically the approval list
 func (repo repository) removeColumn(signatureID, columnName string) (*models.Signature, error) {
-	log.Debugf("removing column %s from signature ID: %s", columnName, signatureID)
+	f := logrus.Fields{
+		"functionName": "removeColumn",
+		"signatureID":  signatureID,
+		"columnName":   columnName,
+	}
+	log.WithFields(f).Debug("removing column from signature")
 
 	// Update dynamoDB table
 	input := &dynamodb.UpdateItemInput{
@@ -1820,7 +1831,7 @@ func (repo repository) removeColumn(signatureID, columnName string) (*models.Sig
 
 	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
 	if updateErr != nil {
-		log.Warnf("error removing approval lists column %s for signature ID: %s, error: %v", columnName, signatureID, updateErr)
+		log.WithFields(f).Warnf("error removing approval lists column %s for signature ID: %s, error: %v", columnName, signatureID, updateErr)
 		return nil, updateErr
 	}
 
@@ -1833,6 +1844,11 @@ func (repo repository) removeColumn(signatureID, columnName string) (*models.Sig
 }
 
 func (repo repository) AddSigTypeSignedApprovedID(signatureID string, val string) error {
+	f := logrus.Fields{
+		"functionName":            "AddSigTypeSignedApprovedID",
+		"signatureID":             signatureID,
+		"sigtypeSignedApprovedID": val,
+	}
 	input := &dynamodb.UpdateItemInput{
 		TableName: aws.String(repo.signatureTableName),
 		Key: map[string]*dynamodb.AttributeValue{
@@ -1852,18 +1868,24 @@ func (repo repository) AddSigTypeSignedApprovedID(signatureID string, val string
 	}
 	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
 	if updateErr != nil {
-		log.Warnf("unable to update sigtype_signed_approved_id for signature_id : %s", signatureID)
+		log.WithFields(f).Warnf("unable to update sigtype_signed_approved_id for signature_id: %s with input: %+v, error: %+v",
+			signatureID, input, updateErr)
 		return updateErr
 	}
 	return nil
 }
 func (repo repository) AddUsersDetails(signatureID string, userID string) error {
+	f := logrus.Fields{
+		"functionName": "AddUserDetails",
+		"signatureID":  signatureID,
+		"userID":       userID,
+	}
 	userModel, err := repo.usersRepo.GetUser(userID)
 	if err != nil {
 		return err
 	}
 	if userModel == nil {
-		log.WithFields(logrus.Fields{"user_id": userID, "signature_id": signatureID}).Error("invalid user_id")
+		log.WithFields(f).Error("invalid user_id")
 		return fmt.Errorf("invalid user id : %s for signature : %s", userID, signatureID)
 	}
 	var email string
@@ -1900,6 +1922,7 @@ func (repo repository) AddUsersDetails(signatureID string, userID string) error 
 	ue.AddUpdateExpression("#email = :email", email != "")
 	if ue.Expression == "" {
 		// nothing to update
+		log.WithFields(f).Debug("no fields to update")
 		return nil
 	}
 	input.UpdateExpression = aws.String(ue.Expression)
@@ -1907,14 +1930,19 @@ func (repo repository) AddUsersDetails(signatureID string, userID string) error 
 	input.ExpressionAttributeValues = ue.ExpressionAttributeValues
 	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
 	if updateErr != nil {
-		log.Debugf("update input: %v", input)
-		log.Warnf("unable to add users details to : %s . error = %s", signatureID, updateErr.Error())
+		log.WithFields(f).Warnf("unable to add users details to signature ID: %s with input: %+v, error = %s",
+			signatureID, input, updateErr.Error())
 		return updateErr
 	}
+
 	return nil
 }
 
 func (repo repository) AddSignedOn(signatureID string) error {
+	f := logrus.Fields{
+		"functionName": "AddSignedOn",
+		"signatureID":  signatureID,
+	}
 	_, currentTime := utils.CurrentTime()
 	input := &dynamodb.UpdateItemInput{
 		TableName: aws.String(repo.signatureTableName),
@@ -1933,12 +1961,16 @@ func (repo repository) AddSignedOn(signatureID string) error {
 		},
 		UpdateExpression: aws.String("SET #signed_on = :current_time"),
 	}
+
+	log.WithFields(f).Debug("updating signed on date...")
 	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
 	if updateErr != nil {
-		log.Debugf("update input: %v", input)
-		log.Warnf("unable to signed_on to : %s . error = %s", signatureID, updateErr.Error())
+		log.WithFields(f).Warnf("unable to signed_on for signature ID: %s using update input: %+v, error = %s",
+			signatureID, input, updateErr.Error())
 		return updateErr
 	}
+
+	log.WithFields(f).Debug("successfully updated signed on date...")
 	return nil
 }
 

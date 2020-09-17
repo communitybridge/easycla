@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -126,15 +128,15 @@ func (s *service) removeCLAPermissions(projectSFID string) error {
 	}
 	log.WithFields(f).Debug("removing CLA permissions...")
 
-	roleErr := s.removeCLAPermissionsByRole(projectSFID, utils.CLAManagerRole)
+	roleErr := s.removeCLAPermissionsByProjectRole(projectSFID, utils.CLAManagerRole)
 	if roleErr != nil {
 		return roleErr
 	}
-	roleErr = s.removeCLAPermissionsByRole(projectSFID, utils.CLADesigneeRole)
+	roleErr = s.removeCLAPermissionsByProjectRole(projectSFID, utils.CLADesigneeRole)
 	if roleErr != nil {
 		return roleErr
 	}
-	roleErr = s.removeCLAPermissionsByRole(projectSFID, utils.CLASignatoryRole)
+	roleErr = s.removeCLAPermissionsByProjectRole(projectSFID, utils.CLASignatoryRole)
 	if roleErr != nil {
 		return roleErr
 	}
@@ -142,10 +144,10 @@ func (s *service) removeCLAPermissions(projectSFID string) error {
 	return nil
 }
 
-// ProjectDeleteEvent handles the CLA Group (projects table) delete event
-func (s *service) removeCLAPermissionsByRole(projectSFID, roleName string) error {
+// removeCLAPermissionsByProjectRole handles removal of the specified role for the given SF Project
+func (s *service) removeCLAPermissionsByProjectRole(projectSFID, roleName string) error {
 	f := logrus.Fields{
-		"functionName": "removeCLAPermissionsByRole",
+		"functionName": "removeCLAPermissionsByProjectRole",
 		"projectSFID":  projectSFID,
 		"roleName":     roleName,
 	}
@@ -160,5 +162,55 @@ func (s *service) removeCLAPermissionsByRole(projectSFID, roleName string) error
 
 	// TODO: figure out how to query ACS for the list of role assignments matching the provided projectSFID and roleID
 
+	return nil
+}
+
+// removeCLAPermissionsByProjectOrganizationRole handles removal of the specified role for the given SF Project and SF Organization
+func (s *service) removeCLAPermissionsByProjectOrganizationRole(projectSFID, organizationSFID, roleName string) error {
+	f := logrus.Fields{
+		"functionName":     "removeCLAPermissionsByProjectOrganizationRole",
+		"projectSFID":      projectSFID,
+		"organizationSFID": organizationSFID,
+		"roleName":         roleName,
+	}
+	log.WithFields(f).Debug("removing CLA permissions...")
+	client := acs_service.GetClient()
+
+	log.WithFields(f).Debugf("locating users with assigned role of %s with matching scope...", roleName)
+	assignedRoles, assignedRolesErr := client.GetAssignedRoles(roleName, projectSFID, organizationSFID)
+	if assignedRolesErr != nil {
+		log.WithFields(f).Warnf("problem looking up assigned roles of %s, error: %+v", roleName, assignedRolesErr)
+		return assignedRolesErr
+	}
+
+	var eg errgroup.Group
+	for _, assignedRoleData := range assignedRoles.Data {
+		// Grab the user name for the printout/log
+		username := "<not defined>"
+		if assignedRoleData.User != nil && assignedRoleData.User.Username != "" {
+			username = assignedRoleData.User.Username
+		}
+
+		for _, assignedRole := range assignedRoleData.Roles {
+			eg.Go(func() error {
+				log.WithFields(f).Debugf("deleting role using role ID: %s with name: %s for user: %s",
+					assignedRole.ID, assignedRole.Name, username)
+				deleteErr := client.DeleteRoleByID(assignedRole.ID)
+				if deleteErr != nil {
+					log.WithFields(f).Warnf("problem deleting  assigned role of %s, error: %+v", roleName, deleteErr)
+					return deleteErr
+				}
+
+				log.WithFields(f).Debugf("deleted role using role ID: %s with name: %s for user: %s",
+					assignedRole.ID, assignedRole.Name, username)
+				return nil
+			})
+		}
+	}
+
+	log.WithFields(f).Debug("waiting for role cleanup...")
+	if loadErr := eg.Wait(); loadErr != nil {
+		return loadErr
+	}
 	return nil
 }

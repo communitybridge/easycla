@@ -6,7 +6,6 @@ package dynamo_events
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
@@ -15,6 +14,7 @@ import (
 	v2OrgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	v2UserService "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 )
 
 // SetInitialCLAManagerACSPermissions
@@ -31,6 +31,15 @@ func (s *service) SetInitialCLAManagerACSPermissions(signatureID string) error {
 	}
 
 	f["signatureType"] = sig.SignatureType
+	f["referenceID"] = sig.SignatureReferenceID
+	f["referenceName"] = sig.SignatureReferenceName
+	f["referenceType"] = sig.SignatureReferenceType
+	f["projectID"] = sig.ProjectID
+	f["signed"] = sig.SignatureSigned
+	f["approved"] = sig.SignatureApproved
+	f["companyName"] = sig.CompanyName
+	f["claType"] = sig.ClaType
+
 	if sig.SignatureType != CCLASignatureType {
 		log.WithFields(f).Warn("invalid signature type for setting initial cla manager request")
 		return fmt.Errorf("invalid signature type for setting initial cla manager request. %s", signatureID)
@@ -39,28 +48,78 @@ func (s *service) SetInitialCLAManagerACSPermissions(signatureID string) error {
 		log.WithFields(f).Warn("initial cla manager details not found")
 		return errors.New("initial cla manager details not found")
 	}
+
+	if len(sig.SignatureACL) > 1 {
+		log.WithFields(f).Warnf("%d initial cla managers specified in the signature record - this likely a mistake.", len(sig.SignatureACL))
+	}
+
 	// get user details
 	userServiceClient := v2UserService.GetClient()
+	log.WithFields(f).Debugf("searching user by username: %s", sig.SignatureACL[0].LfUsername)
 	claManager, err := userServiceClient.GetUserByUsername(sig.SignatureACL[0].LfUsername)
-	if err != nil {
-		log.WithFields(f).Warnf("unable to lookup user by username: %s", sig.SignatureACL[0].LfUsername)
-		return err
+	// Find it? If not, we'll try a couple of approaches before giving up...
+	if err != nil || claManager == nil {
+		log.WithFields(f).Warnf("unable to lookup user by username: %s, error: %+v",
+			sig.SignatureACL[0].LfUsername, err)
+
+		log.WithFields(f).Debugf("searching user by email: %s", sig.SignatureACL[0].LfEmail)
+		if sig.SignatureACL[0].LfEmail != "" {
+			claManager, err = userServiceClient.SearchUserByEmail(sig.SignatureACL[0].LfEmail)
+			if err != nil || claManager == nil {
+				log.WithFields(f).Warnf("unable to lookup user by email: %s, error: %+v",
+					sig.SignatureACL[0].LfEmail, err)
+			}
+		}
+
+		// Haven't found it yet - do we have any alternative emails?
+		if claManager == nil && sig.SignatureACL[0].Emails != nil {
+			// Search each one...
+			for _, altEmail := range sig.SignatureACL[0].Emails {
+				log.WithFields(f).Debugf("searching user by alternate email: %s", altEmail)
+				claManager, err = userServiceClient.SearchUserByEmail(altEmail)
+				if err != nil || claManager == nil {
+					log.WithFields(f).Warnf("unable to lookup user by alternate email: %s, error: %+v",
+						altEmail, err)
+				}
+
+				// Found it!
+				if claManager != nil {
+					break
+				}
+			}
+		}
+
+		// Bummer, didn't find it... time to bail out...
+		if claManager == nil {
+			if err == nil {
+				msg := "unable to locate user using username, lf email or alternate emails - giving up"
+				log.WithFields(f).Warn(msg)
+				err = errors.New(msg)
+			}
+			return err
+		}
+
+		// Fall through - we have a valid claManager record!!
 	}
-	// get email id from the user details
+
+	// get the preferred email from the user details
 	var email string
 	for _, e := range claManager.Emails {
 		if e != nil && e.IsPrimary != nil && *e.IsPrimary {
 			email = utils.StringValue(e.EmailAddress)
 		}
 	}
+
+	log.WithFields(f).Debug("locating company record by signature reference ID...")
 	company, err := s.companyRepo.GetCompany(sig.SignatureReferenceID.String())
 	if err != nil {
-		log.WithFields(f).Warnf("unable to lookup company by ID: %s, error: %+v",
+		log.WithFields(f).Warnf("unable to lookup company by signature reference ID: %s, error: %+v",
 			sig.SignatureReferenceID.String(), err)
 		return err
 	}
 
 	// fetch list of projects under cla group
+	log.WithFields(f).Debug("locating SF projects associated with the CLA Group...")
 	projectList, err := s.projectsClaGroupRepo.GetProjectsIdsForClaGroup(sig.ProjectID)
 	if err != nil {
 		log.WithFields(f).Warnf("unable to fetch list of projects associated with CLA Group: %s, error: %+v",
@@ -68,7 +127,14 @@ func (s *service) SetInitialCLAManagerACSPermissions(signatureID string) error {
 		return err
 	}
 
+	// Build a quick string for the output log
+	var projectInfoMsg string
+	for _, project := range projectList {
+		projectInfoMsg += project.ProjectName + "(" + project.ProjectSFID + "), "
+	}
+
 	// Assign cla manager role based on level
+	log.WithFields(f).Debugf("assigning %s role for projects: %s", utils.CLAManagerRole, projectInfoMsg)
 	err = s.assignCLAManager(email, claManager.Username, company.CompanyExternalID, projectList)
 	if err != nil {
 		log.WithFields(f).Warnf("unable to assign CLA Manager %s for company: %s, error: %+v",
@@ -89,90 +155,55 @@ func (s service) assignCLAManager(email, username, companySFID string, projectLi
 
 	// check if project is signed at foundation level
 	foundationID := projectList[0].FoundationSFID
+	f["foundationID"] = projectList[0].FoundationSFID
+	log.WithFields(f).Debugf("determining if this project happens to be signed at the foundation level, foundationID: %s", foundationID)
 	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(foundationID)
 	if signedErr != nil {
 		return signedErr
 	}
+
 	acsClient := v2AcsService.GetClient()
+	log.WithFields(f).Debugf("locating role ID for role: %s", utils.CLAManagerRole)
 	claManagerRoleID, roleErr := acsClient.GetRoleID(utils.CLAManagerRole)
 	if roleErr != nil {
-		log.WithFields(f).Warnf("problem getting role for %s, error: %+v", utils.CLAManagerRole, roleErr)
+		log.WithFields(f).Warnf("problem looking up details for role: %s, error: %+v", utils.CLAManagerRole, roleErr)
 		return roleErr
 	}
-	orgService := v2OrgService.GetClient()
 
-	scopes, err := orgService.ListOrgUserScopes(companySFID, []string{utils.CLAManagerRole, utils.CLADesigneeRole})
-	if err != nil {
-		log.WithFields(f).Warnf("problem listing organization user scopes for company: %s, error: %+v",
-			companySFID, err)
-		return err
-	}
+	orgService := v2OrgService.GetClient()
 
 	if signedAtFoundation {
 		// add cla manager role at foundation level
-		err = orgService.CreateOrgUserRoleOrgScopeProjectOrg(email, foundationID, companySFID, claManagerRoleID)
+		err := orgService.CreateOrgUserRoleOrgScopeProjectOrg(email, foundationID, companySFID, claManagerRoleID)
 		if err != nil {
-			log.WithFields(logrus.Fields{
-				"org_id":          companySFID,
-				"foundation_sfid": foundationID,
-				"lf_username":     username,
-				"email":           email,
-			}).Warnf("unable to add cla-manager scope. error = %s", err)
+			log.WithFields(f).Warnf("unable to add %s scope. error = %s", utils.CLAManagerRole, err)
 		}
-
-		// delete cla manager designee role for foundation
-		for _, userRole := range scopes.Userroles {
-			for _, roleScope := range userRole.RoleScopes {
-				if roleScope.RoleName == utils.CLADesigneeRole {
-					for _, scope := range roleScope.Scopes {
-						tmp := strings.Split(scope.ObjectID, "|")
-						projectSFID := tmp[0]
-						if foundationID == projectSFID {
-							err = orgService.DeleteOrgUserRoleOrgScopeProjectOrg(companySFID, roleScope.RoleID, scope.ScopeID, nil, nil)
-							if err != nil {
-								log.WithFields(logrus.Fields{"org_id": companySFID, "object_name": scope.ObjectName}).Warnf("unable to delete stale cla-manager-designee scope")
-							}
-						}
-					}
-				}
-			}
-		}
-
 	} else {
 		projectSFIDList := utils.NewStringSet()
 		for _, p := range projectList {
 			projectSFIDList.Add(p.ProjectSFID)
 		}
 
+		var eg errgroup.Group
 		// add user as cla-manager for all projects of cla-group
 		for _, projectSFID := range projectSFIDList.List() {
-			err = orgService.CreateOrgUserRoleOrgScopeProjectOrg(email, projectSFID, companySFID, claManagerRoleID)
-			if err != nil {
-				log.WithFields(logrus.Fields{
-					"org_id":       companySFID,
-					"project_sfid": projectSFID,
-					"lf_username":  username,
-					"email":        email,
-				}).Warnf("unable to add cla-manager scope. error = %s", err)
-			}
-		}
-		// delete all cla-manager designee for all project of cla-group
-		for _, userRole := range scopes.Userroles {
-			for _, roleScope := range userRole.RoleScopes {
-				if roleScope.RoleName == utils.CLADesigneeRole {
-					for _, scope := range roleScope.Scopes {
-						tmp := strings.Split(scope.ObjectID, "|")
-						projectSFID := tmp[0]
-						if projectSFIDList.Include(projectSFID) {
-							err = orgService.DeleteOrgUserRoleOrgScopeProjectOrg(companySFID, roleScope.RoleID, scope.ScopeID, nil, nil)
-							if err != nil {
-								log.WithFields(logrus.Fields{"org_id": companySFID, "object_name": scope.ObjectName}).Warnf("unable to delete stale cla-manager-designee scope")
-							}
-						}
-					}
+			eg.Go(func() error {
+				err := orgService.CreateOrgUserRoleOrgScopeProjectOrg(email, projectSFID, companySFID, claManagerRoleID)
+				if err != nil {
+					log.WithFields(f).Warnf("unable to add %s scope for project: %s, company: %s using roleID: %s for user email: %s. error = %s",
+						utils.CLAManagerRole, projectSFID, companySFID, claManagerRoleID, email, err)
+					return err
 				}
-			}
+				return nil
+			})
 		}
+
+		// Wait for the go routines to finish
+		log.WithFields(f).Debugf("waiting for create role assignment to complete for %d projects...", len(projectSFIDList.List()))
+		if loadErr := eg.Wait(); loadErr != nil {
+			return loadErr
+		}
+		return nil
 	}
 
 	return nil
