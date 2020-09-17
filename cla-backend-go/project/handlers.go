@@ -4,7 +4,10 @@
 package project
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/sirupsen/logrus"
 
@@ -35,20 +38,22 @@ func isValidUser(claUser *user.CLAUser) bool {
 func Configure(api *operations.ClaAPI, service Service, eventsService events.Service, gerritService gerrits.Service, repositoryService repositories.Service, signatureService signatures.SignatureService) {
 	// Create CLA Group/Project Handler
 	api.ProjectCreateProjectHandler = project.CreateProjectHandlerFunc(func(params project.CreateProjectParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		if params.Body.ProjectName == "" || params.Body.ProjectACL == nil {
 			msg := "Missing Project Name or Project ACL parameter."
 			log.Warnf("Create Project Failed - %s", msg)
-			return project.NewCreateProjectBadRequest().WithPayload(&models.ErrorResponse{
+			return project.NewCreateProjectBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
 				Message: msg,
 			})
 		}
 
-		exitingModel, getErr := service.GetCLAGroupByName(params.Body.ProjectName)
+		exitingModel, getErr := service.GetCLAGroupByName(ctx, params.Body.ProjectName)
 		if getErr != nil {
 			msg := fmt.Sprintf("Error querying the project by name, error: %+v", getErr)
 			log.Warnf("Create Project Failed - %s", msg)
-			return project.NewCreateProjectBadRequest().WithPayload(&models.ErrorResponse{
+			return project.NewCreateProjectBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
 				Message: msg,
 			})
@@ -58,14 +63,14 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		if exitingModel != nil {
 			msg := fmt.Sprintf("Project with same name exists: %s", params.Body.ProjectName)
 			log.Warnf("Create Project Failed - %s", msg)
-			return project.NewCreateProjectConflict().WithPayload(&models.ErrorResponse{
+			return project.NewCreateProjectConflict().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "409",
 				Message: msg,
 			})
 		}
 
 		// Ok, safe to create now
-		projectModel, err := service.CreateCLAGroup(&params.Body)
+		projectModel, err := service.CreateCLAGroup(ctx, &params.Body)
 		if err != nil {
 			log.Warnf("Create Project Failed - %+v", err)
 			return project.NewCreateProjectBadRequest().WithPayload(errorResponse(err))
@@ -80,105 +85,116 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 		log.Infof("Create Project Succeeded, project name: %s, project external ID: %s",
 			params.Body.ProjectName, params.Body.ProjectExternalID)
-		return project.NewCreateProjectOK().WithPayload(projectModel)
+		return project.NewCreateProjectOK().WithXRequestID(reqID).WithPayload(projectModel)
 	})
 
 	// Get Projects
 	api.ProjectGetProjectsHandler = project.GetProjectsHandlerFunc(func(params project.GetProjectsParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		if !isValidUser(claUser) {
-			return project.NewGetProjectsUnauthorized().WithPayload(&models.ErrorResponse{
+			return project.NewGetProjectsUnauthorized().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Message: "unauthorized",
 				Code:    "401",
 			})
 		}
-		projects, err := service.GetCLAGroups(&params)
+		projects, err := service.GetCLAGroups(ctx, &params)
 		if err != nil {
-			return project.NewGetProjectsBadRequest().WithPayload(errorResponse(err))
+			return project.NewGetProjectsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
-		return project.NewGetProjectsOK().WithPayload(projects)
+		return project.NewGetProjectsOK().WithXRequestID(reqID).WithPayload(projects)
 	})
 
 	// Get Project By ID
-	api.ProjectGetProjectByIDHandler = project.GetProjectByIDHandlerFunc(func(projectParams project.GetProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
+	api.ProjectGetProjectByIDHandler = project.GetProjectByIDHandlerFunc(func(params project.GetProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 
-		projectModel, err := service.GetCLAGroupByID(projectParams.ProjectID)
+		projectModel, err := service.GetCLAGroupByID(ctx, params.ProjectID)
 		if err != nil {
-			return project.NewGetProjectByIDBadRequest().WithPayload(errorResponse(err))
+			return project.NewGetProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 		if projectModel == nil {
-			return project.NewGetProjectByIDNotFound()
+			return project.NewGetProjectByIDNotFound().WithXRequestID(reqID)
 		}
 
-		return project.NewGetProjectByIDOK().WithPayload(projectModel)
+		return project.NewGetProjectByIDOK().WithXRequestID(reqID).WithPayload(projectModel)
 	})
 
 	// Get Project By External ID Handler
-	api.ProjectGetProjectsByExternalIDHandler = project.GetProjectsByExternalIDHandlerFunc(func(projectParams project.GetProjectsByExternalIDParams, claUser *user.CLAUser) middleware.Responder {
+	api.ProjectGetProjectsByExternalIDHandler = project.GetProjectsByExternalIDHandlerFunc(func(params project.GetProjectsByExternalIDParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 
 		log.Debugf("Project Handler - GetProjectsByExternalID")
-		if projectParams.ProjectSFID == "" {
-			return project.NewGetProjectsByExternalIDBadRequest().WithPayload(&models.ErrorResponse{
+		if params.ProjectSFID == "" {
+			return project.NewGetProjectsByExternalIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
 				Message: "External ID is empty",
 			})
 		}
 
 		// Set the default page size
-		if projectParams.PageSize == nil {
-			projectParams.PageSize = aws.Int64(defaultPageSize)
+		if params.PageSize == nil {
+			params.PageSize = aws.Int64(defaultPageSize)
 		}
 
 		log.Debugf("Project Handler - GetProjectsByExternalID - invoking service")
-		projectsModel, err := service.GetCLAGroupsByExternalID(&projectParams)
+		projectsModel, err := service.GetCLAGroupsByExternalID(ctx, &params)
 		if err != nil {
-			return project.NewGetProjectsByExternalIDBadRequest().WithPayload(errorResponse(err))
+			return project.NewGetProjectsByExternalIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 		if projectsModel == nil {
-			return project.NewGetProjectsByExternalIDNotFound()
+			return project.NewGetProjectsByExternalIDNotFound().WithXRequestID(reqID)
 		}
 
-		return project.NewGetProjectsByExternalIDOK().WithPayload(projectsModel)
+		return project.NewGetProjectsByExternalIDOK().WithXRequestID(reqID).WithPayload(projectsModel)
 	})
 
 	// Get Project By Name
-	api.ProjectGetProjectByNameHandler = project.GetProjectByNameHandlerFunc(func(projectParams project.GetProjectByNameParams, claUser *user.CLAUser) middleware.Responder {
+	api.ProjectGetProjectByNameHandler = project.GetProjectByNameHandlerFunc(func(params project.GetProjectByNameParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 
-		projectModel, err := service.GetCLAGroupByName(projectParams.ProjectName)
+		projectModel, err := service.GetCLAGroupByName(ctx, params.ProjectName)
 		if err != nil {
-			return project.NewGetProjectByNameBadRequest().WithPayload(errorResponse(err))
+			return project.NewGetProjectByNameBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 		if projectModel == nil {
-			return project.NewGetProjectByNameNotFound()
+			return project.NewGetProjectByNameNotFound().WithXRequestID(reqID)
 		}
 
-		return project.NewGetProjectByNameOK().WithPayload(projectModel)
+		return project.NewGetProjectByNameOK().WithXRequestID(reqID).WithPayload(projectModel)
 	})
 
 	// Delete Project By ID
-	api.ProjectDeleteProjectByIDHandler = project.DeleteProjectByIDHandlerFunc(func(projectParams project.DeleteProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
+	api.ProjectDeleteProjectByIDHandler = project.DeleteProjectByIDHandlerFunc(func(params project.DeleteProjectByIDParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		f := logrus.Fields{
 			"functionName":                "ProjectDeleteProjectByIDHandler",
-			"claGroupID":                  projectParams.ProjectID,
+			utils.XREQUESTID:              ctx.Value(utils.XREQUESTID),
+			"claGroupID":                  params.ProjectID,
 			"authenticatedUserLFUsername": claUser.LFUsername,
 			"authenticatedUserLFEmail":    claUser.LFEmail,
 			"authenticatedUserUserID":     claUser.UserID,
 			"authenticatedUserName":       claUser.Name,
 		}
 		log.WithFields(f).Debug("Processing delete request")
-		projectModel, err := service.GetCLAGroupByID(projectParams.ProjectID)
+		projectModel, err := service.GetCLAGroupByID(ctx, params.ProjectID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
-				return project.NewDeleteProjectByIDNotFound()
+				return project.NewDeleteProjectByIDNotFound().WithXRequestID(reqID)
 			}
-			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
+			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
 		// Delete gerrit repositories
 		log.WithFields(f).Debug("Processing gerrit delete")
-		howMany, err := gerritService.DeleteClaGroupGerrits(projectParams.ProjectID)
+		howMany, err := gerritService.DeleteClaGroupGerrits(params.ProjectID)
 		if err != nil {
-			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
+			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 		// Log gerrit event
 		if howMany > 0 {
@@ -195,9 +211,9 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 		// Delete github repositories
 		log.WithFields(f).Debug("Processing github repository disable/delete")
-		howMany, err = repositoryService.DisableRepositoriesByProjectID(projectParams.ProjectID)
+		howMany, err = repositoryService.DisableRepositoriesByProjectID(params.ProjectID)
 		if err != nil {
-			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
+			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 		if howMany > 0 {
 			log.WithFields(f).Debugf("Deleted %d github repositories", howMany)
@@ -215,9 +231,9 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 		// Invalidate project signatures
 		log.WithFields(f).Debug("Invalidating signatures")
-		howMany, err = signatureService.InvalidateProjectRecords(projectParams.ProjectID, projectModel.ProjectName)
+		howMany, err = signatureService.InvalidateProjectRecords(params.ProjectID, projectModel.ProjectName)
 		if err != nil {
-			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
+			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 		if howMany > 0 {
 			log.WithFields(f).Debugf("Invalidated %d signatures", howMany)
@@ -232,12 +248,12 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			})
 		}
 
-		err = service.DeleteCLAGroup(projectParams.ProjectID)
+		err = service.DeleteCLAGroup(ctx, params.ProjectID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
 				return project.NewDeleteProjectByIDNotFound()
 			}
-			return project.NewDeleteProjectByIDBadRequest().WithPayload(errorResponse(err))
+			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
 			EventType:    events.CLAGroupDeleted,
@@ -246,17 +262,19 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			EventData:    &events.CLAGroupDeletedEventData{},
 		})
 
-		return project.NewDeleteProjectByIDNoContent()
+		return project.NewDeleteProjectByIDNoContent().WithXRequestID(reqID)
 	})
 
 	// Update Project By Name
 	api.ProjectUpdateProjectHandler = project.UpdateProjectHandlerFunc(func(projectParams project.UpdateProjectParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(projectParams.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 
-		exitingModel, getErr := service.GetCLAGroupByID(projectParams.Body.ProjectID)
+		exitingModel, getErr := service.GetCLAGroupByID(ctx, projectParams.Body.ProjectID)
 		if getErr != nil {
 			msg := fmt.Sprintf("Error querying the project by ID, error: %+v", getErr)
 			log.Warnf("Update Project Failed - %s", msg)
-			return project.NewCreateProjectBadRequest().WithPayload(&models.ErrorResponse{
+			return project.NewCreateProjectBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "500",
 				Message: msg,
 			})
@@ -266,18 +284,18 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		if exitingModel == nil {
 			msg := fmt.Sprintf("unable to locate project with ID: %s", projectParams.Body.ProjectID)
 			log.Warn(msg)
-			return project.NewUpdateProjectNotFound().WithPayload(&models.ErrorResponse{
+			return project.NewUpdateProjectNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "404",
 				Message: msg,
 			})
 		}
 
-		projectModel, err := service.UpdateCLAGroup(&projectParams.Body)
+		projectModel, err := service.UpdateCLAGroup(ctx, &projectParams.Body)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
 				return project.NewUpdateProjectNotFound()
 			}
-			return project.NewUpdateProjectBadRequest().WithPayload(errorResponse(err))
+			return project.NewUpdateProjectBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
 			EventType:    events.CLAGroupUpdated,
@@ -286,6 +304,6 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			EventData:    &events.CLAGroupUpdatedEventData{},
 		})
 
-		return project.NewUpdateProjectOK().WithPayload(projectModel)
+		return project.NewUpdateProjectOK().WithXRequestID(reqID).WithPayload(projectModel)
 	})
 }

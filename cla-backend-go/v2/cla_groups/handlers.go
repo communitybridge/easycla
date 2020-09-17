@@ -4,6 +4,7 @@
 package cla_groups
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -28,6 +29,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 	api.ClaGroupCreateClaGroupHandler = cla_group.CreateClaGroupHandlerFunc(func(params cla_group.CreateClaGroupParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !utils.IsUserAuthorizedForProjectTree(authUser, *params.ClaGroupInput.FoundationSfid) {
 			return cla_group.NewCreateClaGroupForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -37,7 +39,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			})
 		}
 
-		claGroup, err := service.CreateCLAGroup(params.ClaGroupInput, utils.StringValue(params.XUSERNAME))
+		claGroup, err := service.CreateCLAGroup(ctx, params.ClaGroupInput, utils.StringValue(params.XUSERNAME))
 		if err != nil {
 			return cla_group.NewCreateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
@@ -57,15 +59,17 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 	api.ClaGroupDeleteClaGroupHandler = cla_group.DeleteClaGroupHandlerFunc(func(params cla_group.DeleteClaGroupParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		f := logrus.Fields{
-			"functionName": "ClaGroupDeleteClaGroupHandler",
-			"claGroupID":   params.ClaGroupID,
-			"authUsername": params.XUSERNAME,
-			"authEmail":    params.XEMAIL,
+			"functionName":   "ClaGroupDeleteClaGroupHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"claGroupID":     params.ClaGroupID,
+			"authUsername":   params.XUSERNAME,
+			"authEmail":      params.XEMAIL,
 		}
 
-		claGroupModel, err := v1ProjectService.GetCLAGroupByID(params.ClaGroupID)
+		claGroupModel, err := v1ProjectService.GetCLAGroupByID(ctx, params.ClaGroupID)
 		if err != nil {
 			log.WithFields(f).Warn(err)
 			if err == v1Project.ErrProjectDoesNotExist {
@@ -90,7 +94,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			})
 		}
 
-		err = service.DeleteCLAGroup(claGroupModel, authUser)
+		err = service.DeleteCLAGroup(ctx, claGroupModel, authUser)
 		if err != nil {
 			log.WithFields(f).Warn(err)
 			return cla_group.NewDeleteClaGroupInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -112,8 +116,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 	api.ClaGroupEnrollProjectsHandler = cla_group.EnrollProjectsHandlerFunc(func(params cla_group.EnrollProjectsParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		cg, err := v1ProjectService.GetCLAGroupByID(params.ClaGroupID)
+		cg, err := v1ProjectService.GetCLAGroupByID(ctx, params.ClaGroupID)
 		if err != nil {
 			if err == v1Project.ErrProjectDoesNotExist {
 				return cla_group.NewEnrollProjectsNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -135,7 +140,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			})
 		}
 
-		err = service.EnrollProjectsInClaGroup(params.ClaGroupID, cg.FoundationSFID, params.ProjectSFIDList)
+		err = service.EnrollProjectsInClaGroup(ctx, params.ClaGroupID, cg.FoundationSFID, params.ProjectSFIDList)
 		if err != nil {
 			if strings.Contains(err.Error(), "bad request") {
 				return cla_group.NewEnrollProjectsBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -161,8 +166,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 	api.ClaGroupUnenrollProjectsHandler = cla_group.UnenrollProjectsHandlerFunc(func(params cla_group.UnenrollProjectsParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		cg, err := v1ProjectService.GetCLAGroupByID(params.ClaGroupID)
+		cg, err := v1ProjectService.GetCLAGroupByID(ctx, params.ClaGroupID)
 		if err != nil {
 			if err == v1Project.ErrProjectDoesNotExist {
 				return cla_group.NewUnenrollProjectsNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -184,7 +190,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			})
 		}
 
-		err = service.UnenrollProjectsInClaGroup(params.ClaGroupID, cg.FoundationSFID, params.ProjectSFIDList)
+		err = service.UnenrollProjectsInClaGroup(ctx, params.ClaGroupID, cg.FoundationSFID, params.ProjectSFIDList)
 		if err != nil {
 			if strings.Contains(err.Error(), "bad request") {
 				return cla_group.NewUnenrollProjectsBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -212,6 +218,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 	api.ClaGroupListClaGroupsUnderFoundationHandler = cla_group.ListClaGroupsUnderFoundationHandlerFunc(func(params cla_group.ListClaGroupsUnderFoundationParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 			return cla_group.NewListClaGroupsUnderFoundationForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -221,7 +228,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			})
 		}
 
-		result, err := service.ListClaGroupsForFoundationOrProject(params.ProjectSFID)
+		result, err := service.ListClaGroupsForFoundationOrProject(ctx, params.ProjectSFID)
 		if err != nil {
 			return cla_group.NewListClaGroupsUnderFoundationInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "500",
@@ -241,11 +248,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 	api.ClaGroupValidateClaGroupHandler = cla_group.ValidateClaGroupHandlerFunc(func(params cla_group.ValidateClaGroupParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
 		// No API user validation - anyone can confirm or use the validate API endpoint
 
-		valid, validationErrors := service.ValidateCLAGroup(params.ValidationInputRequest)
+		valid, validationErrors := service.ValidateCLAGroup(ctx, params.ValidationInputRequest)
 		return cla_group.NewValidateClaGroupOK().WithXRequestID(reqID).WithPayload(&models.ClaGroupValidationResponse{
 			Valid:            valid,
 			ValidationErrors: validationErrors,
@@ -254,8 +262,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 	api.FoundationListFoundationClaGroupsHandler = foundation.ListFoundationClaGroupsHandlerFunc(func(params foundation.ListFoundationClaGroupsParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		result, err := service.ListAllFoundationClaGroups(params.FoundationSFID)
+		result, err := service.ListAllFoundationClaGroups(ctx, params.FoundationSFID)
 		if err != nil {
 			return foundation.NewListFoundationClaGroupsInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "500",

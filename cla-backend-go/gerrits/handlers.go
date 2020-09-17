@@ -4,6 +4,7 @@
 package gerrits
 
 import (
+	"context"
 	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
@@ -17,28 +18,30 @@ import (
 
 // ProjectService contains Project methods
 type ProjectService interface {
-	GetCLAGroupByID(projectID string) (*models.Project, error)
+	GetCLAGroupByID(ctx context.Context, projectID string) (*models.Project, error)
 }
 
 // Configure the gerrit api
 func Configure(api *operations.ClaAPI, service Service, projectService ProjectService, eventService events.Service) {
 	api.GerritsDeleteGerritHandler = gerrits.DeleteGerritHandlerFunc(
 		func(params gerrits.DeleteGerritParams, claUser *user.CLAUser) middleware.Responder {
-			projectModel, err := projectService.GetCLAGroupByID(params.ProjectID)
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			projectModel, err := projectService.GetCLAGroupByID(ctx, params.ProjectID)
 			if err != nil {
-				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
+				return gerrits.NewDeleteGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 			// verify user have access to the project
 			if !claUser.IsAuthorizedForProject(projectModel.ProjectExternalID) {
-				return gerrits.NewDeleteGerritUnauthorized()
+				return gerrits.NewDeleteGerritUnauthorized().WithXRequestID(reqID)
 			}
 			gerrit, err := service.GetGerrit(params.GerritID)
 			if err != nil {
-				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
+				return gerrits.NewDeleteGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 			// verify gerrit project is same as the request
 			if gerrit.ProjectID != params.ProjectID {
-				return gerrits.NewDeleteGerritBadRequest().WithPayload(&models.ErrorResponse{
+				return gerrits.NewDeleteGerritBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "400",
 					Message: "provided project id does not match with gerrit project id",
 				})
@@ -46,7 +49,7 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 			// delete the gerrit
 			err = service.DeleteGerrit(params.GerritID)
 			if err != nil {
-				return gerrits.NewDeleteGerritBadRequest().WithPayload(errorResponse(err))
+				return gerrits.NewDeleteGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 			// record the event
 			eventService.LogEvent(&events.LogEventArgs{
@@ -57,22 +60,24 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 					GerritRepositoryName: gerrit.GerritName,
 				},
 			})
-			return gerrits.NewDeleteGerritOK()
+			return gerrits.NewDeleteGerritOK().WithXRequestID(reqID)
 		})
 
 	api.GerritsAddGerritHandler = gerrits.AddGerritHandlerFunc(
 		func(params gerrits.AddGerritParams, claUser *user.CLAUser) middleware.Responder {
-			projectModel, err := projectService.GetCLAGroupByID(params.ProjectID)
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			projectModel, err := projectService.GetCLAGroupByID(ctx, params.ProjectID)
 			if err != nil {
-				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
+				return gerrits.NewAddGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 			// verify user have access to the project
 			if !claUser.IsAuthorizedForProject(projectModel.ProjectExternalID) {
-				return gerrits.NewAddGerritUnauthorized()
+				return gerrits.NewAddGerritUnauthorized().WithXRequestID(reqID)
 			}
 
 			if len(strings.TrimSpace(*params.AddGerritInput.GerritName)) == 0 {
-				return gerrits.NewGetGerritReposBadRequest().WithPayload(&models.ErrorResponse{
+				return gerrits.NewGetGerritReposBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "400",
 					Message: "invalid gerritName parameter - expecting gerrit hostname",
 				})
@@ -82,9 +87,9 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 			result, err := service.AddGerrit(params.ProjectID, projectModel.ProjectExternalID, params.AddGerritInput, projectModel)
 			if err != nil {
 				if err.Error() == "gerrit_name already present in the system" {
-					return gerrits.NewAddGerritConflict().WithPayload(errorResponse(err))
+					return gerrits.NewAddGerritConflict().WithXRequestID(reqID).WithPayload(errorResponse(err))
 				}
-				return gerrits.NewAddGerritBadRequest().WithPayload(errorResponse(err))
+				return gerrits.NewAddGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 			// record the event
 			eventService.LogEvent(&events.LogEventArgs{
@@ -95,17 +100,20 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 					GerritRepositoryName: utils.StringValue(params.AddGerritInput.GerritName),
 				},
 			})
-			return gerrits.NewAddGerritOK().WithPayload(result)
+			return gerrits.NewAddGerritOK().WithXRequestID(reqID).WithPayload(result)
 		})
 
 	api.GerritsGetGerritReposHandler = gerrits.GetGerritReposHandlerFunc(
 		func(params gerrits.GetGerritReposParams, authUser *user.CLAUser) middleware.Responder {
 
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			//ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
 			// No specific permissions required
 
 			// Validate input
 			if params.GerritHost == nil {
-				return gerrits.NewGetGerritReposBadRequest().WithPayload(&models.ErrorResponse{
+				return gerrits.NewGetGerritReposBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "400",
 					Message: "missing gerritHost query parameter",
 				})
@@ -113,10 +121,10 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 
 			result, err := service.GetGerritRepos(params.GerritHost.String())
 			if err != nil {
-				return gerrits.NewGetGerritReposBadRequest().WithPayload(errorResponse(err))
+				return gerrits.NewGetGerritReposBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 
-			return gerrits.NewGetGerritReposOK().WithPayload(result)
+			return gerrits.NewGetGerritReposOK().WithXRequestID(reqID).WithPayload(result)
 		})
 }
 
