@@ -743,12 +743,27 @@ func (s *service) AssignCompanyOwner(companySFID string, userEmail string, LFXPo
 	orgClient := orgService.GetClient()
 	acsClient := acs_service.GetClient()
 	userClient := v2UserService.GetClient()
-	user, err := userClient.SearchUserByEmail(userEmail)
+
 	//Orgs to check whether user is company-owner
 	orgs := []string{companySFID}
+
+	assignOrg, orgErr := orgClient.GetOrganization(companySFID)
+	if orgErr != nil {
+		msg := fmt.Sprintf("Getting org by ID: %s with error : %+v", companySFID, orgErr)
+		log.Debug(msg)
+		return nil, orgErr
+	}
+
+	user, err := userClient.SearchUserByEmail(userEmail)
 	if err != nil {
 		msg := fmt.Sprintf("Failed searching user by email :%s ", userEmail)
 		log.Warn(msg)
+		// Send user invite for company owner
+		emailErr := sendEmailToUserWithNoLFID(userEmail, assignOrg.Name, assignOrg.ID, "company-owner")
+		if emailErr != nil {
+			msg := fmt.Sprintf("error %+v", emailErr)
+			log.Debug(msg)
+		}
 		return nil, err
 	}
 
@@ -1247,4 +1262,30 @@ func sendEmailToUserCompanyProfile(orgName string, userEmail string, username st
 	} else {
 		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
 	}
+}
+
+// sendEmailToUserWithNoLFID helper function to send email to a given user with no LFID
+func sendEmailToUserWithNoLFID(userWithNoLFIDEmail, organizationName string, organizationID string, role string) error {
+	// subject string, body string, recipients []string
+	subject := fmt.Sprintf("EasyCLA: Invitation to create LF Login and complete process of becoming CLA Manager with %s role", role)
+	body := fmt.Sprintf(`
+<p>Hello %s,</p>
+<p>This is a notification email from EasyCLA regarding the organization %s.</p>
+<p> You have been identified as company owner </p>
+<p> <a href="USERACCEPTLINK">Accept Invite</a> </p>
+%s
+%s`,
+		userWithNoLFIDEmail, organizationName,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
+
+	acsClient := acs_service.GetClient()
+	automate := false
+
+	acsErr := acsClient.SendUserInvite(&userWithNoLFIDEmail, role, "organization", nil, organizationID, "userinvite", &subject, &body, automate)
+	if acsErr != nil {
+		msg := fmt.Sprintf("Error sending email to user: %s, error : %+v", userWithNoLFIDEmail, acsErr)
+		log.Debug(msg)
+		return acsErr
+	}
+	return nil
 }

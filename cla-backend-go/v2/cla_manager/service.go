@@ -951,12 +951,13 @@ func (s *service) InviteCompanyAdmin(contactAdmin bool, companyID string, projec
 		foundationSFID := projectCLAGroups[0].FoundationSFID
 		sendErr := sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, &foundationSFID, "cla-manager-designee")
 		if sendErr != nil {
-			return nil, sendErr
+			msg := fmt.Sprintf("Problem sending email to user: %s , error: %+v", userEmail, sendErr)
+			log.Warn(msg)
 		}
-		sendErr = sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, &foundationSFID, "company-owner")
-		if sendErr != nil {
-			return nil, sendErr
-		}
+		// sendErr = sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, &foundationSFID, "company-owner")
+		// if sendErr != nil {
+		// 	return nil, sendErr
+		// }
 		return nil, ErrNoLFID
 	}
 	var projectSFs []string
