@@ -13,7 +13,7 @@ import (
 
 // errors
 var (
-	ErrGithubRepositoryNotFound = errors.New("github organization name not found")
+	ErrGithubRepositoryNotFound = errors.New("github repository not found")
 )
 
 // GetRepositoryByExternalID finds gitub repository by github repository id

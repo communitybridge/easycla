@@ -29,6 +29,7 @@ import (
 // indexes
 const (
 	GithubOrgSFIDIndex               = "github-org-sfid-index"
+	GithubOrgLowerNameIndex          = "organization-name-lower-search-index"
 	ProjectSFIDOrganizationNameIndex = "project-sfid-organization-name-index"
 )
 
@@ -40,6 +41,7 @@ var (
 // Repository interface defines the functions for the github organizations data model
 type Repository interface {
 	GetGithubOrganizations(externalProjectID string, projectSFID string) (*models.GithubOrganizations, error)
+	GetGithubOrganizationByName(githubOrganizationName string) (*models.GithubOrganizations, error)
 	AddGithubOrganization(externalProjectID string, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
 	DeleteGithubOrganization(externalProjectID string, projectSFID string, githubOrgName string) error
 	UpdateGithubOrganization(projectSFID string, organizationName string, autoEnabled bool) error
@@ -305,4 +307,48 @@ func (repo repository) GetGithubOrganization(githubOrganizationName string) (*mo
 		return nil, err
 	}
 	return toModel(&org), nil
+}
+
+func (repo repository) GetGithubOrganizationByName(githubOrganizationName string) (*models.GithubOrganizations, error) {
+	var condition expression.KeyConditionBuilder
+	var indexName string
+	builder := expression.NewBuilder()
+
+	condition = expression.Key("organization_name_lower").Equal(expression.Value(githubOrganizationName))
+	indexName = GithubOrgLowerNameIndex
+
+	builder = builder.WithKeyCondition(condition)
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(repo.githubOrgTableName),
+		IndexName:                 aws.String(indexName),
+	}
+
+	results, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.Warnf("error retrieving github_organizations using githubOrganizationName = %s. error = %s", githubOrganizationName, err.Error())
+		return nil, err
+	}
+	if len(results.Items) == 0 {
+		return &models.GithubOrganizations{
+			List: []*models.GithubOrganization{},
+		}, nil
+	}
+	var resultOutput []*GithubOrganization
+	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &resultOutput)
+	if err != nil {
+		return nil, err
+	}
+	ghOrgList := buildGithubOrganizationListModels(resultOutput)
+	return &models.GithubOrganizations{List: ghOrgList}, nil
 }
