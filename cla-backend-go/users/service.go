@@ -4,6 +4,8 @@
 package users
 
 import (
+	"errors"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
@@ -108,6 +110,9 @@ func (s service) GetUser(userID string) (*models.User, error) {
 
 // GetuserByLFUserName returns the user record associated with the LF Username value
 func (s service) GetUserByLFUserName(lfUserName string) (*models.User, error) {
+	if lfUserName == "" {
+		return nil, errors.New("username is empty")
+	}
 	return s.repo.GetUserByLFUserName(lfUserName)
 }
 
