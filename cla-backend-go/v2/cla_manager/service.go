@@ -189,7 +189,7 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 		designeeEmail := params.Body.UserEmail.String()
 		msg := fmt.Sprintf("User does not have an LF Login account and has been sent an email invite: %s.", *params.Body.UserEmail)
 		log.WithFields(f).Warn(msg)
-		sendEmailErr := sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, *managerUser.Emails[0].EmailAddress, designeeName, designeeEmail, organizationSF.ID, nil, utils.CLAManagerRole)
+		sendEmailErr := sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, *managerUser.Emails[0].EmailAddress, designeeName, designeeEmail, organizationSF.ID, &params.ProjectSFID, utils.CLAManagerRole)
 		if sendEmailErr != nil {
 			emailMessage := fmt.Sprintf("Failed to send email to user : %s ", designeeEmail)
 			return nil, &models.ErrorResponse{
@@ -198,8 +198,8 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 			}
 		}
 		return nil, &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
+			Message: ErrNoLFID.Error(),
+			Code:    "202",
 		}
 	}
 
