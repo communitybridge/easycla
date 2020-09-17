@@ -205,13 +205,6 @@ func (s *service) CreateCLAManager(claGroupID string, params cla_manager.CreateC
 
 	// Check if user exists in easyCLA DB, if not add User
 	log.WithFields(f).Debugf("Checking user: %+v in easyCLA records", user)
-	userNamemsg := fmt.Sprintf("User doesn't have username, error: %+v ", ErrLFXUserNotFound)
-	if user.Username == "" {
-		return nil, &models.ErrorResponse{
-			Message: userNamemsg,
-			Code:    "400",
-		}
-	}
 	claUser, claUserErr := s.easyCLAUserService.GetUserByLFUserName(user.Username)
 	if claUserErr != nil {
 		msg := fmt.Sprintf("Problem getting claUser by :%s, error: %+v ", user.Username, claUserErr)
