@@ -5,6 +5,7 @@ package github_organizations
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/events"
@@ -30,6 +31,12 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			}
 			result, err := service.GetGithubOrganizations(params.ProjectSFID)
 			if err != nil {
+				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
+					return github_organizations.NewGetProjectGithubOrganizationsNotFound().WithPayload(&models.ErrorResponse{
+						Code:    "404",
+						Message: fmt.Sprintf("githubOrg not found with given ID. [%s]", params.ProjectSFID),
+					})
+				}
 				return github_organizations.NewGetProjectGithubOrganizationsBadRequest().WithPayload(errorResponse(err))
 			}
 			return github_organizations.NewGetProjectGithubOrganizationsOK().WithPayload(result)
@@ -88,6 +95,12 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 
 			err := service.DeleteGithubOrganization(params.ProjectSFID, params.OrgName)
 			if err != nil {
+				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
+					return github_organizations.NewDeleteProjectGithubOrganizationNotFound().WithPayload(&models.ErrorResponse{
+						Code:    "404",
+						Message: fmt.Sprintf("githubOrg not found with given ID. [%s]", params.ProjectSFID),
+					})
+				}
 				return github_organizations.NewDeleteProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
 

@@ -13,6 +13,7 @@ import (
 
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/events"
+	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/restapi/operations/github_repositories"
@@ -68,6 +69,10 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				ProjectID:         utils.StringValue(params.GithubRepositoryInput.ClaGroupID),
 				ExternalProjectID: params.ProjectSFID,
 				LfUsername:        authUser.UserName,
+				ProjectModel: &v1Models.Project{
+					ProjectExternalID: params.ProjectSFID,
+					ProjectID:         utils.StringValue(params.GithubRepositoryInput.ClaGroupID),
+				},
 				EventData: &events.RepositoryAddedEventData{
 					RepositoryName: result.RepositoryName,
 				},

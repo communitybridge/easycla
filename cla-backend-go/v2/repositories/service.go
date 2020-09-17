@@ -43,6 +43,7 @@ type Service interface {
 
 // GithubOrgRepo provide method to get github organization by name
 type GithubOrgRepo interface {
+	GetGithubOrganizationByName(githubOrganizationName string) (*v1Models.GithubOrganizations, error)
 	GetGithubOrganization(githubOrganizationName string) (*v1Models.GithubOrganization, error)
 }
 
@@ -89,18 +90,18 @@ func (s *service) AddGithubRepository(projectSFID string, input *models.GithubRe
 	if !valid {
 		return nil, fmt.Errorf("provided cla group id %s is not linked to project sfid %s", utils.StringValue(input.ClaGroupID), projectSFID)
 	}
-	org, err := s.ghOrgRepo.GetGithubOrganization(utils.StringValue(input.GithubOrganizationName))
+	org, err := s.ghOrgRepo.GetGithubOrganizationByName(utils.StringValue(input.GithubOrganizationName))
 	if err != nil {
 		return nil, err
 	}
-	if org.OrganizationInstallationID == 0 {
+	if len(org.List) == 0 {
 		return nil, errors.New("github app not installed on github organization")
 	}
 	repoGithubID, err := strconv.ParseInt(utils.StringValue(input.RepositoryGithubID), 10, 64)
 	if err != nil {
 		return nil, err
 	}
-	ghRepo, err := github.GetRepositoryByExternalID(org.OrganizationInstallationID, repoGithubID)
+	ghRepo, err := github.GetRepositoryByExternalID(org.List[0].OrganizationInstallationID, repoGithubID)
 	if err != nil {
 		return nil, err
 	}
