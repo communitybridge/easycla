@@ -64,6 +64,13 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				return cla_manager.NewCreateCLAManagerBadRequest().WithPayload(errorResponse)
 			} else if errorResponse.Code == Conflict {
 				return cla_manager.NewCreateCLAManagerConflict().WithPayload(errorResponse)
+			} else if errorResponse.Code == Accepted {
+				msg := fmt.Sprintf("User %s has no LF Login account ", params.Body.UserEmail)
+				return cla_manager.NewCreateCLAManagerRequestAccepted().WithPayload(
+					&models.SuccessResponse{
+						Message: msg,
+						Code:    Accepted,
+					})
 			}
 		}
 
