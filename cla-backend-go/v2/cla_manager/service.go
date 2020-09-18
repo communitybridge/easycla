@@ -910,6 +910,13 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		"userEmail":      userEmail,
 		"name":           name}
 
+	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, projectID)
+
+	if signedErr != nil {
+		msg := fmt.Sprintf("Problem checking project: %s , error: %+v", projectID, signedErr)
+		log.WithFields(f).Warn(msg)
+		return nil, signedErr
+	}
 	// Get project cla Group records
 	log.WithFields(f).Debugf("Getting SalesForce Projects for claGroup: %s ", projectID)
 	projectCLAGroups, getErr := s.projectCGRepo.GetProjectsIdsForClaGroup(projectID)
@@ -1016,15 +1023,28 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		return designeeScopes, nil
 	}
 
-	for _, pcg := range projectCLAGroups {
-		log.WithFields(f).Debugf("Create cla manager designee for Project SFID: %s", pcg.ProjectSFID)
-		claManagerDesignee, err := s.CreateCLAManagerDesignee(ctx, organization.ID, pcg.ProjectSFID, userEmail)
+	if signedAtFoundation {
+		// check if claGroup is signed at foundation level
+		foundationSFID := projectCLAGroups[0].FoundationSFID
+		log.WithFields(f).Debugf("Create cla manager designee for foundation : %s ", foundationSFID)
+		claManagerDesignee, err := s.CreateCLAManagerDesignee(ctx, organization.ID, foundationSFID, userEmail)
 		if err != nil {
 			msg := fmt.Sprintf("Problem creating cla Manager Designee for user : %s, error: %+v ", userEmail, err)
 			log.WithFields(f).Warn(msg)
 			return nil, err
 		}
 		designeeScopes = append(designeeScopes, claManagerDesignee)
+	} else {
+		for _, pcg := range projectCLAGroups {
+			log.WithFields(f).Debugf("Create cla manager designee for Project SFID: %s", pcg.ProjectSFID)
+			claManagerDesignee, err := s.CreateCLAManagerDesignee(ctx, organization.ID, pcg.ProjectSFID, userEmail)
+			if err != nil {
+				msg := fmt.Sprintf("Problem creating cla Manager Designee for user : %s, error: %+v ", userEmail, err)
+				log.WithFields(f).Warn(msg)
+				return nil, err
+			}
+			designeeScopes = append(designeeScopes, claManagerDesignee)
+		}
 	}
 
 	log.Debugf("Sending Email to CLA Manager Designee email: %s ", userEmail)
