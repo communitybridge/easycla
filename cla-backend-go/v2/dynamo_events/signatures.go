@@ -128,32 +128,36 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 				return errors.New(msg)
 			}
 
-			var eg errgroup.Group
-
-			// We have a separate routine to help assign the CLA Manager Role - it's a bit wasteful as it
-			// loads the signature and other details again.
-			// Kick off a go routine to set the cla manager role
-			eg.Go(func() error {
-				// Set the CLA manager permissions
-				log.WithFields(f).Debug("assigning the initial CLA manager")
-				err = s.SetInitialCLAManagerACSPermissions(ctx, newSignature.SignatureID)
-				if err != nil {
-					log.WithFields(f).Warnf("failed to set initial cla manager, error: %+v", err)
-					return err
-				}
-				return nil
-			})
-
 			// Load the list of SF projects associated with this CLA Group
 			log.WithFields(f).Debugf("querying SF projects for CLA Group: %s", newSignature.SignatureProjectID)
 			projectCLAGroups, err := s.projectsClaGroupRepo.GetProjectsIdsForClaGroup(newSignature.SignatureProjectID)
 			log.WithFields(f).Debugf("found %d SF projects for CLA Group: %s", len(projectCLAGroups), newSignature.SignatureProjectID)
 
+			// Only proceed if we have one or more SF projects - otherwise, we can't assign and cleanup/adjust roles
+			if len(projectCLAGroups) == 0 {
+				log.WithFields(f).Warnf("unable to assign initial %s role or cleanup existing %s roles - no SF projects assigned to CLA group",
+					utils.CLAManagerRole, utils.CLADesigneeRole)
+				return nil
+			}
+
+			// We have a separate routine to help assign the CLA Manager Role - it's a bit wasteful as it
+			// loads the signature and other details again.
+			// Kick off a go routine to set the cla manager role
+			// Set the CLA manager permissions
+			log.WithFields(f).Debug("assigning the initial CLA manager")
+			err = s.SetInitialCLAManagerACSPermissions(ctx, newSignature.SignatureID)
+			if err != nil {
+				log.WithFields(f).Warnf("failed to set initial cla manager, error: %+v", err)
+				return err
+			}
+
+			var eg errgroup.Group
+
 			// Kick off a set of go routines to adjust the roles
 			for _, projectCLAGroup := range projectCLAGroups {
 				eg.Go(func() error {
 					// Remove any roles that were previously assigned for cla-manager-designee
-					log.WithFields(f).Debugf("removing %s role for project: '%s' (%s) and company: '%s' (%s)",
+					log.WithFields(f).Debugf("removing existing %s role for project: '%s' (%s) and company: '%s' (%s)",
 						utils.CLADesigneeRole, projectCLAGroup.ProjectName, projectCLAGroup.ProjectSFID, companyModel.CompanyName, companyModel.CompanyExternalID)
 					err = s.removeCLAPermissionsByProjectOrganizationRole(projectCLAGroup.ProjectSFID, companyModel.CompanyExternalID, utils.CLADesigneeRole)
 					if err != nil {
@@ -168,10 +172,14 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 
 			// Wait for the go routines to finish
 			log.WithFields(f).Debug("waiting for role assignment and cleanup...")
-			if loadErr := eg.Wait(); loadErr != nil {
-				return loadErr
+			var lastRoleErr error
+			if roleErr := eg.Wait(); roleErr != nil {
+				log.WithFields(f).Warnf("encountered error while processing roles: %+v", roleErr)
+				lastRoleErr = roleErr
 			}
-			return nil
+
+			// Could be nil or the last error encountered
+			return lastRoleErr
 		}
 	}
 

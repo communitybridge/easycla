@@ -186,7 +186,7 @@ func (ac *Client) GetRoleID(roleName string) (string, error) {
 }
 
 // GetObjectTypeIDByName will return object type ID for the provided role name
-func (ac *Client) GetObjectTypeIDByName(objectType string) (string, error) {
+func (ac *Client) GetObjectTypeIDByName(objectType string) (int, error) {
 	f := logrus.Fields{
 		"functionName": "GetObjectTypeID",
 		"objectType":   objectType,
@@ -195,21 +195,21 @@ func (ac *Client) GetObjectTypeIDByName(objectType string) (string, error) {
 	tok, err := token.GetToken()
 	if err != nil {
 		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
-		return "", err
+		return 0, err
 	}
 
 	url := fmt.Sprintf("%s/acs/v1/api/object-types", ac.apiGwURL)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.WithFields(f).Warnf("problem making a new GET request for url: %s, error: %+v", url, err)
-		return "", err
+		return 0, err
 	}
 	req.Header.Set("X-API-KEY", ac.apiKey)
 	req.Header.Set("Authorization", "Bearer "+tok)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.WithFields(f).Warnf("problem invoking http GET request to url: %s, error: %+v", url, err)
-		return "", err
+		return 0, err
 	}
 	defer func() {
 		closeErr := resp.Body.Close()
@@ -218,7 +218,7 @@ func (ac *Client) GetObjectTypeIDByName(objectType string) (string, error) {
 		}
 	}()
 	var objectTypes []struct {
-		TypeID    string `json:"type_id"`
+		TypeID    int    `json:"type_id"`
 		Name      string `json:"name"`
 		CreatedAt string `json:"created_at"`
 		UpdatedAt string `json:"updated_at"`
@@ -226,12 +226,12 @@ func (ac *Client) GetObjectTypeIDByName(objectType string) (string, error) {
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.WithFields(f).Warnf("problem reading response body, error: %+v", err)
-		return "", err
+		return 0, err
 	}
 	err = json.Unmarshal(b, &objectTypes)
 	if err != nil {
 		log.WithFields(f).Warnf("problem unmarshalling response body, error: %+v", err)
-		return "", err
+		return 0, err
 	}
 
 	for _, role := range objectTypes {
@@ -240,7 +240,7 @@ func (ac *Client) GetObjectTypeIDByName(objectType string) (string, error) {
 		}
 	}
 
-	return "", ErrRoleNotFound
+	return 0, ErrRoleNotFound
 }
 
 // GetAssignedRoles will return assigned roles based on the roleName, project and organization SFID
@@ -264,7 +264,8 @@ func (ac *Client) GetAssignedRoles(roleName, projectSFID, organizationSFID strin
 		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
 		return nil, err
 	}
-	url := fmt.Sprintf("%s/acs/v1/api/object-types/%s/roles?ojectid=%s|%s", ac.apiGwURL, objectTypeID, projectSFID, organizationSFID)
+
+	url := fmt.Sprintf("%s/acs/v1/api/object-types/%d/roles?ojectid=%s|%s", ac.apiGwURL, objectTypeID, projectSFID, organizationSFID)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.WithFields(f).Warnf("problem making a new GET request for url: %s, error: %+v", url, err)
