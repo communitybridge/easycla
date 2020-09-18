@@ -120,8 +120,9 @@ func (s *service) ProcessEvents(events events.DynamoDBEvent) {
 			// Dumping the event is super verbose
 			// "event":      event,
 		}
-		b, _ := json.Marshal(events) // nolint
-		fields["events_data"] = string(b)
+		// Generates a ton of output
+		// b, _ := json.Marshal(events) // nolint
+		//fields["events_data"] = string(b)
 		log.WithFields(fields).Debug("processing event record")
 		key := fmt.Sprintf("%s:%s", tableName, event.EventName)
 		for _, f := range s.functions[key] {
