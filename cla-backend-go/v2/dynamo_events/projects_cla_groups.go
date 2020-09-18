@@ -192,19 +192,25 @@ func (s *service) removeCLAPermissionsByProjectOrganizationRole(projectSFID, org
 		}
 
 		for _, assignedRole := range assignedRoleData.Roles {
-			eg.Go(func() error {
-				log.WithFields(f).Debugf("deleting role using role ID: %s with name: %s for user: %s",
-					assignedRole.ID, assignedRole.Name, username)
-				deleteErr := client.DeleteRoleByID(assignedRole.ID)
-				if deleteErr != nil {
-					log.WithFields(f).Warnf("problem deleting  assigned role of %s, error: %+v", roleName, deleteErr)
-					return deleteErr
-				}
+			// Only delete the roles which match the provided role name - the above query returns ALL roles
+			// that match this object (e.g. project|organization) and
+			// the scope of: {projectSFID}|{organizationSFID}
+			// Still need to filter on the name, e.g. cla-manager, cla-manager-designee or cla-signatory
+			if roleName == assignedRole.Name {
+				eg.Go(func() error {
+					log.WithFields(f).Debugf("deleting role using role ID: %s with name: %s for user: %s",
+						assignedRole.ID, assignedRole.Name, username)
+					deleteErr := client.DeleteRoleByID(assignedRole.ID)
+					if deleteErr != nil {
+						log.WithFields(f).Warnf("problem deleting  assigned role of %s, error: %+v", roleName, deleteErr)
+						return deleteErr
+					}
 
-				log.WithFields(f).Debugf("deleted role using role ID: %s with name: %s for user: %s",
-					assignedRole.ID, assignedRole.Name, username)
-				return nil
-			})
+					log.WithFields(f).Debugf("deleted role using role ID: %s with name: %s for user: %s",
+						assignedRole.ID, assignedRole.Name, username)
+					return nil
+				})
+			}
 		}
 	}
 
