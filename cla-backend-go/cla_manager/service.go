@@ -187,7 +187,7 @@ func (s service) AddClaManager(ctx context.Context, companyID string, projectID 
 	if userErr != nil || userModel == nil {
 		return nil, userErr
 	}
-	companyModel, companyErr := s.companyService.GetCompany(companyID)
+	companyModel, companyErr := s.companyService.GetCompany(ctx, companyID)
 	if companyErr != nil || companyModel == nil {
 		return nil, companyErr
 	}
@@ -201,7 +201,7 @@ func (s service) AddClaManager(ctx context.Context, companyID string, projectID 
 
 	signed := true
 	approved := true
-	sigModel, sigErr := s.sigService.GetProjectCompanySignature(companyID, projectID, &signed, &approved, nil, aws.Int64(5))
+	sigModel, sigErr := s.sigService.GetProjectCompanySignature(ctx, companyID, projectID, &signed, &approved, nil, aws.Int64(5))
 	if sigErr != nil || sigModel == nil {
 		return nil, sigErr
 	}
@@ -212,13 +212,13 @@ func (s service) AddClaManager(ctx context.Context, companyID string, projectID 
 		companyID, projectID, sigModel.SignatureID)
 
 	// Update the signature ACL
-	addedSignature, aclErr := s.sigService.AddCLAManager(sigModel.SignatureID.String(), LFID)
+	addedSignature, aclErr := s.sigService.AddCLAManager(ctx, sigModel.SignatureID.String(), LFID)
 	if aclErr != nil {
 		return nil, aclErr
 	}
 
 	// Update the company ACL
-	companyACLError := s.companyService.AddUserToCompanyAccessList(companyID, LFID)
+	companyACLError := s.companyService.AddUserToCompanyAccessList(ctx, companyID, LFID)
 	if companyACLError != nil {
 		log.Warnf("AddCLAManager- Unable to add user to company ACL, companyID: %s, user: %s, error: %+v", companyID, LFID, companyACLError)
 		return nil, companyACLError
@@ -256,9 +256,9 @@ func (s service) AddClaManager(ctx context.Context, companyID string, projectID 
 }
 
 // Utility function that returns company signature
-func (s service) getCompanySignature(companyID string, projectID string) (*models.Signature, error) {
+func (s service) getCompanySignature(ctx context.Context, companyID string, projectID string) (*models.Signature, error) {
 	// Look up signature ACL to ensure the user can remove given cla manager
-	sigModels, sigErr := s.sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
+	sigModels, sigErr := s.sigService.GetProjectCompanySignatures(ctx, sigAPI.GetProjectCompanySignaturesParams{
 		HTTPRequest: nil,
 		CompanyID:   companyID,
 		ProjectID:   projectID,
@@ -285,7 +285,7 @@ func (s service) RemoveClaManager(ctx context.Context, companyID string, project
 	if userErr != nil || userModel == nil {
 		return nil, userErr
 	}
-	companyModel, companyErr := s.companyService.GetCompany(companyID)
+	companyModel, companyErr := s.companyService.GetCompany(ctx, companyID)
 	if companyErr != nil || companyModel == nil {
 		return nil, companyErr
 	}
@@ -297,13 +297,13 @@ func (s service) RemoveClaManager(ctx context.Context, companyID string, project
 
 	signed := true
 	approved := true
-	sigModel, sigErr := s.sigService.GetProjectCompanySignature(companyID, projectID, &signed, &approved, nil, aws.Int64(5))
+	sigModel, sigErr := s.sigService.GetProjectCompanySignature(ctx, companyID, projectID, &signed, &approved, nil, aws.Int64(5))
 	if sigErr != nil || sigModel == nil {
 		return nil, sigErr
 	}
 
 	// Update the signature ACL
-	updatedSignature, aclErr := s.sigService.RemoveCLAManager(sigModel.SignatureID.String(), LFID)
+	updatedSignature, aclErr := s.sigService.RemoveCLAManager(ctx, sigModel.SignatureID.String(), LFID)
 	if aclErr != nil || updatedSignature == nil {
 		log.Warnf("remove CLA Manager returned an error or empty signature model using Signature ID: %s, error: %+v",
 			sigModel.SignatureID, sigErr)
@@ -311,7 +311,7 @@ func (s service) RemoveClaManager(ctx context.Context, companyID string, project
 	}
 
 	// Get Updated cla manager list with removed manager for email purposes
-	sigModel, sigErr = s.getCompanySignature(companyID, projectID)
+	sigModel, sigErr = s.getCompanySignature(ctx, companyID, projectID)
 	if sigErr != nil {
 		return nil, sigErr
 	}

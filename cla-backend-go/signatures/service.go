@@ -30,28 +30,28 @@ import (
 
 // SignatureService interface
 type SignatureService interface {
-	GetSignature(signatureID string) (*models.Signature, error)
+	GetSignature(ctx context.Context, signatureID string) (*models.Signature, error)
 	GetIndividualSignature(ctx context.Context, claGroupID, userID string) (*models.Signature, error)
 	GetCorporateSignature(ctx context.Context, claGroupID, companyID string) (*models.Signature, error)
-	GetProjectSignatures(params signatures.GetProjectSignaturesParams) (*models.Signatures, error)
-	GetProjectCompanySignature(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signature, error)
-	GetProjectCompanySignatures(params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error)
-	GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error)
-	GetCompanySignatures(params signatures.GetCompanySignaturesParams) (*models.Signatures, error)
-	GetCompanyIDsWithSignedCorporateSignatures(claGroupID string) ([]SignatureCompanyID, error)
-	GetUserSignatures(params signatures.GetUserSignaturesParams) (*models.Signatures, error)
-	InvalidateProjectRecords(projectID string, projectName string) (int, error)
+	GetProjectSignatures(ctx context.Context, params signatures.GetProjectSignaturesParams) (*models.Signatures, error)
+	GetProjectCompanySignature(ctx context.Context, companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signature, error)
+	GetProjectCompanySignatures(ctx context.Context, params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error)
+	GetProjectCompanyEmployeeSignatures(ctx context.Context, params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error)
+	GetCompanySignatures(ctx context.Context, params signatures.GetCompanySignaturesParams) (*models.Signatures, error)
+	GetCompanyIDsWithSignedCorporateSignatures(ctx context.Context, claGroupID string) ([]SignatureCompanyID, error)
+	GetUserSignatures(ctx context.Context, params signatures.GetUserSignaturesParams) (*models.Signatures, error)
+	InvalidateProjectRecords(ctx context.Context, projectID string, projectName string) (int, error)
 
-	GetGithubOrganizationsFromWhitelist(signatureID string, githubAccessToken string) ([]models.GithubOrg, error)
-	AddGithubOrganizationToWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
-	DeleteGithubOrganizationFromWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
-	UpdateApprovalList(authUser *auth.User, projectModel *models.Project, companyModel *models.Company, claGroupID string, params *models.ApprovalList) (*models.Signature, error)
+	GetGithubOrganizationsFromWhitelist(ctx context.Context, signatureID string, githubAccessToken string) ([]models.GithubOrg, error)
+	AddGithubOrganizationToWhitelist(ctx context.Context, signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
+	DeleteGithubOrganizationFromWhitelist(ctx context.Context, signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
+	UpdateApprovalList(ctx context.Context, authUser *auth.User, projectModel *models.Project, companyModel *models.Company, claGroupID string, params *models.ApprovalList) (*models.Signature, error)
 
-	AddCLAManager(signatureID, claManagerID string) (*models.Signature, error)
-	RemoveCLAManager(signatureID, claManagerID string) (*models.Signature, error)
+	AddCLAManager(ctx context.Context, signatureID, claManagerID string) (*models.Signature, error)
+	RemoveCLAManager(ctx context.Context, ignatureID, claManagerID string) (*models.Signature, error)
 
-	GetClaGroupICLASignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
-	GetClaGroupCorporateContributors(claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error)
+	GetClaGroupICLASignatures(ctx context.Context, claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
+	GetClaGroupCorporateContributors(ctx context.Context, claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error)
 }
 
 type service struct {
@@ -74,8 +74,8 @@ func NewService(repo SignatureRepository, companyService company.IService, users
 }
 
 // GetSignature returns the signature associated with the specified signature ID
-func (s service) GetSignature(signatureID string) (*models.Signature, error) {
-	return s.repo.GetSignature(signatureID)
+func (s service) GetSignature(ctx context.Context, signatureID string) (*models.Signature, error) {
+	return s.repo.GetSignature(ctx, signatureID)
 }
 
 // GetIndividualSignature returns the signature associated with the specified CLA Group and User ID
@@ -89,7 +89,7 @@ func (s service) GetCorporateSignature(ctx context.Context, claGroupID, companyI
 }
 
 // GetProjectSignatures returns the list of signatures associated with the specified project
-func (s service) GetProjectSignatures(params signatures.GetProjectSignaturesParams) (*models.Signatures, error) {
+func (s service) GetProjectSignatures(ctx context.Context, params signatures.GetProjectSignaturesParams) (*models.Signatures, error) {
 
 	const defaultPageSize int64 = 10
 	var pageSize = defaultPageSize
@@ -97,7 +97,7 @@ func (s service) GetProjectSignatures(params signatures.GetProjectSignaturesPara
 		pageSize = *params.PageSize
 	}
 
-	projectSignatures, err := s.repo.GetProjectSignatures(params, pageSize)
+	projectSignatures, err := s.repo.GetProjectSignatures(ctx, params, pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -106,12 +106,12 @@ func (s service) GetProjectSignatures(params signatures.GetProjectSignaturesPara
 }
 
 // GetProjectCompanySignature returns the signature associated with the specified project and company
-func (s service) GetProjectCompanySignature(companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signature, error) {
-	return s.repo.GetProjectCompanySignature(companyID, projectID, signed, approved, nextKey, pageSize)
+func (s service) GetProjectCompanySignature(ctx context.Context, companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signature, error) {
+	return s.repo.GetProjectCompanySignature(ctx, companyID, projectID, signed, approved, nextKey, pageSize)
 }
 
 // GetProjectCompanySignatures returns the list of signatures associated with the specified project
-func (s service) GetProjectCompanySignatures(params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error) {
+func (s service) GetProjectCompanySignatures(ctx context.Context, params signatures.GetProjectCompanySignaturesParams) (*models.Signatures, error) {
 
 	const defaultPageSize int64 = 10
 	var pageSize = defaultPageSize
@@ -123,7 +123,7 @@ func (s service) GetProjectCompanySignatures(params signatures.GetProjectCompany
 	approved := true
 
 	projectSignatures, err := s.repo.GetProjectCompanySignatures(
-		params.CompanyID, params.ProjectID, &signed, &approved, params.NextKey, &pageSize)
+		ctx, params.CompanyID, params.ProjectID, &signed, &approved, params.NextKey, &pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (s service) GetProjectCompanySignatures(params signatures.GetProjectCompany
 }
 
 // GetProjectCompanyEmployeeSignatures returns the list of employee signatures associated with the specified project
-func (s service) GetProjectCompanyEmployeeSignatures(params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error) {
+func (s service) GetProjectCompanyEmployeeSignatures(ctx context.Context, params signatures.GetProjectCompanyEmployeeSignaturesParams) (*models.Signatures, error) {
 
 	const defaultPageSize int64 = 10
 	var pageSize = defaultPageSize
@@ -140,7 +140,7 @@ func (s service) GetProjectCompanyEmployeeSignatures(params signatures.GetProjec
 		pageSize = *params.PageSize
 	}
 
-	projectSignatures, err := s.repo.GetProjectCompanyEmployeeSignatures(params, pageSize)
+	projectSignatures, err := s.repo.GetProjectCompanyEmployeeSignatures(ctx, params, pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func (s service) GetProjectCompanyEmployeeSignatures(params signatures.GetProjec
 }
 
 // GetCompanySignatures returns the list of signatures associated with the specified company
-func (s service) GetCompanySignatures(params signatures.GetCompanySignaturesParams) (*models.Signatures, error) {
+func (s service) GetCompanySignatures(ctx context.Context, params signatures.GetCompanySignaturesParams) (*models.Signatures, error) {
 
 	const defaultPageSize int64 = 50
 	var pageSize = defaultPageSize
@@ -157,7 +157,7 @@ func (s service) GetCompanySignatures(params signatures.GetCompanySignaturesPara
 		pageSize = *params.PageSize
 	}
 
-	companySignatures, err := s.repo.GetCompanySignatures(params, pageSize, LoadACLDetails)
+	companySignatures, err := s.repo.GetCompanySignatures(ctx, params, pageSize, LoadACLDetails)
 	if err != nil {
 		return nil, err
 	}
@@ -166,12 +166,12 @@ func (s service) GetCompanySignatures(params signatures.GetCompanySignaturesPara
 }
 
 // GetCompanyIDsWithSignedCorporateSignatures returns a list of company IDs that have signed a CLA agreement
-func (s service) GetCompanyIDsWithSignedCorporateSignatures(claGroupID string) ([]SignatureCompanyID, error) {
-	return s.repo.GetCompanyIDsWithSignedCorporateSignatures(claGroupID)
+func (s service) GetCompanyIDsWithSignedCorporateSignatures(ctx context.Context, claGroupID string) ([]SignatureCompanyID, error) {
+	return s.repo.GetCompanyIDsWithSignedCorporateSignatures(ctx, claGroupID)
 }
 
 // GetUserSignatures returns the list of user signatures associated with the specified user
-func (s service) GetUserSignatures(params signatures.GetUserSignaturesParams) (*models.Signatures, error) {
+func (s service) GetUserSignatures(ctx context.Context, params signatures.GetUserSignaturesParams) (*models.Signatures, error) {
 
 	const defaultPageSize int64 = 10
 	var pageSize = defaultPageSize
@@ -179,7 +179,7 @@ func (s service) GetUserSignatures(params signatures.GetUserSignaturesParams) (*
 		pageSize = *params.PageSize
 	}
 
-	userSignatures, err := s.repo.GetUserSignatures(params, pageSize)
+	userSignatures, err := s.repo.GetUserSignatures(ctx, params, pageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +188,7 @@ func (s service) GetUserSignatures(params signatures.GetUserSignaturesParams) (*
 }
 
 // GetGithubOrganizationsFromWhitelist retrieves the organization from the whitelist
-func (s service) GetGithubOrganizationsFromWhitelist(signatureID string, githubAccessToken string) ([]models.GithubOrg, error) {
+func (s service) GetGithubOrganizationsFromWhitelist(ctx context.Context, signatureID string, githubAccessToken string) ([]models.GithubOrg, error) {
 
 	if signatureID == "" {
 		msg := "unable to get GitHub organizations whitelist - signature ID is nil"
@@ -196,7 +196,7 @@ func (s service) GetGithubOrganizationsFromWhitelist(signatureID string, githubA
 		return nil, errors.New(msg)
 	}
 
-	orgIds, err := s.repo.GetGithubOrganizationsFromWhitelist(signatureID)
+	orgIds, err := s.repo.GetGithubOrganizationsFromWhitelist(ctx, signatureID)
 	if err != nil {
 		log.Warnf("error loading github organization from whitelist using signatureID: %s, error: %v",
 			signatureID, err)
@@ -215,14 +215,14 @@ func (s service) GetGithubOrganizationsFromWhitelist(signatureID string, githubA
 		ts := oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: githubAccessToken},
 		)
-		tc := oauth2.NewClient(context.Background(), ts)
+		tc := oauth2.NewClient(utils.NewContext(), ts)
 		client := githubpkg.NewClient(tc)
 
 		opt := &githubpkg.ListOptions{
 			PerPage: 100,
 		}
 
-		orgs, _, err := client.Organizations.List(context.Background(), "", opt)
+		orgs, _, err := client.Organizations.List(utils.NewContext(), "", opt)
 		if err != nil {
 			return nil, err
 		}
@@ -241,7 +241,7 @@ func (s service) GetGithubOrganizationsFromWhitelist(signatureID string, githubA
 }
 
 // AddGithubOrganizationToWhitelist adds the GH organization to the whitelist
-func (s service) AddGithubOrganizationToWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error) {
+func (s service) AddGithubOrganizationToWhitelist(ctx context.Context, signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error) {
 	organizationID := whiteListParams.OrganizationID
 
 	if signatureID == "" {
@@ -272,7 +272,7 @@ func (s service) AddGithubOrganizationToWhitelist(signatureID string, whiteListP
 		ts := oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: githubAccessToken},
 		)
-		tc := oauth2.NewClient(context.Background(), ts)
+		tc := oauth2.NewClient(utils.NewContext(), ts)
 		client := githubpkg.NewClient(tc)
 
 		opt := &githubpkg.ListOptions{
@@ -280,7 +280,7 @@ func (s service) AddGithubOrganizationToWhitelist(signatureID string, whiteListP
 		}
 
 		log.Debugf("querying for user's github organizations...")
-		orgs, _, err := client.Organizations.List(context.Background(), "", opt)
+		orgs, _, err := client.Organizations.List(utils.NewContext(), "", opt)
 		if err != nil {
 			return nil, err
 		}
@@ -300,7 +300,7 @@ func (s service) AddGithubOrganizationToWhitelist(signatureID string, whiteListP
 		}
 	}
 
-	gitHubWhiteList, err := s.repo.AddGithubOrganizationToWhitelist(signatureID, *organizationID)
+	gitHubWhiteList, err := s.repo.AddGithubOrganizationToWhitelist(ctx, signatureID, *organizationID)
 	if err != nil {
 		log.Warnf("issue adding github organization to white list using signatureID: %s, gh org id: %s, error: %v",
 			signatureID, *organizationID, err)
@@ -311,7 +311,7 @@ func (s service) AddGithubOrganizationToWhitelist(signatureID string, whiteListP
 }
 
 // DeleteGithubOrganizationFromWhitelist deletes the specified GH organization from the whitelist
-func (s service) DeleteGithubOrganizationFromWhitelist(signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error) {
+func (s service) DeleteGithubOrganizationFromWhitelist(ctx context.Context, signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error) {
 
 	// Extract the payload values
 	organizationID := whiteListParams.OrganizationID
@@ -372,7 +372,7 @@ func (s service) DeleteGithubOrganizationFromWhitelist(signatureID string, white
 		}
 	}
 
-	gitHubWhiteList, err := s.repo.DeleteGithubOrganizationFromWhitelist(signatureID, *organizationID)
+	gitHubWhiteList, err := s.repo.DeleteGithubOrganizationFromWhitelist(ctx, signatureID, *organizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -381,10 +381,10 @@ func (s service) DeleteGithubOrganizationFromWhitelist(signatureID string, white
 }
 
 // UpdateApprovalList service method
-func (s service) UpdateApprovalList(authUser *auth.User, projectModel *models.Project, companyModel *models.Company, claGroupID string, params *models.ApprovalList) (*models.Signature, error) {
+func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, projectModel *models.Project, companyModel *models.Company, claGroupID string, params *models.ApprovalList) (*models.Signature, error) {
 	pageSize := int64(1)
 	signed, approved := true, true
-	sigModel, sigErr := s.GetProjectCompanySignature(companyModel.CompanyID, claGroupID, &signed, &approved, nil, &pageSize)
+	sigModel, sigErr := s.GetProjectCompanySignature(ctx, companyModel.CompanyID, claGroupID, &signed, &approved, nil, &pageSize)
 	if sigErr != nil {
 		msg := fmt.Sprintf("unable to locate project company signature by Company ID: %s, Project ID: %s, CLA Group ID: %s, error: %+v",
 			companyModel.CompanyID, projectModel.ProjectID, claGroupID, sigErr)
@@ -414,7 +414,7 @@ func (s service) UpdateApprovalList(authUser *auth.User, projectModel *models.Pr
 		return nil, userErr
 	}
 
-	updatedSig, err := s.repo.UpdateApprovalList(projectModel.ProjectID, companyModel.CompanyID, params)
+	updatedSig, err := s.repo.UpdateApprovalList(ctx, projectModel.ProjectID, companyModel.CompanyID, params)
 	if err != nil {
 		return updatedSig, err
 	}
@@ -435,13 +435,13 @@ func (s service) UpdateApprovalList(authUser *auth.User, projectModel *models.Pr
 }
 
 // Disassociate project signatures
-func (s service) InvalidateProjectRecords(projectID string, projectName string) (int, error) {
+func (s service) InvalidateProjectRecords(ctx context.Context, projectID string, projectName string) (int, error) {
 	f := logrus.Fields{
 		"functionName": "InvalidateProjectRecords",
 		"projectID":    projectID,
 		"projectName":  projectName}
 
-	result, err := s.repo.ProjectSignatures(projectID)
+	result, err := s.repo.ProjectSignatures(ctx, projectID)
 	if err != nil {
 		log.WithFields(f).Warnf(fmt.Sprintf("Unable to get signatures for project: %s", projectID))
 		return 0, err
@@ -456,7 +456,7 @@ func (s service) InvalidateProjectRecords(projectID string, projectName string) 
 			// Do this in parallel, as we could have a lot to invalidate
 			go func(sigID, projName string) {
 				defer wg.Done()
-				updateErr := s.repo.InvalidateProjectRecord(sigID, projName)
+				updateErr := s.repo.InvalidateProjectRecord(ctx, sigID, projName)
 				if updateErr != nil {
 					log.WithFields(f).Warnf("Unable to update signature: %s with project name: %s, error: %v",
 						sigID, projName, updateErr)
@@ -472,13 +472,13 @@ func (s service) InvalidateProjectRecords(projectID string, projectName string) 
 }
 
 // AddCLAManager adds the specified manager to the signature ACL list
-func (s service) AddCLAManager(signatureID, claManagerID string) (*models.Signature, error) {
-	return s.repo.AddCLAManager(signatureID, claManagerID)
+func (s service) AddCLAManager(ctx context.Context, signatureID, claManagerID string) (*models.Signature, error) {
+	return s.repo.AddCLAManager(ctx, signatureID, claManagerID)
 }
 
 // RemoveCLAManager removes the specified manager from the signature ACL list
-func (s service) RemoveCLAManager(signatureID, claManagerID string) (*models.Signature, error) {
-	return s.repo.RemoveCLAManager(signatureID, claManagerID)
+func (s service) RemoveCLAManager(ctx context.Context, signatureID, claManagerID string) (*models.Signature, error) {
+	return s.repo.RemoveCLAManager(ctx, signatureID, claManagerID)
 }
 
 // appendList is a helper function to generate the email content of the Approval List changes
@@ -789,12 +789,12 @@ func (s service) createEventLogEntries(companyModel *models.Company, projectMode
 	}
 }
 
-func (s service) GetClaGroupICLASignatures(claGroupID string, searchTerm *string) (*models.IclaSignatures, error) {
-	return s.repo.GetClaGroupICLASignatures(claGroupID, searchTerm)
+func (s service) GetClaGroupICLASignatures(ctx context.Context, claGroupID string, searchTerm *string) (*models.IclaSignatures, error) {
+	return s.repo.GetClaGroupICLASignatures(ctx, claGroupID, searchTerm)
 }
 
-func (s service) GetClaGroupCorporateContributors(claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error) {
-	return s.repo.GetClaGroupCorporateContributors(claGroupID, companyID, searchTerm)
+func (s service) GetClaGroupCorporateContributors(ctx context.Context, claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error) {
+	return s.repo.GetClaGroupCorporateContributors(ctx, claGroupID, companyID, searchTerm)
 }
 
 // sendRequestAccessEmailToContributors sends the request access email to the specified contributors

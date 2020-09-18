@@ -4,7 +4,6 @@
 package dynamo_events
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -56,8 +55,10 @@ type Signature struct {
 
 // should be called when we modify signature
 func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
+	ctx := utils.NewContext()
 	f := logrus.Fields{
-		"functionName": "SignatureSignedEvent",
+		"functionName":   "SignatureSignedEvent",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 
 	// Decode the pre-update and post-update signature record details
@@ -85,14 +86,18 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 
 	// check if signature signed event is received
 	if !oldSignature.SignatureSigned && newSignature.SignatureSigned {
+		log.WithFields(f).Debugf("processing signature signed event for signature type: %s...", newSignature.SignatureType)
+
 		// Update the signed on date
-		err = s.signatureRepo.AddSignedOn(newSignature.SignatureID)
+		err = s.signatureRepo.AddSignedOn(ctx, newSignature.SignatureID)
 		if err != nil {
 			log.WithFields(f).Warnf("failed to add signed_on date/time to signature, error: %+v", err)
 		}
 
 		// If a CCLA signature...
 		if newSignature.SignatureType == CCLASignatureType {
+			log.WithFields(f).Debugf("processing signature type: %s with %d CLA Managers...",
+				newSignature.SignatureType, len(newSignature.SignatureACL))
 
 			if len(newSignature.SignatureACL) == 0 {
 				log.WithFields(f).Warn("initial cla manager details not found")
@@ -100,7 +105,7 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 			}
 
 			log.WithFields(f).Debugf("loading company from signature by companyID: %s...", newSignature.SignatureReferenceID)
-			companyModel, err := s.companyRepo.GetCompany(newSignature.SignatureReferenceID)
+			companyModel, err := s.companyRepo.GetCompany(ctx, newSignature.SignatureReferenceID)
 			if err != nil {
 				log.WithFields(f).Warnf("failed to lookup company from signature by companyID: %s, error: %+v",
 					newSignature.SignatureReferenceID, err)
@@ -131,7 +136,7 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 			eg.Go(func() error {
 				// Set the CLA manager permissions
 				log.WithFields(f).Debug("assigning the initial CLA manager")
-				err = s.SetInitialCLAManagerACSPermissions(context.Background(), newSignature.SignatureID)
+				err = s.SetInitialCLAManagerACSPermissions(ctx, newSignature.SignatureID)
 				if err != nil {
 					log.WithFields(f).Warnf("failed to set initial cla manager, error: %+v", err)
 					return err
@@ -175,6 +180,11 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 
 // SignatureAdded function should be called when new icla, ecla signature added
 func (s *service) SignatureAddSigTypeSignedApprovedID(event events.DynamoDBEventRecord) error {
+	ctx := utils.NewContext()
+	f := logrus.Fields{
+		"functionName":   "SignatureAddSigTypeSignedApprovedID",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
 	var newSig Signature
 	var sigType string
 	var id string
@@ -193,15 +203,15 @@ func (s *service) SignatureAddSigTypeSignedApprovedID(event events.DynamoDBEvent
 		sigType = ECLASignatureType
 		id = newSig.SignatureUserCompanyID
 	default:
-		log.Warnf("setting sigtype_signed_approved_id for signature: %s failed", newSig.SignatureID)
+		log.WithFields(f).Warnf("setting sigtype_signed_approved_id for signature: %s failed", newSig.SignatureID)
 		return errors.New("invalid signature in SignatureAddSigTypeSignedApprovedID")
 	}
 	val := fmt.Sprintf("%s#%v#%v#%s", sigType, newSig.SignatureSigned, newSig.SignatureApproved, id)
 	if newSig.SigtypeSignedApprovedID == val {
 		return nil
 	}
-	log.Debugf("setting sigtype_signed_approved_id for signature: %s", newSig.SignatureID)
-	err = s.signatureRepo.AddSigTypeSignedApprovedID(newSig.SignatureID, val)
+	log.WithFields(f).Debugf("setting sigtype_signed_approved_id for signature: %s", newSig.SignatureID)
+	err = s.signatureRepo.AddSigTypeSignedApprovedID(ctx, newSig.SignatureID, val)
 	if err != nil {
 		return err
 	}
@@ -209,16 +219,21 @@ func (s *service) SignatureAddSigTypeSignedApprovedID(event events.DynamoDBEvent
 }
 
 func (s *service) SignatureAddUsersDetails(event events.DynamoDBEventRecord) error {
+	ctx := utils.NewContext()
+	f := logrus.Fields{
+		"functionName":   "SignatureAddUsersDetails",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
 	var newSig Signature
 	err := unmarshalStreamImage(event.Change.NewImage, &newSig)
 	if err != nil {
 		return err
 	}
 	if newSig.SignatureReferenceType == "user" && newSig.UserLFUsername == "" && newSig.UserGithubUsername == "" {
-		log.Debugf("adding users details in signature: %s", newSig.SignatureID)
-		err = s.signatureRepo.AddUsersDetails(newSig.SignatureID, newSig.SignatureReferenceID)
+		log.WithFields(f).Debugf("adding users details in signature: %s", newSig.SignatureID)
+		err = s.signatureRepo.AddUsersDetails(ctx, newSig.SignatureID, newSig.SignatureReferenceID)
 		if err != nil {
-			log.Debugf("adding users details in signature: %s failed. error = %s", newSig.SignatureID, err.Error())
+			log.WithFields(f).Debugf("adding users details in signature: %s failed. error = %s", newSig.SignatureID, err.Error())
 		}
 	}
 	return nil

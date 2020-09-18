@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
@@ -26,7 +27,7 @@ func (s *service) SetInitialCLAManagerACSPermissions(ctx context.Context, signat
 		"signatureID":    signatureID,
 	}
 
-	sig, err := s.signatureRepo.GetSignature(signatureID)
+	sig, err := s.signatureRepo.GetSignature(ctx, signatureID)
 	if err != nil {
 		log.WithFields(f).Warnf("problem locating signature by ID, error: %+v", err)
 		return err
@@ -113,7 +114,7 @@ func (s *service) SetInitialCLAManagerACSPermissions(ctx context.Context, signat
 	}
 
 	log.WithFields(f).Debug("locating company record by signature reference ID...")
-	company, err := s.companyRepo.GetCompany(sig.SignatureReferenceID.String())
+	company, err := s.companyRepo.GetCompany(ctx, sig.SignatureReferenceID.String())
 	if err != nil {
 		log.WithFields(f).Warnf("unable to lookup company by signature reference ID: %s, error: %+v",
 			sig.SignatureReferenceID.String(), err)
@@ -128,15 +129,16 @@ func (s *service) SetInitialCLAManagerACSPermissions(ctx context.Context, signat
 			sig.ProjectID, err)
 		return err
 	}
+	log.WithFields(f).Debugf("discovered %d SF projects associated with the CLA Group...", len(projectList))
 
 	// Build a quick string for the output log
-	var projectInfoMsg string
+	var projectInfoMsg strings.Builder
 	for _, project := range projectList {
-		projectInfoMsg += project.ProjectName + "(" + project.ProjectSFID + "), "
+		projectInfoMsg.WriteString(project.ProjectName + "(" + project.ProjectSFID + "), ")
 	}
 
 	// Assign cla manager role based on level
-	log.WithFields(f).Debugf("assigning %s role for projects: %s", utils.CLAManagerRole, projectInfoMsg)
+	log.WithFields(f).Debugf("assigning %s role for projects: %s", utils.CLAManagerRole, projectInfoMsg.String())
 	err = s.assignCLAManager(ctx, email, claManager.Username, company.CompanyExternalID, projectList)
 	if err != nil {
 		log.WithFields(f).Warnf("unable to assign CLA Manager %s for company: %s, error: %+v",
@@ -156,9 +158,18 @@ func (s service) assignCLAManager(ctx context.Context, email, username, companyS
 		"companySFID":    companySFID,
 	}
 
+	if len(projectList) == 0 {
+		msg := fmt.Sprintf("Unable to assign %s role to user: %s with email: %s - no projects specified",
+			utils.CLAManagerRole, username, email)
+		log.WithFields(f).Warn(msg)
+		return errors.New(msg)
+	}
+
 	// check if project is signed at foundation level
 	foundationID := projectList[0].FoundationSFID
 	f["foundationID"] = projectList[0].FoundationSFID
+	log.WithFields(f).Debugf("using first project's foundation ID: %s", foundationID)
+
 	log.WithFields(f).Debugf("determining if this project happens to be signed at the foundation level, foundationID: %s", foundationID)
 	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, foundationID)
 	if signedErr != nil {

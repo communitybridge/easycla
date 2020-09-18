@@ -2955,6 +2955,7 @@ paths:
       operationId: getCompanyCLAGroupManagers
       security: []
       parameters:
+        - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/path-companyID"
         - $ref: "#/parameters/path-claGroupID"
       responses:
@@ -3047,6 +3048,7 @@ paths:
       operationId: getCompanyAdmins
       security: []
       parameters:
+        - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/path-companySFID"
       responses:
         '200':
@@ -3100,6 +3102,7 @@ paths:
       security: []
       operationId: createCompany
       parameters:
+        - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/path-userID"
         - name: input
           in: body
