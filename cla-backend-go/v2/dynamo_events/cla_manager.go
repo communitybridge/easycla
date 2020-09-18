@@ -104,6 +104,7 @@ func (s *service) SetInitialCLAManagerACSPermissions(ctx context.Context, signat
 
 		// Fall through - we have a valid claManager record!!
 	}
+	log.WithFields(f).Debugf("found user: %+v", claManager)
 
 	// get the preferred email from the user details
 	var email string

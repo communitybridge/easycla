@@ -220,8 +220,8 @@ func (ac *Client) GetObjectTypeIDByName(objectType string) (int, error) {
 	var objectTypes []struct {
 		TypeID    int    `json:"type_id"`
 		Name      string `json:"name"`
-		CreatedAt string `json:"created_at"`
-		UpdatedAt string `json:"updated_at"`
+		CreatedAt int    `json:"created_at"`
+		UpdatedAt int    `json:"updated_at"`
 	}
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
