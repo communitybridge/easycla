@@ -4,8 +4,11 @@
 package company
 
 import (
+	"context"
 	"errors"
 	"fmt"
+
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/organization"
 
@@ -25,168 +28,186 @@ import (
 func Configure(api *operations.ClaAPI, service IService, usersService users.Service, companyUserValidation bool, eventsService events.Service) {
 
 	api.CompanyGetCompaniesHandler = company.GetCompaniesHandlerFunc(func(params company.GetCompaniesParams, claUser *user.CLAUser) middleware.Responder {
-		companiesModel, err := service.GetCompanies()
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		companiesModel, err := service.GetCompanies(ctx)
 		if err != nil {
 			msg := fmt.Sprintf("Bad Request - unable to query all companies, error: %v", err)
 			log.Warnf(msg)
-			return company.NewGetCompaniesBadRequest().WithPayload(&models.ErrorResponse{
+			return company.NewGetCompaniesBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
 				Message: msg,
 			})
 		}
 
-		return company.NewGetCompaniesOK().WithPayload(companiesModel)
+		return company.NewGetCompaniesOK().WithXRequestID(reqID).WithPayload(companiesModel)
 	})
 
 	api.CompanyGetCompanyHandler = company.GetCompanyHandlerFunc(func(params company.GetCompanyParams, claUser *user.CLAUser) middleware.Responder {
-		companyModel, err := service.GetCompany(params.CompanyID)
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		companyModel, err := service.GetCompany(ctx, params.CompanyID)
 		if err != nil {
 			msg := fmt.Sprintf("Bad Request - unable to query company by ID: %s, error: %v", params.CompanyID, err)
 			log.Warnf(msg)
-			return company.NewGetCompanyBadRequest().WithPayload(&models.ErrorResponse{
+			return company.NewGetCompanyBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
 				Message: msg,
 			})
 		}
 
 		if companyModel.CompanyID == "" || companyModel.CompanyName == "" {
-			return company.NewGetCompanyNotFound().WithPayload(&models.ErrorResponse{
+			return company.NewGetCompanyNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "404",
 				Message: fmt.Sprintf("Company Not Found with ID: %s", params.CompanyID),
 			})
 		}
 
-		return company.NewGetCompanyOK().WithPayload(companyModel)
+		return company.NewGetCompanyOK().WithXRequestID(reqID).WithPayload(companyModel)
 	})
 
 	api.CompanyGetCompanyByExternalIDHandler = company.GetCompanyByExternalIDHandlerFunc(func(params company.GetCompanyByExternalIDParams) middleware.Responder {
-		companyModel, err := service.GetCompanyByExternalID(params.CompanySFID)
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		companyModel, err := service.GetCompanyByExternalID(ctx, params.CompanySFID)
 		if err != nil {
 			msg := fmt.Sprintf("Bad Request - unable to query company by ExternalID: %s, error: %v", params.CompanySFID, err)
 			log.Warnf(msg)
-			return company.NewGetCompanyByExternalIDBadRequest().WithPayload(&models.ErrorResponse{
+			return company.NewGetCompanyByExternalIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
 				Message: msg,
 			})
 		}
-		return company.NewGetCompanyByExternalIDOK().WithPayload(companyModel)
+		return company.NewGetCompanyByExternalIDOK().WithXRequestID(reqID).WithPayload(companyModel)
 	})
 
 	api.CompanySearchCompanyHandler = company.SearchCompanyHandlerFunc(func(params company.SearchCompanyParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		var nextKey = ""
 		if params.NextKey != nil {
 			nextKey = *params.NextKey
 		}
 
-		companiesModel, err := service.SearchCompanyByName(params.CompanyName, nextKey)
+		companiesModel, err := service.SearchCompanyByName(ctx, params.CompanyName, nextKey)
 		if err != nil {
 			msg := fmt.Sprintf("Bad Request - unable to query company by name: %s, error: %v", params.CompanyName, err)
 			log.Warnf(msg)
-			return company.NewSearchCompanyBadRequest().WithPayload(&models.ErrorResponse{
+			return company.NewSearchCompanyBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
 				Message: msg,
 			})
 		}
 
-		return company.NewSearchCompanyOK().WithPayload(companiesModel)
+		return company.NewSearchCompanyOK().WithXRequestID(reqID).WithPayload(companiesModel)
 	})
 
 	api.CompanyGetCompaniesByUserManagerHandler = company.GetCompaniesByUserManagerHandlerFunc(func(params company.GetCompaniesByUserManagerParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		if companyUserValidation {
 			log.Debugf("Company User Validation - GetUserByUserName() - claUser: %+v", claUser)
 			userModel, userErr := usersService.GetUserByUserName(claUser.LFUsername, true)
 			if userErr != nil {
-				return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
+				return company.NewGetCompaniesByUserManagerUnauthorized().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "401",
 					Message: fmt.Sprintf("unauthorized - unable to find current logged in user by lf_username: %s", claUser.LFUsername),
 				})
 			}
 
 			if params.UserID == "" || params.UserID != userModel.UserID {
-				return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
+				return company.NewGetCompaniesByUserManagerUnauthorized().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "401",
 					Message: fmt.Sprintf("unauthorized - userID mismatch: param user id: %s, claUser id: %s", params.UserID, userModel.UserID),
 				})
 			}
 		}
 
-		companies, err := service.GetCompaniesByUserManager(params.UserID)
+		companies, err := service.GetCompaniesByUserManager(ctx, params.UserID)
 		if err != nil {
 			msg := fmt.Sprintf("Bad Request - unable to query companies by user manager id: %s, error: %v", params.UserID, err)
 			log.Warnf(msg)
-			return company.NewGetCompaniesByUserManagerBadRequest().WithPayload(&models.ErrorResponse{
+			return company.NewGetCompaniesByUserManagerBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
 				Message: msg,
 			})
 		}
 
-		return company.NewGetCompaniesByUserManagerOK().WithPayload(companies)
+		return company.NewGetCompaniesByUserManagerOK().WithXRequestID(reqID).WithPayload(companies)
 	})
 
 	api.CompanyGetCompaniesByUserManagerWithInvitesHandler = company.GetCompaniesByUserManagerWithInvitesHandlerFunc(func(params company.GetCompaniesByUserManagerWithInvitesParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		if companyUserValidation {
 			log.Debugf("Company User Validation - GetUserByUserName() - claUser: %+v", claUser)
 			userModel, userErr := usersService.GetUserByUserName(claUser.LFUsername, true)
 			if userErr != nil {
-				return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
+				return company.NewGetCompaniesByUserManagerUnauthorized().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "401",
 					Message: fmt.Sprintf("unauthorized - unable to find current logged in user by lf_username: %s", claUser.LFUsername),
 				})
 			}
 
 			if params.UserID == "" || params.UserID != userModel.UserID {
-				return company.NewGetCompaniesByUserManagerUnauthorized().WithPayload(&models.ErrorResponse{
+				return company.NewGetCompaniesByUserManagerUnauthorized().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "401",
 					Message: fmt.Sprintf("unauthorized - userID mismatch: param user id: %s, claUser id: %s", params.UserID, userModel.UserID),
 				})
 			}
 		}
 
-		companies, err := service.GetCompaniesByUserManagerWithInvites(params.UserID)
+		companies, err := service.GetCompaniesByUserManagerWithInvites(ctx, params.UserID)
 		if err != nil {
 			msg := fmt.Sprintf("Bad Request - unable to query companies by user manager id: %s, error: %v", params.UserID, err)
 			log.Warnf(msg)
-			return company.NewGetCompaniesByUserManagerWithInvitesBadRequest().WithPayload(&models.ErrorResponse{
+			return company.NewGetCompaniesByUserManagerWithInvitesBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
 				Message: msg,
 			})
 		}
 
-		return company.NewGetCompaniesByUserManagerWithInvitesOK().WithPayload(companies)
+		return company.NewGetCompaniesByUserManagerWithInvitesOK().WithXRequestID(reqID).WithPayload(companies)
 	})
 
 	api.CompanyGetCompanyInviteRequestsHandler = company.GetCompanyInviteRequestsHandlerFunc(func(params company.GetCompanyInviteRequestsParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		log.Debugf("Processing get company invite request for company ID: %s", params.CompanyID)
-		result, err := service.GetCompanyInviteRequests(params.CompanyID, params.Status)
+		result, err := service.GetCompanyInviteRequests(ctx, params.CompanyID, params.Status)
 		if err != nil {
 			log.Warnf("error getting company invite using company id: %s, error: %v", params.CompanyID, err)
-			return company.NewGetCompanyInviteRequestsBadRequest().WithPayload(errorResponse(err))
+			return company.NewGetCompanyInviteRequestsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
-		return company.NewGetCompanyInviteRequestsOK().WithPayload(result)
+		return company.NewGetCompanyInviteRequestsOK().WithXRequestID(reqID).WithPayload(result)
 	})
 
 	api.CompanyGetCompanyUserInviteRequestsHandler = company.GetCompanyUserInviteRequestsHandlerFunc(func(params company.GetCompanyUserInviteRequestsParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		log.Debugf("Processing get company user invite request for company ID: %s and user ID: %s", params.CompanyID, params.UserID)
-		result, err := service.GetCompanyUserInviteRequests(params.CompanyID, params.UserID)
+		result, err := service.GetCompanyUserInviteRequests(ctx, params.CompanyID, params.UserID)
 		if err != nil {
 			log.Warnf("error getting company user invite using company id: %s, user id: %s, error: %v", params.CompanyID, params.UserID, err)
-			return company.NewGetCompanyUserInviteRequestsBadRequest().WithPayload(errorResponse(err))
+			return company.NewGetCompanyUserInviteRequestsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
 		if result == nil {
-			return company.NewGetCompanyUserInviteRequestsNotFound()
+			return company.NewGetCompanyUserInviteRequestsNotFound().WithXRequestID(reqID)
 		}
 
-		return company.NewGetCompanyUserInviteRequestsOK().WithPayload(result)
+		return company.NewGetCompanyUserInviteRequestsOK().WithXRequestID(reqID).WithPayload(result)
 	})
 
 	api.CompanyAddUsertoCompanyAccessListHandler = company.AddUsertoCompanyAccessListHandlerFunc(func(params company.AddUsertoCompanyAccessListParams, claUser *user.CLAUser) middleware.Responder {
-		err := service.AddUserToCompanyAccessList(params.CompanyID, params.User.UserLFID)
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		err := service.AddUserToCompanyAccessList(ctx, params.CompanyID, params.User.UserLFID)
 		if err != nil {
 			log.Warnf("error adding user to company access list using company id: %s, invite id: %s, and user LFID: %s, error: %v",
 				params.CompanyID, params.User.InviteID, params.User.UserLFID, err)
-			return company.NewAddUsertoCompanyAccessListBadRequest()
+			return company.NewAddUsertoCompanyAccessListBadRequest().WithXRequestID(reqID)
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
@@ -198,15 +219,17 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 			},
 		})
 
-		return company.NewAddUsertoCompanyAccessListOK()
+		return company.NewAddUsertoCompanyAccessListOK().WithXRequestID(reqID)
 	})
 
 	api.CompanyRequestCompanyAccessRequestHandler = company.RequestCompanyAccessRequestHandlerFunc(func(params company.RequestCompanyAccessRequestParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		log.Debugf("Processing company access request for company ID: %s, by user %+v", params.CompanyID, claUser)
-		newInvite, err := service.AddPendingCompanyInviteRequest(params.CompanyID, claUser.UserID)
+		newInvite, err := service.AddPendingCompanyInviteRequest(ctx, params.CompanyID, claUser.UserID)
 		if err != nil {
 			log.Warnf("error creating company access request for company id: %s, User: %+v, error: %v", params.CompanyID, claUser, err)
-			return company.NewRequestCompanyAccessRequestBadRequest().WithPayload(errorResponse(err))
+			return company.NewRequestCompanyAccessRequestBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
 		// Add an event to the log
@@ -221,15 +244,17 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 			},
 		})
 
-		return company.NewRequestCompanyAccessRequestOK()
+		return company.NewRequestCompanyAccessRequestOK().WithXRequestID(reqID)
 	})
 
 	api.CompanyApproveCompanyAccessRequestHandler = company.ApproveCompanyAccessRequestHandlerFunc(func(params company.ApproveCompanyAccessRequestParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		log.Debugf("Processing approve company access request for request ID: %s, company ID: %s, by user %+v", params.RequestID, params.CompanyID, claUser)
-		inviteModel, err := service.ApproveCompanyAccessRequest(params.RequestID)
+		inviteModel, err := service.ApproveCompanyAccessRequest(ctx, params.RequestID)
 		if err != nil {
 			log.Warnf("error approving company access for request ID: %s, company id: %s, error: %v", params.RequestID, params.CompanyID, err)
-			return company.NewApproveCompanyAccessRequestBadRequest().WithPayload(errorResponse(err))
+			return company.NewApproveCompanyAccessRequestBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
 		// Add an event to the log
@@ -244,15 +269,17 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 			},
 		})
 
-		return company.NewApproveCompanyAccessRequestOK()
+		return company.NewApproveCompanyAccessRequestOK().WithXRequestID(reqID)
 	})
 
 	api.CompanyRejectCompanyAccessRequestHandler = company.RejectCompanyAccessRequestHandlerFunc(func(params company.RejectCompanyAccessRequestParams, claUser *user.CLAUser) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		log.Debugf("Processing reject company access request for request ID: %s, company ID: %s, by user %+v", params.RequestID, params.CompanyID, claUser)
-		inviteModel, err := service.RejectCompanyAccessRequest(params.RequestID)
+		inviteModel, err := service.RejectCompanyAccessRequest(ctx, params.RequestID)
 		if err != nil {
 			log.Warnf("error rejecting company access for request ID: %s, company id: %s, error: %v", params.RequestID, params.CompanyID, err)
-			return company.NewRejectCompanyAccessRequestBadRequest().WithPayload(errorResponse(err))
+			return company.NewRejectCompanyAccessRequestBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
 		// Add an event to the log
@@ -267,24 +294,26 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 			},
 		})
 
-		return company.NewRejectCompanyAccessRequestOK()
+		return company.NewRejectCompanyAccessRequestOK().WithXRequestID(reqID)
 	})
 
 	api.OrganizationSearchOrganizationHandler = organization.SearchOrganizationHandlerFunc(func(params organization.SearchOrganizationParams) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 
 		if params.CompanyName == nil && params.WebsiteName == nil && params.DollarFilter == nil {
 			log.Debugf("CompanyName or WebsiteName or filter atleast one required")
-			return organization.NewSearchOrganizationBadRequest().WithPayload(errorResponse(errors.New("companyName or websiteName or filter atleast one required")))
+			return organization.NewSearchOrganizationBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(errors.New("companyName or websiteName or filter at least one required")))
 		}
 
 		companyName, websiteName, filter := validateParams(params)
 
-		result, err := service.SearchOrganizationByName(companyName, websiteName, filter)
+		result, err := service.SearchOrganizationByName(ctx, companyName, websiteName, filter)
 		if err != nil {
 			log.Warnf("error occured while search org %s. error = %s", *params.CompanyName, err.Error())
-			return organization.NewSearchOrganizationInternalServerError().WithPayload(errorResponse(err))
+			return organization.NewSearchOrganizationInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
-		return organization.NewSearchOrganizationOK().WithPayload(result)
+		return organization.NewSearchOrganizationOK().WithXRequestID(reqID).WithPayload(result)
 	})
 }
 

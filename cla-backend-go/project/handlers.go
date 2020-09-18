@@ -231,7 +231,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 		// Invalidate project signatures
 		log.WithFields(f).Debug("Invalidating signatures")
-		howMany, err = signatureService.InvalidateProjectRecords(params.ProjectID, projectModel.ProjectName)
+		howMany, err = signatureService.InvalidateProjectRecords(ctx, params.ProjectID, projectModel.ProjectName)
 		if err != nil {
 			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}

@@ -43,7 +43,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
+		companyModel, companyErr := companyService.GetCompany(ctx, params.CompanyID)
 		if companyErr != nil || companyModel == nil {
 			msg := buildErrorMessage("company lookup error", params, companyErr)
 			log.Warn(msg)
@@ -84,7 +84,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		// Look up signature ACL to ensure the user can approve the request
-		sigModels, sigErr := sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
+		sigModels, sigErr := sigService.GetProjectCompanySignatures(ctx, sigAPI.GetProjectCompanySignaturesParams{
 			HTTPRequest: nil,
 			CompanyID:   params.CompanyID,
 			ProjectID:   params.ProjectID,
@@ -252,7 +252,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 
-		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
+		companyModel, companyErr := companyService.GetCompany(ctx, params.CompanyID)
 		if companyErr != nil || companyModel == nil {
 			msg := buildErrorMessageForApprove(params, companyErr)
 			log.Warn(msg)
@@ -273,7 +273,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		// Look up signature ACL to ensure the user can approve the request
-		sigModels, sigErr := sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
+		sigModels, sigErr := sigService.GetProjectCompanySignatures(ctx, sigAPI.GetProjectCompanySignaturesParams{
 			HTTPRequest: nil,
 			CompanyID:   params.CompanyID,
 			ProjectID:   params.ProjectID,
@@ -315,7 +315,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		// Update the signature ACL
-		_, aclErr := sigService.AddCLAManager(sigModel.SignatureID.String(), request.UserID)
+		_, aclErr := sigService.AddCLAManager(ctx, sigModel.SignatureID.String(), request.UserID)
 		if aclErr != nil {
 			msg := buildErrorMessageForApprove(params, aclErr)
 			log.Warn(msg)
@@ -359,7 +359,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 
-		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
+		companyModel, companyErr := companyService.GetCompany(ctx, params.CompanyID)
 		if companyErr != nil || companyModel == nil {
 			msg := buildErrorMessageForDeny(params, companyErr)
 			log.Warn(msg)
@@ -380,7 +380,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		// Look up signature ACL to ensure the user can deny the request
-		sigModels, sigErr := sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
+		sigModels, sigErr := sigService.GetProjectCompanySignatures(ctx, sigAPI.GetProjectCompanySignaturesParams{
 			HTTPRequest: nil,
 			CompanyID:   params.CompanyID,
 			ProjectID:   params.ProjectID,
@@ -455,7 +455,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 
 		// Make sure the company id exists...
-		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
+		companyModel, companyErr := companyService.GetCompany(ctx, params.CompanyID)
 		if companyErr != nil || companyModel == nil {
 			msg := buildErrorMessageForDelete(params, companyErr)
 			return cla_manager.NewDeleteCLAManagerRequestBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -496,7 +496,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		// Look up signature ACL to ensure the user can delete the request
-		sigModels, sigErr := sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
+		sigModels, sigErr := sigService.GetProjectCompanySignatures(ctx, sigAPI.GetProjectCompanySignaturesParams{
 			HTTPRequest: nil,
 			CompanyID:   params.CompanyID,
 			ProjectID:   params.ProjectID,
@@ -573,7 +573,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 				Code:    "400",
 			})
 		}
-		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
+		companyModel, companyErr := companyService.GetCompany(ctx, params.CompanyID)
 		if companyErr != nil || companyModel == nil {
 			msg := fmt.Sprintf("User lookup for company by ID: %s failed ", params.CompanyID)
 			log.Warn(msg)
@@ -594,7 +594,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		// Look up signature ACL to ensure the user is allowed to add CLA managers
-		sigModels, sigErr := sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
+		sigModels, sigErr := sigService.GetProjectCompanySignatures(ctx, sigAPI.GetProjectCompanySignaturesParams{
 			HTTPRequest: nil,
 			CompanyID:   params.CompanyID,
 			ProjectID:   params.ProjectID,
@@ -654,7 +654,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 				Code:    "400",
 			})
 		}
-		companyModel, companyErr := companyService.GetCompany(params.CompanyID)
+		companyModel, companyErr := companyService.GetCompany(ctx, params.CompanyID)
 		if companyErr != nil || companyModel == nil {
 			msg := fmt.Sprintf("User lookup for company by ID: %s failed ", params.CompanyID)
 			log.Warn(msg)
@@ -674,7 +674,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 		// Look up signature ACL to ensure the user is allowed to remove CLA managers
-		sigModels, sigErr := sigService.GetProjectCompanySignatures(sigAPI.GetProjectCompanySignaturesParams{
+		sigModels, sigErr := sigService.GetProjectCompanySignatures(ctx, sigAPI.GetProjectCompanySignaturesParams{
 			HTTPRequest: nil,
 			CompanyID:   params.CompanyID,
 			ProjectID:   params.ProjectID,

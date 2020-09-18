@@ -10,6 +10,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 
@@ -163,7 +165,7 @@ func main() {
 	log.Info("Lambda server starting...")
 	printBuildInfo()
 	if os.Getenv("LOCAL_MODE") == "true" {
-		handler(context.Background(), events.CloudWatchEvent{})
+		handler(utils.NewContext(), events.CloudWatchEvent{})
 	} else {
 		awslambda.Start(handler)
 	}

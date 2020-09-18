@@ -4,8 +4,11 @@
 package events
 
 import (
+	"context"
 	"errors"
 	"fmt"
+
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	eventOps "github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/events"
@@ -34,7 +37,7 @@ type Service interface {
 // CombinedRepo contains the various methods of other repositories
 type CombinedRepo interface {
 	GetCLAGroupByID(projectID string, loadRepoDetails bool) (*models.Project, error)
-	GetCompany(companyID string) (*models.Company, error)
+	GetCompany(ctx context.Context, companyID string) (*models.Company, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
 	GetUser(userID string) (*models.User, error)
 }
@@ -115,14 +118,14 @@ type LogEventArgs struct {
 	companyName       string
 }
 
-func (s *service) loadCompany(args *LogEventArgs) error {
+func (s *service) loadCompany(ctx context.Context, args *LogEventArgs) error {
 	if args.CompanyModel != nil {
 		args.companyName = args.CompanyModel.CompanyName
 		args.CompanyID = args.CompanyModel.CompanyID
 		return nil
 	}
 	if args.CompanyID != "" {
-		companyModel, err := s.combinedRepo.GetCompany(args.CompanyID)
+		companyModel, err := s.combinedRepo.GetCompany(ctx, args.CompanyID)
 		if err != nil {
 			return err
 		}
@@ -182,8 +185,8 @@ func (s *service) loadUser(args *LogEventArgs) error {
 	return nil
 }
 
-func (s *service) loadDetails(args *LogEventArgs) error {
-	err := s.loadCompany(args)
+func (s *service) loadDetails(ctx context.Context, args *LogEventArgs) error {
+	err := s.loadCompany(ctx, args)
 	if err != nil {
 		return err
 	}
@@ -200,6 +203,7 @@ func (s *service) loadDetails(args *LogEventArgs) error {
 
 // LogEvent logs the event in database
 func (s *service) LogEvent(args *LogEventArgs) {
+	ctx := utils.NewContext()
 	defer func() {
 		if r := recover(); r != nil {
 			log.Error("panic occurred in CreateEvent", fmt.Errorf("%v", r))
@@ -209,7 +213,7 @@ func (s *service) LogEvent(args *LogEventArgs) {
 		log.Warnf("invalid arguments to LogEvent, missing one or more required values. args %#v", args)
 		return
 	}
-	err := s.loadDetails(args)
+	err := s.loadDetails(ctx, args)
 	if err != nil {
 		log.Error("unable to load details for event", err)
 		return

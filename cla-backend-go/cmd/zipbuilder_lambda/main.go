@@ -7,6 +7,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/communitybridge/easycla/cla-backend-go/v2/signatures"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -84,7 +86,7 @@ func main() {
 		if len(os.Args) != 3 {
 			log.Fatal("invalid number of args. first arg should be icla or ccla and 2nd arg should be cla_group_id")
 		}
-		err := handler(context.Background(), BuildZipEvent{SignatureType: os.Args[1], ClaGroupID: os.Args[2]})
+		err := handler(utils.NewContext(), BuildZipEvent{SignatureType: os.Args[1], ClaGroupID: os.Args[2]})
 		if err != nil {
 			log.Fatal(err)
 		}

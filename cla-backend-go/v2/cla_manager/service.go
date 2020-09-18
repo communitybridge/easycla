@@ -145,7 +145,7 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 
 	// Search for salesForce Company aka external Company
 	log.WithFields(f).Debugf("Getting company by external ID : %s", params.CompanySFID)
-	companyModel, companyErr := s.companyService.GetCompanyByExternalID(params.CompanySFID)
+	companyModel, companyErr := s.companyService.GetCompanyByExternalID(ctx, params.CompanySFID)
 	if companyErr != nil || companyModel == nil {
 		msg := buildErrorMessage("company lookup error", claGroupID, params, companyErr)
 		log.WithFields(f).Warn(msg)
@@ -412,7 +412,7 @@ func (s *service) DeleteCLAManager(ctx context.Context, claGroupID string, param
 	}
 
 	// Search for salesForce Company aka external Company
-	companyModel, companyErr := s.companyService.GetCompanyByExternalID(params.CompanySFID)
+	companyModel, companyErr := s.companyService.GetCompanyByExternalID(ctx, params.CompanySFID)
 	if companyErr != nil || companyModel == nil {
 		msg := buildErrorMessageDelete(params, companyErr)
 		log.WithFields(f).Warn(msg)
@@ -516,7 +516,7 @@ func (s *service) CreateCLAManagerDesignee(ctx context.Context, companySFID stri
 	projectClient := v2ProjectService.GetClient()
 
 	log.WithFields(f).Debugf("loading company by external ID...")
-	v1CompanyModel, companyErr := s.companyService.GetCompanyByExternalID(companySFID)
+	v1CompanyModel, companyErr := s.companyService.GetCompanyByExternalID(ctx, companySFID)
 	if companyErr != nil {
 		log.WithFields(f).Warnf("company not found, error: %+v", companyErr)
 		return nil, companyErr
@@ -758,7 +758,7 @@ func (s *service) CreateCLAManagerRequest(ctx context.Context, contactAdmin bool
 
 	log.WithFields(f).Debugf("loading company by external ID...")
 	// Search for salesForce Company aka external Company
-	v1CompanyModel, companyErr := s.companyService.GetCompanyByExternalID(companySFID)
+	v1CompanyModel, companyErr := s.companyService.GetCompanyByExternalID(ctx, companySFID)
 	if companyErr != nil {
 		msg := fmt.Sprintf("EasyCLA - 400 Bad Request - %s", companyErr)
 		log.Warn(msg)
@@ -916,7 +916,7 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 
 	// Get company
 	log.WithFields(f).Debugf("Get company for companyID: %s ", companyID)
-	companyModel, companyErr := s.companyService.GetCompany(companyID)
+	companyModel, companyErr := s.companyService.GetCompany(ctx, companyID)
 	if companyErr != nil || companyModel.CompanyExternalID == "" {
 		msg := fmt.Sprintf("Problem getting company for companyID: %s ", companyID)
 		log.Warn(msg)
@@ -1163,7 +1163,7 @@ func (s *service) isSigned(ctx context.Context, companyModel *v1Models.Company, 
 	f["companyID"] = companyModel.CompanyID
 	f["companyName"] = companyModel.CompanyName
 	log.WithFields(f).Debug("loading CLA Managers for company/project")
-	claManagers, err := s.v2CompanyService.GetCompanyProjectCLAManagers(companyModel.CompanyID, projectID)
+	claManagers, err := s.v2CompanyService.GetCompanyProjectCLAManagers(ctx, companyModel.CompanyID, projectID)
 	if err != nil {
 		msg := fmt.Sprintf("EasyCLA - 400 Bad Request : %v", err)
 		log.WithFields(f).Warn(msg)
