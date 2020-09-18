@@ -4,6 +4,7 @@
 package company
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -34,29 +35,29 @@ const (
 
 // IService interface defining the functions for the company service
 type IService interface { // nolint
-	CreateOrgFromExternalID(companySFID string) (*models.Company, error)
+	CreateOrgFromExternalID(ctx context.Context, companySFID string) (*models.Company, error)
 
-	GetCompanies() (*models.Companies, error)
-	GetCompany(companyID string) (*models.Company, error)
-	GetCompanyByExternalID(companySFID string) (*models.Company, error)
-	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
-	GetCompaniesByUserManager(userID string) (*models.Companies, error)
-	GetCompaniesByUserManagerWithInvites(userID string) (*models.CompaniesWithInvites, error)
+	GetCompanies(ctx context.Context) (*models.Companies, error)
+	GetCompany(ctx context.Context, companyID string) (*models.Company, error)
+	GetCompanyByExternalID(ctx context.Context, companySFID string) (*models.Company, error)
+	SearchCompanyByName(ctx context.Context, companyName string, nextKey string) (*models.Companies, error)
+	GetCompaniesByUserManager(ctx context.Context, userID string) (*models.Companies, error)
+	GetCompaniesByUserManagerWithInvites(ctx context.Context, userID string) (*models.CompaniesWithInvites, error)
 
-	AddUserToCompanyAccessList(companyID, lfid string) error
-	GetCompanyInviteRequests(companyID string, status *string) ([]models.CompanyInviteUser, error)
-	GetCompanyUserInviteRequests(companyID string, userID string) (*models.CompanyInviteUser, error)
-	AddPendingCompanyInviteRequest(companyID string, userID string) (*InviteModel, error)
-	ApproveCompanyAccessRequest(companyInviteID string) (*InviteModel, error)
-	RejectCompanyAccessRequest(companyInviteID string) (*InviteModel, error)
+	AddUserToCompanyAccessList(ctx context.Context, companyID, lfid string) error
+	GetCompanyInviteRequests(ctx context.Context, companyID string, status *string) ([]models.CompanyInviteUser, error)
+	GetCompanyUserInviteRequests(ctx context.Context, companyID string, userID string) (*models.CompanyInviteUser, error)
+	AddPendingCompanyInviteRequest(ctx context.Context, companyID string, userID string) (*InviteModel, error)
+	ApproveCompanyAccessRequest(ctx context.Context, companyInviteID string) (*InviteModel, error)
+	RejectCompanyAccessRequest(ctx context.Context, companyInviteID string) (*InviteModel, error)
 
 	// calls org service
-	SearchOrganizationByName(orgName string, websiteName string, filter string) (*models.OrgList, error)
+	SearchOrganizationByName(ctx context.Context, orgName string, websiteName string, filter string) (*models.OrgList, error)
 
-	sendRequestAccessEmail(companyModel *models.Company, requesterName, requesterEmail, recipientName, recipientAddress string)
-	sendRequestApprovedEmailToRecipient(companyModel *models.Company, recipientName, recipientAddress string)
-	sendRequestRejectedEmailToRecipient(companyModel *models.Company, recipientName, recipientAddress string)
-	getPreferredNameAndEmail(lfid string) (string, string, error)
+	sendRequestAccessEmail(ctx context.Context, companyModel *models.Company, requesterName, requesterEmail, recipientName, recipientAddress string)
+	sendRequestApprovedEmailToRecipient(ctx context.Context, companyModel *models.Company, recipientName, recipientAddress string)
+	sendRequestRejectedEmailToRecipient(ctx context.Context, companyModel *models.Company, recipientName, recipientAddress string)
+	getPreferredNameAndEmail(ctx context.Context, lfid string) (string, string, error)
 }
 
 // NewService creates a new company service object
@@ -70,18 +71,18 @@ func NewService(repo IRepository, corporateConsoleURL string, userDynamoRepo use
 }
 
 // GetCompanies returns all the companies
-func (s service) GetCompanies() (*models.Companies, error) {
-	return s.repo.GetCompanies()
+func (s service) GetCompanies(ctx context.Context) (*models.Companies, error) {
+	return s.repo.GetCompanies(ctx)
 }
 
 // GetCompany returns the company associated with the company ID
-func (s service) GetCompany(companyID string) (*models.Company, error) {
-	return s.repo.GetCompany(companyID)
+func (s service) GetCompany(ctx context.Context, companyID string) (*models.Company, error) {
+	return s.repo.GetCompany(ctx, companyID)
 }
 
 // SearchCompanyByName locates companies by the matching name and return any potential matches
-func (s service) SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error) {
-	companies, err := s.repo.SearchCompanyByName(companyName, nextKey)
+func (s service) SearchCompanyByName(ctx context.Context, companyName string, nextKey string) (*models.Companies, error) {
+	companies, err := s.repo.SearchCompanyByName(ctx, companyName, nextKey)
 	if err != nil {
 		log.Warnf("Error searching company by company name: %s, error: %v", companyName, err)
 		return nil, err
@@ -91,30 +92,30 @@ func (s service) SearchCompanyByName(companyName string, nextKey string) (*model
 }
 
 // GetCompanyUserManager the get a list of companies when provided the company id and user manager
-func (s service) GetCompaniesByUserManager(userID string) (*models.Companies, error) {
+func (s service) GetCompaniesByUserManager(ctx context.Context, userID string) (*models.Companies, error) {
 	userModel, err := s.userDynamoRepo.GetUser(userID)
 	if err != nil {
 		log.Warnf("Unable to lookup user by user id: %s, error: %v", userID, err)
 		return nil, err
 	}
 
-	return s.repo.GetCompaniesByUserManager(userID, userModel)
+	return s.repo.GetCompaniesByUserManager(ctx, userID, userModel)
 }
 
 // GetCompanyUserManagerWithInvites the get a list of companies including status when provided the company id and user manager
-func (s service) GetCompaniesByUserManagerWithInvites(userID string) (*models.CompaniesWithInvites, error) {
+func (s service) GetCompaniesByUserManagerWithInvites(ctx context.Context, userID string) (*models.CompaniesWithInvites, error) {
 	userModel, err := s.userDynamoRepo.GetUser(userID)
 	if err != nil {
 		log.Warnf("Unable to lookup user by user id: %s, error: %v", userID, err)
 		return nil, err
 	}
 
-	return s.repo.GetCompaniesByUserManagerWithInvites(userID, userModel)
+	return s.repo.GetCompaniesByUserManagerWithInvites(ctx, userID, userModel)
 }
 
 // GetCompanyInviteRequests returns a list of company invites when provided the company ID
-func (s service) GetCompanyInviteRequests(companyID string, status *string) ([]models.CompanyInviteUser, error) {
-	companyInvites, err := s.repo.GetCompanyInviteRequests(companyID, status)
+func (s service) GetCompanyInviteRequests(ctx context.Context, companyID string, status *string) ([]models.CompanyInviteUser, error) {
+	companyInvites, err := s.repo.GetCompanyInviteRequests(ctx, companyID, status)
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +147,8 @@ func (s service) GetCompanyInviteRequests(companyID string, status *string) ([]m
 }
 
 // GetCompanyUserInviteRequests returns a list of company invites when provided the company ID
-func (s service) GetCompanyUserInviteRequests(companyID string, userID string) (*models.CompanyInviteUser, error) {
-	invite, err := s.repo.GetCompanyUserInviteRequests(companyID, userID)
+func (s service) GetCompanyUserInviteRequests(ctx context.Context, companyID string, userID string) (*models.CompanyInviteUser, error) {
+	invite, err := s.repo.GetCompanyUserInviteRequests(ctx, companyID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +172,7 @@ func (s service) GetCompanyUserInviteRequests(companyID string, userID string) (
 	}
 
 	// Let's do a company lookup so we can grab the company name
-	company, err := s.repo.GetCompany(companyID)
+	company, err := s.repo.GetCompany(ctx, companyID)
 	if err != nil {
 		log.Warnf("Error fetching company with company id: %s, error: %v", companyID, err)
 		return nil, err
@@ -188,9 +189,9 @@ func (s service) GetCompanyUserInviteRequests(companyID string, userID string) (
 }
 
 // AddPendingCompanyInviteRequest adds a new company invite request
-func (s service) AddPendingCompanyInviteRequest(companyID string, userID string) (*InviteModel, error) {
+func (s service) AddPendingCompanyInviteRequest(ctx context.Context, companyID string, userID string) (*InviteModel, error) {
 
-	companyModel, companyErr := s.GetCompany(companyID)
+	companyModel, companyErr := s.GetCompany(ctx, companyID)
 	if companyErr != nil {
 		log.Warnf("AddPendingCompanyInviteRequest - unable to locate company model by ID: %s, error: %+v",
 			companyID, companyErr)
@@ -204,7 +205,7 @@ func (s service) AddPendingCompanyInviteRequest(companyID string, userID string)
 		return nil, userErr
 	}
 
-	newInvite, err := s.repo.AddPendingCompanyInviteRequest(companyID, userModel)
+	newInvite, err := s.repo.AddPendingCompanyInviteRequest(ctx, companyID, userModel)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +223,7 @@ func (s service) AddPendingCompanyInviteRequest(companyID string, userID string)
 
 	// Send the email to each company manager
 	for _, companyManagerLFID := range companyModel.CompanyACL {
-		companyManagerName, companyManagerEmail, err := s.getPreferredNameAndEmail(companyManagerLFID)
+		companyManagerName, companyManagerEmail, err := s.getPreferredNameAndEmail(ctx, companyManagerLFID)
 		if err != nil {
 			log.Warnf("unable to lookup company manager's name and email using LFID: %s - unable to send email, error: %+v",
 				companyManagerLFID, err)
@@ -230,7 +231,7 @@ func (s service) AddPendingCompanyInviteRequest(companyID string, userID string)
 		}
 
 		// Send an email to this company manager
-		s.sendRequestAccessEmail(companyModel, userModel.UserName, requesterEmail, companyManagerName, companyManagerEmail)
+		s.sendRequestAccessEmail(ctx, companyModel, userModel.UserName, requesterEmail, companyManagerName, companyManagerEmail)
 	}
 
 	return &InviteModel{
@@ -247,20 +248,20 @@ func (s service) AddPendingCompanyInviteRequest(companyID string, userID string)
 }
 
 // ApproveCompanyAccessRequest approve access request service method
-func (s service) ApproveCompanyAccessRequest(companyInviteID string) (*InviteModel, error) {
-	err := s.repo.ApproveCompanyAccessRequest(companyInviteID)
+func (s service) ApproveCompanyAccessRequest(ctx context.Context, companyInviteID string) (*InviteModel, error) {
+	err := s.repo.ApproveCompanyAccessRequest(ctx, companyInviteID)
 	if err != nil {
 		return nil, err
 	}
 
-	inviteModel, inviteErr := s.repo.GetCompanyInviteRequest(companyInviteID)
+	inviteModel, inviteErr := s.repo.GetCompanyInviteRequest(ctx, companyInviteID)
 	if inviteErr != nil || inviteModel == nil {
 		log.Warnf("ApproveCompanyAccessRequest - unable to locate company invite: %s, error: %+v",
 			companyInviteID, inviteErr)
 		return nil, inviteErr
 	}
 
-	companyModel, companyErr := s.GetCompany(inviteModel.RequestedCompanyID)
+	companyModel, companyErr := s.GetCompany(ctx, inviteModel.RequestedCompanyID)
 	if companyErr != nil {
 		log.Warnf("ApproveCompanyAccessRequest - unable to locate company model by ID: %s, error: %+v",
 			inviteModel.RequestedCompanyID, companyErr)
@@ -282,7 +283,7 @@ func (s service) ApproveCompanyAccessRequest(companyInviteID string) (*InviteMod
 	}
 
 	// update the company ACL
-	aclErr := s.AddUserToCompanyAccessList(inviteModel.RequestedCompanyID, updatedUserModel.LFUsername)
+	aclErr := s.AddUserToCompanyAccessList(ctx, inviteModel.RequestedCompanyID, updatedUserModel.LFUsername)
 	if aclErr != nil {
 		log.Warnf("ApproveCompanyAccessRequest - unable to add user to Company ACL, company ID: %s, user LFID: %s, error: %+v",
 			inviteModel.RequestedCompanyID, updatedUserModel.UserName, err)
@@ -300,7 +301,7 @@ func (s service) ApproveCompanyAccessRequest(companyInviteID string) (*InviteMod
 		whichEmail = updatedUserModel.UserEmails[0]
 	}
 
-	s.sendRequestApprovedEmailToRecipient(companyModel, updatedUserModel.UserName, whichEmail)
+	s.sendRequestApprovedEmailToRecipient(ctx, companyModel, updatedUserModel.UserName, whichEmail)
 
 	return &InviteModel{
 		CompanyInviteID:    inviteModel.CompanyInviteID,
@@ -316,20 +317,20 @@ func (s service) ApproveCompanyAccessRequest(companyInviteID string) (*InviteMod
 }
 
 // RejectCompanyAccessRequest approve access request service method
-func (s service) RejectCompanyAccessRequest(companyInviteID string) (*InviteModel, error) {
-	err := s.repo.RejectCompanyAccessRequest(companyInviteID)
+func (s service) RejectCompanyAccessRequest(ctx context.Context, companyInviteID string) (*InviteModel, error) {
+	err := s.repo.RejectCompanyAccessRequest(ctx, companyInviteID)
 	if err != nil {
 		return nil, err
 	}
 
-	inviteModel, inviteErr := s.repo.GetCompanyInviteRequest(companyInviteID)
+	inviteModel, inviteErr := s.repo.GetCompanyInviteRequest(ctx, companyInviteID)
 	if inviteErr != nil || inviteModel == nil {
 		log.Warnf("RejectCompanyAccessRequest - unable to locate company invite: %s, error: %+v",
 			companyInviteID, inviteErr)
 		return nil, inviteErr
 	}
 
-	companyModel, companyErr := s.GetCompany(inviteModel.RequestedCompanyID)
+	companyModel, companyErr := s.GetCompany(ctx, inviteModel.RequestedCompanyID)
 	if companyErr != nil {
 		log.Warnf("RejectCompanyAccessRequest - unable to locate company model by ID: %s, error: %+v",
 			inviteModel.RequestedCompanyID, companyErr)
@@ -354,7 +355,7 @@ func (s service) RejectCompanyAccessRequest(companyInviteID string) (*InviteMode
 		whichEmail = userModel.UserEmails[0]
 	}
 
-	s.sendRequestRejectedEmailToRecipient(companyModel, userModel.UserName, whichEmail)
+	s.sendRequestRejectedEmailToRecipient(ctx, companyModel, userModel.UserName, whichEmail)
 
 	return &InviteModel{
 		CompanyInviteID:    inviteModel.CompanyInviteID,
@@ -370,9 +371,9 @@ func (s service) RejectCompanyAccessRequest(companyInviteID string) (*InviteMode
 }
 
 // AddUserToCompanyAccessList adds a user to the specified company
-func (s service) AddUserToCompanyAccessList(companyID, lfid string) error {
+func (s service) AddUserToCompanyAccessList(ctx context.Context, companyID, lfid string) error {
 	// call the get company function
-	company, err := s.repo.GetCompany(companyID)
+	company, err := s.repo.GetCompany(ctx, companyID)
 	if err != nil {
 		log.Warnf("Error retrieving company by company ID: %s, error: %v", companyID, err)
 		return err
@@ -389,7 +390,7 @@ func (s service) AddUserToCompanyAccessList(companyID, lfid string) error {
 	// add user to string set
 	company.CompanyACL = append(company.CompanyACL, lfid)
 
-	err = s.repo.UpdateCompanyAccessList(companyID, company.CompanyACL)
+	err = s.repo.UpdateCompanyAccessList(ctx, companyID, company.CompanyACL)
 	if err != nil {
 		log.Warnf("Error updating company access list with company ID: %s, company ACL: %v, error: %v", companyID, company.CompanyACL, err)
 		return err
@@ -399,7 +400,7 @@ func (s service) AddUserToCompanyAccessList(companyID, lfid string) error {
 }
 
 // sendRequestAccessEmail sends the request access email
-func (s service) sendRequestAccessEmail(companyModel *models.Company, requesterName, requesterEmail, recipientName, recipientAddress string) {
+func (s service) sendRequestAccessEmail(ctx context.Context, companyModel *models.Company, requesterName, requesterEmail, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
 
 	requestedUserInfo := fmt.Sprintf("<ul><li>%s (%s)</li></ul>", requesterName, requesterEmail)
@@ -432,7 +433,7 @@ Manager status.
 }
 
 // sendRequestApprovedEmailToRecipient generates and sends an email to the specified recipient
-func (s service) sendRequestApprovedEmailToRecipient(companyModel *models.Company, recipientName, recipientAddress string) {
+func (s service) sendRequestApprovedEmailToRecipient(ctx context.Context, companyModel *models.Company, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
 
 	// subject string, body string, recipients []string
@@ -463,7 +464,7 @@ Manager status.
 }
 
 // sendRequestRejectedEmailToRecipient generates and sends an email to the specified recipient
-func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Company, recipientName, recipientAddress string) {
+func (s service) sendRequestRejectedEmailToRecipient(ctx context.Context, companyModel *models.Company, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
 
 	var companyManagerText = ""
@@ -522,7 +523,7 @@ If you have further questions about this denial, please contact one of the exist
 }
 
 // getPreferredNameAndEmail when given the user LFID, this routine returns the user's name and preferred email
-func (s service) getPreferredNameAndEmail(lfid string) (string, string, error) {
+func (s service) getPreferredNameAndEmail(ctx context.Context, lfid string) (string, string, error) {
 	userModel, userErr := s.userService.GetUserByLFUserName(lfid)
 	if userErr != nil {
 		log.Warnf("getPreferredNameAndEmail - unable to locate user model by ID: %s, error: %+v",
@@ -544,13 +545,13 @@ func (s service) getPreferredNameAndEmail(lfid string) (string, string, error) {
 	return userName, userEmail, nil
 }
 
-func (s service) GetCompanyByExternalID(companySFID string) (*models.Company, error) {
-	comp, err := s.repo.GetCompanyByExternalID(companySFID)
+func (s service) GetCompanyByExternalID(ctx context.Context, companySFID string) (*models.Company, error) {
+	comp, err := s.repo.GetCompanyByExternalID(ctx, companySFID)
 	if err == nil {
 		return comp, nil
 	}
 	if err == ErrCompanyDoesNotExist {
-		comp, err = s.CreateOrgFromExternalID(companySFID)
+		comp, err = s.CreateOrgFromExternalID(ctx, companySFID)
 		if err != nil {
 			return comp, err
 		}
@@ -559,7 +560,7 @@ func (s service) GetCompanyByExternalID(companySFID string) (*models.Company, er
 	return nil, err
 }
 
-func (s service) SearchOrganizationByName(orgName string, websiteName string, filter string) (*models.OrgList, error) {
+func (s service) SearchOrganizationByName(ctx context.Context, orgName string, websiteName string, filter string) (*models.OrgList, error) {
 	osc := organization_service.GetClient()
 	orgs, err := osc.SearchOrganization(orgName, websiteName, filter)
 	if err != nil {
@@ -578,8 +579,12 @@ func (s service) SearchOrganizationByName(orgName string, websiteName string, fi
 }
 
 // CreateOrgFromExternalID creates a new EasyCLA company from the external SF Organization ID
-func (s service) CreateOrgFromExternalID(companySFID string) (*models.Company, error) {
-	f := logrus.Fields{"companySFID": companySFID}
+func (s service) CreateOrgFromExternalID(ctx context.Context, companySFID string) (*models.Company, error) {
+	f := logrus.Fields{
+		"functionName":   "CreateOrgFromExternalID",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companySFID":    companySFID,
+	}
 	osc := organization_service.GetClient()
 	log.WithFields(f).Debugf("getting organization details")
 	org, err := osc.GetOrganization(companySFID)
@@ -594,7 +599,7 @@ func (s service) CreateOrgFromExternalID(companySFID string) (*models.Company, e
 
 	// Query the platform user service to locate the company admin
 	log.WithFields(f).Debugf("getting company-admin information")
-	companyAdmin, err := getCompanyAdmin(companySFID)
+	companyAdmin, err := getCompanyAdmin(ctx, companySFID)
 	if err != nil {
 		return nil, err
 	}
@@ -627,7 +632,7 @@ func (s service) CreateOrgFromExternalID(companySFID string) (*models.Company, e
 	f["company"] = newComp
 	log.WithFields(f).Debugf("creating cla company")
 	// create company
-	comp, err := s.repo.CreateCompany(newComp)
+	comp, err := s.repo.CreateCompany(ctx, newComp)
 	if err != nil {
 		log.WithFields(f).Debugf("creating cla company failed. error = %s", err.Error())
 		return nil, err
@@ -636,12 +641,17 @@ func (s service) CreateOrgFromExternalID(companySFID string) (*models.Company, e
 }
 
 // getCompanyAdmin is helper function which queries org-service to get first company-admin
-func getCompanyAdmin(companySFID string) (*models.User, error) {
+func getCompanyAdmin(ctx context.Context, companySFID string) (*models.User, error) {
+	f := logrus.Fields{
+		"functionName":   "getCompanyAdmin",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companySFID":    companySFID,
+	}
 	osc := organization_service.GetClient()
 	result, err := osc.ListOrgUserAdminScopes(companySFID, nil)
 	if err != nil {
 		if _, ok := err.(*organizations.ListOrgUsrAdminScopesNotFound); !ok {
-			log.WithField("companySFID", companySFID).Errorf("getting company-admin failed. error = %s", err.Error())
+			log.WithFields(f).Warnf("getting company-admin failed. error = %s", err.Error())
 			return nil, err
 		}
 	}
@@ -655,12 +665,12 @@ func getCompanyAdmin(companySFID string) (*models.User, error) {
 						UserExternalID: usc.Contact.ID,
 						Username:       usc.Contact.Name,
 					}
-					log.WithFields(logrus.Fields{"companySFID": companySFID, "company-admin": companyAdmin}).Debug("company-admin found")
+					log.WithFields(f).WithField("company-admin", companyAdmin).Debug("company-admin found")
 					return companyAdmin, nil
 				}
 			}
 		}
 	}
-	log.WithField("companySFID", companySFID).Errorf("no company-admin found")
+	log.WithFields(f).Warnf("no company-admin found")
 	return nil, errors.New("no company-admin found")
 }

@@ -4,6 +4,7 @@
 package sign
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -24,6 +25,8 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 	// Retrieve a list of available templates
 	api.SignRequestCorporateSignatureHandler = sign.RequestCorporateSignatureHandlerFunc(
 		func(params sign.RequestCorporateSignatureParams, user *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
 			if !utils.IsUserAuthorizedForProjectOrganizationTree(user, utils.StringValue(params.Input.ProjectSfid), utils.StringValue(params.Input.CompanySfid)) {
 				return sign.NewRequestCorporateSignatureForbidden().WithPayload(&models.ErrorResponse{
@@ -33,7 +36,7 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 				})
 			}
 
-			resp, err := service.RequestCorporateSignature(utils.StringValue(params.XUSERNAME), params.Authorization, params.Input)
+			resp, err := service.RequestCorporateSignature(ctx, utils.StringValue(params.XUSERNAME), params.Authorization, params.Input)
 			if err != nil {
 				if strings.Contains(err.Error(), "does not exist") {
 					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(err))

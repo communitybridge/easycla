@@ -33,7 +33,7 @@ paths:
   /ops/version:
     get:
       summary: API Version Information
-      security: []
+      security: [ ]
       operationId: getVersion
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -52,7 +52,7 @@ paths:
   /ops/health:
     get:
       summary: API Health Check
-      security: []
+      security: [ ]
       operationId: healthCheck
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -80,7 +80,7 @@ paths:
 
   /api-docs:
     get:
-      security: []
+      security: [ ]
       summary: Get swagger documentation
       operationId: getDoc
       parameters:
@@ -95,7 +95,7 @@ paths:
 
   /swagger.json:
     get:
-      security: []
+      security: [ ]
       summary: Get swagger JSON
       operationId: getSwagger
       parameters:
@@ -337,7 +337,7 @@ paths:
       summary: Get project signatures
       description: Returns a list of project signature models when provided the project ID
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: getProjectSignatures
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -371,7 +371,7 @@ paths:
     get:
       summary: Get project company signatures
       description: Returns a list of project signature models when provided the project ID and company ID
-      security: []
+      security: [ ]
       operationId: getProjectCompanySignatures
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -402,7 +402,7 @@ paths:
       summary: Get company signatures
       description: Returns a list of company signatures when provided the company ID
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: getCompanySignatures
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -434,7 +434,7 @@ paths:
       summary: Get user signatures
       description: Returns a list of user signatures when provided the user ID
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: getUserSignatures
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -465,7 +465,7 @@ paths:
       summary: Get project company signatures for the employees
       description: Returns a list of employee project signature models when provided the project ID and company ID
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: getProjectCompanyEmployeeSignatures
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -535,7 +535,7 @@ paths:
     get:
       summary: Signature Update
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: getGitHubOrgWhitelist
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -565,7 +565,7 @@ paths:
     delete:
       summary: Signature Update
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: deleteGitHubOrgWhitelist
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -599,7 +599,7 @@ paths:
     post:
       summary: Signature Update
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: addGitHubOrgWhitelist
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -634,7 +634,7 @@ paths:
   /signatures/{claGroupID}/{userID}/icla/pdf:
     get:
       summary: Download signed ICLA PDF
-      security: []
+      security: [ ]
       operationId: getSignedICLADocument
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -662,7 +662,7 @@ paths:
   /signatures/{claGroupID}/{companyID}/ccla/pdf:
     get:
       summary: Download signed CCLA PDF
-      security: []
+      security: [ ]
       operationId: getSignedCCLADocument
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -692,7 +692,7 @@ paths:
     post:
       summary: Create a Project/CLA Group
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: createProject
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -722,7 +722,7 @@ paths:
     put:
       summary: Update Project by ID
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: updateProject
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -752,7 +752,7 @@ paths:
     get:
       summary: Get Projects
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: getProjects
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -789,7 +789,7 @@ paths:
     get:
       summary: Get Project by ID
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: getProjectById
       responses:
         '200':
@@ -813,7 +813,7 @@ paths:
     delete:
       summary: Delete Project by ID
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: deleteProjectById
       responses:
         '204':
@@ -843,7 +843,7 @@ paths:
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/pageSize'
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: getProjectsByExternalID
       responses:
         '200':
@@ -876,7 +876,7 @@ paths:
           type: string
           required: true
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: getProjectByName
       responses:
         '200':
@@ -907,6 +907,8 @@ paths:
         - OauthSecurity:
             - company
       operationId: getCompanies
+      parameters:
+        - $ref: "#/parameters/x-request-id"
       responses:
         '200':
           description: 'Success'
@@ -962,7 +964,7 @@ paths:
     get:
       summary: Get company
       description: Returns the company by external ID
-      security: []
+      security: [ ]
       operationId: getCompanyByExternalID
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1092,7 +1094,7 @@ paths:
     get:
       summary: Search companies from organization service
       description: Searches for matching organization by name
-      security: []
+      security: [ ]
       operationId: searchOrganization
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1348,7 +1350,7 @@ paths:
         - company
     post:
       summary: create ccla Approval request for given project
-      security: []
+      security: [ ]
       operationId: addCclaWhitelistRequest
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1796,7 +1798,7 @@ paths:
     get:
       summary: Get Available Templates
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: getTemplates
       responses:
         '200':
@@ -1828,7 +1830,7 @@ paths:
     post:
       summary: Create contract template for CLA Group
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: createCLAGroupTemplate
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1858,7 +1860,7 @@ paths:
   /github/login:
     get:
       summary: API to redirect to Github Auth flow
-      security: []
+      security: [ ]
       operationId: login
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1878,7 +1880,7 @@ paths:
   /github/redirect:
     get:
       summary: API that Github redirects to after successful auth
-      security: []
+      security: [ ]
       operationId: redirect
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1903,7 +1905,7 @@ paths:
     get:
       summary: API to fetch the GitHub Oranization Details
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: getOrg
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1933,7 +1935,7 @@ paths:
     post:
       summary: API to add new gitHub oranization in the project
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: addProjectGithubOrganization
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1963,7 +1965,7 @@ paths:
     get:
       summary: API to fetch the gitHub oranizations of the project
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: getProjectGithubOrganizations
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1989,7 +1991,7 @@ paths:
     delete:
       summary: API to delete gitHub oranization in the project
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       operationId: deleteProjectGithubOrganization
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -2149,7 +2151,7 @@ paths:
     get:
       summary: search events
       security:
-        - OauthSecurity: []
+        - OauthSecurity: [ ]
       description: Returns list of events matching with search criteria
       operationId: searchEvents
       parameters:
@@ -2302,11 +2304,11 @@ parameters:
   companyName:
     name: companyName
     description: >-
-            Represent the name of the organization
+      Represent the name of the organization
 
-            #### <span style="color:red">$filter available</span>
+      #### <span style="color:red">$filter available</span>
 
-            e.g. `$filter=name eq Pinterest`
+      e.g. `$filter=name eq Pinterest`
     in: query
     type: string
     required: false
@@ -2354,7 +2356,7 @@ parameters:
     in: query
     type: string
     required: false
-    enum: [ccla,cla]
+    enum: [ ccla,cla ]
   claType:
     name: claType
     description: >
@@ -2365,7 +2367,7 @@ parameters:
     in: query
     type: string
     required: false
-    enum: [icla,ecla,ccla]
+    enum: [ icla,ecla,ccla ]
   nextKey:
     name: nextKey
     description: The next key to scan - used as a page offset for scanning batches of records
@@ -2379,7 +2381,7 @@ parameters:
     in: query
     description: Sort order
     type: string
-    enum: [asc, desc]
+    enum: [ asc, desc ]
   eventType:
     name: eventType
     description: Type of the event
@@ -2469,37 +2471,37 @@ parameters:
     in: query
     type: string
     description: >-
-        System query option to set custom on-demand criteria to condition the results of the resource requested
+      System query option to set custom on-demand criteria to condition the results of the resource requested
 
-         **Comparison Operators**
+       **Comparison Operators**
 
-          Operator | Description         | Example
-          -------- | ------------------- | -------
-          eq     | Equal                 | **$filter**=companyName **eq** Pinterest
-          ne     | Not Equal             | **$filter**=status **ne** Planned
-          gt     | Greater than          | **$filter**=startDate **gt** 06-22-2019
-          ge     | Greater than or equal | **$filter**=endDate **ge*8 06-22-2021
-          lt     | Less than             | **$filter**=price **lt** 100000
-          le     | Less than or equal    | **$filter**=EventYear **le** 2019
+        Operator | Description         | Example
+        -------- | ------------------- | -------
+        eq     | Equal                 | **$filter**=companyName **eq** Pinterest
+        ne     | Not Equal             | **$filter**=status **ne** Planned
+        gt     | Greater than          | **$filter**=startDate **gt** 06-22-2019
+        ge     | Greater than or equal | **$filter**=endDate **ge*8 06-22-2021
+        lt     | Less than             | **$filter**=price **lt** 100000
+        le     | Less than or equal    | **$filter**=EventYear **le** 2019
 
 
-        **Logical Operators** (comming soon)
+      **Logical Operators** (comming soon)
 
-          Operator | Description    | Example
-          -------- | -------------- | -------
-          and    | Logical and      | **$filter**=status **eq** Active **and** startDate **gt** 01-01-2020
-          or     | Logical or       | **$filter**=status **eq** Active **or** Status **ne** Planned
+        Operator | Description    | Example
+        -------- | -------------- | -------
+        and    | Logical and      | **$filter**=status **eq** Active **and** startDate **gt** 01-01-2020
+        or     | Logical or       | **$filter**=status **eq** Active **or** Status **ne** Planned
 
-          **Filter Considerations**
+        **Filter Considerations**
 
-          * Filter can not be used con other request parameters, it will ignore all others
+        * Filter can not be used con other request parameters, it will ignore all others
 
-          * If filter fails you won't get an error, it will return everything
+        * If filter fails you won't get an error, it will return everything
 
-        <p style="color: #8a6d3b;background-color: #fcf8e3;padding: 5px">
-          <b>Note</b>: look up for fields in the response structure  with the description of <b><span style="color:red">$filter available</span></b>,
-          those are the available fields to use
-        </p>
+      <p style="color: #8a6d3b;background-color: #fcf8e3;padding: 5px">
+        <b>Note</b>: look up for fields in the response structure  with the description of <b><span style="color:red">$filter available</span></b>,
+        those are the available fields to use
+      </p>
 
 definitions:
   version:

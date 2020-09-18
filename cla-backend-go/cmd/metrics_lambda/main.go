@@ -7,6 +7,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/aws/aws-lambda-go/lambda"
 
 	"github.com/communitybridge/easycla/cla-backend-go/token"
@@ -74,7 +76,7 @@ func main() {
 	log.Info("Lambda server starting...")
 	printBuildInfo()
 	if os.Getenv("LOCAL_MODE") == "true" {
-		handler(context.Background(), events.CloudWatchEvent{})
+		handler(utils.NewContext(), events.CloudWatchEvent{})
 	} else {
 		lambda.Start(handler)
 	}

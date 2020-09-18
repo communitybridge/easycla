@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/communitybridge/easycla/cla-backend-go/approval_list"
 	"github.com/communitybridge/easycla/cla-backend-go/cla_manager"
 
@@ -125,7 +127,7 @@ func main() {
 				log.Fatal(err)
 			}
 		}
-		handler(context.Background(), dynamodbEvent)
+		handler(utils.NewContext(), dynamodbEvent)
 	} else {
 		lambda.Start(handler)
 	}

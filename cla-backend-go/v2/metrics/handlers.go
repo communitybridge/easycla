@@ -4,6 +4,7 @@
 package metrics
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/LF-Engineering/lfx-kit/auth"
@@ -93,6 +94,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 	api.MetricsListCompanyProjectMetricsHandler = metrics.ListCompanyProjectMetricsHandlerFunc(
 		func(params metrics.ListCompanyProjectMetricsParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
 				return metrics.NewListCompanyProjectMetricsForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -101,7 +103,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 						authUser.UserName, params.CompanySFID),
 				})
 			}
-			comp, err := v1CompanyRepo.GetCompanyByExternalID(params.CompanySFID)
+			comp, err := v1CompanyRepo.GetCompanyByExternalID(ctx, params.CompanySFID)
 			if err != nil {
 				if err == v1Company.ErrCompanyDoesNotExist {
 					return metrics.NewListCompanyProjectMetricsNotFound().WithXRequestID(reqID)

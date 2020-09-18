@@ -71,9 +71,16 @@ func NewRepository(awsSession *session.Session, stage string) Repository {
 }
 
 func (repo *repo) queryClaGroupsProjects(keyCondition expression.KeyConditionBuilder, indexName *string) ([]*ProjectClaGroup, error) {
+	f := logrus.Fields{
+		"functionName": "queryClaGroupsProjects",
+		"indexName":    aws.StringValue(indexName),
+		"keyCondition": fmt.Sprintf("%+v", keyCondition),
+	}
+
+	log.WithFields(f).Debug("building query...")
 	expr, err := expression.NewBuilder().WithKeyCondition(keyCondition).Build()
 	if err != nil {
-		log.Warnf("error building expression for project cla groups, error: %v", err)
+		log.WithFields(f).Warnf("error building expression for project cla groups, error: %v", err)
 		return nil, err
 	}
 
@@ -88,9 +95,10 @@ func (repo *repo) queryClaGroupsProjects(keyCondition expression.KeyConditionBui
 
 	var projectClaGroups []*ProjectClaGroup
 	for {
+		log.WithFields(f).Debugf("running query using input: %+v", queryInput)
 		results, errQuery := repo.dynamoDBClient.Query(queryInput)
 		if errQuery != nil {
-			log.Warnf("error retrieving project cla-groups, error: %v", errQuery)
+			log.WithFields(f).Warnf("error retrieving project cla-groups, error: %v", errQuery)
 			return nil, errQuery
 		}
 
@@ -98,7 +106,7 @@ func (repo *repo) queryClaGroupsProjects(keyCondition expression.KeyConditionBui
 
 		err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &projectClaGroupsTmp)
 		if err != nil {
-			log.Warnf("error unmarshalling project cla-groups from database. error: %v", err)
+			log.Warnf("error unmarshalling project cla-groups from database table: %s. error: %v", repo.tableName, err)
 			return nil, err
 		}
 		projectClaGroups = append(projectClaGroups, projectClaGroupsTmp...)
@@ -109,6 +117,7 @@ func (repo *repo) queryClaGroupsProjects(keyCondition expression.KeyConditionBui
 			break
 		}
 	}
+
 	return projectClaGroups, nil
 }
 

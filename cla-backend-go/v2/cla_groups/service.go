@@ -567,7 +567,7 @@ func (s *service) CreateCLAGroup(ctx context.Context, input *models.CreateClaGro
 		log.WithFields(f).Debug("using apache style template as template_id is not passed")
 		templateFields.TemplateID = v1Template.ApacheStyleTemplateID
 	}
-	pdfUrls, err := s.v1TemplateService.CreateCLAGroupTemplate(context.Background(), claGroup.ProjectID, &templateFields)
+	pdfUrls, err := s.v1TemplateService.CreateCLAGroupTemplate(ctx, claGroup.ProjectID, &templateFields)
 	if err != nil {
 		log.WithFields(f).Warnf("attaching cla_group_template failed, error: %+v", err)
 		log.WithFields(f).Debugf("rolling back creation - deleting previously created CLA Group: %s", *input.ClaGroupName)
@@ -760,7 +760,7 @@ func (s *service) DeleteCLAGroup(ctx context.Context, claGroupModel *v1Models.Pr
 	// Locate all the signed/approved corporate CLA signature records - need all the Organization IDs so we can
 	// remove CLA Manager/CLA Manager Designee/CLA Signatory Permissions
 	log.WithFields(f).Debug("locating signed corporate signatures...")
-	signatureCompanyIDModels, companyIDErr := s.signatureService.GetCompanyIDsWithSignedCorporateSignatures(claGroupModel.ProjectID)
+	signatureCompanyIDModels, companyIDErr := s.signatureService.GetCompanyIDsWithSignedCorporateSignatures(ctx, claGroupModel.ProjectID)
 	if companyIDErr != nil {
 		log.WithFields(f).Warnf("unable to fetch list of company IDs, error: %+v", companyIDErr)
 		return companyIDErr
@@ -829,7 +829,7 @@ func (s *service) DeleteCLAGroup(ctx context.Context, claGroupModel *v1Models.Pr
 	// Invalidate project signatures
 	go func(claGroup *v1Models.Project, authUser *auth.User) {
 		log.WithFields(f).Debug("invalidating all signatures for CLA Group...")
-		numInvalidated, invalidateErr := s.signatureService.InvalidateProjectRecords(claGroup.ProjectID, claGroup.ProjectName)
+		numInvalidated, invalidateErr := s.signatureService.InvalidateProjectRecords(ctx, claGroup.ProjectID, claGroup.ProjectName)
 		if invalidateErr != nil {
 			log.WithFields(f).Warn(invalidateErr)
 			errChan <- invalidateErr
