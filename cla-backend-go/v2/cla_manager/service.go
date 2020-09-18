@@ -848,6 +848,10 @@ func (s *service) CreateCLAManagerRequest(ctx context.Context, contactAdmin bool
 		return nil, ErrNoLFID
 	}
 
+	if lfxUser.Username == "" {
+		return nil, ErrNoLFID
+	}
+
 	log.WithFields(f).Debug("sending CLA manager designee request...")
 	claManagerDesignee, err := s.CreateCLAManagerDesignee(ctx, companySFID, projectID, userEmail)
 	if err != nil {
