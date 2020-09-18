@@ -4,7 +4,6 @@
 package acs_service
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -99,7 +98,7 @@ func (ac *Client) SendUserInvite(email *string,
 			RoleName: roleName,
 			Type:     inviteType,
 		},
-		Context: context.Background(),
+		Context: utils.NewContext(),
 	}
 	if scope == utils.ProjectOrgScope && projectID == nil {
 		log.WithFields(f).Warnf("Project ID required for project|organization scope, error: %+v", ErrProjectIDMissing)

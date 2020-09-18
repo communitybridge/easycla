@@ -4,6 +4,7 @@
 package company
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -34,27 +35,27 @@ var (
 
 // IRepository interface methods
 type IRepository interface { //nolint
-	CreateCompany(in *models.Company) (*models.Company, error)
-	GetCompanies() (*models.Companies, error)
-	GetCompany(companyID string) (*models.Company, error)
-	GetCompanyByExternalID(companySFID string) (*models.Company, error)
-	GetCompanyByName(companyName string) (*models.Company, error)
-	SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error)
-	DeleteCompanyByID(companyID string) error
-	DeleteCompanyBySFID(companySFID string) error
-	GetCompaniesByUserManager(userID string, userModel user.User) (*models.Companies, error)
-	GetCompaniesByUserManagerWithInvites(userID string, userModel user.User) (*models.CompaniesWithInvites, error)
+	CreateCompany(ctx context.Context, in *models.Company) (*models.Company, error)
+	GetCompanies(ctx context.Context) (*models.Companies, error)
+	GetCompany(ctx context.Context, companyID string) (*models.Company, error)
+	GetCompanyByExternalID(ctx context.Context, companySFID string) (*models.Company, error)
+	GetCompanyByName(ctx context.Context, companyName string) (*models.Company, error)
+	SearchCompanyByName(ctx context.Context, companyName string, nextKey string) (*models.Companies, error)
+	DeleteCompanyByID(ctx context.Context, companyID string) error
+	DeleteCompanyBySFID(ctx context.Context, companySFID string) error
+	GetCompaniesByUserManager(ctx context.Context, userID string, userModel user.User) (*models.Companies, error)
+	GetCompaniesByUserManagerWithInvites(ctx context.Context, userID string, userModel user.User) (*models.CompaniesWithInvites, error)
 
-	AddPendingCompanyInviteRequest(companyID string, userModel user.User) (*Invite, error)
-	GetCompanyInviteRequest(companyInviteID string) (*Invite, error)
-	GetCompanyInviteRequests(companyID string, status *string) ([]Invite, error)
-	GetCompanyUserInviteRequests(companyID string, userID string) (*Invite, error)
-	GetUserInviteRequests(userID string) ([]Invite, error)
-	ApproveCompanyAccessRequest(companyInviteID string) error
-	RejectCompanyAccessRequest(companyInviteID string) error
-	updateInviteRequestStatus(companyInviteID, status string) error
+	AddPendingCompanyInviteRequest(ctx context.Context, companyID string, userModel user.User) (*Invite, error)
+	GetCompanyInviteRequest(ctx context.Context, companyInviteID string) (*Invite, error)
+	GetCompanyInviteRequests(ctx context.Context, companyID string, status *string) ([]Invite, error)
+	GetCompanyUserInviteRequests(ctx context.Context, companyID string, userID string) (*Invite, error)
+	GetUserInviteRequests(ctx context.Context, userID string) ([]Invite, error)
+	ApproveCompanyAccessRequest(ctx context.Context, companyInviteID string) error
+	RejectCompanyAccessRequest(ctx context.Context, companyInviteID string) error
+	updateInviteRequestStatus(ctx context.Context, companyInviteID, status string) error
 
-	UpdateCompanyAccessList(companyID string, companyACL []string) error
+	UpdateCompanyAccessList(ctx context.Context, companyID string, companyACL []string) error
 }
 
 type repository struct {
@@ -75,11 +76,15 @@ func NewRepository(awsSession *session.Session, stage string) IRepository {
 }
 
 // GetCompanies retrieves all the companies
-func (repo repository) GetCompanies() (*models.Companies, error) {
+func (repo repository) GetCompanies(ctx context.Context) (*models.Companies, error) {
+	f := logrus.Fields{
+		"functionName":   "GetCompanies",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().WithProjection(buildCompanyProjection()).Build()
 	if err != nil {
-		log.Warnf("error building expression for get all companies scan error: %v", err)
+		log.WithFields(f).Warnf("error building expression for get all companies scan error: %v", err)
 		return nil, err
 	}
 
@@ -100,14 +105,14 @@ func (repo repository) GetCompanies() (*models.Companies, error) {
 		// Make the DynamoDB Query API call
 		results, dbErr := repo.dynamoDBClient.Scan(scanInput)
 		if dbErr != nil {
-			log.Warnf("error retrieving get all companies, error: %v", dbErr)
+			log.WithFields(f).Warnf("error retrieving get all companies, error: %v", dbErr)
 			return nil, dbErr
 		}
 
 		// Convert the list of DB models to a list of response models
-		companyList, modelErr := buildCompanyModels(results)
+		companyList, modelErr := buildCompanyModels(ctx, results)
 		if modelErr != nil {
-			log.Warnf("error retrieving get all companies, error: %v", modelErr)
+			log.WithFields(f).Warnf("error retrieving get all companies, error: %v", modelErr)
 			return nil, modelErr
 		}
 
@@ -134,7 +139,7 @@ func (repo repository) GetCompanies() (*models.Companies, error) {
 
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
 	if err != nil {
-		log.Warnf("error retrieving total company record count, error: %v", err)
+		log.WithFields(f).Warnf("error retrieving total company record count, error: %v", err)
 		return nil, err
 	}
 
@@ -149,7 +154,12 @@ func (repo repository) GetCompanies() (*models.Companies, error) {
 }
 
 // GetCompanyByExternalID returns a company based on the company external ID
-func (repo repository) GetCompanyByExternalID(companySFID string) (*models.Company, error) {
+func (repo repository) GetCompanyByExternalID(ctx context.Context, companySFID string) (*models.Company, error) {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companySFID":    companySFID,
+	}
 	condition := expression.Key("company_external_id").Equal(expression.Value(companySFID))
 	builder := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildCompanyProjection())
 	// Use the nice builder to create the expression
@@ -171,7 +181,7 @@ func (repo repository) GetCompanyByExternalID(companySFID string) (*models.Compa
 
 	results, err := repo.dynamoDBClient.Query(queryInput)
 	if err != nil {
-		log.Warnf("error retrieving company using company_external_id. error = %s", err.Error())
+		log.WithFields(f).Warnf("error retrieving company using company_external_id. error = %s", err.Error())
 		return nil, err
 	}
 
@@ -187,14 +197,19 @@ func (repo repository) GetCompanyByExternalID(companySFID string) (*models.Compa
 }
 
 // GetCompanyByName searches the database and returns the matching company names
-func (repo repository) GetCompanyByName(companyName string) (*models.Company, error) {
+func (repo repository) GetCompanyByName(ctx context.Context, companyName string) (*models.Company, error) {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companyName":    companyName,
+	}
 	// This is the key we want to match
 	condition := expression.Key("company_name").Equal(expression.Value(companyName))
 
 	// Use the builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildCompanyProjection()).Build()
 	if err != nil {
-		log.Warnf("error building expression for company query, companyName: %s, error: %v",
+		log.WithFields(f).Warnf("error building expression for company query, companyName: %s, error: %v",
 			companyName, err)
 		return nil, err
 	}
@@ -212,13 +227,13 @@ func (repo repository) GetCompanyByName(companyName string) (*models.Company, er
 	// Make the DynamoDB Query API call
 	results, queryErr := repo.dynamoDBClient.Query(queryInput)
 	if queryErr != nil {
-		log.Warnf("error retrieving company by companyName: %s, error: %+v", companyName, queryErr)
+		log.WithFields(f).Warnf("error retrieving company by companyName: %s, error: %+v", companyName, queryErr)
 		return nil, queryErr
 	}
 
 	// Didn't find it...
 	if *results.Count == 0 {
-		log.Debugf("Company query by name returned no results using companyName: %s", companyName)
+		log.WithFields(f).Debugf("Company query by name returned no results using companyName: %s", companyName)
 		return nil, nil
 	}
 
@@ -226,7 +241,7 @@ func (repo repository) GetCompanyByName(companyName string) (*models.Company, er
 	var dbModels []DBModel
 	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbModels)
 	if err != nil {
-		log.Warnf("error unmarshalling db company, error: %+v", err)
+		log.WithFields(f).Warnf("error unmarshalling db company, error: %+v", err)
 		return nil, err
 	}
 	// TODO: DAD - review projection and unmarshalling logic, the 'note' column is not being loaded into the data model
@@ -236,7 +251,12 @@ func (repo repository) GetCompanyByName(companyName string) (*models.Company, er
 }
 
 // GetCompany returns a company based on the company ID
-func (repo repository) GetCompany(companyID string) (*models.Company, error) {
+func (repo repository) GetCompany(ctx context.Context, companyID string) (*models.Company, error) {
+	f := logrus.Fields{
+		"functionName":   "GetCompany",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companyID":      companyID,
+	}
 	companyTableData, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(repo.companyTableName),
 		Key: map[string]*dynamodb.AttributeValue{
@@ -247,8 +267,7 @@ func (repo repository) GetCompany(companyID string) (*models.Company, error) {
 	})
 
 	if err != nil {
-		log.Warnf(err.Error())
-		log.Warnf("error fetching company table data using company id: %s, error: %v", companyID, err)
+		log.WithFields(f).Warnf("error fetching company table data using company id: %s, error: %v", companyID, err)
 		return nil, err
 	}
 
@@ -259,14 +278,22 @@ func (repo repository) GetCompany(companyID string) (*models.Company, error) {
 	dbCompanyModel := DBModel{}
 	err = dynamodbattribute.UnmarshalMap(companyTableData.Item, &dbCompanyModel)
 	if err != nil {
-		log.Warnf("error unmarshalling company table data, error: %v", err)
+		log.WithFields(f).Warnf("error unmarshalling company table data, error: %v", err)
 		return nil, err
 	}
+
 	return dbCompanyModel.toModel()
 }
 
 // SearchCompanyByName locates companies by the matching name and return any potential matches
-func (repo repository) SearchCompanyByName(companyName string, nextKey string) (*models.Companies, error) {
+func (repo repository) SearchCompanyByName(ctx context.Context, companyName string, nextKey string) (*models.Companies, error) {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companyName":    companyName,
+		"nextKey":        nextKey,
+	}
+
 	// Sorry, no results if empty company name
 	if strings.TrimSpace(companyName) == "" {
 		return &models.Companies{
@@ -284,7 +311,7 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().WithFilter(filter).WithProjection(buildCompanyProjection()).Build()
 	if err != nil {
-		log.Warnf("error building expression for company scan, companyName: %s, error: %v",
+		log.WithFields(f).Warnf("error building expression for company scan, companyName: %s, error: %v",
 			companyName, err)
 		return nil, err
 	}
@@ -300,7 +327,7 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 
 	// If we have the next key, set the exclusive start key value
 	if nextKey != "" {
-		log.Debugf("Received a nextKey, value: %s", nextKey)
+		log.WithFields(f).Debugf("Received a nextKey, value: %s", nextKey)
 		// The primary key of the first item that this operation will evaluate.
 		// and the query key (if not the same)
 		scanInput.ExclusiveStartKey = map[string]*dynamodb.AttributeValue{
@@ -325,9 +352,9 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 		}
 
 		// Convert the list of DB models to a list of response models
-		companyList, modelErr := buildCompanyModels(results)
+		companyList, modelErr := buildCompanyModels(ctx, results)
 		if modelErr != nil {
-			log.Warnf("error retrieving companies for companyName %s in ACL, error: %v", companyName, modelErr)
+			log.WithFields(f).Warnf("error retrieving companies for companyName %s in ACL, error: %v", companyName, modelErr)
 			return nil, modelErr
 		}
 
@@ -354,7 +381,7 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
 	if err != nil {
-		log.Warnf("error retrieving total company record count for companyName: %s, error: %v", companyName, err)
+		log.WithFields(f).Warnf("error retrieving total company record count for companyName: %s, error: %v", companyName, err)
 		return nil, err
 	}
 
@@ -369,7 +396,13 @@ func (repo repository) SearchCompanyByName(companyName string, nextKey string) (
 }
 
 // DeleteCompanyByID deletes the company by ID
-func (repo repository) DeleteCompanyByID(companyID string) error {
+func (repo repository) DeleteCompanyByID(ctx context.Context, companyID string) error {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companyID":      companyID,
+	}
+	log.WithFields(f).Debug("deleting company by ID")
 	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"company_id": {S: aws.String(companyID)},
@@ -385,7 +418,14 @@ func (repo repository) DeleteCompanyByID(companyID string) error {
 }
 
 // DeleteCompanyBySFID deletes the company by SFID
-func (repo repository) DeleteCompanyBySFID(companySFID string) error {
+func (repo repository) DeleteCompanyBySFID(ctx context.Context, companySFID string) error {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companySFID":    companySFID,
+	}
+
+	log.WithFields(f).Debug("deleting company by SFID...")
 	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"company_external_id": {S: aws.String(companySFID)},
@@ -401,7 +441,14 @@ func (repo repository) DeleteCompanyBySFID(companySFID string) error {
 }
 
 // GetCompanyUserManager the get a list of companies when provided the company id and user manager
-func (repo repository) GetCompaniesByUserManager(userID string, userModel user.User) (*models.Companies, error) {
+func (repo repository) GetCompaniesByUserManager(ctx context.Context, userID string, userModel user.User) (*models.Companies, error) {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"userID":         userID,
+		"userModel":      userModel,
+	}
+
 	// Sorry, no results if empty user ID
 	if strings.TrimSpace(userID) == "" {
 		return &models.Companies{
@@ -419,7 +466,7 @@ func (repo repository) GetCompaniesByUserManager(userID string, userModel user.U
 	} else if userModel.UserName != "" {
 		filter = expression.Name("company_acl").Contains(userModel.UserName)
 	} else {
-		log.Warnf("unable to query user with no LF username or username in their data model - user iD: %s.", userID)
+		log.WithFields(f).Warnf("unable to query user with no LF username or username in their data model - user iD: %s.", userID)
 		return &models.Companies{
 			Companies:      []models.Company{},
 			LastKeyScanned: "",
@@ -431,7 +478,7 @@ func (repo repository) GetCompaniesByUserManager(userID string, userModel user.U
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().WithFilter(filter).WithProjection(buildCompanyProjection()).Build()
 	if err != nil {
-		log.Warnf("error building expression for company scan, userID %s in ACL, error: %v", userID, err)
+		log.WithFields(f).Warnf("error building expression for company scan, userID %s in ACL, error: %v", userID, err)
 		return nil, err
 	}
 
@@ -453,14 +500,14 @@ func (repo repository) GetCompaniesByUserManager(userID string, userModel user.U
 		// Make the DynamoDB Query API call
 		results, dbErr := repo.dynamoDBClient.Scan(scanInput)
 		if dbErr != nil {
-			log.Warnf("error retrieving companies for userID %s in ACL, error: %v", userID, dbErr)
+			log.WithFields(f).Warnf("error retrieving companies for userID %s in ACL, error: %v", userID, dbErr)
 			return nil, dbErr
 		}
 
 		// Convert the list of DB models to a list of response models
-		companyList, modelErr := buildCompanyModels(results)
+		companyList, modelErr := buildCompanyModels(ctx, results)
 		if modelErr != nil {
-			log.Warnf("error retrieving companies for userID %s in ACL, error: %v", userID, modelErr)
+			log.WithFields(f).Warnf("error retrieving companies for userID %s in ACL, error: %v", userID, modelErr)
 			return nil, modelErr
 		}
 
@@ -487,7 +534,7 @@ func (repo repository) GetCompaniesByUserManager(userID string, userModel user.U
 
 	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
 	if err != nil {
-		log.Warnf("error retrieving total company record count, error: %v", err)
+		log.WithFields(f).Warnf("error retrieving total company record count, error: %v", err)
 		return nil, err
 	}
 
@@ -502,24 +549,35 @@ func (repo repository) GetCompaniesByUserManager(userID string, userModel user.U
 }
 
 // GetCompanyUserManagerWithInvites the get a list of companies including status when provided the company id and user manager
-func (repo repository) GetCompaniesByUserManagerWithInvites(userID string, userModel user.User) (*models.CompaniesWithInvites, error) {
-	companies, err := repo.GetCompaniesByUserManager(userID, userModel)
+func (repo repository) GetCompaniesByUserManagerWithInvites(ctx context.Context, userID string, userModel user.User) (*models.CompaniesWithInvites, error) {
+	f := logrus.Fields{
+		"functionName":   "GetCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"userID":         userID,
+		"userModel":      userModel,
+	}
+
+	companies, err := repo.GetCompaniesByUserManager(ctx, userID, userModel)
 	if err != nil {
-		log.Warnf("error retrieving companies for userID %s in ACL, error: %v", userID, err)
+		log.WithFields(f).Warnf("error retrieving companies for userID %s in ACL, error: %v", userID, err)
 		return nil, err
 	}
 
 	// Query the invites table for list of invitations for this user
-	invites, err := repo.GetUserInviteRequests(userID)
+	invites, err := repo.GetUserInviteRequests(ctx, userID)
 	if err != nil {
-		log.Warnf("error retrieving companies invites for userID %s, error: %v", userID, err)
+		log.WithFields(f).Warnf("error retrieving companies invites for userID %s, error: %v", userID, err)
 		return nil, err
 	}
 
-	return repo.buildCompaniesByUserManagerWithInvites(companies, invites), nil
+	return repo.buildCompaniesByUserManagerWithInvites(ctx, companies, invites), nil
 }
 
-func (repo repository) buildCompaniesByUserManagerWithInvites(companies *models.Companies, invites []Invite) *models.CompaniesWithInvites {
+func (repo repository) buildCompaniesByUserManagerWithInvites(ctx context.Context, companies *models.Companies, invites []Invite) *models.CompaniesWithInvites {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
 	companiesWithInvites := models.CompaniesWithInvites{
 		ResultCount: int64(len(companies.Companies) + len(invites)),
 		TotalCount:  companies.TotalCount + int64(len(invites)),
@@ -539,9 +597,9 @@ func (repo repository) buildCompaniesByUserManagerWithInvites(companies *models.
 	}
 
 	for _, invite := range invites {
-		company, err := repo.GetCompany(invite.RequestedCompanyID)
+		company, err := repo.GetCompany(ctx, invite.RequestedCompanyID)
 		if err != nil {
-			log.Warnf("error retrieving company with company ID %s, error: %v - skipping invite", company, err)
+			log.WithFields(f).Warnf("error retrieving company with company ID %s, error: %v - skipping invite", company, err)
 			continue
 		}
 
@@ -566,7 +624,11 @@ func (repo repository) buildCompaniesByUserManagerWithInvites(companies *models.
 }
 
 // buildCompanyModels converts the response model into a response data model
-func buildCompanyModels(results *dynamodb.ScanOutput) ([]models.Company, error) {
+func buildCompanyModels(ctx context.Context, results *dynamodb.ScanOutput) ([]models.Company, error) {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
 	var companies []models.Company
 
 	type ItemSignature struct {
@@ -583,7 +645,7 @@ func buildCompanyModels(results *dynamodb.ScanOutput) ([]models.Company, error) 
 
 	err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbCompanies)
 	if err != nil {
-		log.Warnf("error unmarshalling companies from database, error: %v", err)
+		log.WithFields(f).Warnf("error unmarshalling companies from database, error: %v", err)
 		return nil, err
 	}
 
@@ -592,14 +654,14 @@ func buildCompanyModels(results *dynamodb.ScanOutput) ([]models.Company, error) 
 	for _, dbCompany := range dbCompanies {
 		createdDateTime, err := utils.ParseDateTime(dbCompany.Created)
 		if err != nil {
-			log.Warnf("Unable to parse company created date time: %s, error: %v - using current time",
+			log.WithFields(f).Warnf("Unable to parse company created date time: %s, error: %v - using current time",
 				dbCompany.Created, err)
 			createdDateTime = now
 		}
 
 		modifiedDateTime, err := utils.ParseDateTime(dbCompany.Modified)
 		if err != nil {
-			log.Warnf("Unable to parse company modified date time: %s, error: %v - using current time",
+			log.WithFields(f).Warnf("Unable to parse company modified date time: %s, error: %v - using current time",
 				dbCompany.Created, err)
 			modifiedDateTime = now
 		}
@@ -618,7 +680,12 @@ func buildCompanyModels(results *dynamodb.ScanOutput) ([]models.Company, error) 
 }
 
 // GetCompanyInviteRequest returns the specified request
-func (repo repository) GetCompanyInviteRequest(companyInviteID string) (*Invite, error) {
+func (repo repository) GetCompanyInviteRequest(ctx context.Context, companyInviteID string) (*Invite, error) {
+	f := logrus.Fields{
+		"functionName":    "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
+		"companyInviteID": companyInviteID,
+	}
 
 	condition := expression.Key("company_invite_id").Equal(expression.Value(companyInviteID))
 
@@ -626,7 +693,7 @@ func (repo repository) GetCompanyInviteRequest(companyInviteID string) (*Invite,
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildInvitesProjection()).Build()
 
 	if err != nil {
-		log.Warnf("error building expression for company invites, invite ID: %s, error: %v", companyInviteID, err)
+		log.WithFields(f).Warnf("error building expression for company invites, invite ID: %s, error: %v", companyInviteID, err)
 		return nil, err
 	}
 
@@ -642,18 +709,18 @@ func (repo repository) GetCompanyInviteRequest(companyInviteID string) (*Invite,
 
 	queryResults, err := repo.dynamoDBClient.Query(queryInput)
 	if err != nil {
-		log.Warnf("Unable to query the company invite based on invite ID: %s, error: %v", companyInviteID, err)
+		log.WithFields(f).Warnf("Unable to query the company invite based on invite ID: %s, error: %v", companyInviteID, err)
 		return nil, err
 	}
 
 	var companyInvites []Invite
 	err = dynamodbattribute.UnmarshalListOfMaps(queryResults.Items, &companyInvites)
 	if err != nil || companyInvites == nil {
-		log.Warnf("unable to unmarshall the company invite based on invite ID: %s, error: %v", companyInviteID, err)
+		log.WithFields(f).Warnf("unable to unmarshall the company invite based on invite ID: %s, error: %v", companyInviteID, err)
 		return nil, err
 	}
 	if len(companyInvites) == 0 {
-		log.Warnf("unable to locate the company invite based on invite ID: %s, error: %v", companyInviteID, err)
+		log.WithFields(f).Warnf("unable to locate the company invite based on invite ID: %s, error: %v", companyInviteID, err)
 		return nil, nil
 	}
 
@@ -661,7 +728,13 @@ func (repo repository) GetCompanyInviteRequest(companyInviteID string) (*Invite,
 }
 
 // GetCompanyInviteRequests returns a list of company invites when provided the company ID
-func (repo repository) GetCompanyInviteRequests(companyID string, status *string) ([]Invite, error) {
+func (repo repository) GetCompanyInviteRequests(ctx context.Context, companyID string, status *string) ([]Invite, error) {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companyID":      companyID,
+		"status":         aws.StringValue(status),
+	}
 
 	// These are the keys we want to match
 	condition := expression.Key("requested_company_id").Equal(expression.Value(companyID))
@@ -677,7 +750,7 @@ func (repo repository) GetCompanyInviteRequests(companyID string, status *string
 
 	expr, err := builder.Build()
 	if err != nil {
-		log.Warnf("error building expression for company invite query, companyID: %s, error: %v",
+		log.WithFields(f).Warnf("error building expression for company invite query, companyID: %s, error: %v",
 			companyID, err)
 		return nil, err
 	}
@@ -695,14 +768,14 @@ func (repo repository) GetCompanyInviteRequests(companyID string, status *string
 
 	companyInviteAV, err := repo.dynamoDBClient.Query(queryInput)
 	if err != nil {
-		log.Warnf("Unable to retrieve data from Company-Invites table, error: %v", err)
+		log.WithFields(f).Warnf("Unable to retrieve data from Company-Invites table, error: %v", err)
 		return nil, err
 	}
 
 	var companyInvites []Invite
 	err = dynamodbattribute.UnmarshalListOfMaps(companyInviteAV.Items, &companyInvites)
 	if err != nil {
-		log.Warnf("error unmarshalling company invite data, error: %v", err)
+		log.WithFields(f).Warnf("error unmarshalling company invite data, error: %v", err)
 		return nil, err
 	}
 
@@ -710,7 +783,13 @@ func (repo repository) GetCompanyInviteRequests(companyID string, status *string
 }
 
 // GetCompanyUserInviteRequests returns a list of company invites when provided the company ID and user ID
-func (repo repository) GetCompanyUserInviteRequests(companyID string, userID string) (*Invite, error) {
+func (repo repository) GetCompanyUserInviteRequests(ctx context.Context, companyID string, userID string) (*Invite, error) {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companyID":      companyID,
+		"userID":         userID,
+	}
 
 	// These are the keys we want to match
 	condition := expression.Key("requested_company_id").Equal(expression.Value(companyID))
@@ -722,7 +801,7 @@ func (repo repository) GetCompanyUserInviteRequests(companyID string, userID str
 		WithFilter(filter).
 		WithProjection(buildInvitesProjection()).Build()
 	if err != nil {
-		log.Warnf("error building expression for company scan, companyID: %s with userID: %s, error: %v",
+		log.WithFields(f).Warnf("error building expression for company scan, companyID: %s with userID: %s, error: %v",
 			companyID, userID, err)
 		return nil, err
 	}
@@ -740,25 +819,25 @@ func (repo repository) GetCompanyUserInviteRequests(companyID string, userID str
 
 	queryResults, err := repo.dynamoDBClient.Query(queryInput)
 	if err != nil {
-		log.Warnf("Unable to retrieve data from Company-Invites table using company id: %s and user id: %s, error: %v", companyID, userID, err)
+		log.WithFields(f).Warnf("Unable to retrieve data from Company-Invites table using company id: %s and user id: %s, error: %v", companyID, userID, err)
 		return nil, err
 	}
 
 	var companyInvites []Invite
 	err = dynamodbattribute.UnmarshalListOfMaps(queryResults.Items, &companyInvites)
 	if err != nil {
-		log.Warnf("error unmarshalling company invite data using company id: %s and user id: %s, error: %v",
+		log.WithFields(f).Warnf("error unmarshalling company invite data using company id: %s and user id: %s, error: %v",
 			companyID, userID, err)
 		return nil, err
 	}
 
 	if len(companyInvites) == 0 {
-		log.Debugf("Unable to find company invite for company id: %s and user id: %s", companyID, userID)
+		log.WithFields(f).Debugf("Unable to find company invite for company id: %s and user id: %s", companyID, userID)
 		return nil, nil
 	}
 
 	if len(companyInvites) > 1 {
-		log.Warnf("Company invite should have one result, found: %d for company id: %s and user id: %s",
+		log.WithFields(f).Warnf("Company invite should have one result, found: %d for company id: %s and user id: %s",
 			len(companyInvites), companyID, userID)
 	}
 
@@ -766,7 +845,12 @@ func (repo repository) GetCompanyUserInviteRequests(companyID string, userID str
 }
 
 // GetUserInviteRequests returns a list of company invites when provided the user ID
-func (repo repository) GetUserInviteRequests(userID string) ([]Invite, error) {
+func (repo repository) GetUserInviteRequests(ctx context.Context, userID string) ([]Invite, error) {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"userID":         userID,
+	}
 
 	filter := expression.Name("user_id").Equal(expression.Value(userID))
 
@@ -775,7 +859,7 @@ func (repo repository) GetUserInviteRequests(userID string) ([]Invite, error) {
 		WithFilter(filter).
 		WithProjection(buildInvitesProjection()).Build()
 	if err != nil {
-		log.Warnf("error building expression for company scan with userID: %s, error: %v", userID, err)
+		log.WithFields(f).Warnf("error building expression for company scan with userID: %s, error: %v", userID, err)
 		return nil, err
 	}
 
@@ -796,14 +880,14 @@ func (repo repository) GetUserInviteRequests(userID string) ([]Invite, error) {
 
 		queryResults, err := repo.dynamoDBClient.Scan(scanInput)
 		if err != nil {
-			log.Warnf("Unable to retrieve data from Company-Invites table using user id: %s, error: %v", userID, err)
+			log.WithFields(f).Warnf("Unable to retrieve data from Company-Invites table using user id: %s, error: %v", userID, err)
 			return nil, err
 		}
 
 		var companyInvitesList []Invite
 		err = dynamodbattribute.UnmarshalListOfMaps(queryResults.Items, &companyInvitesList)
 		if err != nil {
-			log.Warnf("error unmarshalling company invite data using user id: %s, error: %v", userID, err)
+			log.WithFields(f).Warnf("error unmarshalling company invite data using user id: %s, error: %v", userID, err)
 			return nil, err
 		}
 
@@ -828,9 +912,10 @@ func (repo repository) GetUserInviteRequests(userID string) ([]Invite, error) {
 }
 
 // AddPendingCompanyInviteRequest adds a pending company invite when provided the company ID and user ID
-func (repo repository) AddPendingCompanyInviteRequest(companyID string, userModel user.User) (*Invite, error) {
+func (repo repository) AddPendingCompanyInviteRequest(ctx context.Context, companyID string, userModel user.User) (*Invite, error) {
 	f := logrus.Fields{
 		"functionName":       "AddPendingCompanyInviteRequest",
+		utils.XREQUESTID:     ctx.Value(utils.XREQUESTID),
 		"companyID":          companyID,
 		"UserID":             userModel.UserID,
 		"UserName":           userModel.UserName,
@@ -840,7 +925,7 @@ func (repo repository) AddPendingCompanyInviteRequest(companyID string, userMode
 	}
 
 	// First, let's check if we already have a previous invite for this company and user ID pair
-	previousInvite, err := repo.GetCompanyUserInviteRequests(companyID, userModel.UserID)
+	previousInvite, err := repo.GetCompanyUserInviteRequests(ctx, companyID, userModel.UserID)
 	if err != nil {
 		log.WithFields(f).Warnf("Previous invite already exists for company id: %s and user: %s, error: %v",
 			companyID, userModel.UserID, err)
@@ -851,7 +936,7 @@ func (repo repository) AddPendingCompanyInviteRequest(companyID string, userMode
 	if previousInvite != nil {
 		// Update rejected invite request
 		if previousInvite.Status == "rejected" {
-			updateErr := repo.updateInviteRequestStatus(previousInvite.CompanyInviteID, "pending")
+			updateErr := repo.updateInviteRequestStatus(ctx, previousInvite.CompanyInviteID, "pending")
 			if updateErr != nil {
 				return nil, updateErr
 			}
@@ -919,7 +1004,7 @@ func (repo repository) AddPendingCompanyInviteRequest(companyID string, userMode
 		return nil, err
 	}
 
-	createdInvite, err := repo.GetCompanyInviteRequest(companyInviteID.String())
+	createdInvite, err := repo.GetCompanyInviteRequest(ctx, companyInviteID.String())
 	if err != nil || createdInvite == nil {
 		log.WithFields(f).Warnf("Unable to query newly created company invite id: %s, error: %v",
 			companyInviteID.String(), err)
@@ -930,22 +1015,26 @@ func (repo repository) AddPendingCompanyInviteRequest(companyID string, userMode
 }
 
 // ApproveCompanyAccessRequest approves the specified company invite
-func (repo repository) ApproveCompanyAccessRequest(companyInviteID string) error {
-	return repo.updateInviteRequestStatus(companyInviteID, "approved")
+func (repo repository) ApproveCompanyAccessRequest(ctx context.Context, companyInviteID string) error {
+	return repo.updateInviteRequestStatus(ctx, companyInviteID, "approved")
 }
 
 // RejectCompanyInviteRequest rejects the specified company invite
-func (repo repository) RejectCompanyAccessRequest(companyInviteID string) error {
-	return repo.updateInviteRequestStatus(companyInviteID, "rejected")
+func (repo repository) RejectCompanyAccessRequest(ctx context.Context, companyInviteID string) error {
+	return repo.updateInviteRequestStatus(ctx, companyInviteID, "rejected")
 }
 
 // updateInviteRequestStatus updates the specified invite with the specified status
-func (repo repository) updateInviteRequestStatus(companyInviteID, status string) error {
+func (repo repository) updateInviteRequestStatus(ctx context.Context, companyInviteID, status string) error {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
 
 	// First, let's check if we already have a previous invite
-	inviteModel, err := repo.GetCompanyInviteRequest(companyInviteID)
+	inviteModel, err := repo.GetCompanyInviteRequest(ctx, companyInviteID)
 	if err != nil || inviteModel == nil {
-		log.Warnf("ApproveCompanyAccessRequest - unable to locate previous invite, error: %v",
+		log.WithFields(f).Warnf("ApproveCompanyAccessRequest - unable to locate previous invite, error: %v",
 			err)
 		return err
 	}
@@ -984,7 +1073,7 @@ func (repo repository) updateInviteRequestStatus(companyInviteID, status string)
 
 	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
 	if updateErr != nil {
-		log.Warnf("ApproveCompanyAccessRequest - unable to update request with approved status, error: %v",
+		log.WithFields(f).Warnf("ApproveCompanyAccessRequest - unable to update request with approved status, error: %v",
 			updateErr)
 		return updateErr
 	}
@@ -993,7 +1082,13 @@ func (repo repository) updateInviteRequestStatus(companyInviteID, status string)
 }
 
 // UpdateCompanyAccessList updates the company ACL when provided the company ID and ACL list
-func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []string) error {
+func (repo repository) UpdateCompanyAccessList(ctx context.Context, companyID string, companyACL []string) error {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companyID":      companyID,
+		"companyACL":     strings.Join(companyACL, ","),
+	}
 	_, now := utils.CurrentTime()
 
 	input := &dynamodb.UpdateItemInput{
@@ -1020,7 +1115,7 @@ func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []st
 
 	_, err := repo.dynamoDBClient.UpdateItem(input)
 	if err != nil {
-		log.Warnf("Error updating Company Access List, error: %v", err)
+		log.WithFields(f).Warnf("Error updating Company Access List, error: %v", err)
 		return err
 	}
 
@@ -1028,10 +1123,14 @@ func (repo repository) UpdateCompanyAccessList(companyID string, companyACL []st
 }
 
 // CreateCompany creates a new company record
-func (repo repository) CreateCompany(in *models.Company) (*models.Company, error) {
+func (repo repository) CreateCompany(ctx context.Context, in *models.Company) (*models.Company, error) {
+	f := logrus.Fields{
+		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
 	companyID, err := uuid.NewV4()
 	if err != nil {
-		log.Warnf("Unable to generate a UUID for a pending invite, error: %v", err)
+		log.WithFields(f).Warnf("Unable to generate a UUID for a pending invite, error: %v", err)
 		return nil, err
 	}
 	_, now := utils.CurrentTime()
@@ -1064,6 +1163,7 @@ func (repo repository) CreateCompany(in *models.Company) (*models.Company, error
 	if err != nil {
 		return nil, err
 	}
-	log.Debugf("company created %#v\n", comp)
+
+	log.WithFields(f).Debugf("company created %#v\n", comp)
 	return comp.toModel()
 }

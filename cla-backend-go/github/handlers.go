@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 
 	"github.com/communitybridge/easycla/cla-backend-go/user"
@@ -55,7 +57,7 @@ func Configure(api *operations.ClaAPI, clientID, clientSecret, accessToken strin
 			})
 		}
 
-		ctx := context.Background()
+		ctx := utils.NewContext()
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: accessToken})
 		tc := oauth2.NewClient(ctx, ts)
 		if tc == nil {

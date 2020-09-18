@@ -5,6 +5,7 @@ package sign
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -51,7 +52,7 @@ type ProjectRepo interface {
 
 // Service interface defines the sign service methods
 type Service interface {
-	RequestCorporateSignature(lfUsername string, authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error)
+	RequestCorporateSignature(ctx context.Context, lfUsername string, authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error)
 }
 
 // service
@@ -121,14 +122,14 @@ func validateCorporateSignatureInput(input *models.CorporateSignatureInput) erro
 	return nil
 }
 
-func (s *service) RequestCorporateSignature(lfUsername string, authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error) {
+func (s *service) RequestCorporateSignature(ctx context.Context, lfUsername string, authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error) {
 	usc := userService.GetClient()
 
 	err := validateCorporateSignatureInput(input)
 	if err != nil {
 		return nil, err
 	}
-	comp, err := s.companyRepo.GetCompanyByExternalID(utils.StringValue(input.CompanySfid))
+	comp, err := s.companyRepo.GetCompanyByExternalID(ctx, utils.StringValue(input.CompanySfid))
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +229,7 @@ func (s *service) RequestCorporateSignature(lfUsername string, authorizationHead
 	}
 
 	// Update the company ACL
-	companyACLError := s.companyService.AddUserToCompanyAccessList(comp.CompanyID, lfUsername)
+	companyACLError := s.companyService.AddUserToCompanyAccessList(ctx, comp.CompanyID, lfUsername)
 	if companyACLError != nil {
 		log.Warnf("AddCLAManager- Unable to add user to company ACL, companyID: %s, user: %s, error: %+v", *input.CompanySfid, lfUsername, companyACLError)
 	}

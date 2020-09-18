@@ -6,6 +6,7 @@ package dynamo_events
 import (
 	"github.com/aws/aws-lambda-go/events"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 	"github.com/sirupsen/logrus"
 )
@@ -19,6 +20,7 @@ type Event struct {
 
 // should be called when we insert Event
 func (s *service) EventAddedEvent(event events.DynamoDBEventRecord) error {
+	ctx := utils.NewContext()
 	var newEvent Event
 	err := unmarshalStreamImage(event.Change.NewImage, &newEvent)
 	if err != nil {
@@ -26,7 +28,7 @@ func (s *service) EventAddedEvent(event events.DynamoDBEventRecord) error {
 	}
 	f := logrus.Fields{"event": newEvent}
 	var foundationSFID, projectSFID, projectSFName, companySFID string
-	companyModel, err := s.companyRepo.GetCompany(newEvent.EventCompanyID)
+	companyModel, err := s.companyRepo.GetCompany(ctx, newEvent.EventCompanyID)
 	if err != nil {
 		log.WithFields(f).Error("unable to get company detail", err)
 	} else {

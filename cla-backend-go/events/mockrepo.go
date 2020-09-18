@@ -4,6 +4,7 @@
 package events
 
 import (
+	"context"
 	"time"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -101,7 +102,7 @@ func (repo *mockRepository) GetCLAGroupByID(projectID string, loadACLDetails boo
 
 }
 
-func (repo *mockRepository) GetCompany(companyID string) (*models.Company, error) {
+func (repo *mockRepository) GetCompany(ctx context.Context, companyID string) (*models.Company, error) {
 	return &models.Company{
 		CompanyACL:  []string{"foo", "bar"},
 		CompanyID:   companyID,

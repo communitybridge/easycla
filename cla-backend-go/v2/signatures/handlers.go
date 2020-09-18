@@ -42,8 +42,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	// Get Signature
 	api.SignaturesGetSignatureHandler = signatures.GetSignatureHandlerFunc(func(params signatures.GetSignatureParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		// ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-		signature, err := v1SignatureService.GetSignature(params.SignatureID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		signature, err := v1SignatureService.GetSignature(ctx, params.SignatureID)
 		if err != nil {
 			log.Warnf("error retrieving signature metrics, error: %+v", err)
 			return signatures.NewGetSignatureBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
@@ -83,7 +83,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		// Lookup the internal company ID when provided the external ID via the v1SignatureService call
-		companyModel, compErr := companyService.GetCompanyByExternalID(params.CompanySFID)
+		companyModel, compErr := companyService.GetCompanyByExternalID(ctx, params.CompanySFID)
 		if compErr != nil || companyModel == nil {
 			log.Warnf("unable to locate company by external company ID: %s", params.CompanySFID)
 			return signatures.NewUpdateApprovalListNotFound().WithXRequestID(reqID).WithPayload(errorResponse(compErr))
@@ -110,7 +110,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		// Invoke the update v1SignatureService function
-		updatedSig, updateErr := v1SignatureService.UpdateApprovalList(authUser, projectModel, companyModel, params.ClaGroupID, &v1ApprovalList)
+		updatedSig, updateErr := v1SignatureService.UpdateApprovalList(ctx, authUser, projectModel, companyModel, params.ClaGroupID, &v1ApprovalList)
 		if updateErr != nil || updatedSig == nil {
 			if err, ok := err.(*signatureService.ForbiddenError); ok {
 				return signatures.NewUpdateApprovalListForbidden().WithXRequestID(reqID).WithPayload(errorResponse(err))
@@ -133,7 +133,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	// Retrieve GitHub Approval Entries
 	api.SignaturesGetGitHubOrgWhitelistHandler = signatures.GetGitHubOrgWhitelistHandlerFunc(func(params signatures.GetGitHubOrgWhitelistParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		// ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
 			log.Warnf("error retrieving session from the session store, error: %+v", err)
@@ -146,7 +146,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			githubAccessToken = ""
 		}
 
-		ghWhiteList, err := v1SignatureService.GetGithubOrganizationsFromWhitelist(params.SignatureID, githubAccessToken)
+		ghWhiteList, err := v1SignatureService.GetGithubOrganizationsFromWhitelist(ctx, params.SignatureID, githubAccessToken)
 		if err != nil {
 			log.Warnf("error fetching github organization whitelist entries v using signature_id: %s, error: %+v",
 				params.SignatureID, err)
@@ -163,7 +163,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	// Add GitHub Approval Entries
 	api.SignaturesAddGitHubOrgWhitelistHandler = signatures.AddGitHubOrgWhitelistHandlerFunc(func(params signatures.AddGitHubOrgWhitelistParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		// ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
@@ -183,7 +183,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			return signatures.NewAddGitHubOrgWhitelistInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
-		ghApprovalList, err := v1SignatureService.AddGithubOrganizationToWhitelist(params.SignatureID, input, githubAccessToken)
+		ghApprovalList, err := v1SignatureService.AddGithubOrganizationToWhitelist(ctx, params.SignatureID, input, githubAccessToken)
 		if err != nil {
 			log.Warnf("error adding github organization %s using signature_id: %s to the approval list, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
@@ -191,7 +191,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		// Create an event
-		signatureModel, getSigErr := v1SignatureService.GetSignature(params.SignatureID)
+		signatureModel, getSigErr := v1SignatureService.GetSignature(ctx, params.SignatureID)
 		var projectID = ""
 		var companyID = ""
 		if getSigErr != nil || signatureModel == nil {
@@ -223,7 +223,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	// Delete GitHub Approval List Entries
 	api.SignaturesDeleteGitHubOrgWhitelistHandler = signatures.DeleteGitHubOrgWhitelistHandlerFunc(func(params signatures.DeleteGitHubOrgWhitelistParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		// ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
@@ -243,7 +243,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			return signatures.NewDeleteGitHubOrgWhitelistInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 
-		ghApprovalList, err := v1SignatureService.DeleteGithubOrganizationFromWhitelist(params.SignatureID, input, githubAccessToken)
+		ghApprovalList, err := v1SignatureService.DeleteGithubOrganizationFromWhitelist(ctx, params.SignatureID, input, githubAccessToken)
 		if err != nil {
 			log.Warnf("error deleting github organization %s using signature_id: %s from the approval list, error: %+v",
 				*params.Body.OrganizationID, params.SignatureID, err)
@@ -251,7 +251,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		// Create an event
-		signatureModel, getSigErr := v1SignatureService.GetSignature(params.SignatureID)
+		signatureModel, getSigErr := v1SignatureService.GetSignature(ctx, params.SignatureID)
 		var projectID = ""
 		var companyID = ""
 		if getSigErr != nil || signatureModel == nil {
@@ -282,8 +282,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	// Get Project Signatures
 	api.SignaturesGetProjectSignaturesHandler = signatures.GetProjectSignaturesHandlerFunc(func(params signatures.GetProjectSignaturesParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		// ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-		projectSignatures, err := v1SignatureService.GetProjectSignatures(v1Signatures.GetProjectSignaturesParams{
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		projectSignatures, err := v1SignatureService.GetProjectSignatures(ctx, v1Signatures.GetProjectSignaturesParams{
 			HTTPRequest:   params.HTTPRequest,
 			FullMatch:     params.FullMatch,
 			NextKey:       params.NextKey,
@@ -317,7 +317,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	// Get Project Company Signatures
 	api.SignaturesGetProjectCompanySignaturesHandler = signatures.GetProjectCompanySignaturesHandlerFunc(func(params signatures.GetProjectCompanySignaturesParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		// ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		// Must be in the Organization Scope to see this
 		if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
 			msg := fmt.Sprintf("EasyCLA - 403 Forbidden - user %s is not authorized to view project company signatures with Organization scope: %s",
@@ -329,7 +329,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			})
 		}
 
-		projectSignatures, err := v2service.GetProjectCompanySignatures(params.CompanySFID, params.ProjectSFID)
+		projectSignatures, err := v2service.GetProjectCompanySignatures(ctx, params.CompanySFID, params.ProjectSFID)
 		if err != nil {
 			log.Warnf("error retrieving project signatures for project: %s, company: %s, error: %+v",
 				params.ProjectSFID, params.CompanySFID, err)
@@ -341,8 +341,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	// Get Employee Project Company Signatures
 	api.SignaturesGetProjectCompanyEmployeeSignaturesHandler = signatures.GetProjectCompanyEmployeeSignaturesHandlerFunc(func(params signatures.GetProjectCompanyEmployeeSignaturesParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		// ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-		projectSignatures, err := v1SignatureService.GetProjectCompanyEmployeeSignatures(v1Signatures.GetProjectCompanyEmployeeSignaturesParams{
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		projectSignatures, err := v1SignatureService.GetProjectCompanyEmployeeSignatures(ctx, v1Signatures.GetProjectCompanyEmployeeSignaturesParams{
 			HTTPRequest: params.HTTPRequest,
 			CompanyID:   params.CompanyID,
 			NextKey:     params.NextKey,
@@ -365,7 +365,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	// Get Company Signatures
 	api.SignaturesGetCompanySignaturesHandler = signatures.GetCompanySignaturesHandlerFunc(func(params signatures.GetCompanySignaturesParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		// ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanyID) {
 			msg := fmt.Sprintf("EasyCLA - 403 Forbidden - user %s is not authorized to view company signatures with Organization scope: %s",
@@ -378,13 +378,13 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		// Lookup the internal company ID when provided the external ID via the v1SignatureService call
-		companyModel, compErr := companyService.GetCompanyByExternalID(params.CompanyID)
+		companyModel, compErr := companyService.GetCompanyByExternalID(ctx, params.CompanyID)
 		if compErr != nil || companyModel == nil {
 			log.Warnf("unable to locate company by external company ID: %s", params.CompanyID)
 			return signatures.NewGetCompanySignaturesNotFound().WithXRequestID(reqID)
 		}
 
-		companySignatures, err := v1SignatureService.GetCompanySignatures(v1Signatures.GetCompanySignaturesParams{
+		companySignatures, err := v1SignatureService.GetCompanySignatures(ctx, v1Signatures.GetCompanySignaturesParams{
 			HTTPRequest:   params.HTTPRequest,
 			CompanyID:     companyModel.CompanyID, // need to internal company ID here
 			CompanyName:   params.CompanyName,
@@ -410,8 +410,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	// Get User Signatures
 	api.SignaturesGetUserSignaturesHandler = signatures.GetUserSignaturesHandlerFunc(func(params signatures.GetUserSignaturesParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		// ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-		userSignatures, err := v1SignatureService.GetUserSignatures(v1Signatures.GetUserSignaturesParams{
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		userSignatures, err := v1SignatureService.GetUserSignatures(ctx, v1Signatures.GetUserSignaturesParams{
 			HTTPRequest: params.HTTPRequest,
 			NextKey:     params.NextKey,
 			PageSize:    params.PageSize,
@@ -449,7 +449,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				})
 			}
 
-			result, err := v2service.GetClaGroupCorporateContributorsCsv(params.ClaGroupID, params.CompanySFID)
+			result, err := v2service.GetClaGroupCorporateContributorsCsv(ctx, params.ClaGroupID, params.CompanySFID)
 			if err != nil {
 				if _, ok := err.(*organizations.GetOrgNotFound); ok {
 					formatErr := errors.New("error retrieving company using companySFID")
@@ -501,7 +501,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				})
 			}
 
-			result, err := v2service.GetProjectIclaSignaturesCsv(params.ClaGroupID)
+			result, err := v2service.GetProjectIclaSignaturesCsv(ctx, params.ClaGroupID)
 			if err != nil {
 				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
@@ -540,7 +540,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 					Message: "EasyCLA - 400 Bad Request - individual contribution is not supported for this project",
 				})
 			}
-			result, err := v2service.GetProjectIclaSignatures(params.ClaGroupID, params.SearchTerm)
+			result, err := v2service.GetProjectIclaSignatures(ctx, params.ClaGroupID, params.SearchTerm)
 			if err != nil {
 				return signatures.NewListClaGroupIclaSignatureInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
@@ -550,7 +550,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	api.SignaturesListClaGroupCorporateContributorsHandler = signatures.ListClaGroupCorporateContributorsHandlerFunc(
 		func(params signatures.ListClaGroupCorporateContributorsParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
-			// ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			claGroupModel, err := projectRepo.GetCLAGroupByID(params.ClaGroupID, project.DontLoadRepoDetails)
 			if err != nil {
 				if err == project.ErrProjectDoesNotExist {
@@ -571,7 +571,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 					Message: "EasyCLA - 400 Bad Request - This project does not support corporate contribution",
 				})
 			}
-			result, err := v2service.GetClaGroupCorporateContributors(params.ClaGroupID, params.CompanySFID, params.SearchTerm)
+			result, err := v2service.GetClaGroupCorporateContributors(ctx, params.ClaGroupID, params.CompanySFID, params.SearchTerm)
 			if err != nil {
 				return signatures.NewListClaGroupCorporateContributorsInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
@@ -580,17 +580,17 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 
 	api.SignaturesGetSignatureSignedDocumentHandler = signatures.GetSignatureSignedDocumentHandlerFunc(func(params signatures.GetSignatureSignedDocumentParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		//ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
-		signature, err := v1SignatureService.GetSignature(params.SignatureID)
+		signature, err := v1SignatureService.GetSignature(ctx, params.SignatureID)
 		if err != nil {
 			return signatures.NewGetSignatureSignedDocumentInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 		if signature == nil {
 			return signatures.NewGetSignatureSignedDocumentNotFound().WithXRequestID(reqID).WithPayload(errorResponse(errors.New("signature not found")))
 		}
-		haveAccess, err := isUserHaveAccessOfSignedSignaturePDF(authUser, signature, companyService, projectClaGroupsRepo)
+		haveAccess, err := isUserHaveAccessOfSignedSignaturePDF(ctx, authUser, signature, companyService, projectClaGroupsRepo)
 		if err != nil {
 			return signatures.NewGetSignatureSignedDocumentInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
@@ -600,7 +600,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				Message: "EasyCLA - 403 Forbidden : user does not have access of signature",
 			})
 		}
-		doc, err := v2service.GetSignedDocument(signature.SignatureID.String())
+		doc, err := v2service.GetSignedDocument(ctx, signature.SignatureID.String())
 		if err != nil {
 			if strings.Contains(err.Error(), "bad request") {
 				return signatures.NewGetSignatureSignedDocumentBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
@@ -685,7 +685,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 
 }
 
-func isUserHaveAccessOfSignedSignaturePDF(authUser *auth.User, signature *v1Models.Signature, companyService company.IService, projectClaGroupRepo projects_cla_groups.Repository) (bool, error) {
+func isUserHaveAccessOfSignedSignaturePDF(ctx context.Context, authUser *auth.User, signature *v1Models.Signature, companyService company.IService, projectClaGroupRepo projects_cla_groups.Repository) (bool, error) {
 	if authUser.Admin {
 		return true, nil
 	}
@@ -705,7 +705,7 @@ func isUserHaveAccessOfSignedSignaturePDF(authUser *auth.User, signature *v1Mode
 		return true, nil
 	}
 	if signature.SignatureType == CclaSignatureType {
-		comp, err := companyService.GetCompany(signature.SignatureReferenceID.String())
+		comp, err := companyService.GetCompany(ctx, signature.SignatureReferenceID.String())
 		if err != nil {
 			return false, err
 		}
