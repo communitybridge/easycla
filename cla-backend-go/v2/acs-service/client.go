@@ -4,11 +4,15 @@
 package acs_service
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"strconv"
 	"strings"
+
+	"github.com/communitybridge/easycla/cla-backend-go/v2/acs-service/client/role"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/acs-service/client/object_type"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
@@ -143,42 +147,20 @@ func (ac *Client) GetRoleID(roleName string) (string, error) {
 		return "", err
 	}
 
-	url := fmt.Sprintf("%s/acs/v1/api/roles?search=%s", ac.apiGwURL, roleName)
-	req, err := http.NewRequest("GET", url, nil)
+	rolesParams := &role.GetRolesParams{
+		Search:  aws.String(roleName),
+		Context: context.Background(),
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	response, err := ac.cl.Role.GetRoles(rolesParams, clientAuth)
 	if err != nil {
-		log.WithFields(f).Warnf("problem making a new GET request for url: %s, error: %+v", url, err)
+		log.WithFields(f).Warnf("problem fetching GetRole, error: %+v", err)
 		return "", err
 	}
-	req.Header.Set("X-API-KEY", ac.apiKey)
-	req.Header.Set("Authorization", "Bearer "+tok)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.WithFields(f).Warnf("problem invoking http GET request to url: %s, error: %+v", url, err)
-		return "", err
-	}
-	defer func() {
-		closeErr := resp.Body.Close()
-		if closeErr != nil {
-			log.WithFields(f).Warnf("error closing resource: %+v", closeErr)
-		}
-	}()
-	var roles []struct {
-		RoleName string `json:"role_name"`
-		RoleID   string `json:"role_id"`
-	}
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(f).Warnf("problem reading response body, error: %+v", err)
-		return "", err
-	}
-	err = json.Unmarshal(b, &roles)
-	if err != nil {
-		log.WithFields(f).Warnf("problem unmarshalling response body, error: %+v", err)
-		return "", err
-	}
-	for _, role := range roles {
-		if role.RoleName == roleName {
-			return role.RoleID, nil
+
+	for _, theRole := range response.Payload {
+		if theRole.RoleName == roleName {
+			return theRole.RoleID, nil
 		}
 	}
 
@@ -198,45 +180,21 @@ func (ac *Client) GetObjectTypeIDByName(objectType string) (int, error) {
 		return 0, err
 	}
 
-	url := fmt.Sprintf("%s/acs/v1/api/object-types", ac.apiGwURL)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.WithFields(f).Warnf("problem making a new GET request for url: %s, error: %+v", url, err)
-		return 0, err
+	objectTypeListParams := &object_type.GetObjectTypeListParams{
+		Context: context.Background(),
 	}
-	req.Header.Set("X-API-KEY", ac.apiKey)
-	req.Header.Set("Authorization", "Bearer "+tok)
-	resp, err := http.DefaultClient.Do(req)
+	clientAuth := runtimeClient.BearerToken(tok)
+	response, err := ac.cl.ObjectType.GetObjectTypeList(objectTypeListParams, clientAuth)
 	if err != nil {
-		log.WithFields(f).Warnf("problem invoking http GET request to url: %s, error: %+v", url, err)
-		return 0, err
-	}
-	defer func() {
-		closeErr := resp.Body.Close()
-		if closeErr != nil {
-			log.WithFields(f).Warnf("error closing resource: %+v", closeErr)
-		}
-	}()
-	var objectTypes []struct {
-		TypeID    int    `json:"type_id"`
-		Name      string `json:"name"`
-		CreatedAt int    `json:"created_at"`
-		UpdatedAt int    `json:"updated_at"`
-	}
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(f).Warnf("problem reading response body, error: %+v", err)
-		return 0, err
-	}
-	err = json.Unmarshal(b, &objectTypes)
-	if err != nil {
-		log.WithFields(f).Warnf("problem unmarshalling response body, error: %+v", err)
+		log.WithFields(f).Warnf("problem fetching GetObjectTypeList, error: %+v", err)
 		return 0, err
 	}
 
-	for _, role := range objectTypes {
-		if role.Name == objectType {
-			return role.TypeID, nil
+	for _, entry := range response.Payload {
+		log.WithFields(f).Debugf("Checking entry with name: %s against input: %s", entry.Name, objectType)
+		if entry.Name == objectType {
+			log.WithFields(f).Debugf("Found match: %s == %s, entry.TypeID: %d", entry.Name, objectType, int(entry.TypeID))
+			return int(entry.TypeID), nil
 		}
 	}
 
@@ -265,39 +223,21 @@ func (ac *Client) GetAssignedRoles(roleName, projectSFID, organizationSFID strin
 		return nil, err
 	}
 
-	url := fmt.Sprintf("%s/acs/v1/api/object-types/%d/roles?ojectid=%s|%s", ac.apiGwURL, objectTypeID, projectSFID, organizationSFID)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.WithFields(f).Warnf("problem making a new GET request for url: %s, error: %+v", url, err)
-		return nil, err
+	objectID := fmt.Sprintf("%s|%s", projectSFID, organizationSFID)
+	objectTypeParams := &object_type.GetObjectTypeRoleListParams{
+		ID:       strconv.Itoa(objectTypeID),
+		Objectid: aws.String(objectID),
+		Context:  context.Background(),
 	}
-	req.Header.Set("X-API-KEY", ac.apiKey)
-	req.Header.Set("Authorization", "Bearer "+tok)
-	resp, err := http.DefaultClient.Do(req)
+	clientAuth := runtimeClient.BearerToken(tok)
+	log.WithFields(f).Debugf("querying for object type role list: %s with %s", strconv.Itoa(objectTypeID), objectID)
+	response, err := ac.cl.ObjectType.GetObjectTypeRoleList(objectTypeParams, clientAuth)
 	if err != nil {
-		log.WithFields(f).Warnf("problem invoking http GET request to url: %s, error: %+v", url, err)
-		return nil, err
-	}
-	defer func() {
-		closeErr := resp.Body.Close()
-		if closeErr != nil {
-			log.WithFields(f).Warnf("error closing resource: %+v", closeErr)
-		}
-	}()
-
-	var response *models.ObjectRoleScope
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(f).Warnf("problem reading response body, error: %+v", err)
-		return nil, err
-	}
-	err = json.Unmarshal(b, response)
-	if err != nil {
-		log.WithFields(f).Warnf("problem unmarshalling response body, error: %+v", err)
+		log.WithFields(f).Warnf("problem fetching GetObjectTypeRoleList, error: %+v", err)
 		return nil, err
 	}
 
-	return response, nil
+	return response.Payload, nil
 }
 
 // DeleteRoleByID will delete the specified role by ID
@@ -318,28 +258,15 @@ func (ac *Client) DeleteRoleByID(roleID string) error {
 		return err
 	}
 
-	url := fmt.Sprintf("%s/acs/v1/api/roles/%s", ac.apiGwURL, roleID)
-	req, err := http.NewRequest("DELETE", url, nil)
-	if err != nil {
-		log.WithFields(f).Warnf("problem making a new DELETE request for url: %s, error: %+v", url, err)
-		return err
+	roleParams := &role.DeleteRoleParams{
+		ID:      strfmt.UUID(roleID),
+		Context: context.Background(),
 	}
-	req.Header.Set("X-API-KEY", ac.apiKey)
-	req.Header.Set("Authorization", "Bearer "+tok)
-	resp, err := http.DefaultClient.Do(req)
+	clientAuth := runtimeClient.BearerToken(tok)
+	_, err = ac.cl.Role.DeleteRole(roleParams, clientAuth) // nolint
 	if err != nil {
-		log.WithFields(f).Warnf("problem invoking http DELETE request to url: %s, error: %+v", url, err)
+		log.WithFields(f).Warnf("problem with DeleteRole using roleID: %s, error: %+v", roleID, err)
 		return err
-	}
-	defer func() {
-		closeErr := resp.Body.Close()
-		if closeErr != nil {
-			log.WithFields(f).Warnf("error closing resource: %+v", closeErr)
-		}
-	}()
-
-	if resp.StatusCode != 204 {
-		log.WithFields(f).Warnf("non-success status code returned from delete operation: %d", resp.StatusCode)
 	}
 
 	return nil
