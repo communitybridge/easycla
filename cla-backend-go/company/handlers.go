@@ -20,6 +20,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/company"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
+	orgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -69,9 +70,21 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 	api.CompanyGetCompanyByExternalIDHandler = company.GetCompanyByExternalIDHandlerFunc(func(params company.GetCompanyByExternalIDParams) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		// Check for Salesforce org
+		orgClient := orgService.GetClient()
+		org, getErr := orgClient.GetOrganization(params.CompanySFID)
+
+		if getErr != nil {
+			msg := fmt.Sprintf("Failed to get salesforce org for ID: %s ", params.CompanySFID)
+			log.Warn(msg)
+			return company.NewGetCompanyByExternalIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: msg,
+			})
+		}
 		companyModel, err := service.GetCompanyByExternalID(ctx, params.CompanySFID)
 		if err != nil {
-			msg := fmt.Sprintf("Bad Request - unable to query company by ExternalID: %s, error: %v", params.CompanySFID, err)
+			msg := fmt.Sprintf("Bad Request - unable to get associated salesforce Organization: %s for EasyCLA Company: %s, error: %v", org.Name, companyModel.CompanyName, err)
 			log.Warnf(msg)
 			return company.NewGetCompanyByExternalIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
