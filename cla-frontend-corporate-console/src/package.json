@@ -74,7 +74,8 @@
     "mem": "^4.0.0",
     "tunnel-agent": "^0.6.0",
     "cryptiles": "^4.1.2",
-    "hoek": "^4.2.1"
+    "hoek": "^4.2.1",
+    "yargs-parser": "13.1.2"
   },
   "cordovaPlatforms": [
     "ios",
