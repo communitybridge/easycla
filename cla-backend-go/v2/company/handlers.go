@@ -115,11 +115,13 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
+			// PM - check if authorized by project scope - allow if PM has project ID scope that matches
+			// CLA Manager - check if authorized by project|organization scope - allow if CLA Manager (for example) has project ID + org DI scope that matches
+			if !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) || !utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
 				return company.NewGetCompanyProjectContributorsForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to get contributors with Project|Organization scope of %s | %s",
-						authUser.UserName, params.ProjectSFID, params.CompanySFID),
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to get contributors with Project scope of %s or Project|Organization scope of %s | %s",
+						authUser.UserName, params.ProjectSFID, params.ProjectSFID, params.CompanySFID),
 				})
 			}
 
