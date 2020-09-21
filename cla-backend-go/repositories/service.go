@@ -4,8 +4,17 @@
 package repositories
 
 import (
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	"github.com/communitybridge/easycla/cla-backend-go/github"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 )
 
 // Service contains functions of Github Repository service
@@ -19,19 +28,67 @@ type Service interface {
 	GetRepositoriesByCLAGroup(claGroupID string) ([]*models.GithubRepository, error)
 }
 
+// GithubOrgRepo provide method to get github organization by name
+type GithubOrgRepo interface {
+	GetGithubOrganizationByName(githubOrganizationName string) (*models.GithubOrganizations, error)
+	GetGithubOrganization(githubOrganizationName string) (*models.GithubOrganization, error)
+}
+
 type service struct {
-	repo Repository
+	repo                  Repository
+	ghOrgRepo             GithubOrgRepo
+	projectsClaGroupsRepo projects_cla_groups.Repository
 }
 
 // NewService creates a new githubOrganizations service
-func NewService(repo Repository) Service {
+func NewService(repo Repository, ghOrgRepo GithubOrgRepo, pcgRepo projects_cla_groups.Repository) Service {
 	return &service{
-		repo: repo,
+		repo:                  repo,
+		ghOrgRepo:             ghOrgRepo,
+		projectsClaGroupsRepo: pcgRepo,
 	}
 }
 
 func (s *service) AddGithubRepository(externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
+	if input.RepositoryName != nil && *input.RepositoryName == "" {
+		return nil, errors.New("github repository name required")
+	}
 	projectSFID := externalProjectID
+
+	allMappings, err := s.projectsClaGroupsRepo.GetProjectsIdsForClaGroup(aws.StringValue(input.RepositoryProjectID))
+	if err != nil {
+		return nil, err
+	}
+	var valid bool
+	for _, cgm := range allMappings {
+		if cgm.ProjectSFID == projectSFID || cgm.FoundationSFID == projectSFID {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		return nil, fmt.Errorf("provided cla group id %s is not linked to project sfid %s", utils.StringValue(input.RepositoryProjectID), projectSFID)
+	}
+
+	org, err := s.ghOrgRepo.GetGithubOrganizationByName(utils.StringValue(input.RepositoryOrganizationName))
+	if err != nil {
+		return nil, err
+	}
+	if len(org.List) == 0 {
+		return nil, errors.New("github app not installed on github organization")
+	}
+	repoGithubID, err := strconv.ParseInt(utils.StringValue(input.RepositoryExternalID), 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	ghRepo, err := github.GetRepositoryByExternalID(org.List[0].OrganizationInstallationID, repoGithubID)
+	if err != nil {
+		return nil, err
+	}
+	log.Debugf("ghRepo.HTMLURL %s, input.RepositoryURL  %s", *ghRepo.HTMLURL, *input.RepositoryURL)
+	if !strings.EqualFold(*ghRepo.HTMLURL, *input.RepositoryURL) {
+		return nil, errors.New("github repository not found")
+	}
 	return s.repo.AddGithubRepository(externalProjectID, projectSFID, input)
 }
 
