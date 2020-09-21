@@ -13,6 +13,7 @@
     "graceful-fs": "^4.2.2"
   },
   "resolutions": {
+    "node-sass": "4.13.1",
     "mem": "^4.0.0"
   },
   "devDependencies": {
