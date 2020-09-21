@@ -14,7 +14,8 @@
   },
   "resolutions": {
     "node-sass": "4.13.1",
-    "mem": "^4.0.0"
+    "mem": "^4.0.0",
+    "yargs-parser": "13.1.2"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
