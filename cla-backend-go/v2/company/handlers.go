@@ -115,13 +115,14 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+			if !utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
 				return company.NewGetCompanyProjectContributorsForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAManager with Project|Organization scope of %s | %s",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to get contributors with Project|Organization scope of %s | %s",
 						authUser.UserName, params.ProjectSFID, params.CompanySFID),
 				})
 			}
+
 			result, err := service.GetCompanyProjectContributors(ctx, params.ProjectSFID, params.CompanySFID, utils.StringValue(params.SearchTerm))
 			if err != nil {
 				if err == v1Company.ErrCompanyDoesNotExist {
