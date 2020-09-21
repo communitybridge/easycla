@@ -252,7 +252,7 @@ func server(localMode bool) http.Handler {
 	signaturesService := signatures.NewService(signaturesRepo, companyService, usersService, eventsService, githubOrgValidation)
 	v2SignatureService := v2Signatures.NewService(awsSession, configFile.SignatureFilesBucket, projectService, companyService, signaturesService, projectClaGroupRepo)
 	v1ClaManagerService := cla_manager.NewService(claManagerReqRepo, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
-	repositoriesService := repositories.NewService(repositoriesRepo)
+	repositoriesService := repositories.NewService(repositoriesRepo, githubOrganizationsRepo, projectClaGroupRepo)
 	v2RepositoriesService := v2Repositories.NewService(repositoriesRepo, projectClaGroupRepo, githubOrganizationsRepo)
 	v2ClaManagerService := v2ClaManager.NewService(companyService, projectService, v1ClaManagerService, usersService, repositoriesService, v2CompanyService, eventsService, projectClaGroupRepo)
 	approvalListService := approval_list.NewService(approvalListRepo, usersRepo, companyRepo, projectRepo, signaturesRepo, configFile.CorporateConsoleURL, http.DefaultClient)

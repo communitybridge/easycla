@@ -4,6 +4,8 @@
 package repositories
 
 import (
+	"fmt"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
@@ -18,7 +20,11 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 	api.GithubRepositoriesGetProjectGithubRepositoriesHandler = github_repositories.GetProjectGithubRepositoriesHandlerFunc(
 		func(params github_repositories.GetProjectGithubRepositoriesParams, claUser *user.CLAUser) middleware.Responder {
 			if !claUser.IsAuthorizedForProject(params.ProjectSFID) {
-				return github_repositories.NewGetProjectGithubRepositoriesUnauthorized()
+				return github_repositories.NewGetProjectGithubRepositoriesForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Add GitHub Repository with Project scope of %s",
+						claUser.LFUsername, params.ProjectSFID),
+				})
 			}
 			result, err := service.ListProjectRepositories(params.ProjectSFID)
 			if err != nil {
@@ -30,7 +36,11 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 	api.GithubRepositoriesAddProjectGithubRepositoryHandler = github_repositories.AddProjectGithubRepositoryHandlerFunc(
 		func(params github_repositories.AddProjectGithubRepositoryParams, claUser *user.CLAUser) middleware.Responder {
 			if !claUser.IsAuthorizedForProject(params.ProjectSFID) {
-				return github_repositories.NewAddProjectGithubRepositoryUnauthorized()
+				return github_repositories.NewAddProjectGithubRepositoryForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Add GitHub Repository with Project scope of %s",
+						claUser.LFUsername, params.ProjectSFID),
+				})
 			}
 			result, err := service.AddGithubRepository(params.ProjectSFID, params.GithubRepositoryInput)
 			if err != nil {
@@ -51,7 +61,11 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 	api.GithubRepositoriesDeleteProjectGithubRepositoryHandler = github_repositories.DeleteProjectGithubRepositoryHandlerFunc(
 		func(params github_repositories.DeleteProjectGithubRepositoryParams, claUser *user.CLAUser) middleware.Responder {
 			if !claUser.IsAuthorizedForProject(params.ProjectSFID) {
-				return github_repositories.NewDeleteProjectGithubRepositoryUnauthorized()
+				return github_repositories.NewDeleteProjectGithubRepositoryForbidden().WithPayload(&models.ErrorResponse{
+					Code: "403",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Delete GitHub Repository with Project scope of %s",
+						claUser.LFUsername, params.ProjectSFID),
+				})
 			}
 			ghRepo, err := service.GetRepository(params.RepositoryID)
 			if err != nil {
@@ -73,7 +87,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 					RepositoryName: ghRepo.RepositoryName,
 				},
 			})
-			return github_repositories.NewDeleteProjectGithubRepositoryOK()
+			return github_repositories.NewDeleteProjectGithubRepositoryNoContent()
 		})
 
 }
