@@ -23,7 +23,7 @@ import (
 
 // errors
 var (
-	ErrCclaWhitelistRequestAlreadyExists = errors.New("CCLA whiltelist request already exist")
+	ErrCclaApprovalRequestAlreadyExists = errors.New("approval request already exist")
 )
 
 // constants
@@ -74,7 +74,7 @@ func (s service) AddCclaWhitelistRequest(ctx context.Context, companyID string, 
 		if item.RequestStatus == "pending" || item.RequestStatus == "approved" {
 			log.Warnf("AddCclaWhitelistRequest - found existing contributor invite - id: %s, request for company: %s, project: %s, user by id: %s with name: %s, email: %s",
 				list.List[0].RequestID, companyID, projectID, args.ContributorID, args.ContributorName, args.ContributorEmail)
-			return "", ErrCclaWhitelistRequestAlreadyExists
+			return "", ErrCclaApprovalRequestAlreadyExists
 		}
 	}
 	companyModel, err := s.companyRepo.GetCompany(ctx, companyID)

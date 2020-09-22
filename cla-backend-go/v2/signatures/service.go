@@ -55,6 +55,7 @@ type service struct {
 type Service interface {
 	GetProjectCompanySignatures(ctx context.Context, companySFID string, projectSFID string) (*models.Signatures, error)
 	GetProjectIclaSignaturesCsv(ctx context.Context, claGroupID string) ([]byte, error)
+	GetProjectCclaSignaturesCsv(ctx context.Context, claGroupID string) ([]byte, error)
 	GetProjectIclaSignatures(ctx context.Context, claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
 	GetClaGroupCorporateContributorsCsv(ctx context.Context, claGroupID string, companySFID string) ([]byte, error)
 	GetClaGroupCorporateContributors(ctx context.Context, claGroupID string, companySFID *string, searchTerm *string) (*models.CorporateContributorList, error)
@@ -103,18 +104,6 @@ func (s *service) GetProjectCompanySignatures(ctx context.Context, companySFID s
 	return v2SignaturesReplaceCompanyID(resp, companyModel.CompanyID, companySFID)
 }
 
-func iclaSigCsvLine(sig *v1Models.IclaSignature) string {
-	var dateTime string
-	t, err := utils.ParseDateTime(sig.SignedOn)
-	if err != nil {
-		log.WithFields(logrus.Fields{"signature_id": sig.SignatureID, "signature_created": sig.SignedOn}).
-			Error("invalid time format present for signatures")
-	} else {
-		dateTime = t.Format("Jan 2,2006")
-	}
-	return fmt.Sprintf("\n%s,%s,%s,%s,\"%s\"", sig.GithubUsername, sig.LfUsername, sig.UserName, sig.UserEmail, dateTime)
-}
-
 func eclaSigCsvLine(sig *v1Models.CorporateContributor) string {
 	var dateTime string
 	t, err := utils.ParseDateTime(sig.Timestamp)
@@ -159,6 +148,30 @@ func (s service) GetProjectIclaSignaturesCsv(ctx context.Context, claGroupID str
 	b.WriteString(`Github ID,LF_ID,Name,Email,Date Signed`)
 	for _, sig := range result.List {
 		b.WriteString(iclaSigCsvLine(sig))
+	}
+	return b.Bytes(), nil
+}
+
+func (s service) GetProjectCclaSignaturesCsv(ctx context.Context, claGroupID string) ([]byte, error) {
+	f := logrus.Fields{
+		"functionName":   "GetProjectCclaSignaturesCsv",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"claGroupID":     claGroupID,
+	}
+	log.WithFields(f).Debug("querying for CCLA signatures...")
+	result, err := s.v1SignatureService.GetClaGroupCCLASignatures(ctx, claGroupID)
+	if err != nil {
+		log.WithFields(f).Warnf("error loading CCLA signatures for CLA group, error: %+v", err)
+		return nil, err
+	}
+	log.WithFields(f).Debugf("loaded %d CCLA signatures", len(result.Signatures))
+
+	var b bytes.Buffer
+	log.WithFields(f).Debug("writing CCLA signatures header CSV...")
+	b.WriteString(cclaSigCsvHeader())
+	log.WithFields(f).Debugf("writing CCLA %d signatures records as CSV...", len(result.Signatures))
+	for _, sig := range result.Signatures {
+		b.WriteString(cclaSigCsvLine(sig))
 	}
 	return b.Bytes(), nil
 }

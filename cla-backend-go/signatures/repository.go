@@ -44,23 +44,6 @@ const (
 	SignatureProjectIDTypeIndex                    = "signature-project-id-type-index"
 	SignatureReferenceIndex                        = "reference-signature-index"
 
-	// ReferenceTypeUser is the signature reference type for user signatures - individual and employee
-	ReferenceTypeUser = "user"
-	// ReferenceTypeCompany is the signature reference type for corporate signatures - signed by CLA Signatories, managed by CLA Managers
-	ReferenceTypeCompany = "company"
-
-	// SignatureTypeCLA is the cla signature type in the DB
-	SignatureTypeCLA = "cla"
-	// SignatureTypeCCLA is the ccla signature type in the DB
-	SignatureTypeCCLA = "ccla"
-
-	// ICLA represents individual contributor CLA records
-	ICLA = "icla"
-	// ECLA represents employee contributor CLA records (acknowledgements)
-	ECLA = "ecla"
-	// CCLA represents corporate CLA records (includes approval lists)
-	CCLA = "ccla"
-
 	HugePageSize = 10000
 )
 
@@ -438,8 +421,8 @@ func (repo repository) GetIndividualSignature(ctx context.Context, claGroupID, u
 		"tableName":              repo.signatureTableName,
 		"claGroupID":             claGroupID,
 		"userID":                 userID,
-		"signatureType":          SignatureTypeCLA,
-		"signatureReferenceType": ReferenceTypeUser,
+		"signatureType":          utils.SignatureTypeCLA,
+		"signatureReferenceType": utils.SignatureReferenceTypeUser,
 		"signatureApproved":      "true",
 		"signatureSigned":        "true",
 	}
@@ -447,7 +430,7 @@ func (repo repository) GetIndividualSignature(ctx context.Context, claGroupID, u
 	// These are the keys we want to match for an ICLA Signature with a given CLA Group and User ID
 	condition := expression.Key("signature_project_id").Equal(expression.Value(claGroupID)).
 		And(expression.Key("signature_reference_id").Equal(expression.Value(userID)))
-	filter := expression.Name("signature_type").Equal(expression.Value(SignatureTypeCLA)).
+	filter := expression.Name("signature_type").Equal(expression.Value(utils.SignatureTypeCLA)).
 		And(expression.Name("signature_reference_type").Equal(expression.Value("user"))).
 		And(expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true)))).
 		And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(true)))).
@@ -695,22 +678,22 @@ func (repo repository) GetProjectSignatures(ctx context.Context, params signatur
 
 	if params.ClaType != nil {
 		filterAdded = true
-		if strings.ToLower(*params.ClaType) == ICLA {
-			filter = expression.Name("signature_type").Equal(expression.Value(SignatureTypeCLA)).
-				And(expression.Name("signature_reference_type").Equal(expression.Value(ReferenceTypeUser))).
+		if strings.ToLower(*params.ClaType) == utils.ClaTypeICLA {
+			filter = expression.Name("signature_type").Equal(expression.Value(utils.SignatureTypeCLA)).
+				And(expression.Name("signature_reference_type").Equal(expression.Value(utils.SignatureReferenceTypeUser))).
 				And(expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true)))).
 				And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(true)))).
 				And(expression.Name("signature_user_ccla_company_id").AttributeNotExists())
 
-		} else if strings.ToLower(*params.ClaType) == ECLA {
-			filter = expression.Name("signature_type").Equal(expression.Value(SignatureTypeCLA)).
-				And(expression.Name("signature_reference_type").Equal(expression.Value(ReferenceTypeUser))).
+		} else if strings.ToLower(*params.ClaType) == utils.ClaTypeECLA {
+			filter = expression.Name("signature_type").Equal(expression.Value(utils.SignatureTypeCLA)).
+				And(expression.Name("signature_reference_type").Equal(expression.Value(utils.SignatureReferenceTypeUser))).
 				And(expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true)))).
 				And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(true)))).
 				And(expression.Name("signature_user_ccla_company_id").AttributeExists())
-		} else if strings.ToLower(*params.ClaType) == CCLA {
-			filter = expression.Name("signature_type").Equal(expression.Value(SignatureTypeCCLA)).
-				And(expression.Name("signature_reference_type").Equal(expression.Value(ReferenceTypeCompany))).
+		} else if strings.ToLower(*params.ClaType) == utils.ClaTypeCCLA {
+			filter = expression.Name("signature_type").Equal(expression.Value(utils.SignatureTypeCCLA)).
+				And(expression.Name("signature_reference_type").Equal(expression.Value(utils.SignatureReferenceTypeCompany))).
 				And(expression.Name("signature_approved").Equal(expression.Value(aws.Bool(true)))).
 				And(expression.Name("signature_signed").Equal(expression.Value(aws.Bool(true)))).
 				And(expression.Name("signature_user_ccla_company_id").AttributeNotExists())
@@ -806,7 +789,7 @@ func (repo repository) GetProjectSignatures(ctx context.Context, params signatur
 	// Loop until we have all the records
 	for ok := true; ok; ok = lastEvaluatedKey != "" {
 		// Make the DynamoDB Query API call
-		log.WithFields(f).Debugf("Running signature project query using queryInput: %+v", queryInput)
+		// log.WithFields(f).Debugf("Running signature project query using queryInput: %+v", queryInput)
 		results, errQuery := repo.dynamoDBClient.Query(queryInput)
 		if errQuery != nil {
 			log.WithFields(f).Warnf("error retrieving project signature ID for project: %s, error: %v",
@@ -2080,17 +2063,17 @@ func (repo repository) buildProjectSignatureModels(ctx context.Context, results 
 		// Set the signature type in the response
 		var claType = ""
 		// Corporate Signature
-		if dbSignature.SignatureReferenceType == ReferenceTypeCompany && dbSignature.SignatureType == SignatureTypeCCLA {
-			claType = CCLA
+		if dbSignature.SignatureReferenceType == utils.SignatureReferenceTypeCompany && dbSignature.SignatureType == utils.SignatureTypeCCLA {
+			claType = utils.ClaTypeCCLA
 		}
 		// Employee Signature
-		if dbSignature.SignatureReferenceType == ReferenceTypeUser && dbSignature.SignatureType == SignatureTypeCLA && dbSignature.SignatureUserCompanyID != "" {
-			claType = ECLA
+		if dbSignature.SignatureReferenceType == utils.SignatureReferenceTypeUser && dbSignature.SignatureType == utils.SignatureTypeCLA && dbSignature.SignatureUserCompanyID != "" {
+			claType = utils.ClaTypeECLA
 		}
 
 		// Individual Signature
-		if dbSignature.SignatureReferenceType == ReferenceTypeUser && dbSignature.SignatureType == SignatureTypeCLA && dbSignature.SignatureUserCompanyID == "" {
-			claType = ICLA
+		if dbSignature.SignatureReferenceType == utils.SignatureReferenceTypeUser && dbSignature.SignatureType == utils.SignatureTypeCLA && dbSignature.SignatureUserCompanyID == "" {
+			claType = utils.ClaTypeICLA
 		}
 
 		sig := &models.Signature{
@@ -2313,7 +2296,7 @@ func (repo repository) GetClaGroupICLASignatures(ctx context.Context, claGroupID
 		"claGroupID":     claGroupID,
 	}
 
-	sortKeyPrefix := fmt.Sprintf("%s#%v#%v", ICLA, true, true)
+	sortKeyPrefix := fmt.Sprintf("%s#%v#%v", utils.ClaTypeICLA, true, true)
 	// This is the key we want to match
 	condition := expression.Key("signature_project_id").Equal(expression.Value(claGroupID)).
 		And(expression.Key("sigtype_signed_approved_id").BeginsWith(sortKeyPrefix))
@@ -2396,10 +2379,10 @@ func (repo repository) GetClaGroupCorporateContributors(ctx context.Context, cla
 
 	condition := expression.Key("signature_project_id").Equal(expression.Value(claGroupID))
 	if companyID != nil {
-		sortKey := fmt.Sprintf("%s#%v#%v#%v", ECLA, true, true, *companyID)
+		sortKey := fmt.Sprintf("%s#%v#%v#%v", utils.ClaTypeECLA, true, true, *companyID)
 		condition = condition.And(expression.Key("sigtype_signed_approved_id").Equal(expression.Value(sortKey)))
 	} else {
-		sortKeyPrefix := fmt.Sprintf("%s#%v#%v", ECLA, true, true)
+		sortKeyPrefix := fmt.Sprintf("%s#%v#%v", utils.ClaTypeECLA, true, true)
 		condition = condition.And(expression.Key("sigtype_signed_approved_id").BeginsWith(sortKeyPrefix))
 	}
 
