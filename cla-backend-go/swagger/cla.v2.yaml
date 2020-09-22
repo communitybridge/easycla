@@ -1528,8 +1528,8 @@ paths:
 
   /cla-group/{claGroupID}/icla/signatures:
     get:
-      summary: List icla signatures for cla group
-      description: Return list of icla signatures for cla group
+      summary: List individual signatures for CLA Group
+      description: Returns a list of individual signatures for a CLA Group
       operationId: listClaGroupIclaSignature
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1561,7 +1561,7 @@ paths:
   /cla-group/{claGroupID}/corporate-contributors:
     get:
       summary: List corporate contributors for cla group
-      description: Return list of corporate contributor for cla group
+      description: Returns a list of corporate contributor for the CLA Group
       operationId: listClaGroupCorporateContributors
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1858,6 +1858,7 @@ paths:
         - $ref: "#/parameters/path-claGroupID"
       produces:
         - text/csv
+        - application/json
       responses:
         '200':
           description: 'The CLA Group corporate CLAs as a CSV file'
@@ -2410,7 +2411,7 @@ paths:
           $ref: '#/responses/conflict'
       tags:
         - company
-  
+
 
 
   /company/{companySFID}/company-owner:
@@ -2482,7 +2483,7 @@ paths:
           $ref: '#/responses/conflict'
       tags:
         - cla-manager
-  
+
 
 
   /company/{companySFID}/claGroup/{claGroupID}/cla-manager-designee:
@@ -3041,7 +3042,7 @@ paths:
           $ref: '#/responses/not-found'
       tags:
         - company
-  
+
   /company/{companySFID}/admin:
     get:
       summary: Returns a list of Company Admins (salesforce)
@@ -3296,7 +3297,7 @@ parameters:
     in: query
     type: string
     required: false
-    enum: [ccla,cla]
+    enum: [ ccla,cla ]
   claType:
     name: claType
     description: >
@@ -3307,13 +3308,13 @@ parameters:
     in: query
     type: string
     required: false
-    enum: [icla,ecla,ccla]
+    enum: [ icla,ecla,ccla ]
   templateCLAType:
     name: claType
     in: query
     type: string
     required: true
-    enum: [icla, ccla]
+    enum: [ icla, ccla ]
   foundationSFID:
     name: foundationSFID
     description: the Salesforce ID of the Foundation
@@ -3873,7 +3874,7 @@ definitions:
         items:
           $ref:
             '#/definitions/cla-manager-designee'
-  
+
   contributors:
     type: object
     title: contributors
@@ -3950,7 +3951,7 @@ definitions:
         description: 'the Organization SalesForce ID'
         x-omitempty: false
         example: 'abc134234adsdf43'
-    
+
 
   cla-manager-designee:
     type: object
@@ -4171,7 +4172,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/unsigned_project'
-  
+
   company-admin-list:
     type: object
     properties:
@@ -4179,7 +4180,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/admin_sf'
-  
+
   admin_sf:
     type: object
     title: salesforce company admin
@@ -4194,8 +4195,8 @@ definitions:
       email:
         type: string
         x-omitempty: false
-      
-  
+
+
   unsigned_project:
     type: object
     title: unsigned project
@@ -4612,7 +4613,7 @@ definitions:
         description: The error message
         example: "unable to find project Acme, Inc."
         type: string
-  
+
   success-response:
     type: object
     x-nullable: false
