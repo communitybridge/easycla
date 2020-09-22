@@ -4,10 +4,16 @@
 package signatures
 
 import (
+	"fmt"
+	"strings"
+
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/strfmt"
 	"github.com/jinzhu/copier"
+	"github.com/sirupsen/logrus"
 )
 
 func v2Signature(src *v1Models.Signature) (*models.Signature, error) {
@@ -43,4 +49,40 @@ func v2SignaturesReplaceCompanyID(src *v1Models.Signatures, internalID, external
 	}
 
 	return &dst, nil
+}
+
+func iclaSigCsvLine(sig *v1Models.IclaSignature) string {
+	var dateTime string
+	t, err := utils.ParseDateTime(sig.SignedOn)
+	if err != nil {
+		log.WithFields(logrus.Fields{"signature_id": sig.SignatureID, "signature_created": sig.SignedOn}).
+			Error("invalid time format present for signatures")
+	} else {
+		dateTime = t.Format("Jan 2,2006")
+	}
+	return fmt.Sprintf("\n%s,%s,%s,%s,\"%s\"", sig.GithubUsername, sig.LfUsername, sig.UserName, sig.UserEmail, dateTime)
+}
+
+func cclaSigCsvHeader() string {
+	return `Company Name,Signed,Approved,DomainApprovalList,EmailApprovalList,GitHubOrgApprovalList,GitHubUsernameApprovalList,Date Signed`
+}
+
+func cclaSigCsvLine(sig *v1Models.Signature) string {
+	var dateTime string
+	t, err := utils.ParseDateTime(sig.SignedOn)
+	if err != nil {
+		log.WithFields(logrus.Fields{"signature_id": sig.SignatureID, "signature_created": sig.SignedOn}).
+			Error("invalid time format present for signatures")
+	} else {
+		dateTime = t.Format("Jan 2,2006")
+	}
+	return fmt.Sprintf("\n\"%s\",%t,%t,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"",
+		sig.CompanyName,
+		sig.SignatureSigned,
+		sig.SignatureApproved,
+		strings.Join(sig.DomainApprovalList, ","),
+		strings.Join(sig.EmailApprovalList, ","),
+		strings.Join(sig.GithubOrgApprovalList, ","),
+		strings.Join(sig.GithubUsernameApprovalList, ","),
+		dateTime)
 }
