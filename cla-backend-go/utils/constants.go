@@ -23,3 +23,24 @@ const Lead = "lead"
 
 // ProjectOrgScope is the ACS project + organiztion scope
 const ProjectOrgScope = "project|organization"
+
+// ClaTypeICLA represents individual contributor CLA records
+const ClaTypeICLA = "icla"
+
+// ClaTypeECLA represents employee contributor CLA records (acknowledgements)
+const ClaTypeECLA = "ecla"
+
+// ClaTypeCCLA represents corporate CLA records (includes approval lists)
+const ClaTypeCCLA = "ccla"
+
+// SignatureTypeCLA is the cla signature type in the DB
+const SignatureTypeCLA = "cla"
+
+// SignatureTypeCCLA is the ccla signature type in the DB
+const SignatureTypeCCLA = "ccla"
+
+// SignatureReferenceTypeUser is the signature reference type for user signatures - individual and employee
+const SignatureReferenceTypeUser = "user"
+
+// SignatureReferenceTypeCompany is the signature reference type for corporate signatures - signed by CLA Signatories, managed by CLA Managers
+const SignatureReferenceTypeCompany = "company"

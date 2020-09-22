@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/aws/aws-sdk-go/aws"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
@@ -51,6 +53,7 @@ type SignatureService interface {
 	RemoveCLAManager(ctx context.Context, ignatureID, claManagerID string) (*models.Signature, error)
 
 	GetClaGroupICLASignatures(ctx context.Context, claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
+	GetClaGroupCCLASignatures(ctx context.Context, claGroupID string) (*models.Signatures, error)
 	GetClaGroupCorporateContributors(ctx context.Context, claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error)
 }
 
@@ -791,6 +794,13 @@ func (s service) createEventLogEntries(companyModel *models.Company, projectMode
 
 func (s service) GetClaGroupICLASignatures(ctx context.Context, claGroupID string, searchTerm *string) (*models.IclaSignatures, error) {
 	return s.repo.GetClaGroupICLASignatures(ctx, claGroupID, searchTerm)
+}
+
+func (s service) GetClaGroupCCLASignatures(ctx context.Context, claGroupID string) (*models.Signatures, error) {
+	return s.repo.GetProjectSignatures(ctx, signatures.GetProjectSignaturesParams{
+		ClaType:   aws.String(utils.ClaTypeCCLA),
+		ProjectID: claGroupID,
+	}, 1000)
 }
 
 func (s service) GetClaGroupCorporateContributors(ctx context.Context, claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error) {
