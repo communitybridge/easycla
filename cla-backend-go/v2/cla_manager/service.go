@@ -1057,6 +1057,19 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 	}
 
 	log.Debugf("CLA Manager designee created : %+v", designeeScopes)
+
+	// Convert user to contact
+	if user.Type == utils.Lead {
+		// convert user to contact
+		log.WithFields(f).Debug("converting lead to contact")
+		err := userService.ConvertToContact(user.ID)
+		if err != nil {
+			msg := fmt.Sprintf("converting lead to contact failed: %v", err)
+			log.WithFields(f).Warn(msg)
+			return nil, err
+		}
+	}
+
 	return designeeScopes, nil
 
 }
