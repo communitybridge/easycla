@@ -1,0 +1,9 @@
+.landing-page-container {
+    margin-top: 0;
+    padding: 25px 0;
+    min-height: calc(100vh - 168px);
+    &.expanded {
+        margin-top: 77px;
+        min-height: calc(100vh - 244px);
+    }
+}

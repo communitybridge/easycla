@@ -1,0 +1,23 @@
+.cla-footer {
+    left: 0;
+    bottom: 0;
+    position: relative;
+    z-index: 10;
+    display: block;
+    width: 100%;
+    background-color: #252525;
+    p {
+        padding: 2.4rem;
+        text-align: center;
+        color: #cccc;
+        font-size: 12px;
+        font-weight: 400;
+        font-family: 'Work Sans', sans-serif;
+        margin: 0;
+    }
+
+    a {
+        color: #cccc;
+        padding: 0 0.2rem;
+    }
+}

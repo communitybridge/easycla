@@ -1,0 +1,52 @@
+{
+  "name": "easyCLA-landing-page",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "./node_modules/@angular/cli/bin/ng",
+    "serve": "./node_modules/@angular/cli/bin/ng serve",
+    "build": "./node_modules/@angular/cli/bin/ng build",
+    "build:dev": "yarn prebuild:dev && ./node_modules/@angular/cli/bin/ng build --prod --configuration=dev",
+    "build:staging": "yarn prebuild:dev && ./node_modules/@angular/cli/bin/ng build --prod --configuration=staging",
+    "build:prod": "yarn prebuild:dev && ./node_modules/@angular/cli/bin/ng build --prod --configuration=production"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "~9.1.3",
+    "@angular/common": "~9.1.3",
+    "@angular/compiler": "~9.1.3",
+    "@angular/core": "~9.1.3",
+    "@angular/forms": "~9.1.3",
+    "@angular/platform-browser": "~9.1.3",
+    "@angular/platform-browser-dynamic": "~9.1.3",
+    "@angular/router": "~9.1.3",
+    "@types/auth0-js": "^8.11.7",
+    "@types/node": "^12.11.1",
+    "auth0-js": "^9.13.2",
+    "aws-sdk": "^2.733.0",
+    "bootstrap": "^4.4.0",
+    "rxjs": "~6.5.4",
+    "tslib": "^1.10.0",
+    "zone.js": "~0.10.2"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "~0.901.3",
+    "@angular/cli": "~9.1.3",
+    "@angular/compiler-cli": "~9.1.3",
+    "@angular/language-service": "~9.1.3",
+    "@types/node": "^12.11.1",
+    "@types/jasmine": "~3.5.0",
+    "@types/jasminewd2": "~2.0.3",
+    "codelyzer": "^5.1.2",
+    "jasmine-core": "~3.5.0",
+    "jasmine-spec-reporter": "~4.2.1",
+    "karma": "~5.0.0",
+    "karma-chrome-launcher": "~3.1.0",
+    "karma-coverage-istanbul-reporter": "~2.1.0",
+    "karma-jasmine": "~3.0.1",
+    "karma-jasmine-html-reporter": "^1.4.2",
+    "protractor": "~5.4.3",
+    "ts-node": "~8.3.0",
+    "tslint": "~6.1.0",
+    "typescript": "~3.8.3"
+  }
+}
