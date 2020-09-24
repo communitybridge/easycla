@@ -955,7 +955,7 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 
 	// Get suggested CLA Manager user details
 	user, userErr := userService.SearchUserByEmail(userEmail)
-	if userErr != nil {
+	if userErr != nil || (user != nil && user.Username == "") {
 		msg := fmt.Sprintf("UserEmail: %s has no LF Login and has been sent an invite email to create an account , error: %+v", userEmail, userErr)
 		log.Warn(msg)
 		// Send Email
