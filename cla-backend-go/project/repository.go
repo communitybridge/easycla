@@ -176,7 +176,7 @@ func (repo *repo) getCLAGroupByID(projectID string, loadCLAGroupDetails bool) (*
 	}
 
 	if len(results.Items) < 1 {
-		return nil, ErrProjectDoesNotExist
+		return nil, &utils.CLAGroupNotFound{CLAGroupID: projectID}
 	}
 	var dbModel DBProjectModel
 	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
