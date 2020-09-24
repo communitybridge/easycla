@@ -832,7 +832,7 @@ func (s *service) AssignCompanyOwner(ctx context.Context, companySFID string, us
 	}
 
 	user, err := userClient.SearchUserByEmail(userEmail)
-	if err != nil {
+	if err != nil || (user != nil && user.Username == "") {
 		msg := fmt.Sprintf("Failed searching user by email :%s ", userEmail)
 		log.Warn(msg)
 		// Send user invite for company owner
