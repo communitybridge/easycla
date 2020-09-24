@@ -1,0 +1,26 @@
+<!-- Copyright The Linux Foundation and each contributor to CommunityBridge.
+ SPDX-License-Identifier: MIT -->
+
+<lfx-header [expanded]="hasExapnded" (toggled)="onToggled()"></lfx-header>
+
+<div [ngClass]="{'expanded':hasExapnded}" class="container landing-page-container">
+  <div class="row justify-content-center">
+    <!-- Project Console -->
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-4">
+      <app-cla-console-section [consoleMetadata]="projectSection"></app-cla-console-section>
+    </div>
+
+    <!-- Organiation Console -->
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-4">
+      <app-cla-console-section [consoleMetadata]="organizationSection"></app-cla-console-section>
+    </div>
+
+    <!-- Developer Console -->
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-4">
+      <app-cla-console-section [consoleMetadata]="developerSection"></app-cla-console-section>
+    </div>
+  </div>
+</div>
+
+<!-- Footer view -->
+<app-cla-footer></app-cla-footer>
