@@ -45,7 +45,7 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 					return sign.NewRequestCorporateSignatureInternalServerError().WithPayload(errorResponse(err))
 				}
 				if err == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
-					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(err))
+					return sign.NewRequestCorporateSignatureBadRequest().WithPayload(errorResponse(err))
 				}
 				if err == ErrCCLANotEnabled || err == ErrTemplateNotConfigured {
 					return sign.NewRequestCorporateSignatureBadRequest().WithPayload(errorResponse(err))
