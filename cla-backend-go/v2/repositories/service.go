@@ -125,6 +125,11 @@ func (s *service) DisableRepository(repositoryID string) error {
 }
 
 func (s *service) ListProjectRepositories(projectSFID string) (*v1Models.ListGithubRepositories, error) {
+	psc := v2ProjectService.GetClient()
+	_, err := psc.GetProject(projectSFID)
+	if err != nil {
+		return nil, err
+	}
 	return s.repo.ListProjectRepositories("", projectSFID, true)
 }
 
