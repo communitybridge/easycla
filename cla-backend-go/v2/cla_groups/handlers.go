@@ -230,16 +230,33 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 		result, err := service.ListClaGroupsForFoundationOrProject(ctx, params.ProjectSFID)
 		if err != nil {
-			return cla_group.NewListClaGroupsUnderFoundationInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+			if err, ok := err.(*utils.SFProjectNotFound); ok {
+				return cla_group.NewListClaGroupsUnderFoundationNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+				})
+			}
+			if _, ok := err.(*utils.ProjectCLAGroupMappingNotFound); ok {
+				return cla_group.NewListClaGroupsUnderFoundationOK().WithXRequestID(reqID).WithPayload(&models.ClaGroupList{
+					List: []*models.ClaGroup{},
+				})
+			}
+			if err, ok := err.(*utils.CLAGroupNotFound); ok {
+				return cla_group.NewListClaGroupsUnderFoundationNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+				})
+			}
+			return cla_group.NewListClaGroupsUnderFoundationBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "500",
-				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+				Message: fmt.Sprintf("EasyCLA - 404 Bad Request - error = %s", err.Error()),
 			})
 		}
 
+		// No results - empty OK response
 		if result == nil {
-			return cla_group.NewListClaGroupsUnderFoundationNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "404",
-				Message: fmt.Sprintf("EasyCLA - 404 Not Found - unable to find CLA Group for foundation or project by ID: %s", params.ProjectSFID),
+			return cla_group.NewListClaGroupsUnderFoundationOK().WithXRequestID(reqID).WithPayload(&models.ClaGroupList{
+				List: []*models.ClaGroup{},
 			})
 		}
 

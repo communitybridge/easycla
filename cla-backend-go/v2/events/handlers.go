@@ -123,10 +123,9 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			pm, err := projectsClaGroupsRepo.GetClaGroupIDForProject(params.ProjectSFID)
 			if err != nil {
 				if err == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
-					return WriteResponse(http.StatusNotFound, runtime.JSONMime, runtime.JSONProducer(), &models.ErrorResponse{
-						Code: "404",
-						Message: fmt.Sprintf("EasyCLA - 403 Forbidden - project %s not found in cla",
-							params.ProjectSFID),
+					return WriteResponse(http.StatusBadRequest, runtime.JSONMime, runtime.JSONProducer(), &models.ErrorResponse{
+						Code:    "400",
+						Message: fmt.Sprintf("EasyCLA - 400 Bad Request - No cla group associated with this project: %s", params.ProjectSFID),
 					})
 				}
 				return WriteResponse(http.StatusInternalServerError, runtime.JSONMime, runtime.JSONProducer(), errorResponse(err))
@@ -155,10 +154,9 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			pm, err := projectsClaGroupsRepo.GetClaGroupIDForProject(params.ProjectSFID)
 			if err != nil {
 				if err == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
-					return events.NewGetProjectEventsNotFound().WithPayload(&models.ErrorResponse{
-						Code: "404",
-						Message: fmt.Sprintf("EasyCLA - 404 Not found - project %s not found in cla",
-							params.ProjectSFID),
+					return events.NewGetProjectEventsBadRequest().WithPayload(&models.ErrorResponse{
+						Code:    "400",
+						Message: fmt.Sprintf("EasyCLA - 400 Bad Request - No cla group associated with this project: %s", params.ProjectSFID),
 					})
 				}
 				return events.NewGetProjectEventsInternalServerError().WithPayload(errorResponse(err))
@@ -198,10 +196,9 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 				pm, perr := projectsClaGroupsRepo.GetClaGroupIDForProject(params.ProjectSFID)
 				if perr != nil {
 					if perr == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
-						return events.NewGetCompanyProjectEventsNotFound().WithPayload(&models.ErrorResponse{
-							Code: "404",
-							Message: fmt.Sprintf("EasyCLA - 404 Not found - project %s not found in cla",
-								params.ProjectSFID),
+						return events.NewGetCompanyProjectEventsBadRequest().WithPayload(&models.ErrorResponse{
+							Code:    "400",
+							Message: fmt.Sprintf("EasyCLA - 400 Bad Request - No cla group associated with this project: %s", params.ProjectSFID),
 						})
 					}
 					return events.NewGetCompanyProjectEventsInternalServerError().WithPayload(errorResponse(err))

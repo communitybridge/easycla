@@ -51,9 +51,9 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		cginfo, err := projectClaGroupRepo.GetClaGroupIDForProject(params.ProjectSFID)
 		if err != nil {
 			if err == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
-				return cla_manager.NewCreateCLAManagerInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				return cla_manager.NewCreateCLAManagerBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    BadRequest,
-					Message: fmt.Sprintf("EasyCLA - Bad Request. error = %s", "No cla group is associated with this project"),
+					Message: fmt.Sprintf("EasyCLA - 400 Bad Request - No cla group associated with this project: %s", params.ProjectSFID),
 				})
 			}
 			return cla_manager.NewCreateCLAManagerInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
