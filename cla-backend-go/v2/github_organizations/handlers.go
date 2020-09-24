@@ -34,7 +34,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
 					return github_organizations.NewGetProjectGithubOrganizationsNotFound().WithPayload(&models.ErrorResponse{
 						Code:    "404",
-						Message: fmt.Sprintf("githubOrg not found with given ID. [%s]", params.ProjectSFID),
+						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
 					})
 				}
 				return github_organizations.NewGetProjectGithubOrganizationsBadRequest().WithPayload(errorResponse(err))
@@ -95,10 +95,10 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 
 			err := service.DeleteGithubOrganization(params.ProjectSFID, params.OrgName)
 			if err != nil {
-				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
+				if strings.Contains(err.Error(), "getProjectNotFound") {
 					return github_organizations.NewDeleteProjectGithubOrganizationNotFound().WithPayload(&models.ErrorResponse{
 						Code:    "404",
-						Message: fmt.Sprintf("githubOrg not found with given ID. [%s]", params.ProjectSFID),
+						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
 					})
 				}
 				return github_organizations.NewDeleteProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
