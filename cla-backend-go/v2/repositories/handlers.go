@@ -6,6 +6,7 @@ package repositories
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
@@ -38,6 +39,12 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 
 			result, err := service.ListProjectRepositories(params.ProjectSFID)
 			if err != nil {
+				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
+					return github_repositories.NewGetProjectGithubRepositoriesNotFound().WithPayload(&models.ErrorResponse{
+						Code:    "404",
+						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
+					})
+				}
 				return github_repositories.NewGetProjectGithubRepositoriesBadRequest().WithPayload(errorResponse(err))
 			}
 			response := &models.ListGithubRepositories{}

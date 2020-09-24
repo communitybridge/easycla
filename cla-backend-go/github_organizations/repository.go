@@ -98,26 +98,24 @@ func (repo repository) AddGithubOrganization(externalProjectID string, projectSF
 }
 
 func (repo repository) DeleteGithubOrganization(externalProjectID string, projectSFID string, githubOrgName string) error {
-	var attrName, attrValue string
-	if externalProjectID != "" {
-		attrName = "organization_sfid"
-		attrValue = externalProjectID
-	} else {
-		attrName = "project_sfid"
-		attrValue = projectSFID
+	var githubOrganizationName string
+	orgs, orgErr := repo.GetGithubOrganizations(externalProjectID, projectSFID)
+	if orgErr != nil {
+		errMsg := fmt.Sprintf("github organization is not found using externalProjectID %s or projectSFID %s error: - %+v", externalProjectID, projectSFID, orgErr)
+		log.Warnf(errMsg)
+		return errors.New(errMsg)
+	}
+	for _, githubOrg := range orgs.List {
+		if strings.EqualFold(githubOrg.OrganizationName, githubOrgName) {
+			githubOrganizationName = githubOrg.OrganizationName
+		}
 	}
 	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
-		ExpressionAttributeNames: map[string]*string{
-			"#id": aws.String(attrName),
-		},
-		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-			":val": {
-				S: aws.String(attrValue),
-			},
-		},
-		ConditionExpression: aws.String("#id = :val"),
+
 		Key: map[string]*dynamodb.AttributeValue{
-			"organization_name": {S: aws.String(githubOrgName)},
+			"organization_name": {
+				S: aws.String(githubOrganizationName),
+			},
 		},
 		TableName: aws.String(repo.githubOrgTableName),
 	})
