@@ -44,3 +44,6 @@ const SignatureReferenceTypeUser = "user"
 
 // SignatureReferenceTypeCompany is the signature reference type for corporate signatures - signed by CLA Signatories, managed by CLA Managers
 const SignatureReferenceTypeCompany = "company"
+
+// ProjectTypeProjectGroup is the string that represents the Project Group type in a Project Service record
+const ProjectTypeProjectGroup = "Project Group"

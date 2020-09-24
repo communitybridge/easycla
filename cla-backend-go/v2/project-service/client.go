@@ -27,8 +27,6 @@ const (
 	NA  = "N/A"
 )
 
-var theLinuxFoundationProject *models.ProjectOutput
-
 // Client is client for user_service
 type Client struct {
 	cl *client.PMM
@@ -85,52 +83,6 @@ func (pmm *Client) GetProjectByName(projectName string) (*models.ProjectList, er
 		return nil, err
 	}
 	return result.Payload, nil
-}
-
-// GetLinuxFoundationProject returns the linux foundation project
-func (pmm *Client) GetLinuxFoundationProject() (*models.ProjectOutput, error) {
-	f := logrus.Fields{
-		"functionName": "GetLinuxFoundationProject",
-	}
-
-	// temp workaround for DEV since the search API is not working without auth
-	// remove once search is working
-	if true {
-		return &models.ProjectOutput{
-			ID:   "a0941000002wBz9AAE",
-			Slug: "tlf",
-			Type: "Membership",
-			ProjectCommon: models.ProjectCommon{
-				Name: "The Linux Foundation",
-			},
-		}, nil
-	}
-
-	// Previously loaded? Use the cached version...
-	if theLinuxFoundationProject != nil {
-		log.WithFields(f).Debug("querying for the linux foundation project by name - cache hit")
-		return theLinuxFoundationProject, nil
-	}
-	log.WithFields(f).Debug("querying for the linux foundation project by name - no cache hit...")
-	projectList, err := pmm.GetProjectByName(utils.TheLinuxFoundation)
-	if err != nil {
-		log.WithFields(f).Warnf("unable to lookup %s using search project by name, error: %+v", utils.TheLinuxFoundation, err)
-		return nil, err
-	}
-
-	// We could possibly get more than 1 result - doubtful
-	for _, project := range projectList.Data {
-		// Should match exactly...
-		if project.Name == utils.TheLinuxFoundation {
-			// Save into our cache for next time
-			log.WithFields(f).Debug("saving the linux foundation project by name to cache...")
-			theLinuxFoundationProject = project
-			return project, nil
-		}
-	}
-
-	// Couldn't find it :-(
-	return nil, nil
 }
 
 // IsTheLinuxFoundation returns true if the specified project SFID is the The Linux Foundation project
