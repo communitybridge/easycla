@@ -1,0 +1,21 @@
+/* You can add global styles to this file, and also import other style files */
+@import "~bootstrap/scss/bootstrap";
+@import "https://use.fontawesome.com/releases/v5.7.0/css/all.css";
+
+@font-face {
+  font-family: "Source Sans Pro";
+  src: url(./assets/fonts/Source_Sans_Pro/SourceSansPro-Regular.ttf) format("truetype");
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: "Source Sans Pro bold";
+  src: url(./assets/fonts/Source_Sans_Pro/SourceSansPro-Bold.ttf) format("truetype");
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: "Open Sans";
+  src: url(./assets/fonts/Open_Sans/OpenSans-Bold.ttf) format("truetype");
+  font-weight: 300;
+}

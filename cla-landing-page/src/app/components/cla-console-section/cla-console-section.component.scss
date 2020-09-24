@@ -1,0 +1,88 @@
+.console-container {
+    margin-bottom: 25px;
+    .section {
+        border: 1px solid #8492a6;
+        border-radius: 6px;
+        font-family: "Source Sans Pro";
+        padding-top: 20px;
+        .head {
+            min-height: 124px;
+            text-align: center;
+            .logo {
+                i {
+                    color: #049cec;
+                    font-size: 30px;
+                }
+            }
+
+            .title {
+                color: #000000;
+                font-size: 18px;
+                font-weight: bold;
+            }
+
+            .subtitle {
+                color: #333333;
+                font-size: 14px;
+                padding: 5px;
+                line-height: normal;
+            }
+        }
+
+        .divider {
+            border-bottom: 1px solid #d9e0e7;
+            margin: 10px 0;
+        }
+
+        .body {
+            color: #333333;
+            font-family: "Source Sans Pro";
+            font-size: 12px;
+            text-align: left;
+            min-height: 130px;
+            .highlight {
+                line-height: normal;
+                margin-bottom: 10px;
+                i {
+                    font-size: 16px;
+                    color: #8bc34a;
+                }
+            }
+        }
+
+        .footer {
+            background: rgba(0, 153, 204, 0.1);
+
+            .title {
+                color: #000000;
+                font-family: "Open Sans";
+                font-size: 14px;
+                text-align: center;
+                padding: 20px 0 30px 0;
+            }
+        }
+    }
+
+    .buttons {
+        margin-top: -14px;
+        .button {
+            color: #ffffff;
+            font-family: "Source Sans Pro bold";
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            border: none;
+            border-radius: 50px;
+            width: 90px;
+            padding: 2px;
+
+            &.blue {
+                background: #0099cc;
+            }
+
+            &.gray {
+                background: #8492A6;
+            }
+        }
+    }
+}
