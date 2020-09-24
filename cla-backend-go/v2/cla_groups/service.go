@@ -40,13 +40,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// constants
-const (
-	DontLoadDetails = false
-	LoadDetails     = true
-	foundationLevel = "Project Group"
-)
-
 type service struct {
 	v1ProjectService      v1Project.Service
 	v1TemplateService     v1Template.Service
@@ -300,6 +293,7 @@ func (s *service) validateEnrollProjectsInput(ctx context.Context, foundationSFI
 		return err
 	}
 
+	// Let's check the foundation provided - does it have a parent? Only allowed parent is TLF
 	if foundationProjectDetails.Parent != "" && !isLFParent {
 		log.WithFields(f).Warnf("input validation failure - foundation_sfid of %s has a parent other than %s which is: %s",
 			foundationSFID, utils.TheLinuxFoundation, foundationProjectDetails.Parent)
@@ -1039,10 +1033,12 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 	sfProjectModelDetails, projDetailsErr := v2ProjectService.GetClient().GetProject(projectOrFoundationSFID)
 	if projDetailsErr != nil {
 		log.WithFields(f).Warnf("unable to lookup CLA Group by foundation or project, error: %+v", projDetailsErr)
+		return nil, &utils.SFProjectNotFound{ProjectSFID: projectOrFoundationSFID, Err: projDetailsErr}
 	}
 
 	if sfProjectModelDetails == nil {
-		return nil, nil
+		log.WithFields(f).Warn("unable to lookup CLA Group by foundation or project - empty result")
+		return nil, &utils.SFProjectNotFound{ProjectSFID: projectOrFoundationSFID}
 	}
 
 	// Lookup the foundation name - need this if we were a project - need to lookup parent ID/Name
@@ -1069,7 +1065,7 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 		projectCLAGroup, lookupErr := s.projectsClaGroupsRepo.GetClaGroupIDForProject(projectOrFoundationSFID)
 		if lookupErr != nil {
 			log.WithFields(f).Warnf("problem locating CLA group by project id, error: %+v", lookupErr)
-			return nil, lookupErr
+			return nil, &utils.ProjectCLAGroupMappingNotFound{ProjectSFID: projectOrFoundationSFID, Err: lookupErr}
 		}
 
 		log.WithFields(f).Debugf("loading CLA Group by ID: %s", projectCLAGroup.ClaGroupID)
@@ -1077,17 +1073,17 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 		//v1ClaGroupsByProject, prjerr := s.v1ProjectService.GetClaGroupByProjectSFID(projectOrFoundationSFID, DontLoadDetails)
 		if claGroupLoadErr != nil {
 			log.WithFields(f).Warnf("problem loading CLA group by id, error: %+v", claGroupLoadErr)
-			return nil, claGroupLoadErr
+			return nil, &utils.CLAGroupNotFound{CLAGroupID: projectCLAGroup.ClaGroupID, Err: claGroupLoadErr}
 		}
 
 		v1ClaGroups.Projects = append(v1ClaGroups.Projects, *v1ClaGroupsByProject)
 
-	} else if sfProjectModelDetails.ProjectType == foundationLevel {
+	} else if sfProjectModelDetails.ProjectType == utils.ProjectTypeProjectGroup {
 		log.WithFields(f).Debug("found 'project group' in platform project service. Locating CLA Groups for foundation...")
 		projectCLAGroups, lookupErr := s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(projectOrFoundationSFID)
 		if lookupErr != nil {
 			log.WithFields(f).Warnf("problem locating CLA group by project id, error: %+v", lookupErr)
-			return nil, lookupErr
+			return nil, &utils.ProjectCLAGroupMappingNotFound{ProjectSFID: projectOrFoundationSFID, Err: lookupErr}
 		}
 		log.WithFields(f).Debugf("discovered %d projects based on foundation SFID...", len(projectCLAGroups))
 
@@ -1110,8 +1106,8 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 				log.WithFields(f).Debugf("loading CLA Group by ID: %s", projectCLAGroupClaGroupID)
 				claGroupModel, claGroupLookupErr := s.v1ProjectService.GetCLAGroupByID(ctx, projectCLAGroupClaGroupID)
 				if claGroupLookupErr != nil {
-					log.WithFields(f).Warnf("problem locating CLA group by project id, error: %+v", claGroupLookupErr)
-					return claGroupLookupErr
+					log.WithFields(f).Warnf("problem locating project by id: %s, error: %+v", projectCLAGroupClaGroupID, claGroupLookupErr)
+					return &utils.SFProjectNotFound{ProjectSFID: projectCLAGroupClaGroupID, Err: claGroupLookupErr}
 				}
 
 				v1ClaGroups.Projects = append(v1ClaGroups.Projects, *claGroupModel)
@@ -1126,8 +1122,9 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 		}
 
 	} else {
-		log.WithFields(f).Warnf("unsupported foundation/project SFID type: %s", sfProjectModelDetails.ProjectType)
-		return nil, errors.New("invalid foundation/project SFID")
+		msg := fmt.Sprintf("unsupported foundation/project SFID type: %s", sfProjectModelDetails.ProjectType)
+		log.WithFields(f).Warn(msg)
+		return nil, errors.New(msg)
 	}
 
 	log.WithFields(f).Debugf("Building response model for %d CLA Groups", len(v1ClaGroups.Projects))
@@ -1159,7 +1156,7 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 		// How many SF projects are associated with this CLA Group?
 		cgprojects, err := s.projectsClaGroupsRepo.GetProjectsIdsForClaGroup(v1ClaGroup.ProjectID)
 		if err != nil {
-			return nil, err
+			return nil, &utils.ProjectCLAGroupMappingNotFound{CLAGroupID: v1ClaGroup.ProjectID, Err: err}
 		}
 
 		// For each SF project under this CLA Group...
