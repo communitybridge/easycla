@@ -1,10 +1,15 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-package user_service
+package project_service
 
 import (
 	"strings"
+
+	"github.com/sirupsen/logrus"
+
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/go-openapi/runtime"
 
@@ -21,6 +26,8 @@ const (
 	CLA = "CLA"
 	NA  = "N/A"
 )
+
+var theLinuxFoundationProject *models.ProjectOutput
 
 // Client is client for user_service
 type Client struct {
@@ -66,6 +73,118 @@ func (pmm *Client) GetProject(projectSFID string) (*models.ProjectOutputDetailed
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
 	return pmm.getProject(projectSFID, clientAuth)
+}
+
+// GetProjectByName returns project details for the associated project name
+func (pmm *Client) GetProjectByName(projectName string) (*models.ProjectList, error) {
+	// Can't see to provide auth - as a result, it is failing
+	result, err := pmm.cl.Project.SearchProjects(&project.SearchProjectsParams{
+		Name: []string{projectName},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.Payload, nil
+}
+
+// GetLinuxFoundationProject returns the linux foundation project
+func (pmm *Client) GetLinuxFoundationProject() (*models.ProjectOutput, error) {
+	f := logrus.Fields{
+		"functionName": "GetLinuxFoundationProject",
+	}
+
+	// temp workaround for DEV since the search API is not working without auth
+	// remove once search is working
+	if true {
+		return &models.ProjectOutput{
+			ID:   "a0941000002wBz9AAE",
+			Slug: "tlf",
+			Type: "Membership",
+			ProjectCommon: models.ProjectCommon{
+				Name: "The Linux Foundation",
+			},
+		}, nil
+	}
+
+	// Previously loaded? Use the cached version...
+	if theLinuxFoundationProject != nil {
+		log.WithFields(f).Debug("querying for the linux foundation project by name - cache hit")
+		return theLinuxFoundationProject, nil
+	}
+	log.WithFields(f).Debug("querying for the linux foundation project by name - no cache hit...")
+	projectList, err := pmm.GetProjectByName(utils.TheLinuxFoundation)
+	if err != nil {
+		log.WithFields(f).Warnf("unable to lookup %s using search project by name, error: %+v", utils.TheLinuxFoundation, err)
+		return nil, err
+	}
+
+	// We could possibly get more than 1 result - doubtful
+	for _, project := range projectList.Data {
+		// Should match exactly...
+		if project.Name == utils.TheLinuxFoundation {
+			// Save into our cache for next time
+			log.WithFields(f).Debug("saving the linux foundation project by name to cache...")
+			theLinuxFoundationProject = project
+			return project, nil
+		}
+	}
+
+	// Couldn't find it :-(
+	return nil, nil
+}
+
+// IsTheLinuxFoundation returns true if the specified project SFID is the The Linux Foundation project
+func (pmm *Client) IsTheLinuxFoundation(projectSFID string) (bool, error) {
+	f := logrus.Fields{
+		"functionName": "IsTheLinuxFoundation",
+	}
+
+	log.WithFields(f).Debug("querying project...")
+	projectModel, err := pmm.GetProject(projectSFID)
+	if err != nil {
+		log.WithFields(f).Warnf("unable to lookup project by ID: %s error: %+v", projectSFID, err)
+		return false, err
+	}
+
+	if projectModel.Name == utils.TheLinuxFoundation {
+		// Save into our cache for next time
+		log.WithFields(f).Debug("project is the linux foundation...")
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// IsParentTheLinuxFoundation returns true if the parent is the The Linux Foundation project
+func (pmm *Client) IsParentTheLinuxFoundation(projectSFID string) (bool, error) {
+	f := logrus.Fields{
+		"functionName": "IsParentTheLinuxFoundation",
+	}
+
+	log.WithFields(f).Debug("querying project...")
+	projectModel, err := pmm.GetProject(projectSFID)
+	if err != nil {
+		log.WithFields(f).Warnf("unable to lookup project by ID: %s error: %+v", projectSFID, err)
+		return false, err
+	}
+
+	if projectModel.Parent == "" {
+		return false, nil
+	}
+
+	parentProjectModel, err := pmm.GetProject(projectModel.Parent)
+	if err != nil {
+		log.WithFields(f).Warnf("unable to lookup parent project by ID: %s error: %+v", projectModel.Parent, err)
+		return false, err
+	}
+
+	if parentProjectModel.Name == utils.TheLinuxFoundation {
+		// Save into our cache for next time
+		log.WithFields(f).Debug("parent project is the linux foundation...")
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // EnableCLA enables CLA service in project-service
