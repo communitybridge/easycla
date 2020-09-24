@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -125,23 +124,23 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 		"xEmail":         params.XEMAIL,
 	}
 
-	re := regexp.MustCompile(`^\w{1,30}$`)
-	if !re.MatchString(*params.Body.FirstName) || !re.MatchString(*params.Body.LastName) {
-		msg := "Firstname and last Name values should not exceed 30 characters in length"
-		log.WithFields(f).Warn(msg)
-		return nil, &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
-	if *params.Body.UserEmail == "" {
-		msg := "UserEmail cannot be empty"
-		log.WithFields(f).Warn(msg)
-		return nil, &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
+	// re := regexp.MustCompile(`^\w{1,30}$`)
+	// if !re.MatchString(*params.Body.FirstName) || !re.MatchString(*params.Body.LastName) {
+	// 	msg := "Firstname and last Name values should not exceed 30 characters in length"
+	// 	log.WithFields(f).Warn(msg)
+	// 	return nil, &models.ErrorResponse{
+	// 		Message: msg,
+	// 		Code:    "400",
+	// 	}
+	// }
+	// if *params.Body.UserEmail == "" {
+	// 	msg := "UserEmail cannot be empty"
+	// 	log.WithFields(f).Warn(msg)
+	// 	return nil, &models.ErrorResponse{
+	// 		Message: msg,
+	// 		Code:    "400",
+	// 	}
+	// }
 
 	// Search for salesForce Company aka external Company
 	log.WithFields(f).Debugf("Getting company by external ID : %s", params.CompanySFID)
@@ -185,6 +184,15 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 	}
 	acsClient := v2AcsService.GetClient()
 	user, userErr := userServiceClient.SearchUserByEmail(params.Body.UserEmail.String())
+
+	// Check for potential user with no username
+	if user != nil && user.Username == "" {
+		msg := fmt.Sprintf("User %s needs to update account with username", params.Body.UserEmail.String())
+		return nil, &models.ErrorResponse{
+			Message: msg,
+			Code:    "400",
+		}
+	}
 
 	if userErr != nil {
 		designeeName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
