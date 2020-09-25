@@ -1223,20 +1223,32 @@ func (s *service) isSigned(ctx context.Context, companyModel *v1Models.Company, 
 	return false, nil
 }
 
-func sendEmailToOrgAdmin(adminEmail string, admin string, company string, projectNames []string, contributorID string, contributorName string, corporateConsole string) {
-	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ", company, contributorID)
+func projectsStrList(projectNames []string) string {
+	var sb strings.Builder
+	sb.WriteString("<ul>")
+	for _, project := range projectNames {
+		sb.WriteString(fmt.Sprintf("<li>%s</li>", project))
+	}
+	sb.WriteString("</ul>")
+	return sb.String()
+}
+
+func sendEmailToOrgAdmin(adminEmail string, admin string, company string, projectNames []string, senderEmail string, senderName string, corporateConsole string) {
+	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA ", company)
 	recipients := []string{adminEmail}
+	projectList := projectsStrList(projectNames)
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
-<p>This is a notification email from EasyCLA regarding the project(s) %s.</p>
-<p>The following contributor is requesting to sign CLA for organization: </p>
-<p> %s %s </p>
-<p>Before the user contribution can be accepted, your organization must sign a CLA.
-<p>Kindly login to this portal %s and sign the CLA for any of the projects %s. </p>
-<p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
+<p>This is a notification email from EasyCLA regarding the CLA setup and signing process for %s.</p>
+<p> %s %s has identified you as a potential candidate to setup the Corporate CLA for %s in support of the following projects: </p>
+%s
+<p>Before the contribution can be accepted, your organization must sign a CLA. 
+Either you or someone whom to designate from your company can login to this portal [Corporate console](%s) and sign the CLA for this project %s </p>
+<p>If you are not the CLA Manager, please forward this email to the appropriate person so that they can start the CLA process.</p>
+<p> Please notify the contributor once they are added so that they may complete the contribution process.</p>
 %s
 %s`,
-		admin, projectNames, contributorName, contributorID, corporateConsole, projectNames,
+		admin, company, senderName, senderEmail, company, projectList, corporateConsole, projectNames[0],
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
