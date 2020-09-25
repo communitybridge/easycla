@@ -37,6 +37,7 @@ import (
 	v2OrgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 	v2UserService "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
+	v2UserModels "github.com/communitybridge/easycla/cla-backend-go/v2/user-service/models"
 )
 
 var (
@@ -1054,6 +1055,10 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 			designeeScopes = append(designeeScopes, claManagerDesignee)
 		}
 	}
+	conversionErr := s.convertGHUserToContact(ctx, contributor)
+	if conversionErr != nil {
+		return nil, conversionErr
+	}
 
 	log.Debugf("Sending Email to CLA Manager Designee email: %s ", userEmail)
 
@@ -1065,18 +1070,6 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 	}
 
 	log.Debugf("CLA Manager designee created : %+v", designeeScopes)
-
-	// Convert user to contact
-	if user.Type == utils.Lead {
-		// convert user to contact
-		log.WithFields(f).Debug("converting lead to contact")
-		err := userService.ConvertToContact(user.ID)
-		if err != nil {
-			msg := fmt.Sprintf("converting lead to contact failed: %v", err)
-			log.WithFields(f).Warn(msg)
-			return nil, err
-		}
-	}
 
 	return designeeScopes, nil
 
@@ -1336,4 +1329,45 @@ Once complete, notify the user %s and they will be able to add you as a CLA Mana
 func buildErrorMessage(errPrefix string, claGroupID string, params cla_manager.CreateCLAManagerParams, err error) string {
 	return fmt.Sprintf("%s - problem creating new CLA Manager Request using company SFID: %s, project ID: %s, first name: %s, last name: %s, user email: %s, error: %+v",
 		errPrefix, params.CompanySFID, claGroupID, *params.Body.FirstName, *params.Body.LastName, *params.Body.UserEmail, err)
+}
+
+func (s *service) convertGHUserToContact(ctx context.Context, contributor *v1User.User) error {
+	f := logrus.Fields{
+		"functionName":   "convertGHUserToContact",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
+
+	userService := v2UserService.GetClient()
+	log.Infof("Checking if GH User: %s, GH ID: %s has LFID for contact conversion ", contributor.UserGithubUsername, contributor.UserGithubID)
+	var GHUserLF *v2UserModels.User
+	var GHUserErr error
+	if contributor.LFEmail != "" {
+		GHUserLF, GHUserErr = userService.SearchUserByEmail(contributor.LFEmail)
+		if GHUserErr != nil {
+			msg := fmt.Sprintf("GH UserEmail: %s has no LF Login ", contributor.LFEmail)
+			log.Warn(msg)
+		}
+
+	} else if contributor.LFUsername != "" {
+		GHUserLF, GHUserErr = userService.GetUserByUsername(contributor.LFUsername)
+		if GHUserErr != nil {
+			msg := fmt.Sprintf("GH Username: %s has no LF Login ", contributor.LFUsername)
+			log.Warn(msg)
+		}
+	}
+
+	if GHUserLF != nil {
+		// Convert user to contact
+		if GHUserLF.Type == utils.Lead {
+			// convert user to contact
+			log.WithFields(f).Debug("converting lead to contact")
+			err := userService.ConvertToContact(GHUserLF.ID)
+			if err != nil {
+				msg := fmt.Sprintf("converting lead to contact failed: %v", err)
+				log.WithFields(f).Warn(msg)
+				return err
+			}
+		}
+	}
+	return nil
 }
