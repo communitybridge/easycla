@@ -581,14 +581,14 @@ def unable_to_do_cla_check_email_content(project, managers, repositories):
     <p>Provide the Owner/Admin the following instructions:</p>
     <ul>
     <li>Go into the "Settings" tab of the GitHub Organization</li>
-    <li>Click on "Integration & services" vertical navigation</li>
+    <li>Click on "installed GitHub Apps" vertical navigation</li>
     <li>Then click "Configure" associated with the EasyCLA App</li>
     <li>Finally, click the "All Repositories" radio button option</li>
     </ul>
     {get_email_help_content(project.get_version() == 'v2')}
     {get_email_sign_off_content()}
     """
-    body = '<p>' + body.replace('\n', '<br>') + '</p>'
+    # body = '<p>' + body.replace('\n', '<br>') + '</p>'
     recipients = []
     for manager in managers:
         recipients.append(manager["email"])
