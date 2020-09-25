@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/sirupsen/logrus"
@@ -73,13 +74,18 @@ func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
 }
 
 func (s service) CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemplate, templateFor string) ([]byte, error) {
+	f := logrus.Fields{
+		"functionName": "CreateTemplatePreview",
+		"templateID":   claGroupFields.TemplateID,
+		"templateFor":  templateFor,
+	}
 	var template models.Template
 	var err error
 	if claGroupFields.TemplateID != "" {
 		// Get Template
 		template, err = s.templateRepo.GetTemplate(claGroupFields.TemplateID)
 		if err != nil {
-			log.Warnf("Unable to fetch template fields: %s, error: %v",
+			log.WithFields(f).Warnf("unable to fetch template fields: %s, error: %v",
 				claGroupFields.TemplateID, err)
 			return nil, err
 		}
@@ -87,7 +93,7 @@ func (s service) CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemp
 		// use default Apache template if template_id is not provided
 		template, err = s.templateRepo.GetTemplate(ApacheStyleTemplateID)
 		if err != nil {
-			log.Warnf("Unable to fetch default template fields: %s, error: %v",
+			log.WithFields(f).Warnf("Unable to fetch default template fields: %s, error: %v",
 				claGroupFields.TemplateID, err)
 			return nil, err
 		}
@@ -96,19 +102,20 @@ func (s service) CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemp
 	// Apply template fields
 	iclaTemplateHTML, cclaTemplateHTML, err := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
 	if err != nil {
-		log.Warnf("Unable to inject metadata details into template, error: %v", err)
+		log.WithFields(f).Warnf("unable to inject metadata details into template, error: %v", err)
 		return nil, err
 	}
 	var templateHTML string
 	switch templateFor {
-	case claTypeICLA:
+	case utils.ClaTypeICLA:
 		templateHTML = iclaTemplateHTML
-	case claTypeCCLA:
+	case utils.ClaTypeCCLA:
 		templateHTML = cclaTemplateHTML
 	default:
 		return nil, errors.New("invalid value of template_for")
 	}
-	pdf, err := s.docraptorClient.CreatePDF(templateHTML)
+
+	pdf, err := s.docraptorClient.CreatePDF(templateHTML, templateFor)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +170,7 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 		// Invoke the go routine - any errors will be handled below
 		eg.Go(func() error {
 			log.WithFields(f).Debugf("Creating PDF for %s", claTypeICLA)
-			iclaPdf, iclaErr := s.docraptorClient.CreatePDF(iclaTemplateHTML)
+			iclaPdf, iclaErr := s.docraptorClient.CreatePDF(iclaTemplateHTML, claTypeICLA)
 			if iclaErr != nil {
 				log.WithFields(f).Warnf("Problem generating ICLA template via docraptor client, error: %v - returning empty template PDFs", err)
 				return err
@@ -190,7 +197,7 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 		// Invoke the go routine - any errors will be handled below
 		eg.Go(func() error {
 			log.WithFields(f).Debugf("Creating PDF for %s", claTypeCCLA)
-			cclaPdf, cclaErr := s.docraptorClient.CreatePDF(cclaTemplateHTML)
+			cclaPdf, cclaErr := s.docraptorClient.CreatePDF(cclaTemplateHTML, claTypeCCLA)
 			if cclaErr != nil {
 				log.WithFields(f).Warnf("Problem generating CCLA template via docraptor client, error: %v - returning empty template PDFs", err)
 				return err
@@ -235,6 +242,9 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	}
 
 	// Save Template to DynamoDB
+	f["cclaEnabled"] = claGroup.ProjectCCLAEnabled
+	f["iclaEnabled"] = claGroup.ProjectICLAEnabled
+	log.WithFields(f).Debug("updating templates for the cla group")
 	err = s.templateRepo.UpdateDynamoContractGroupTemplates(ctx, claGroupID, template, pdfUrls, claGroup.ProjectCCLAEnabled, claGroup.ProjectICLAEnabled)
 	if err != nil {
 		log.WithFields(f).Warnf("Problem updating the database with ICLA/CCLA new PDF details, error: %v - returning empty template PDFs", err)
@@ -351,14 +361,16 @@ func (s service) InjectProjectInformationIntoTemplate(template models.Template, 
 	return iclaTemplateHTML, cclaTemplateHTML, nil
 }
 
+// generateTemplateS3FilePath helper function to generate a suitable s3 path and filename for the template
 func (s service) generateTemplateS3FilePath(claGroupID, claType string) string {
 	fileNameTemplate := "contract-group/%s/template/%s"
 	var ext string
 	switch claType {
 	case claTypeICLA:
-		ext = "icla.pdf"
+		// Format would be, for example: icla-2020-09-25T22-32-59Z.pdf
+		ext = fmt.Sprintf("icla-%s.pdf", strings.ReplaceAll(utils.CurrentSimpleDateTimeString(), ":", "-"))
 	case claTypeCCLA:
-		ext = "ccla.pdf"
+		ext = fmt.Sprintf("ccla-%s.pdf", strings.ReplaceAll(utils.CurrentSimpleDateTimeString(), ":", "-"))
 	default:
 		return ""
 	}
