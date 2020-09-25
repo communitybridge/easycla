@@ -25,6 +25,7 @@ export class AppComponent {
 
   initializeData() {
     this.projectSection = {
+      class: 'coding-icon',
       title: 'Projects',
       subtitle: 'Reduce administrative hassles of supporting the CLA for your project.',
       highlights: [
@@ -36,6 +37,7 @@ export class AppComponent {
     };
 
     this.organizationSection = {
+      class: 'building-icon',
       title: 'Organizations',
       subtitle: 'Enable all your developers to contribute code easily and quickly while remaining compliant with contribution policies.',
       highlights: [
@@ -47,6 +49,7 @@ export class AppComponent {
     };
 
     this.developerSection = {
+      class: 'user-icon',
       title: 'Developers',
       subtitle: 'Get started contributing code faster and with less friction.',
       highlights: [

@@ -19,3 +19,28 @@
   src: url(./assets/fonts/Open_Sans/OpenSans-Bold.ttf) format("truetype");
   font-weight: 300;
 }
+
+.building-icon {
+  width: 40px;
+  height: 40px;
+  background-size: contain;
+  background-image: url("./assets/icons/building.svg");
+}
+
+.coding-icon {
+  width: 43px;
+  height: 42px;
+  background-size: contain;
+  background-image: url("./assets/icons/coding.svg");
+}
+
+.user-icon {
+  width: 40px;
+  height: 40px;
+  background-size: contain;
+  background-image: url("./assets/icons/user.svg");
+}
+
+.filter-color {
+  filter: invert(52%) sepia(23%) saturate(5408%) hue-rotate(171deg) brightness(91%) contrast(105%);
+}
