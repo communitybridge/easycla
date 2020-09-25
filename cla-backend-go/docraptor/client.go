@@ -11,6 +11,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/sirupsen/logrus"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
@@ -45,7 +47,12 @@ func NewDocraptorClient(key string, testMode bool) (Client, error) {
 }
 
 // CreatePDF accepts an HTML document and returns a PDF
-func (dc Client) CreatePDF(html string) (io.ReadCloser, error) {
+func (dc Client) CreatePDF(html string, claType string) (io.ReadCloser, error) {
+	f := logrus.Fields{
+		"functionName": "CreatePDF",
+		"claType":      claType,
+	}
+
 	document := map[string]interface{}{
 		"document_type":    "pdf",
 		"document_content": html,
@@ -55,12 +62,14 @@ func (dc Client) CreatePDF(html string) (io.ReadCloser, error) {
 
 	documentBytes, err := json.Marshal(document)
 	if err != nil {
+		log.WithFields(f).Warnf("unable to encode docraptor payload for request, error: %+v", err)
 		return nil, err
 	}
 
-	log.Debug("Generating PDF using docraptor...")
+	log.WithFields(f).Debug("Generating PDF using docraptor...")
 	resp, err := http.Post(dc.url, "application/json", bytes.NewBuffer(documentBytes))
 	if err != nil {
+		log.WithFields(f).Warnf("problem with API call to docraptor, error: %+v", err)
 		return nil, err
 	}
 

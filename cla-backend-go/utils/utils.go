@@ -44,6 +44,12 @@ func CurrentTime() (time.Time, string) {
 	return t, TimeToString(t)
 }
 
+// CurrentSimpleDateTimeString returns the current UTC time and current Time in the "2006-01-02T15:04:05Z" format
+func CurrentSimpleDateTimeString() string {
+	t := time.Now().UTC()
+	return t.UTC().Format("2006-01-02T15:04:05Z")
+}
+
 // ParseDateTime attempts to convert the string to one of our supported date time formats
 func ParseDateTime(dateTimeStr string) (time.Time, error) {
 	dateTimeStrTrimmed := strings.TrimSpace(dateTimeStr)
