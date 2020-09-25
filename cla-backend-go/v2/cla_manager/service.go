@@ -1245,7 +1245,7 @@ func sendEmailToOrgAdmin(adminEmail string, admin string, company string, projec
 <p>Before the contribution can be accepted, your organization must sign a CLA. 
 Either you or someone whom to designate from your company can login to this portal [Corporate console](%s) and sign the CLA for this project %s </p>
 <p>If you are not the CLA Manager, please forward this email to the appropriate person so that they can start the CLA process.</p>
-<p> Please notify the contributor once they are added so that they may complete the contribution process.</p>
+<p> Please notify the user once CLA setup is complete.</p>
 %s
 %s`,
 		admin, company, senderName, senderEmail, company, projectList, corporateConsole, projectNames[0],
