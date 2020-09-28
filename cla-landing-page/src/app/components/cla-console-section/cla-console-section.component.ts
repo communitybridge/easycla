@@ -28,7 +28,6 @@ export class ClaConsoleSectionComponent implements OnInit {
     this.authService.setItem(AppSettings.CONSOLE_TYPE, consoleType)
     if (this.authService.hasTokenValid() && this.authService.isAuthenticated()) {
       const url = EnvConfig.default[consoleType];
-      console.log(url);
       window.open(url, '_self');
     } else {
       // Redirect to LF login page.
