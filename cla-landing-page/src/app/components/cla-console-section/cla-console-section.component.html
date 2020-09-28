@@ -36,7 +36,7 @@
     <div class="buttons">
         <div class="row justify-content-center">
             <div class="col-auto" *ngIf="consoleMetadata.title !=='Developers'">
-                <button tabindex="-1" type="button" class="button blue" (click)="onClickSignIn()">Sign In</button>
+                <button tabindex="-1" type="button" class="button blue" (click)="onClickSignIn(consoleMetadata.title)">Sign In</button>
             </div>
             <div class="col-auto" *ngIf="consoleMetadata.title !=='Developers'">
                 <button tabindex=" -1" type="button" class="button gray" (click)="onClickSignUp()">Sign Up</button>
