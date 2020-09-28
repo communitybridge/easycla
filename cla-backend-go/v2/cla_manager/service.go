@@ -125,24 +125,6 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 		"xEmail":         params.XEMAIL,
 	}
 
-	// re := regexp.MustCompile(`^\w{1,30}$`)
-	// if !re.MatchString(*params.Body.FirstName) || !re.MatchString(*params.Body.LastName) {
-	// 	msg := "Firstname and last Name values should not exceed 30 characters in length"
-	// 	log.WithFields(f).Warn(msg)
-	// 	return nil, &models.ErrorResponse{
-	// 		Message: msg,
-	// 		Code:    "400",
-	// 	}
-	// }
-	// if *params.Body.UserEmail == "" {
-	// 	msg := "UserEmail cannot be empty"
-	// 	log.WithFields(f).Warn(msg)
-	// 	return nil, &models.ErrorResponse{
-	// 		Message: msg,
-	// 		Code:    "400",
-	// 	}
-	// }
-
 	// Search for salesForce Company aka external Company
 	log.WithFields(f).Debugf("Getting company by external ID : %s", params.CompanySFID)
 	companyModel, companyErr := s.companyService.GetCompanyByExternalID(ctx, params.CompanySFID)
