@@ -531,9 +531,9 @@ class DocuSign(signing_service_interface.SigningService):
         # Save signature
         new_signature.save()
         cla.log.info(f'Set and saved signature for: {request_info}')
-        event_data = 'employee signature created for user {}, company {}, project {}'.format(user.get_user_name(),
-                                                                                             company.get_company_name(),
-                                                                                             project.get_project_name())
+        event_data = (f'employee signature created for user {user.get_user_name()}, '
+                      f'company {company.get_company_name()}, '
+                      f'project {project.get_project_name()}')
         Event.create_event(
             event_type=EventType.EmployeeSignatureCreated,
             event_company_id=company_id,
@@ -629,9 +629,9 @@ class DocuSign(signing_service_interface.SigningService):
         # Save signature before adding user to the LDAP Group.
         new_signature.save()
         cla.log.info(f'Set and saved signature for: {request_info}')
-        event_data = 'employee signature created for user {}, company {}, project {}'.format(user.get_user_name(),
-                                                                                             company.get_company_name(),
-                                                                                             project.get_project_name())
+        event_data = (f'employee signature created for user {user.get_user_name()}, '
+                      f'company {company.get_company_name()}, '
+                      f'project {project.get_project_name()}')
         Event.create_event(
             event_type=EventType.EmployeeSignatureCreated,
             event_company_id=company_id,
@@ -1375,13 +1375,15 @@ class DocuSign(signing_service_interface.SigningService):
                 event_data = (f'individual signature of user {user.get_user_name()} '
                               f'signed for project {project.get_project_name()}, '
                               f'params: {param_str}')
+                event_summary = (f'individual signature of user {user.get_user_name()} '
+                                 f'signed for project {project.get_project_name()}')
                 Event.create_event(
                     event_type=EventType.IndividualSignatureSigned,
                     event_project_id=project_id,
                     event_company_id=None,
                     event_user_id=user.get_user_id(),
                     event_data=event_data,
-                    event_summary=event_data,
+                    event_summary=event_summary,
                     contains_pii=False,
                 )
             elif signature.get_signature_reference_type() == 'company':
@@ -1390,13 +1392,17 @@ class DocuSign(signing_service_interface.SigningService):
                               f'and company {company.get_company_name()} '
                               f'by user {user.get_user_name()}, '
                               f'params: {param_str}')
+                event_summary = (f'corporate signature '
+                                 f'signed for project {project.get_project_name()} '
+                                 f'and company {company.get_company_name()} '
+                                 f'by user {user.get_user_name()}')
                 Event.create_event(
                     event_type=EventType.CompanySignatureSigned,
                     event_project_id=project_id,
                     event_company_id=company.get_company_id(),
                     event_user_id=user.get_user_id(),
                     event_data=event_data,
-                    event_summary=event_data,
+                    event_summary=event_summary,
                     contains_pii=False,
                 )
 
