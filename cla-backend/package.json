@@ -33,5 +33,8 @@
     "serverless-pseudo-parameters": "^2.5.0",
     "serverless-python-requirements": "^4.2.5",
     "serverless-wsgi": "^1.5.2"
+  },
+  "resolutions": {
+    "node-fetch": "^2.6.1"
   }
 }
