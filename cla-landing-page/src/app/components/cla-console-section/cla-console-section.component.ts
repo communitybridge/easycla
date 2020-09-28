@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: MIT
 
 import { Component, Input, OnInit } from '@angular/core';
+import { AuthService } from 'src/app/core/services/auth.service';
+import { EnvConfig } from 'src/app/config/cla-env-utils';
+import { AppSettings } from 'src/app/config/app-settings';
+
 
 @Component({
   selector: 'app-cla-console-section',
@@ -11,13 +15,26 @@ import { Component, Input, OnInit } from '@angular/core';
 export class ClaConsoleSectionComponent implements OnInit {
   @Input() consoleMetadata: any;
 
-  constructor() { }
+  constructor(
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
   }
 
 
-  onClickSignIn() {
+  onClickSignIn(type: string) {
+    const consoleType = type === 'Projects' ? AppSettings.PROJECT_CONSOLE_LINK : AppSettings.CORPORATE_CONSOLE_LINK;
+    this.authService.setItem(AppSettings.CONSOLE_TYPE, consoleType)
+    if (this.authService.hasTokenValid() && this.authService.isAuthenticated()) {
+      const url = EnvConfig.default[consoleType];
+      console.log(url);
+      window.open(url, '_self');
+    } else {
+      // Redirect to LF login page.
+      console.log('Redirect to Auth0');
+      this.authService.login();
+    }
 
   }
 
@@ -26,7 +43,7 @@ export class ClaConsoleSectionComponent implements OnInit {
   }
 
   onClickLearnMore() {
-
+    window.open(AppSettings.LEARN_MORE, '_blank');
   }
 
 }
