@@ -39,6 +39,7 @@ export class ClaContractVersionModal {
     });
     this.documentType = this.navParams.get('documentType');
     this.documents = this.navParams.get('documents').reverse();
+    this.sortData();
     if (this.documents.length > 0) {
       this.currentDocument = this.documents.slice(0, 1);
       if (this.documents.length > 1) {
@@ -48,6 +49,14 @@ export class ClaContractVersionModal {
 
     events.subscribe('modal:close', () => {
       this.dismiss();
+    });
+  }
+
+  sortData() {
+    this.documents.sort(function (a, b) {
+      a = new Date(a.documentCreationDate);
+      b = new Date(b.documentCreationDate);
+      return a > b ? -1 : a < b ? 1 : 0;
     });
   }
 
