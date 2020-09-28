@@ -474,7 +474,7 @@ var templateMap = map[string]models.Template{
 				Width:        340,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      24,
+				OffsetY:      20,
 			},
 			{
 				ID:           "mailing_address3",
@@ -486,7 +486,7 @@ var templateMap = map[string]models.Template{
 				Width:        340,
 				Height:       20,
 				OffsetX:      0,  // should be aligned with the above
-				OffsetY:      60, // 47 should move down some
+				OffsetY:      48, // 47 should move down some
 			},
 			{
 				ID:           "country",
@@ -632,7 +632,7 @@ var templateMap = map[string]models.Template{
 				Width:        350,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      27,
+				OffsetY:      20,
 			},
 			{
 				ID:           "corporation_address3",
@@ -644,7 +644,7 @@ var templateMap = map[string]models.Template{
 				Width:        350,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      65,
+				OffsetY:      50,
 			},
 			{
 				ID:           "cla_manager_name",
