@@ -44,20 +44,15 @@ export class AuthService {
   public isAuthenticated(): boolean {
     // Check whether the current time is past the
     // access token's expiry time
-    const outhData = JSON.parse(this.getItem(AppSettings.AUTH_DATA));
-    if (outhData) {
-      return new Date().getTime() < outhData.expires_at;
+    const expiresAt = JSON.parse(this.getItem(AppSettings.EXPIRES_AT));
+    if (expiresAt) {
+      return new Date().getTime() < expiresAt;
     }
     return false;
   }
 
-  public logout(): void {
-    // Remove tokens and expiry time from localStorage
-    this.removeItem(AppSettings.AUTH_DATA);
-  }
-
   public getIdToken(): string {
-    const tokenId = JSON.parse(this.getItem(AppSettings.ID_TOKEN))
+    const tokenId = JSON.parse(this.getItem(AppSettings.ID_TOKEN));
     return tokenId;
   }
 
@@ -88,16 +83,12 @@ export class AuthService {
   private setSession(authResult): void {
     // Set the time that the access token will expire at
     const expiresAt = JSON.stringify(authResult.expiresIn * 1000 + new Date().getTime());
-    const sessionData = {
-      access_token: authResult.accessToken,
-      id_token: authResult.idToken,
-      expires_at: expiresAt,
-      userid: authResult.idTokenPayload.nickname,
-      user_email: authResult.idTokenPayload.email,
-      user_name: authResult.idTokenPayload.name
-    }
+    this.setItem(AppSettings.ACCESS_TOKEN, authResult.accessToken);
     this.setItem(AppSettings.ID_TOKEN, authResult.idToken);
-    this.setItem(AppSettings.AUTH_DATA, sessionData);
+    this.setItem(AppSettings.EXPIRES_AT, expiresAt);
+    this.setItem(AppSettings.USER_ID, authResult.idTokenPayload.nickname);
+    this.setItem(AppSettings.USER_EMAIL, authResult.idTokenPayload.email);
+    this.setItem(AppSettings.USER_NAME, authResult.idTokenPayload.name);
   }
 
   hasTokenValid() {

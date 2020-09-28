@@ -19,13 +19,12 @@ export class PageNotFoundComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    console.log('Page not found');
     const consoleType: string = JSON.parse(this.authService.getItem(AppSettings.CONSOLE_TYPE));
     if (consoleType) {
       this.message = 'You are being redirected to the ' + (consoleType === AppSettings.PROJECT_CONSOLE_LINK ? 'Project' : 'Corporate') + ' contributor console.';
-      const url = EnvConfig.default[consoleType];
+      const url = EnvConfig.default[consoleType] + '?idToken=' + this.authService.getIdToken();
       this.authService.removeItem(AppSettings.CONSOLE_TYPE);
-      // window.open(url, '_self');
+      window.open(url, '_self');
     } else {
       this.message = 'The page you are looking for was not found.';
     }

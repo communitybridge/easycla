@@ -15,7 +15,8 @@ async function prefetchSSM() {
   console.log('Fetching completed.');
 
   //test for local
-  // result['cla-api-url'] = 'http://localhost:5000';
+  // result['corp-console-link'] = 'http://localhost:8101/';
+  // result['proj-console-link'] = 'http://localhost:8101/';
   console.log(`Saving configuration to file: ${AWS_SSM_JSON_PATH}...`);
   fs.writeFile(AWS_SSM_JSON_PATH, JSON.stringify(result), function (err) {
     if (err) {
