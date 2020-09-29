@@ -83,7 +83,7 @@ func (s *service) GetCLAProjectsByID(ctx context.Context, foundationSFID string)
 				cla.FoundationSfid = foundationSFID
 			}
 
-			claGroup, err := s.projectRepo.GetCLAGroupByID(claGroupID, v1Project.DontLoadRepoDetails)
+			claGroup, err := s.projectRepo.GetCLAGroupByID(ctx, claGroupID, v1Project.DontLoadRepoDetails)
 			if err != nil {
 				log.WithFields(f).Warnf("unable to fetch cla-group details of %s", claGroupID)
 			} else {

@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
+
 	"github.com/communitybridge/easycla/cla-backend-go/approval_list"
 	"github.com/communitybridge/easycla/cla-backend-go/cla_manager"
 
@@ -47,6 +49,7 @@ type service struct {
 	eventsRepo               claevent.Repository
 	projectRepo              project.ProjectRepository
 	projectService           project.Service
+	githubOrgService         github_organizations.Service
 	claManagerRequestsRepo   cla_manager.IRepository
 	approvalListRequestsRepo approval_list.IRepository
 }
@@ -64,9 +67,11 @@ func NewService(stage string,
 	eventsRepo claevent.Repository,
 	projectRepo project.ProjectRepository,
 	projService project.Service,
+	githubOrgService github_organizations.Service,
 	claManagerRequestsRepo cla_manager.IRepository,
 	approvalListRequestsRepo approval_list.IRepository) Service {
-	SignaturesTable := fmt.Sprintf("cla-%s-signatures", stage)
+
+	signaturesTable := fmt.Sprintf("cla-%s-signatures", stage)
 	eventsTable := fmt.Sprintf("cla-%s-events", stage)
 	projectsCLAGroupsTable := fmt.Sprintf("cla-%s-projects-cla-groups", stage)
 	repositoryTableName := fmt.Sprintf("cla-%s-repositories", stage)
@@ -80,22 +85,31 @@ func NewService(stage string,
 		eventsRepo:               eventsRepo,
 		projectRepo:              projectRepo,
 		projectService:           projService,
+		githubOrgService:         githubOrgService,
 		claManagerRequestsRepo:   claManagerRequestsRepo,
 		approvalListRequestsRepo: approvalListRequestsRepo,
 	}
 
-	s.registerCallback(SignaturesTable, Modify, s.SignatureSignedEvent)
-	s.registerCallback(SignaturesTable, Modify, s.SignatureAddSigTypeSignedApprovedID)
-	s.registerCallback(SignaturesTable, Insert, s.SignatureAddSigTypeSignedApprovedID)
-	s.registerCallback(SignaturesTable, Insert, s.SignatureAddUsersDetails)
+	s.registerCallback(signaturesTable, Modify, s.SignatureSignedEvent)
+	s.registerCallback(signaturesTable, Modify, s.SignatureAddSigTypeSignedApprovedID)
+	s.registerCallback(signaturesTable, Insert, s.SignatureAddSigTypeSignedApprovedID)
+	s.registerCallback(signaturesTable, Insert, s.SignatureAddUsersDetails)
 
 	s.registerCallback(eventsTable, Insert, s.EventAddedEvent)
 
-	s.registerCallback(projectsCLAGroupsTable, Insert, s.ProjectAddedEvent)
-	s.registerCallback(projectsCLAGroupsTable, Remove, s.ProjectDeletedEvent)
+	// Enable or Disable the CLA Service Enabled/Disabled flag/attribute in the platform Project Service
+	s.registerCallback(projectsCLAGroupsTable, Insert, s.ProjectServiceEnableCLAServiceHandler)
+	s.registerCallback(projectsCLAGroupsTable, Remove, s.ProjectServiceDisableCLAServiceHandler)
+
+	// Remove any lingering CLA Permissions for the specified project which was unenrolled/disabled
+	s.registerCallback(projectsCLAGroupsTable, Remove, s.RemoveCLAPermissions)
 
 	s.registerCallback(repositoryTableName, Insert, s.GithubRepoAddedEvent)
 	s.registerCallback(repositoryTableName, Remove, s.GithubRepoDeletedEvent)
+
+	// Check and enable/disable the branch protection when a project
+	s.registerCallback(repositoryTableName, Insert, s.EnableBranchProtectionServiceHandler)
+	s.registerCallback(repositoryTableName, Remove, s.DisableBranchProtectionServiceHandler)
 
 	s.registerCallback(claGroupsTable, Modify, s.ProcessCLAGroupUpdateEvents)
 

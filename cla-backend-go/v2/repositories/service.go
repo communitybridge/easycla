@@ -31,20 +31,20 @@ import (
 
 // Service contains functions of Github Repository service
 type Service interface {
-	AddGithubRepository(projectSFID string, input *models.GithubRepositoryInput) (*v1Models.GithubRepository, error)
-	EnableRepository(repositoryID string) error
-	DisableRepository(repositoryID string) error
-	ListProjectRepositories(projectSFID string) (*v1Models.ListGithubRepositories, error)
-	GetRepository(repositoryID string) (*v1Models.GithubRepository, error)
-	DisableCLAGroupRepositories(claGroupID string) error
-	GetProtectedBranch(repositoryID string) (*v2Models.GithubRepositoryBranchProtection, error)
-	UpdateProtectedBranch(repositoryID string, input *v2Models.GithubRepositoryBranchProtectionInput) (*v2Models.GithubRepositoryBranchProtection, error)
+	AddGithubRepository(ctx context.Context, projectSFID string, input *models.GithubRepositoryInput) (*v1Models.GithubRepository, error)
+	EnableRepository(ctx context.Context, repositoryID string) error
+	DisableRepository(ctx context.Context, repositoryID string) error
+	ListProjectRepositories(ctx context.Context, projectSFID string) (*v1Models.ListGithubRepositories, error)
+	GetRepository(ctx context.Context, repositoryID string) (*v1Models.GithubRepository, error)
+	DisableCLAGroupRepositories(ctx context.Context, claGroupID string) error
+	GetProtectedBranch(ctx context.Context, repositoryID string) (*v2Models.GithubRepositoryBranchProtection, error)
+	UpdateProtectedBranch(ctx context.Context, repositoryID string, input *v2Models.GithubRepositoryBranchProtectionInput) (*v2Models.GithubRepositoryBranchProtection, error)
 }
 
 // GithubOrgRepo provide method to get github organization by name
 type GithubOrgRepo interface {
-	GetGithubOrganizationByName(githubOrganizationName string) (*v1Models.GithubOrganizations, error)
-	GetGithubOrganization(githubOrganizationName string) (*v1Models.GithubOrganization, error)
+	GetGithubOrganizationByName(ctx context.Context, githubOrganizationName string) (*v1Models.GithubOrganizations, error)
+	GetGithubOrganization(ctx context.Context, githubOrganizationName string) (*v1Models.GithubOrganization, error)
 }
 
 type service struct {
@@ -64,7 +64,7 @@ func NewService(repo v1Repositories.Repository, pcgRepo projects_cla_groups.Repo
 	}
 }
 
-func (s *service) AddGithubRepository(projectSFID string, input *models.GithubRepositoryInput) (*v1Models.GithubRepository, error) {
+func (s *service) AddGithubRepository(ctx context.Context, projectSFID string, input *models.GithubRepositoryInput) (*v1Models.GithubRepository, error) {
 	psc := v2ProjectService.GetClient()
 	project, err := psc.GetProject(projectSFID)
 	if err != nil {
@@ -90,7 +90,7 @@ func (s *service) AddGithubRepository(projectSFID string, input *models.GithubRe
 	if !valid {
 		return nil, fmt.Errorf("provided cla group id %s is not linked to project sfid %s", utils.StringValue(input.ClaGroupID), projectSFID)
 	}
-	org, err := s.ghOrgRepo.GetGithubOrganizationByName(utils.StringValue(input.GithubOrganizationName))
+	org, err := s.ghOrgRepo.GetGithubOrganizationByName(ctx, utils.StringValue(input.GithubOrganizationName))
 	if err != nil {
 		return nil, err
 	}
@@ -113,32 +113,32 @@ func (s *service) AddGithubRepository(projectSFID string, input *models.GithubRe
 		RepositoryType:             aws.String("github"),
 		RepositoryURL:              ghRepo.HTMLURL,
 	}
-	return s.repo.AddGithubRepository(externalProjectID, projectSFID, in)
+	return s.repo.AddGithubRepository(ctx, externalProjectID, projectSFID, in)
 }
 
-func (s *service) EnableRepository(repositoryID string) error {
-	return s.repo.EnableRepository(repositoryID)
+func (s *service) EnableRepository(ctx context.Context, repositoryID string) error {
+	return s.repo.EnableRepository(ctx, repositoryID)
 }
 
-func (s *service) DisableRepository(repositoryID string) error {
-	return s.repo.DisableRepository(repositoryID)
+func (s *service) DisableRepository(ctx context.Context, repositoryID string) error {
+	return s.repo.DisableRepository(ctx, repositoryID)
 }
 
-func (s *service) ListProjectRepositories(projectSFID string) (*v1Models.ListGithubRepositories, error) {
+func (s *service) ListProjectRepositories(ctx context.Context, projectSFID string) (*v1Models.ListGithubRepositories, error) {
 	psc := v2ProjectService.GetClient()
 	_, err := psc.GetProject(projectSFID)
 	if err != nil {
 		return nil, err
 	}
-	return s.repo.ListProjectRepositories("", projectSFID, true)
+	return s.repo.ListProjectRepositories(ctx, "", projectSFID, true)
 }
 
-func (s *service) GetRepository(repositoryID string) (*v1Models.GithubRepository, error) {
-	return s.repo.GetRepository(repositoryID)
+func (s *service) GetRepository(ctx context.Context, repositoryID string) (*v1Models.GithubRepository, error) {
+	return s.repo.GetRepository(ctx, repositoryID)
 }
 
-func (s *service) GetProtectedBranch(repositoryID string) (*v2Models.GithubRepositoryBranchProtection, error) {
-	githubRepository, err := s.GetRepository(repositoryID)
+func (s *service) GetProtectedBranch(ctx context.Context, repositoryID string) (*v2Models.GithubRepositoryBranchProtection, error) {
+	githubRepository, err := s.GetRepository(ctx, repositoryID)
 	if err != nil {
 		log.Warnf("fetching repository failed : %s : %v", repositoryID, err)
 		return nil, err
@@ -148,13 +148,12 @@ func (s *service) GetProtectedBranch(repositoryID string) (*v2Models.GithubRepos
 	githubRepoName := githubRepository.RepositoryName
 	githubRepoName = s.cleanGithubRepoName(githubRepoName)
 
-	githubClient, err := s.getGithubClientForOrgName(githubOrgName)
+	githubClient, err := s.getGithubClientForOrgName(ctx, githubOrgName)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	owner, branchName, err := s.getGithubOwnerBranchName(githubClient, githubOrgName, githubRepoName)
+	owner, branchName, err := s.getGithubOwnerBranchName(ctx, githubClient, githubOrgName, githubRepoName)
 	if err != nil {
 		return nil, err
 	}
@@ -183,10 +182,10 @@ func (s *service) GetProtectedBranch(repositoryID string) (*v2Models.GithubRepos
 	return result, nil
 }
 
-func (s *service) UpdateProtectedBranch(repositoryID string, input *v2Models.GithubRepositoryBranchProtectionInput) (*v2Models.GithubRepositoryBranchProtection, error) {
-	githubRepository, err := s.GetRepository(repositoryID)
+func (s *service) UpdateProtectedBranch(ctx context.Context, repositoryID string, input *v2Models.GithubRepositoryBranchProtectionInput) (*v2Models.GithubRepositoryBranchProtection, error) {
+	githubRepository, err := s.GetRepository(ctx, repositoryID)
 	if err != nil {
-		log.Warnf("fetching repository failed : %s : %v", repositoryID, err)
+		log.Warnf("fetching repository %s, failed, error: %v", repositoryID, err)
 		return nil, err
 	}
 
@@ -194,13 +193,12 @@ func (s *service) UpdateProtectedBranch(repositoryID string, input *v2Models.Git
 	githubRepoName := githubRepository.RepositoryName
 	githubRepoName = s.cleanGithubRepoName(githubRepoName)
 
-	githubClient, err := s.getGithubClientForOrgName(githubOrgName)
+	githubClient, err := s.getGithubClientForOrgName(ctx, githubOrgName)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	owner, branchName, err := s.getGithubOwnerBranchName(githubClient, githubOrgName, githubRepoName)
+	owner, branchName, err := s.getGithubOwnerBranchName(ctx, githubClient, githubOrgName, githubRepoName)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +234,7 @@ func (s *service) UpdateProtectedBranch(repositoryID string, input *v2Models.Git
 		return nil, err
 	}
 
-	return s.GetProtectedBranch(repositoryID)
+	return s.GetProtectedBranch(ctx, repositoryID)
 }
 
 func (s *service) cleanGithubRepoName(githubRepoName string) string {
@@ -247,24 +245,23 @@ func (s *service) cleanGithubRepoName(githubRepoName string) string {
 	return githubRepoName
 }
 
-func (s *service) getGithubClientForOrgName(githubOrgName string) (*githubsdk.Client, error) {
-	githubOrg, err := s.ghOrgRepo.GetGithubOrganization(githubOrgName)
+func (s *service) getGithubClientForOrgName(ctx context.Context, githubOrgName string) (*githubsdk.Client, error) {
+	githubOrg, err := s.ghOrgRepo.GetGithubOrganization(ctx, githubOrgName)
 	if err != nil {
-		log.Warnf("fetching githubOrg failed : %s : %v", githubOrgName, err)
+		log.Warnf("fetching githubOrg %s failed, error: %v", githubOrgName, err)
 		return nil, err
 	}
 
 	githubClient, err := github.NewGithubAppClient(githubOrg.OrganizationInstallationID)
 	if err != nil {
-		log.Warnf("creating the github client for installation id failed  : %d : %v", githubOrg.OrganizationInstallationID, err)
+		log.Warnf("creating the github client for installation id %d failed, error: %v", githubOrg.OrganizationInstallationID, err)
 		return nil, err
 	}
 
 	return githubClient, nil
 }
 
-func (s *service) getGithubOwnerBranchName(githubClient *githubsdk.Client, githubOrgName, githubRepoName string) (string, string, error) {
-	ctx := context.Background()
+func (s *service) getGithubOwnerBranchName(ctx context.Context, githubClient *githubsdk.Client, githubOrgName, githubRepoName string) (string, string, error) {
 	owner, err := github.GetOwnerName(ctx, githubClient, githubOrgName, githubRepoName)
 	if err != nil {
 		log.Warnf("getting the owner name for org : %s and repo : %s failed : %v", githubOrgName, githubRepoName, err)
@@ -317,9 +314,9 @@ func (s *service) getRequiredProtectedBranchCheckStatus(protectedBranch *githubs
 	return result
 }
 
-func (s *service) DisableCLAGroupRepositories(claGroupID string) error {
+func (s *service) DisableCLAGroupRepositories(ctx context.Context, claGroupID string) error {
 	var deleteErr error
-	ghOrgs, err := s.repo.GetCLAGroupRepositoriesGroupByOrgs(claGroupID, true)
+	ghOrgs, err := s.repo.GetCLAGroupRepositoriesGroupByOrgs(ctx, claGroupID, true)
 	if err != nil {
 		return err
 	}
@@ -327,7 +324,7 @@ func (s *service) DisableCLAGroupRepositories(claGroupID string) error {
 		log.Debugf("Deleting repositories for cla-group :%s", claGroupID)
 		for _, ghOrg := range ghOrgs {
 			for _, item := range ghOrg.List {
-				deleteErr = s.repo.DisableRepository(item.RepositoryID)
+				deleteErr = s.repo.DisableRepository(ctx, item.RepositoryID)
 				if deleteErr != nil {
 					log.Warnf("Unable to remove repository: %s for project :%s error :%v", item.RepositoryID, claGroupID, deleteErr)
 				}

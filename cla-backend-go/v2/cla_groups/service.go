@@ -822,7 +822,7 @@ func (s *service) DeleteCLAGroup(ctx context.Context, claGroupModel *v1Models.Pr
 	go func(claGroup *v1Models.Project, authUser *auth.User) {
 		// Delete github repositories
 		log.WithFields(f).Debug("deleting CLA Group GitHub repositories...")
-		numDeleted, delGHReposErr := s.repositoriesService.DisableRepositoriesByProjectID(claGroup.ProjectID)
+		numDeleted, delGHReposErr := s.repositoriesService.DisableRepositoriesByProjectID(ctx, claGroup.ProjectID)
 		if delGHReposErr != nil {
 			log.WithFields(f).Warn(delGHReposErr)
 			errChan <- delGHReposErr

@@ -523,7 +523,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			}
 
 			// Lookup the CLA Group by ID - make sure it's valid
-			claGroupModel, err := projectRepo.GetCLAGroupByID(params.ClaGroupID, project.DontLoadRepoDetails)
+			claGroupModel, err := projectRepo.GetCLAGroupByID(ctx, params.ClaGroupID, project.DontLoadRepoDetails)
 			if err != nil {
 				if err == project.ErrProjectDoesNotExist {
 					return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
