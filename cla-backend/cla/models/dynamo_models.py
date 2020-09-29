@@ -3232,6 +3232,7 @@ class GitHubOrgModel(BaseModel):
     organization_project_id = UnicodeAttribute(null=True)
     organization_company_id = UnicodeAttribute(null=True)
     auto_enabled = BooleanAttribute(null=True)
+    branch_protection_enabled = BooleanAttribute(null=True)
 
 
 class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-methods
@@ -3240,7 +3241,8 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
     """
 
     def __init__(
-            self, organization_name=None, organization_installation_id=None, organization_sfid=None, auto_enabled=False
+            self, organization_name=None, organization_installation_id=None, organization_sfid=None,
+            auto_enabled=False, branch_protection_enabled=False,
     ):
         super(GitHubOrg).__init__()
         self.model = GitHubOrgModel()
@@ -3250,6 +3252,7 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
         self.model.organization_installation_id = organization_installation_id
         self.model.organization_sfid = organization_sfid
         self.model.auto_enabled = auto_enabled
+        self.model.branch_protection_enabled = branch_protection_enabled
 
     def __str__(self):
         return (
@@ -3258,7 +3261,8 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
             f'organization SFID: {self.model.organization_sfid}, '
             f'organization project id: {self.model.organization_project_id}, '
             f'organization company id: {self.model.organization_company_id}, '
-            f'auto_enabled: {self.model.auto_enabled}'
+            f'auto_enabled: {self.model.auto_enabled},'
+            f'branch_protection_enabled: {self.model.branch_protection_enabled}'
         )
 
     def to_dict(self):
@@ -3301,6 +3305,9 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
     def get_auto_enabled(self):
         return self.model.auto_enabled
 
+    def get_branch_protection_enabled(self):
+        return self.model.branch_protection_enabled
+
     def set_organization_name(self, organization_name):
         self.model.organization_name = organization_name
         if self.model.organization_name:
@@ -3323,6 +3330,9 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
 
     def set_auto_enabled(self, auto_enabled):
         self.model.auto_enabled = auto_enabled
+
+    def set_branch_protection_enabled(self, branch_protection_enabled):
+        self.model.branch_protection_enabled = branch_protection_enabled
 
     def get_organization_by_sfid(self, sfid):
         organization_generator = self.model.organization_sfid_index.query(sfid)
@@ -3751,7 +3761,7 @@ class Event(model_interfaces.Event):
 
     def get_event_data(self):
         return self.model.event_data
-    
+
     def get_event_summary(self):
         return self.model.event_summary
 
@@ -3816,7 +3826,7 @@ class Event(model_interfaces.Event):
 
     def set_event_data(self, event_data):
         self.model.event_data = event_data
-    
+
     def set_event_summary(self, event_summary):
         self.model.event_summary = event_summary
 

@@ -12,6 +12,7 @@ import (
 	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
 
 	"github.com/aws/aws-lambda-go/events"
+	claEvents "github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
@@ -27,14 +28,15 @@ type ProjectClaGroup struct {
 	RepositoriesCount int64  `json:"repositories_count"`
 }
 
-func (s *service) ProjectAddedEvent(event events.DynamoDBEventRecord) error {
+// ProjectServiceEnableCLAServiceHandler handles enabling the CLA Service attribute from the project service
+func (s *service) ProjectServiceEnableCLAServiceHandler(event events.DynamoDBEventRecord) error {
 	f := logrus.Fields{
-		"functionName": "ProjectAddedEvent",
+		"functionName": "ProjectServiceEnableCLAServiceHandler",
 		"eventID":      event.EventID,
 		"eventName":    event.EventName,
 		"eventSource":  event.EventSource,
 	}
-	log.WithFields(f).Debug("ProjectAddedEvent called")
+	log.WithFields(f).Debug("ProjectServiceEnableCLAServiceHandler called")
 	var newProject ProjectClaGroup
 	err := unmarshalStreamImage(event.Change.NewImage, &newProject)
 	if err != nil {
@@ -54,18 +56,39 @@ func (s *service) ProjectAddedEvent(event events.DynamoDBEventRecord) error {
 		return err
 	}
 
+	// Log the event
+	eventErr := s.eventsRepo.CreateEvent(&models.Event{
+		ContainsPII:            false,
+		EventData:              fmt.Sprintf("enabled CLA service for project: %s", newProject.ProjectSFID),
+		EventSummary:           fmt.Sprintf("enabled CLA service for project: %s", newProject.ProjectSFID),
+		EventFoundationSFID:    newProject.FoundationSFID,
+		EventProjectExternalID: newProject.ProjectSFID,
+		EventProjectID:         newProject.ClaGroupID,
+		EventProjectSFID:       newProject.ProjectSFID,
+		EventType:              claEvents.ProjectServiceCLAEnabled,
+		LfUsername:             "easycla system",
+		UserID:                 "easycla system",
+		UserName:               "easycla system",
+		// EventProjectName:       "",
+		// EventProjectSFName:     "",
+	})
+	if eventErr != nil {
+		log.WithFields(f).Warnf("problem logging event for enabling CLA service, error: %+v", eventErr)
+		// Ok - don't fail for now
+	}
+
 	return nil
 }
 
-// ProjectDeleteEvent handles the CLA Group (projects table) delete event
-func (s *service) ProjectDeletedEvent(event events.DynamoDBEventRecord) error {
+// ProjectServiceDisableCLAServiceHandler handles disabling/removing the CLA Service attribute from the project service
+func (s *service) ProjectServiceDisableCLAServiceHandler(event events.DynamoDBEventRecord) error {
 	f := logrus.Fields{
-		"functionName": "ProjectDeletedEvent",
+		"functionName": "ProjectServiceDisableCLAServiceHandler",
 		"eventID":      event.EventID,
 		"eventName":    event.EventName,
 		"eventSource":  event.EventSource,
 	}
-	log.WithFields(f).Debug("ProjectDeletedEvent called")
+	log.WithFields(f).Debug("ProjectServiceDisableCLAServiceHandler called")
 	var oldProject ProjectClaGroup
 	err := unmarshalStreamImage(event.Change.OldImage, &oldProject)
 	if err != nil {
@@ -92,13 +115,13 @@ func (s *service) ProjectDeletedEvent(event events.DynamoDBEventRecord) error {
 	// Log the event
 	eventErr := s.eventsRepo.CreateEvent(&models.Event{
 		ContainsPII:            false,
-		EventData:              fmt.Sprintf("disabled CLA service for Project: %s", oldProject.ProjectSFID),
-		EventSummary:           fmt.Sprintf("disabled CLA service for Project: %s", oldProject.ProjectSFID),
+		EventData:              fmt.Sprintf("disabled CLA service for project: %s", oldProject.ProjectSFID),
+		EventSummary:           fmt.Sprintf("disabled CLA service for project: %s", oldProject.ProjectSFID),
 		EventFoundationSFID:    oldProject.FoundationSFID,
 		EventProjectExternalID: oldProject.ProjectSFID,
 		EventProjectID:         oldProject.ClaGroupID,
 		EventProjectSFID:       oldProject.ProjectSFID,
-		EventType:              "disable.cla",
+		EventType:              claEvents.ProjectServiceCLADisabled,
 		LfUsername:             "easycla system",
 		UserID:                 "easycla system",
 		UserName:               "easycla system",
@@ -110,7 +133,31 @@ func (s *service) ProjectDeletedEvent(event events.DynamoDBEventRecord) error {
 		// Ok - don't fail for now
 	}
 
-	// remove any CLA related permissions
+	return nil
+}
+
+// RemoveCLAPermissions handles removing existing CLA permissions
+func (s *service) RemoveCLAPermissions(event events.DynamoDBEventRecord) error {
+	f := logrus.Fields{
+		"functionName": "RemoveCLAPermissions",
+		"eventID":      event.EventID,
+		"eventName":    event.EventName,
+		"eventSource":  event.EventSource,
+	}
+	log.WithFields(f).Debug("RemoveCLAPermissions called")
+	var oldProject ProjectClaGroup
+	err := unmarshalStreamImage(event.Change.OldImage, &oldProject)
+	if err != nil {
+		log.WithFields(f).Warnf("problem unmarshalling stream image, error: %+v", err)
+		return err
+	}
+
+	// Add more fields for the logger
+	f["ProjectSFID"] = oldProject.ProjectSFID
+	f["ClaGroupID"] = oldProject.ClaGroupID
+	f["FoundationSFID"] = oldProject.FoundationSFID
+
+	// Remove any CLA related permissions
 	permErr := s.removeCLAPermissions(oldProject.ProjectSFID)
 	if permErr != nil {
 		log.WithFields(f).Warnf("problem removing CLA permissions for projectSFID, error: %+v", permErr)

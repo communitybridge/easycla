@@ -36,7 +36,7 @@ type Service interface {
 
 // CombinedRepo contains the various methods of other repositories
 type CombinedRepo interface {
-	GetCLAGroupByID(projectID string, loadRepoDetails bool) (*models.Project, error)
+	GetCLAGroupByID(ctx context.Context, projectID string, loadRepoDetails bool) (*models.Project, error)
 	GetCompany(ctx context.Context, companyID string) (*models.Company, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
 	GetUser(userID string) (*models.User, error)
@@ -135,7 +135,7 @@ func (s *service) loadCompany(ctx context.Context, args *LogEventArgs) error {
 	return nil
 }
 
-func (s *service) loadProject(args *LogEventArgs) error {
+func (s *service) loadProject(ctx context.Context, args *LogEventArgs) error {
 	if args.ProjectModel != nil {
 		args.ProjectID = args.ProjectModel.ProjectID
 		args.projectName = args.ProjectModel.ProjectName
@@ -143,7 +143,7 @@ func (s *service) loadProject(args *LogEventArgs) error {
 		return nil
 	}
 	if args.ProjectID != "" {
-		projectModel, err := s.combinedRepo.GetCLAGroupByID(args.ProjectID, DontLoadRepoDetails)
+		projectModel, err := s.combinedRepo.GetCLAGroupByID(ctx, args.ProjectID, DontLoadRepoDetails)
 		if err != nil {
 			return err
 		}
@@ -190,7 +190,7 @@ func (s *service) loadDetails(ctx context.Context, args *LogEventArgs) error {
 	if err != nil {
 		return err
 	}
-	err = s.loadProject(args)
+	err = s.loadProject(ctx, args)
 	if err != nil {
 		return err
 	}

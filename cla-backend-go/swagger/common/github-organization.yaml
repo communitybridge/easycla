@@ -32,6 +32,10 @@ properties:
     type: boolean
     description: Flag to indicate if this GitHub Organization is configured to allow new repositories to be auto-enabled/auto-enrolled in EasyCLA.
     x-omitempty: false
+  branchProtectionEnabled:
+    type: boolean
+    description: Flag to indicate if this GitHub Organization is configured to automatically setup branch protection on CLA enabled repositories.
+    x-omitempty: false
   githubInfo:
     type: object
     properties:

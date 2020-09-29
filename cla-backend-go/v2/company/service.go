@@ -97,8 +97,8 @@ type Service interface {
 
 // ProjectRepo contains project repo methods
 type ProjectRepo interface {
-	GetCLAGroupByID(projectID string, loadRepoDetails bool) (*v1Models.Project, error)
-	GetCLAGroupsByExternalID(params *v1ProjectParams.GetProjectsByExternalIDParams, loadRepoDetails bool) (*v1Models.Projects, error)
+	GetCLAGroupByID(ctx context.Context, projectID string, loadRepoDetails bool) (*v1Models.Project, error)
+	GetCLAGroupsByExternalID(ctx context.Context, params *v1ProjectParams.GetProjectsByExternalIDParams, loadRepoDetails bool) (*v1Models.Projects, error)
 }
 
 // NewService returns instance of company service
@@ -123,7 +123,7 @@ func (s *service) GetCompanyProjectCLAManagers(ctx context.Context, companyID st
 	}
 	log.WithFields(f).Debugf("locating CLA Group(s) under project or foundation...")
 	var err error
-	claGroups, err := s.getCLAGroupsUnderProjectOrFoundation(projectSFID)
+	claGroups, err := s.getCLAGroupsUnderProjectOrFoundation(ctx, projectSFID)
 	if err != nil {
 		log.WithFields(f).Warnf("problem fetching CLA Groups under project or foundation, error: %+v", err)
 		return nil, err
@@ -227,7 +227,7 @@ func (s *service) GetCompanyProjectActiveCLAs(ctx context.Context, companyID str
 		"companyID":      companyID,
 	}
 	var err error
-	claGroups, err := s.getCLAGroupsUnderProjectOrFoundation(projectSFID)
+	claGroups, err := s.getCLAGroupsUnderProjectOrFoundation(ctx, projectSFID)
 	if err != nil {
 		log.WithFields(f).Warnf("problem fetching CLA Groups under project or foundation, error: %+v", err)
 		return nil, err
@@ -524,7 +524,7 @@ func (s *service) CreateContributor(ctx context.Context, companyID string, proje
 		log.Error("company not found", companyErr)
 	}
 
-	projectModel, projErr := s.projectRepo.GetCLAGroupByID(ClaGroupID, DontLoadRepoDetails)
+	projectModel, projErr := s.projectRepo.GetCLAGroupByID(ctx, ClaGroupID, DontLoadRepoDetails)
 	if projErr != nil {
 		msg := fmt.Sprintf("unable to query CLA Group ID: %s, error: %+v", ClaGroupID, projErr)
 		log.WithFields(f).Warnf(msg)
@@ -701,7 +701,7 @@ func (s *service) GetCompanyProjectCLA(ctx context.Context, authUser *auth.User,
 		}
 	}
 
-	claGroups, err := s.getCLAGroupsUnderProjectOrFoundation(projectSFID)
+	claGroups, err := s.getCLAGroupsUnderProjectOrFoundation(ctx, projectSFID)
 	if err != nil {
 		log.WithFields(f).Warnf("problem fetching CLA Groups under project or foundation, error: %+v", err)
 		return nil, err
@@ -767,7 +767,7 @@ func (s *service) GetCompanyCLAGroupManagers(ctx context.Context, companyID, cla
 		return nil, nil
 	}
 
-	projectModel, projErr := s.projectRepo.GetCLAGroupByID(claGroupID, DontLoadRepoDetails)
+	projectModel, projErr := s.projectRepo.GetCLAGroupByID(ctx, claGroupID, DontLoadRepoDetails)
 	if projErr != nil {
 		log.WithFields(f).Warnf("unable to query CLA Group ID: %s, error: %+v", claGroupID, err)
 		return nil, err
@@ -923,7 +923,7 @@ func v2ProjectToMap(projectDetails *v2ProjectServiceModels.ProjectOutputDetailed
 	return epmap, nil
 }
 
-func (s *service) getCLAGroupsUnderProjectOrFoundation(id string) (map[string]*claGroupModel, error) {
+func (s *service) getCLAGroupsUnderProjectOrFoundation(ctx context.Context, id string) (map[string]*claGroupModel, error) {
 	result := make(map[string]*claGroupModel)
 	psc := v2ProjectService.GetClient()
 	projectDetails, err := psc.GetProject(id)
@@ -983,7 +983,7 @@ func (s *service) getCLAGroupsUnderProjectOrFoundation(id string) (map[string]*c
 		go func(claGroupID string, claGroup *claGroupModel) {
 			defer wg.Done()
 			// get cla-group info
-			cginfo, err := s.projectRepo.GetCLAGroupByID(claGroupID, DontLoadRepoDetails)
+			cginfo, err := s.projectRepo.GetCLAGroupByID(ctx, claGroupID, DontLoadRepoDetails)
 			if err != nil || cginfo == nil {
 				log.Warnf("Unable to get details of cla_group: %s", claGroupID)
 				return
@@ -1173,12 +1173,12 @@ func (s *service) fillActiveCLA(wg *sync.WaitGroup, sig *v1Models.Signature, act
 }
 
 // return projects output for which cla_group is present in cla
-func (s *service) filterClaProjects(projects []*v2ProjectServiceModels.ProjectOutput) []*v2ProjectServiceModels.ProjectOutput { //nolint
+func (s *service) filterClaProjects(ctx context.Context, projects []*v2ProjectServiceModels.ProjectOutput) []*v2ProjectServiceModels.ProjectOutput { //nolint
 	results := make([]*v2ProjectServiceModels.ProjectOutput, 0)
 	prChan := make(chan *v2ProjectServiceModels.ProjectOutput)
 	for _, v := range projects {
 		go func(projectOutput *v2ProjectServiceModels.ProjectOutput) {
-			project, err := s.projectRepo.GetCLAGroupsByExternalID(&v1ProjectParams.GetProjectsByExternalIDParams{
+			project, err := s.projectRepo.GetCLAGroupsByExternalID(ctx, &v1ProjectParams.GetProjectsByExternalIDParams{
 				ProjectSFID: projectOutput.ID,
 				PageSize:    aws.Int64(1),
 			}, DontLoadRepoDetails)
@@ -1259,7 +1259,7 @@ func (s *service) getAllCompanyProjectEmployeeSignatures(ctx context.Context, co
 	return sigs.Signatures, nil
 }
 
-// get company and project parallely
+// get company and project in parallel
 func (s *service) getCompanyAndClaGroup(ctx context.Context, companySFID, projectSFID string) (*v1Models.Company, *v1Models.Project, error) {
 	f := logrus.Fields{
 		"functionName":   "getCompanyAndClaGroup",
@@ -1286,7 +1286,7 @@ func (s *service) getCompanyAndClaGroup(ctx context.Context, companySFID, projec
 			log.WithFields(f).Debugf("cla group mapping not found for projectSFID %s", projectSFID)
 			return
 		}
-		claGroup, projectErr = s.projectRepo.GetCLAGroupByID(pm.ClaGroupID, DontLoadRepoDetails)
+		claGroup, projectErr = s.projectRepo.GetCLAGroupByID(ctx, pm.ClaGroupID, DontLoadRepoDetails)
 		if claGroup == nil {
 			projectErr = ErrProjectNotFound
 		}

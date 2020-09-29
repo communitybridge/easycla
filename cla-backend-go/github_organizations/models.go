@@ -15,6 +15,7 @@ type GithubOrganization struct {
 	OrganizationSfid           string `json:"organization_sfid,omitempty"`
 	ProjectSFID                string `json:"project_sfid"`
 	AutoEnabled                bool   `json:"auto_enabled"`
+	BranchProtectionEnabled    bool   `json:"branch_protection_enabled"`
 	Version                    string `json:"version,omitempty"`
 }
 
@@ -27,6 +28,7 @@ func toModel(in *GithubOrganization) *models.GithubOrganization {
 		OrganizationSfid:           in.OrganizationSfid,
 		Version:                    in.Version,
 		AutoEnabled:                in.AutoEnabled,
+		BranchProtectionEnabled:    in.BranchProtectionEnabled,
 		ProjectSFID:                in.ProjectSFID,
 	}
 }

@@ -4,6 +4,7 @@
 package github_organizations
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -21,7 +22,10 @@ import (
 func Configure(api *operations.EasyclaAPI, service Service, eventService events.Service) {
 	api.GithubOrganizationsGetProjectGithubOrganizationsHandler = github_organizations.GetProjectGithubOrganizationsHandlerFunc(
 		func(params github_organizations.GetProjectGithubOrganizationsParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_organizations.NewGetProjectGithubOrganizationsForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -29,7 +33,8 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 						authUser.UserName, params.ProjectSFID),
 				})
 			}
-			result, err := service.GetGithubOrganizations(params.ProjectSFID)
+
+			result, err := service.GetGithubOrganizations(ctx, params.ProjectSFID)
 			if err != nil {
 				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
 					return github_organizations.NewGetProjectGithubOrganizationsNotFound().WithPayload(&models.ErrorResponse{
@@ -39,12 +44,16 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				}
 				return github_organizations.NewGetProjectGithubOrganizationsBadRequest().WithPayload(errorResponse(err))
 			}
+
 			return github_organizations.NewGetProjectGithubOrganizationsOK().WithPayload(result)
 		})
 
 	api.GithubOrganizationsAddProjectGithubOrganizationHandler = github_organizations.AddProjectGithubOrganizationHandlerFunc(
 		func(params github_organizations.AddProjectGithubOrganizationParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_organizations.NewAddProjectGithubOrganizationForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -60,12 +69,12 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
-			_, err := github.GetOrganization(*params.Body.OrganizationName)
+			_, err := github.GetOrganization(ctx, *params.Body.OrganizationName)
 			if err != nil {
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
 
-			result, err := service.AddGithubOrganization(params.ProjectSFID, params.Body)
+			result, err := service.AddGithubOrganization(ctx, params.ProjectSFID, params.Body)
 			if err != nil {
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
@@ -84,7 +93,10 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 
 	api.GithubOrganizationsDeleteProjectGithubOrganizationHandler = github_organizations.DeleteProjectGithubOrganizationHandlerFunc(
 		func(params github_organizations.DeleteProjectGithubOrganizationParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_organizations.NewDeleteProjectGithubOrganizationForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -93,7 +105,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
-			err := service.DeleteGithubOrganization(params.ProjectSFID, params.OrgName)
+			err := service.DeleteGithubOrganization(ctx, params.ProjectSFID, params.OrgName)
 			if err != nil {
 				if strings.Contains(err.Error(), "getProjectNotFound") {
 					return github_organizations.NewDeleteProjectGithubOrganizationNotFound().WithPayload(&models.ErrorResponse{
@@ -112,12 +124,16 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 					GithubOrganizationName: params.OrgName,
 				},
 			})
+
 			return github_organizations.NewDeleteProjectGithubOrganizationNoContent()
 		})
 
 	api.GithubOrganizationsUpdateProjectGithubOrganizationConfigHandler = github_organizations.UpdateProjectGithubOrganizationConfigHandlerFunc(
 		func(params github_organizations.UpdateProjectGithubOrganizationConfigParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_organizations.NewUpdateProjectGithubOrganizationConfigForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -133,7 +149,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
-			err := service.UpdateGithubOrganization(params.ProjectSFID, params.OrgName, *params.Body.AutoEnabled)
+			err := service.UpdateGithubOrganization(ctx, params.ProjectSFID, params.OrgName, *params.Body.AutoEnabled, params.Body.BranchProtectionEnabled)
 			if err != nil {
 				return github_organizations.NewUpdateProjectGithubOrganizationConfigBadRequest().WithPayload(errorResponse(err))
 			}
@@ -147,6 +163,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 					AutoEnabled:            *params.Body.AutoEnabled,
 				},
 			})
+
 			return github_organizations.NewUpdateProjectGithubOrganizationConfigOK()
 		})
 }

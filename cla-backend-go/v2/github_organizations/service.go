@@ -4,12 +4,13 @@
 package github_organizations
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
-	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
-	"github.com/labstack/gommon/log"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
@@ -39,10 +40,10 @@ func v2GithubOrgnizationModel(in *v1Models.GithubOrganization) (*models.GithubOr
 
 // Service contains functions of GithubOrganizations service
 type Service interface {
-	GetGithubOrganizations(projectSFID string) (*models.ProjectGithubOrganizations, error)
-	AddGithubOrganization(projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
-	DeleteGithubOrganization(projectSFID string, githubOrgName string) error
-	UpdateGithubOrganization(projectSFID string, organizationName string, autoEnabled bool) error
+	GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.ProjectGithubOrganizations, error)
+	AddGithubOrganization(ctx context.Context, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
+	DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error
+	UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, branchProtectionEnabled bool) error
 }
 
 type service struct {
@@ -69,14 +70,14 @@ const (
 	NoConnection = "no_connection"
 )
 
-func (s service) GetGithubOrganizations(projectSFID string) (*models.ProjectGithubOrganizations, error) {
+func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.ProjectGithubOrganizations, error) {
 	psc := v2ProjectService.GetClient()
 	_, err := psc.GetProject(projectSFID)
 	if err != nil {
 		return nil, err
 	}
 
-	orgs, err := s.repo.GetGithubOrganizations("", projectSFID)
+	orgs, err := s.repo.GetGithubOrganizations(ctx, "", projectSFID)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +117,7 @@ func (s service) GetGithubOrganizations(projectSFID string) (*models.ProjectGith
 			}
 		}
 	}
-	repos, err := s.ghRepository.ListProjectRepositories("", projectSFID, true)
+	repos, err := s.ghRepository.ListProjectRepositories(ctx, "", projectSFID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +173,7 @@ func (s service) GetGithubOrganizations(projectSFID string) (*models.ProjectGith
 	return out, nil
 }
 
-func (s service) AddGithubOrganization(projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
+func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
 	var in v1Models.CreateGithubOrganization
 	err := copier.Copy(&in, input)
 	if err != nil {
@@ -189,26 +190,26 @@ func (s service) AddGithubOrganization(projectSFID string, input *models.CreateG
 	} else {
 		externalProjectID = project.Parent
 	}
-	resp, err := s.repo.AddGithubOrganization(externalProjectID, projectSFID, &in)
+	resp, err := s.repo.AddGithubOrganization(ctx, externalProjectID, projectSFID, &in)
 	if err != nil {
 		return nil, err
 	}
 	return v2GithubOrgnizationModel(resp)
 }
 
-func (s service) DeleteGithubOrganization(projectSFID string, githubOrgName string) error {
+func (s service) DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error {
 	psc := v2ProjectService.GetClient()
 	_, projecterr := psc.GetProject(projectSFID)
 	if projecterr != nil {
 		return projecterr
 	}
-	err := s.ghRepository.DisableRepositoriesOfGithubOrganization(projectSFID, githubOrgName)
+	err := s.ghRepository.DisableRepositoriesOfGithubOrganization(ctx, projectSFID, githubOrgName)
 	if err != nil {
 		return err
 	}
-	return s.repo.DeleteGithubOrganization("", projectSFID, githubOrgName)
+	return s.repo.DeleteGithubOrganization(ctx, "", projectSFID, githubOrgName)
 }
 
-func (s service) UpdateGithubOrganization(projectSFID string, organizationName string, autoEnabled bool) error {
-	return s.repo.UpdateGithubOrganization(projectSFID, organizationName, autoEnabled)
+func (s service) UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, branchProtectionEnabled bool) error {
+	return s.repo.UpdateGithubOrganization(ctx, projectSFID, organizationName, autoEnabled, branchProtectionEnabled)
 }
