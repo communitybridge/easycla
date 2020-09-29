@@ -113,6 +113,7 @@ func (repo *repo) CreateCLAGroup(projectModel *models.Project) (*models.Project,
 	addBooleanAttribute(input.Item, "project_icla_enabled", projectModel.ProjectICLAEnabled)
 	addBooleanAttribute(input.Item, "project_ccla_enabled", projectModel.ProjectCCLAEnabled)
 	addBooleanAttribute(input.Item, "project_ccla_requires_icla_signature", projectModel.ProjectCCLARequiresICLA)
+	addBooleanAttribute(input.Item, "project_live", projectModel.ProjectLive)
 
 	// Empty documents for now - will add the template details later
 	addListAttribute(input.Item, "project_corporate_documents", []*dynamodb.AttributeValue{})
@@ -631,6 +632,7 @@ func (repo *repo) UpdateCLAGroup(projectModel *models.Project) (*models.Project,
 		"ProjectICLAEnabled":      projectModel.ProjectICLAEnabled,
 		"ProjectCCLAEnabled":      projectModel.ProjectCCLAEnabled,
 		"ProjectCCLARequiresICLA": projectModel.ProjectCCLARequiresICLA,
+		"ProjectLive":             projectModel.ProjectLive,
 		"tableName":               repo.claGroupTable}
 	log.WithFields(f).Debugf("updating CLA Group")
 
@@ -691,6 +693,11 @@ func (repo *repo) UpdateCLAGroup(projectModel *models.Project) (*models.Project,
 	expressionAttributeNames["#CI"] = aws.String("project_ccla_requires_icla_signature")
 	expressionAttributeValues[":ci"] = &dynamodb.AttributeValue{BOOL: aws.Bool(projectModel.ProjectCCLARequiresICLA)}
 	updateExpression = updateExpression + " #CI = :ci, "
+
+	log.WithFields(f).Debugf("adding project_live: %t", projectModel.ProjectLive)
+	expressionAttributeNames["#PL"] = aws.String("project_live")
+	expressionAttributeValues[":pl"] = &dynamodb.AttributeValue{BOOL: aws.Bool(projectModel.ProjectLive)}
+	updateExpression = updateExpression + " #PL = :pl, "
 
 	_, currentTimeString := utils.CurrentTime()
 	log.WithFields(f).Debugf("adding date_modified: %s", currentTimeString)
@@ -829,86 +836,14 @@ func (repo *repo) buildCLAGroupModel(dbModel DBProjectModel, loadRepoDetails boo
 		ProjectCCLAEnabled:           dbModel.ProjectCclaEnabled,
 		ProjectICLAEnabled:           dbModel.ProjectIclaEnabled,
 		ProjectCCLARequiresICLA:      dbModel.ProjectCclaRequiresIclaSignature,
-		ProjectCorporateDocuments:    repo.buildCLAGroupDocumentModels(dbModel.ProjectCorporateDocuments),
-		ProjectIndividualDocuments:   repo.buildCLAGroupDocumentModels(dbModel.ProjectIndividualDocuments),
-		ProjectMemberDocuments:       repo.buildCLAGroupDocumentModels(dbModel.ProjectMemberDocuments),
+		ProjectLive:                  dbModel.ProjectLive,
+		ProjectCorporateDocuments:    buildCLAGroupDocumentModels(dbModel.ProjectCorporateDocuments),
+		ProjectIndividualDocuments:   buildCLAGroupDocumentModels(dbModel.ProjectIndividualDocuments),
+		ProjectMemberDocuments:       buildCLAGroupDocumentModels(dbModel.ProjectMemberDocuments),
 		GithubRepositories:           ghOrgs,
 		Gerrits:                      gerrits,
 		DateCreated:                  dbModel.DateCreated,
 		DateModified:                 dbModel.DateModified,
 		Version:                      dbModel.Version,
 	}
-}
-
-// buildCLAGroupDocumentModels builds response models based on the array of db models
-func (repo *repo) buildCLAGroupDocumentModels(dbDocumentModels []DBProjectDocumentModel) []models.ProjectDocument {
-	if dbDocumentModels == nil {
-		return nil
-	}
-
-	// Response model
-	var response []models.ProjectDocument
-
-	for _, dbDocumentModel := range dbDocumentModels {
-		response = append(response, models.ProjectDocument{
-			DocumentName:            dbDocumentModel.DocumentName,
-			DocumentAuthorName:      dbDocumentModel.DocumentAuthorName,
-			DocumentContentType:     dbDocumentModel.DocumentContentType,
-			DocumentFileID:          dbDocumentModel.DocumentFileID,
-			DocumentLegalEntityName: dbDocumentModel.DocumentLegalEntityName,
-			DocumentPreamble:        dbDocumentModel.DocumentPreamble,
-			DocumentS3URL:           dbDocumentModel.DocumentS3URL,
-			DocumentMajorVersion:    dbDocumentModel.DocumentMajorVersion,
-			DocumentMinorVersion:    dbDocumentModel.DocumentMinorVersion,
-			DocumentCreationDate:    dbDocumentModel.DocumentCreationDate,
-		})
-	}
-
-	return response
-}
-
-// buildProject is a helper function to build a common set of projection/columns for the query
-func buildProjection() expression.ProjectionBuilder {
-	// These are the columns we want returned
-	return expression.NamesList(
-		expression.Name("project_id"),
-		expression.Name("foundation_sfid"),
-		expression.Name("root_project_repositories_count"),
-		expression.Name("project_external_id"),
-		expression.Name("project_name"),
-		expression.Name("project_name_lower"),
-		expression.Name("project_description"),
-		expression.Name("project_acl"),
-		expression.Name("project_ccla_enabled"),
-		expression.Name("project_icla_enabled"),
-		expression.Name("project_ccla_requires_icla_signature"),
-		expression.Name("project_corporate_documents"),
-		expression.Name("project_individual_documents"),
-		expression.Name("project_member_documents"),
-		expression.Name("date_created"),
-		expression.Name("date_modified"),
-		expression.Name("version"),
-	)
-}
-
-// addStringAttribute adds a new string attribute to the existing map
-func addStringAttribute(item map[string]*dynamodb.AttributeValue, key string, value string) {
-	if value != "" {
-		item[key] = &dynamodb.AttributeValue{S: aws.String(value)}
-	}
-}
-
-// addBooleanAttribute adds a new boolean attribute to the existing map
-func addBooleanAttribute(item map[string]*dynamodb.AttributeValue, key string, value bool) {
-	item[key] = &dynamodb.AttributeValue{BOOL: aws.Bool(value)}
-}
-
-// addStringSliceAttribute adds a new string slice attribute to the existing map
-func addStringSliceAttribute(item map[string]*dynamodb.AttributeValue, key string, value []string) {
-	item[key] = &dynamodb.AttributeValue{SS: aws.StringSlice(value)}
-}
-
-// addListAttribute adds a list to the existing map
-func addListAttribute(item map[string]*dynamodb.AttributeValue, key string, value []*dynamodb.AttributeValue) {
-	item[key] = &dynamodb.AttributeValue{L: value}
 }
