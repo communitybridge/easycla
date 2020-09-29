@@ -83,7 +83,9 @@ cla-frontend-contributor-console/src/config/cla-env-config.json
 cla-frontend-corporate-console/src/config/cla-env-config.json
 cla-frontend-project-console/src/config/cla-env-config.json
 cla-next/src/config/cla-env-config.json
+cla-landing-page/src/app/config/cla-env-config.json
 cla-frontend-project-console/.serverless/
+cla-landing-page/node_modules/
 cla-frontend-project-console/edge/node_modules/
 cla-frontend-project-console/node_modules/
 cla-frontend-corporate-console/.serverless/
