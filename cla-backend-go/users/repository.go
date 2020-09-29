@@ -259,11 +259,32 @@ func (repo repository) Save(user *models.UserUpdate) (*models.User, error) {
 		updateExpression = updateExpression + " #E = :e, "
 	}
 
+	if user.UserExternalID != "" && oldUserModel.UserExternalID != user.UserExternalID {
+		log.WithFields(f).Debugf("building query - adding user_external_id: %s", user.UserExternalID)
+		expressionAttributeNames["#UE"] = aws.String("user_external_id")
+		expressionAttributeValues[":ue"] = &dynamodb.AttributeValue{S: aws.String(user.UserExternalID)}
+		updateExpression = updateExpression + " #UE = :ue, "
+	}
+
+	if user.Emails != nil {
+		log.WithFields(f).Debugf("building query - adding user_emails: %v", user.Emails)
+		expressionAttributeNames["#UES"] = aws.String("user_emails")
+		expressionAttributeValues[":ues"] = &dynamodb.AttributeValue{SS: aws.StringSlice(user.Emails)}
+		updateExpression = updateExpression + " #UES = :ues, "
+	}
+
 	if user.LfUsername != "" && oldUserModel.LfUsername != user.LfUsername {
 		log.WithFields(f).Debugf("building query - adding lf_username: %s", user.LfUsername)
 		expressionAttributeNames["#U"] = aws.String("lf_username")
 		expressionAttributeValues[":u"] = &dynamodb.AttributeValue{S: aws.String(user.LfUsername)}
 		updateExpression = updateExpression + " #U = :u, "
+	}
+
+	if user.Username != "" && oldUserModel.Username != user.Username {
+		log.WithFields(f).Debugf("building query - adding user_name: %s", user.Username)
+		expressionAttributeNames["#N"] = aws.String("user_name")
+		expressionAttributeValues[":n"] = &dynamodb.AttributeValue{S: aws.String(user.Username)}
+		updateExpression = updateExpression + " #N = :n, "
 	}
 
 	if user.CompanyID != "" && oldUserModel.CompanyID != user.CompanyID {
