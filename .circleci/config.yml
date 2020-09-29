@@ -192,6 +192,8 @@ jobs:
             make build-zipbuilder-lambda-linux
             echo "Building Functional Tests..."
             make build-functional-tests-linux
+            echo "Building User Subscribe..."
+            make build-user-subscribe-lambda-linux
       - run:
           name: Test
           command: |
@@ -215,6 +217,7 @@ jobs:
             - cla-backend-go/zipbuilder-scheduler-lambda
             - cla-backend-go/zipbuilder-lambda
             - cla-backend-go/functional-tests
+            - cla-backend-go/user-subscribe-lambda
 
   buildGoBackendDev:
     <<: *buildGoBackendAnchor
@@ -320,11 +323,13 @@ jobs:
             # --------------------------------------------------------------
 
             cp ~/cla-backend-go/backend-aws-lambda ~/project/cla-backend-go/
+            cp ~/cla-backend-go/user-subscribe-lambda ~/project/cla-backend-go/
             echo "Directory: ~/project/cla-backend-go/"
             ls -alF ~/project/cla-backend-go/
             pushd ~/project/cla-backend-go
             echo "Directory: $(pwd)"
             if [[ ! -f backend-aws-lambda ]]; then echo "Missing backend-aws-lambda binary file. Exiting..."; exit 1; fi
+            if [[ ! -f user-subscribe-lambda ]]; then echo "Missing user-subscribe-lambda binary file. Exiting..."; exit 1; fi
             yarn install
 
             # Deploy to us-east-2
