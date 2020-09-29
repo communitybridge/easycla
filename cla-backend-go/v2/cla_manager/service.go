@@ -156,15 +156,6 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 	}
 	// GetSF Org
 	orgClient := v2OrgService.GetClient()
-	organizationSF, orgErr := orgClient.GetOrganization(params.CompanySFID)
-	if orgErr != nil {
-		msg := buildErrorMessage("organization service lookup error", claGroupID, params, orgErr)
-		log.WithFields(f).Warn(msg)
-		return nil, &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
 	acsClient := v2AcsService.GetClient()
 	user, userErr := userServiceClient.SearchUserByEmail(params.Body.UserEmail.String())
 
@@ -178,18 +169,8 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 	}
 
 	if userErr != nil {
-		designeeName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
-		designeeEmail := params.Body.UserEmail.String()
-		msg := fmt.Sprintf("User does not have an LF Login account and has been sent an email invite: %s.", *params.Body.UserEmail)
+		msg := fmt.Sprintf("User does not have an LF Login account %s.", *params.Body.UserEmail)
 		log.WithFields(f).Warn(msg)
-		sendEmailErr := sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, *managerUser.Emails[0].EmailAddress, designeeName, designeeEmail, organizationSF.ID, &params.ProjectSFID, utils.CLAManagerRole)
-		if sendEmailErr != nil {
-			emailMessage := fmt.Sprintf("Failed to send email to user : %s ", designeeEmail)
-			return nil, &models.ErrorResponse{
-				Message: emailMessage,
-				Code:    "400",
-			}
-		}
 		return nil, &models.ErrorResponse{
 			Message: ErrNoLFID.Error(),
 			Code:    "202",
