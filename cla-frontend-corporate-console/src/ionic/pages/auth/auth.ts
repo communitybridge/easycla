@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
+import { NavParams } from 'ionic-angular';
 import { NavController } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
 import { RolesService } from '../../services/roles.service';
@@ -19,9 +20,10 @@ import { RolesService } from '../../services/roles.service';
 export class AuthPage {
   userRoles: any;
 
-  constructor(public navCtrl: NavController, public authService: AuthService, public rolesService: RolesService) {}
+  constructor(public navCtrl: NavController,public navParams: NavParams, public authService: AuthService, public rolesService: RolesService) {}
 
   ionViewDidEnter() {
+    console.log('token '+this.navParams.get('idToken'))
     setTimeout(() => {
       this.rolesService
         .getUserRolesPromise()

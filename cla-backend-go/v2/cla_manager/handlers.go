@@ -277,7 +277,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		}
 
 		claManagerDesignee, err := service.CreateCLAManagerRequest(ctx, params.Body.ContactAdmin, params.CompanySFID, params.ProjectSFID, params.Body.UserEmail.String(),
-			params.Body.FullName, authUser, LfxPortalURL)
+			*params.Body.FullName, authUser, LfxPortalURL)
 
 		if err != nil {
 			statusCode := buildErrorStatusCode(err)
@@ -289,7 +289,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 					})
 			}
 			if statusCode == Conflict {
-				msg := fmt.Sprintf("User %s already has role scope assigned ", params.Body.FullName)
+				msg := fmt.Sprintf("User %s already has role scope assigned ", *params.Body.FullName)
 				return cla_manager.NewCreateCLAManagerRequestConflict().WithXRequestID(reqID).WithPayload(
 					&models.ErrorResponse{
 						Message: msg,
