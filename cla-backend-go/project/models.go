@@ -18,6 +18,7 @@ type DBProjectModel struct {
 	ProjectCclaEnabled               bool                     `dynamodbav:"project_ccla_enabled"`
 	ProjectCclaRequiresIclaSignature bool                     `dynamodbav:"project_ccla_requires_icla_signature"`
 	ProjectIclaEnabled               bool                     `dynamodbav:"project_icla_enabled"`
+	ProjectLive                      bool                     `dynamodbav:"project_live"`
 	ProjectCorporateDocuments        []DBProjectDocumentModel `dynamodbav:"project_corporate_documents"`
 	ProjectIndividualDocuments       []DBProjectDocumentModel `dynamodbav:"project_individual_documents"`
 	ProjectMemberDocuments           []DBProjectDocumentModel `dynamodbav:"project_member_documents"`
