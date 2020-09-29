@@ -931,6 +931,7 @@ class ProjectModel(BaseModel):
     project_icla_enabled = BooleanAttribute(default=True)
     project_ccla_enabled = BooleanAttribute(default=True)
     project_ccla_requires_icla_signature = BooleanAttribute(default=False)
+    project_live = BooleanAttribute(default=False)
     foundation_sfid = UnicodeAttribute(null=True)
     root_project_repositories_count = NumberAttribute(null=True)
     # Indexes
@@ -959,6 +960,7 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
             project_ccla_enabled=True,
             project_ccla_requires_icla_signature=False,
             project_acl=None,
+            project_live=False,
     ):
         super(Project).__init__()
         self.model = ProjectModel()
@@ -970,6 +972,7 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
         self.model.project_ccla_enabled = project_ccla_enabled
         self.model.project_ccla_requires_icla_signature = project_ccla_requires_icla_signature
         self.model.project_acl = project_acl
+        self.model.project_live = project_live
 
     def __str__(self):
         return (
@@ -981,6 +984,7 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
             f"project_icla_enabled: {self.model.project_icla_enabled}, "
             f"project_ccla_enabled: {self.model.project_ccla_enabled}, "
             f"project_ccla_requires_icla_signature: {self.model.project_ccla_requires_icla_signature}, "
+            f"project_live: {self.model.project_live}, "
             f"project_acl: {self.model.project_acl}, "
             f"root_project_repositories_count: {self.model.root_project_repositories_count}, "
             f"date_created: {self.model.date_created}, "
@@ -1060,6 +1064,9 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def get_project_ccla_enabled(self):
         return self.model.project_ccla_enabled
+
+    def get_project_live(self):
+        return self.model.project_live
 
     def get_project_individual_documents(self):
         documents = []
@@ -1188,6 +1195,9 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
 
     def set_project_ccla_enabled(self, project_ccla_enabled):
         self.model.project_ccla_enabled = project_ccla_enabled
+
+    def set_project_live(self, project_live):
+        self.model.project_live = project_live
 
     def add_project_individual_document(self, document):
         self.model.project_individual_documents.append(document.model)
