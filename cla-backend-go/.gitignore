@@ -7,6 +7,10 @@ cla-mac
 backend-aws-lambda
 backend-aws-lambda-mac
 backend-aws-lambda-linux
+user-subscribe-lambda
+user-subscribe-lambda-mac
+build-user-subscribe-lambda-linux
+build-user-subscribe-lambda-mac
 metrics-aws-lambda
 metrics-aws-lambda-mac
 functional-tests

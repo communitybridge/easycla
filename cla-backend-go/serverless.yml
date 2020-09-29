@@ -33,6 +33,7 @@ custom:
   prune:
     automatic: true
     number: 3
+  userEventsSNSTopicARN: arn:aws:sns:${self:provider.region}:#{AWS::AccountId}:userservice-triggers-${self:provider.stage}-user-sns-topic
 
 provider:
   name: aws
@@ -284,3 +285,17 @@ functions:
       individually: true
       include:
         - ./backend-aws-lambda
+
+  easyClaUserSubscribe:
+    name: easy-cla-user-subscribe
+    runtime: go1.x
+    description: Update easycla user data to user object in dynamodb
+    handler: user-subscribe-lambda
+    package:
+      individually: true
+      include:
+        - ./userSubscribeLambda
+    reservedConcurrency: 5
+    events:
+      - sns:
+          arn: ${self:custom.userEventsSNSTopicARN}
