@@ -90,6 +90,7 @@ func init() {
 	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	project_service.InitClient(configFile.APIGatewayURL)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
+	repositoriesService := repositories.NewService(repositoriesRepo, githubOrganizationsRepo, projectClaGroupRepo)
 
 	// Services
 	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo, projectClaGroupRepo)
@@ -115,6 +116,7 @@ func init() {
 		projectRepo,
 		projectService,
 		githubOrganizationsService,
+		repositoriesService,
 		claManagerRequestsRepo,
 		approvalListRequestsRepo)
 }

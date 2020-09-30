@@ -32,6 +32,7 @@ const (
 	SFDCRepositoryIndex                        = "sfdc-repository-index"
 	ExternalRepositoryIndex                    = "external-repository-index"
 	ProjectSFIDRepositoryOrganizationNameIndex = "project-sfid-repository-organization-name-index"
+	RepositoryOrganizationNameIndex            = "repository-organization-name-index"
 )
 
 // errors
@@ -48,6 +49,7 @@ type Repository interface {
 	DisableRepositoriesOfGithubOrganization(ctx context.Context, externalProjectID, githubOrgName string) error
 	GetRepository(ctx context.Context, repositoryID string) (*models.GithubRepository, error)
 	GetRepositoriesByCLAGroup(ctx context.Context, claGroup string, enabled bool) ([]*models.GithubRepository, error)
+	GetRepositoriesByOrganizationName(ctx context.Context, gitHubOrgName string) ([]*models.GithubRepository, error)
 	GetCLAGroupRepositoriesGroupByOrgs(ctx context.Context, projectID string, enabled bool) ([]*models.GithubRepositoriesGroupByOrgs, error)
 	ListProjectRepositories(ctx context.Context, externalProjectID string, projectSFID string, enabled bool) (*models.ListGithubRepositories, error)
 }
@@ -253,6 +255,54 @@ func (repo *repo) GetRepositoriesByCLAGroup(ctx context.Context, claGroupID stri
 	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &repositories)
 	if err != nil {
 		log.WithFields(f).Warnf("problem unmarshalling response, error: %+v", err)
+		return nil, err
+	}
+
+	return convertModels(repositories), nil
+}
+
+func (repo *repo) GetRepositoriesByOrganizationName(ctx context.Context, gitHubOrgName string) ([]*models.GithubRepository, error) {
+	f := logrus.Fields{
+		"functionName":   "GetRepositoriesByOrganizationName",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"gitHubOrgName":  gitHubOrgName,
+	}
+
+	builder := expression.NewBuilder()
+	condition := expression.Key("repository_organization_name").Equal(expression.Value(gitHubOrgName))
+	builder = builder.WithKeyCondition(condition)
+
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(repo.repositoryTableName),
+		IndexName:                 aws.String(RepositoryOrganizationNameIndex),
+	}
+
+	log.WithFields(f).Debug("querying repositories table by github organization name")
+	results, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.WithFields(f).Warnf("unable to get github repositories by organization name. error: %+v", err)
+		return nil, err
+	}
+
+	if len(results.Items) == 0 {
+		log.WithFields(f).Warn("no repositories found matching the search criteria")
+		return nil, ErrGithubRepositoryNotFound
+	}
+
+	var repositories []*RepositoryDBModel
+	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &repositories)
+	if err != nil {
+		log.WithFields(f).Warnf("problem unmarshalling repository response, error: %+v", err)
 		return nil, err
 	}
 

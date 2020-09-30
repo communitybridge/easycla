@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/repositories"
+
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
 
 	"github.com/communitybridge/easycla/cla-backend-go/approval_list"
@@ -50,6 +52,7 @@ type service struct {
 	projectRepo              project.ProjectRepository
 	projectService           project.Service
 	githubOrgService         github_organizations.Service
+	repositoryService        repositories.Service
 	claManagerRequestsRepo   cla_manager.IRepository
 	approvalListRequestsRepo approval_list.IRepository
 }
@@ -68,12 +71,14 @@ func NewService(stage string,
 	projectRepo project.ProjectRepository,
 	projService project.Service,
 	githubOrgService github_organizations.Service,
+	repositoryService repositories.Service,
 	claManagerRequestsRepo cla_manager.IRepository,
 	approvalListRequestsRepo approval_list.IRepository) Service {
 
 	signaturesTable := fmt.Sprintf("cla-%s-signatures", stage)
 	eventsTable := fmt.Sprintf("cla-%s-events", stage)
 	projectsCLAGroupsTable := fmt.Sprintf("cla-%s-projects-cla-groups", stage)
+	githubOrgTableName := fmt.Sprintf("cla-%s-github-orgs", stage)
 	repositoryTableName := fmt.Sprintf("cla-%s-repositories", stage)
 	claGroupsTable := fmt.Sprintf("cla-%s-projects", stage)
 
@@ -103,6 +108,9 @@ func NewService(stage string,
 
 	// Remove any lingering CLA Permissions for the specified project which was unenrolled/disabled
 	s.registerCallback(projectsCLAGroupsTable, Remove, s.RemoveCLAPermissions)
+
+	// GitHub organization table modified event
+	s.registerCallback(githubOrgTableName, Modify, s.GitHubOrgUpdatedEvent)
 
 	s.registerCallback(repositoryTableName, Insert, s.GithubRepoAddedEvent)
 	s.registerCallback(repositoryTableName, Remove, s.GithubRepoDeletedEvent)
