@@ -370,6 +370,16 @@ functions:
       include:
         - ./dynamo-events-lambda
 
+  dynamo-github-orgs-events-lambda:
+    handler: dynamo-events-lambda
+    name: ${self:service}-${opt:stage, self:provider.stage, 'dev'}-dynamo-github-orgs-events-lambda
+    description: "EasyCLA DynamoDB stream events handler for cla-<stage>-github-orgs the table"
+    runtime: go1.x
+    package:
+      individually: true
+      include:
+        - ./dynamo-events-lambda
+
   saveMetrics:
     description: "EasyCLA Save Metrics API handler"
     runtime: go1.x
