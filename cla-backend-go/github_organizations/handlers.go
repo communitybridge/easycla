@@ -4,11 +4,14 @@
 package github_organizations
 
 import (
+	"context"
+
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/github_organizations"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -16,7 +19,9 @@ import (
 func Configure(api *operations.ClaAPI, service Service, eventService events.Service) {
 	api.GithubOrganizationsGetProjectGithubOrganizationsHandler = github_organizations.GetProjectGithubOrganizationsHandlerFunc(
 		func(params github_organizations.GetProjectGithubOrganizationsParams, claUser *user.CLAUser) middleware.Responder {
-			result, err := service.GetGithubOrganizations(params.ProjectSFID)
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			result, err := service.GetGithubOrganizations(ctx, params.ProjectSFID)
 			if err != nil {
 				return github_organizations.NewGetProjectGithubOrganizationsBadRequest().WithPayload(errorResponse(err))
 			}
@@ -25,7 +30,9 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 
 	api.GithubOrganizationsAddProjectGithubOrganizationHandler = github_organizations.AddProjectGithubOrganizationHandlerFunc(
 		func(params github_organizations.AddProjectGithubOrganizationParams, claUser *user.CLAUser) middleware.Responder {
-			result, err := service.AddGithubOrganization(params.ProjectSFID, params.Body)
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			result, err := service.AddGithubOrganization(ctx, params.ProjectSFID, params.Body)
 			if err != nil {
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
@@ -55,7 +62,9 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 
 	api.GithubOrganizationsDeleteProjectGithubOrganizationHandler = github_organizations.DeleteProjectGithubOrganizationHandlerFunc(
 		func(params github_organizations.DeleteProjectGithubOrganizationParams, claUser *user.CLAUser) middleware.Responder {
-			err := service.DeleteGithubOrganization(params.ProjectSFID, params.OrgName)
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			err := service.DeleteGithubOrganization(ctx, params.ProjectSFID, params.OrgName)
 			if err != nil {
 				return github_organizations.NewDeleteProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
@@ -73,6 +82,8 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 
 	api.GithubOrganizationsUpdateProjectGithubOrganizationConfigHandler = github_organizations.UpdateProjectGithubOrganizationConfigHandlerFunc(
 		func(params github_organizations.UpdateProjectGithubOrganizationConfigParams, claUser *user.CLAUser) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			if params.Body.AutoEnabled == nil {
 				return github_organizations.NewUpdateProjectGithubOrganizationConfigBadRequest().WithPayload(&models.ErrorResponse{
 					Code:    "400",
@@ -80,7 +91,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 				})
 			}
 
-			err := service.UpdateGithubOrganization(params.ProjectSFID, params.OrgName, *params.Body.AutoEnabled)
+			err := service.UpdateGithubOrganization(ctx, params.ProjectSFID, params.OrgName, *params.Body.AutoEnabled, params.Body.BranchProtectionEnabled)
 			if err != nil {
 				return github_organizations.NewUpdateProjectGithubOrganizationConfigBadRequest().WithPayload(errorResponse(err))
 			}

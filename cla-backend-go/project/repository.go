@@ -4,6 +4,7 @@
 package project
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -44,18 +45,18 @@ const (
 
 // ProjectRepository defines functions of Project repository
 type ProjectRepository interface { //nolint
-	CreateCLAGroup(project *models.Project) (*models.Project, error)
-	GetCLAGroupByID(projectID string, loadRepoDetails bool) (*models.Project, error)
-	GetCLAGroupsByExternalID(params *project.GetProjectsByExternalIDParams, loadRepoDetails bool) (*models.Projects, error)
-	GetCLAGroupByName(projectName string) (*models.Project, error)
-	GetExternalCLAGroup(projectExternalID string) (*models.Project, error)
-	GetCLAGroups(params *project.GetProjectsParams) (*models.Projects, error)
-	DeleteCLAGroup(projectID string) error
-	UpdateCLAGroup(projectModel *models.Project) (*models.Project, error)
+	CreateCLAGroup(ctx context.Context, project *models.Project) (*models.Project, error)
+	GetCLAGroupByID(ctx context.Context, projectID string, loadRepoDetails bool) (*models.Project, error)
+	GetCLAGroupsByExternalID(ctx context.Context, params *project.GetProjectsByExternalIDParams, loadRepoDetails bool) (*models.Projects, error)
+	GetCLAGroupByName(ctx context.Context, projectName string) (*models.Project, error)
+	GetExternalCLAGroup(ctx context.Context, projectExternalID string) (*models.Project, error)
+	GetCLAGroups(ctx context.Context, params *project.GetProjectsParams) (*models.Projects, error)
+	DeleteCLAGroup(ctx context.Context, projectID string) error
+	UpdateCLAGroup(ctx context.Context, projectModel *models.Project) (*models.Project, error)
 
-	GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error)
-	GetClaGroupByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Project, error)
-	UpdateRootCLAGroupRepositoriesCount(claGroupID string, diff int64) error
+	GetClaGroupsByFoundationSFID(ctx context.Context, foundationSFID string, loadRepoDetails bool) (*models.Projects, error)
+	GetClaGroupByProjectSFID(ctx context.Context, projectSFID string, loadRepoDetails bool) (*models.Project, error)
+	UpdateRootCLAGroupRepositoriesCount(ctx context.Context, claGroupID string, diff int64) error
 }
 
 // NewRepository creates instance of project repository
@@ -80,9 +81,10 @@ type repo struct {
 }
 
 // CreateCLAGroup creates a new project
-func (repo *repo) CreateCLAGroup(projectModel *models.Project) (*models.Project, error) {
+func (repo *repo) CreateCLAGroup(ctx context.Context, projectModel *models.Project) (*models.Project, error) {
 	f := logrus.Fields{
 		"function":          "CreateCLAGroup",
+		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
 		"projectName":       projectModel.ProjectName,
 		"projectExternalID": projectModel.ProjectExternalID,
 		"foundationSFID":    projectModel.FoundationSFID,
@@ -142,9 +144,10 @@ func (repo *repo) CreateCLAGroup(projectModel *models.Project) (*models.Project,
 	return projectModel, nil
 }
 
-func (repo *repo) getCLAGroupByID(projectID string, loadCLAGroupDetails bool) (*models.Project, error) {
+func (repo *repo) getCLAGroupByID(ctx context.Context, projectID string, loadCLAGroupDetails bool) (*models.Project, error) {
 	f := logrus.Fields{
 		"function":           "getCLAGroupByID",
+		utils.XREQUESTID:     ctx.Value(utils.XREQUESTID),
 		"projectID":          projectID,
 		"loadProjectDetails": loadCLAGroupDetails,
 		"tableName":          repo.claGroupTable}
@@ -187,18 +190,19 @@ func (repo *repo) getCLAGroupByID(projectID string, loadCLAGroupDetails bool) (*
 	}
 
 	// Convert the database model to an API response model
-	return repo.buildCLAGroupModel(dbModel, loadCLAGroupDetails), nil
+	return repo.buildCLAGroupModel(ctx, dbModel, loadCLAGroupDetails), nil
 }
 
 // GetCLAGroupByID returns the project model associated for the specified projectID
-func (repo *repo) GetCLAGroupByID(projectID string, loadRepoDetails bool) (*models.Project, error) {
-	return repo.getCLAGroupByID(projectID, loadRepoDetails)
+func (repo *repo) GetCLAGroupByID(ctx context.Context, projectID string, loadRepoDetails bool) (*models.Project, error) {
+	return repo.getCLAGroupByID(ctx, projectID, loadRepoDetails)
 }
 
 // GetCLAGroupsByExternalID queries the database and returns a list of the projects
-func (repo *repo) GetCLAGroupsByExternalID(params *project.GetProjectsByExternalIDParams, loadRepoDetails bool) (*models.Projects, error) {
+func (repo *repo) GetCLAGroupsByExternalID(ctx context.Context, params *project.GetProjectsByExternalIDParams, loadRepoDetails bool) (*models.Projects, error) {
 	f := logrus.Fields{
 		"functionName":    "GetCLAGroupsByExternalID",
+		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
 		"ProjectSFID":     params.ProjectSFID,
 		"NextKey":         params.NextKey,
 		"PageSize":        params.PageSize,
@@ -260,7 +264,7 @@ func (repo *repo) GetCLAGroupsByExternalID(params *project.GetProjectsByExternal
 		}
 
 		// Convert the list of DB models to a list of response models
-		projectList, modelErr := repo.buildCLAGroupModels(results.Items, loadRepoDetails)
+		projectList, modelErr := repo.buildCLAGroupModels(ctx, results.Items, loadRepoDetails)
 		if modelErr != nil {
 			log.WithFields(f).Warnf("error converting project DB model to response model, error: %v",
 				modelErr)
@@ -295,9 +299,10 @@ func (repo *repo) GetCLAGroupsByExternalID(params *project.GetProjectsByExternal
 }
 
 // GetClaGroupsByFoundationID queries the database and returns a list of all cla_groups associated with foundation
-func (repo *repo) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDetails bool) (*models.Projects, error) {
+func (repo *repo) GetClaGroupsByFoundationSFID(ctx context.Context, foundationSFID string, loadRepoDetails bool) (*models.Projects, error) {
 	f := logrus.Fields{
 		"functionName":    "GetClaGroupsByFoundationSFID",
+		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
 		"foundationSFID":  foundationSFID,
 		"loadRepoDetails": loadRepoDetails,
 		"tableName":       repo.claGroupTable}
@@ -331,7 +336,7 @@ func (repo *repo) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDe
 		}
 
 		// Convert the list of DB models to a list of response models
-		projectList, modelErr := repo.buildCLAGroupModels(results.Items, loadRepoDetails)
+		projectList, modelErr := repo.buildCLAGroupModels(ctx, results.Items, loadRepoDetails)
 		if modelErr != nil {
 			log.WithFields(f).Warnf("error converting project DB model to response model, error: %v",
 				modelErr)
@@ -355,9 +360,10 @@ func (repo *repo) GetClaGroupsByFoundationSFID(foundationSFID string, loadRepoDe
 }
 
 // GetClaGroupsByProjectSFID returns cla_group associated with project
-func (repo *repo) GetClaGroupByProjectSFID(projectSFID string, loadRepoDetails bool) (*models.Project, error) {
+func (repo *repo) GetClaGroupByProjectSFID(ctx context.Context, projectSFID string, loadRepoDetails bool) (*models.Project, error) {
 	f := logrus.Fields{
 		"functionName":    "GetClaGroupByProjectSFID",
+		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
 		"projectSFID":     projectSFID,
 		"loadRepoDetails": loadRepoDetails,
 		"tableName":       repo.claGroupTable}
@@ -369,15 +375,16 @@ func (repo *repo) GetClaGroupByProjectSFID(projectSFID string, loadRepoDetails b
 		return nil, err
 	}
 
-	return repo.getCLAGroupByID(claGroupProject.ClaGroupID, loadRepoDetails)
+	return repo.getCLAGroupByID(ctx, claGroupProject.ClaGroupID, loadRepoDetails)
 }
 
 // GetCLAGroupByName returns the project model associated for the specified project name
-func (repo *repo) GetCLAGroupByName(projectName string) (*models.Project, error) {
+func (repo *repo) GetCLAGroupByName(ctx context.Context, projectName string) (*models.Project, error) {
 	f := logrus.Fields{
-		"functionName": "GetCLAGroupByName",
-		"projectName":  projectName,
-		"tableName":    repo.claGroupTable}
+		"functionName":   "GetCLAGroupByName",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectName":    projectName,
+		"tableName":      repo.claGroupTable}
 	log.WithFields(f).Debugf("loading project")
 
 	// This is the key we want to match
@@ -428,13 +435,14 @@ func (repo *repo) GetCLAGroupByName(projectName string) (*models.Project, error)
 	}
 
 	// Convert the database model to an API response model
-	return repo.buildCLAGroupModel(dbModel, LoadRepoDetails), nil
+	return repo.buildCLAGroupModel(ctx, dbModel, LoadRepoDetails), nil
 }
 
 // GetExternalCLAGroup returns the project model associated for the specified external project ID
-func (repo *repo) GetExternalCLAGroup(projectExternalID string) (*models.Project, error) {
+func (repo *repo) GetExternalCLAGroup(ctx context.Context, projectExternalID string) (*models.Project, error) {
 	f := logrus.Fields{
 		"functionName":      "GetExternalCLAGroup",
+		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
 		"projectExternalID": projectExternalID,
 		"tableName":         repo.claGroupTable}
 	log.WithFields(f).Debugf("loading project")
@@ -484,19 +492,20 @@ func (repo *repo) GetExternalCLAGroup(projectExternalID string) (*models.Project
 	}
 
 	// Convert the database model to an API response model
-	return repo.buildCLAGroupModel(dbModel, LoadRepoDetails), nil
+	return repo.buildCLAGroupModel(ctx, dbModel, LoadRepoDetails), nil
 }
 
 // GetCLAGroups queries the database and returns a list of the projects
-func (repo *repo) GetCLAGroups(params *project.GetProjectsParams) (*models.Projects, error) {
+func (repo *repo) GetCLAGroups(ctx context.Context, params *project.GetProjectsParams) (*models.Projects, error) {
 	f := logrus.Fields{
-		"functionName": "GetCLAGroups",
-		"searchField":  params.SearchField,
-		"searchTerm":   params.SearchTerm,
-		"nextKey":      params.NextKey,
-		"pageSize":     params.PageSize,
-		"fullMatch":    params.FullMatch,
-		"tableName":    repo.claGroupTable}
+		"functionName":   "GetCLAGroups",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"searchField":    params.SearchField,
+		"searchTerm":     params.SearchTerm,
+		"nextKey":        params.NextKey,
+		"pageSize":       params.PageSize,
+		"fullMatch":      params.FullMatch,
+		"tableName":      repo.claGroupTable}
 	log.WithFields(f).Debugf("searching project")
 
 	// Use the nice builder to create the expression
@@ -550,7 +559,7 @@ func (repo *repo) GetCLAGroups(params *project.GetProjectsParams) (*models.Proje
 		}
 
 		// Convert the list of DB models to a list of response models
-		projectList, modelErr := repo.buildCLAGroupModels(results.Items, LoadRepoDetails)
+		projectList, modelErr := repo.buildCLAGroupModels(ctx, results.Items, LoadRepoDetails)
 		if modelErr != nil {
 			log.WithFields(f).Warnf("error converting project DB model to response model, error: %v",
 				modelErr)
@@ -584,14 +593,15 @@ func (repo *repo) GetCLAGroups(params *project.GetProjectsParams) (*models.Proje
 }
 
 // DeleteCLAGroup deletes the CLAGroup by projectID
-func (repo *repo) DeleteCLAGroup(projectID string) error {
+func (repo *repo) DeleteCLAGroup(ctx context.Context, projectID string) error {
 	f := logrus.Fields{
-		"functionName": "DeleteCLAGroup",
-		"projectID":    projectID,
-		"tableName":    repo.claGroupTable}
+		"functionName":   "DeleteCLAGroup",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectID":      projectID,
+		"tableName":      repo.claGroupTable}
 	log.WithFields(f).Debugf("deleting CLA Group")
 
-	existingCLAGroup, getErr := repo.GetCLAGroupByID(projectID, DontLoadRepoDetails)
+	existingCLAGroup, getErr := repo.GetCLAGroupByID(ctx, projectID, DontLoadRepoDetails)
 	if getErr != nil {
 		log.WithFields(f).Warnf("delete - error locating the CLA Group, error: %+v", getErr)
 		return getErr
@@ -622,9 +632,10 @@ func (repo *repo) DeleteCLAGroup(projectID string) error {
 }
 
 // UpdateCLAGroup updates the project by projectID
-func (repo *repo) UpdateCLAGroup(projectModel *models.Project) (*models.Project, error) {
+func (repo *repo) UpdateCLAGroup(ctx context.Context, projectModel *models.Project) (*models.Project, error) {
 	f := logrus.Fields{
 		"functionName":            "UpdateCLAGroup",
+		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
 		"ProjectID":               projectModel.ProjectID,
 		"ProjectName":             projectModel.ProjectName,
 		"FoundationSFID":          projectModel.FoundationSFID,
@@ -640,7 +651,7 @@ func (repo *repo) UpdateCLAGroup(projectModel *models.Project) (*models.Project,
 		return nil, ErrProjectIDMissing
 	}
 
-	existingCLAGroup, getErr := repo.GetCLAGroupByID(projectModel.ProjectID, DontLoadRepoDetails)
+	existingCLAGroup, getErr := repo.GetCLAGroupByID(ctx, projectModel.ProjectID, DontLoadRepoDetails)
 	if getErr != nil {
 		log.WithFields(f).Warnf("update - error locating the project id: %s, error: %+v", projectModel.ProjectID, getErr)
 		return nil, getErr
@@ -729,10 +740,17 @@ func (repo *repo) UpdateCLAGroup(projectModel *models.Project) (*models.Project,
 	// Read the updated record back from the DB and return - probably could
 	// just create/update a new model in memory and return it to make it fast,
 	// but this approach return exactly what the DB has
-	return repo.GetCLAGroupByID(projectModel.ProjectID, LoadRepoDetails)
+	return repo.GetCLAGroupByID(ctx, projectModel.ProjectID, LoadRepoDetails)
 }
 
-func (repo *repo) UpdateRootCLAGroupRepositoriesCount(claGroupID string, diff int64) error {
+func (repo *repo) UpdateRootCLAGroupRepositoriesCount(ctx context.Context, claGroupID string, diff int64) error {
+	f := logrus.Fields{
+		"functionName":   "UpdateRootCLAGroupRepositoriesCount",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"claGroupID":     claGroupID,
+		"diff":           diff,
+	}
+
 	val := strconv.FormatInt(diff, 10)
 	updateExp := "ADD root_project_repositories_count :val"
 	input := &dynamodb.UpdateItemInput{
@@ -745,13 +763,13 @@ func (repo *repo) UpdateRootCLAGroupRepositoriesCount(claGroupID string, diff in
 	}
 	_, err := repo.dynamoDBClient.UpdateItem(input)
 	if err != nil {
-		log.WithField("cla_group_id", claGroupID).Error("unable to update repositories count", err)
+		log.WithFields(f).Error("unable to update repositories count", err)
 	}
 	return err
 }
 
 // buildCLAGroupModels converts the database response model into an API response data model
-func (repo *repo) buildCLAGroupModels(results []map[string]*dynamodb.AttributeValue, loadRepoDetails bool) ([]models.Project, error) {
+func (repo *repo) buildCLAGroupModels(ctx context.Context, results []map[string]*dynamodb.AttributeValue, loadRepoDetails bool) ([]models.Project, error) {
 	var projects []models.Project
 
 	// The DB project model
@@ -770,7 +788,7 @@ func (repo *repo) buildCLAGroupModels(results []map[string]*dynamodb.AttributeVa
 	for _, dbProject := range dbProjects {
 		go func(dbProject DBProjectModel) {
 			// Send the results to the output channel
-			responseChannel <- repo.buildCLAGroupModel(dbProject, loadRepoDetails)
+			responseChannel <- repo.buildCLAGroupModel(ctx, dbProject, loadRepoDetails)
 		}(dbProject)
 	}
 
@@ -783,7 +801,7 @@ func (repo *repo) buildCLAGroupModels(results []map[string]*dynamodb.AttributeVa
 }
 
 // buildCLAGroupModel maps the database model to the API response model
-func (repo *repo) buildCLAGroupModel(dbModel DBProjectModel, loadRepoDetails bool) *models.Project {
+func (repo *repo) buildCLAGroupModel(ctx context.Context, dbModel DBProjectModel, loadRepoDetails bool) *models.Project {
 
 	var ghOrgs []*models.GithubRepositoriesGroupByOrgs
 	var gerrits []*models.Gerrit
@@ -795,7 +813,7 @@ func (repo *repo) buildCLAGroupModel(dbModel DBProjectModel, loadRepoDetails boo
 			go func() {
 				defer wg.Done()
 				var err error
-				ghOrgs, err = repo.ghRepo.GetCLAGroupRepositoriesGroupByOrgs(dbModel.ProjectID, true)
+				ghOrgs, err = repo.ghRepo.GetCLAGroupRepositoriesGroupByOrgs(ctx, dbModel.ProjectID, true)
 				if err != nil {
 					log.Warnf("buildPCLAGroupModel - unable to load GH organizations by project ID: %s, error: %+v",
 						dbModel.ProjectID, err)
