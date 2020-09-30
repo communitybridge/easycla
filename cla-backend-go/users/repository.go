@@ -34,6 +34,7 @@ type UserRepository interface {
 	Delete(userID string) error
 	GetUser(userID string) (*models.User, error)
 	GetUserByLFUserName(lfUserName string) (*models.User, error)
+	GetUserByExternalID(userExternalID string) (*models.User, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
 	GetUserByEmail(userEmail string) (*models.User, error)
 	GetUserByGitHubUsername(gitHubUsername string) (*models.User, error)
@@ -417,7 +418,6 @@ func (repo repository) GetUser(userID string) (*models.User, error) {
 
 // GetuserByLFUserName returns the user record associated with the LF Username value
 func (repo repository) GetUserByLFUserName(lfUserName string) (*models.User, error) {
-
 	// This is the key we want to match
 	condition := expression.Key("lf_username").Equal(expression.Value(lfUserName))
 
@@ -464,7 +464,56 @@ func (repo repository) GetUserByLFUserName(lfUserName string) (*models.User, err
 	}
 
 	return convertDBUserModel(dbUserModels[0]), nil
+}
 
+// GetUserByExternalID returns the user record associated with the UserExternalID value
+func (repo repository) GetUserByExternalID(userExternalID string) (*models.User, error) {
+	// This is the key we want to match
+	condition := expression.Key("user_external_id").Equal(expression.Value(userExternalID))
+
+	// These are the columns we want returned
+	projection := buildUserProjection()
+
+	// Use the nice builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(projection).Build()
+	if err != nil {
+		log.Warnf("error building expression for user_external_id : %s, error: %v", userExternalID, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(repo.tableName),
+		IndexName:                 aws.String("github-user-external-id-index"),
+	}
+
+	// Make the DynamoDB Query API call
+	result, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.Warnf("Error retrieving user by user_external_id: %s, error: %+v", userExternalID, err)
+		return nil, err
+	}
+
+	// The user model
+	var dbUserModels []DBUser
+
+	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &dbUserModels)
+	if err != nil {
+		log.Warnf("error unmarshalling user record from database for user_external_id: %s, error: %+v", userExternalID, err)
+		return nil, err
+	}
+
+	if len(dbUserModels) == 0 {
+		return nil, nil
+	} else if len(dbUserModels) > 1 {
+		log.Warnf("retrieved %d results for the getUser(id) query when we should return 0 or 1", len(dbUserModels))
+	}
+
+	return convertDBUserModel(dbUserModels[0]), nil
 }
 
 func (repo repository) GetUserByUserName(userName string, fullMatch bool) (*models.User, error) {
