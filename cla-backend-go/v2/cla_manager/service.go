@@ -925,32 +925,6 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		return nil, orgErr
 	}
 
-	// Get suggested CLA Manager user details
-	user, userErr := userService.SearchUserByEmail(userEmail)
-	if userErr != nil || (user != nil && user.Username == "") {
-		msg := fmt.Sprintf("UserEmail: %s has no LF Login and has been sent an invite email to create an account , error: %+v", userEmail, userErr)
-		log.Warn(msg)
-		// Send Email
-		var contributorEmail *string
-		if len(contributor.UserEmails) > 0 {
-			contributorEmail = &contributor.UserEmails[0]
-		} else {
-			contributorEmail = &contributor.LFEmail
-		}
-
-		// Use FoundationSFID
-		foundationSFID := projectCLAGroups[0].FoundationSFID
-		sendErr := sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, &foundationSFID, "cla-manager-designee")
-		if sendErr != nil {
-			msg := fmt.Sprintf("Problem sending email to user: %s , error: %+v", userEmail, sendErr)
-			log.Warn(msg)
-		}
-		// sendErr = sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, &foundationSFID, "company-owner")
-		// if sendErr != nil {
-		// 	return nil, sendErr
-		// }
-		return nil, ErrNoLFID
-	}
 	var projectSFs []string
 	for _, pcg := range projectCLAGroups {
 		log.WithFields(f).Debugf("Getting salesforce project by SFID: %s ", pcg.ProjectSFID)
@@ -993,6 +967,33 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 			designeeScopes = append(designeeScopes, &designeeScope)
 		}
 		return designeeScopes, nil
+	}
+
+	// Get suggested CLA Manager user details
+	user, userErr := userService.SearchUserByEmail(userEmail)
+	if userErr != nil || (user != nil && user.Username == "") {
+		msg := fmt.Sprintf("UserEmail: %s has no LF Login and has been sent an invite email to create an account , error: %+v", userEmail, userErr)
+		log.Warn(msg)
+		// Send Email
+		var contributorEmail *string
+		if len(contributor.UserEmails) > 0 {
+			contributorEmail = &contributor.UserEmails[0]
+		} else {
+			contributorEmail = &contributor.LFEmail
+		}
+
+		// Use FoundationSFID
+		foundationSFID := projectCLAGroups[0].FoundationSFID
+		sendErr := sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, &foundationSFID, "cla-manager-designee")
+		if sendErr != nil {
+			msg := fmt.Sprintf("Problem sending email to user: %s , error: %+v", userEmail, sendErr)
+			log.Warn(msg)
+		}
+		// sendErr = sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, &foundationSFID, "company-owner")
+		// if sendErr != nil {
+		// 	return nil, sendErr
+		// }
+		return nil, ErrNoLFID
 	}
 
 	if signedAtFoundation {
