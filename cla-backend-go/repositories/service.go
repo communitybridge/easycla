@@ -27,6 +27,7 @@ type Service interface {
 	GetRepository(ctx context.Context, repositoryID string) (*models.GithubRepository, error)
 	DisableRepositoriesByProjectID(ctx context.Context, projectID string) (int, error)
 	GetRepositoriesByCLAGroup(ctx context.Context, claGroupID string) ([]*models.GithubRepository, error)
+	GetRepositoriesByOrganizationName(ctx context.Context, gitHubOrgName string) ([]*models.GithubRepository, error)
 }
 
 // GithubOrgRepo provide method to get github organization by name
@@ -135,4 +136,9 @@ func (s *service) DisableRepositoriesByProjectID(ctx context.Context, projectID 
 func (s *service) GetRepositoriesByCLAGroup(ctx context.Context, claGroupID string) ([]*models.GithubRepository, error) {
 	// Return the list of github repositories that are enabled
 	return s.repo.GetRepositoriesByCLAGroup(ctx, claGroupID, true)
+}
+
+// GetRepositoriesByOrganizationName get repositories by organization name
+func (s *service) GetRepositoriesByOrganizationName(ctx context.Context, gitHubOrgName string) ([]*models.GithubRepository, error) {
+	return s.repo.GetRepositoriesByOrganizationName(ctx, gitHubOrgName)
 }

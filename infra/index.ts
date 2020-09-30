@@ -471,6 +471,13 @@ function buildRepositoriesTable(importResources: boolean): aws.dynamodb.Table {
           readCapacity: defaultReadCapacity,
           writeCapacity: defaultWriteCapacity,
         },
+        {
+          name: 'repository-organization-name-index',
+          hashKey: 'repository_organization_name',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
+        },
       ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,
