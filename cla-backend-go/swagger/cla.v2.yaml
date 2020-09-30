@@ -2255,11 +2255,13 @@ paths:
             x-nullable: false
             title: CLA Manager Designee User
             description: User object used for CLA Manager requests
+            required:
+              - fullName
             properties:
               fullName:
                 type: string
-                pattern: '^(\w+( +\w+)*)$'
-                minLength: 1
+                pattern: '^[a-zA-Z0-9_]+( [a-zA-Z0-9_]+)*$'
+                minLength: 2
                 maxLength: 60
               userEmail:
                 $ref: './common/properties/email.yaml'

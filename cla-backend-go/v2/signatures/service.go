@@ -266,22 +266,39 @@ func (s service) IsZipPresentOnS3(zipFilePath string) (bool, error) {
 }
 
 func (s service) GetClaGroupCorporateContributors(ctx context.Context, claGroupID string, companySFID *string, searchTerm *string) (*models.CorporateContributorList, error) {
+	f := logrus.Fields{
+		"functionName": "GetClaGroupCorporateContributors",
+		"claGroupID":   claGroupID,
+	}
+	if companySFID != nil {
+		f["companySFID"] = *companySFID
+	}
+	if searchTerm != nil {
+		f["searchTerm"] = *searchTerm
+	}
+
 	var companyID *string
 	if companySFID != nil {
+		log.WithFields(f).Debug("loading company by companySFID...")
 		companyModel, err := s.v1CompanyService.GetCompanyByExternalID(ctx, *companySFID)
 		if err != nil {
 			return nil, err
 		}
 		companyID = &companyModel.CompanyID
 	}
+
+	log.WithFields(f).Debug("querying CLA corporate contributors...")
 	result, err := s.v1SignatureService.GetClaGroupCorporateContributors(ctx, claGroupID, companyID, searchTerm)
 	if err != nil {
 		return nil, err
 	}
+
+	log.WithFields(f).Debug("converting to v2 response model...")
 	var resp models.CorporateContributorList
 	err = copier.Copy(&resp, result)
 	if err != nil {
 		return nil, err
 	}
+
 	return &resp, nil
 }

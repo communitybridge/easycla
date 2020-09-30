@@ -43,6 +43,10 @@ properties:
     description: Flag to indicate if the CCLA configuration also requires an ICLA
     type: boolean
     x-omitempty: false
+  projectLive:
+    description: Flag to indicate if the CLA Group is live in production. Applies to the production environment only, flag indicates if the CLA Group is being actively used by the community.
+    type: boolean
+    x-omitempty: false
   projectCorporateDocuments:
     description: Project Corporate Documents
     type: array

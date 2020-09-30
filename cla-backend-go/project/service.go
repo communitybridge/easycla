@@ -55,12 +55,12 @@ func NewService(projectRepo ProjectRepository, repositoriesRepo repositories.Rep
 
 // CreateProject service method
 func (s service) CreateCLAGroup(ctx context.Context, projectModel *models.Project) (*models.Project, error) {
-	return s.repo.CreateCLAGroup(projectModel)
+	return s.repo.CreateCLAGroup(ctx, projectModel)
 }
 
 // GetCLAGroups service method
 func (s service) GetCLAGroups(ctx context.Context, params *project.GetProjectsParams) (*models.Projects, error) {
-	return s.repo.GetCLAGroups(params)
+	return s.repo.GetCLAGroups(ctx, params)
 }
 
 // GetProjectByID service method
@@ -73,7 +73,7 @@ func (s service) GetCLAGroupByID(ctx context.Context, projectID string) (*models
 	}
 
 	log.WithFields(f).Debug("locating CLA Group by ID...")
-	project, err := s.repo.GetCLAGroupByID(projectID, LoadRepoDetails)
+	project, err := s.repo.GetCLAGroupByID(ctx, projectID, LoadRepoDetails)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (s service) GetCLAGroupsByExternalID(ctx context.Context, params *project.G
 		"NextKey":        params.NextKey,
 		"PageSize":       params.PageSize}
 	log.Debugf("Project Service Handler - GetCLAGroupsByExternalID")
-	projects, err := s.repo.GetCLAGroupsByExternalID(params, LoadRepoDetails)
+	projects, err := s.repo.GetCLAGroupsByExternalID(ctx, params, LoadRepoDetails)
 	if err != nil {
 		log.WithFields(f).Warnf("problem with query, error: %+v", err)
 		return nil, err
@@ -134,7 +134,7 @@ func (s service) GetCLAGroupsByExternalID(ctx context.Context, params *project.G
 	for i := range projects.Projects {
 		go func(project *models.Project) {
 			defer wg.Done()
-			s.fillRepoInfo(project)
+			s.fillRepoInfo(ctx, project)
 		}(&projects.Projects[i])
 	}
 	wg.Wait()
@@ -142,7 +142,7 @@ func (s service) GetCLAGroupsByExternalID(ctx context.Context, params *project.G
 	return projects, nil
 }
 
-func (s service) fillRepoInfo(project *models.Project) {
+func (s service) fillRepoInfo(ctx context.Context, project *models.Project) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 	var ghrepos []*models.GithubRepositoriesGroupByOrgs
@@ -150,7 +150,7 @@ func (s service) fillRepoInfo(project *models.Project) {
 	go func() {
 		defer wg.Done()
 		var err error
-		ghrepos, err = s.repositoriesRepo.GetCLAGroupRepositoriesGroupByOrgs(project.ProjectID, true)
+		ghrepos, err = s.repositoriesRepo.GetCLAGroupRepositoriesGroupByOrgs(ctx, project.ProjectID, true)
 		if err != nil {
 			log.Error("unable to get github repositories for project.", err)
 			return
@@ -174,29 +174,29 @@ func (s service) fillRepoInfo(project *models.Project) {
 
 // GetCLAGroupByName service method
 func (s service) GetCLAGroupByName(ctx context.Context, projectName string) (*models.Project, error) {
-	return s.repo.GetCLAGroupByName(projectName)
+	return s.repo.GetCLAGroupByName(ctx, projectName)
 }
 
 // DeleteCLAGroup service method
 func (s service) DeleteCLAGroup(ctx context.Context, projectID string) error {
-	return s.repo.DeleteCLAGroup(projectID)
+	return s.repo.DeleteCLAGroup(ctx, projectID)
 }
 
 // UpdateCLAGroup service method
 func (s service) UpdateCLAGroup(ctx context.Context, projectModel *models.Project) (*models.Project, error) {
 	// Updates to the CLA Group "projects" table will cause a DB trigger handler (separate lambda) to also update other
 	// tables where we have the CLA Group name/description
-	return s.repo.UpdateCLAGroup(projectModel)
+	return s.repo.UpdateCLAGroup(ctx, projectModel)
 }
 
 // GetClaGroupsByFoundationSFID service method
 func (s service) GetClaGroupsByFoundationSFID(ctx context.Context, foundationSFID string, loadRepoDetails bool) (*models.Projects, error) {
-	return s.repo.GetClaGroupsByFoundationSFID(foundationSFID, loadRepoDetails)
+	return s.repo.GetClaGroupsByFoundationSFID(ctx, foundationSFID, loadRepoDetails)
 }
 
 // GetClaGroupByProjectSFID( service method
 func (s service) GetClaGroupByProjectSFID(ctx context.Context, projectSFID string, loadRepoDetails bool) (*models.Project, error) {
-	return s.repo.GetClaGroupByProjectSFID(projectSFID, loadRepoDetails)
+	return s.repo.GetClaGroupByProjectSFID(ctx, projectSFID, loadRepoDetails)
 }
 
 // SignedAtFoundationLevel returns true if the specified foundation has a CLA Group at the foundation level, returns false otherwise.

@@ -746,15 +746,15 @@ func (ed *GithubOrganizationUpdatedEventData) GetEventSummaryString(args *LogEve
 
 // GetEventSummaryString . . .
 func (ed *CCLAApprovalListRequestApprovedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s approved a CCLA Approval Request for project: %s, company: %s - request id: %s",
-		args.userName, args.projectName, args.companyName, ed.RequestID)
+	data := fmt.Sprintf("user %s approved a CCLA Approval Request for project: %s, company: %s",
+		args.userName, args.projectName, args.companyName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *CCLAApprovalListRequestRejectedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s rejected a CCLA Approval Request for project: %s, company: %s - request id: %s",
-		args.userName, args.projectName, args.companyName, ed.RequestID)
+	data := fmt.Sprintf("user %s rejected a CCLA Approval Request for project: %s, company: %s",
+		args.userName, args.projectName, args.companyName)
 	return data, true
 }
 
@@ -858,8 +858,8 @@ func (ed *CLAApprovalListRemoveGitHubOrgData) GetEventSummaryString(args *LogEve
 
 // GetEventSummaryString . . .
 func (ed *CCLAApprovalListRequestCreatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s created a CCLA Approval Request for project: %s, company: %s - request id: %s",
-		args.userName, args.projectName, args.companyName, ed.RequestID)
+	data := fmt.Sprintf("user %s created a CCLA Approval Request for project: %s, company: %s",
+		args.userName, args.projectName, args.companyName)
 	return data, true
 }
 
@@ -886,29 +886,29 @@ func (ed *ClaManagerAccessRequestAddedEventData) GetEventSummaryString(args *Log
 
 // GetEventSummaryString . . .
 func (ed *ClaManagerAccessRequestDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s has deleted request with id %s to be cla manager",
-		args.userName, ed.RequestID)
+	data := fmt.Sprintf("user %s has deleted a request to be cla manager",
+		args.userName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *CLAGroupCreatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s has created a CLA Group %s - %s",
-		args.userName, args.projectName, args.ProjectID)
+	data := fmt.Sprintf("user %s has created a CLA Group %s",
+		args.userName, args.projectName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *CLAGroupUpdatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s has updated CLA Group %s - %s",
-		args.userName, args.projectName, args.ProjectID)
+	data := fmt.Sprintf("user %s has updated CLA Group %s",
+		args.userName, args.projectName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *CLAGroupDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s has deleted CLA Group %s - %s",
-		args.userName, args.projectName, args.ProjectID)
+	data := fmt.Sprintf("user %s has deleted CLA Group %s",
+		args.userName, args.projectName)
 	return data, true
 }
 
@@ -950,52 +950,49 @@ func (ed *SignatureProjectInvalidatedEventData) GetEventSummaryString(args *LogE
 
 // GetEventSummaryString . . .
 func (ed *ContributorNotifyCompanyAdminData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s notified company admin by email: %s %s for company %s / %s",
-		args.userName, ed.AdminName, ed.AdminEmail, args.companyName, args.CompanyID)
+	data := fmt.Sprintf("user %s notified company admin by email: %s %s for company %s",
+		args.userName, ed.AdminName, ed.AdminEmail, args.companyName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *ContributorNotifyCLADesignee) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s notified CLA Designee by email: %s %s for project %s / %s company %s / %s",
+	data := fmt.Sprintf("user %s notified CLA Designee by email: %s %s for project %s company %s",
 		args.userName, ed.DesigneeName, ed.DesigneeEmail,
-		args.projectName, args.ExternalProjectID,
-		args.companyName, args.CompanyID)
+		args.projectName, args.companyName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *ContributorAssignCLADesignee) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s assigned user: %s as CLA Manager Designee for project %s / %s company %s / %s",
+	data := fmt.Sprintf("user %s assigned user: %s as CLA Manager Designee for project %s company %s",
 		args.userName, ed.DesigneeName,
-		args.projectName, args.ExternalProjectID,
-		args.companyName, args.CompanyID)
+		args.projectName, args.companyName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *UserConvertToContactData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user %s converted to Contact state for project %s",
-		args.LfUsername, args.ExternalProjectID)
+		args.LfUsername, args.projectName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *AssignRoleScopeData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s assigned scope %s with role %s for project %s",
-		args.LfUsername,
-		ed.Scope, ed.Role, args.ExternalProjectID)
+	data := fmt.Sprintf("user %s assigned role %s for project %s",
+		args.LfUsername, ed.Role, args.projectName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *ClaManagerRoleCreatedData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s added user %s from role: %s with scope: %s", args.userName, ed.UserName, ed.Role, ed.Scope)
+	data := fmt.Sprintf("user %s added user %s as role: %s", args.userName, ed.UserName, ed.Role)
 	return data, false
 }
 
 // GetEventSummaryString . . .
 func (ed *ClaManagerRoleDeletedData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s removed user %s from role: %s with scope: %s", args.userName, ed.UserName, ed.Role, ed.Scope)
+	data := fmt.Sprintf("user %s removed user %s from role: %s", args.userName, ed.UserName, ed.Role)
 	return data, false
 }

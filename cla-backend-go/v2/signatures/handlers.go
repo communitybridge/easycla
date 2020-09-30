@@ -152,7 +152,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				params.SignatureID, err)
 			return signatures.NewGetGitHubOrgWhitelistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
-		response := []models.GithubOrg{}
+
+		var response []models.GithubOrg
 		err = copier.Copy(&response, ghWhiteList)
 		if err != nil {
 			return signatures.NewGetGitHubOrgWhitelistInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
@@ -212,7 +213,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
-		response := []models.GithubOrg{}
+
+		var response []models.GithubOrg
 		err = copier.Copy(&response, ghApprovalList)
 		if err != nil {
 			return signatures.NewAddGitHubOrgWhitelistInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
@@ -302,13 +304,6 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		resp, err := v2Signatures(projectSignatures)
 		if err != nil {
 			return signatures.NewGetProjectSignaturesBadRequest().WithXRequestID(reqID)
-		}
-
-		if len(resp.Signatures) == 0 {
-			return signatures.NewGetProjectSignaturesNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "404",
-				Message: fmt.Sprintf("Signatures not found with given clagroupID. [%s]", params.ClaGroupID),
-			})
 		}
 
 		return signatures.NewGetProjectSignaturesOK().WithXRequestID(reqID).WithPayload(resp)
@@ -511,26 +506,41 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		func(params signatures.ListClaGroupCorporateContributorsParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			claGroupModel, err := projectRepo.GetCLAGroupByID(params.ClaGroupID, project.DontLoadRepoDetails)
+
+			// Make sure the user has provided the companySFID
+			if params.CompanySFID == nil {
+				return signatures.NewDownloadProjectSignatureICLABadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA - 400 Bad Request - missing companySFID as input",
+				})
+			}
+
+			// Lookup the CLA Group by ID - make sure it's valid
+			claGroupModel, err := projectRepo.GetCLAGroupByID(ctx, params.ClaGroupID, project.DontLoadRepoDetails)
 			if err != nil {
 				if err == project.ErrProjectDoesNotExist {
 					return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 				}
 				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
-			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) {
+
+			// Authorized to view this? Allow project scope and project|org scope for matching IDs
+			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) && !utils.IsUserAuthorizedForProjectOrganization(authUser, claGroupModel.FoundationSFID, *params.CompanySFID) {
 				return signatures.NewDownloadProjectSignatureICLAAsCSVForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to ListClaGroupCorporateContributors with project scope of %s",
-						authUser.UserName, claGroupModel.FoundationSFID),
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to ListClaGroupCorporateContributors with project scope of %s or project|organization scope of %s|%s",
+						authUser.UserName, claGroupModel.FoundationSFID, claGroupModel.FoundationSFID, *params.CompanySFID),
 				})
 			}
+
+			// Make sure CCLA is enabled for this CLA Group
 			if !claGroupModel.ProjectCCLAEnabled {
 				return signatures.NewDownloadProjectSignatureICLABadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "400",
 					Message: "EasyCLA - 400 Bad Request - This project does not support corporate contribution",
 				})
 			}
+
 			result, err := v2service.GetClaGroupCorporateContributors(ctx, params.ClaGroupID, params.CompanySFID, params.SearchTerm)
 			if err != nil {
 				return signatures.NewListClaGroupCorporateContributorsInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
