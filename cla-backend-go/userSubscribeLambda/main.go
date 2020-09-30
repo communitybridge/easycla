@@ -94,6 +94,14 @@ func Write(user EventSchemaData) {
 	}
 
 	if userDetails == nil {
+		userDetails, userErr = usersRepo.GetUserByExternalID(user.Data.UserID)
+		if userErr != nil {
+			log.Warnf("Error - unable to locate user by UserExternalID: %s, error: %+v", user.Data.UserID, userErr)
+			return
+		}
+	}
+
+	if userDetails == nil {
 		log.Debugf("User model is nil so skipping user %s", user.Data.UserName)
 		return
 	}
