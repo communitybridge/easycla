@@ -944,6 +944,38 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		return nil, orgErr
 	}
 
+	var designeeScopes []*models.ClaManagerDesignee
+
+	// Check if sending cla manager request to company admin
+	if contactAdmin {
+		log.Debugf("Sending email to company Admin")
+		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyModel.CompanyExternalID, nil)
+		if listScopeErr != nil {
+			msg := fmt.Sprintf("Admin lookup error for organisation SFID: %s ", companyModel.CompanyExternalID)
+			log.WithFields(f).Warn(msg)
+			return nil, listScopeErr
+		}
+		// Search for Easy CLA User
+		log.Debugf("Getting user by ID: %s", contributor.UserID)
+		userModel, userErr := s.easyCLAUserService.GetUser(contributor.UserID)
+		if userErr != nil {
+			msg := fmt.Sprintf("Problem getting user by ID: %s ", contributor.UserID)
+			log.Warn(msg)
+			return nil, userErr
+		}
+
+		for _, admin := range scopes.Userroles {
+			// Check if is Gerrit User or GH User
+			contributorEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, organization.Name, projectSFs, userModel, LfxPortalURL)
+			designeeScope := models.ClaManagerDesignee{
+				Email: strfmt.Email(admin.Contact.EmailAddress),
+				Name:  admin.Contact.Name,
+			}
+			designeeScopes = append(designeeScopes, &designeeScope)
+		}
+		return designeeScopes, nil
+	}
+
 	// Get suggested CLA Manager user details
 	user, userErr := userService.SearchUserByEmail(userEmail)
 	if userErr != nil || (user != nil && user.Username == "") {
@@ -982,37 +1014,7 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		projectSFs = append(projectSFs, projectSF.Name)
 	}
 
-	var designeeScopes []*models.ClaManagerDesignee
 
-	// Check if sending cla manager request to company admin
-	if contactAdmin {
-		log.Debugf("Sending email to company Admin")
-		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyModel.CompanyExternalID, nil)
-		if listScopeErr != nil {
-			msg := fmt.Sprintf("Admin lookup error for organisation SFID: %s ", companyModel.CompanyExternalID)
-			log.WithFields(f).Warn(msg)
-			return nil, listScopeErr
-		}
-		// Search for Easy CLA User
-		log.Debugf("Getting user by ID: %s", contributor.UserID)
-		userModel, userErr := s.easyCLAUserService.GetUser(contributor.UserID)
-		if userErr != nil {
-			msg := fmt.Sprintf("Problem getting user by ID: %s ", contributor.UserID)
-			log.Warn(msg)
-			return nil, userErr
-		}
-
-		for _, admin := range scopes.Userroles {
-			// Check if is Gerrit User or GH User
-			contributorEmailToOrgAdmin(admin.Contact.EmailAddress, admin.Contact.Name, organization.Name, projectSFs, userModel, LfxPortalURL)
-			designeeScope := models.ClaManagerDesignee{
-				Email: strfmt.Email(admin.Contact.EmailAddress),
-				Name:  admin.Contact.Name,
-			}
-			designeeScopes = append(designeeScopes, &designeeScope)
-		}
-		return designeeScopes, nil
-	}
 
 	if signedAtFoundation {
 		// check if claGroup is signed at foundation level
