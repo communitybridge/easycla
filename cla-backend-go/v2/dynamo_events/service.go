@@ -91,6 +91,7 @@ func NewService(stage string,
 		projectRepo:              projectRepo,
 		projectService:           projService,
 		githubOrgService:         githubOrgService,
+		repositoryService:        repositoryService,
 		claManagerRequestsRepo:   claManagerRequestsRepo,
 		approvalListRequestsRepo: approvalListRequestsRepo,
 	}

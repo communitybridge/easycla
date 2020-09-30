@@ -36,7 +36,10 @@ func (s *service) GitHubOrgUpdatedEvent(event events.DynamoDBEventRecord) error 
 
 	// If the branch protection value was updated from false to true....
 	if !oldGitHubOrg.BranchProtectionEnabled && newGitHubOrg.BranchProtectionEnabled {
+		log.WithFields(f).Debug("transition of branchProtectionEnabled false => true - processing...")
+
 		// Locate the repositories already saved under this organization
+		log.WithFields(f).Debug("loading repositories under the organization...")
 		repos, err := s.repositoryService.GetRepositoriesByOrganizationName(context.Background(), newGitHubOrg.OrganizationName)
 		if err != nil {
 			log.WithFields(f).Warnf("problem locating repositories by organization name, error: %+v", err)
@@ -76,8 +79,10 @@ func (s *service) GitHubOrgUpdatedEvent(event events.DynamoDBEventRecord) error 
 			log.WithFields(f).Warnf("encountered branch protection setup error: %+v", loadErr)
 			branchProtectionErr = loadErr
 		}
+
 		return branchProtectionErr
 	}
 
+	log.WithFields(f).Debug("no transition of branchProtectionEnabled false => true - ignoring...")
 	return nil
 }
