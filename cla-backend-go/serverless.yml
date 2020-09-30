@@ -33,6 +33,7 @@ custom:
   prune:
     automatic: true
     number: 3
+  userEventsSNSTopicARN: arn:aws:sns:${self:provider.region}:#{AWS::AccountId}:userservice-triggers-${self:provider.stage}-user-sns-topic
 
 provider:
   name: aws
@@ -136,6 +137,7 @@ provider:
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-ccla-whitelist-requests/index/ccla-approval-list-request-project-id-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/github-user-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/github-username-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/github-user-external-id-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/lf-username-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/lf-email-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-gerrit-instances/index/gerrit-name-index"
@@ -285,3 +287,17 @@ functions:
       individually: true
       include:
         - ./backend-aws-lambda
+
+  easyClaUserSubscribe:
+    name: easy-cla-user-subscribe
+    runtime: go1.x
+    description: Update easycla user data to user object in dynamodb
+    handler: user-subscribe-lambda
+    package:
+      individually: true
+      include:
+        - ./userSubscribeLambda
+    reservedConcurrency: 5
+    events:
+      - sns:
+          arn: ${self:custom.userEventsSNSTopicARN}
