@@ -297,3 +297,12 @@ func TestGitHubOrg(t *testing.T) {
 		assert.False(t, valid, fmt.Sprintf("invalid GitHub Organization %s %s", org, msg))
 	}
 }
+
+// TestGetPathFromURL tests for getting the path for a URL
+func TestGetPathFromURL(t *testing.T) {
+	input := "https://cla-signature-files-dev.s3.amazonaws.com/contract-group/66b97366-a298-4625-965e-0c292c39f9a2/template/ccla-2020-09-25T22-37-51Z.pdf"
+	expected := "/contract-group/66b97366-a298-4625-965e-0c292c39f9a2/template/ccla-2020-09-25T22-37-51Z.pdf"
+	result, err := utils.GetPathFromURL(input)
+	assert.Nil(t, err, "GetPathFromURL error is not nil")
+	assert.Equal(t, expected, result)
+}
