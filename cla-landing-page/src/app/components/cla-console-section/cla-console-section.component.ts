@@ -23,22 +23,14 @@ export class ClaConsoleSectionComponent implements OnInit {
   }
 
 
-  onClickSignIn(type: string) {
+  onClickProceed(type: string) {
     const consoleType = type === 'Projects' ? AppSettings.PROJECT_CONSOLE_LINK : AppSettings.CORPORATE_CONSOLE_LINK;
-    this.authService.setItem(AppSettings.CONSOLE_TYPE, consoleType)
-    if (this.authService.hasTokenValid() && this.authService.isAuthenticated()) {
-      const url = EnvConfig.default[consoleType];
-      window.open(url, '_self');
-    } else {
-      // Redirect to LF login page.
-      console.log('Redirect to Auth0');
-      this.authService.login();
-    }
-
+    const url = EnvConfig.default[consoleType];
+    window.open(url, '_self');
   }
 
-  onClickSignUp() {
-
+  onClickRequestAccess() {
+    window.open(AppSettings.REQUEST_ACCESS_LINK, '_blank');
   }
 
   onClickLearnMore() {

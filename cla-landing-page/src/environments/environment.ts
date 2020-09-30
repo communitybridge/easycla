@@ -7,9 +7,11 @@
 
 export const environment = {
   production: false,
-  LFX_HEADER_URL: 'https://cdn.dev.platform.linuxfoundation.org/lfx-header.js'
-};
-
+  LFX_HEADER_URL: 'https://cdn.dev.platform.linuxfoundation.org/lfx-header.js',
+  ACCEPTABLE_USER_POLICY: 'https://communitybridge.dev.platform.linuxfoundation.org/acceptable-use/',
+  SERVICE_SPECIFIC_TERM: 'https://communitybridge.dev.platform.linuxfoundation.org/service-terms/',
+  PLATEFORM_USER_AGREEMENT: 'https://communitybridge.dev.platform.linuxfoundation.org/platform-use-agreement/'
+}
 /*
  * For easier debugging in development mode, you can import the following file
  * to ignore zone related error stack frames such as `zone.run`, `zoneDelegate.invokeTask`.

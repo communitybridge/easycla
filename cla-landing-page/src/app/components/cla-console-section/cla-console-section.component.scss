@@ -9,7 +9,7 @@
         font-family: "Source Sans Pro";
         padding-top: 20px;
         .head {
-            min-height: 124px;
+            min-height: 90px;
             text-align: center;
             .logo {
                 i {
@@ -61,30 +61,30 @@
                 font-family: "Open Sans";
                 font-size: 14px;
                 text-align: center;
-                padding: 20px 0 30px 0;
-            }
-        }
-    }
-
-    .buttons {
-        margin-top: -14px;
-        .button {
-            color: #ffffff;
-            font-family: "Source Sans Pro bold";
-            font-size: 14px;
-            font-weight: bold;
-            text-align: center;
-            border: none;
-            border-radius: 50px;
-            width: 90px;
-            padding: 2px;
-
-            &.blue {
-                background: #0099cc;
+                padding: 15px 0;
             }
 
-            &.gray {
-                background: #8492A6;
+            .buttons {
+                margin-bottom: 15px;
+                .button {
+                    color: #ffffff;
+                    font-family: "Source Sans Pro bold";
+                    font-size: 14px;
+                    font-weight: bold;
+                    text-align: center;
+                    border: none;
+                    border-radius: 50px;
+                    min-width: 90px;
+                    padding: 2px 10px;
+
+                    &.blue {
+                        background: #0099cc;
+                    }
+
+                    &.gray {
+                        background: #8492a6;
+                    }
+                }
             }
         }
     }
