@@ -16,27 +16,33 @@ import (
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 )
 
+// GithubRepoAddedEvent github repository added event
 func (s *service) GithubRepoAddedEvent(event events.DynamoDBEventRecord) error {
-	log.Debug("GithubRepoAddedEvent called")
-	var newGithubOrg repositories.RepositoryDBModel
-	err := unmarshalStreamImage(event.Change.NewImage, &newGithubOrg)
+	f := logrus.Fields{
+		"functionName": "GithubRepoAddedEvent",
+	}
+
+	log.WithFields(f).Debug("GithubRepoAddedEvent called")
+	var newRepoModel repositories.RepositoryDBModel
+	err := unmarshalStreamImage(event.Change.NewImage, &newRepoModel)
 	if err != nil {
+		log.WithFields(f).Warnf("problem unmarshalling the new repository model event, error: %+v", err)
 		return err
 	}
 
 	psc := v2ProjectService.GetClient()
-	project, err := psc.GetProject(newGithubOrg.ProjectSFID)
+	project, err := psc.GetProject(newRepoModel.ProjectSFID)
 	if err != nil {
 		return err
 	}
 
 	var uerr error
 	if project.Parent == "" || project.Parent == utils.TheLinuxFoundation {
-		log.Debugf("incrementing root_project_repositories_count of cla_group_id %s", newGithubOrg.RepositoryProjectID)
-		uerr = s.projectRepo.UpdateRootCLAGroupRepositoriesCount(context.Background(), newGithubOrg.RepositoryProjectID, 1)
+		log.Debugf("incrementing root_project_repositories_count of cla_group_id %s", newRepoModel.RepositoryProjectID)
+		uerr = s.projectRepo.UpdateRootCLAGroupRepositoriesCount(context.Background(), newRepoModel.RepositoryProjectID, 1)
 	} else {
-		log.Debugf("incrementing repositories_count for project %s", newGithubOrg.ProjectSFID)
-		uerr = s.projectsClaGroupRepo.UpdateRepositoriesCount(newGithubOrg.ProjectSFID, 1)
+		log.Debugf("incrementing repositories_count for project %s", newRepoModel.ProjectSFID)
+		uerr = s.projectsClaGroupRepo.UpdateRepositoriesCount(newRepoModel.ProjectSFID, 1)
 	}
 	if uerr != nil {
 		return err
@@ -45,27 +51,33 @@ func (s *service) GithubRepoAddedEvent(event events.DynamoDBEventRecord) error {
 	return nil
 }
 
+// GithubRepoDeletedEvent github repository removed event
 func (s *service) GithubRepoDeletedEvent(event events.DynamoDBEventRecord) error {
-	log.Debug("GithubRepoDeletedEvent called")
-	var oldGithubOrg repositories.RepositoryDBModel
-	err := unmarshalStreamImage(event.Change.OldImage, &oldGithubOrg)
+	f := logrus.Fields{
+		"functionName": "GithubRepoDeletedEvent",
+	}
+
+	log.WithFields(f).Debug("GithubRepoDeletedEvent called...")
+	var oldRepoModel repositories.RepositoryDBModel
+	err := unmarshalStreamImage(event.Change.OldImage, &oldRepoModel)
 	if err != nil {
+		log.WithFields(f).Warnf("problem unmarshalling the old repository model event, error: %+v", err)
 		return err
 	}
 
 	psc := v2ProjectService.GetClient()
-	project, err := psc.GetProject(oldGithubOrg.ProjectSFID)
+	project, err := psc.GetProject(oldRepoModel.ProjectSFID)
 	if err != nil {
 		return err
 	}
 
 	var uerr error
 	if project.Parent == "" || project.Parent == utils.TheLinuxFoundation {
-		log.Debugf("decrementing root_project_repositories_count of cla_group_id %s", oldGithubOrg.RepositoryProjectID)
-		uerr = s.projectRepo.UpdateRootCLAGroupRepositoriesCount(context.Background(), oldGithubOrg.RepositoryProjectID, -1)
+		log.Debugf("decrementing root_project_repositories_count of cla_group_id %s", oldRepoModel.RepositoryProjectID)
+		uerr = s.projectRepo.UpdateRootCLAGroupRepositoriesCount(context.Background(), oldRepoModel.RepositoryProjectID, -1)
 	} else {
-		log.Debugf("decrementing repositories_count for project %s", oldGithubOrg.ProjectSFID)
-		uerr = s.projectsClaGroupRepo.UpdateRepositoriesCount(oldGithubOrg.ProjectSFID, -1)
+		log.Debugf("decrementing repositories_count for project %s", oldRepoModel.ProjectSFID)
+		uerr = s.projectsClaGroupRepo.UpdateRepositoriesCount(oldRepoModel.ProjectSFID, -1)
 	}
 	if uerr != nil {
 		return err
@@ -84,21 +96,23 @@ func (s *service) EnableBranchProtectionServiceHandler(event events.DynamoDBEven
 	}
 
 	log.WithFields(f).Debug("EnableBranchProtectionServiceHandler called...")
-	var newGithubRepositoryModel repositories.RepositoryDBModel
-	err := unmarshalStreamImage(event.Change.NewImage, &newGithubRepositoryModel)
+	var newRepoModel repositories.RepositoryDBModel
+	err := unmarshalStreamImage(event.Change.NewImage, &newRepoModel)
 	if err != nil {
+		log.WithFields(f).Warnf("problem unmarshalling the new github organization add event, error: %+v", err)
 		return err
 	}
 
-	f["repositoryName"] = newGithubRepositoryModel.RepositoryName
-	f["repositoryOrganizationName"] = newGithubRepositoryModel.RepositoryOrganizationName
-	f["projectSFID"] = newGithubRepositoryModel.ProjectSFID
+	f["repositoryName"] = newRepoModel.RepositoryName
+	f["repositoryOrganizationName"] = newRepoModel.RepositoryOrganizationName
+	f["projectSFID"] = newRepoModel.ProjectSFID
 
 	// Branch protection only available for GitHub
-	if newGithubRepositoryModel.RepositoryType == utils.GitHubType {
+	if newRepoModel.RepositoryType == utils.GitHubType {
 		log.WithFields(f).Debugf("repository type is: %s", utils.GitHubType)
 
-		parentOrgName := newGithubRepositoryModel.RepositoryOrganizationName
+		parentOrgName := newRepoModel.RepositoryOrganizationName
+		log.WithFields(f).Warnf("problem locating github organization by name: %s, error: %+v", parentOrgName, err)
 		gitHubOrg, err := s.githubOrgService.GetGithubOrganizationByName(context.Background(), parentOrgName)
 		if err != nil {
 			log.WithFields(f).Warnf("problem locating github organization by name: %s, error: %+v", parentOrgName, err)
@@ -120,15 +134,15 @@ func (s *service) EnableBranchProtectionServiceHandler(event events.DynamoDBEven
 			}
 
 			log.WithFields(f).Debug("looking up the default branch for the GitHub repository...")
-			defaultBranch, branchErr := github.GetDefaultBranchForRepo(ctx, gitHubClient, gitHubOrg.OrganizationName, newGithubRepositoryModel.RepositoryName)
+			defaultBranch, branchErr := github.GetDefaultBranchForRepo(ctx, gitHubClient, gitHubOrg.OrganizationName, newRepoModel.RepositoryName)
 			if branchErr != nil {
 				return branchErr
 			}
 
 			log.WithFields(f).Debugf("enabling branch protection on th default branch %s for the GitHub repository: %s...",
-				defaultBranch, newGithubRepositoryModel.RepositoryName)
+				defaultBranch, newRepoModel.RepositoryName)
 			return github.EnableBranchProtection(ctx, gitHubClient,
-				parentOrgName, newGithubRepositoryModel.RepositoryName,
+				parentOrgName, newRepoModel.RepositoryName,
 				defaultBranch, true, []string{utils.GitHubBotName}, []string{})
 		}
 
@@ -148,15 +162,16 @@ func (s *service) DisableBranchProtectionServiceHandler(event events.DynamoDBEve
 	}
 
 	log.WithFields(f).Debug("DisableBranchProtectionServiceHandler called")
-	var oldGithubOrg repositories.RepositoryDBModel
-	err := unmarshalStreamImage(event.Change.OldImage, &oldGithubOrg)
+	var oldRepoModel repositories.RepositoryDBModel
+	err := unmarshalStreamImage(event.Change.OldImage, &oldRepoModel)
 	if err != nil {
+		log.WithFields(f).Warnf("problem unmarshalling the old github organization removed event, error: %+v", err)
 		return err
 	}
 
 	// Branch protection only available for GitHub
-	if oldGithubOrg.RepositoryType == utils.GitHubType {
-		parentOrgName := oldGithubOrg.RepositoryOrganizationName
+	if oldRepoModel.RepositoryType == utils.GitHubType {
+		parentOrgName := oldRepoModel.RepositoryOrganizationName
 		gitHubOrg, err := s.githubOrgService.GetGithubOrganizationByName(context.Background(), parentOrgName)
 		if err != nil {
 			log.WithFields(f).Warnf("problem locating github organization by name: %s, error: %+v", parentOrgName, err)
