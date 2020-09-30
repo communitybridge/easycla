@@ -1011,6 +1011,12 @@ projectsClaGroupsTable.onEvent("projectsCLAGroupsStreamEvents",
   aws.lambda.Function.get(dynamoDBProjectsCLAGroupsEventLambdaName, dynamoDBProjectsCLAGroupsEventLambdaArn),
   { startingPosition: "LATEST" });
 
+const dynamoDBGitHubOrgsEventLambdaName = "cla-backend-" + stage + "-dynamo-github-orgs-events-lambda";
+const dynamoDBGitHubOrgsEventLambdaArn = "arn:aws:lambda:" + aws.getRegion().name + ":" + accountID + ":function:" + dynamoDBGitHubOrgsEventLambdaName;
+gitHubOrgsTable.onEvent("gitHubOrgsStreamEvents",
+  aws.lambda.Function.get(dynamoDBGitHubOrgsEventLambdaName, dynamoDBGitHubOrgsEventLambdaArn),
+  { startingPosition: "LATEST" });
+
 const dynamoDBRepositoriesEventLambdaName = "cla-backend-" + stage + "-dynamo-repositories-events-lambda";
 const dynamoDBRepositoriesEventLambdaArn = "arn:aws:lambda:" + aws.getRegion().name + ":" + accountID + ":function:" + dynamoDBRepositoriesEventLambdaName;
 repositoriesTable.onEvent("repositoriesStreamEvents",
