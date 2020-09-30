@@ -211,7 +211,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 		// Delete github repositories
 		log.WithFields(f).Debug("Processing github repository disable/delete")
-		howMany, err = repositoryService.DisableRepositoriesByProjectID(params.ProjectID)
+		howMany, err = repositoryService.DisableRepositoriesByProjectID(ctx, params.ProjectID)
 		if err != nil {
 			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}

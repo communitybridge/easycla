@@ -4,6 +4,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -28,7 +29,10 @@ import (
 func Configure(api *operations.EasyclaAPI, service Service, eventService events.Service) {
 	api.GithubRepositoriesGetProjectGithubRepositoriesHandler = github_repositories.GetProjectGithubRepositoriesHandlerFunc(
 		func(params github_repositories.GetProjectGithubRepositoriesParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_repositories.NewGetProjectGithubRepositoriesForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -37,7 +41,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
-			result, err := service.ListProjectRepositories(params.ProjectSFID)
+			result, err := service.ListProjectRepositories(ctx, params.ProjectSFID)
 			if err != nil {
 				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
 					return github_repositories.NewGetProjectGithubRepositoriesNotFound().WithPayload(&models.ErrorResponse{
@@ -57,7 +61,9 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 
 	api.GithubRepositoriesAddProjectGithubRepositoryHandler = github_repositories.AddProjectGithubRepositoryHandlerFunc(
 		func(params github_repositories.AddProjectGithubRepositoryParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_repositories.NewAddProjectGithubRepositoryForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -66,7 +72,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
-			result, err := service.AddGithubRepository(params.ProjectSFID, params.GithubRepositoryInput)
+			result, err := service.AddGithubRepository(ctx, params.ProjectSFID, params.GithubRepositoryInput)
 			if err != nil {
 				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
@@ -96,7 +102,9 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 
 	api.GithubRepositoriesDeleteProjectGithubRepositoryHandler = github_repositories.DeleteProjectGithubRepositoryHandlerFunc(
 		func(params github_repositories.DeleteProjectGithubRepositoryParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_repositories.NewDeleteProjectGithubRepositoryForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -105,7 +113,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
-			ghRepo, err := service.GetRepository(params.RepositoryID)
+			ghRepo, err := service.GetRepository(ctx, params.RepositoryID)
 			if err != nil {
 				if err == repositories.ErrGithubRepositoryNotFound {
 					return github_repositories.NewDeleteProjectGithubRepositoryNotFound()
@@ -113,7 +121,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
 
-			err = service.DisableRepository(params.RepositoryID)
+			err = service.DisableRepository(ctx, params.RepositoryID)
 			if err != nil {
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
@@ -133,7 +141,9 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 
 	api.GithubRepositoriesGetProjectGithubRepositoryBranchProtectionHandler = github_repositories.GetProjectGithubRepositoryBranchProtectionHandlerFunc(
 		func(params github_repositories.GetProjectGithubRepositoryBranchProtectionParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_repositories.NewGetProjectGithubRepositoryBranchProtectionForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -142,7 +152,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
-			protectedBranch, err := service.GetProtectedBranch(params.RepositoryID)
+			protectedBranch, err := service.GetProtectedBranch(ctx, params.RepositoryID)
 			if err != nil {
 				if err == repositories.ErrGithubRepositoryNotFound {
 					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionNotFound()
@@ -161,9 +171,12 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 
 			return github_repositories.NewGetProjectGithubRepositoryBranchProtectionOK().WithPayload(protectedBranch)
 		})
+
 	api.GithubRepositoriesUpdateProjectGithubRepositoryBranchProtectionHandler = github_repositories.UpdateProjectGithubRepositoryBranchProtectionHandlerFunc(
 		func(params github_repositories.UpdateProjectGithubRepositoryBranchProtectionParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_repositories.NewUpdateProjectGithubRepositoryBranchProtectionForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -172,7 +185,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
-			protectedBranch, err := service.UpdateProtectedBranch(params.RepositoryID, params.GithubRepositoryBranchProtectionInput)
+			protectedBranch, err := service.UpdateProtectedBranch(ctx, params.RepositoryID, params.GithubRepositoryBranchProtectionInput)
 			if err != nil {
 				log.Warnf("UpdateProjectGithubRepositoryBranchProtectionHandler : failed for repo %s : %v", params.RepositoryID, err)
 				if err == repositories.ErrGithubRepositoryNotFound {

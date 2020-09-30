@@ -4,6 +4,7 @@
 package repositories
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
@@ -19,6 +20,8 @@ import (
 func Configure(api *operations.ClaAPI, service Service, eventService events.Service) {
 	api.GithubRepositoriesGetProjectGithubRepositoriesHandler = github_repositories.GetProjectGithubRepositoriesHandlerFunc(
 		func(params github_repositories.GetProjectGithubRepositoriesParams, claUser *user.CLAUser) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			if !claUser.IsAuthorizedForProject(params.ProjectSFID) {
 				return github_repositories.NewGetProjectGithubRepositoriesForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -26,7 +29,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 						claUser.LFUsername, params.ProjectSFID),
 				})
 			}
-			result, err := service.ListProjectRepositories(params.ProjectSFID)
+			result, err := service.ListProjectRepositories(ctx, params.ProjectSFID)
 			if err != nil {
 				return github_repositories.NewGetProjectGithubRepositoriesBadRequest().WithPayload(errorResponse(err))
 			}
@@ -35,6 +38,8 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 
 	api.GithubRepositoriesAddProjectGithubRepositoryHandler = github_repositories.AddProjectGithubRepositoryHandlerFunc(
 		func(params github_repositories.AddProjectGithubRepositoryParams, claUser *user.CLAUser) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			if !claUser.IsAuthorizedForProject(params.ProjectSFID) {
 				return github_repositories.NewAddProjectGithubRepositoryForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -42,7 +47,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 						claUser.LFUsername, params.ProjectSFID),
 				})
 			}
-			result, err := service.AddGithubRepository(params.ProjectSFID, params.GithubRepositoryInput)
+			result, err := service.AddGithubRepository(ctx, params.ProjectSFID, params.GithubRepositoryInput)
 			if err != nil {
 				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
@@ -60,6 +65,8 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 
 	api.GithubRepositoriesDeleteProjectGithubRepositoryHandler = github_repositories.DeleteProjectGithubRepositoryHandlerFunc(
 		func(params github_repositories.DeleteProjectGithubRepositoryParams, claUser *user.CLAUser) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			if !claUser.IsAuthorizedForProject(params.ProjectSFID) {
 				return github_repositories.NewDeleteProjectGithubRepositoryForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -67,14 +74,14 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 						claUser.LFUsername, params.ProjectSFID),
 				})
 			}
-			ghRepo, err := service.GetRepository(params.RepositoryID)
+			ghRepo, err := service.GetRepository(ctx, params.RepositoryID)
 			if err != nil {
 				if err == ErrGithubRepositoryNotFound {
 					return github_repositories.NewDeleteProjectGithubRepositoryNotFound()
 				}
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
-			err = service.DisableRepository(params.RepositoryID)
+			err = service.DisableRepository(ctx, params.RepositoryID)
 			if err != nil {
 				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
@@ -89,7 +96,6 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 			})
 			return github_repositories.NewDeleteProjectGithubRepositoryNoContent()
 		})
-
 }
 
 // codedResponse interface
