@@ -2404,12 +2404,15 @@ func (repo repository) GetClaGroupCorporateContributors(ctx context.Context, cla
 		IndexName:                 aws.String(SignatureProjectIDSigTypeSignedApprovedIDIndex),
 		Limit:                     aws.Int64(HugePageSize),
 	}
+
 	out := &models.CorporateContributorList{List: make([]*models.CorporateContributor, 0)}
 	if searchTerm != nil {
 		searchTerm = aws.String(strings.ToLower(*searchTerm))
 	}
+
 	for {
 		// Make the DynamoDB Query API call
+		log.WithFields(f).Debug("querying signatures...")
 		results, queryErr := repo.dynamoDBClient.Query(queryInput)
 		if queryErr != nil {
 			log.WithFields(f).Warnf("error retrieving icla signatures for project: %s, error: %v", claGroupID, queryErr)

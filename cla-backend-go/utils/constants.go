@@ -3,6 +3,9 @@
 
 package utils
 
+// GitHubBotName is the name of the GitHub bot
+const GitHubBotName = "EasyCLA"
+
 // TheLinuxFoundation is the name of the super parent for many Salesforce Foundations/Project Groups
 const TheLinuxFoundation = "The Linux Foundation"
 
@@ -47,3 +50,6 @@ const SignatureReferenceTypeCompany = "company"
 
 // ProjectTypeProjectGroup is the string that represents the Project Group type in a Project Service record
 const ProjectTypeProjectGroup = "Project Group"
+
+// GitHubType is the repository type identifier for github
+const GitHubType = "github"

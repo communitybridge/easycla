@@ -82,7 +82,7 @@ func (s service) AddCclaWhitelistRequest(ctx context.Context, companyID string, 
 		log.Warnf("AddCclaWhitelistRequest - unable to lookup company by id: %s, error: %+v", companyID, err)
 		return "", err
 	}
-	projectModel, err := s.projectRepo.GetCLAGroupByID(projectID, DontLoadRepoDetails)
+	projectModel, err := s.projectRepo.GetCLAGroupByID(ctx, projectID, DontLoadRepoDetails)
 	if err != nil {
 		log.Warnf("AddCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", projectID, err)
 		return "", err
@@ -140,7 +140,7 @@ func (s service) ApproveCclaWhitelistRequest(ctx context.Context, companyID, pro
 		log.Warnf("ApproveCclaWhitelistRequest - unable to lookup company by id: %s, error: %+v", companyID, err)
 		return err
 	}
-	projectModel, err := s.projectRepo.GetCLAGroupByID(projectID, DontLoadRepoDetails)
+	projectModel, err := s.projectRepo.GetCLAGroupByID(ctx, projectID, DontLoadRepoDetails)
 	if err != nil {
 		log.Warnf("ApproveCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", projectID, err)
 		return err
@@ -178,7 +178,7 @@ func (s service) RejectCclaWhitelistRequest(ctx context.Context, companyID, proj
 		log.Warnf("RejectCclaWhitelistRequest - unable to lookup company by id: %s, error: %+v", companyID, err)
 		return err
 	}
-	projectModel, err := s.projectRepo.GetCLAGroupByID(projectID, DontLoadRepoDetails)
+	projectModel, err := s.projectRepo.GetCLAGroupByID(ctx, projectID, DontLoadRepoDetails)
 	if err != nil {
 		log.Warnf("RejectCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", projectID, err)
 		return err

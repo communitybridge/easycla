@@ -37,6 +37,7 @@ import (
 	v2OrgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 	v2UserService "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
+	v2UserModels "github.com/communitybridge/easycla/cla-backend-go/v2/user-service/models"
 )
 
 var (
@@ -124,24 +125,6 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 		"xEmail":         params.XEMAIL,
 	}
 
-	// re := regexp.MustCompile(`^\w{1,30}$`)
-	// if !re.MatchString(*params.Body.FirstName) || !re.MatchString(*params.Body.LastName) {
-	// 	msg := "Firstname and last Name values should not exceed 30 characters in length"
-	// 	log.WithFields(f).Warn(msg)
-	// 	return nil, &models.ErrorResponse{
-	// 		Message: msg,
-	// 		Code:    "400",
-	// 	}
-	// }
-	// if *params.Body.UserEmail == "" {
-	// 	msg := "UserEmail cannot be empty"
-	// 	log.WithFields(f).Warn(msg)
-	// 	return nil, &models.ErrorResponse{
-	// 		Message: msg,
-	// 		Code:    "400",
-	// 	}
-	// }
-
 	// Search for salesForce Company aka external Company
 	log.WithFields(f).Debugf("Getting company by external ID : %s", params.CompanySFID)
 	companyModel, companyErr := s.companyService.GetCompanyByExternalID(ctx, params.CompanySFID)
@@ -173,15 +156,6 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 	}
 	// GetSF Org
 	orgClient := v2OrgService.GetClient()
-	organizationSF, orgErr := orgClient.GetOrganization(params.CompanySFID)
-	if orgErr != nil {
-		msg := buildErrorMessage("organization service lookup error", claGroupID, params, orgErr)
-		log.WithFields(f).Warn(msg)
-		return nil, &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
 	acsClient := v2AcsService.GetClient()
 	user, userErr := userServiceClient.SearchUserByEmail(params.Body.UserEmail.String())
 
@@ -195,18 +169,8 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 	}
 
 	if userErr != nil {
-		designeeName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
-		designeeEmail := params.Body.UserEmail.String()
-		msg := fmt.Sprintf("User does not have an LF Login account and has been sent an email invite: %s.", *params.Body.UserEmail)
+		msg := fmt.Sprintf("User does not have an LF Login account %s.", *params.Body.UserEmail)
 		log.WithFields(f).Warn(msg)
-		sendEmailErr := sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, *managerUser.Emails[0].EmailAddress, designeeName, designeeEmail, organizationSF.ID, &params.ProjectSFID, utils.CLAManagerRole)
-		if sendEmailErr != nil {
-			emailMessage := fmt.Sprintf("Failed to send email to user : %s ", designeeEmail)
-			return nil, &models.ErrorResponse{
-				Message: emailMessage,
-				Code:    "400",
-			}
-		}
 		return nil, &models.ErrorResponse{
 			Message: ErrNoLFID.Error(),
 			Code:    "202",
@@ -887,7 +851,7 @@ func (s *service) CreateCLAManagerRequest(ctx context.Context, contactAdmin bool
 
 	log.WithFields(f).Debugf("sending Email to CLA Manager Designee email: %s ", userEmail)
 	designeeName := fmt.Sprintf("%s %s", lfxUser.FirstName, lfxUser.LastName)
-	sendEmailToCLAManagerDesignee(LfxPortalURL, v1CompanyModel.CompanyName, []string{projectSF.Name}, userEmail, designeeName, authUser.Email, authUser.UserName)
+	sendEmailToCLAManagerDesigneeCorporate(LfxPortalURL, v1CompanyModel.CompanyName, []string{projectSF.Name}, userEmail, designeeName, authUser.Email, authUser.UserName)
 
 	log.WithFields(f).Debug("creating a contributor notify CLA designee log event...")
 	// Make a note in the event log
@@ -1054,6 +1018,10 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 			designeeScopes = append(designeeScopes, claManagerDesignee)
 		}
 	}
+	conversionErr := s.convertGHUserToContact(ctx, contributor)
+	if conversionErr != nil {
+		return nil, conversionErr
+	}
 
 	log.Debugf("Sending Email to CLA Manager Designee email: %s ", userEmail)
 
@@ -1065,18 +1033,6 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 	}
 
 	log.Debugf("CLA Manager designee created : %+v", designeeScopes)
-
-	// Convert user to contact
-	if user.Type == utils.Lead {
-		// convert user to contact
-		log.WithFields(f).Debug("converting lead to contact")
-		err := userService.ConvertToContact(user.ID)
-		if err != nil {
-			msg := fmt.Sprintf("converting lead to contact failed: %v", err)
-			log.WithFields(f).Warn(msg)
-			return nil, err
-		}
-	}
 
 	return designeeScopes, nil
 
@@ -1243,9 +1199,9 @@ func sendEmailToOrgAdmin(adminEmail string, admin string, company string, projec
 <p> %s %s has identified you as a potential candidate to setup the Corporate CLA for %s in support of the following projects: </p>
 %s
 <p>Before the contribution can be accepted, your organization must sign a CLA. 
-Either you or someone whom to designate from your company can login to this portal [Corporate console](%s) and sign the CLA for this project %s </p>
+Either you or someone whom to designate from your company can login to this portal (%s) and sign the CLA for this project %s </p>
 <p>If you are not the CLA Manager, please forward this email to the appropriate person so that they can start the CLA process.</p>
-<p> Please notify the contributor once they are added so that they may complete the contribution process.</p>
+<p> Please notify the user once CLA setup is complete.</p>
 %s
 %s`,
 		admin, company, senderName, senderEmail, company, projectList, corporateConsole, projectNames[0],
@@ -1273,6 +1229,32 @@ func contributorEmailToOrgAdmin(adminEmail string, admin string, company string,
 %s
 %s`,
 		admin, projectNames, getFormattedUserDetails(contributor), corporateConsole, projectNames,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
+
+	err := utils.SendEmail(subject, body, recipients)
+	if err != nil {
+		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+	} else {
+		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	}
+}
+
+func sendEmailToCLAManagerDesigneeCorporate(corporateConsole string, companyName string, projectNames []string, designeeEmail string, designeeName string, senderEmail string, senderName string) {
+	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA ", companyName)
+	recipients := []string{designeeEmail}
+	projectList := projectsStrList(projectNames)
+	body := fmt.Sprintf(`
+<p>Hello %s,</p>
+<p>This is a notification email from EasyCLA regarding the CLA setup and signing process for %s.</p>
+<p> %s %s has identified you as a potential candidate to setup the Corporate CLA for %s in support of the following projects: </p>
+%s
+<p>Before the contribution can be accepted, your organization must sign a CLA. 
+Either you or someone whom to designate from your company can login to this portal [Corporate console](%s) and sign the CLA for this project %s </p>
+<p>If you are not the CLA Manager, please forward this email to the appropriate person so that they can start the CLA process.</p>
+<p> Please notify the user once CLA setup is complete.</p>
+%s
+%s`,
+		designeeName, companyName, senderName, senderEmail, companyName, projectList, corporateConsole, projectNames[0],
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
@@ -1336,4 +1318,45 @@ Once complete, notify the user %s and they will be able to add you as a CLA Mana
 func buildErrorMessage(errPrefix string, claGroupID string, params cla_manager.CreateCLAManagerParams, err error) string {
 	return fmt.Sprintf("%s - problem creating new CLA Manager Request using company SFID: %s, project ID: %s, first name: %s, last name: %s, user email: %s, error: %+v",
 		errPrefix, params.CompanySFID, claGroupID, *params.Body.FirstName, *params.Body.LastName, *params.Body.UserEmail, err)
+}
+
+func (s *service) convertGHUserToContact(ctx context.Context, contributor *v1User.User) error {
+	f := logrus.Fields{
+		"functionName":   "convertGHUserToContact",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
+
+	userService := v2UserService.GetClient()
+	log.Infof("Checking if GH User: %s, GH ID: %s has LFID for contact conversion ", contributor.UserGithubUsername, contributor.UserGithubID)
+	var GHUserLF *v2UserModels.User
+	var GHUserErr error
+	if contributor.LFEmail != "" {
+		GHUserLF, GHUserErr = userService.SearchUserByEmail(contributor.LFEmail)
+		if GHUserErr != nil {
+			msg := fmt.Sprintf("GH UserEmail: %s has no LF Login ", contributor.LFEmail)
+			log.Warn(msg)
+		}
+
+	} else if contributor.LFUsername != "" {
+		GHUserLF, GHUserErr = userService.GetUserByUsername(contributor.LFUsername)
+		if GHUserErr != nil {
+			msg := fmt.Sprintf("GH Username: %s has no LF Login ", contributor.LFUsername)
+			log.Warn(msg)
+		}
+	}
+
+	if GHUserLF != nil {
+		// Convert user to contact
+		if GHUserLF.Type == utils.Lead {
+			// convert user to contact
+			log.WithFields(f).Debug("converting lead to contact")
+			err := userService.ConvertToContact(GHUserLF.ID)
+			if err != nil {
+				msg := fmt.Sprintf("converting lead to contact failed: %v", err)
+				log.WithFields(f).Warn(msg)
+				return err
+			}
+		}
+	}
+	return nil
 }

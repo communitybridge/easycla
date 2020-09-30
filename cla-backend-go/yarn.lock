@@ -139,9 +139,9 @@
     shortid "^2.2.14"
 
 "@serverless/components@^3.1.5":
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/@serverless/components/-/components-3.2.0.tgz#b13a16f8c1e27aeeda63dfc5fe43d3921c62abd5"
-  integrity sha512-PJDs0kzs5pcFG7WZ9CxMbTLhpvRBFNftBpqWNXGwb3dfG0+QJKldAayesqd0fePK2BzZapvh77mQflYE5JdOjg==
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/@serverless/components/-/components-3.2.1.tgz#c517bdc1a34d10050851a9714ddc81da81875109"
+  integrity sha512-ZINkDIPxW2PTKzNUpB4pqYafZ5j4X7Ijn3PAKDEeguQ91tkz2YDxzbqlws/Yld/87Bpi1iLxEk5mct8QXtbEJQ==
   dependencies:
     "@serverless/platform-client" "^2.1.0"
     "@serverless/platform-client-china" "^2.0.0"
@@ -908,9 +908,9 @@ at-least-node@^1.0.0:
   integrity sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==
 
 aws-sdk@^2.760.0:
-  version "2.761.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.761.0.tgz#a677e3755fe84550de780e9be61190e8898cc032"
-  integrity sha512-mSzdiqlnruFlJYrQVWPMyPQ8ynJe9P5QVD+edv8HFlYDQNOwpPCjlqI9kE1VE3cVcxkh0j2Q2kfLQa/pAY2w7Q==
+  version "2.763.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.763.0.tgz#675c77e1288f7316090a9fd5cb3483057f923883"
+  integrity sha512-uHb+yfsH21wR8ZInj/GQwxCmWJjrL3sOwqwZ2lf9hDxh1P0lsMKDjf0e+8ICgRBY4x28XNWXs3/O15EID6Rsqw==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"

@@ -8,3 +8,7 @@ properties:
   autoEnabled:
     type: boolean
     description: Flag to indicate if auto-enabled flag should be enabled. Organizations with auto-enable turned on will automatically include any new repositories to the EasyCLA configuration.
+  branchProtectionEnabled:
+    type: boolean
+    description: Flag to indicate if this GitHub Organization is configured to automatically setup branch protection on CLA enabled repositories.
+    x-omitempty: true

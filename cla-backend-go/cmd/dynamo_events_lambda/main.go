@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
+
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/communitybridge/easycla/cla-backend-go/approval_list"
@@ -82,10 +84,13 @@ func init() {
 	eventsRepo := claevents.NewRepository(awsSession, stage)
 	claManagerRequestsRepo := cla_manager.NewRepository(awsSession, stage)
 	approvalListRequestsRepo := approval_list.NewRepository(awsSession, stage)
+	githubOrganizationsRepo := github_organizations.NewRepository(awsSession, stage)
 
 	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
 	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	project_service.InitClient(configFile.APIGatewayURL)
+	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
+	repositoriesService := repositories.NewService(repositoriesRepo, githubOrganizationsRepo, projectClaGroupRepo)
 
 	// Services
 	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo, projectClaGroupRepo)
@@ -102,7 +107,18 @@ func init() {
 	})
 	organization_service.InitClient(configFile.APIGatewayURL, eventsService)
 	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
-	dynamoEventsService = dynamo_events.NewService(stage, signaturesRepo, companyRepo, projectClaGroupRepo, eventsRepo, projectRepo, projectService, claManagerRequestsRepo, approvalListRequestsRepo)
+	dynamoEventsService = dynamo_events.NewService(
+		stage,
+		signaturesRepo,
+		companyRepo,
+		projectClaGroupRepo,
+		eventsRepo,
+		projectRepo,
+		projectService,
+		githubOrganizationsService,
+		repositoriesService,
+		claManagerRequestsRepo,
+		approvalListRequestsRepo)
 }
 
 func handler(ctx context.Context, event events.DynamoDBEvent) {

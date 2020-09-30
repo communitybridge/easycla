@@ -10,6 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	"github.com/sirupsen/logrus"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -227,16 +230,26 @@ func (r repository) buildProjectModel(dbModel DBProjectModel) *models.Project {
 }
 
 // UpdateDynamoContractGroupTemplates updates the templates in the data store
-func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template, pdfUrls models.TemplatePdfs, projectCCLAEnabled, projectICLAEnabled bool) error {
+func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, claGroupID string, template models.Template, pdfUrls models.TemplatePdfs, projectCCLAEnabled, projectICLAEnabled bool) error {
+	f := logrus.Fields{
+		"functionName":   "UpdateDynamoContractGroupTemplates",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"claGroupID":     claGroupID,
+		"templateID":     template.ID,
+		"templateName":   template.Name,
+		"cclaEnabled":    projectCCLAEnabled,
+		"iclaEnabled":    projectICLAEnabled,
+	}
 	tableName := fmt.Sprintf("cla-%s-projects", r.stage)
 	// Find Contract Group to update the Templates on
 	key := map[string]*dynamodb.AttributeValue{
 		"project_id": {
-			S: aws.String(ContractGroupID),
+			S: aws.String(claGroupID),
 		},
 	}
 
 	if projectCCLAEnabled {
+		log.WithFields(f).Debugf("updating CLA Group %s document list...", utils.ClaTypeCCLA)
 		// Map the fields to the dynamo model as the attribute names are different
 		// Map Template Fields into DocumentTab
 		cclaDocumentTabs := []DocumentTab{}
@@ -263,7 +276,7 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 
 		currentTime := time.Now().Format(time.RFC3339)
 
-		// Map CCLA Template to Document
+		// Map Template to Document
 		dynamoCorporateProjectDocument := DynamoProjectDocument{
 			DocumentName:            template.Name,
 			DocumentFileID:          template.ID,
@@ -282,34 +295,44 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 		dynamoCorporateProjectDocuments := []DynamoProjectDocument{}
 		dynamoCorporateProjectDocuments = append(dynamoCorporateProjectDocuments, dynamoCorporateProjectDocument)
 
-		dynamoCorporateProject := DynamoProjectCorporateDocuments{
-			DynamoProjectDocument: dynamoCorporateProjectDocuments,
-		}
-
 		// Marshal object into dynamodb attribute
-		expr, err := dynamodbattribute.MarshalMap(dynamoCorporateProject)
+		expr, err := dynamodbattribute.MarshalList(dynamoCorporateProjectDocuments)
 		if err != nil {
+			log.WithFields(f).Warnf("Error updating the CLA Group corporate document with template from: %s, error: %+v", template.Name, err)
 			return err
 		}
 
-		log.Debugf("Updating table %s with corporate template details - CLA Group id: %s.", tableName, ContractGroupID)
+		_, now := utils.CurrentTime()
+
+		log.WithFields(f).Debugf("Updating table %s with corporate template details - CLA Group id: %s.", tableName, claGroupID)
 		input := &dynamodb.UpdateItemInput{
-			ExpressionAttributeValues: expr,
-			TableName:                 aws.String(tableName),
-			Key:                       key,
-			ReturnValues:              aws.String("UPDATED_NEW"),
-			// UpdateExpression:          aws.String("set project_corporate_documents =  list_append(project_corporate_documents, :project_corporate_documents)"),
-			UpdateExpression: aws.String("set project_corporate_documents =  :project_corporate_documents"),
+			ExpressionAttributeNames: map[string]*string{
+				"#project_corporate_documents": aws.String("project_corporate_documents"),
+				"#date_modified":               aws.String("date_modified"),
+			},
+			//ExpressionAttributeValues: expr,
+			ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+				":project_corporate_documents": {
+					L: expr,
+				},
+				":date_modified": {
+					S: aws.String(now),
+				},
+			}, TableName: aws.String(tableName),
+			Key:              key,
+			ReturnValues:     aws.String("UPDATED_NEW"),
+			UpdateExpression: aws.String("set #date_modified = :date_modified, #project_corporate_documents =  list_append(#project_corporate_documents, :project_corporate_documents)"),
 		}
 
 		_, err = r.dynamoDBClient.UpdateItem(input)
 		if err != nil {
-			log.Warnf("Error updating the CLA Group corporate document with template from: %s, error: %+v", template.Name, err)
+			log.WithFields(f).Warnf("Error updating the CLA Group corporate document with template from: %s, error: %+v", template.Name, err)
 			return err
 		}
 	}
 
 	if projectICLAEnabled {
+		log.WithFields(f).Debugf("updating CLA Group %s document list...", utils.ClaTypeCCLA)
 		// Map ICLA Template Fields into DocumentTab
 		iclaDocumentTabs := []DocumentTab{}
 
@@ -334,6 +357,7 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 		}
 
 		currentTime := time.Now().Format(time.RFC3339)
+
 		// Map Template to Document
 		dynamoIndividualDocument := DynamoProjectDocument{
 			DocumentName:            template.Name,
@@ -352,28 +376,39 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, Cont
 		dynamoProjectIndividualDocuments := []DynamoProjectDocument{}
 		dynamoProjectIndividualDocuments = append(dynamoProjectIndividualDocuments, dynamoIndividualDocument)
 
-		dynamoIndividualProject := DynamoProjectIndividualDocuments{
-			DynamoProjectDocument: dynamoProjectIndividualDocuments,
-		}
-
-		expr, err := dynamodbattribute.MarshalMap(dynamoIndividualProject)
+		expr, err := dynamodbattribute.MarshalList(dynamoProjectIndividualDocuments)
 		if err != nil {
-			log.Warnf("Error updating the CLA Group individual document with template from: %s, error: %+v", template.Name, err)
+			log.WithFields(f).Warnf("Error updating the CLA Group individual document with template from: %s, error: %+v", template.Name, err)
 			return err
 		}
 
+		_, now := utils.CurrentTime()
+
+		log.WithFields(f).Debugf("Updating table %s with individual template details - CLA Group id: %s.", tableName, claGroupID)
 		input := &dynamodb.UpdateItemInput{
-			ExpressionAttributeValues: expr,
-			TableName:                 aws.String(tableName),
-			Key:                       key,
-			ReturnValues:              aws.String("UPDATED_NEW"),
-			UpdateExpression:          aws.String("set project_individual_documents =  list_append(project_individual_documents, :project_individual_documents)"),
+			ExpressionAttributeNames: map[string]*string{
+				"#project_individual_documents": aws.String("project_individual_documents"),
+				"#date_modified":                aws.String("date_modified"),
+			},
+			//ExpressionAttributeValues: expr,
+			ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+				":project_individual_documents": {
+					L: expr,
+				},
+				":date_modified": {
+					S: aws.String(now),
+				},
+			},
+			TableName:        aws.String(tableName),
+			Key:              key,
+			ReturnValues:     aws.String("UPDATED_NEW"),
+			UpdateExpression: aws.String("set #date_modified = :date_modified, #project_individual_documents = list_append(#project_individual_documents, :project_individual_documents)"),
 		}
 
-		log.Debugf("Updating table %s with individual template details - CLA Group id: %s.", tableName, ContractGroupID)
+		log.WithFields(f).Debugf("Updating table %s with individual template details - CLA Group id: %s.", tableName, claGroupID)
 		_, err = r.dynamoDBClient.UpdateItem(input)
 		if err != nil {
-			log.Warnf("Error updating the CLA Group individual document with template from: %s, error: %+v", template.Name, err)
+			log.WithFields(f).Warnf("Error updating the CLA Group individual document with template from: %s, error: %+v", template.Name, err)
 			return err
 		}
 
@@ -439,7 +474,7 @@ var templateMap = map[string]models.Template{
 				Width:        340,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      24,
+				OffsetY:      20,
 			},
 			{
 				ID:           "mailing_address3",
@@ -451,7 +486,7 @@ var templateMap = map[string]models.Template{
 				Width:        340,
 				Height:       20,
 				OffsetX:      0,  // should be aligned with the above
-				OffsetY:      60, // 47 should move down some
+				OffsetY:      48, // 47 should move down some
 			},
 			{
 				ID:           "country",
@@ -597,7 +632,7 @@ var templateMap = map[string]models.Template{
 				Width:        350,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      27,
+				OffsetY:      20,
 			},
 			{
 				ID:           "corporation_address3",
@@ -609,7 +644,7 @@ var templateMap = map[string]models.Template{
 				Width:        350,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      65,
+				OffsetY:      50,
 			},
 			{
 				ID:           "cla_manager_name",
