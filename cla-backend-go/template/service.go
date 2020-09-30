@@ -303,8 +303,19 @@ func (s service) GetCLATemplatePreview(ctx context.Context, claGroupID, claType 
 		return nil, err
 	}
 
-	//fetch the document from s3 at this stage
-	fileName := s.generateTemplateS3FilePath(claGroupID, claType)
+	// Convert:
+	//   https://cla-signature-files-dev.s3.amazonaws.com/contract-group/66b97366-a298-4625-965e-0c292c39f9a2/template/ccla-2020-09-25T22-37-51Z.pdf
+	// to:
+	//   contract-group/66b97366-a298-4625-965e-0c292c39f9a2/template/ccla-2020-09-25T22-37-51Z.pdf
+	fileName, urlErr := utils.GetPathFromURL(pdfS3URL)
+	if urlErr != nil {
+		return nil, err
+	}
+
+	// Strip any leading slashes...
+	fileName = strings.TrimLeft(fileName, "/")
+
+	// fetch the document from s3 at this stage
 	b, err := utils.DownloadFromS3(fileName)
 	if err != nil {
 		return nil, err
