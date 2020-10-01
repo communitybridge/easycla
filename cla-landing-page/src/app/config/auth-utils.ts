@@ -1,23 +1,16 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
+import { AppSettings } from './app-settings';
+import { EnvConfig } from './cla-env-utils';
+
 export const AUTH_ROUTE = '#/auth';
 
-const HTTP_PORT = '80';
-const HTTPS_PORT = '443';
-
-export function getURL(route: string, location: Location) {
-    const port = location.port;
-    const hasStandardPort = port === HTTPS_PORT || port === HTTP_PORT || port === '';
-    const redirectPort = hasStandardPort ? '' : `:${port}`;
-    return `${location.protocol}//${location.hostname}${redirectPort}/${route}`;
-}
-
-export function getAuthURL(location: Location) {
-    return getURL(AUTH_ROUTE, location);
-}
 
 // The URL to which Auth0 will redirect the browser after authorization has been granted for the user.
-export function getAuthURLFromWindow() {
-    return getAuthURL(window.location);
+export function getAuthURLFromWindow(type) {
+    const redirectConsole = (type === 'Projects') ? AppSettings.PROJECT_CONSOLE_LINK : AppSettings.CORPORATE_CONSOLE_LINK;
+    console.log(EnvConfig.default[redirectConsole]);
+    return EnvConfig.default[redirectConsole] + AUTH_ROUTE;
 }
+
