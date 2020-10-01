@@ -901,19 +901,20 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		"userEmail":      userEmail,
 		"name":           name}
 
-	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, projectID)
-
-	if signedErr != nil {
-		msg := fmt.Sprintf("Problem checking project: %s , error: %+v", projectID, signedErr)
-		log.WithFields(f).Warn(msg)
-		return nil, signedErr
-	}
 	// Get project cla Group records
 	log.WithFields(f).Debugf("Getting SalesForce Projects for claGroup: %s ", projectID)
 	projectCLAGroups, getErr := s.projectCGRepo.GetProjectsIdsForClaGroup(projectID)
 	if getErr != nil {
 		msg := fmt.Sprintf("Error getting SF projects for claGroup: %s ", projectID)
 		log.Debug(msg)
+	}
+
+	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, projectCLAGroups[0].FoundationSFID)
+
+	if signedErr != nil {
+		msg := fmt.Sprintf("Problem checking project: %s , error: %+v", projectID, signedErr)
+		log.WithFields(f).Warn(msg)
+		return nil, signedErr
 	}
 
 	// Get company
