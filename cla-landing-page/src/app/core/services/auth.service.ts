@@ -12,19 +12,19 @@ import { EnvConfig } from 'src/app/config/cla-env-utils';
 
 @Injectable()
 export class AuthService {
-
-  auth0 = new auth0.WebAuth({
-    clientID: EnvConfig.default['auth0-clientId'],
-    domain: EnvConfig.default['auth0-domain'],
-    responseType: 'token id_token',
-    redirectUri: getAuthURLFromWindow(),
-    scope: 'openid email profile'
-  });
+  auth0;
 
   constructor(
   ) { }
 
-  public login(): void {
+  public login(type): void {
+    this.auth0 = new auth0.WebAuth({
+      clientID: EnvConfig.default['auth0-clientId'],
+      domain: EnvConfig.default['auth0-domain'],
+      responseType: 'token id_token',
+      redirectUri: getAuthURLFromWindow(type),
+      scope: 'openid email profile'
+    });
     this.auth0.authorize();
   }
 
