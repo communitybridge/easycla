@@ -12,7 +12,7 @@ type GithubOrganization struct {
 	OrganizationInstallationID int64  `json:"organization_installation_id,omitempty"`
 	OrganizationName           string `json:"organization_name,omitempty"`
 	OrganizationNameLower      string `json:"organization_name_lower,omitempty"`
-	OrganizationSfid           string `json:"organization_sfid,omitempty"`
+	OrganizationSFID           string `json:"organization_sfid,omitempty"`
 	ProjectSFID                string `json:"project_sfid"`
 	AutoEnabled                bool   `json:"auto_enabled"`
 	BranchProtectionEnabled    bool   `json:"branch_protection_enabled"`
@@ -25,7 +25,7 @@ func toModel(in *GithubOrganization) *models.GithubOrganization {
 		DateModified:               in.DateModified,
 		OrganizationInstallationID: in.OrganizationInstallationID,
 		OrganizationName:           in.OrganizationName,
-		OrganizationSfid:           in.OrganizationSfid,
+		OrganizationSfid:           in.OrganizationSFID,
 		Version:                    in.Version,
 		AutoEnabled:                in.AutoEnabled,
 		BranchProtectionEnabled:    in.BranchProtectionEnabled,

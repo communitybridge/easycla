@@ -1965,7 +1965,7 @@ paths:
       tags:
         - github-organizations
     get:
-      summary: API to fetch the gitHub oranizations of the project
+      summary: API to fetch the GitHub Oranizations for the project
       security:
         - OauthSecurity: [ ]
       operationId: getProjectGithubOrganizations

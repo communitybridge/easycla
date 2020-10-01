@@ -8,14 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 
-	"github.com/go-openapi/strfmt"
 	"github.com/sirupsen/logrus"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
-
-	"github.com/communitybridge/easycla/cla-backend-go/github"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -41,12 +37,14 @@ var (
 
 // Repository interface defines the functions for the github organizations data model
 type Repository interface {
-	GetGithubOrganizations(ctx context.Context, externalProjectID string, projectSFID string) (*models.GithubOrganizations, error)
-	GetGithubOrganizationByName(ctx context.Context, githubOrganizationName string) (*models.GithubOrganizations, error)
-	AddGithubOrganization(ctx context.Context, externalProjectID string, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
-	DeleteGithubOrganization(ctx context.Context, externalProjectID string, projectSFID string, githubOrgName string) error
-	UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, branchProtectionEnabled bool) error
+	AddGithubOrganization(ctx context.Context, parentProjectSFID string, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
+	GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.GithubOrganizations, error)
+	GetGithubOrganizationsByParent(ctx context.Context, parentProjectSFID string) (*models.GithubOrganizations, error)
 	GetGithubOrganization(ctx context.Context, githubOrganizationName string) (*models.GithubOrganization, error)
+	GetGithubOrganizationByName(ctx context.Context, githubOrganizationName string) (*models.GithubOrganizations, error)
+	UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, branchProtectionEnabled bool) error
+	DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error
+	DeleteGithubOrganizationByParent(ctx context.Context, parentProjectSFID string, githubOrgName string) error
 }
 
 type repository struct {
@@ -63,11 +61,11 @@ func NewRepository(awsSession *session.Session, stage string) repository {
 		githubOrgTableName: fmt.Sprintf("cla-%s-github-orgs", stage),
 	}
 }
-func (repo repository) AddGithubOrganization(ctx context.Context, externalProjectID string, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
+func (repo repository) AddGithubOrganization(ctx context.Context, parentProjectSFID string, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
 	f := logrus.Fields{
 		"functionName":            "AddGithubOrganization",
 		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
-		"externalProjectID":       externalProjectID,
+		"parentProjectSFID":       parentProjectSFID,
 		"projectSFID":             projectSFID,
 		"organizationName":        aws.StringValue(input.OrganizationName),
 		"autoEnabled":             aws.BoolValue(input.AutoEnabled),
@@ -81,7 +79,7 @@ func (repo repository) AddGithubOrganization(ctx context.Context, externalProjec
 		OrganizationInstallationID: 0,
 		OrganizationName:           *input.OrganizationName,
 		OrganizationNameLower:      strings.ToLower(*input.OrganizationName),
-		OrganizationSfid:           externalProjectID,
+		OrganizationSFID:           parentProjectSFID,
 		ProjectSFID:                projectSFID,
 		AutoEnabled:                aws.BoolValue(input.AutoEnabled),
 		BranchProtectionEnabled:    aws.BoolValue(input.BranchProtectionEnabled),
@@ -115,31 +113,166 @@ func (repo repository) AddGithubOrganization(ctx context.Context, externalProjec
 	return toModel(githubOrg), nil
 }
 
-func (repo repository) DeleteGithubOrganization(ctx context.Context, externalProjectID string, projectSFID string, githubOrgName string) error {
+func (repo repository) GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.GithubOrganizations, error) {
 	f := logrus.Fields{
-		"functionName":      "DeleteGithubOrganization",
+		"functionName":   "GetGithubOrganizations",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectSFID":    projectSFID,
+	}
+
+	condition := expression.Key("project_sfid").Equal(expression.Value(projectSFID))
+	builder := expression.NewBuilder().WithKeyCondition(condition)
+
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		log.WithFields(f).Warnf("problem building query expression, error: %+v", err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(repo.githubOrgTableName),
+		IndexName:                 aws.String(ProjectSFIDOrganizationNameIndex),
+	}
+
+	results, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.WithFields(f).Warnf("error retrieving github_organizations using project_sfid = %s. error = %s", projectSFID, err.Error())
+		return nil, err
+	}
+
+	if len(results.Items) == 0 {
+		log.WithFields(f).Debug("no results from query")
+		return &models.GithubOrganizations{
+			List: []*models.GithubOrganization{},
+		}, nil
+	}
+
+	var resultOutput []*GithubOrganization
+	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &resultOutput)
+	if err != nil {
+		return nil, err
+	}
+
+	log.WithFields(f).Debug("building response model...")
+	ghOrgList := buildGithubOrganizationListModels(ctx, resultOutput)
+	return &models.GithubOrganizations{List: ghOrgList}, nil
+}
+
+func (repo repository) GetGithubOrganizationsByParent(ctx context.Context, parentProjectSFID string) (*models.GithubOrganizations, error) {
+	f := logrus.Fields{
+		"functionName":      "GetGithubOrganizations",
 		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
-		"externalProjectID": externalProjectID,
-		"projectSFID":       projectSFID,
-		"githubOrgName":     githubOrgName,
+		"parentProjectSFID": parentProjectSFID,
 	}
 
-	var githubOrganizationName string
-	orgs, orgErr := repo.GetGithubOrganizations(ctx, externalProjectID, projectSFID)
-	if orgErr != nil {
-		errMsg := fmt.Sprintf("github organization is not found using externalProjectID %s or projectSFID %s error: - %+v", externalProjectID, projectSFID, orgErr)
-		log.WithFields(f).Warn(errMsg)
-		return errors.New(errMsg)
+	condition := expression.Key("organization_sfid").Equal(expression.Value(parentProjectSFID))
+	builder := expression.NewBuilder().WithKeyCondition(condition)
+
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
 	}
 
-	for _, githubOrg := range orgs.List {
-		if strings.EqualFold(githubOrg.OrganizationName, githubOrgName) {
-			githubOrganizationName = githubOrg.OrganizationName
-		}
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(repo.githubOrgTableName),
+		IndexName:                 aws.String(GithubOrgSFIDIndex),
 	}
 
-	log.WithFields(f).Debug("Deleting GitHub organization...")
-	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
+	results, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.WithFields(f).Warnf("error retrieving github_organizations using organization_sfid = %s, error = %+v", parentProjectSFID, err)
+		return nil, err
+	}
+
+	if len(results.Items) == 0 {
+		log.WithFields(f).Debug("no results from query")
+		return &models.GithubOrganizations{
+			List: []*models.GithubOrganization{},
+		}, nil
+	}
+
+	var resultOutput []*GithubOrganization
+	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &resultOutput)
+	if err != nil {
+		return nil, err
+	}
+
+	log.WithFields(f).Debug("building response model...")
+	ghOrgList := buildGithubOrganizationListModels(ctx, resultOutput)
+	return &models.GithubOrganizations{List: ghOrgList}, nil
+}
+
+func (repo repository) GetGithubOrganizationByName(ctx context.Context, githubOrganizationName string) (*models.GithubOrganizations, error) {
+	f := logrus.Fields{
+		"functionName":           "GetGithubOrganizationByName",
+		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
+		"githubOrganizationName": "githubOrganizationName",
+	}
+
+	condition := expression.Key("organization_name_lower").Equal(expression.Value(strings.ToLower(githubOrganizationName)))
+	builder := expression.NewBuilder().WithKeyCondition(condition)
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(repo.githubOrgTableName),
+		IndexName:                 aws.String(GithubOrgLowerNameIndex),
+	}
+
+	log.WithFields(f).Debug("querying for github organization by name...")
+	results, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.WithFields(f).Warnf("error retrieving github_organizations using githubOrganizationName = %s. error = %s", githubOrganizationName, err.Error())
+		return nil, err
+	}
+	if len(results.Items) == 0 {
+		log.WithFields(f).Debug("Unable to find github organization by name - no results")
+		return &models.GithubOrganizations{
+			List: []*models.GithubOrganization{},
+		}, nil
+	}
+	var resultOutput []*GithubOrganization
+	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &resultOutput)
+	if err != nil {
+		log.WithFields(f).Warnf("problem decoding database results, error: %+v", err)
+		return nil, err
+	}
+
+	ghOrgList := buildGithubOrganizationListModels(ctx, resultOutput)
+	return &models.GithubOrganizations{List: ghOrgList}, nil
+}
+
+func (repo repository) GetGithubOrganization(ctx context.Context, githubOrganizationName string) (*models.GithubOrganization, error) {
+	f := logrus.Fields{
+		"functionName":           "GetGithubOrganization",
+		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
+		"githubOrganizationName": "githubOrganizationName",
+	}
+
+	log.WithFields(f).Debug("Querying for github organization by name...")
+	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"organization_name": {
 				S: aws.String(githubOrganizationName),
@@ -148,12 +281,20 @@ func (repo repository) DeleteGithubOrganization(ctx context.Context, externalPro
 		TableName: aws.String(repo.githubOrgTableName),
 	})
 	if err != nil {
-		errMsg := fmt.Sprintf("error deleting github organization: %s - %+v", githubOrgName, err)
-		log.WithFields(f).Warnf(errMsg)
-		return errors.New(errMsg)
+		return nil, err
+	}
+	if len(result.Item) == 0 {
+		log.WithFields(f).Debug("Unable to find github organization by name - no results")
+		return nil, ErrOrganizationDoesNotExist
 	}
 
-	return nil
+	var org GithubOrganization
+	err = dynamodbattribute.UnmarshalMap(result.Item, &org)
+	if err != nil {
+		log.WithFields(f).Warnf("error unmarshalling organization table data, error: %v", err)
+		return nil, err
+	}
+	return toModel(&org), nil
 }
 
 // UpdateGithubOrganization updates the specified GitHub organization based on the update model provided
@@ -216,132 +357,30 @@ func (repo repository) UpdateGithubOrganization(ctx context.Context, projectSFID
 	return nil
 }
 
-func (repo repository) GetGithubOrganizations(ctx context.Context, externalProjectID string, projectSFID string) (*models.GithubOrganizations, error) {
+func (repo repository) DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error {
 	f := logrus.Fields{
-		"functionName":      "GetGithubOrganizations",
-		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
-		"projectSFID":       projectSFID,
-		"externalProjectID": externalProjectID,
-	}
-
-	var condition expression.KeyConditionBuilder
-	var indexName string
-	builder := expression.NewBuilder()
-
-	if externalProjectID != "" {
-		condition = expression.Key("organization_sfid").Equal(expression.Value(externalProjectID))
-		indexName = GithubOrgSFIDIndex
-	} else {
-		condition = expression.Key("project_sfid").Equal(expression.Value(projectSFID))
-		indexName = ProjectSFIDOrganizationNameIndex
-	}
-
-	builder = builder.WithKeyCondition(condition)
-	// Use the nice builder to create the expression
-	expr, err := builder.Build()
-	if err != nil {
-		return nil, err
-	}
-
-	// Assemble the query input parameters
-	queryInput := &dynamodb.QueryInput{
-		ExpressionAttributeNames:  expr.Names(),
-		ExpressionAttributeValues: expr.Values(),
-		KeyConditionExpression:    expr.KeyCondition(),
-		ProjectionExpression:      expr.Projection(),
-		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(repo.githubOrgTableName),
-		IndexName:                 aws.String(indexName),
-	}
-
-	results, err := repo.dynamoDBClient.Query(queryInput)
-	if err != nil {
-		log.WithFields(f).Warnf("error retrieving github_organizations using organization_sfid = %s, project_sfid = %s. error = %s", externalProjectID, projectSFID, err.Error())
-		return nil, err
-	}
-
-	if len(results.Items) == 0 {
-		log.WithFields(f).Debug("no results from query")
-		return &models.GithubOrganizations{
-			List: []*models.GithubOrganization{},
-		}, nil
-	}
-
-	var resultOutput []*GithubOrganization
-	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &resultOutput)
-	if err != nil {
-		return nil, err
-	}
-
-	log.WithFields(f).Debug("building response model...")
-	ghOrgList := buildGithubOrganizationListModels(ctx, resultOutput)
-	return &models.GithubOrganizations{List: ghOrgList}, nil
-}
-
-func buildGithubOrganizationListModels(ctx context.Context, githubOrganizations []*GithubOrganization) []*models.GithubOrganization {
-	f := logrus.Fields{
-		"functionName":   "buildGithubOrganizationListModels",
+		"functionName":   "DeleteGithubOrganization",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectSFID":    projectSFID,
+		"githubOrgName":  githubOrgName,
 	}
-	ghOrgList := toModels(githubOrganizations)
-	if len(ghOrgList) > 0 {
-		var wg sync.WaitGroup
-		wg.Add(len(ghOrgList))
-		for _, ghorganization := range ghOrgList {
-			go func(ghorg *models.GithubOrganization) {
-				defer wg.Done()
-				ghorg.GithubInfo = &models.GithubOrganizationGithubInfo{}
-				log.WithFields(f).Debugf("Loading GitHub organization details: %s...", ghorg.OrganizationName)
-				user, err := github.GetUserDetails(ghorg.OrganizationName)
-				if err != nil {
-					ghorg.GithubInfo.Error = err.Error()
-				} else {
-					url := strfmt.URI(*user.HTMLURL)
-					ghorg.GithubInfo.Details = &models.GithubOrganizationGithubInfoDetails{
-						Bio:     user.Bio,
-						HTMLURL: &url,
-						ID:      user.ID,
-					}
-				}
-				ghorg.Repositories = &models.GithubOrganizationRepositories{
-					List: make([]*models.GithubRepositoryInfo, 0),
-				}
-				if ghorg.OrganizationInstallationID != 0 {
-					log.WithFields(f).Debugf("Loading GitHub repository list based on installation id: %d...", ghorg.OrganizationInstallationID)
-					list, err := github.GetInstallationRepositories(ghorg.OrganizationInstallationID)
-					if err != nil {
-						log.WithFields(f).Warnf("unable to get repositories for installation id : %d", ghorg.OrganizationInstallationID)
-						ghorg.Repositories.Error = err.Error()
-						return
-					}
 
-					log.WithFields(f).Debugf("Found %d GitHub repositories using installation id: %d...",
-						len(list), ghorg.OrganizationInstallationID)
-					for _, repoInfo := range list {
-						ghorg.Repositories.List = append(ghorg.Repositories.List, &models.GithubRepositoryInfo{
-							RepositoryGithubID: utils.Int64Value(repoInfo.ID),
-							RepositoryName:     utils.StringValue(repoInfo.FullName),
-							RepositoryURL:      utils.StringValue(repoInfo.URL),
-							RepositoryType:     "github",
-						})
-					}
-				}
-			}(ghorganization)
+	var githubOrganizationName string
+	orgs, orgErr := repo.GetGithubOrganizations(ctx, projectSFID)
+	if orgErr != nil {
+		errMsg := fmt.Sprintf("github organization is not found using projectSFID: %s, error: %+v", projectSFID, orgErr)
+		log.WithFields(f).Warn(errMsg)
+		return errors.New(errMsg)
+	}
+
+	for _, githubOrg := range orgs.List {
+		if strings.EqualFold(githubOrg.OrganizationName, githubOrgName) {
+			githubOrganizationName = githubOrg.OrganizationName
 		}
-		wg.Wait()
-	}
-	return ghOrgList
-}
-
-func (repo repository) GetGithubOrganization(ctx context.Context, githubOrganizationName string) (*models.GithubOrganization, error) {
-	f := logrus.Fields{
-		"functionName":           "GetGithubOrganization",
-		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
-		"githubOrganizationName": "githubOrganizationName",
 	}
 
-	log.WithFields(f).Debug("Querying for github organization by name")
-	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
+	log.WithFields(f).Debug("Deleting GitHub organization...")
+	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"organization_name": {
 				S: aws.String(githubOrganizationName),
@@ -350,72 +389,50 @@ func (repo repository) GetGithubOrganization(ctx context.Context, githubOrganiza
 		TableName: aws.String(repo.githubOrgTableName),
 	})
 	if err != nil {
-		return nil, err
-	}
-	if len(result.Item) == 0 {
-		log.WithFields(f).Debug("Unable to find github organization by name")
-		return nil, ErrOrganizationDoesNotExist
+		errMsg := fmt.Sprintf("error deleting github organization: %s - %+v", githubOrgName, err)
+		log.WithFields(f).Warnf(errMsg)
+		return errors.New(errMsg)
 	}
 
-	var org GithubOrganization
-	err = dynamodbattribute.UnmarshalMap(result.Item, &org)
-	if err != nil {
-		log.WithFields(f).Warnf("error unmarshalling organization table data, error: %v", err)
-		return nil, err
-	}
-	return toModel(&org), nil
+	return nil
 }
 
-func (repo repository) GetGithubOrganizationByName(ctx context.Context, githubOrganizationName string) (*models.GithubOrganizations, error) {
+func (repo repository) DeleteGithubOrganizationByParent(ctx context.Context, parentProjectSFID string, githubOrgName string) error {
 	f := logrus.Fields{
-		"functionName":           "GetGithubOrganizationByName",
-		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
-		"githubOrganizationName": "githubOrganizationName",
+		"functionName":      "DeleteGithubOrganization",
+		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
+		"parentProjectSFID": parentProjectSFID,
+		"githubOrgName":     githubOrgName,
 	}
 
-	var condition expression.KeyConditionBuilder
-	var indexName string
-	builder := expression.NewBuilder()
+	var githubOrganizationName string
+	orgs, orgErr := repo.GetGithubOrganizationsByParent(ctx, parentProjectSFID)
+	if orgErr != nil {
+		errMsg := fmt.Sprintf("github organization is not found using parentProjectSFID %s, error: - %+v", parentProjectSFID, orgErr)
+		log.WithFields(f).Warn(errMsg)
+		return errors.New(errMsg)
+	}
 
-	condition = expression.Key("organization_name_lower").Equal(expression.Value(strings.ToLower(githubOrganizationName)))
-	indexName = GithubOrgLowerNameIndex
+	for _, githubOrg := range orgs.List {
+		if strings.EqualFold(githubOrg.OrganizationName, githubOrgName) {
+			githubOrganizationName = githubOrg.OrganizationName
+		}
+	}
 
-	builder = builder.WithKeyCondition(condition)
-	// Use the nice builder to create the expression
-	expr, err := builder.Build()
+	log.WithFields(f).Debug("Deleting GitHub organization...")
+	_, err := repo.dynamoDBClient.DeleteItem(&dynamodb.DeleteItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"organization_name": {
+				S: aws.String(githubOrganizationName),
+			},
+		},
+		TableName: aws.String(repo.githubOrgTableName),
+	})
 	if err != nil {
-		return nil, err
-	}
-	// Assemble the query input parameters
-	queryInput := &dynamodb.QueryInput{
-		ExpressionAttributeNames:  expr.Names(),
-		ExpressionAttributeValues: expr.Values(),
-		KeyConditionExpression:    expr.KeyCondition(),
-		ProjectionExpression:      expr.Projection(),
-		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(repo.githubOrgTableName),
-		IndexName:                 aws.String(indexName),
+		errMsg := fmt.Sprintf("error deleting github organization: %s - %+v", githubOrgName, err)
+		log.WithFields(f).Warnf(errMsg)
+		return errors.New(errMsg)
 	}
 
-	log.WithFields(f).Debug("querying for github organization by name...")
-	results, err := repo.dynamoDBClient.Query(queryInput)
-	if err != nil {
-		log.WithFields(f).Warnf("error retrieving github_organizations using githubOrganizationName = %s. error = %s", githubOrganizationName, err.Error())
-		return nil, err
-	}
-	if len(results.Items) == 0 {
-		log.WithFields(f).Debug("unable to find github organization by name")
-		return &models.GithubOrganizations{
-			List: []*models.GithubOrganization{},
-		}, nil
-	}
-	var resultOutput []*GithubOrganization
-	err = dynamodbattribute.UnmarshalListOfMaps(results.Items, &resultOutput)
-	if err != nil {
-		log.WithFields(f).Warnf("problem decoding database results, error: %+v", err)
-		return nil, err
-	}
-
-	ghOrgList := buildGithubOrganizationListModels(ctx, resultOutput)
-	return &models.GithubOrganizations{List: ghOrgList}, nil
+	return nil
 }
