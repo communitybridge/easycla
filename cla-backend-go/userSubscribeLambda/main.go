@@ -5,16 +5,15 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"runtime"
-	"time"
 
+	"github.com/LF-Engineering/lfx-models/models/event"
+	usersModels "github.com/LF-Engineering/lfx-models/models/users"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-
 	"github.com/communitybridge/easycla/cla-backend-go/config"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -22,6 +21,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/userSubscribeLambda/cmd"
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
+	"github.com/mitchellh/mapstructure"
 )
 
 // Build and version variables defined and set during the build process
@@ -53,27 +53,45 @@ func init() {
 }
 
 // Handler is the user subscribe handler lambda entry function
-func Handler(ctx context.Context, sqsEvent events.SQSEvent) error {
-	for _, message := range sqsEvent.Records {
-		log.Infof("Processing message %s for event source %s\n", message.MessageId, message.EventSource)
-		log.Debugf("message body %v", message.Body)
+func Handler(ctx context.Context, snsEvent events.SNSEvent) error {
+	if len(snsEvent.Records) == 0 {
+		log.Warn("SNS event contained 0 records - ignoring message.")
+		return nil
+	}
 
-		userData := EventSchemaData{}
-		err := json.Unmarshal([]byte(message.Body), &userData)
+	for _, message := range snsEvent.Records {
+		log.Infof("Processing message id: '%s' for event source '%s'\n", message.SNS.MessageID, message.EventSource)
+
+		log.Debugf("Unmarshalling message body: '%s'", message.SNS.Message)
+
+		// log.Debugf("Unmarshalling message body: '%s'", message.SNS.Message)
+		var model event.Event
+		err := model.UnmarshalBinary([]byte(message.SNS.Message))
 		if err != nil {
-			log.Warnf("Error: %v, JSON unmarshal failed - unable to process message: %s", err, message.MessageId)
+			log.Warnf("Error: %v, JSON unmarshal failed - unable to process message: %s", err, message.SNS.MessageID)
+			return err
 		}
-		if userData.Type != "UserUpdatedProfile" {
-			log.Warnf("Invalid event %s- skipping event", userData.Type)
-			return nil
+
+		switch model.Type {
+		case "UserUpdatedProfile":
+			Write(model)
+		default:
+			log.Warnf("unrecognized message type: %s - unable to process message ", model.Type)
 		}
-		Write(userData)
+
 	}
 	return nil
 }
 
 // Write saves the user data model to persistent storage
-func Write(user EventSchemaData) {
+func Write(user event.Event) {
+
+	uc := &usersModels.UserUpdated{}
+	err := mapstructure.Decode(user.Data, uc)
+	if err != nil {
+		return
+	}
+
 	var userDetails *models.User
 	var userErr error
 	var awsSession = session.Must(session.NewSession(&aws.Config{}))
@@ -83,45 +101,46 @@ func Write(user EventSchemaData) {
 	}
 	usersRepo := users.NewRepository(awsSession, stage)
 
-	userDetails, userErr = usersRepo.GetUserByLFUserName(user.Data.UserName)
+	userDetails, userErr = usersRepo.GetUserByLFUserName(*uc.Username)
 	if userErr != nil {
-		log.Warnf("Error - unable to locate user by LfUsername: %s, error: %+v", user.Data.UserName, userErr)
+		log.Warnf("Error - unable to locate user by LfUsername: %s, error: %+v", *uc.Username, userErr)
 		log.Error("", userErr)
 		return
 	}
 
 	if userDetails == nil {
-		userDetails, userErr = usersRepo.GetUserByEmail(user.Data.Email)
+		for _, email := range uc.Emails {
+			userDetails, userErr = usersRepo.GetUserByEmail(*email.EmailAddress)
+			if userErr != nil {
+				log.Warnf("Error - unable to locate user by LfUsername: %s, error: %+v", *uc.Username, userErr)
+			}
+		}
+	}
+
+	if userDetails == nil {
+		userDetails, userErr = usersRepo.GetUserByExternalID(uc.UserID)
 		if userErr != nil {
-			log.Warnf("Error - unable to locate user by LfUsername: %s, error: %+v", user.Data.UserName, userErr)
+			log.Warnf("Error - unable to locate user by UserExternalID: %s, error: %+v", uc.UserID, userErr)
 			return
 		}
 	}
 
 	if userDetails == nil {
-		userDetails, userErr = usersRepo.GetUserByExternalID(user.Data.UserID)
-		if userErr != nil {
-			log.Warnf("Error - unable to locate user by UserExternalID: %s, error: %+v", user.Data.UserID, userErr)
-			return
-		}
-	}
-
-	if userDetails == nil {
-		log.Debugf("User model is nil so skipping user %s", user.Data.UserName)
+		log.Debugf("User model is nil so skipping user %s", *uc.Username)
 		return
 	}
 
 	userServiceClient := user_service.GetClient()
 
-	sfdcUserObject, err := userServiceClient.GetUser(user.Data.UserID)
+	sfdcUserObject, err := userServiceClient.GetUser(uc.UserID)
 	if err != nil {
-		log.Warnf("Error - unable to locate user by SFID: %s, error: %+v", user.Data.UserID, userErr)
+		log.Warnf("Error - unable to locate user by SFID: %s, error: %+v", uc.UserID, userErr)
 		log.Error("", userErr)
 		return
 	}
 
 	if sfdcUserObject == nil {
-		log.Debugf("User-service model is nil so skipping user %s with SFID %s", user.Data.UserName, user.Data.UserID)
+		log.Debugf("User-service model is nil so skipping user %s with SFID %s", *uc.Username, uc.UserID)
 		return
 	}
 
@@ -146,7 +165,7 @@ func Write(user EventSchemaData) {
 
 	_, updateErr := usersRepo.Save(updateUserModel)
 	if updateErr != nil {
-		log.Warnf("Error - unable to update user by LfUsername: %s, error: %+v", user.Data.UserName, updateErr)
+		log.Warnf("Error - unable to update user by LfUsername: %s, error: %+v", *uc.Username, updateErr)
 		return
 	}
 }
@@ -166,63 +185,4 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-// UserData . . .
-type UserData struct {
-	UserID    string `json:"userId,omitempty"`
-	FirstName string `json:"firstName,omitempty"`
-	Title     string `json:"title,omitempty"`
-	LastName  string `json:"lastName,omitempty"`
-	Email     string `json:"email,omitempty"`
-	Type      string `json:"type,omitempty"`
-	UserName  string `json:"username,omitempty"`
-	Picture   string `json:"picture,omitempty"`
-}
-
-// EventSchemaData . . .
-type EventSchemaData struct {
-	Schema struct {
-		Type       string `json:"type"`
-		Properties struct {
-			UserID struct {
-				Type string `json:"type"`
-			} `json:"userID"`
-			FirstName struct {
-				Type string `json:"type"`
-			} `json:"firstName"`
-			LastName struct {
-				Type string `json:"type"`
-			} `json:"lastName"`
-			Email struct {
-				Type string `json:"type"`
-			} `json:"email"`
-			Title struct {
-				Type string `json:"type"`
-			} `json:"title"`
-			Username struct {
-				Type string `json:"type"`
-			} `json:"username"`
-			Picture struct {
-				Type string `json:"type"`
-			} `json:"picture"`
-			LinkedInID struct {
-				Type string `json:"type"`
-			} `json:"linkedInId"`
-			GithubID struct {
-				Type string `json:"type"`
-			} `json:"githubId"`
-		} `json:"properties"`
-		Required []string `json:"required"`
-	} `json:"$schema"`
-	Version  string    `json:"version"`
-	Type     string    `json:"type"`
-	Created  time.Time `json:"created"`
-	ID       string    `json:"id"`
-	SourceID struct {
-		ClientID    string `json:"client_id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	} `json:"source_id"`
-	Data UserData `json:"data,omitempty"`
 }
