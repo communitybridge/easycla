@@ -46,18 +46,20 @@ func (s *service) GitHubOrgUpdatedEvent(event events.DynamoDBEventRecord) error 
 			return err
 		}
 
+		ctx := context.Background()
+		log.WithFields(f).Debugf("creating a new GitHub client object for org: %s...", newGitHubOrg.OrganizationName)
+		gitHubClient, clientErr := github.NewGithubAppClient(newGitHubOrg.OrganizationInstallationID)
+		if clientErr != nil {
+			return clientErr
+		}
+
 		var eg errgroup.Group
 		for _, repo := range repos {
+			// this is for goroutine local variables
+			repo := repo
 			// Update the branch protection in a go routine...
 			eg.Go(func() error {
 				log.WithFields(f).Debugf("enabling branch protection for repository: %s", repo.RepositoryName)
-
-				ctx := context.Background()
-				log.WithFields(f).Debugf("creating a new GitHub client object for repository: %s...", repo.RepositoryName)
-				gitHubClient, clientErr := github.NewGithubAppClient(newGitHubOrg.OrganizationInstallationID)
-				if clientErr != nil {
-					return clientErr
-				}
 
 				log.WithFields(f).Debugf("looking up the default branch for the GitHub repository: %s...", repo.RepositoryName)
 				defaultBranch, branchErr := github.GetDefaultBranchForRepo(ctx, gitHubClient, newGitHubOrg.OrganizationName, repo.RepositoryName)
