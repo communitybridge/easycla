@@ -5,11 +5,14 @@ package github_organizations
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/github_organizations"
+	"github.com/communitybridge/easycla/cla-backend-go/github"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/runtime/middleware"
@@ -21,8 +24,15 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 		func(params github_organizations.GetProjectGithubOrganizationsParams, claUser *user.CLAUser) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
 			result, err := service.GetGithubOrganizations(ctx, params.ProjectSFID)
 			if err != nil {
+				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
+					return github_organizations.NewGetProjectGithubOrganizationsNotFound().WithPayload(&models.ErrorResponse{
+						Code:    "404",
+						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
+					})
+				}
 				return github_organizations.NewGetProjectGithubOrganizationsBadRequest().WithPayload(errorResponse(err))
 			}
 			return github_organizations.NewGetProjectGithubOrganizationsOK().WithPayload(result)
@@ -32,15 +42,28 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 		func(params github_organizations.AddProjectGithubOrganizationParams, claUser *user.CLAUser) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			result, err := service.AddGithubOrganization(ctx, params.ProjectSFID, params.Body)
-			if err != nil {
-				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
-			}
+
 			if params.Body.OrganizationName == nil {
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(&models.ErrorResponse{
 					Code:    "400",
 					Message: "EasyCLA - 400 Bad Request - Missing input Organization Name",
 				})
+			}
+
+			_, err := github.GetOrganization(ctx, *params.Body.OrganizationName)
+			if err != nil {
+				return github_organizations.NewAddProjectGithubOrganizationNotFound().WithPayload(errorResponse(err))
+			}
+
+			result, err := service.AddGithubOrganization(ctx, params.ProjectSFID, params.Body)
+			if err != nil {
+				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
+					return github_organizations.NewAddProjectGithubOrganizationNotFound().WithPayload(&models.ErrorResponse{
+						Code:    "404",
+						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
+					})
+				}
+				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
 
 			autoEnabled := false
@@ -64,10 +87,23 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 		func(params github_organizations.DeleteProjectGithubOrganizationParams, claUser *user.CLAUser) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			err := service.DeleteGithubOrganization(ctx, params.ProjectSFID, params.OrgName)
+
+			_, err := github.GetOrganization(ctx, params.OrgName)
 			if err != nil {
+				return github_organizations.NewDeleteProjectGithubOrganizationNotFound().WithPayload(errorResponse(err))
+			}
+
+			err = service.DeleteGithubOrganization(ctx, params.ProjectSFID, params.OrgName)
+			if err != nil {
+				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
+					return github_organizations.NewGetProjectGithubOrganizationsNotFound().WithPayload(&models.ErrorResponse{
+						Code:    "404",
+						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
+					})
+				}
 				return github_organizations.NewDeleteProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
+
 			eventService.LogEvent(&events.LogEventArgs{
 				UserID:            claUser.UserID,
 				EventType:         events.GithubOrganizationDeleted,
@@ -77,7 +113,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 					GithubOrganizationName: params.OrgName,
 				},
 			})
-			return github_organizations.NewDeleteProjectGithubOrganizationOK()
+			return github_organizations.NewDeleteProjectGithubOrganizationNoContent()
 		})
 
 	api.GithubOrganizationsUpdateProjectGithubOrganizationConfigHandler = github_organizations.UpdateProjectGithubOrganizationConfigHandlerFunc(
