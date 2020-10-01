@@ -2,11 +2,13 @@
  SPDX-License-Identifier: MIT */
 
 .landing-page-container {
-    margin-top: 0;
+    transition: margin 0.3s;
+    margin-top: 40px;
     padding: 25px 0;
-    min-height: calc(100vh - 168px);
+    min-height: calc(100vh - 207px);
     &.expanded {
         margin-top: 115px;
         min-height: calc(100vh - 282px);
     }
 }
+

@@ -10,7 +10,6 @@ import { ClaConsoleSectionComponent } from './components/cla-console-section/cla
 import { ClaFooterComponent } from './components/cla-footer/cla-footer.component';
 import { LfxHeaderComponent } from './components/lfx-header/lfx-header.component';
 import { AuthService } from './core/services/auth.service';
-import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
 import { HomeComponent } from './components/home/home.component';
 
 @NgModule({
@@ -19,7 +18,6 @@ import { HomeComponent } from './components/home/home.component';
     ClaConsoleSectionComponent,
     ClaFooterComponent,
     LfxHeaderComponent,
-    PageNotFoundComponent,
     HomeComponent,
   ],
   imports: [
