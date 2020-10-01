@@ -13,10 +13,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type fn func(ctx context.Context, sqsEvent events.SQSEvent) error
+type fn func(ctx context.Context, sqsEvent events.SNSEvent) error
 
+// Start starts the specified handler
 func Start(handler fn) error {
-	log.Info("starting lambda handler...")
+	log.Println("starting lambda handler...")
 
 	lambda.Start(handler)
 	return nil

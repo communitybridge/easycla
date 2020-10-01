@@ -41,6 +41,7 @@ require (
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/labstack/gommon v0.2.8
 	github.com/lytics/logrus v0.0.0-20170528191427-4389a17ed024
+	github.com/mitchellh/mapstructure v1.3.2
 	github.com/mozillazg/request v0.8.0 // indirect
 	github.com/pdfcpu/pdfcpu v0.3.5-0.20200802160406-be1e0eb55afc
 	github.com/pelletier/go-toml v1.8.0 // indirect
