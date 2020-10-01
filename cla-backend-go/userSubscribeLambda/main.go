@@ -56,11 +56,16 @@ func init() {
 func Handler(ctx context.Context, sqsEvent events.SQSEvent) error {
 	for _, message := range sqsEvent.Records {
 		log.Infof("Processing message %s for event source %s\n", message.MessageId, message.EventSource)
+		log.Debugf("message body %v", message.Body)
 
 		userData := EventSchemaData{}
 		err := json.Unmarshal([]byte(message.Body), &userData)
 		if err != nil {
 			log.Warnf("Error: %v, JSON unmarshal failed - unable to process message: %s", err, message.MessageId)
+		}
+		if userData.Type != "UserUpdatedProfile" {
+			log.Warnf("Invalid event %s- skipping event", userData.Type)
+			return nil
 		}
 		Write(userData)
 	}
