@@ -91,7 +91,7 @@ func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string)
 	}
 
 	log.WithFields(f).Debug("loading github organization details...")
-	orgs, err := s.repo.GetGithubOrganizations(ctx, "", projectSFID)
+	orgs, err := s.repo.GetGithubOrganizations(ctx, projectSFID)
 	if err != nil {
 		log.WithFields(f).Warnf("problem loading github organizations from the project service, error: %+v", err)
 		return nil, err
@@ -263,7 +263,7 @@ func (s service) DeleteGithubOrganization(ctx context.Context, projectSFID strin
 	}
 
 	log.WithFields(f).Debug("deleting github github organization...")
-	return s.repo.DeleteGithubOrganization(ctx, "", projectSFID, githubOrgName)
+	return s.repo.DeleteGithubOrganization(ctx, projectSFID, githubOrgName)
 }
 
 func (s service) UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, branchProtectionEnabled bool) error {

@@ -6,21 +6,25 @@ package github_organizations
 import (
 	"context"
 
+	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
+
+	"github.com/sirupsen/logrus"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
-	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 )
 
 // Service contains functions of GithubOrganizations service
 type Service interface {
-	GetGithubOrganizations(ctx context.Context, externalProjectID string) (*models.GithubOrganizations, error)
+	AddGithubOrganization(ctx context.Context, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
+	GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.GithubOrganizations, error)
+	GetGithubOrganizationsByParent(ctx context.Context, parentProjectSFID string) (*models.GithubOrganizations, error)
 	GetGithubOrganizationByName(ctx context.Context, githubOrgName string) (*models.GithubOrganization, error)
-	AddGithubOrganization(ctx context.Context, externalProjectID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
-	DeleteGithubOrganization(ctx context.Context, externalProjectID string, githubOrgName string) error
 	UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, branchProtectionEnabled bool) error
+	DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error
 }
 
 type service struct {
@@ -36,69 +40,108 @@ func NewService(repo Repository, ghRepository repositories.Repository) Service {
 	}
 }
 
+func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
+	f := logrus.Fields{
+		"functionName":   "AddGithubOrganization",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectSFID":    projectSFID,
+	}
+	// Lookup the parent
+	parentProjectSFID, projErr := v2ProjectService.GetClient().GetParentProject(projectSFID)
+	if projErr != nil {
+		log.WithFields(f).Warnf("problem fetching github organizations by projectSFID, error: %+v", projErr)
+		return nil, projErr
+	}
+
+	return s.repo.AddGithubOrganization(ctx, parentProjectSFID, projectSFID, input)
+}
+
 func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.GithubOrganizations, error) {
-	externalProjectID, err := projectHelper(projectSFID)
+	f := logrus.Fields{
+		"functionName":   "GetGithubOrganizations",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectSFID":    projectSFID,
+	}
+
+	gitHubOrgModels, err := s.repo.GetGithubOrganizations(ctx, projectSFID)
 	if err != nil {
+		log.WithFields(f).Warnf("problem fetching github organizations by projectSFID, error: %+v", err)
 		return nil, err
 	}
-	return s.repo.GetGithubOrganizations(ctx, externalProjectID, projectSFID)
+
+	if len(gitHubOrgModels.List) >= 0 {
+		return gitHubOrgModels, err
+	}
+
+	log.WithFields(f).Debug("unable to find github organizations by projectSFID - searching by parent...")
+	// Lookup the parent
+	parentProjectSFID, projErr := v2ProjectService.GetClient().GetParentProject(projectSFID)
+	if projErr != nil {
+		log.WithFields(f).Warnf("problem fetching project parent SFID, error: %+v", projErr)
+		return nil, projErr
+	}
+
+	if parentProjectSFID != projectSFID {
+		log.WithFields(f).Debugf("searching github organization by parent SFID: %s", parentProjectSFID)
+		return s.repo.GetGithubOrganizationsByParent(ctx, parentProjectSFID)
+	}
+
+	log.WithFields(f).Debugf("no parent or parent is %s - search criteria exhausted", utils.TheLinuxFoundation)
+	return gitHubOrgModels, err
+}
+
+func (s service) GetGithubOrganizationsByParent(ctx context.Context, parentProjectSFID string) (*models.GithubOrganizations, error) {
+	return s.repo.GetGithubOrganizationsByParent(ctx, parentProjectSFID)
 }
 
 func (s service) GetGithubOrganizationByName(ctx context.Context, githubOrgName string) (*models.GithubOrganization, error) {
+	f := logrus.Fields{
+		"functionName":   "GetGithubOrganizationByName",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"githubOrgName":  githubOrgName,
+	}
+
 	gitHubOrgs, err := s.repo.GetGithubOrganizationByName(ctx, githubOrgName)
 	if err != nil {
+		log.WithFields(f).Warnf("problem fetching github organizations by name, error: %+v", err)
 		return nil, err
 	}
 	if len(gitHubOrgs.List) == 0 {
-		log.Debugf("no matching github organization matches organization name: %s", githubOrgName)
+		log.WithFields(f).Debugf("no matching github organization matches organization name: %s", githubOrgName)
 		return nil, nil
 	}
 
 	if len(gitHubOrgs.List) > 1 {
-		log.Warnf("More than 1 github organization matches organization name: %s - using first one", githubOrgName)
+		log.WithFields(f).Warnf("More than 1 github organization matches organization name: %s - using first one", githubOrgName)
 	}
 
 	return gitHubOrgs.List[0], err
-}
-
-func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
-	externalProjectID, err := projectHelper(projectSFID)
-	if err != nil {
-		return nil, err
-	}
-	return s.repo.AddGithubOrganization(ctx, externalProjectID, projectSFID, input)
-}
-
-func (s service) DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error {
-	externalProjectID, err := projectHelper(projectSFID)
-	if err != nil {
-		return err
-	}
-
-	err = s.ghRepository.DisableRepositoriesOfGithubOrganization(ctx, externalProjectID, githubOrgName)
-	if err != nil {
-		return err
-	}
-	return s.repo.DeleteGithubOrganization(ctx, externalProjectID, projectSFID, githubOrgName)
 }
 
 func (s service) UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, branchProtectionEnabled bool) error {
 	return s.repo.UpdateGithubOrganization(ctx, projectSFID, organizationName, autoEnabled, branchProtectionEnabled)
 }
 
-func projectHelper(projectSFID string) (string, error) {
-	psc := v2ProjectService.GetClient()
-	project, err := psc.GetProject(projectSFID)
+func (s service) DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error {
+	f := logrus.Fields{
+		"functionName":   "DeleteGithubOrganization",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectSFID":    projectSFID,
+		"githubOrgName":  githubOrgName,
+	}
+
+	// Lookup the parent
+	parentProjectSFID, projErr := v2ProjectService.GetClient().GetParentProject(projectSFID)
+	if projErr != nil {
+		log.WithFields(f).Warnf("problem fetching project parent SFID, error: %+v", projErr)
+		return projErr
+	}
+
+	err := s.ghRepository.DisableRepositoriesOfGithubOrganization(ctx, parentProjectSFID, githubOrgName)
 	if err != nil {
-		return "", err
+		log.WithFields(f).Warnf("problem disabling repositories for github organizations, error: %+v", projErr)
+		return err
 	}
 
-	var externalProjectID string
-	if project.Parent == "" || project.Parent == utils.TheLinuxFoundation {
-		externalProjectID = projectSFID
-	} else {
-		externalProjectID = project.Parent
-	}
-
-	return externalProjectID, nil
+	return s.repo.DeleteGithubOrganization(ctx, projectSFID, githubOrgName)
 }

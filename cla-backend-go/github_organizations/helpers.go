@@ -1,0 +1,71 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
+package github_organizations
+
+import (
+	"context"
+	"sync"
+
+	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	"github.com/communitybridge/easycla/cla-backend-go/github"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	"github.com/go-openapi/strfmt"
+	"github.com/sirupsen/logrus"
+)
+
+func buildGithubOrganizationListModels(ctx context.Context, githubOrganizations []*GithubOrganization) []*models.GithubOrganization {
+	f := logrus.Fields{
+		"functionName":   "buildGithubOrganizationListModels",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
+	ghOrgList := toModels(githubOrganizations)
+	if len(ghOrgList) > 0 {
+		var wg sync.WaitGroup
+		wg.Add(len(ghOrgList))
+		for _, ghorganization := range ghOrgList {
+			go func(ghorg *models.GithubOrganization) {
+				defer wg.Done()
+				ghorg.GithubInfo = &models.GithubOrganizationGithubInfo{}
+				log.WithFields(f).Debugf("Loading GitHub organization details: %s...", ghorg.OrganizationName)
+				user, err := github.GetUserDetails(ghorg.OrganizationName)
+				if err != nil {
+					ghorg.GithubInfo.Error = err.Error()
+				} else {
+					url := strfmt.URI(*user.HTMLURL)
+					ghorg.GithubInfo.Details = &models.GithubOrganizationGithubInfoDetails{
+						Bio:     user.Bio,
+						HTMLURL: &url,
+						ID:      user.ID,
+					}
+				}
+				ghorg.Repositories = &models.GithubOrganizationRepositories{
+					List: make([]*models.GithubRepositoryInfo, 0),
+				}
+				if ghorg.OrganizationInstallationID != 0 {
+					log.WithFields(f).Debugf("Loading GitHub repository list based on installation id: %d...", ghorg.OrganizationInstallationID)
+					list, err := github.GetInstallationRepositories(ghorg.OrganizationInstallationID)
+					if err != nil {
+						log.WithFields(f).Warnf("unable to get repositories for installation id : %d", ghorg.OrganizationInstallationID)
+						ghorg.Repositories.Error = err.Error()
+						return
+					}
+
+					log.WithFields(f).Debugf("Found %d GitHub repositories using installation id: %d...",
+						len(list), ghorg.OrganizationInstallationID)
+					for _, repoInfo := range list {
+						ghorg.Repositories.List = append(ghorg.Repositories.List, &models.GithubRepositoryInfo{
+							RepositoryGithubID: utils.Int64Value(repoInfo.ID),
+							RepositoryName:     utils.StringValue(repoInfo.FullName),
+							RepositoryURL:      utils.StringValue(repoInfo.URL),
+							RepositoryType:     "github",
+						})
+					}
+				}
+			}(ghorganization)
+		}
+		wg.Wait()
+	}
+	return ghOrgList
+}
