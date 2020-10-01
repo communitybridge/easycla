@@ -31,6 +31,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/token"
 
 	"github.com/communitybridge/easycla/cla-backend-go/company"
+	"github.com/communitybridge/easycla/cla-backend-go/github"
 
 	claevents "github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/users"
@@ -87,6 +88,8 @@ func init() {
 	githubOrganizationsRepo := github_organizations.NewRepository(awsSession, stage)
 
 	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
+	github.Init(configFile.Github.AppID, configFile.Github.AppPrivateKey, configFile.Github.AccessToken)
+
 	user_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	project_service.InitClient(configFile.APIGatewayURL)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
