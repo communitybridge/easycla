@@ -105,7 +105,6 @@ func Write(user event.Event) {
 	if userErr != nil {
 		log.Warnf("Error - unable to locate user by LfUsername: %s, error: %+v", *uc.Username, userErr)
 		log.Error("", userErr)
-		return
 	}
 
 	if userDetails == nil {
@@ -121,7 +120,6 @@ func Write(user event.Event) {
 		userDetails, userErr = usersRepo.GetUserByExternalID(uc.UserID)
 		if userErr != nil {
 			log.Warnf("Error - unable to locate user by UserExternalID: %s, error: %+v", uc.UserID, userErr)
-			return
 		}
 	}
 
