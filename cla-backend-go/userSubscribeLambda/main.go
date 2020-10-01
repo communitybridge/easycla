@@ -56,6 +56,7 @@ func init() {
 func Handler(ctx context.Context, sqsEvent events.SQSEvent) error {
 	for _, message := range sqsEvent.Records {
 		log.Infof("Processing message %s for event source %s\n", message.MessageId, message.EventSource)
+		log.Debugf("message body %v", message.Body)
 
 		userData := EventSchemaData{}
 		err := json.Unmarshal([]byte(message.Body), &userData)
