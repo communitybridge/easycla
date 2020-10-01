@@ -63,6 +63,10 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) error {
 		if err != nil {
 			log.Warnf("Error: %v, JSON unmarshal failed - unable to process message: %s", err, message.MessageId)
 		}
+		if userData.Type != "UserUpdatedProfile" {
+			log.Warnf("Invalid event %s- skipping event", userData.Type)
+			return nil
+		}
 		Write(userData)
 	}
 	return nil
