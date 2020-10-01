@@ -10,47 +10,63 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/labstack/gommon/log"
+	log "github.com/sirupsen/logrus"
 )
 
-type fn func(ctx context.Context, sqsEvent events.SQSEvent) error
-
-var handler fn
-
-func postCollabSQSEvent(w http.ResponseWriter, r *http.Request) {
+func postSQSEvent(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" && r.Method != http.MethodPost {
-		log.Warn("404 not found.")
+		log.Println("404 not found.")
 		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
 	}
 
 	dataByte, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Warn("Failed to read body")
+		log.Println("Failed to read body")
 		http.Error(w, "Failed to read body", http.StatusInternalServerError)
 	}
 
-	var sEvent events.SQSEvent
-	sEvent.Records = append(sEvent.Records, events.SQSMessage{
-		Body:        string(dataByte),
-		MessageId:   "LocalID",
-		EventSource: "localhost",
+	var sEvent events.SNSEvent
+	sEvent.Records = append(sEvent.Records, events.SNSEventRecord{
+		EventVersion:         "1.0",
+		EventSubscriptionArn: "",
+		EventSource:          "localhost",
+		SNS: events.SNSEntity{
+			Signature:         "",
+			MessageID:         "",
+			Type:              "",
+			TopicArn:          "",
+			MessageAttributes: nil,
+			SignatureVersion:  "",
+			Timestamp:         time.Now().UTC(),
+			SigningCertURL:    "",
+			Message:           string(dataByte),
+			UnsubscribeURL:    "",
+			Subject:           "",
+		},
 	})
 
-	if handler(r.Context(), sEvent) != nil {
-		log.Fatal(err)
+	err = handler(r.Context(), sEvent)
+	if err != nil {
+		log.Warnf("Failed to process event in handler. Error: %v", err)
+		http.Error(w, "Failed to process event", http.StatusInternalServerError)
 	}
 }
+
+type fn func(ctx context.Context, sqsEvent events.SNSEvent) error
+
+var handler fn
 
 // Start lambda handler function
 func Start(hf fn) error {
 	handler = hf
-	http.HandleFunc("/", postCollabSQSEvent)
+	http.HandleFunc("/", postSQSEvent)
 
 	fmt.Printf("Starting server for testing HTTP POST...\n")
-	if err := http.ListenAndServe(":8181", nil); err != nil {
+	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
 	}
 	return nil
