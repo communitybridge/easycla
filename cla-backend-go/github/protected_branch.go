@@ -21,6 +21,7 @@ var (
 
 // GetOwnerName retrieves the owner name of the given org and repo name
 func GetOwnerName(ctx context.Context, client *githubpkg.Client, orgName, repoName string) (string, error) {
+	repoName = CleanGithubRepoName(repoName)
 	log.Debugf("GetOwnerName : getting owner name for org %s and repoName : %s", orgName, repoName)
 	listOpt := &githubpkg.RepositoryListByOrgOptions{
 		ListOptions: githubpkg.ListOptions{
@@ -63,6 +64,7 @@ func GetOwnerName(ctx context.Context, client *githubpkg.Client, orgName, repoNa
 
 // GetDefaultBranchForRepo helps with pulling the default branch for the given repo
 func GetDefaultBranchForRepo(ctx context.Context, client *githubpkg.Client, owner, repoName string) (string, error) {
+	repoName = CleanGithubRepoName(repoName)
 	repo, resp, err := client.Repositories.Get(ctx, owner, repoName)
 	if err != nil {
 		if ok, wErr := checkAndWrapForKnownErrors(resp, err); ok {
@@ -83,6 +85,7 @@ func GetDefaultBranchForRepo(ctx context.Context, client *githubpkg.Client, owne
 
 // GetProtectedBranch fetches the protected branch details
 func GetProtectedBranch(ctx context.Context, client *githubpkg.Client, owner, repoName, protectedBranchName string) (*githubpkg.Protection, error) {
+	repoName = CleanGithubRepoName(repoName)
 	protection, resp, err := client.Repositories.GetBranchProtection(ctx, owner, repoName, protectedBranchName)
 
 	if err != nil {
@@ -105,12 +108,10 @@ func GetProtectedBranch(ctx context.Context, client *githubpkg.Client, owner, re
 //EnableBranchProtection enables branch protection if not enabled and makes sure passed arguments such as enforceAdmin
 //statusChecks are applied. The operation makes sure it doesn't override the existing checks.
 func EnableBranchProtection(ctx context.Context, client *githubpkg.Client, owner, repoName, branchName string, enforceAdmin bool, enableStatusChecks, disableStatusChecks []string) error {
+	repoName = CleanGithubRepoName(repoName)
 	protectedBranch, err := GetProtectedBranch(ctx, client, owner, repoName, branchName)
-	if err != nil {
-		if !errors.Is(err, ErrBranchNotProtected) {
-			return fmt.Errorf("fetching the protected branch : %w", err)
-		}
-		return err
+	if err != nil && !errors.Is(err, ErrBranchNotProtected) {
+		return fmt.Errorf("fetching the protected branch for repo : %s : %w", repoName, err)
 	}
 
 	var currentChecks *githubpkg.RequiredStatusChecks
@@ -218,4 +219,13 @@ func AreStatusChecksEnabled(protection *githubpkg.Protection, checks []string) b
 	}
 
 	return len(found) == len(checks)
+}
+
+// CleanGithubRepoName removes the orgname if existing in the string
+func CleanGithubRepoName(githubRepoName string) string {
+	if strings.Contains(githubRepoName, "/") {
+		parts := strings.Split(githubRepoName, "/")
+		githubRepoName = parts[len(parts)-1]
+	}
+	return githubRepoName
 }
