@@ -6,7 +6,6 @@ package github_organizations
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -15,6 +14,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/github"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	psproject "github.com/communitybridge/easycla/cla-backend-go/v2/project-service/client/project"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -27,8 +27,8 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 
 			result, err := service.GetGithubOrganizations(ctx, params.ProjectSFID)
 			if err != nil {
-				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
-					return github_organizations.NewGetProjectGithubOrganizationsNotFound().WithPayload(&models.ErrorResponse{
+				if _, ok := err.(*psproject.GetProjectNotFound); ok {
+					return github_organizations.NewGetProjectGithubOrganizationsNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 						Code:    "404",
 						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
 					})
@@ -57,8 +57,8 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 
 			result, err := service.AddGithubOrganization(ctx, params.ProjectSFID, params.Body)
 			if err != nil {
-				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
-					return github_organizations.NewAddProjectGithubOrganizationNotFound().WithPayload(&models.ErrorResponse{
+				if _, ok := err.(*psproject.GetProjectNotFound); ok {
+					return github_organizations.NewAddProjectGithubOrganizationNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 						Code:    "404",
 						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
 					})
@@ -95,8 +95,8 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 
 			err = service.DeleteGithubOrganization(ctx, params.ProjectSFID, params.OrgName)
 			if err != nil {
-				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
-					return github_organizations.NewGetProjectGithubOrganizationsNotFound().WithPayload(&models.ErrorResponse{
+				if _, ok := err.(*psproject.GetProjectNotFound); ok {
+					return github_organizations.NewDeleteProjectGithubOrganizationNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 						Code:    "404",
 						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
 					})
