@@ -156,15 +156,6 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 	}
 	// GetSF Org
 	orgClient := v2OrgService.GetClient()
-	organizationSF, orgErr := orgClient.GetOrganization(params.CompanySFID)
-	if orgErr != nil {
-		msg := buildErrorMessage("organization service lookup error", claGroupID, params, orgErr)
-		log.WithFields(f).Warn(msg)
-		return nil, &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
 	acsClient := v2AcsService.GetClient()
 	user, userErr := userServiceClient.SearchUserByEmail(params.Body.UserEmail.String())
 
@@ -178,18 +169,8 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 	}
 
 	if userErr != nil {
-		designeeName := fmt.Sprintf("%s %s", *params.Body.FirstName, *params.Body.LastName)
-		designeeEmail := params.Body.UserEmail.String()
-		msg := fmt.Sprintf("User does not have an LF Login account and has been sent an email invite: %s.", *params.Body.UserEmail)
+		msg := fmt.Sprintf("User does not have an LF Login account %s.", *params.Body.UserEmail)
 		log.WithFields(f).Warn(msg)
-		sendEmailErr := sendEmailToUserWithNoLFID(claGroup.ProjectName, authUsername, *managerUser.Emails[0].EmailAddress, designeeName, designeeEmail, organizationSF.ID, &params.ProjectSFID, utils.CLAManagerRole)
-		if sendEmailErr != nil {
-			emailMessage := fmt.Sprintf("Failed to send email to user : %s ", designeeEmail)
-			return nil, &models.ErrorResponse{
-				Message: emailMessage,
-				Code:    "400",
-			}
-		}
 		return nil, &models.ErrorResponse{
 			Message: ErrNoLFID.Error(),
 			Code:    "202",
@@ -870,7 +851,7 @@ func (s *service) CreateCLAManagerRequest(ctx context.Context, contactAdmin bool
 
 	log.WithFields(f).Debugf("sending Email to CLA Manager Designee email: %s ", userEmail)
 	designeeName := fmt.Sprintf("%s %s", lfxUser.FirstName, lfxUser.LastName)
-	sendEmailToCLAManagerDesignee(LfxPortalURL, v1CompanyModel.CompanyName, []string{projectSF.Name}, userEmail, designeeName, authUser.Email, authUser.UserName)
+	sendEmailToCLAManagerDesigneeCorporate(LfxPortalURL, v1CompanyModel.CompanyName, []string{projectSF.Name}, userEmail, designeeName, authUser.Email, authUser.UserName)
 
 	log.WithFields(f).Debug("creating a contributor notify CLA designee log event...")
 	// Make a note in the event log
@@ -1218,7 +1199,7 @@ func sendEmailToOrgAdmin(adminEmail string, admin string, company string, projec
 <p> %s %s has identified you as a potential candidate to setup the Corporate CLA for %s in support of the following projects: </p>
 %s
 <p>Before the contribution can be accepted, your organization must sign a CLA. 
-Either you or someone whom to designate from your company can login to this portal [Corporate console](%s) and sign the CLA for this project %s </p>
+Either you or someone whom to designate from your company can login to this portal (%s) and sign the CLA for this project %s </p>
 <p>If you are not the CLA Manager, please forward this email to the appropriate person so that they can start the CLA process.</p>
 <p> Please notify the user once CLA setup is complete.</p>
 %s
@@ -1248,6 +1229,32 @@ func contributorEmailToOrgAdmin(adminEmail string, admin string, company string,
 %s
 %s`,
 		admin, projectNames, getFormattedUserDetails(contributor), corporateConsole, projectNames,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
+
+	err := utils.SendEmail(subject, body, recipients)
+	if err != nil {
+		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+	} else {
+		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	}
+}
+
+func sendEmailToCLAManagerDesigneeCorporate(corporateConsole string, companyName string, projectNames []string, designeeEmail string, designeeName string, senderEmail string, senderName string) {
+	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA ", companyName)
+	recipients := []string{designeeEmail}
+	projectList := projectsStrList(projectNames)
+	body := fmt.Sprintf(`
+<p>Hello %s,</p>
+<p>This is a notification email from EasyCLA regarding the CLA setup and signing process for %s.</p>
+<p> %s %s has identified you as a potential candidate to setup the Corporate CLA for %s in support of the following projects: </p>
+%s
+<p>Before the contribution can be accepted, your organization must sign a CLA. 
+Either you or someone whom to designate from your company can login to this portal [Corporate console](%s) and sign the CLA for this project %s </p>
+<p>If you are not the CLA Manager, please forward this email to the appropriate person so that they can start the CLA process.</p>
+<p> Please notify the user once CLA setup is complete.</p>
+%s
+%s`,
+		designeeName, companyName, senderName, senderEmail, companyName, projectList, corporateConsole, projectNames[0],
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
