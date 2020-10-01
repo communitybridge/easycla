@@ -26,6 +26,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
+	"golang.org/x/sync/errgroup"
 
 	v1ClaManager "github.com/communitybridge/easycla/cla-backend-go/cla_manager"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -294,7 +295,8 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 	}
 
 	// Check if Project is signed at Foundation or Project Level
-	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, claGroupID)
+	foundationSFID := projectCLAGroups[0].FoundationSFID
+	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, foundationSFID)
 
 	if signedErr != nil {
 		msg := buildErrorMessageCreate(params, signedErr)
@@ -306,7 +308,6 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 	}
 
 	if signedAtFoundation {
-		foundationSFID := projectCLAGroups[0].FoundationSFID
 		scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(params.Body.UserEmail.String(), foundationSFID, params.CompanySFID, roleID)
 		if scopeErr != nil {
 			msg := buildErrorMessageCreate(params, scopeErr)
@@ -318,15 +319,33 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 		}
 
 	} else {
-		for _, projectCG := range projectCLAGroups {
-			scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(params.Body.UserEmail.String(), projectCG.ProjectSFID, params.CompanySFID, roleID)
-			if scopeErr != nil {
-				msg := buildErrorMessageCreate(params, scopeErr)
-				log.WithFields(f).Warn(msg)
-				return nil, &models.ErrorResponse{
-					Message: msg,
-					Code:    "400",
+		projectSFIDList := utils.NewStringSet()
+		for _, p := range projectCLAGroups {
+			projectSFIDList.Add(p.ProjectSFID)
+		}
+		var eg errgroup.Group
+		// add user as cla-manager for all projects of cla-group
+		for _, projectSFID := range projectSFIDList.List() {
+			eg.Go(func() error {
+				err := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(params.Body.UserEmail.String(), projectSFID, params.CompanySFID, roleID)
+				if err != nil {
+					msg := fmt.Sprintf("unable to add %s scope for project: %s, company: %s using roleID: %s for user email: %s error = %s",
+						utils.CLAManagerRole, projectSFID, params.CompanySFID, roleID, params.Body.UserEmail.String(), err)
+					log.WithFields(f).Warn(msg)
+					return nil
 				}
+				return nil
+			})
+		}
+
+		// Wait for the go routines to finish
+		log.WithFields(f).Debugf("waiting for create role assignment to complete for %d projects...", len(projectSFIDList.List()))
+		if loadErr := eg.Wait(); loadErr != nil {
+			msg := buildErrorMessageCreate(params, loadErr)
+			log.WithFields(f).Warn(msg)
+			return nil, &models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
 			}
 		}
 	}
