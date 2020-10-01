@@ -6,7 +6,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/communitybridge/easycla/cla-backend-go/github"
 	"os"
 
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
@@ -32,6 +31,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/token"
 
 	"github.com/communitybridge/easycla/cla-backend-go/company"
+	"github.com/communitybridge/easycla/cla-backend-go/github"
 
 	claevents "github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/users"

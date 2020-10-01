@@ -8,10 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/go-openapi/swag"
-
 	githubsdk "github.com/google/go-github/github"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
@@ -146,7 +144,7 @@ func (s *service) GetProtectedBranch(ctx context.Context, repositoryID string) (
 
 	githubOrgName := githubRepository.RepositoryOrganizationName
 	githubRepoName := githubRepository.RepositoryName
-	githubRepoName = s.cleanGithubRepoName(githubRepoName)
+	githubRepoName = github.CleanGithubRepoName(githubRepoName)
 
 	githubClient, err := s.getGithubClientForOrgName(ctx, githubOrgName)
 	if err != nil {
@@ -191,7 +189,7 @@ func (s *service) UpdateProtectedBranch(ctx context.Context, repositoryID string
 
 	githubOrgName := githubRepository.RepositoryOrganizationName
 	githubRepoName := githubRepository.RepositoryName
-	githubRepoName = s.cleanGithubRepoName(githubRepoName)
+	githubRepoName = github.CleanGithubRepoName(githubRepoName)
 
 	githubClient, err := s.getGithubClientForOrgName(ctx, githubOrgName)
 	if err != nil {
@@ -235,14 +233,6 @@ func (s *service) UpdateProtectedBranch(ctx context.Context, repositoryID string
 	}
 
 	return s.GetProtectedBranch(ctx, repositoryID)
-}
-
-func (s *service) cleanGithubRepoName(githubRepoName string) string {
-	if strings.Contains(githubRepoName, "/") {
-		parts := strings.Split(githubRepoName, "/")
-		githubRepoName = parts[len(parts)-1]
-	}
-	return githubRepoName
 }
 
 func (s *service) getGithubClientForOrgName(ctx context.Context, githubOrgName string) (*githubsdk.Client, error) {
