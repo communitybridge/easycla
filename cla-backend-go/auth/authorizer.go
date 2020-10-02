@@ -5,6 +5,9 @@ package auth
 
 import (
 	"errors"
+	"strings"
+
+	swagerrors "github.com/go-openapi/errors"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
@@ -53,6 +56,9 @@ func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, 
 	claims, err := a.authValidator.VerifyToken(token)
 	if err != nil {
 		log.Warnf("SecurityAuth - verify token error: %+v", err)
+		if strings.Contains(strings.ToLower(err.Error()), "expired") {
+			return nil, swagerrors.New(401, err.Error())
+		}
 		return nil, err
 	}
 
