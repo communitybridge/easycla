@@ -244,3 +244,15 @@ func (usc *Client) GetStaff(userSFID string) (*models.Staff, error) {
 	}
 	return result.Payload, nil
 }
+
+//GetUserEmail returns email of a user given username
+func (usc *Client) GetUserEmail(username string) (string, error) {
+	user, err := usc.GetUserByUsername(username)
+	if err != nil {
+		return "", err
+	}
+	if user != nil && len(user.Emails) > 0 {
+		return *user.Emails[0].EmailAddress, nil
+	}
+	return "", nil
+}

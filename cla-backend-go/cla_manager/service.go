@@ -17,6 +17,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	v2UserService "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 )
 
 // IService interface defining the functions for the company service
@@ -429,6 +430,17 @@ func sendRemovedClaManagerEmailToRecipient(companyModel *models.Company, project
 		// If no LF Email try to grab the first other email in their email list
 		if companyAdmin.LfEmail == "" && companyAdmin.Emails != nil {
 			whichEmail = companyAdmin.Emails[0]
+		}
+
+		// Try getting user email from userservice
+		userClient := v2UserService.GetClient()
+		if companyAdmin.LfUsername != "" {
+			email, emailErr := userClient.GetUserEmail(companyAdmin.LfUsername)
+			if emailErr != nil {
+				log.Warnf("unable to get user by username: %s , error: %+v ", companyAdmin.LfUsername, emailErr)
+			} else if email != "" {
+				whichEmail = email
+			}
 		}
 
 		if whichEmail == "" {
