@@ -35,7 +35,7 @@ const (
 
 // IRepository interface defines the functions for the whitelist service
 type IRepository interface {
-	AddCclaWhitelistRequest(company *models.Company, project *models.Project, user *models.User, requesterName, requesterEmail string) (string, error)
+	AddCclaWhitelistRequest(company *models.Company, project *models.ClaGroup, user *models.User, requesterName, requesterEmail string) (string, error)
 	GetCclaWhitelistRequest(requestID string) (*CLARequestModel, error)
 	ApproveCclaWhitelistRequest(requestID string) error
 	RejectCclaWhitelistRequest(requestID string) error
@@ -60,12 +60,17 @@ func NewRepository(awsSession *session.Session, stage string) IRepository {
 }
 
 // AddCclaWhitelistRequest adds the specified request
-func (repo repository) AddCclaWhitelistRequest(company *models.Company, project *models.Project, user *models.User, requesterName, requesterEmail string) (string, error) {
+func (repo repository) AddCclaWhitelistRequest(company *models.Company, project *models.ClaGroup, user *models.User, requesterName, requesterEmail string) (string, error) {
+	f := logrus.Fields{
+		"functionName":   "AddCclaWhitelistRequest",
+		"requesterName":  requesterName,
+		"requesterEmail": requesterEmail,
+	}
 	requestID, err := uuid.NewV4()
 	status := "status:fail"
 
 	if err != nil {
-		log.Warnf("AddCclaWhitelistRequest - unable to generate a UUID for a approval request, error: %v", err)
+		log.WithFields(f).WithError(err).Warn("unable to generate a UUID for a approval request")
 		return status, err
 	}
 
@@ -91,14 +96,14 @@ func (repo repository) AddCclaWhitelistRequest(company *models.Company, project 
 
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
-		log.Warnf("AddCclaWhitelistRequest - unable to create a new ccla approval request, error: %v", err)
+		log.WithFields(f).Warnf("AddCclaWhitelistRequest - unable to create a new ccla approval request, error: %v", err)
 		return status, err
 	}
 
 	// Load the new record - should be able to find it quickly
 	record, readErr := repo.ListCclaWhitelistRequest(company.CompanyID, &project.ProjectID, nil, &user.UserID)
 	if readErr != nil || record == nil || record.List == nil {
-		log.Warnf("AddCclaWhitelistRequest - unable to read newly created invite record, error: %v", readErr)
+		log.WithFields(f).Warnf("AddCclaWhitelistRequest - unable to read newly created invite record, error: %v", readErr)
 		return status, err
 	}
 
@@ -107,6 +112,11 @@ func (repo repository) AddCclaWhitelistRequest(company *models.Company, project 
 
 // GetCclaWhitelistRequest fetches the specified request by ID
 func (repo repository) GetCclaWhitelistRequest(requestID string) (*CLARequestModel, error) {
+	f := logrus.Fields{
+		"functionName": "GetCclaWhitelistRequest",
+		"requestID":    requestID,
+	}
+
 	response, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(repo.tableName),
 		Key: map[string]*dynamodb.AttributeValue{
@@ -117,14 +127,14 @@ func (repo repository) GetCclaWhitelistRequest(requestID string) (*CLARequestMod
 	})
 
 	if err != nil {
-		log.Warnf("error fetching request by ID: %s, error: %v", requestID, err)
+		log.WithFields(f).WithError(err).Warnf("error fetching request by ID: %s, error: %v", requestID, err)
 		return nil, err
 	}
 
 	requestModel := CLARequestModel{}
 	err = dynamodbattribute.UnmarshalMap(response.Item, &requestModel)
 	if err != nil {
-		log.Warnf("error unmarshalling %s table response model data, error: %v", repo.tableName, err)
+		log.WithFields(f).WithError(err).Warnf("error unmarshalling %s table response model data, error: %v", repo.tableName, err)
 		return nil, err
 	}
 
@@ -133,6 +143,11 @@ func (repo repository) GetCclaWhitelistRequest(requestID string) (*CLARequestMod
 
 // ApproveCclaWhitelistRequest approves the specified request
 func (repo repository) ApproveCclaWhitelistRequest(requestID string) error {
+	f := logrus.Fields{
+		"functionName": "ApproveCclaWhitelistRequest",
+		"requestID":    requestID,
+	}
+
 	_, currentTime := utils.CurrentTime()
 	input := &dynamodb.UpdateItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
@@ -158,8 +173,7 @@ func (repo repository) ApproveCclaWhitelistRequest(requestID string) error {
 
 	_, err := repo.dynamoDBClient.UpdateItem(input)
 	if err != nil {
-		log.Warnf("ApproveCclaWhitelistRequest - unable to update approval request with approved status, error: %v",
-			err)
+		log.WithFields(f).WithError(err).Warnf("unable to update approval request with approved status, error: %v", err)
 		return err
 	}
 
@@ -168,6 +182,11 @@ func (repo repository) ApproveCclaWhitelistRequest(requestID string) error {
 
 // RejectCclaWhitelistRequest rejects the specified request
 func (repo repository) RejectCclaWhitelistRequest(requestID string) error {
+	f := logrus.Fields{
+		"functionName": "RejectCclaWhitelistRequest",
+		"requestID":    requestID,
+	}
+
 	_, currentTime := utils.CurrentTime()
 	input := &dynamodb.UpdateItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
@@ -193,7 +212,7 @@ func (repo repository) RejectCclaWhitelistRequest(requestID string) error {
 
 	_, err := repo.dynamoDBClient.UpdateItem(input)
 	if err != nil {
-		log.Warnf("RejectCclaWhitelistRequest - unable to update approval request with rejected status, error: %v",
+		log.WithFields(f).WithError(err).Warnf("unable to update approval request with rejected status, error: %v",
 			err)
 		return err
 	}

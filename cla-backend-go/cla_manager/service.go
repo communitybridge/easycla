@@ -22,17 +22,17 @@ import (
 // IService interface defining the functions for the company service
 type IService interface {
 	CreateRequest(reqModel *CLAManagerRequest) (*models.ClaManagerRequest, error)
-	GetRequests(companyID, projectID string) (*models.ClaManagerRequestList, error)
-	GetRequestsByUserID(companyID, projectID, userID string) (*models.ClaManagerRequestList, error)
+	GetRequests(companyID, claGroupID string) (*models.ClaManagerRequestList, error)
+	GetRequestsByUserID(companyID, claGroupID, userID string) (*models.ClaManagerRequestList, error)
 	GetRequest(requestID string) (*models.ClaManagerRequest, error)
 
-	ApproveRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error)
-	DenyRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error)
-	PendingRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error)
+	ApproveRequest(companyID, claGroupID, requestID string) (*models.ClaManagerRequest, error)
+	DenyRequest(companyID, claGroupID, requestID string) (*models.ClaManagerRequest, error)
+	PendingRequest(companyID, claGroupID, requestID string) (*models.ClaManagerRequest, error)
 	DeleteRequest(requestID string) error
 
-	AddClaManager(ctx context.Context, companyID string, projectID string, LFID string) (*models.Signature, error)
-	RemoveClaManager(ctx context.Context, companyID string, projectID string, LFID string) (*models.Signature, error)
+	AddClaManager(ctx context.Context, companyID string, claGroupID string, LFID string) (*models.Signature, error)
+	RemoveClaManager(ctx context.Context, companyID string, claGroupID string, LFID string) (*models.Signature, error)
 }
 
 type service struct {
@@ -73,11 +73,11 @@ func (s service) CreateRequest(reqModel *CLAManagerRequest) (*models.ClaManagerR
 }
 
 // GetRequests returns a requests object based on the specified parameters
-func (s service) GetRequests(companyID, projectID string) (*models.ClaManagerRequestList, error) {
-	requests, err := s.repo.GetRequests(companyID, projectID)
+func (s service) GetRequests(companyID, claGroupID string) (*models.ClaManagerRequestList, error) {
+	requests, err := s.repo.GetRequests(companyID, claGroupID)
 	if err != nil {
 		log.Warnf("problem with fetching request for company ID: %s, project ID: %s, error :%+v",
-			companyID, projectID, err)
+			companyID, claGroupID, err)
 		return nil, err
 	}
 
@@ -91,11 +91,11 @@ func (s service) GetRequests(companyID, projectID string) (*models.ClaManagerReq
 }
 
 // GetRequestsByUserID returns a requests object based on the specified parameters
-func (s service) GetRequestsByUserID(companyID, projectID, userID string) (*models.ClaManagerRequestList, error) {
-	requests, err := s.repo.GetRequestsByUserID(companyID, projectID, userID)
+func (s service) GetRequestsByUserID(companyID, claGroupID, userID string) (*models.ClaManagerRequestList, error) {
+	requests, err := s.repo.GetRequestsByUserID(companyID, claGroupID, userID)
 	if err != nil {
 		log.Warnf("problem with fetching request for company ID: %s, project ID: %s, user ID: %s, error :%+v",
-			companyID, projectID, userID, err)
+			companyID, claGroupID, userID, err)
 		return nil, err
 	}
 
@@ -128,11 +128,11 @@ func (s service) GetRequest(requestID string) (*models.ClaManagerRequest, error)
 }
 
 // ApproveRequest approves the request based on the specified parameters
-func (s service) ApproveRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error) {
-	request, err := s.repo.ApproveRequest(companyID, projectID, requestID)
+func (s service) ApproveRequest(companyID, claGroupID, requestID string) (*models.ClaManagerRequest, error) {
+	request, err := s.repo.ApproveRequest(companyID, claGroupID, requestID)
 	if err != nil {
 		log.Warnf("problem with approving request for company ID: %s, project ID: %s, request ID: %s, error :%+v",
-			companyID, projectID, requestID, err)
+			companyID, claGroupID, requestID, err)
 		return nil, err
 	}
 
@@ -142,11 +142,11 @@ func (s service) ApproveRequest(companyID, projectID, requestID string) (*models
 }
 
 // PendingRequest updates the specified request to the pending state
-func (s service) PendingRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error) {
-	request, err := s.repo.PendingRequest(companyID, projectID, requestID)
+func (s service) PendingRequest(companyID, claGroupID, requestID string) (*models.ClaManagerRequest, error) {
+	request, err := s.repo.PendingRequest(companyID, claGroupID, requestID)
 	if err != nil {
 		log.Warnf("problem with setting the pending status for company ID: %s, project ID: %s, request ID: %s, error :%+v",
-			companyID, projectID, requestID, err)
+			companyID, claGroupID, requestID, err)
 		return nil, err
 	}
 
@@ -156,11 +156,11 @@ func (s service) PendingRequest(companyID, projectID, requestID string) (*models
 }
 
 // DenyRequest denies the request based on the specified parameters
-func (s service) DenyRequest(companyID, projectID, requestID string) (*models.ClaManagerRequest, error) {
-	request, err := s.repo.DenyRequest(companyID, projectID, requestID)
+func (s service) DenyRequest(companyID, claGroupID, requestID string) (*models.ClaManagerRequest, error) {
+	request, err := s.repo.DenyRequest(companyID, claGroupID, requestID)
 	if err != nil {
 		log.Warnf("problem with denying request for company ID: %s, project ID: %s, request ID: %s, error :%+v",
-			companyID, projectID, requestID, err)
+			companyID, claGroupID, requestID, err)
 		return nil, err
 	}
 
@@ -181,7 +181,7 @@ func (s service) DeleteRequest(requestID string) error {
 }
 
 // AddClaManager Adds LFID to Signature Access Control List list
-func (s service) AddClaManager(ctx context.Context, companyID string, projectID string, LFID string) (*models.Signature, error) {
+func (s service) AddClaManager(ctx context.Context, companyID string, claGroupID string, LFID string) (*models.Signature, error) {
 
 	userModel, userErr := s.usersService.GetUserByLFUserName(LFID)
 	if userErr != nil || userModel == nil {
@@ -192,8 +192,8 @@ func (s service) AddClaManager(ctx context.Context, companyID string, projectID 
 		return nil, companyErr
 	}
 
-	projectModel, projectErr := s.projectService.GetCLAGroupByID(ctx, projectID)
-	if projectErr != nil || projectModel == nil {
+	claGroupModel, projectErr := s.projectService.GetCLAGroupByID(ctx, claGroupID)
+	if projectErr != nil || claGroupModel == nil {
 		return nil, projectErr
 	}
 
@@ -201,7 +201,7 @@ func (s service) AddClaManager(ctx context.Context, companyID string, projectID 
 
 	signed := true
 	approved := true
-	sigModel, sigErr := s.sigService.GetProjectCompanySignature(ctx, companyID, projectID, &signed, &approved, nil, aws.Int64(5))
+	sigModel, sigErr := s.sigService.GetProjectCompanySignature(ctx, companyID, claGroupID, &signed, &approved, nil, aws.Int64(5))
 	if sigErr != nil || sigModel == nil {
 		return nil, sigErr
 	}
@@ -209,7 +209,7 @@ func (s service) AddClaManager(ctx context.Context, companyID string, projectID 
 	claManagers := sigModel.SignatureACL
 
 	log.Debugf("Got Company signatures - Company: %s , Project: %s , signatureID: %s ",
-		companyID, projectID, sigModel.SignatureID)
+		companyID, claGroupID, sigModel.SignatureID)
 
 	// Update the signature ACL
 	addedSignature, aclErr := s.sigService.AddCLAManager(ctx, sigModel.SignatureID.String(), LFID)
@@ -226,26 +226,26 @@ func (s service) AddClaManager(ctx context.Context, companyID string, projectID 
 
 	// Notify CLA Managers - send email to each manager
 	for _, manager := range claManagers {
-		sendClaManagerAddedEmailToCLAManagers(companyModel, projectModel, userModel.Username, userModel.LfEmail,
+		sendClaManagerAddedEmailToCLAManagers(companyModel, claGroupModel, userModel.Username, userModel.LfEmail,
 			manager.Username, manager.LfEmail)
 	}
 	// Notify the added user
-	sendClaManagerAddedEmailToUser(companyModel, projectModel, userModel.Username, userModel.LfEmail)
+	sendClaManagerAddedEmailToUser(companyModel, claGroupModel, userModel.Username, userModel.LfEmail)
 
 	// Send an event
 	s.eventsService.LogEvent(&events.LogEventArgs{
 		EventType:         events.ClaManagerCreated,
-		ProjectID:         projectID,
-		ProjectModel:      projectModel,
+		ProjectID:         claGroupID,
+		ClaGroupModel:     claGroupModel,
 		CompanyID:         companyID,
 		CompanyModel:      companyModel,
 		LfUsername:        LFID,
 		UserID:            LFID,
 		UserModel:         userModel,
-		ExternalProjectID: projectModel.ProjectExternalID,
+		ExternalProjectID: claGroupModel.ProjectExternalID,
 		EventData: &events.CLAManagerCreatedEventData{
 			CompanyName: companyModel.CompanyName,
-			ProjectName: projectModel.ProjectName,
+			ProjectName: claGroupModel.ProjectName,
 			UserName:    userModel.Username,
 			UserEmail:   userModel.LfEmail,
 			UserLFID:    userModel.LfUsername,
@@ -256,30 +256,30 @@ func (s service) AddClaManager(ctx context.Context, companyID string, projectID 
 }
 
 // Utility function that returns company signature
-func (s service) getCompanySignature(ctx context.Context, companyID string, projectID string) (*models.Signature, error) {
+func (s service) getCompanySignature(ctx context.Context, companyID string, claGroupID string) (*models.Signature, error) {
 	// Look up signature ACL to ensure the user can remove given cla manager
 	sigModels, sigErr := s.sigService.GetProjectCompanySignatures(ctx, sigAPI.GetProjectCompanySignaturesParams{
 		HTTPRequest: nil,
 		CompanyID:   companyID,
-		ProjectID:   projectID,
+		ProjectID:   claGroupID,
 		NextKey:     nil,
 		PageSize:    aws.Int64(5),
 	})
 	if sigErr != nil || sigModels == nil {
 		log.Warnf("Unable to lookup project company signature using Project ID: %s, Company ID: %s, error: %+v",
-			projectID, companyID, sigErr)
+			claGroupID, companyID, sigErr)
 		return nil, sigErr
 	}
 
 	if len(sigModels.Signatures) > 1 {
 		log.Warnf("returned multiple CCLA signature models for company ID: %s, project ID: %s",
-			companyID, projectID)
+			companyID, claGroupID)
 	}
 	return sigModels.Signatures[0], nil
 }
 
 // RemoveClaManager removes lfid from signature acl with given company and project
-func (s service) RemoveClaManager(ctx context.Context, companyID string, projectID string, LFID string) (*models.Signature, error) {
+func (s service) RemoveClaManager(ctx context.Context, companyID string, claGroupID string, LFID string) (*models.Signature, error) {
 
 	userModel, userErr := s.usersService.GetUserByLFUserName(LFID)
 	if userErr != nil || userModel == nil {
@@ -290,14 +290,14 @@ func (s service) RemoveClaManager(ctx context.Context, companyID string, project
 		return nil, companyErr
 	}
 
-	projectModel, projectErr := s.projectService.GetCLAGroupByID(ctx, projectID)
-	if projectErr != nil || projectModel == nil {
+	claGroupModel, projectErr := s.projectService.GetCLAGroupByID(ctx, claGroupID)
+	if projectErr != nil || claGroupModel == nil {
 		return nil, projectErr
 	}
 
 	signed := true
 	approved := true
-	sigModel, sigErr := s.sigService.GetProjectCompanySignature(ctx, companyID, projectID, &signed, &approved, nil, aws.Int64(5))
+	sigModel, sigErr := s.sigService.GetProjectCompanySignature(ctx, companyID, claGroupID, &signed, &approved, nil, aws.Int64(5))
 	if sigErr != nil || sigModel == nil {
 		return nil, sigErr
 	}
@@ -311,34 +311,34 @@ func (s service) RemoveClaManager(ctx context.Context, companyID string, project
 	}
 
 	// Get Updated cla manager list with removed manager for email purposes
-	sigModel, sigErr = s.getCompanySignature(ctx, companyID, projectID)
+	sigModel, sigErr = s.getCompanySignature(ctx, companyID, claGroupID)
 	if sigErr != nil {
 		return nil, sigErr
 	}
 	claManagers := sigModel.SignatureACL
 	// Notify CLA Managers - send email to each manager
 	for _, manager := range claManagers {
-		sendClaManagerDeleteEmailToCLAManagers(companyModel, projectModel, userModel.LfUsername,
+		sendClaManagerDeleteEmailToCLAManagers(companyModel, claGroupModel, userModel.LfUsername,
 			manager.Username, manager.LfEmail)
 	}
 
 	// Notify the removed manager
-	sendRemovedClaManagerEmailToRecipient(companyModel, projectModel, userModel.LfUsername, userModel.LfEmail, claManagers)
+	sendRemovedClaManagerEmailToRecipient(companyModel, claGroupModel, userModel.LfUsername, userModel.LfEmail, claManagers)
 
 	// Send an event
 	s.eventsService.LogEvent(&events.LogEventArgs{
 		EventType:         events.ClaManagerDeleted,
-		ProjectID:         projectID,
-		ProjectModel:      projectModel,
+		ProjectID:         claGroupID,
+		ClaGroupModel:     claGroupModel,
 		CompanyID:         companyID,
 		CompanyModel:      companyModel,
 		LfUsername:        userModel.LfUsername,
 		UserID:            LFID,
 		UserModel:         userModel,
-		ExternalProjectID: projectModel.ProjectExternalID,
+		ExternalProjectID: claGroupModel.ProjectExternalID,
 		EventData: &events.CLAManagerDeletedEventData{
 			CompanyName: companyModel.CompanyName,
-			ProjectName: projectModel.ProjectName,
+			ProjectName: claGroupModel.ProjectName,
 			UserName:    userModel.LfUsername,
 			UserEmail:   userModel.LfEmail,
 			UserLFID:    LFID,
@@ -348,9 +348,9 @@ func (s service) RemoveClaManager(ctx context.Context, companyID string, project
 	return updatedSignature, nil
 }
 
-func sendClaManagerAddedEmailToUser(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail string) {
+func sendClaManagerAddedEmailToUser(companyModel *models.Company, claGroupModel *models.ClaGroup, requesterName, requesterEmail string) {
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	// subject string, body string, recipients []string
 	subject := fmt.Sprintf("EasyCLA: Added as CLA Manager for Project :%s", projectName)
@@ -367,8 +367,8 @@ company and then the project %s. From here you will be able to edit the list of 
 %s`,
 		requesterName, projectName,
 		companyName, projectName, projectName, projectName,
-		utils.GetCorporateURL(projectModel.Version == utils.V2), projectName,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetCorporateURL(claGroupModel.Version == utils.V2), projectName,
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -378,9 +378,9 @@ company and then the project %s. From here you will be able to edit the list of 
 	}
 }
 
-func sendClaManagerAddedEmailToCLAManagers(companyModel *models.Company, projectModel *models.Project, name, email, recipientName, recipientAddress string) {
+func sendClaManagerAddedEmailToCLAManagers(companyModel *models.Company, claGroupModel *models.ClaGroup, name, email, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	// subject string, body string, recipients []string
 	subject := fmt.Sprintf("EasyCLA: CLA Manager Added Notice for %s", projectName)
@@ -399,7 +399,7 @@ list of company’s CLA Managers for %s.</p>
 		recipientName, projectName,
 		companyName, projectName, projectName, projectName,
 		name, email,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -410,9 +410,9 @@ list of company’s CLA Managers for %s.</p>
 }
 
 // sendRequestRejectedEmailToRecipient generates and sends an email to the specified recipient
-func sendRemovedClaManagerEmailToRecipient(companyModel *models.Company, projectModel *models.Project, recipientName, recipientAddress string, claManagers []models.User) {
+func sendRemovedClaManagerEmailToRecipient(companyModel *models.Company, claGroupModel *models.ClaGroup, recipientName, recipientAddress string, claManagers []models.User) {
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	var companyManagerText = ""
 	companyManagerText += "<ul>"
@@ -453,7 +453,7 @@ func sendRemovedClaManagerEmailToRecipient(companyModel *models.Company, project
 %s
 %s`,
 		recipientName, projectName, companyName, projectName, companyName, companyManagerText,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -463,9 +463,9 @@ func sendRemovedClaManagerEmailToRecipient(companyModel *models.Company, project
 	}
 }
 
-func sendClaManagerDeleteEmailToCLAManagers(companyModel *models.Company, projectModel *models.Project, name, recipientName, recipientAddress string) {
+func sendClaManagerDeleteEmailToCLAManagers(companyModel *models.Company, claGroupModel *models.ClaGroup, name, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	// subject string, body string, recipients []string
 	subject := fmt.Sprintf("EasyCLA: CLA Manager Removed Notice for %s", projectName)
@@ -478,7 +478,7 @@ func sendClaManagerDeleteEmailToCLAManagers(companyModel *models.Company, projec
 %s
 `,
 		recipientName, projectName, name, companyName, projectName,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

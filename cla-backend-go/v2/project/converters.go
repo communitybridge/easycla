@@ -9,8 +9,8 @@ import (
 	"github.com/jinzhu/copier"
 )
 
-func v1ProjectModel(in *models.Project) (*v1Models.Project, error) {
-	out := &v1Models.Project{}
+func v1ProjectModel(in *models.ClaGroup) (*v1Models.ClaGroup, error) {
+	out := &v1Models.ClaGroup{}
 	err := copier.Copy(out, in)
 	if err != nil {
 		return nil, err
@@ -18,8 +18,8 @@ func v1ProjectModel(in *models.Project) (*v1Models.Project, error) {
 	return out, nil
 }
 
-func v2ProjectModel(in *v1Models.Project) (*models.Project, error) {
-	out := &models.Project{}
+func v2ProjectModel(in *v1Models.ClaGroup) (*models.ClaGroup, error) {
+	out := &models.ClaGroup{}
 	err := copier.Copy(out, in)
 	if err != nil {
 		return nil, err

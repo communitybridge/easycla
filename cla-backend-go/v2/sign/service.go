@@ -47,7 +47,7 @@ var (
 
 // ProjectRepo contains project repo methods
 type ProjectRepo interface {
-	GetCLAGroupByID(ctx context.Context, projectID string, loadRepoDetails bool) (*v1Models.Project, error)
+	GetCLAGroupByID(ctx context.Context, claGroupID string, loadRepoDetails bool) (*v1Models.ClaGroup, error)
 }
 
 // Service interface defines the sign service methods

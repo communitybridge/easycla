@@ -27,7 +27,7 @@ type Service interface {
 	DeleteClaGroupGerrits(claGroupID string) (int, error)
 	DeleteGerrit(gerritID string) error
 	GetGerrit(gerritID string) (*models.Gerrit, error)
-	AddGerrit(claGroupID string, projectSFID string, input *models.AddGerritInput, projectModel *models.Project) (*models.Gerrit, error)
+	AddGerrit(claGroupID string, projectSFID string, input *models.AddGerritInput, claGroupModel *models.ClaGroup) (*models.Gerrit, error)
 	GetClaGroupGerrits(claGroupID string, projectSFID *string) (*models.GerritList, error)
 	GetGerritRepos(gerritName string) (*models.GerritRepoList, error)
 }
@@ -70,26 +70,30 @@ func (s service) GetGerrit(gerritID string) (*models.Gerrit, error) {
 	return s.repo.GetGerrit(gerritID)
 }
 
-func (s service) AddGerrit(claGroupID string, projectSFID string, params *models.AddGerritInput, projectModel *models.Project) (*models.Gerrit, error) {
+func (s service) AddGerrit(claGroupID string, projectSFID string, params *models.AddGerritInput, claGroupModel *models.ClaGroup) (*models.Gerrit, error) {
+	f := logrus.Fields{
+		"claGroupID":  claGroupID,
+		"projectSFID": projectSFID,
+	}
 	if params.GroupIDIcla == "" && params.GroupIDCcla == "" {
 		return nil, errors.New("should specify at least a LDAP group for ICLA or CCLA")
 	}
 
-	log.Debugf("cla groupID %s", claGroupID)
-	log.Debugf("project Model %+v", projectModel)
+	log.WithFields(f).Debugf("cla groupID %s", claGroupID)
+	log.WithFields(f).Debugf("project Model %+v", claGroupModel)
 
-	if projectModel.ProjectCCLAEnabled && projectModel.ProjectICLAEnabled {
+	if claGroupModel.ProjectCCLAEnabled && claGroupModel.ProjectICLAEnabled {
 		if params.GroupIDCcla == "" {
 			return nil, errors.New("please provide GroupIDCcla")
 		}
 		if params.GroupIDIcla == "" {
 			return nil, errors.New("please provide GroupIDIcla")
 		}
-	} else if projectModel.ProjectCCLAEnabled {
+	} else if claGroupModel.ProjectCCLAEnabled {
 		if params.GroupIDCcla == "" {
 			return nil, errors.New("please provide GroupIDCcla")
 		}
-	} else if projectModel.ProjectICLAEnabled {
+	} else if claGroupModel.ProjectICLAEnabled {
 		if params.GroupIDIcla == "" {
 			return nil, errors.New("please provide GroupIDIcla")
 		}
@@ -106,7 +110,7 @@ func (s service) AddGerrit(claGroupID string, projectSFID string, params *models
 	gerritObject, err := s.repo.ExistsByName(*params.GerritName)
 	if err != nil {
 		message := fmt.Sprintf("unable to get gerrit by name : %s", *params.GerritName)
-		log.WithError(err).Warnf(message)
+		log.WithFields(f).WithError(err).Warnf(message)
 	}
 
 	if len(gerritObject) > 0 {
@@ -116,7 +120,7 @@ func (s service) AddGerrit(claGroupID string, projectSFID string, params *models
 	gerritCcla, err := s.repo.GetGerritsByID(params.GroupIDCcla, "CCLA")
 	if err != nil {
 		message := fmt.Sprintf("unable to get gerrit by ccla id : %s", params.GroupIDCcla)
-		log.WithError(err).Warnf(message)
+		log.WithFields(f).WithError(err).Warnf(message)
 	}
 
 	if len(gerritCcla.List) > 0 {
@@ -126,7 +130,7 @@ func (s service) AddGerrit(claGroupID string, projectSFID string, params *models
 	gerritIcla, err := s.repo.GetGerritsByID(params.GroupIDIcla, "ICLA")
 	if err != nil {
 		message := fmt.Sprintf("unable to get gerrit by icla : %s", params.GroupIDIcla)
-		log.WithError(err).Warnf(message)
+		log.WithFields(f).WithError(err).Warnf(message)
 	}
 
 	if len(gerritIcla.List) > 0 {
@@ -142,7 +146,7 @@ func (s service) AddGerrit(claGroupID string, projectSFID string, params *models
 		group, err := s.lfGroup.GetGroup(params.GroupIDIcla)
 		if err != nil {
 			message := fmt.Sprintf("unable to get LDAP ICLA Group: %s", params.GroupIDIcla)
-			log.WithError(err).Warnf(message)
+			log.WithFields(f).WithError(err).Warnf(message)
 			return nil, errors.New(message)
 		}
 		groupNameIcla = group.Title
@@ -151,7 +155,7 @@ func (s service) AddGerrit(claGroupID string, projectSFID string, params *models
 		group, err := s.lfGroup.GetGroup(params.GroupIDCcla)
 		if err != nil {
 			message := fmt.Sprintf("unable to get LDAP CCLA Group: %s", params.GroupIDCcla)
-			log.WithError(err).Warnf(message)
+			log.WithFields(f).WithError(err).Warnf(message)
 			return nil, errors.New(message)
 		}
 		groupNameCcla = group.Title

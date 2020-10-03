@@ -97,8 +97,8 @@ type Service interface {
 
 // ProjectRepo contains project repo methods
 type ProjectRepo interface {
-	GetCLAGroupByID(ctx context.Context, projectID string, loadRepoDetails bool) (*v1Models.Project, error)
-	GetCLAGroupsByExternalID(ctx context.Context, params *v1ProjectParams.GetProjectsByExternalIDParams, loadRepoDetails bool) (*v1Models.Projects, error)
+	GetCLAGroupByID(ctx context.Context, projectID string, loadRepoDetails bool) (*v1Models.ClaGroup, error)
+	GetCLAGroupsByExternalID(ctx context.Context, params *v1ProjectParams.GetProjectsByExternalIDParams, loadRepoDetails bool) (*v1Models.ClaGroups, error)
 }
 
 // NewService returns instance of company service
@@ -538,7 +538,7 @@ func (s *service) CreateContributor(ctx context.Context, companyID string, proje
 			UserID:            user.ID,
 			ExternalProjectID: projectID,
 			CompanyModel:      v1CompanyModel,
-			ProjectModel:      projectModel,
+			ClaGroupModel:     projectModel,
 			UserModel:         &v1Models.User{LfUsername: user.Username, UserID: user.ID},
 			EventData: &events.AssignRoleScopeData{
 				Role:  "contributor",
@@ -1260,7 +1260,7 @@ func (s *service) getAllCompanyProjectEmployeeSignatures(ctx context.Context, co
 }
 
 // get company and project in parallel
-func (s *service) getCompanyAndClaGroup(ctx context.Context, companySFID, projectSFID string) (*v1Models.Company, *v1Models.Project, error) {
+func (s *service) getCompanyAndClaGroup(ctx context.Context, companySFID, projectSFID string) (*v1Models.Company, *v1Models.ClaGroup, error) {
 	f := logrus.Fields{
 		"functionName":   "getCompanyAndClaGroup",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -1268,7 +1268,7 @@ func (s *service) getCompanyAndClaGroup(ctx context.Context, companySFID, projec
 		"projectSFID":    projectSFID,
 	}
 	var comp *v1Models.Company
-	var claGroup *v1Models.Project
+	var claGroup *v1Models.ClaGroup
 	var companyErr, projectErr error
 	// query projects and company
 	var cp sync.WaitGroup
