@@ -82,7 +82,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				ProjectID:         utils.StringValue(params.GithubRepositoryInput.ClaGroupID),
 				ExternalProjectID: params.ProjectSFID,
 				LfUsername:        authUser.UserName,
-				ProjectModel: &v1Models.Project{
+				ClaGroupModel: &v1Models.ClaGroup{
 					ProjectExternalID: params.ProjectSFID,
 					ProjectID:         utils.StringValue(params.GithubRepositoryInput.ClaGroupID),
 				},

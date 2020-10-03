@@ -36,7 +36,7 @@ type Service interface {
 
 // CombinedRepo contains the various methods of other repositories
 type CombinedRepo interface {
-	GetCLAGroupByID(ctx context.Context, projectID string, loadRepoDetails bool) (*models.Project, error)
+	GetCLAGroupByID(ctx context.Context, claGroupID string, loadRepoDetails bool) (*models.ClaGroup, error)
 	GetCompany(ctx context.Context, companyID string) (*models.Company, error)
 	GetUserByUserName(userName string, fullMatch bool) (*models.User, error)
 	GetUser(userID string) (*models.User, error)
@@ -105,7 +105,7 @@ func (s *service) GetCompanyClaGroupEvents(companySFID, claGroupID string, nextK
 type LogEventArgs struct {
 	EventType         string
 	ProjectID         string
-	ProjectModel      *models.Project
+	ClaGroupModel     *models.ClaGroup
 	CompanyID         string
 	CompanyModel      *models.Company
 	LfUsername        string
@@ -136,20 +136,20 @@ func (s *service) loadCompany(ctx context.Context, args *LogEventArgs) error {
 }
 
 func (s *service) loadProject(ctx context.Context, args *LogEventArgs) error {
-	if args.ProjectModel != nil {
-		args.ProjectID = args.ProjectModel.ProjectID
-		args.projectName = args.ProjectModel.ProjectName
-		args.ExternalProjectID = args.ProjectModel.ProjectExternalID
+	if args.ClaGroupModel != nil {
+		args.ProjectID = args.ClaGroupModel.ProjectID
+		args.projectName = args.ClaGroupModel.ProjectName
+		args.ExternalProjectID = args.ClaGroupModel.ProjectExternalID
 		return nil
 	}
 	if args.ProjectID != "" {
-		projectModel, err := s.combinedRepo.GetCLAGroupByID(ctx, args.ProjectID, DontLoadRepoDetails)
+		claGroupModel, err := s.combinedRepo.GetCLAGroupByID(ctx, args.ProjectID, DontLoadRepoDetails)
 		if err != nil {
 			return err
 		}
-		args.ProjectModel = projectModel
-		args.projectName = projectModel.ProjectName
-		args.ExternalProjectID = projectModel.ProjectExternalID
+		args.ClaGroupModel = claGroupModel
+		args.projectName = claGroupModel.ProjectName
+		args.ExternalProjectID = claGroupModel.ProjectExternalID
 	}
 	return nil
 }
