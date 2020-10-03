@@ -249,7 +249,7 @@ func (osc *Client) DeleteRolePermissions(organizationID, projectID, role string,
 						v1EventService.LogEvent(&events.LogEventArgs{
 							EventType:         events.ClaManagerRoleDeleted,
 							ProjectID:         projectID,
-							ProjectModel:      nil,
+							ClaGroupModel:     nil,
 							CompanyID:         organizationID,
 							CompanyModel:      nil,
 							LfUsername:        authUser.UserName,

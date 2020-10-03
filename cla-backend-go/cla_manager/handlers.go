@@ -53,8 +53,8 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetCLAGroupByID(ctx, params.ProjectID)
-		if projectErr != nil || projectModel == nil {
+		claGroupModel, projectErr := projectService.GetCLAGroupByID(ctx, params.ProjectID)
+		if projectErr != nil || claGroupModel == nil {
 			msg := buildErrorMessage("project lookup error", params, projectErr)
 			log.Warn(msg)
 			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -116,8 +116,8 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 				CompanyExternalID: companyModel.CompanyExternalID,
 				CompanyName:       companyModel.CompanyName,
 				ProjectID:         params.ProjectID,
-				ProjectExternalID: projectModel.ProjectExternalID,
-				ProjectName:       projectModel.ProjectName,
+				ProjectExternalID: claGroupModel.ProjectExternalID,
+				ProjectName:       claGroupModel.ProjectName,
 				UserID:            params.Body.UserLFID,
 				UserExternalID:    userModel.UserExternalID,
 				UserName:          params.Body.UserName,
@@ -163,17 +163,17 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		eventsService.LogEvent(&events.LogEventArgs{
 			EventType:         events.ClaManagerAccessRequestCreated,
 			ProjectID:         params.ProjectID,
-			ProjectModel:      projectModel,
+			ClaGroupModel:     claGroupModel,
 			CompanyID:         params.CompanyID,
 			CompanyModel:      companyModel,
 			LfUsername:        params.Body.UserLFID,
 			UserID:            params.Body.UserLFID,
 			UserModel:         userModel,
-			ExternalProjectID: projectModel.ProjectExternalID,
+			ExternalProjectID: claGroupModel.ProjectExternalID,
 			EventData: &events.CLAManagerRequestCreatedEventData{
 				RequestID:   request.RequestID,
 				CompanyName: companyModel.CompanyName,
-				ProjectName: projectModel.ProjectName,
+				ProjectName: claGroupModel.ProjectName,
 				UserName:    params.Body.UserName,
 				UserEmail:   params.Body.UserEmail,
 				UserLFID:    params.Body.UserLFID,
@@ -182,7 +182,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 		// Send email to each manager
 		for _, manager := range claManagers {
-			sendRequestAccessEmailToCLAManagers(companyModel, projectModel,
+			sendRequestAccessEmailToCLAManagers(companyModel, claGroupModel,
 				params.Body.UserName, params.Body.UserEmail,
 				manager.Username, manager.LfEmail)
 		}
@@ -262,8 +262,8 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetCLAGroupByID(ctx, params.ProjectID)
-		if projectErr != nil || projectModel == nil {
+		claGroupModel, projectErr := projectService.GetCLAGroupByID(ctx, params.ProjectID)
+		if projectErr != nil || claGroupModel == nil {
 			msg := buildErrorMessageForApprove(params, projectErr)
 			log.Warn(msg)
 			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -334,7 +334,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			EventData: &events.CLAManagerRequestApprovedEventData{
 				RequestID:    request.RequestID,
 				CompanyName:  companyModel.CompanyName,
-				ProjectName:  projectModel.ProjectName,
+				ProjectName:  claGroupModel.ProjectName,
 				UserName:     request.UserName,
 				UserEmail:    request.UserEmail,
 				ManagerName:  claUser.Name,    // from the request
@@ -344,12 +344,12 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 		// Notify CLA Managers - send email to each manager
 		for _, manager := range claManagers {
-			sendRequestApprovedEmailToCLAManagers(companyModel, projectModel, request.UserName, request.UserEmail,
+			sendRequestApprovedEmailToCLAManagers(companyModel, claGroupModel, request.UserName, request.UserEmail,
 				manager.Username, manager.LfEmail)
 		}
 
 		// Notify the requester
-		sendRequestApprovedEmailToRequester(companyModel, projectModel, request.UserName, request.UserEmail)
+		sendRequestApprovedEmailToRequester(companyModel, claGroupModel, request.UserName, request.UserEmail)
 
 		return cla_manager.NewCreateCLAManagerRequestOK().WithXRequestID(reqID).WithPayload(request)
 	})
@@ -369,8 +369,8 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetCLAGroupByID(ctx, params.ProjectID)
-		if projectErr != nil || projectModel == nil {
+		claGroupModel, projectErr := projectService.GetCLAGroupByID(ctx, params.ProjectID)
+		if projectErr != nil || claGroupModel == nil {
 			msg := buildErrorMessageForDeny(params, projectErr)
 			log.Warn(msg)
 			return cla_manager.NewDenyCLAManagerRequestBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -429,7 +429,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			EventData: &events.CLAManagerRequestDeniedEventData{
 				RequestID:    request.RequestID,
 				CompanyName:  companyModel.CompanyName,
-				ProjectName:  projectModel.ProjectName,
+				ProjectName:  claGroupModel.ProjectName,
 				UserName:     request.UserName,
 				UserEmail:    request.UserEmail,
 				ManagerName:  claUser.Name,    // from the request
@@ -439,12 +439,12 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 
 		// Notify CLA Managers - send email to each manager
 		for _, manager := range claManagers {
-			sendRequestDeniedEmailToCLAManagers(companyModel, projectModel, request.UserName, request.UserEmail,
+			sendRequestDeniedEmailToCLAManagers(companyModel, claGroupModel, request.UserName, request.UserEmail,
 				manager.Username, manager.LfEmail)
 		}
 
 		// Notify the requester
-		sendRequestDeniedEmailToRequester(companyModel, projectModel, request.UserName, request.UserEmail)
+		sendRequestDeniedEmailToRequester(companyModel, claGroupModel, request.UserName, request.UserEmail)
 
 		return cla_manager.NewCreateCLAManagerRequestOK().WithPayload(request)
 	})
@@ -465,8 +465,8 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 		}
 
 		// Make sure the project id exists...
-		projectModel, projectErr := projectService.GetCLAGroupByID(ctx, params.ProjectID)
-		if projectErr != nil || projectModel == nil {
+		claGroupModel, projectErr := projectService.GetCLAGroupByID(ctx, params.ProjectID)
+		if projectErr != nil || claGroupModel == nil {
 			msg := buildErrorMessageForDelete(params, projectErr)
 			log.Warn(msg)
 			return cla_manager.NewDenyCLAManagerRequestBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -548,7 +548,7 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			EventData: &events.CLAManagerRequestDeniedEventData{
 				RequestID:    params.RequestID,
 				CompanyName:  companyModel.CompanyName,
-				ProjectName:  projectModel.ProjectName,
+				ProjectName:  claGroupModel.ProjectName,
 				UserName:     request.UserName,
 				UserEmail:    request.UserEmail,
 				ManagerName:  claUser.Name,    // from the request
@@ -583,8 +583,8 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetCLAGroupByID(ctx, params.ProjectID)
-		if projectErr != nil || projectModel == nil {
+		claGroupModel, projectErr := projectService.GetCLAGroupByID(ctx, params.ProjectID)
+		if projectErr != nil || claGroupModel == nil {
 			msg := fmt.Sprintf("User lookup for project by ID: %s failed ", params.ProjectID)
 			log.Warn(msg)
 			return cla_manager.NewAddCLAManagerBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -664,8 +664,8 @@ func Configure(api *operations.ClaAPI, service IService, companyService company.
 			})
 		}
 
-		projectModel, projectErr := projectService.GetCLAGroupByID(ctx, params.ProjectID)
-		if projectErr != nil || projectModel == nil {
+		claGroupModel, projectErr := projectService.GetCLAGroupByID(ctx, params.ProjectID)
+		if projectErr != nil || claGroupModel == nil {
 			msg := fmt.Sprintf("User lookup for project by ID: %s failed ", params.ProjectID)
 			log.Warn(msg)
 			return cla_manager.NewDeleteCLAManagerBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -794,9 +794,9 @@ func buildErrorMessageDeleteManager(errPrefix string, params cla_manager.DeleteC
 }
 
 // sendRequestAccessEmailToCLAManagers sends the request access email to the specified CLA Managers
-func sendRequestAccessEmailToCLAManagers(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail, recipientName, recipientAddress string) {
+func sendRequestAccessEmailToCLAManagers(companyModel *models.Company, claGroupModel *models.ClaGroup, requesterName, requesterEmail, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	// subject string, body string, recipients []string
 	subject := fmt.Sprintf("EasyCLA: New CLA Manager Access Request for %s on %s", companyName, projectName)
@@ -818,8 +818,8 @@ additional CLA Manager.</p>
 		recipientName, projectName,
 		companyName, projectName, projectName, projectName,
 		requesterName, requesterEmail, companyName, projectName,
-		utils.GetCorporateURL(projectModel.Version == utils.V2), projectName,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetCorporateURL(claGroupModel.Version == utils.V2), projectName,
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -829,9 +829,9 @@ additional CLA Manager.</p>
 	}
 }
 
-func sendRequestApprovedEmailToCLAManagers(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail, recipientName, recipientAddress string) {
+func sendRequestApprovedEmailToCLAManagers(companyModel *models.Company, claGroupModel *models.ClaGroup, requesterName, requesterEmail, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	// subject string, body string, recipients []string
 	subject := fmt.Sprintf("EasyCLA: CLA Manager Access Approval Notice for %s", projectName)
@@ -850,7 +850,7 @@ list of company’s CLA Managers for %s.</p>
 		recipientName, projectName,
 		companyName, projectName, projectName, projectName,
 		requesterName, requesterEmail,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -860,9 +860,9 @@ list of company’s CLA Managers for %s.</p>
 	}
 }
 
-func sendRequestApprovedEmailToRequester(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail string) {
+func sendRequestApprovedEmailToRequester(companyModel *models.Company, claGroupModel *models.ClaGroup, requesterName, requesterEmail string) {
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	// subject string, body string, recipients []string
 	subject := fmt.Sprintf("EasyCLA: New CLA Manager Access Approved for %s", projectName)
@@ -879,8 +879,8 @@ company and then the project %s. From here you will be able to edit the list of 
 %s`,
 		requesterName, projectName,
 		companyName, projectName, projectName, projectName,
-		utils.GetCorporateURL(projectModel.Version == utils.V2), projectName,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetCorporateURL(claGroupModel.Version == utils.V2), projectName,
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -890,9 +890,9 @@ company and then the project %s. From here you will be able to edit the list of 
 	}
 }
 
-func sendRequestDeniedEmailToCLAManagers(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail, recipientName, recipientAddress string) {
+func sendRequestDeniedEmailToCLAManagers(companyModel *models.Company, claGroupModel *models.ClaGroup, requesterName, requesterEmail, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	// subject string, body string, recipients []string
 	subject := fmt.Sprintf("EasyCLA: CLA Manager Access Denied Notice for %s", projectName)
@@ -910,7 +910,7 @@ be able to maintain the list of employees allowed to contribute to %s on behalf 
 		recipientName, projectName,
 		companyName, projectName, projectName,
 		requesterName, requesterEmail,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -920,9 +920,9 @@ be able to maintain the list of employees allowed to contribute to %s on behalf 
 	}
 }
 
-func sendRequestDeniedEmailToRequester(companyModel *models.Company, projectModel *models.Project, requesterName, requesterEmail string) {
+func sendRequestDeniedEmailToRequester(companyModel *models.Company, claGroupModel *models.ClaGroup, requesterName, requesterEmail string) {
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	// subject string, body string, recipients []string
 	subject := fmt.Sprintf("EasyCLA: New CLA Manager Access Denied for %s", projectName)
@@ -936,7 +936,7 @@ list of employees allowed to contribute to %s on behalf of your company.</p>
 %s`,
 		requesterName, projectName,
 		companyName, projectName, projectName,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

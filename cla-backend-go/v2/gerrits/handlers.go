@@ -23,7 +23,7 @@ import (
 )
 
 type ProjectService interface { //nolint
-	GetCLAGroupByID(ctx context.Context, projectID string) (*v1Models.Project, error)
+	GetCLAGroupByID(ctx context.Context, claGroupID string) (*v1Models.ClaGroup, error)
 }
 
 // Configure the Gerrit api

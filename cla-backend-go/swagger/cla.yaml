@@ -699,7 +699,7 @@ paths:
         - name: body
           in: body
           schema:
-            $ref: '#/definitions/project'
+            $ref: '#/definitions/cla-group'
       responses:
         '200':
           description: 'Success'
@@ -708,7 +708,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/project'
+            $ref: '#/definitions/cla-group'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -720,7 +720,7 @@ paths:
       tags:
         - project
     put:
-      summary: Update Project by ID
+      summary: Update CLA Group by ID
       security:
         - OauthSecurity: [ ]
       operationId: updateProject
@@ -729,7 +729,7 @@ paths:
         - name: body
           in: body
           schema:
-            $ref: '#/definitions/project'
+            $ref: '#/definitions/cla-group'
       responses:
         '200':
           description: 'Success'
@@ -738,7 +738,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/project'
+            $ref: '#/definitions/cla-group'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -769,7 +769,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/projects'
+            $ref: '#/definitions/cla-groups'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -799,7 +799,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/project'
+            $ref: '#/definitions/cla-group'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -853,7 +853,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/projects'
+            $ref: '#/definitions/cla-groups'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -867,8 +867,8 @@ paths:
 
   /project/name/{projectName}:
     get:
-      summary: Get Project By Name
-      description: Returns the project object when provided the project name - exact match
+      summary: Get CLA Group By Name
+      description: Returns the CLA Group/Project object when provided the CLA Group/Project name - exact match
       parameters:
         - $ref: "#/parameters/x-request-id"
         - name: projectName
@@ -886,7 +886,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/project'
+            $ref: '#/definitions/cla-group'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -2642,10 +2642,10 @@ definitions:
         $ref: './common/properties/company-name.yaml'
       projectID:
         type: string
-        description: The project's ID
+        description: The CLA Group ID
       projectExternalID:
         type: string
-        description: The project's external ID
+        description: The CLA Group external ID
       projectName:
         $ref: './common/properties/cla-group-name.yaml'
       userID:
@@ -2685,14 +2685,14 @@ definitions:
       userLFID:
         type: string
 
-  projects:
-    $ref: './common/projects.yaml'
+  cla-groups:
+    $ref: './common/cla-groups.yaml'
 
-  project:
-    $ref: './common/project.yaml'
+  cla-group:
+    $ref: './common/cla-group.yaml'
 
-  project-document:
-    $ref: './common/project-document.yaml'
+  cla-group-document:
+    $ref: './common/cla-group-document.yaml'
 
   create-cla-group-template:
     $ref: './common/create-cla-group-template.yaml'

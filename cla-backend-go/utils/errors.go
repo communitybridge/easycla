@@ -25,12 +25,42 @@ type CLAGroupNotFound struct {
 	Err        error
 }
 
-// CLAGroupNotFound is an error string function for CLA Group not found errors
+// Error is an error string function for CLA Group not found errors
 func (e *CLAGroupNotFound) Error() string {
 	if e.Err == nil {
 		return fmt.Sprintf("cla group %s not found", e.CLAGroupID)
 	}
 	return fmt.Sprintf("cla group %s not found: %+v", e.CLAGroupID, e.Err)
+}
+
+// CLAGroupICLANotConfigured is an error model for CLA Group ICLA not configured
+type CLAGroupICLANotConfigured struct {
+	CLAGroupID   string
+	CLAGroupName string
+	Err          error
+}
+
+// Error is an error string function for CLA Group ICLA not configured
+func (e *CLAGroupICLANotConfigured) Error() string {
+	if e.Err == nil {
+		return fmt.Sprintf("cla group %s (%s) is not configured for ICLAs", e.CLAGroupName, e.CLAGroupID)
+	}
+	return fmt.Sprintf("cla group %s (%s) is not configured for ICLAs: %+v", e.CLAGroupName, e.CLAGroupID, e.Err)
+}
+
+// CLAGroupCCLANotConfigured is an error model for CLA Group CCLA not configured
+type CLAGroupCCLANotConfigured struct {
+	CLAGroupID   string
+	CLAGroupName string
+	Err          error
+}
+
+// Error is an error string function for CLA Group CCLA not configured
+func (e *CLAGroupCCLANotConfigured) Error() string {
+	if e.Err == nil {
+		return fmt.Sprintf("cla group %s (%s) is not configured for CCLAs", e.CLAGroupName, e.CLAGroupID)
+	}
+	return fmt.Sprintf("cla group %s (%s) is not configured for CCLAs: %+v", e.CLAGroupName, e.CLAGroupID, e.Err)
 }
 
 // ProjectCLAGroupMappingNotFound is an error model for project CLA Group not found errors
@@ -40,7 +70,7 @@ type ProjectCLAGroupMappingNotFound struct {
 	Err         error
 }
 
-// ProjectCLAGroupMappingNotFound is an error string function for project CLA Group not found errors
+// Error is an error string function for project CLA Group not found errors
 func (e *ProjectCLAGroupMappingNotFound) Error() string {
 	if e.CLAGroupID == "" {
 		if e.Err == nil {

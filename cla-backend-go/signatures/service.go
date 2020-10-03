@@ -47,7 +47,7 @@ type SignatureService interface {
 	GetGithubOrganizationsFromWhitelist(ctx context.Context, signatureID string, githubAccessToken string) ([]models.GithubOrg, error)
 	AddGithubOrganizationToWhitelist(ctx context.Context, signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
 	DeleteGithubOrganizationFromWhitelist(ctx context.Context, signatureID string, whiteListParams models.GhOrgWhitelist, githubAccessToken string) ([]models.GithubOrg, error)
-	UpdateApprovalList(ctx context.Context, authUser *auth.User, projectModel *models.Project, companyModel *models.Company, claGroupID string, params *models.ApprovalList) (*models.Signature, error)
+	UpdateApprovalList(ctx context.Context, authUser *auth.User, claGroupModel *models.ClaGroup, companyModel *models.Company, claGroupID string, params *models.ApprovalList) (*models.Signature, error)
 
 	AddCLAManager(ctx context.Context, signatureID, claManagerID string) (*models.Signature, error)
 	RemoveCLAManager(ctx context.Context, ignatureID, claManagerID string) (*models.Signature, error)
@@ -384,13 +384,13 @@ func (s service) DeleteGithubOrganizationFromWhitelist(ctx context.Context, sign
 }
 
 // UpdateApprovalList service method
-func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, projectModel *models.Project, companyModel *models.Company, claGroupID string, params *models.ApprovalList) (*models.Signature, error) {
+func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, claGroupModel *models.ClaGroup, companyModel *models.Company, claGroupID string, params *models.ApprovalList) (*models.Signature, error) {
 	pageSize := int64(1)
 	signed, approved := true, true
 	sigModel, sigErr := s.GetProjectCompanySignature(ctx, companyModel.CompanyID, claGroupID, &signed, &approved, nil, &pageSize)
 	if sigErr != nil {
 		msg := fmt.Sprintf("unable to locate project company signature by Company ID: %s, Project ID: %s, CLA Group ID: %s, error: %+v",
-			companyModel.CompanyID, projectModel.ProjectID, claGroupID, sigErr)
+			companyModel.CompanyID, claGroupModel.ProjectID, claGroupID, sigErr)
 		log.Warn(msg)
 		return nil, NewBadRequestError(msg)
 	}
@@ -407,7 +407,7 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, pr
 		msg := fmt.Sprintf("EasyCLA - 403 Forbidden - CLA Manager %s / %s is not authorized to approve request for company ID: %s / %s / %s, project ID: %s / %s / %s",
 			authUser.UserName, authUser.Email,
 			companyModel.CompanyName, companyModel.CompanyExternalID, companyModel.CompanyID,
-			projectModel.ProjectName, projectModel.ProjectExternalID, projectModel.ProjectID)
+			claGroupModel.ProjectName, claGroupModel.ProjectExternalID, claGroupModel.ProjectID)
 		return nil, NewForbiddenError(msg)
 	}
 
@@ -417,22 +417,22 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, pr
 		return nil, userErr
 	}
 
-	updatedSig, err := s.repo.UpdateApprovalList(ctx, projectModel.ProjectID, companyModel.CompanyID, params)
+	updatedSig, err := s.repo.UpdateApprovalList(ctx, claGroupModel.ProjectID, companyModel.CompanyID, params)
 	if err != nil {
 		return updatedSig, err
 	}
 
 	// Log Events
-	s.createEventLogEntries(companyModel, projectModel, userModel, params)
+	s.createEventLogEntries(companyModel, claGroupModel, userModel, params)
 
 	// Send an email to the CLA Managers
 	for _, claManager := range claManagers {
 		claManagerEmail := getBestEmail(claManager)
-		s.sendApprovalListUpdateEmailToCLAManagers(companyModel, projectModel, claManager.Username, claManagerEmail, params)
+		s.sendApprovalListUpdateEmailToCLAManagers(companyModel, claGroupModel, claManager.Username, claManagerEmail, params)
 	}
 
 	// Send emails to contributors if email or GH username as added/removed
-	s.sendRequestAccessEmailToContributors(authUser, companyModel, projectModel, params)
+	s.sendRequestAccessEmailToContributors(authUser, companyModel, claGroupModel, params)
 
 	return updatedSig, nil
 }
@@ -513,19 +513,19 @@ func buildApprovalListSummary(approvalListChanges *models.ApprovalList) string {
 }
 
 // sendRequestAccessEmailToCLAManagers sends the request access email to the specified CLA Managers
-func (s service) sendApprovalListUpdateEmailToCLAManagers(companyModel *models.Company, projectModel *models.Project, recipientName, recipientAddress string, approvalListChanges *models.ApprovalList) {
+func (s service) sendApprovalListUpdateEmailToCLAManagers(companyModel *models.Company, claGroupModel *models.ClaGroup, recipientName, recipientAddress string, approvalListChanges *models.ApprovalList) {
 	f := logrus.Fields{
 		"function":          "sendApprovalListUpdateEmailToCLAManagers",
-		"projectName":       projectModel.ProjectName,
-		"projectExternalID": projectModel.ProjectExternalID,
-		"foundationSFID":    projectModel.FoundationSFID,
+		"projectName":       claGroupModel.ProjectName,
+		"projectExternalID": claGroupModel.ProjectExternalID,
+		"foundationSFID":    claGroupModel.FoundationSFID,
 		"companyName":       companyModel.CompanyName,
 		"companyExternalID": companyModel.CompanyExternalID,
 		"recipientName":     recipientName,
 		"recipientAddress":  recipientAddress}
 
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	// subject string, body string, recipients []string
 	subject := fmt.Sprintf("EasyCLA: Approval List Update for %s on %s", companyName, projectName)
@@ -541,7 +541,7 @@ the EasyCLA system.</p>
 %s
 %s`,
 		recipientName, projectName, companyName, projectName, buildApprovalListSummary(approvalListChanges), projectName,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -610,38 +610,38 @@ func (s service) getRemoveGitHubContributors(approvalList *models.ApprovalList) 
 
 	return userModelList
 }
-func (s service) sendRequestAccessEmailToContributors(authUser *auth.User, companyModel *models.Company, projectModel *models.Project, approvalList *models.ApprovalList) {
+func (s service) sendRequestAccessEmailToContributors(authUser *auth.User, companyModel *models.Company, claGroupModel *models.ClaGroup, approvalList *models.ApprovalList) {
 	addEmailUsers := s.getAddEmailContributors(approvalList)
 	for _, user := range addEmailUsers {
-		sendRequestAccessEmailToContributorRecipient(authUser, companyModel, projectModel, user.Username, user.LfEmail, "added", "to", "you are authorized to contribute to")
+		sendRequestAccessEmailToContributorRecipient(authUser, companyModel, claGroupModel, user.Username, user.LfEmail, "added", "to", "you are authorized to contribute to")
 	}
 	removeEmailUsers := s.getRemoveEmailContributors(approvalList)
 	for _, user := range removeEmailUsers {
-		sendRequestAccessEmailToContributorRecipient(authUser, companyModel, projectModel, user.Username, user.LfEmail, "removed", "from", "you are no longer authorized to contribute to")
+		sendRequestAccessEmailToContributorRecipient(authUser, companyModel, claGroupModel, user.Username, user.LfEmail, "removed", "from", "you are no longer authorized to contribute to")
 	}
 	addGitHubUsers := s.getAddGitHubContributors(approvalList)
 	for _, user := range addGitHubUsers {
-		sendRequestAccessEmailToContributorRecipient(authUser, companyModel, projectModel, user.Username, user.LfEmail, "added", "to", "you are authorized to contribute to")
+		sendRequestAccessEmailToContributorRecipient(authUser, companyModel, claGroupModel, user.Username, user.LfEmail, "added", "to", "you are authorized to contribute to")
 	}
 	removeGitHubUsers := s.getRemoveGitHubContributors(approvalList)
 	for _, user := range removeGitHubUsers {
-		sendRequestAccessEmailToContributorRecipient(authUser, companyModel, projectModel, user.Username, user.LfEmail, "removed", "from", "you are no longer authorized to contribute to")
+		sendRequestAccessEmailToContributorRecipient(authUser, companyModel, claGroupModel, user.Username, user.LfEmail, "removed", "from", "you are no longer authorized to contribute to")
 	}
 }
 
-func (s service) createEventLogEntries(companyModel *models.Company, projectModel *models.Project, userModel *models.User, approvalList *models.ApprovalList) {
+func (s service) createEventLogEntries(companyModel *models.Company, claGroupModel *models.ClaGroup, userModel *models.User, approvalList *models.ApprovalList) {
 	for _, value := range approvalList.AddEmailApprovalList {
 		// Send an event
 		s.eventsService.LogEvent(&events.LogEventArgs{
 			EventType:         events.ClaApprovalListUpdated,
-			ProjectID:         projectModel.ProjectID,
-			ProjectModel:      projectModel,
+			ProjectID:         claGroupModel.ProjectID,
+			ClaGroupModel:     claGroupModel,
 			CompanyID:         companyModel.CompanyID,
 			CompanyModel:      companyModel,
 			LfUsername:        userModel.LfUsername,
 			UserID:            userModel.UserID,
 			UserModel:         userModel,
-			ExternalProjectID: projectModel.ProjectExternalID,
+			ExternalProjectID: claGroupModel.ProjectExternalID,
 			EventData: &events.CLAApprovalListAddEmailData{
 				UserName:          userModel.LfUsername,
 				UserEmail:         userModel.LfEmail,
@@ -654,14 +654,14 @@ func (s service) createEventLogEntries(companyModel *models.Company, projectMode
 		// Send an event
 		s.eventsService.LogEvent(&events.LogEventArgs{
 			EventType:         events.ClaApprovalListUpdated,
-			ProjectID:         projectModel.ProjectID,
-			ProjectModel:      projectModel,
+			ProjectID:         claGroupModel.ProjectID,
+			ClaGroupModel:     claGroupModel,
 			CompanyID:         companyModel.CompanyID,
 			CompanyModel:      companyModel,
 			LfUsername:        userModel.LfUsername,
 			UserID:            userModel.UserID,
 			UserModel:         userModel,
-			ExternalProjectID: projectModel.ProjectExternalID,
+			ExternalProjectID: claGroupModel.ProjectExternalID,
 			EventData: &events.CLAApprovalListRemoveEmailData{
 				UserName:          userModel.LfUsername,
 				UserEmail:         userModel.LfEmail,
@@ -674,14 +674,14 @@ func (s service) createEventLogEntries(companyModel *models.Company, projectMode
 		// Send an event
 		s.eventsService.LogEvent(&events.LogEventArgs{
 			EventType:         events.ClaApprovalListUpdated,
-			ProjectID:         projectModel.ProjectID,
-			ProjectModel:      projectModel,
+			ProjectID:         claGroupModel.ProjectID,
+			ClaGroupModel:     claGroupModel,
 			CompanyID:         companyModel.CompanyID,
 			CompanyModel:      companyModel,
 			LfUsername:        userModel.LfUsername,
 			UserID:            userModel.UserID,
 			UserModel:         userModel,
-			ExternalProjectID: projectModel.ProjectExternalID,
+			ExternalProjectID: claGroupModel.ProjectExternalID,
 			EventData: &events.CLAApprovalListAddDomainData{
 				UserName:           userModel.LfUsername,
 				UserEmail:          userModel.LfEmail,
@@ -694,14 +694,14 @@ func (s service) createEventLogEntries(companyModel *models.Company, projectMode
 		// Send an event
 		s.eventsService.LogEvent(&events.LogEventArgs{
 			EventType:         events.ClaApprovalListUpdated,
-			ProjectID:         projectModel.ProjectID,
-			ProjectModel:      projectModel,
+			ProjectID:         claGroupModel.ProjectID,
+			ClaGroupModel:     claGroupModel,
 			CompanyID:         companyModel.CompanyID,
 			CompanyModel:      companyModel,
 			LfUsername:        userModel.LfUsername,
 			UserID:            userModel.UserID,
 			UserModel:         userModel,
-			ExternalProjectID: projectModel.ProjectExternalID,
+			ExternalProjectID: claGroupModel.ProjectExternalID,
 			EventData: &events.CLAApprovalListRemoveDomainData{
 				UserName:           userModel.LfUsername,
 				UserEmail:          userModel.LfEmail,
@@ -714,14 +714,14 @@ func (s service) createEventLogEntries(companyModel *models.Company, projectMode
 		// Send an event
 		s.eventsService.LogEvent(&events.LogEventArgs{
 			EventType:         events.ClaApprovalListUpdated,
-			ProjectID:         projectModel.ProjectID,
-			ProjectModel:      projectModel,
+			ProjectID:         claGroupModel.ProjectID,
+			ClaGroupModel:     claGroupModel,
 			CompanyID:         companyModel.CompanyID,
 			CompanyModel:      companyModel,
 			LfUsername:        userModel.LfUsername,
 			UserID:            userModel.UserID,
 			UserModel:         userModel,
-			ExternalProjectID: projectModel.ProjectExternalID,
+			ExternalProjectID: claGroupModel.ProjectExternalID,
 			EventData: &events.CLAApprovalListAddGitHubUsernameData{
 				UserName:                   userModel.LfUsername,
 				UserEmail:                  userModel.LfEmail,
@@ -734,14 +734,14 @@ func (s service) createEventLogEntries(companyModel *models.Company, projectMode
 		// Send an event
 		s.eventsService.LogEvent(&events.LogEventArgs{
 			EventType:         events.ClaApprovalListUpdated,
-			ProjectID:         projectModel.ProjectID,
-			ProjectModel:      projectModel,
+			ProjectID:         claGroupModel.ProjectID,
+			ClaGroupModel:     claGroupModel,
 			CompanyID:         companyModel.CompanyID,
 			CompanyModel:      companyModel,
 			LfUsername:        userModel.LfUsername,
 			UserID:            userModel.UserID,
 			UserModel:         userModel,
-			ExternalProjectID: projectModel.ProjectExternalID,
+			ExternalProjectID: claGroupModel.ProjectExternalID,
 			EventData: &events.CLAApprovalListRemoveGitHubUsernameData{
 				UserName:                   userModel.LfUsername,
 				UserEmail:                  userModel.LfEmail,
@@ -754,14 +754,14 @@ func (s service) createEventLogEntries(companyModel *models.Company, projectMode
 		// Send an event
 		s.eventsService.LogEvent(&events.LogEventArgs{
 			EventType:         events.ClaApprovalListUpdated,
-			ProjectID:         projectModel.ProjectID,
-			ProjectModel:      projectModel,
+			ProjectID:         claGroupModel.ProjectID,
+			ClaGroupModel:     claGroupModel,
 			CompanyID:         companyModel.CompanyID,
 			CompanyModel:      companyModel,
 			LfUsername:        userModel.LfUsername,
 			UserID:            userModel.UserID,
 			UserModel:         userModel,
-			ExternalProjectID: projectModel.ProjectExternalID,
+			ExternalProjectID: claGroupModel.ProjectExternalID,
 			EventData: &events.CLAApprovalListAddGitHubOrgData{
 				UserName:              userModel.LfUsername,
 				UserEmail:             userModel.LfEmail,
@@ -774,14 +774,14 @@ func (s service) createEventLogEntries(companyModel *models.Company, projectMode
 		// Send an event
 		s.eventsService.LogEvent(&events.LogEventArgs{
 			EventType:         events.ClaApprovalListUpdated,
-			ProjectID:         projectModel.ProjectID,
-			ProjectModel:      projectModel,
+			ProjectID:         claGroupModel.ProjectID,
+			ClaGroupModel:     claGroupModel,
 			CompanyID:         companyModel.CompanyID,
 			CompanyModel:      companyModel,
 			LfUsername:        userModel.LfUsername,
 			UserID:            userModel.UserID,
 			UserModel:         userModel,
-			ExternalProjectID: projectModel.ProjectExternalID,
+			ExternalProjectID: claGroupModel.ProjectExternalID,
 			EventData: &events.CLAApprovalListRemoveGitHubOrgData{
 				UserName:              userModel.LfUsername,
 				UserEmail:             userModel.LfEmail,
@@ -808,9 +808,9 @@ func (s service) GetClaGroupCorporateContributors(ctx context.Context, claGroupI
 }
 
 // sendRequestAccessEmailToContributors sends the request access email to the specified contributors
-func sendRequestAccessEmailToContributorRecipient(authUser *auth.User, companyModel *models.Company, projectModel *models.Project, recipientName, recipientAddress, addRemove, toFrom, authorizedString string) {
+func sendRequestAccessEmailToContributorRecipient(authUser *auth.User, companyModel *models.Company, claGroupModel *models.ClaGroup, recipientName, recipientAddress, addRemove, toFrom, authorizedString string) {
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	// subject string, body string, recipients []string
 	subject := fmt.Sprintf("EasyCLA: Approval List Update for %s on %s", companyName, projectName)
@@ -825,7 +825,7 @@ close and re-open the pull request to force a recheck by the EasyCLA system.</p>
 %s`,
 		recipientName, projectName, addRemove, toFrom,
 		companyName, projectName, authUser.UserName, authorizedString, projectName, projectName,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

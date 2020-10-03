@@ -36,8 +36,8 @@ var (
 type Repository interface {
 	GetTemplates() ([]models.Template, error)
 	GetTemplate(templateID string) (models.Template, error)
-	GetCLAGroup(claGroupID string) (*models.Project, error)
-	GetCLADocuments(claGroupID string, claType string) ([]models.ProjectDocument, error)
+	GetCLAGroup(claGroupID string) (*models.ClaGroup, error)
+	GetCLADocuments(claGroupID string, claType string) ([]models.ClaGroupDocument, error)
 	UpdateDynamoContractGroupTemplates(ctx context.Context, ContractGroupID string, template models.Template, pdfUrls models.TemplatePdfs, projectCCLAEnabled, projectICLAEnabled bool) error
 }
 
@@ -104,7 +104,7 @@ func NewRepository(awsSession *session.Session, stage string) repository {
 
 // GetTemplates returns a list containing all the template models
 func (r repository) GetTemplates() ([]models.Template, error) {
-	templates := []models.Template{}
+	var templates []models.Template
 	for _, template := range templateMap {
 		// DEBUG
 		// Only show the LF style template in dev for now
@@ -128,10 +128,10 @@ func (r repository) GetTemplate(templateID string) (models.Template, error) {
 	return template, nil
 }
 
-// GetCLAGroup This method belongs in the contractgroup package. We are leaving it here
-// because it accesses DynamoDB, but the contractgroup repository is designed
+// GetCLAGroup This method belongs in the contract group package. We are leaving it here
+// because it accesses DynamoDB, but the contract group repository is designed
 // to connect to postgres
-func (r repository) GetCLAGroup(claGroupID string) (*models.Project, error) {
+func (r repository) GetCLAGroup(claGroupID string) (*models.ClaGroup, error) {
 	log.Debugf("GetCLAGroup - claGroupID: %s", claGroupID)
 
 	dbModel, err := r.fetchCLAGroup(claGroupID)
@@ -141,15 +141,15 @@ func (r repository) GetCLAGroup(claGroupID string) (*models.Project, error) {
 	return r.buildProjectModel(*dbModel), nil
 }
 
-// GetCLADocuments fetches the cla documents inside of the CLAgroup, it's separate method for perf reasons
-func (r repository) GetCLADocuments(claGroupID string, claType string) ([]models.ProjectDocument, error) {
+// GetCLADocuments fetches the cla documents inside of the CLA Group, it's separate method for perf reasons
+func (r repository) GetCLADocuments(claGroupID string, claType string) ([]models.ClaGroupDocument, error) {
 	log.Debugf("GetCLADocuments - claGroupID: %s - claType : %s", claGroupID, claType)
 	dbModel, err := r.fetchCLAGroup(claGroupID)
 	if err != nil {
 		return nil, err
 	}
 
-	var projectDocuments []models.ProjectDocument
+	var projectDocuments []models.ClaGroupDocument
 
 	switch claType {
 	case "icla":
@@ -163,14 +163,14 @@ func (r repository) GetCLADocuments(claGroupID string, claType string) ([]models
 	return projectDocuments, nil
 }
 
-func (r repository) buildProjectDocuments(dbProjectDocumentModels []DBProjectDocumentModel) []models.ProjectDocument {
+func (r repository) buildProjectDocuments(dbProjectDocumentModels []DBProjectDocumentModel) []models.ClaGroupDocument {
 	if len(dbProjectDocumentModels) == 0 {
 		return nil
 	}
 
-	var projectDocuments []models.ProjectDocument
+	var projectDocuments []models.ClaGroupDocument
 	for _, dbProjectDocumentModel := range dbProjectDocumentModels {
-		projectDocuments = append(projectDocuments, models.ProjectDocument{
+		projectDocuments = append(projectDocuments, models.ClaGroupDocument{
 			DocumentAuthorName:      dbProjectDocumentModel.DocumentAuthorName,
 			DocumentContentType:     dbProjectDocumentModel.DocumentContentType,
 			DocumentCreationDate:    dbProjectDocumentModel.DocumentCreationDate,
@@ -214,8 +214,8 @@ func (r repository) fetchCLAGroup(claGroupID string) (*DBProjectModel, error) {
 }
 
 // buildProjectModel maps the database model to the API response model
-func (r repository) buildProjectModel(dbModel DBProjectModel) *models.Project {
-	return &models.Project{
+func (r repository) buildProjectModel(dbModel DBProjectModel) *models.ClaGroup {
+	return &models.ClaGroup{
 		ProjectID:               dbModel.ProjectID,
 		ProjectExternalID:       dbModel.ProjectExternalID,
 		ProjectName:             dbModel.ProjectName,
@@ -252,7 +252,7 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, claG
 		log.WithFields(f).Debugf("updating CLA Group %s document list...", utils.ClaTypeCCLA)
 		// Map the fields to the dynamo model as the attribute names are different
 		// Map Template Fields into DocumentTab
-		cclaDocumentTabs := []DocumentTab{}
+		var cclaDocumentTabs []DocumentTab
 
 		for _, field := range template.CclaFields {
 			dynamoTab := DocumentTab{
@@ -292,7 +292,7 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, claG
 		}
 
 		// project_corporate_documents is a List type, and thus the item needs to be in a slice
-		dynamoCorporateProjectDocuments := []DynamoProjectDocument{}
+		var dynamoCorporateProjectDocuments []DynamoProjectDocument
 		dynamoCorporateProjectDocuments = append(dynamoCorporateProjectDocuments, dynamoCorporateProjectDocument)
 
 		// Marshal object into dynamodb attribute
@@ -334,7 +334,7 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, claG
 	if projectICLAEnabled {
 		log.WithFields(f).Debugf("updating CLA Group %s document list...", utils.ClaTypeCCLA)
 		// Map ICLA Template Fields into DocumentTab
-		iclaDocumentTabs := []DocumentTab{}
+		var iclaDocumentTabs []DocumentTab
 
 		for _, field := range template.IclaFields {
 			dynamoTab := DocumentTab{
@@ -373,7 +373,7 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, claG
 			DocumentTabs:            iclaDocumentTabs,
 		}
 
-		dynamoProjectIndividualDocuments := []DynamoProjectDocument{}
+		var dynamoProjectIndividualDocuments []DynamoProjectDocument
 		dynamoProjectIndividualDocuments = append(dynamoProjectIndividualDocuments, dynamoIndividualDocument)
 
 		expr, err := dynamodbattribute.MarshalList(dynamoProjectIndividualDocuments)
@@ -461,7 +461,7 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        300,
 				Height:       20,
-				OffsetX:      105, // 95 move to the right a smigin
+				OffsetX:      105,
 				OffsetY:      -7,
 			},
 			{
