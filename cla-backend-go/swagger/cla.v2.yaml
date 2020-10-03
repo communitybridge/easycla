@@ -367,7 +367,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/cla-group'
+            $ref: '#/definitions/cla-group-summary'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -384,6 +384,41 @@ paths:
         - cla-group
 
   /cla-group/{claGroupID}:
+    put:
+      summary: Update an EasyCLA CLA Group
+      description: Update CLA Group within the EasyCLA system.
+      operationId: updateClaGroup
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+        - $ref: "#/parameters/path-claGroupID"
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/update-cla-group-input'
+      responses:
+        '200':
+          description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
+          schema:
+            $ref: '#/definitions/cla-group-summary'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - cla-group
     delete:
       summary: Delete an EasyCLA CLA Group
       description: Delete CLA Group within the EasyCLA system.
@@ -503,7 +538,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/cla-group-list'
+            $ref: '#/definitions/cla-group-list-summary'
         '400':
           $ref: '#/responses/invalid-request'
         '403':
@@ -595,7 +630,7 @@ paths:
         - name: body
           in: body
           schema:
-            $ref: '#/definitions/project'
+            $ref: '#/definitions/cla-group'
       responses:
         '200':
           description: 'Success'
@@ -604,7 +639,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/project'
+            $ref: '#/definitions/cla-group'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -639,7 +674,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/projects'
+            $ref: '#/definitions/cla-groups'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -674,7 +709,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/project'
+            $ref: '#/definitions/cla-group'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -773,7 +808,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/projects'
+            $ref: '#/definitions/cla-groups'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -809,7 +844,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/project'
+            $ref: '#/definitions/cla-group'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -3534,11 +3569,11 @@ definitions:
   list-github-repositories:
     $ref: './common/list-github-repositories.yaml'
 
-  projects:
-    $ref: './common/projects.yaml'
+  cla-groups:
+    $ref: './common/cla-groups.yaml'
 
-  project:
-    $ref: './common/project.yaml'
+  cla-group:
+    $ref: './common/cla-group.yaml'
 
   template:
     $ref: './common/template.yaml'
@@ -3603,8 +3638,8 @@ definitions:
   github-repositories-group-by-orgs:
     $ref: './common/github-repositories-group-by-orgs.yaml'
 
-  project-document:
-    $ref: './common/project-document.yaml'
+  cla-group-document:
+    $ref: './common/cla-group-document.yaml'
 
   meta-field:
     $ref: './common/meta-field.yaml'
@@ -4391,15 +4426,23 @@ definitions:
         description: template variables using which icla/ccla template will be created
         $ref: '#/definitions/create-cla-group-template'
 
-  cla-group-list:
+  update-cla-group-input:
+    type: object
+    properties:
+      cla_group_name:
+        $ref: './common/properties/cla-group-name.yaml'
+      cla_group_description:
+        $ref: './common/properties/cla-group-description.yaml'
+
+  cla-group-list-summary:
     type: object
     properties:
       list:
         type: array
         items:
-          $ref: '#/definitions/cla-group'
+          $ref: '#/definitions/cla-group-summary'
 
-  cla-group:
+  cla-group-summary:
     type: object
     properties:
       foundationLevelCLA:

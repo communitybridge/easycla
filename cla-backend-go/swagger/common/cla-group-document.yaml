@@ -3,8 +3,8 @@
 
 type: object
 x-nullable: false
-title: Project Document
-description: Project Document
+title: CLA Group Document
+description: CLA Group Document Definition
 properties:
   documentName:
     description: the document name

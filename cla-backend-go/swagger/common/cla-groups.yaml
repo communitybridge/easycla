@@ -3,8 +3,8 @@
 
 type: object
 x-nullable: false
-title: Projects
-description: A list of projects
+title: CLA Groups
+description: A list of CLA Groups
 properties:
   lastKeyScanned:
     type: string
@@ -18,4 +18,4 @@ properties:
     type: array
     x-omitempty: false
     items:
-      $ref: '#/definitions/project'
+      $ref: '#/definitions/cla-group'

@@ -45,17 +45,17 @@ const (
 
 // ProjectRepository defines functions of Project repository
 type ProjectRepository interface { //nolint
-	CreateCLAGroup(ctx context.Context, project *models.Project) (*models.Project, error)
-	GetCLAGroupByID(ctx context.Context, projectID string, loadRepoDetails bool) (*models.Project, error)
-	GetCLAGroupsByExternalID(ctx context.Context, params *project.GetProjectsByExternalIDParams, loadRepoDetails bool) (*models.Projects, error)
-	GetCLAGroupByName(ctx context.Context, projectName string) (*models.Project, error)
-	GetExternalCLAGroup(ctx context.Context, projectExternalID string) (*models.Project, error)
-	GetCLAGroups(ctx context.Context, params *project.GetProjectsParams) (*models.Projects, error)
-	DeleteCLAGroup(ctx context.Context, projectID string) error
-	UpdateCLAGroup(ctx context.Context, projectModel *models.Project) (*models.Project, error)
+	CreateCLAGroup(ctx context.Context, claGroupModel *models.ClaGroup) (*models.ClaGroup, error)
+	GetCLAGroupByID(ctx context.Context, claGroupID string, loadRepoDetails bool) (*models.ClaGroup, error)
+	GetCLAGroupsByExternalID(ctx context.Context, params *project.GetProjectsByExternalIDParams, loadRepoDetails bool) (*models.ClaGroups, error)
+	GetCLAGroupByName(ctx context.Context, claGroupName string) (*models.ClaGroup, error)
+	GetExternalCLAGroup(ctx context.Context, claGroupExternalID string) (*models.ClaGroup, error)
+	GetCLAGroups(ctx context.Context, params *project.GetProjectsParams) (*models.ClaGroups, error)
+	DeleteCLAGroup(ctx context.Context, claGroupID string) error
+	UpdateCLAGroup(ctx context.Context, claGroupModel *models.ClaGroup) (*models.ClaGroup, error)
 
-	GetClaGroupsByFoundationSFID(ctx context.Context, foundationSFID string, loadRepoDetails bool) (*models.Projects, error)
-	GetClaGroupByProjectSFID(ctx context.Context, projectSFID string, loadRepoDetails bool) (*models.Project, error)
+	GetClaGroupsByFoundationSFID(ctx context.Context, foundationSFID string, loadRepoDetails bool) (*models.ClaGroups, error)
+	GetClaGroupByProjectSFID(ctx context.Context, projectSFID string, loadRepoDetails bool) (*models.ClaGroup, error)
 	UpdateRootCLAGroupRepositoriesCount(ctx context.Context, claGroupID string, diff int64) error
 }
 
@@ -80,22 +80,22 @@ type repo struct {
 	claGroupTable       string
 }
 
-// CreateCLAGroup creates a new project
-func (repo *repo) CreateCLAGroup(ctx context.Context, projectModel *models.Project) (*models.Project, error) {
+// CreateCLAGroup creates a new CLA Group
+func (repo *repo) CreateCLAGroup(ctx context.Context, claGroupModel *models.ClaGroup) (*models.ClaGroup, error) {
 	f := logrus.Fields{
 		"function":          "CreateCLAGroup",
 		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
-		"projectName":       projectModel.ProjectName,
-		"projectExternalID": projectModel.ProjectExternalID,
-		"foundationSFID":    projectModel.FoundationSFID,
+		"projectName":       claGroupModel.ProjectName,
+		"projectExternalID": claGroupModel.ProjectExternalID,
+		"foundationSFID":    claGroupModel.FoundationSFID,
 		"tableName":         repo.claGroupTable}
-	// Generate a new project ID
-	projectID, err := uuid.NewV4()
+	// Generate a new CLA Group ID
+	claGroupID, err := uuid.NewV4()
 	if err != nil {
-		log.WithFields(f).Warnf("Unable to generate a UUID for a new project request, error: %v", err)
+		log.WithFields(f).Warnf("Unable to generate a UUID for a new CLA Group request, error: %v", err)
 		return nil, err
 	}
-	f["projectID"] = projectID
+	f["claGroupID"] = claGroupID
 
 	_, currentTimeString := utils.CurrentTime()
 	input := &dynamodb.PutItemInput{
@@ -105,17 +105,17 @@ func (repo *repo) CreateCLAGroup(ctx context.Context, projectModel *models.Proje
 
 	//var individualDocs []*dynamodb.AttributeValue
 	//var corporateDocs []*dynamodb.AttributeValue
-	addStringAttribute(input.Item, "project_id", projectID.String())
-	addStringAttribute(input.Item, "project_external_id", projectModel.ProjectExternalID)
-	addStringAttribute(input.Item, "foundation_sfid", projectModel.FoundationSFID)
-	addStringAttribute(input.Item, "project_description", projectModel.ProjectDescription)
-	addStringAttribute(input.Item, "project_name", projectModel.ProjectName)
-	addStringAttribute(input.Item, "project_name_lower", strings.ToLower(projectModel.ProjectName))
-	addStringSliceAttribute(input.Item, "project_acl", projectModel.ProjectACL)
-	addBooleanAttribute(input.Item, "project_icla_enabled", projectModel.ProjectICLAEnabled)
-	addBooleanAttribute(input.Item, "project_ccla_enabled", projectModel.ProjectCCLAEnabled)
-	addBooleanAttribute(input.Item, "project_ccla_requires_icla_signature", projectModel.ProjectCCLARequiresICLA)
-	addBooleanAttribute(input.Item, "project_live", projectModel.ProjectLive)
+	addStringAttribute(input.Item, "project_id", claGroupID.String())
+	addStringAttribute(input.Item, "project_external_id", claGroupModel.ProjectExternalID)
+	addStringAttribute(input.Item, "foundation_sfid", claGroupModel.FoundationSFID)
+	addStringAttribute(input.Item, "project_description", claGroupModel.ProjectDescription)
+	addStringAttribute(input.Item, "project_name", claGroupModel.ProjectName)
+	addStringAttribute(input.Item, "project_name_lower", strings.ToLower(claGroupModel.ProjectName))
+	addStringSliceAttribute(input.Item, "project_acl", claGroupModel.ProjectACL)
+	addBooleanAttribute(input.Item, "project_icla_enabled", claGroupModel.ProjectICLAEnabled)
+	addBooleanAttribute(input.Item, "project_ccla_enabled", claGroupModel.ProjectCCLAEnabled)
+	addBooleanAttribute(input.Item, "project_ccla_requires_icla_signature", claGroupModel.ProjectCCLARequiresICLA)
+	addBooleanAttribute(input.Item, "project_live", claGroupModel.ProjectLive)
 
 	// Empty documents for now - will add the template details later
 	addListAttribute(input.Item, "project_corporate_documents", []*dynamodb.AttributeValue{})
@@ -125,41 +125,41 @@ func (repo *repo) CreateCLAGroup(ctx context.Context, projectModel *models.Proje
 	addStringAttribute(input.Item, "date_created", currentTimeString)
 	addStringAttribute(input.Item, "date_modified", currentTimeString)
 	// Set the version attribute if not already set
-	if projectModel.Version == "" {
-		projectModel.Version = "v1" // default value
+	if claGroupModel.Version == "" {
+		claGroupModel.Version = "v1" // default value
 	}
-	addStringAttribute(input.Item, "version", projectModel.Version)
+	addStringAttribute(input.Item, "version", claGroupModel.Version)
 
 	_, err = repo.dynamoDBClient.PutItem(input)
 	if err != nil {
-		log.WithFields(f).Warnf("Unable to create a new project record, error: %v", err)
+		log.WithFields(f).Warnf("Unable to create a new CLA Group record, error: %v", err)
 		return nil, err
 	}
 
 	// Re-use the provided model - just update the dynamically assigned values
-	projectModel.ProjectID = projectID.String()
-	projectModel.DateCreated = currentTimeString
-	projectModel.DateModified = currentTimeString
+	claGroupModel.ProjectID = claGroupID.String()
+	claGroupModel.DateCreated = currentTimeString
+	claGroupModel.DateModified = currentTimeString
 
-	return projectModel, nil
+	return claGroupModel, nil
 }
 
-func (repo *repo) getCLAGroupByID(ctx context.Context, projectID string, loadCLAGroupDetails bool) (*models.Project, error) {
+func (repo *repo) getCLAGroupByID(ctx context.Context, claGroupID string, loadCLAGroupDetails bool) (*models.ClaGroup, error) {
 	f := logrus.Fields{
 		"function":           "getCLAGroupByID",
 		utils.XREQUESTID:     ctx.Value(utils.XREQUESTID),
-		"projectID":          projectID,
+		"claGroupID":         claGroupID,
 		"loadProjectDetails": loadCLAGroupDetails,
 		"tableName":          repo.claGroupTable}
-	log.WithFields(f).Debugf("loading project")
+	log.WithFields(f).Debugf("loading cla group...")
 	// This is the key we want to match
-	condition := expression.Key("project_id").Equal(expression.Value(projectID))
+	condition := expression.Key("project_id").Equal(expression.Value(claGroupID))
 
 	// Use the builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
 	if err != nil {
-		log.WithFields(f).Warnf("error building expression for CLA Group query, projectID: %s, error: %v",
-			projectID, err)
+		log.WithFields(f).Warnf("error building expression for CLA Group query, claGroupID: %s, error: %v",
+			claGroupID, err)
 		return nil, err
 	}
 
@@ -175,17 +175,17 @@ func (repo *repo) getCLAGroupByID(ctx context.Context, projectID string, loadCLA
 	// Make the DynamoDB Query API call
 	results, queryErr := repo.dynamoDBClient.Query(queryInput)
 	if queryErr != nil {
-		log.WithFields(f).Warnf("error retrieving project by projectID: %s, error: %v", projectID, queryErr)
+		log.WithFields(f).Warnf("error retrieving cla group by claGroupID: %s, error: %v", claGroupID, queryErr)
 		return nil, queryErr
 	}
 
 	if len(results.Items) < 1 {
-		return nil, &utils.CLAGroupNotFound{CLAGroupID: projectID}
+		return nil, &utils.CLAGroupNotFound{CLAGroupID: claGroupID}
 	}
 	var dbModel DBProjectModel
 	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
 	if err != nil {
-		log.WithFields(f).Warnf("error unmarshalling db project model, error: %+v", err)
+		log.WithFields(f).Warnf("error unmarshalling db cla group model, error: %+v", err)
 		return nil, err
 	}
 
@@ -193,13 +193,13 @@ func (repo *repo) getCLAGroupByID(ctx context.Context, projectID string, loadCLA
 	return repo.buildCLAGroupModel(ctx, dbModel, loadCLAGroupDetails), nil
 }
 
-// GetCLAGroupByID returns the project model associated for the specified projectID
-func (repo *repo) GetCLAGroupByID(ctx context.Context, projectID string, loadRepoDetails bool) (*models.Project, error) {
-	return repo.getCLAGroupByID(ctx, projectID, loadRepoDetails)
+// GetCLAGroupByID returns the cla group model associated for the specified claGroupID
+func (repo *repo) GetCLAGroupByID(ctx context.Context, claGroupID string, loadRepoDetails bool) (*models.ClaGroup, error) {
+	return repo.getCLAGroupByID(ctx, claGroupID, loadRepoDetails)
 }
 
-// GetCLAGroupsByExternalID queries the database and returns a list of the projects
-func (repo *repo) GetCLAGroupsByExternalID(ctx context.Context, params *project.GetProjectsByExternalIDParams, loadRepoDetails bool) (*models.Projects, error) {
+// GetCLAGroupsByExternalID queries the database and returns a list of the cla groups
+func (repo *repo) GetCLAGroupsByExternalID(ctx context.Context, params *project.GetProjectsByExternalIDParams, loadRepoDetails bool) (*models.ClaGroups, error) {
 	f := logrus.Fields{
 		"functionName":    "GetCLAGroupsByExternalID",
 		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
@@ -208,7 +208,7 @@ func (repo *repo) GetCLAGroupsByExternalID(ctx context.Context, params *project.
 		"PageSize":        params.PageSize,
 		"loadRepoDetails": loadRepoDetails,
 		"tableName":       repo.claGroupTable}
-	log.WithFields(f).Debugf("loading project")
+	log.WithFields(f).Debugf("loading cla group")
 
 	// This is the key we want to match
 	condition := expression.Key("project_external_id").Equal(expression.Value(params.ProjectSFID))
@@ -216,7 +216,7 @@ func (repo *repo) GetCLAGroupsByExternalID(ctx context.Context, params *project.
 	// Use the nice builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
 	if err != nil {
-		log.WithFields(f).Warnf("error building expression for project query, error: %v", err)
+		log.WithFields(f).Warnf("error building expression for cla group query, error: %v", err)
 	}
 
 	// Assemble the query input parameters
@@ -252,7 +252,7 @@ func (repo *repo) GetCLAGroupsByExternalID(ctx context.Context, params *project.
 	}
 	queryInput.Limit = pageSize
 
-	var projects []models.Project
+	var projects []models.ClaGroup
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -290,7 +290,7 @@ func (repo *repo) GetCLAGroupsByExternalID(ctx context.Context, params *project.
 		}
 	}
 
-	return &models.Projects{
+	return &models.ClaGroups{
 		LastKeyScanned: lastEvaluatedKey,
 		PageSize:       *pageSize,
 		ResultCount:    int64(len(projects)),
@@ -299,7 +299,7 @@ func (repo *repo) GetCLAGroupsByExternalID(ctx context.Context, params *project.
 }
 
 // GetClaGroupsByFoundationID queries the database and returns a list of all cla_groups associated with foundation
-func (repo *repo) GetClaGroupsByFoundationSFID(ctx context.Context, foundationSFID string, loadRepoDetails bool) (*models.Projects, error) {
+func (repo *repo) GetClaGroupsByFoundationSFID(ctx context.Context, foundationSFID string, loadRepoDetails bool) (*models.ClaGroups, error) {
 	f := logrus.Fields{
 		"functionName":    "GetClaGroupsByFoundationSFID",
 		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
@@ -327,7 +327,7 @@ func (repo *repo) GetClaGroupsByFoundationSFID(ctx context.Context, foundationSF
 		IndexName:                 aws.String("foundation-sfid-project-name-index"),
 	}
 
-	var projects []models.Project
+	var projects []models.ClaGroup
 	for {
 		results, errQuery := repo.dynamoDBClient.Query(queryInput)
 		if errQuery != nil {
@@ -353,14 +353,14 @@ func (repo *repo) GetClaGroupsByFoundationSFID(ctx context.Context, foundationSF
 		}
 	}
 
-	return &models.Projects{
+	return &models.ClaGroups{
 		ResultCount: int64(len(projects)),
 		Projects:    projects,
 	}, nil
 }
 
 // GetClaGroupsByProjectSFID returns cla_group associated with project
-func (repo *repo) GetClaGroupByProjectSFID(ctx context.Context, projectSFID string, loadRepoDetails bool) (*models.Project, error) {
+func (repo *repo) GetClaGroupByProjectSFID(ctx context.Context, projectSFID string, loadRepoDetails bool) (*models.ClaGroup, error) {
 	f := logrus.Fields{
 		"functionName":    "GetClaGroupByProjectSFID",
 		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
@@ -379,7 +379,7 @@ func (repo *repo) GetClaGroupByProjectSFID(ctx context.Context, projectSFID stri
 }
 
 // GetCLAGroupByName returns the project model associated for the specified project name
-func (repo *repo) GetCLAGroupByName(ctx context.Context, projectName string) (*models.Project, error) {
+func (repo *repo) GetCLAGroupByName(ctx context.Context, projectName string) (*models.ClaGroup, error) {
 	f := logrus.Fields{
 		"functionName":   "GetCLAGroupByName",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -439,7 +439,7 @@ func (repo *repo) GetCLAGroupByName(ctx context.Context, projectName string) (*m
 }
 
 // GetExternalCLAGroup returns the project model associated for the specified external project ID
-func (repo *repo) GetExternalCLAGroup(ctx context.Context, projectExternalID string) (*models.Project, error) {
+func (repo *repo) GetExternalCLAGroup(ctx context.Context, projectExternalID string) (*models.ClaGroup, error) {
 	f := logrus.Fields{
 		"functionName":      "GetExternalCLAGroup",
 		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
@@ -496,7 +496,7 @@ func (repo *repo) GetExternalCLAGroup(ctx context.Context, projectExternalID str
 }
 
 // GetCLAGroups queries the database and returns a list of the projects
-func (repo *repo) GetCLAGroups(ctx context.Context, params *project.GetProjectsParams) (*models.Projects, error) {
+func (repo *repo) GetCLAGroups(ctx context.Context, params *project.GetProjectsParams) (*models.ClaGroups, error) {
 	f := logrus.Fields{
 		"functionName":   "GetCLAGroups",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -547,7 +547,7 @@ func (repo *repo) GetCLAGroups(ctx context.Context, params *project.GetProjectsP
 		params.PageSize = &pageSize
 	}
 
-	var projects []models.Project
+	var projects []models.ClaGroup
 	var lastEvaluatedKey string
 
 	// Loop until we have all the records
@@ -585,23 +585,23 @@ func (repo *repo) GetCLAGroups(ctx context.Context, params *project.GetProjectsP
 		}
 	}
 
-	return &models.Projects{
+	return &models.ClaGroups{
 		LastKeyScanned: lastEvaluatedKey,
 		PageSize:       *params.PageSize,
 		Projects:       projects,
 	}, nil
 }
 
-// DeleteCLAGroup deletes the CLAGroup by projectID
-func (repo *repo) DeleteCLAGroup(ctx context.Context, projectID string) error {
+// DeleteCLAGroup deletes the CLAGroup by claGroupID
+func (repo *repo) DeleteCLAGroup(ctx context.Context, claGroupID string) error {
 	f := logrus.Fields{
 		"functionName":   "DeleteCLAGroup",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-		"projectID":      projectID,
+		"claGroupID":     claGroupID,
 		"tableName":      repo.claGroupTable}
 	log.WithFields(f).Debugf("deleting CLA Group")
 
-	existingCLAGroup, getErr := repo.GetCLAGroupByID(ctx, projectID, DontLoadRepoDetails)
+	existingCLAGroup, getErr := repo.GetCLAGroupByID(ctx, claGroupID, DontLoadRepoDetails)
 	if getErr != nil {
 		log.WithFields(f).Warnf("delete - error locating the CLA Group, error: %+v", getErr)
 		return getErr
@@ -624,36 +624,36 @@ func (repo *repo) DeleteCLAGroup(ctx context.Context, projectID string) error {
 	})
 
 	if deleteErr != nil {
-		log.WithFields(f).Warnf("Error deleting project with CLA Group ID : %s, error: %v", projectID, deleteErr)
+		log.WithFields(f).Warnf("Error deleting project with CLA Group ID : %s, error: %v", claGroupID, deleteErr)
 		return deleteErr
 	}
 
 	return nil
 }
 
-// UpdateCLAGroup updates the project by projectID
-func (repo *repo) UpdateCLAGroup(ctx context.Context, projectModel *models.Project) (*models.Project, error) {
+// UpdateCLAGroup updates the project by claGroupID
+func (repo *repo) UpdateCLAGroup(ctx context.Context, claGroupModel *models.ClaGroup) (*models.ClaGroup, error) {
 	f := logrus.Fields{
 		"functionName":            "UpdateCLAGroup",
 		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
-		"ProjectID":               projectModel.ProjectID,
-		"ProjectName":             projectModel.ProjectName,
-		"FoundationSFID":          projectModel.FoundationSFID,
-		"ProjectExternalID":       projectModel.ProjectExternalID,
-		"ProjectICLAEnabled":      projectModel.ProjectICLAEnabled,
-		"ProjectCCLAEnabled":      projectModel.ProjectCCLAEnabled,
-		"ProjectCCLARequiresICLA": projectModel.ProjectCCLARequiresICLA,
-		"ProjectLive":             projectModel.ProjectLive,
+		"ProjectID":               claGroupModel.ProjectID,
+		"ProjectName":             claGroupModel.ProjectName,
+		"FoundationSFID":          claGroupModel.FoundationSFID,
+		"ProjectExternalID":       claGroupModel.ProjectExternalID,
+		"ProjectICLAEnabled":      claGroupModel.ProjectICLAEnabled,
+		"ProjectCCLAEnabled":      claGroupModel.ProjectCCLAEnabled,
+		"ProjectCCLARequiresICLA": claGroupModel.ProjectCCLARequiresICLA,
+		"ProjectLive":             claGroupModel.ProjectLive,
 		"tableName":               repo.claGroupTable}
 	log.WithFields(f).Debugf("updating CLA Group")
 
-	if projectModel.ProjectID == "" {
+	if claGroupModel.ProjectID == "" {
 		return nil, ErrProjectIDMissing
 	}
 
-	existingCLAGroup, getErr := repo.GetCLAGroupByID(ctx, projectModel.ProjectID, DontLoadRepoDetails)
+	existingCLAGroup, getErr := repo.GetCLAGroupByID(ctx, claGroupModel.ProjectID, DontLoadRepoDetails)
 	if getErr != nil {
-		log.WithFields(f).Warnf("update - error locating the project id: %s, error: %+v", projectModel.ProjectID, getErr)
+		log.WithFields(f).Warnf("update - error locating the project id: %s, error: %+v", claGroupModel.ProjectID, getErr)
 		return nil, getErr
 	}
 
@@ -665,50 +665,58 @@ func (repo *repo) UpdateCLAGroup(ctx context.Context, projectModel *models.Proje
 	expressionAttributeValues := map[string]*dynamodb.AttributeValue{}
 	updateExpression := "SET "
 
-	if projectModel.ProjectName != "" {
-		log.WithFields(f).Debugf("adding project_name: %s", projectModel.ProjectName)
+	if claGroupModel.ProjectName != "" && existingCLAGroup.ProjectName != claGroupModel.ProjectName {
+		log.WithFields(f).Debugf("adding project_name: %s", claGroupModel.ProjectName)
 		expressionAttributeNames["#N"] = aws.String("project_name")
-		expressionAttributeValues[":n"] = &dynamodb.AttributeValue{S: aws.String(projectModel.ProjectName)}
+		expressionAttributeValues[":n"] = &dynamodb.AttributeValue{S: aws.String(claGroupModel.ProjectName)}
 		updateExpression = updateExpression + " #N = :n, "
-		log.WithFields(f).Debugf("adding project name lower: %s", strings.ToLower(projectModel.ProjectName))
+		log.WithFields(f).Debugf("adding project name lower: %s", strings.ToLower(claGroupModel.ProjectName))
 		expressionAttributeNames["#LOW"] = aws.String("project_name_lower")
-		expressionAttributeValues[":low"] = &dynamodb.AttributeValue{S: aws.String(strings.ToLower(projectModel.ProjectName))}
+		expressionAttributeValues[":low"] = &dynamodb.AttributeValue{S: aws.String(strings.ToLower(claGroupModel.ProjectName))}
 		updateExpression = updateExpression + " #LOW = :low, "
 	}
 
-	if projectModel.ProjectDescription != "" {
-		log.WithFields(f).Debugf("adding project_description: %s", projectModel.ProjectDescription)
+	if claGroupModel.ProjectDescription != "" && existingCLAGroup.ProjectDescription != claGroupModel.ProjectDescription {
+		log.WithFields(f).Debugf("adding project_description: %s", claGroupModel.ProjectDescription)
 		expressionAttributeNames["#DESC"] = aws.String("project_description")
-		expressionAttributeValues[":desc"] = &dynamodb.AttributeValue{S: aws.String(projectModel.ProjectDescription)}
+		expressionAttributeValues[":desc"] = &dynamodb.AttributeValue{S: aws.String(claGroupModel.ProjectDescription)}
 		updateExpression = updateExpression + " #DESC = :desc, "
 	}
 
-	if projectModel.ProjectACL != nil && len(projectModel.ProjectACL) > 0 {
-		log.WithFields(f).Debugf("adding project_acl: %s", projectModel.ProjectACL)
+	if claGroupModel.ProjectACL != nil && len(claGroupModel.ProjectACL) > 0 {
+		log.WithFields(f).Debugf("adding project_acl: %s", claGroupModel.ProjectACL)
 		expressionAttributeNames["#A"] = aws.String("project_acl")
-		expressionAttributeValues[":a"] = &dynamodb.AttributeValue{SS: aws.StringSlice(projectModel.ProjectACL)}
+		expressionAttributeValues[":a"] = &dynamodb.AttributeValue{SS: aws.StringSlice(claGroupModel.ProjectACL)}
 		updateExpression = updateExpression + " #A = :a, "
 	}
 
-	log.WithFields(f).Debugf("adding project_icla_enabled: %t", projectModel.ProjectICLAEnabled)
-	expressionAttributeNames["#I"] = aws.String("project_icla_enabled")
-	expressionAttributeValues[":i"] = &dynamodb.AttributeValue{BOOL: aws.Bool(projectModel.ProjectICLAEnabled)}
-	updateExpression = updateExpression + " #I = :i, "
+	if claGroupModel.ProjectICLAEnabled != existingCLAGroup.ProjectICLAEnabled {
+		log.WithFields(f).Debugf("adding project_icla_enabled: %t", claGroupModel.ProjectICLAEnabled)
+		expressionAttributeNames["#I"] = aws.String("project_icla_enabled")
+		expressionAttributeValues[":i"] = &dynamodb.AttributeValue{BOOL: aws.Bool(claGroupModel.ProjectICLAEnabled)}
+		updateExpression = updateExpression + " #I = :i, "
+	}
 
-	log.WithFields(f).Debugf("adding project_ccla_enabled: %t", projectModel.ProjectCCLAEnabled)
-	expressionAttributeNames["#C"] = aws.String("project_ccla_enabled")
-	expressionAttributeValues[":c"] = &dynamodb.AttributeValue{BOOL: aws.Bool(projectModel.ProjectCCLAEnabled)}
-	updateExpression = updateExpression + " #C = :c, "
+	if claGroupModel.ProjectCCLAEnabled != existingCLAGroup.ProjectCCLAEnabled {
+		log.WithFields(f).Debugf("adding project_ccla_enabled: %t", claGroupModel.ProjectCCLAEnabled)
+		expressionAttributeNames["#C"] = aws.String("project_ccla_enabled")
+		expressionAttributeValues[":c"] = &dynamodb.AttributeValue{BOOL: aws.Bool(claGroupModel.ProjectCCLAEnabled)}
+		updateExpression = updateExpression + " #C = :c, "
+	}
 
-	log.WithFields(f).Debugf("adding project_ccla_requires_icla_signature: %t", projectModel.ProjectCCLARequiresICLA)
-	expressionAttributeNames["#CI"] = aws.String("project_ccla_requires_icla_signature")
-	expressionAttributeValues[":ci"] = &dynamodb.AttributeValue{BOOL: aws.Bool(projectModel.ProjectCCLARequiresICLA)}
-	updateExpression = updateExpression + " #CI = :ci, "
+	if claGroupModel.ProjectCCLARequiresICLA != existingCLAGroup.ProjectCCLARequiresICLA {
+		log.WithFields(f).Debugf("adding project_ccla_requires_icla_signature: %t", claGroupModel.ProjectCCLARequiresICLA)
+		expressionAttributeNames["#CI"] = aws.String("project_ccla_requires_icla_signature")
+		expressionAttributeValues[":ci"] = &dynamodb.AttributeValue{BOOL: aws.Bool(claGroupModel.ProjectCCLARequiresICLA)}
+		updateExpression = updateExpression + " #CI = :ci, "
+	}
 
-	log.WithFields(f).Debugf("adding project_live: %t", projectModel.ProjectLive)
-	expressionAttributeNames["#PL"] = aws.String("project_live")
-	expressionAttributeValues[":pl"] = &dynamodb.AttributeValue{BOOL: aws.Bool(projectModel.ProjectLive)}
-	updateExpression = updateExpression + " #PL = :pl, "
+	if claGroupModel.ProjectLive != existingCLAGroup.ProjectLive {
+		log.WithFields(f).Debugf("adding project_live: %t", claGroupModel.ProjectLive)
+		expressionAttributeNames["#PL"] = aws.String("project_live")
+		expressionAttributeValues[":pl"] = &dynamodb.AttributeValue{BOOL: aws.Bool(claGroupModel.ProjectLive)}
+		updateExpression = updateExpression + " #PL = :pl, "
+	}
 
 	_, currentTimeString := utils.CurrentTime()
 	log.WithFields(f).Debugf("adding date_modified: %s", currentTimeString)
@@ -733,14 +741,14 @@ func (repo *repo) UpdateCLAGroup(ctx context.Context, projectModel *models.Proje
 	// Make the DynamoDB Update API call
 	_, updateErr := repo.dynamoDBClient.UpdateItem(updateInput)
 	if updateErr != nil {
-		log.WithFields(f).Warnf("error updating CLAGroup by projectID: %s, error: %v", projectModel.ProjectID, updateErr)
+		log.WithFields(f).Warnf("error updating CLAGroup by claGroupID: %s, error: %v", claGroupModel.ProjectID, updateErr)
 		return nil, updateErr
 	}
 
 	// Read the updated record back from the DB and return - probably could
 	// just create/update a new model in memory and return it to make it fast,
 	// but this approach return exactly what the DB has
-	return repo.GetCLAGroupByID(ctx, projectModel.ProjectID, LoadRepoDetails)
+	return repo.GetCLAGroupByID(ctx, claGroupModel.ProjectID, LoadRepoDetails)
 }
 
 func (repo *repo) UpdateRootCLAGroupRepositoriesCount(ctx context.Context, claGroupID string, diff int64) error {
@@ -769,8 +777,8 @@ func (repo *repo) UpdateRootCLAGroupRepositoriesCount(ctx context.Context, claGr
 }
 
 // buildCLAGroupModels converts the database response model into an API response data model
-func (repo *repo) buildCLAGroupModels(ctx context.Context, results []map[string]*dynamodb.AttributeValue, loadRepoDetails bool) ([]models.Project, error) {
-	var projects []models.Project
+func (repo *repo) buildCLAGroupModels(ctx context.Context, results []map[string]*dynamodb.AttributeValue, loadRepoDetails bool) ([]models.ClaGroup, error) {
+	var projects []models.ClaGroup
 
 	// The DB project model
 	var dbProjects []DBProjectModel
@@ -782,7 +790,7 @@ func (repo *repo) buildCLAGroupModels(ctx context.Context, results []map[string]
 	}
 
 	// Create an output channel to receive the results
-	responseChannel := make(chan *models.Project)
+	responseChannel := make(chan *models.ClaGroup)
 
 	// For each project, convert to a response model - using a go routine
 	for _, dbProject := range dbProjects {
@@ -801,7 +809,7 @@ func (repo *repo) buildCLAGroupModels(ctx context.Context, results []map[string]
 }
 
 // buildCLAGroupModel maps the database model to the API response model
-func (repo *repo) buildCLAGroupModel(ctx context.Context, dbModel DBProjectModel, loadRepoDetails bool) *models.Project {
+func (repo *repo) buildCLAGroupModel(ctx context.Context, dbModel DBProjectModel, loadRepoDetails bool) *models.ClaGroup {
 
 	var ghOrgs []*models.GithubRepositoriesGroupByOrgs
 	var gerrits []*models.Gerrit
@@ -843,7 +851,7 @@ func (repo *repo) buildCLAGroupModel(ctx context.Context, dbModel DBProjectModel
 		}
 	}
 
-	return &models.Project{
+	return &models.ClaGroup{
 		ProjectID:                    dbModel.ProjectID,
 		FoundationSFID:               dbModel.FoundationSFID,
 		RootProjectRepositoriesCount: dbModel.RootProjectRepositoriesCount,

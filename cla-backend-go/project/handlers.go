@@ -70,22 +70,22 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		}
 
 		// Ok, safe to create now
-		projectModel, err := service.CreateCLAGroup(ctx, &params.Body)
+		claGroupModel, err := service.CreateCLAGroup(ctx, &params.Body)
 		if err != nil {
 			log.Warnf("Create Project Failed - %+v", err)
 			return project.NewCreateProjectBadRequest().WithPayload(errorResponse(err))
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.CLAGroupCreated,
-			ProjectModel: projectModel,
-			UserID:       claUser.UserID,
-			EventData:    &events.CLAGroupCreatedEventData{},
+			EventType:     events.CLAGroupCreated,
+			ClaGroupModel: claGroupModel,
+			UserID:        claUser.UserID,
+			EventData:     &events.CLAGroupCreatedEventData{},
 		})
 
 		log.Infof("Create Project Succeeded, project name: %s, project external ID: %s",
 			params.Body.ProjectName, params.Body.ProjectExternalID)
-		return project.NewCreateProjectOK().WithXRequestID(reqID).WithPayload(projectModel)
+		return project.NewCreateProjectOK().WithXRequestID(reqID).WithPayload(claGroupModel)
 	})
 
 	// Get Projects
@@ -111,15 +111,15 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 
-		projectModel, err := service.GetCLAGroupByID(ctx, params.ProjectID)
+		claGroupModel, err := service.GetCLAGroupByID(ctx, params.ProjectID)
 		if err != nil {
 			return project.NewGetProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
-		if projectModel == nil {
+		if claGroupModel == nil {
 			return project.NewGetProjectByIDNotFound().WithXRequestID(reqID)
 		}
 
-		return project.NewGetProjectByIDOK().WithXRequestID(reqID).WithPayload(projectModel)
+		return project.NewGetProjectByIDOK().WithXRequestID(reqID).WithPayload(claGroupModel)
 	})
 
 	// Get Project By External ID Handler
@@ -157,15 +157,15 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 
-		projectModel, err := service.GetCLAGroupByName(ctx, params.ProjectName)
+		claGroupModel, err := service.GetCLAGroupByName(ctx, params.ProjectName)
 		if err != nil {
 			return project.NewGetProjectByNameBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
-		if projectModel == nil {
+		if claGroupModel == nil {
 			return project.NewGetProjectByNameNotFound().WithXRequestID(reqID)
 		}
 
-		return project.NewGetProjectByNameOK().WithXRequestID(reqID).WithPayload(projectModel)
+		return project.NewGetProjectByNameOK().WithXRequestID(reqID).WithPayload(claGroupModel)
 	})
 
 	// Delete Project By ID
@@ -182,7 +182,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			"authenticatedUserName":       claUser.Name,
 		}
 		log.WithFields(f).Debug("Processing delete request")
-		projectModel, err := service.GetCLAGroupByID(ctx, params.ProjectID)
+		claGroupModel, err := service.GetCLAGroupByID(ctx, params.ProjectID)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
 				return project.NewDeleteProjectByIDNotFound().WithXRequestID(reqID)
@@ -200,9 +200,9 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		if howMany > 0 {
 			log.WithFields(f).Debugf("Deleted %d gerrit groups", howMany)
 			eventsService.LogEvent(&events.LogEventArgs{
-				EventType:    events.GerritRepositoryDeleted,
-				ProjectModel: projectModel,
-				UserID:       claUser.UserID,
+				EventType:     events.GerritRepositoryDeleted,
+				ClaGroupModel: claGroupModel,
+				UserID:        claUser.UserID,
 				EventData: &events.GerritProjectDeletedEventData{
 					DeletedCount: howMany,
 				},
@@ -220,9 +220,9 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 			// Log github delete event
 			eventsService.LogEvent(&events.LogEventArgs{
-				EventType:    events.RepositoryDisabled,
-				ProjectModel: projectModel,
-				UserID:       claUser.UserID,
+				EventType:     events.RepositoryDisabled,
+				ClaGroupModel: claGroupModel,
+				UserID:        claUser.UserID,
 				EventData: &events.GithubProjectDeletedEventData{
 					DeletedCount: howMany,
 				},
@@ -231,7 +231,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 		// Invalidate project signatures
 		log.WithFields(f).Debug("Invalidating signatures")
-		howMany, err = signatureService.InvalidateProjectRecords(ctx, params.ProjectID, projectModel.ProjectName)
+		howMany, err = signatureService.InvalidateProjectRecords(ctx, params.ProjectID, claGroupModel.ProjectName)
 		if err != nil {
 			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
@@ -239,9 +239,9 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			log.WithFields(f).Debugf("Invalidated %d signatures", howMany)
 			// Log invalidate signatures
 			eventsService.LogEvent(&events.LogEventArgs{
-				EventType:    events.InvalidatedSignature,
-				ProjectModel: projectModel,
-				UserID:       claUser.UserID,
+				EventType:     events.InvalidatedSignature,
+				ClaGroupModel: claGroupModel,
+				UserID:        claUser.UserID,
 				EventData: &events.SignatureProjectInvalidatedEventData{
 					InvalidatedCount: howMany,
 				},
@@ -256,10 +256,10 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.CLAGroupDeleted,
-			ProjectModel: projectModel,
-			UserID:       claUser.UserID,
-			EventData:    &events.CLAGroupDeletedEventData{},
+			EventType:     events.CLAGroupDeleted,
+			ClaGroupModel: claGroupModel,
+			UserID:        claUser.UserID,
+			EventData:     &events.CLAGroupDeletedEventData{},
 		})
 
 		return project.NewDeleteProjectByIDNoContent().WithXRequestID(reqID)
@@ -290,7 +290,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			})
 		}
 
-		projectModel, err := service.UpdateCLAGroup(ctx, &projectParams.Body)
+		claGroupModel, err := service.UpdateCLAGroup(ctx, &projectParams.Body)
 		if err != nil {
 			if err == ErrProjectDoesNotExist {
 				return project.NewUpdateProjectNotFound()
@@ -298,12 +298,12 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			return project.NewUpdateProjectBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.CLAGroupUpdated,
-			ProjectModel: projectModel,
-			UserID:       claUser.UserID,
-			EventData:    &events.CLAGroupUpdatedEventData{},
+			EventType:     events.CLAGroupUpdated,
+			ClaGroupModel: claGroupModel,
+			UserID:        claUser.UserID,
+			EventData:     &events.CLAGroupUpdatedEventData{},
 		})
 
-		return project.NewUpdateProjectOK().WithXRequestID(reqID).WithPayload(projectModel)
+		return project.NewUpdateProjectOK().WithXRequestID(reqID).WithPayload(claGroupModel)
 	})
 }

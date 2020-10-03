@@ -58,8 +58,14 @@ func NewService(stage string, templateRepo Repository, docraptorClient docraptor
 
 // GetTemplates API call
 func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
+	f := logrus.Fields{
+		"functionName":   "GetTemplates",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
+	log.WithFields(f).Debug("loading templates...")
 	templates, err := s.templateRepo.GetTemplates()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem loading templates...")
 		return nil, err
 	}
 
@@ -85,16 +91,16 @@ func (s service) CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemp
 		// Get Template
 		template, err = s.templateRepo.GetTemplate(claGroupFields.TemplateID)
 		if err != nil {
-			log.WithFields(f).Warnf("unable to fetch template fields: %s, error: %v",
-				claGroupFields.TemplateID, err)
+			log.WithFields(f).WithError(err).Warnf("unable to fetch template fields: %s",
+				claGroupFields.TemplateID)
 			return nil, err
 		}
 	} else {
 		// use default Apache template if template_id is not provided
 		template, err = s.templateRepo.GetTemplate(ApacheStyleTemplateID)
 		if err != nil {
-			log.WithFields(f).Warnf("Unable to fetch default template fields: %s, error: %v",
-				claGroupFields.TemplateID, err)
+			log.WithFields(f).WithError(err).Warnf("Unable to fetch default template fields: %s",
+				claGroupFields.TemplateID)
 			return nil, err
 		}
 	}
@@ -102,7 +108,7 @@ func (s service) CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemp
 	// Apply template fields
 	iclaTemplateHTML, cclaTemplateHTML, err := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
 	if err != nil {
-		log.WithFields(f).Warnf("unable to inject metadata details into template, error: %v", err)
+		log.WithFields(f).WithError(err).Warnf("unable to inject metadata details into template")
 		return nil, err
 	}
 	var templateHTML string
@@ -119,7 +125,12 @@ func (s service) CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemp
 	if err != nil {
 		return nil, err
 	}
-	defer pdf.Close()
+	defer func() {
+		closeErr := pdf.Close()
+		if closeErr != nil {
+			log.WithFields(f).WithError(closeErr).Warn("error closing PDF")
+		}
+	}()
 	return ioutil.ReadAll(pdf)
 }
 
@@ -127,6 +138,7 @@ func (s service) CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemp
 func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaGroupTemplate) (models.TemplatePdfs, error) {
 	f := logrus.Fields{
 		"functionName":   "CreateCLAGroupTemplate",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"claGroupID":     claGroupID,
 		"claGroupFields": claGroupFields,
 	}
@@ -134,7 +146,7 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	// Verify claGroupID matches an existing CLA Group
 	claGroup, err := s.templateRepo.GetCLAGroup(claGroupID)
 	if err != nil {
-		log.WithFields(f).Warnf("Unable to fetch CLA group by id: %s, error: %v - returning empty template PDFs", claGroupID, err)
+		log.WithFields(f).WithError(err).Warnf("Unable to fetch CLA group by id: %s - returning empty template PDFs", claGroupID)
 		return models.TemplatePdfs{}, err
 	}
 
@@ -143,15 +155,15 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	// Get Template
 	template, err := s.templateRepo.GetTemplate(claGroupFields.TemplateID)
 	if err != nil {
-		log.WithFields(f).Warnf("Unable to fetch template fields: %s, error: %v - returning empty template PDFs",
-			claGroupFields.TemplateID, err)
+		log.WithFields(f).WithError(err).Warnf("Unable to fetch template fields: %s - returning empty template PDFs",
+			claGroupFields.TemplateID)
 		return models.TemplatePdfs{}, err
 	}
 
 	// Apply template fields
 	iclaTemplateHTML, cclaTemplateHTML, err := s.InjectProjectInformationIntoTemplate(template, claGroupFields.MetaFields)
 	if err != nil {
-		log.WithFields(f).Warnf("Unable to inject metadata details into template, error: %v - returning empty template PDFs", err)
+		log.WithFields(f).WithError(err).Warn("Unable to inject metadata details into template - returning empty template PDFs")
 		return models.TemplatePdfs{}, err
 	}
 
@@ -172,19 +184,19 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 			log.WithFields(f).Debugf("Creating PDF for %s", claTypeICLA)
 			iclaPdf, iclaErr := s.docraptorClient.CreatePDF(iclaTemplateHTML, claTypeICLA)
 			if iclaErr != nil {
-				log.WithFields(f).Warnf("Problem generating ICLA template via docraptor client, error: %v - returning empty template PDFs", err)
+				log.WithFields(f).WithError(iclaErr).Warn("Problem generating ICLA template via docraptor client - returning empty template PDFs")
 				return err
 			}
 			defer func() {
 				closeErr := iclaPdf.Close()
 				if closeErr != nil {
-					log.WithFields(f).Warnf("error closing ICLA PDF, error: %v", closeErr)
+					log.WithFields(f).WithError(closeErr).Warn("error closing ICLA PDF")
 				}
 			}()
 			iclaFileName := s.generateTemplateS3FilePath(claGroupID, claTypeICLA)
 			iclaFileURL, err = s.SaveTemplateToS3(bucket, iclaFileName, iclaPdf)
 			if err != nil {
-				log.WithFields(f).Warnf("Problem uploading ICLA PDF: %s to s3, error: %v - returning empty template PDFs", iclaFileName, err)
+				log.WithFields(f).WithError(err).Warnf("Problem uploading ICLA PDF: %s to s3 - returning empty template PDFs", iclaFileName)
 				return err
 			}
 
@@ -199,13 +211,13 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 			log.WithFields(f).Debugf("Creating PDF for %s", claTypeCCLA)
 			cclaPdf, cclaErr := s.docraptorClient.CreatePDF(cclaTemplateHTML, claTypeCCLA)
 			if cclaErr != nil {
-				log.WithFields(f).Warnf("Problem generating CCLA template via docraptor client, error: %v - returning empty template PDFs", err)
+				log.WithFields(f).WithError(cclaErr).Warn("Problem generating CCLA template via docraptor client - returning empty template PDFs")
 				return err
 			}
 			defer func() {
 				closeErr := cclaPdf.Close()
 				if closeErr != nil {
-					log.WithFields(f).Warnf("error closing CCLA PDF, error: %v", closeErr)
+					log.WithFields(f).WithError(closeErr).Warn("error closing CCLA PDF")
 				}
 			}()
 			cclaFileName := s.generateTemplateS3FilePath(claGroupID, claTypeCCLA)
@@ -247,7 +259,7 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 	log.WithFields(f).Debug("updating templates for the cla group")
 	err = s.templateRepo.UpdateDynamoContractGroupTemplates(ctx, claGroupID, template, pdfUrls, claGroup.ProjectCCLAEnabled, claGroup.ProjectICLAEnabled)
 	if err != nil {
-		log.WithFields(f).Warnf("Problem updating the database with ICLA/CCLA new PDF details, error: %v - returning empty template PDFs", err)
+		log.WithFields(f).WithError(err).Warnf("Problem updating the database with ICLA/CCLA new PDF details, error: %v - returning empty template PDFs", err)
 		return models.TemplatePdfs{}, err
 	}
 
@@ -255,51 +267,62 @@ func (s service) CreateCLAGroupTemplate(ctx context.Context, claGroupID string, 
 }
 
 func (s service) GetCLATemplatePreview(ctx context.Context, claGroupID, claType string, watermark bool) ([]byte, error) {
+	f := logrus.Fields{
+		"functionName":   "GetCLATemplatePreview",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"claGroupID":     claGroupID,
+		"claType":        claType,
+		"watermark":      watermark,
+	}
+
 	// Verify claGroupID matches an existing CLA Group
 	claGroup, err := s.templateRepo.GetCLAGroup(claGroupID)
 	if err != nil {
-		log.Warnf("unable to fetch CLA group by id: %s, error: %v - returning empty PDF", claGroupID, err)
+		log.WithFields(f).WithError(err).Warnf("unable to fetch CLA group by id: %s - returning empty PDF", claGroupID)
 		return nil, err
 	}
 
-	var projectDocuments []models.ProjectDocument
+	var claGroupDocuments []models.ClaGroupDocument
 
 	switch claType {
 	case claTypeICLA:
 		if !claGroup.ProjectICLAEnabled {
 			err = fmt.Errorf("icla required for the group id : %s, but not enabled", claGroupID)
-			log.WithError(err)
+			log.WithFields(f).WithError(err)
 			return nil, err
 		}
 
 	case claTypeCCLA:
 		if !claGroup.ProjectCCLAEnabled {
 			err = fmt.Errorf("ccla required for the group id : %s, but not enabled", claGroupID)
-			log.WithError(err)
+			log.WithFields(f).WithError(err)
 			return nil, err
 		}
 
 	default:
 		err = fmt.Errorf("not supported cla type provided : %s", claType)
+		log.WithFields(f).WithError(err)
 		return nil, err
 	}
 
-	projectDocuments, err = s.templateRepo.GetCLADocuments(claGroupID, claType)
+	claGroupDocuments, err = s.templateRepo.GetCLADocuments(claGroupID, claType)
 	if err != nil {
-		log.Warnf("fetching icla document failed for claGroupID : %s : %v", claGroupID, err)
+		log.WithFields(f).WithError(err).Warnf("fetching icla document failed for claGroupID : %s", claGroupID)
 		return nil, err
 	}
 
 	// process the documents and try to fetch the document from s3
-	if len(projectDocuments) == 0 {
+	if len(claGroupDocuments) == 0 {
 		err = fmt.Errorf("no documents found in groupID : %s", claGroupID)
+		log.WithFields(f).WithError(err)
 		return nil, err
 	}
 
-	doc := projectDocuments[0]
+	doc := claGroupDocuments[0]
 	pdfS3URL := doc.DocumentS3URL
 	if pdfS3URL == "" {
 		err = fmt.Errorf("s3 url is empty for groupID : %s and document %s", claGroupID, doc.DocumentFileID)
+		log.WithFields(f).WithError(err)
 		return nil, err
 	}
 
@@ -309,6 +332,7 @@ func (s service) GetCLATemplatePreview(ctx context.Context, claGroupID, claType 
 	//   contract-group/66b97366-a298-4625-965e-0c292c39f9a2/template/ccla-2020-09-25T22-37-51Z.pdf
 	fileName, urlErr := utils.GetPathFromURL(pdfS3URL)
 	if urlErr != nil {
+		log.WithFields(f).WithError(urlErr).Warnf("problem obtaining path from URL: %s", pdfS3URL)
 		return nil, err
 	}
 
@@ -318,6 +342,7 @@ func (s service) GetCLATemplatePreview(ctx context.Context, claGroupID, claType 
 	// fetch the document from s3 at this stage
 	b, err := utils.DownloadFromS3(fileName)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem downloading document from s3 using filename: %s", fileName)
 		return nil, err
 	}
 
@@ -325,7 +350,7 @@ func (s service) GetCLATemplatePreview(ctx context.Context, claGroupID, claType 
 	if watermark {
 		b, err = utils.WatermarkPdf(b, "Not for Execution")
 		if err != nil {
-			log.WithError(err)
+			log.WithFields(f).WithError(err).Warn("problem generating watermark pdf")
 			return nil, err
 		}
 	}
@@ -391,7 +416,17 @@ func (s service) generateTemplateS3FilePath(claGroupID, claType string) string {
 
 // SaveTemplateToS3
 func (s service) SaveTemplateToS3(bucket, filepath string, template io.ReadCloser) (string, error) {
-	defer template.Close()
+	f := logrus.Fields{
+		"functionName": "SaveTemplateToS3",
+		"bucket":       bucket,
+		"filepath":     filepath,
+	}
+	defer func() {
+		closeErr := template.Close()
+		if closeErr != nil {
+			log.WithFields(f).WithError(closeErr).Warn("error closing template")
+		}
+	}()
 
 	// Upload the file to S3.
 	result, err := s.s3Client.Upload(&s3manager.UploadInput{

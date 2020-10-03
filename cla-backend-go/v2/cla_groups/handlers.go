@@ -25,7 +25,7 @@ import (
 )
 
 // Configure configures the cla group api
-func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1Project.Service, eventsService events.Service) {
+func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1Project.Service, eventsService events.Service) { //nolint
 
 	api.ClaGroupCreateClaGroupHandler = cla_group.CreateClaGroupHandlerFunc(func(params cla_group.CreateClaGroupParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
@@ -55,6 +55,67 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		})
 
 		return cla_group.NewCreateClaGroupOK().WithXRequestID(reqID).WithPayload(claGroup)
+	})
+
+	api.ClaGroupUpdateClaGroupHandler = cla_group.UpdateClaGroupHandlerFunc(func(params cla_group.UpdateClaGroupParams, authUser *auth.User) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+		f := logrus.Fields{
+			"functionName":   "ClaGroupUpdateClaGroupHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"claGroupID":     params.ClaGroupID,
+			"authUsername":   params.XUSERNAME,
+			"authEmail":      params.XEMAIL,
+		}
+
+		claGroupModel, err := v1ProjectService.GetCLAGroupByID(ctx, params.ClaGroupID)
+		if err != nil {
+			log.WithFields(f).Warn(err)
+			if err, ok := err.(*utils.CLAGroupNotFound); ok {
+				return cla_group.NewUpdateClaGroupNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+					Code:    "404",
+					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+				})
+			}
+			if err == v1Project.ErrProjectDoesNotExist {
+				return cla_group.NewUpdateClaGroupNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+					Code: "404",
+					Message: fmt.Sprintf("EasyCLA - 404 Not Found - cla_group %s not found",
+						params.ClaGroupID),
+				})
+			}
+			return cla_group.NewUpdateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				Code: "500",
+				Message: fmt.Sprintf("EasyCLA - 400 Bad Request - unable to lookup CLA Group by ID: %s, error: %+v",
+					params.ClaGroupID, err),
+			})
+		}
+
+		if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) {
+			return cla_group.NewUpdateClaGroupForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				Code: "403",
+				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to UpdateCLAGroup with Project scope of %s",
+					authUser.UserName, claGroupModel.FoundationSFID),
+			})
+		}
+
+		claGroup, err := service.UpdateCLAGroup(ctx, params.ClaGroupID, params.Body, utils.StringValue(params.XUSERNAME))
+		if err != nil {
+			return cla_group.NewUpdateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", err.Error()),
+			})
+		}
+
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType:  events.CLAGroupUpdated,
+			ProjectID:  claGroup.ClaGroupID,
+			LfUsername: authUser.UserName,
+			EventData:  &events.CLAGroupUpdatedEventData{},
+		})
+
+		return cla_group.NewUpdateClaGroupOK().WithXRequestID(reqID).WithPayload(claGroup)
 	})
 
 	api.ClaGroupDeleteClaGroupHandler = cla_group.DeleteClaGroupHandlerFunc(func(params cla_group.DeleteClaGroupParams, authUser *auth.User) middleware.Responder {
@@ -111,10 +172,10 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.CLAGroupDeleted,
-			ProjectModel: claGroupModel,
-			LfUsername:   authUser.UserName,
-			EventData:    &events.CLAGroupDeletedEventData{},
+			EventType:     events.CLAGroupDeleted,
+			ClaGroupModel: claGroupModel,
+			LfUsername:    authUser.UserName,
+			EventData:     &events.CLAGroupDeletedEventData{},
 		})
 
 		return cla_group.NewDeleteClaGroupNoContent().WithXRequestID(reqID)
@@ -167,10 +228,10 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.CLAGroupUpdated,
-			ProjectModel: cg,
-			LfUsername:   authUser.UserName,
-			EventData:    &events.CLAGroupUpdatedEventData{},
+			EventType:     events.CLAGroupUpdated,
+			ClaGroupModel: cg,
+			LfUsername:    authUser.UserName,
+			EventData:     &events.CLAGroupUpdatedEventData{},
 		})
 
 		return cla_group.NewEnrollProjectsOK().WithXRequestID(reqID)
@@ -225,10 +286,10 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		// TODO: Project Service - remove CLA Enabled flag
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:    events.CLAGroupUpdated,
-			ProjectModel: cg,
-			LfUsername:   authUser.UserName,
-			EventData:    &events.CLAGroupUpdatedEventData{},
+			EventType:     events.CLAGroupUpdated,
+			ClaGroupModel: cg,
+			LfUsername:    authUser.UserName,
+			EventData:     &events.CLAGroupUpdatedEventData{},
 		})
 
 		return cla_group.NewUnenrollProjectsOK().WithXRequestID(reqID)
@@ -255,8 +316,8 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				})
 			}
 			if _, ok := err.(*utils.ProjectCLAGroupMappingNotFound); ok {
-				return cla_group.NewListClaGroupsUnderFoundationOK().WithXRequestID(reqID).WithPayload(&models.ClaGroupList{
-					List: []*models.ClaGroup{},
+				return cla_group.NewListClaGroupsUnderFoundationOK().WithXRequestID(reqID).WithPayload(&models.ClaGroupListSummary{
+					List: []*models.ClaGroupSummary{},
 				})
 			}
 			if err, ok := err.(*utils.CLAGroupNotFound); ok {
@@ -273,8 +334,8 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 		// No results - empty OK response
 		if result == nil {
-			return cla_group.NewListClaGroupsUnderFoundationOK().WithXRequestID(reqID).WithPayload(&models.ClaGroupList{
-				List: []*models.ClaGroup{},
+			return cla_group.NewListClaGroupsUnderFoundationOK().WithXRequestID(reqID).WithPayload(&models.ClaGroupListSummary{
+				List: []*models.ClaGroupSummary{},
 			})
 		}
 

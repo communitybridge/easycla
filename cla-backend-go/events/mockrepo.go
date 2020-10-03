@@ -86,8 +86,8 @@ func eventInList(eventList []*models.Event, event *models.Event) bool {
 	return retVal
 }
 
-func (repo *mockRepository) GetCLAGroupByID(ctx context.Context, projectID string, loadACLDetails bool) (*models.Project, error) {
-	return &models.Project{
+func (repo *mockRepository) GetCLAGroupByID(ctx context.Context, projectID string, loadACLDetails bool) (*models.ClaGroup, error) {
+	return &models.ClaGroup{
 		DateCreated:             "",
 		DateModified:            "",
 		ProjectACL:              nil,

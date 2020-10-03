@@ -18,7 +18,7 @@ import (
 
 // ProjectService contains Project methods
 type ProjectService interface {
-	GetCLAGroupByID(ctx context.Context, projectID string) (*models.Project, error)
+	GetCLAGroupByID(ctx context.Context, claGroupID string) (*models.ClaGroup, error)
 }
 
 // Configure the gerrit api
@@ -27,12 +27,12 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 		func(params gerrits.DeleteGerritParams, claUser *user.CLAUser) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			projectModel, err := projectService.GetCLAGroupByID(ctx, params.ProjectID)
+			claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ProjectID)
 			if err != nil {
 				return gerrits.NewDeleteGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 			// verify user have access to the project
-			if !claUser.IsAuthorizedForProject(projectModel.ProjectExternalID) {
+			if !claUser.IsAuthorizedForProject(claGroupModel.ProjectExternalID) {
 				return gerrits.NewDeleteGerritUnauthorized().WithXRequestID(reqID)
 			}
 			gerrit, err := service.GetGerrit(params.GerritID)
@@ -53,9 +53,9 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 			}
 			// record the event
 			eventService.LogEvent(&events.LogEventArgs{
-				EventType:    events.GerritRepositoryDeleted,
-				ProjectModel: projectModel,
-				UserID:       claUser.UserID,
+				EventType:     events.GerritRepositoryDeleted,
+				ClaGroupModel: claGroupModel,
+				UserID:        claUser.UserID,
 				EventData: &events.GerritDeletedEventData{
 					GerritRepositoryName: gerrit.GerritName,
 				},
@@ -67,12 +67,12 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 		func(params gerrits.AddGerritParams, claUser *user.CLAUser) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			projectModel, err := projectService.GetCLAGroupByID(ctx, params.ProjectID)
+			claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ProjectID)
 			if err != nil {
 				return gerrits.NewAddGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
 			// verify user have access to the project
-			if !claUser.IsAuthorizedForProject(projectModel.ProjectExternalID) {
+			if !claUser.IsAuthorizedForProject(claGroupModel.ProjectExternalID) {
 				return gerrits.NewAddGerritUnauthorized().WithXRequestID(reqID)
 			}
 
@@ -84,7 +84,7 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 			}
 			params.AddGerritInput.Version = "v1"
 			// add the gerrit
-			result, err := service.AddGerrit(params.ProjectID, projectModel.ProjectExternalID, params.AddGerritInput, projectModel)
+			result, err := service.AddGerrit(params.ProjectID, claGroupModel.ProjectExternalID, params.AddGerritInput, claGroupModel)
 			if err != nil {
 				if err.Error() == "gerrit_name already present in the system" {
 					return gerrits.NewAddGerritConflict().WithXRequestID(reqID).WithPayload(errorResponse(err))
@@ -93,9 +93,9 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 			}
 			// record the event
 			eventService.LogEvent(&events.LogEventArgs{
-				EventType:    events.GerritRepositoryAdded,
-				ProjectModel: projectModel,
-				UserID:       claUser.UserID,
+				EventType:     events.GerritRepositoryAdded,
+				ClaGroupModel: claGroupModel,
+				UserID:        claUser.UserID,
 				EventData: &events.GerritAddedEventData{
 					GerritRepositoryName: utils.StringValue(params.AddGerritInput.GerritName),
 				},

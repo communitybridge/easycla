@@ -33,11 +33,11 @@ const (
 
 // IService interface defines the service methods/functions
 type IService interface {
-	AddCclaWhitelistRequest(ctx context.Context, companyID string, projectID string, args models.CclaWhitelistRequestInput) (string, error)
-	ApproveCclaWhitelistRequest(ctx context.Context, companyID, projectID, requestID string) error
-	RejectCclaWhitelistRequest(ctx context.Context, companyID, projectID, requestID string) error
-	ListCclaWhitelistRequest(companyID string, projectID, status *string) (*models.CclaWhitelistRequestList, error)
-	ListCclaWhitelistRequestByCompanyProjectUser(companyID string, projectID, status, userID *string) (*models.CclaWhitelistRequestList, error)
+	AddCclaWhitelistRequest(ctx context.Context, companyID string, claGroupID string, args models.CclaWhitelistRequestInput) (string, error)
+	ApproveCclaWhitelistRequest(ctx context.Context, companyID, claGroupID, requestID string) error
+	RejectCclaWhitelistRequest(ctx context.Context, companyID, claGroupID, requestID string) error
+	ListCclaWhitelistRequest(companyID string, claGroupID, status *string) (*models.CclaWhitelistRequestList, error)
+	ListCclaWhitelistRequestByCompanyProjectUser(companyID string, claGroupID, status, userID *string) (*models.CclaWhitelistRequestList, error)
 }
 
 type service struct {
@@ -63,17 +63,17 @@ func NewService(repo IRepository, userRepo users.UserRepository, companyRepo com
 	}
 }
 
-func (s service) AddCclaWhitelistRequest(ctx context.Context, companyID string, projectID string, args models.CclaWhitelistRequestInput) (string, error) {
-	list, err := s.ListCclaWhitelistRequestByCompanyProjectUser(companyID, &projectID, nil, &args.ContributorID)
+func (s service) AddCclaWhitelistRequest(ctx context.Context, companyID string, claGroupID string, args models.CclaWhitelistRequestInput) (string, error) {
+	list, err := s.ListCclaWhitelistRequestByCompanyProjectUser(companyID, &claGroupID, nil, &args.ContributorID)
 	if err != nil {
 		log.Warnf("AddCclaWhitelistRequest - error looking up existing contributor invite requests for company: %s, project: %s, user by id: %s with name: %s, email: %s, error: %+v",
-			companyID, projectID, args.ContributorID, args.ContributorName, args.ContributorEmail, err)
+			companyID, claGroupID, args.ContributorID, args.ContributorName, args.ContributorEmail, err)
 		return "", err
 	}
 	for _, item := range list.List {
 		if item.RequestStatus == "pending" || item.RequestStatus == "approved" {
 			log.Warnf("AddCclaWhitelistRequest - found existing contributor invite - id: %s, request for company: %s, project: %s, user by id: %s with name: %s, email: %s",
-				list.List[0].RequestID, companyID, projectID, args.ContributorID, args.ContributorName, args.ContributorEmail)
+				list.List[0].RequestID, companyID, claGroupID, args.ContributorID, args.ContributorName, args.ContributorEmail)
 			return "", ErrCclaApprovalRequestAlreadyExists
 		}
 	}
@@ -82,9 +82,9 @@ func (s service) AddCclaWhitelistRequest(ctx context.Context, companyID string, 
 		log.Warnf("AddCclaWhitelistRequest - unable to lookup company by id: %s, error: %+v", companyID, err)
 		return "", err
 	}
-	projectModel, err := s.projectRepo.GetCLAGroupByID(ctx, projectID, DontLoadRepoDetails)
+	claGroupModel, err := s.projectRepo.GetCLAGroupByID(ctx, claGroupID, DontLoadRepoDetails)
 	if err != nil {
-		log.Warnf("AddCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", projectID, err)
+		log.Warnf("AddCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", claGroupID, err)
 		return "", err
 	}
 	userModel, err := s.userRepo.GetUser(args.ContributorID)
@@ -101,27 +101,27 @@ func (s service) AddCclaWhitelistRequest(ctx context.Context, companyID string, 
 
 	signed, approved := true, true
 	pageSize := int64(5)
-	sig, sigErr := s.signatureRepo.GetProjectCompanySignatures(ctx, companyID, projectID, &signed, &approved, nil, &pageSize)
+	sig, sigErr := s.signatureRepo.GetProjectCompanySignatures(ctx, companyID, claGroupID, &signed, &approved, nil, &pageSize)
 	if sigErr != nil || sig == nil || sig.Signatures == nil {
 		log.Warnf("AddCclaWhitelistRequest - unable to lookup signature by company id: %s project id: %s - (or no managers), sig: %+v, error: %+v",
-			companyID, projectID, sig, err)
+			companyID, claGroupID, sig, err)
 		return "", err
 	}
 
-	requestID, addErr := s.repo.AddCclaWhitelistRequest(companyModel, projectModel, userModel, args.ContributorName, args.ContributorEmail)
+	requestID, addErr := s.repo.AddCclaWhitelistRequest(companyModel, claGroupModel, userModel, args.ContributorName, args.ContributorEmail)
 	if addErr != nil {
 		log.Warnf("AddCclaWhitelistRequest - unable to add Approval Request for id: %s with name: %s, email: %s, error: %+v",
 			args.ContributorID, args.ContributorName, args.ContributorEmail, addErr)
 	}
 
 	// Send the emails to the CLA managers for this CCLA Signature which includes the managers in the ACL list
-	s.sendRequestSentEmail(companyModel, projectModel, sig.Signatures[0], args.ContributorName, args.ContributorEmail, args.RecipientName, args.RecipientEmail, args.Message)
+	s.sendRequestSentEmail(companyModel, claGroupModel, sig.Signatures[0], args.ContributorName, args.ContributorEmail, args.RecipientName, args.RecipientEmail, args.Message)
 
 	return requestID, nil
 }
 
 // ApproveCclaWhitelistRequest is the handler for the approve CLA request
-func (s service) ApproveCclaWhitelistRequest(ctx context.Context, companyID, projectID, requestID string) error {
+func (s service) ApproveCclaWhitelistRequest(ctx context.Context, companyID, claGroupID, requestID string) error {
 	err := s.repo.ApproveCclaWhitelistRequest(requestID)
 	if err != nil {
 		log.Warnf("ApproveCclaWhitelistRequest - problem updating approved list with 'approved' status for request: %s, error: %+v",
@@ -140,9 +140,9 @@ func (s service) ApproveCclaWhitelistRequest(ctx context.Context, companyID, pro
 		log.Warnf("ApproveCclaWhitelistRequest - unable to lookup company by id: %s, error: %+v", companyID, err)
 		return err
 	}
-	projectModel, err := s.projectRepo.GetCLAGroupByID(ctx, projectID, DontLoadRepoDetails)
+	claGroupModel, err := s.projectRepo.GetCLAGroupByID(ctx, claGroupID, DontLoadRepoDetails)
 	if err != nil {
-		log.Warnf("ApproveCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", projectID, err)
+		log.Warnf("ApproveCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", claGroupID, err)
 		return err
 	}
 
@@ -154,13 +154,13 @@ func (s service) ApproveCclaWhitelistRequest(ctx context.Context, companyID, pro
 	}
 
 	// Send the email
-	s.sendRequestApprovedEmailToRecipient(companyModel, projectModel, requestModel.UserName, requestModel.UserEmails[0])
+	s.sendRequestApprovedEmailToRecipient(companyModel, claGroupModel, requestModel.UserName, requestModel.UserEmails[0])
 
 	return nil
 }
 
 // RejectCclaWhitelistRequest is the handler for the decline CLA request
-func (s service) RejectCclaWhitelistRequest(ctx context.Context, companyID, projectID, requestID string) error {
+func (s service) RejectCclaWhitelistRequest(ctx context.Context, companyID, claGroupID, requestID string) error {
 	err := s.repo.RejectCclaWhitelistRequest(requestID)
 	if err != nil {
 		log.Warnf("RejectCclaWhitelistRequest - problem updating approved list with 'rejected' status for request: %s, error: %+v", requestID, err)
@@ -178,18 +178,18 @@ func (s service) RejectCclaWhitelistRequest(ctx context.Context, companyID, proj
 		log.Warnf("RejectCclaWhitelistRequest - unable to lookup company by id: %s, error: %+v", companyID, err)
 		return err
 	}
-	projectModel, err := s.projectRepo.GetCLAGroupByID(ctx, projectID, DontLoadRepoDetails)
+	claGroupModel, err := s.projectRepo.GetCLAGroupByID(ctx, claGroupID, DontLoadRepoDetails)
 	if err != nil {
-		log.Warnf("RejectCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", projectID, err)
+		log.Warnf("RejectCclaWhitelistRequest - unable to lookup project by id: %s, error: %+v", claGroupID, err)
 		return err
 	}
 
 	signed, approved := true, true
 	pageSize := int64(5)
-	sig, sigErr := s.signatureRepo.GetProjectCompanySignatures(ctx, companyID, projectID, &signed, &approved, nil, &pageSize)
+	sig, sigErr := s.signatureRepo.GetProjectCompanySignatures(ctx, companyID, claGroupID, &signed, &approved, nil, &pageSize)
 	if sigErr != nil || sig == nil || sig.Signatures == nil {
 		log.Warnf("RejectCclaWhitelistRequest - unable to lookup signature by company id: %s project id: %s - (or no managers), sig: %+v, error: %+v",
-			companyID, projectID, sig, err)
+			companyID, claGroupID, sig, err)
 		return err
 	}
 
@@ -201,29 +201,29 @@ func (s service) RejectCclaWhitelistRequest(ctx context.Context, companyID, proj
 	}
 
 	// Send the email
-	s.sendRequestRejectedEmailToRecipient(companyModel, projectModel, sig.Signatures[0], requestModel.UserName, requestModel.UserEmails[0])
+	s.sendRequestRejectedEmailToRecipient(companyModel, claGroupModel, sig.Signatures[0], requestModel.UserName, requestModel.UserEmails[0])
 
 	return nil
 }
 
 // ListCclaWhitelistRequest is the handler for the list CLA request
-func (s service) ListCclaWhitelistRequest(companyID string, projectID, status *string) (*models.CclaWhitelistRequestList, error) {
-	return s.repo.ListCclaWhitelistRequest(companyID, projectID, status, nil)
+func (s service) ListCclaWhitelistRequest(companyID string, claGroupID, status *string) (*models.CclaWhitelistRequestList, error) {
+	return s.repo.ListCclaWhitelistRequest(companyID, claGroupID, status, nil)
 }
 
 // ListCclaWhitelistRequestByCompanyProjectUser is the handler for the list CLA request
-func (s service) ListCclaWhitelistRequestByCompanyProjectUser(companyID string, projectID, status, userID *string) (*models.CclaWhitelistRequestList, error) {
-	return s.repo.ListCclaWhitelistRequest(companyID, projectID, status, userID)
+func (s service) ListCclaWhitelistRequestByCompanyProjectUser(companyID string, claGroupID, status, userID *string) (*models.CclaWhitelistRequestList, error) {
+	return s.repo.ListCclaWhitelistRequest(companyID, claGroupID, status, userID)
 }
 
 // sendRequestSentEmail sends emails to the CLA managers specified in the signature record
-func (s service) sendRequestSentEmail(companyModel *models.Company, projectModel *models.Project, signature *models.Signature, contributorName, contributorEmail, recipientName, recipientEmail, message string) {
+func (s service) sendRequestSentEmail(companyModel *models.Company, claGroupModel *models.ClaGroup, signature *models.Signature, contributorName, contributorEmail, recipientName, recipientEmail, message string) {
 
 	// If we have an override name and email from the request - possibly from the web form where the user selected the
 	// CLA Manager Name/Email from a list, send this to this recipient (CLA Manager) - otherwise we will send to all
 	// CLA Managers on the Signature ACL
 	if recipientName != "" && recipientEmail != "" {
-		s.sendRequestEmailToRecipient(companyModel, projectModel, contributorName, contributorEmail, recipientName, recipientEmail, message)
+		s.sendRequestEmailToRecipient(companyModel, claGroupModel, contributorName, contributorEmail, recipientName, recipientEmail, message)
 		return
 	}
 
@@ -244,15 +244,15 @@ func (s service) sendRequestSentEmail(companyModel *models.Company, projectModel
 			log.Warnf("unable to send email to manager: %+v - no email on file...", manager)
 		} else {
 			// Send the email
-			s.sendRequestEmailToRecipient(companyModel, projectModel, contributorName, contributorEmail, manager.Username, whichEmail, message)
+			s.sendRequestEmailToRecipient(companyModel, claGroupModel, contributorName, contributorEmail, manager.Username, whichEmail, message)
 		}
 	}
 }
 
 // sendRequestEmailToRecipient generates and sends an email to the specified recipient
-func (s service) sendRequestEmailToRecipient(companyModel *models.Company, projectModel *models.Project, contributorName, contributorEmail, recipientName, recipientAddress, message string) {
+func (s service) sendRequestEmailToRecipient(companyModel *models.Company, claGroupModel *models.ClaGroup, contributorName, contributorEmail, recipientName, recipientAddress, message string) {
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	var optionalMessage = ""
 	if message != "" {
@@ -282,7 +282,7 @@ repository. This will permit them to begin contributing to %s on behalf of %s.</
 		companyName, projectName, companyName, projectName,
 		optionalMessage, s.corpConsoleURL,
 		companyModel.CompanyID, projectName, companyName,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -293,9 +293,9 @@ repository. This will permit them to begin contributing to %s on behalf of %s.</
 }
 
 // sendRequestApprovedEmailToRecipient generates and sends an email to the specified recipient
-func (s service) sendRequestApprovedEmailToRecipient(companyModel *models.Company, projectModel *models.Project, recipientName, recipientAddress string) {
+func (s service) sendRequestApprovedEmailToRecipient(companyModel *models.Company, claGroupModel *models.ClaGroup, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	// subject string, body string, recipients []string
 	subject := fmt.Sprintf("EasyCLA: Contributor Access Approved for %s", projectName)
@@ -312,8 +312,8 @@ be able to edit the list of approved employees and CLA Managers.
 %s`,
 		recipientName, projectName,
 		companyName, projectName,
-		utils.GetCorporateURL(projectModel.Version == utils.V2), projectName,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetCorporateURL(claGroupModel.Version == utils.V2), projectName,
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
@@ -324,9 +324,9 @@ be able to edit the list of approved employees and CLA Managers.
 }
 
 // sendRequestRejectedEmailToRecipient generates and sends an email to the specified recipient
-func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Company, projectModel *models.Project, signature *models.Signature, recipientName, recipientAddress string) {
+func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Company, claGroupModel *models.ClaGroup, signature *models.Signature, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
-	projectName := projectModel.ProjectName
+	projectName := claGroupModel.ProjectName
 
 	var claManagerText = ""
 	claManagerText += "<ul>"
@@ -367,7 +367,7 @@ If you have further questions about this denial, please contact one of the exist
 		recipientName, projectName,
 		companyName, projectName, companyName, projectName,
 		claManagerText,
-		utils.GetEmailHelpContent(projectModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {

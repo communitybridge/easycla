@@ -3,20 +3,23 @@
 
 type: object
 x-nullable: false
-title: Project
-description: Project data model
+title: CLA Group
+description: CLA Group data model
 properties:
   projectID:
-    description: the project internal ID
+    description: the CLA Group internal ID
+    example: 'b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f'
     type: string
   foundationSFID:
-    description: the foundation sfid of the project
+    description: the foundation sfid of the CLA Group
+    example: 'a09410000182dD2AAI'
     type: string
   rootProjectRepositoriesCount:
-    description: number of repositories configured from root project/foundation
+    description: number of repositories configured from root CLA Group
     type: integer
   projectExternalID:
-    description: the project external ID
+    description: the CLA Group external ID (used by v1)
+    example: 'a09410000182dD2AAI'
     type: string
   projectName:
     $ref: './common/properties/cla-group-name.yaml'
@@ -24,23 +27,27 @@ properties:
     $ref: './common/properties/cla-group-description.yaml'
   projectACL:
     type: array
-    description: A list of user ID's authorized to make changes to the project
+    description: A list of user ID's authorized to make changes to the CLA Group (used by v1)
     items:
       type: string
   foundationLevelCLA:
     description: Flag indicating whether CLA is signed at Foundation level (true) or Project level (false)
+    example: true
     type: boolean
     x-omitempty: false 
   projectCCLAEnabled:
     description: Flag to indicate if the Corporate/Company Contributor License Agreement is enabled
+    example: true
     type: boolean
     x-omitempty: false
   projectICLAEnabled:
     description: Flag to indicate if the Individual Contributor License Agreement is enabled
+    example: true
     type: boolean
     x-omitempty: false
   projectCCLARequiresICLA:
     description: Flag to indicate if the CCLA configuration also requires an ICLA
+    example: true
     type: boolean
     x-omitempty: false
   projectLive:
@@ -48,40 +55,41 @@ properties:
     type: boolean
     x-omitempty: false
   projectCorporateDocuments:
-    description: Project Corporate Documents
+    description: CLA Group Corporate Documents
     type: array
     x-omitempty: false
     items:
-      $ref: '#/definitions/project-document'
+      $ref: '#/definitions/cla-group-document'
   projectIndividualDocuments:
-    description: Project Corporate Documents
+    description: CLA Group Corporate Documents
     type: array
     x-omitempty: false
     items:
-      $ref: '#/definitions/project-document'
+      $ref: '#/definitions/cla-group-document'
   projectMemberDocuments:
-    description: Project Corporate Documents
+    description: CLA Group Corporate Documents
     type: array
     x-omitempty: false
     items:
-      $ref: '#/definitions/project-document'
+      $ref: '#/definitions/cla-group-document'
   dateCreated:
-    description: Date/time the record was created
+    description: Date/time the CLA Group was created
     type: string
   dateModified:
-    description: Date/time the record was last modified
+    description: Date/time the CLA Group was last modified
     type: string
   version:
-    description: Record version
+    description: CLA Group record version
+    example: 'v1'
     type: string
   githubRepositories:
-    description: Github repositories associated with project
+    description: GitHub repositories associated with project
     type: array
     x-omitempty: false
     items:
       $ref: '#/definitions/github-repositories-group-by-orgs'
   gerrits:
-    description: Gerrits associated with project
+    description: Gerrit Server instances associated with project
     type: array
     x-omitempty: false
     items:
