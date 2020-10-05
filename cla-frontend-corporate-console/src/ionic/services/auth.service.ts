@@ -22,7 +22,7 @@ export class AuthService {
     redirectUri: getAuthURLFromWindow()
   });
 
-  constructor(private app: App) {}
+  constructor(private app: App) { }
 
   // constructor(public router: Router) {} Right now haven't figure out how ionic does routing
   public login(): void {
@@ -70,10 +70,7 @@ export class AuthService {
 
         // Logout the user and redirect to the login page
         this.logout();
-        this.app
-          .getRootNav()
-          .setRoot('LoginPage')
-          .catch((error) => this.warn(error));
+        window.open(EnvConfig['cla-landing-page-url'], '_self');
       }
     }, FIVE_MINUTES_MS);
   }
@@ -90,18 +87,9 @@ export class AuthService {
     localStorage.removeItem('userid');
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_name');
-
-    const localServicesMode = (process.env.USE_LOCAL_SERVICES || 'false').toLowerCase() === 'true';
-    // property is: cla-corp-console-link-{STAGE} -> https://corporate.dev.lfcla.com
-    // but ask for the key without the prefix or the suffix/stage
-    let redirectUri = EnvConfig['corp-console-link'];
-    if (localServicesMode) {
-      redirectUri = 'http://localhost:8101';
-    }
-    // This library seems to want the options to be `redirectUri`, but the API docs say to use: `returnTo`
-    // `returnTo` works
+    const redirectUri = EnvConfig['cla-landing-page-url'];
     this.auth0.logout({
-      returnTo: redirectUri + '/#/login'
+      returnTo: redirectUri
     });
   }
 
