@@ -1484,6 +1484,12 @@ class DocuSign(signing_service_interface.SigningService):
     def send_signed_document(self, signature, document_data, user, icla=True):
         """Helper method to send the user their signed document."""
 
+        # Check if the user's email is public
+        recipient = user.get_user_email()
+        if "noreply.github.com" in recipient:
+            cla.log.debug(f'unable to send docusign email confirmation to the individual contributor - email is not public: {recipient}')
+            return
+
         # Load and ensure the CLA Group/Project record exists
         try:
             project = Project()
@@ -1514,12 +1520,6 @@ class DocuSign(signing_service_interface.SigningService):
             {get_email_help_content(project.get_version() == 'v2')}
             {get_email_sign_off_content()}
             '''
-        recipient = user.get_user_email()
-
-        #Check if GH email is public
-        if "noreply.github.com" in recipient:
-            cla.log.debug(f'unable to send docusign email confirmation to the individual contributor - email is not public: {recipient}')
-            return 
 
         # Third, send the email.
         cla.log.info(f'Sending signed CLA document to {recipient} with subject: {subject}')
