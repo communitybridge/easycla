@@ -69,6 +69,14 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			"authEmail":      params.XEMAIL,
 		}
 
+		// Make sure we have some parameters to process...
+		if params.Body == nil || (params.Body.ClaGroupName == "" && params.Body.ClaGroupDescription == "") {
+			return cla_group.NewUpdateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: "EasyCLA - 400 Bad Request - missing update parameters - body missing required values",
+			})
+		}
+
 		claGroupModel, err := v1ProjectService.GetCLAGroupByID(ctx, params.ClaGroupID)
 		if err != nil {
 			log.WithFields(f).Warn(err)
@@ -86,7 +94,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				})
 			}
 			return cla_group.NewUpdateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code: "500",
+				Code: "400",
 				Message: fmt.Sprintf("EasyCLA - 400 Bad Request - unable to lookup CLA Group by ID: %s, error: %+v",
 					params.ClaGroupID, err),
 			})
@@ -97,6 +105,21 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to UpdateCLAGroup with Project scope of %s",
 					authUser.UserName, claGroupModel.FoundationSFID),
+			})
+		}
+
+		// Don't try to update values that are the same... that would be pointless
+		if claGroupModel.ProjectName == params.Body.ClaGroupName {
+			return cla_group.NewUpdateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: fmt.Sprintf("EasyCLA - 400 Bad Request - cannot update CLA Group Name - existing CLA Group name matches updated name value: %s", claGroupModel.ProjectName),
+			})
+		}
+		// Don't try to update values that are the same... that would be pointless
+		if claGroupModel.ProjectDescription == params.Body.ClaGroupDescription {
+			return cla_group.NewUpdateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: fmt.Sprintf("EasyCLA - 400 Bad Request - cannot update CLA Group Description - existing CLA Group description matches updated description value: %s", claGroupModel.ProjectDescription),
 			})
 		}
 
