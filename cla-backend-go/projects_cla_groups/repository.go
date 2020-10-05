@@ -123,7 +123,12 @@ func (repo *repo) queryClaGroupsProjects(keyCondition expression.KeyConditionBui
 
 // GetClaGroupIDForProject retrieves the CLA Group ID for the project
 func (repo *repo) GetClaGroupIDForProject(projectSFID string) (*ProjectClaGroup, error) {
-	f := logrus.Fields{"function": "GetClaGroupIDForProject", "tableName": repo.tableName, "projectSFID": projectSFID}
+	f := logrus.Fields{
+		"function":    "GetClaGroupIDForProject",
+		"tableName":   repo.tableName,
+		"projectSFID": projectSFID,
+	}
+
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(repo.tableName),
 		Key: map[string]*dynamodb.AttributeValue{
@@ -132,7 +137,6 @@ func (repo *repo) GetClaGroupIDForProject(projectSFID string) (*ProjectClaGroup,
 			},
 		},
 	})
-
 	if err != nil {
 		log.WithFields(f).Warnf("unable to lookup CLA Group associated with project, error: %+v", err)
 		return nil, err
@@ -140,14 +144,14 @@ func (repo *repo) GetClaGroupIDForProject(projectSFID string) (*ProjectClaGroup,
 
 	var out ProjectClaGroup
 	if len(result.Item) == 0 {
-		//Query by foundation sfid index returns multiple results
-		f = logrus.Fields{"function": "GetClaGroupIDForProject", "tableName": repo.tableName, "foundationSFID": projectSFID}
+		// Query by foundation sfid index returns multiple results
+		log.WithFields(f).Debug("no results querying by project SFID - checking if this is a foundation SFID")
 		pcgs, foundationErr := repo.GetProjectsIdsForFoundation(projectSFID)
-
 		if foundationErr != nil {
 			log.WithFields(f).Warnf("unable to lookup CLA Group associated with project, error: %+v", foundationErr)
 			return nil, err
 		}
+
 		if len(pcgs) == 0 {
 			log.WithFields(f).Warn("unable to lookup CLA Group associated with project - missing table entry")
 			return nil, ErrProjectNotAssociatedWithClaGroup
@@ -164,7 +168,6 @@ func (repo *repo) GetClaGroupIDForProject(projectSFID string) (*ProjectClaGroup,
 	}
 
 	return &out, nil
-
 }
 
 func (repo *repo) GetProjectsIdsForClaGroup(claGroupID string) ([]*ProjectClaGroup, error) {
