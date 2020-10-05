@@ -7,6 +7,8 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	swagerrors "github.com/go-openapi/errors"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -47,6 +49,10 @@ func NewAuthorizer(authValidator Validator, userPermissioner UserPermissioner) A
 
 // SecurityAuth creates a new CLA user based on the token and scopes
 func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, error) {
+	f := logrus.Fields{
+		"functionName": "SecurityAuth",
+		"scopes":       strings.Join(scopes, ","),
+	}
 	// This handler is called by the runtime whenever a route needs authentication
 	// against the 'OAuthSecurity' scheme.
 	// It is passed a token extracted from the Authentication Bearer header, and
@@ -55,7 +61,7 @@ func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, 
 	// Verify the token is valid
 	claims, err := a.authValidator.VerifyToken(token)
 	if err != nil {
-		log.Warnf("SecurityAuth - verify token error: %+v", err)
+		log.WithFields(f).WithError(err).Warnf("SecurityAuth - verify token error: %+v", err)
 		if strings.Contains(strings.ToLower(err.Error()), "expired") {
 			return nil, swagerrors.New(401, err.Error())
 		}
