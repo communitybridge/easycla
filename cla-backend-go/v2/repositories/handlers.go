@@ -152,7 +152,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
-			protectedBranch, err := service.GetProtectedBranch(ctx, params.RepositoryID)
+			protectedBranch, err := service.GetProtectedBranch(ctx, params.ProjectSFID, params.RepositoryID)
 			if err != nil {
 				if err == repositories.ErrGithubRepositoryNotFound {
 					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionNotFound()
@@ -185,7 +185,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
-			protectedBranch, err := service.UpdateProtectedBranch(ctx, params.RepositoryID, params.GithubRepositoryBranchProtectionInput)
+			protectedBranch, err := service.UpdateProtectedBranch(ctx, params.RepositoryID, params.ProjectSFID, params.GithubRepositoryBranchProtectionInput)
 			if err != nil {
 				log.Warnf("UpdateProjectGithubRepositoryBranchProtectionHandler : failed for repo %s : %v", params.RepositoryID, err)
 				if err == repositories.ErrGithubRepositoryNotFound {
