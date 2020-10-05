@@ -1,9 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
+import { EnvConfig } from "../services/cla.env.utils";
+
 export function Restricted(restrictions: any) {
-  return function(target: Function) {
-    target.prototype.ionViewCanEnter = function() {
+  return function (target: Function) {
+    target.prototype.ionViewCanEnter = function () {
       if (restrictions.roles) {
         if (!this.rolesService) {
           console.warn('[WARNING] this.rolesService is not defined for ' + target.prototype.constructor.name);
@@ -25,18 +27,7 @@ export function Restricted(restrictions: any) {
             return true;
           } else {
             console.log('no access');
-            // let navObject = {
-            //   page: target.prototype.constructor.name,
-            //   params: {},
-            //   roles: restrictions.roles,
-            // };
-            // if (this.navParams) {
-            //   navObject.params = this.navParams.data;
-            // }
-            // let navString = JSON.stringify(navObject);
-            // window.location.hash = '#/login/';
-            window.location.hash = '#/login';
-            window.location.reload(true);
+            window.open(EnvConfig['cla-landing-page-url'], '_self');
             return false;
           }
         });
