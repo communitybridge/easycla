@@ -27,7 +27,7 @@ import (
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 )
 
-// Service contains functions of Github Repository service
+// Service contains functions of Github Repositories service
 type Service interface {
 	AddGithubRepository(ctx context.Context, projectSFID string, input *models.GithubRepositoryInput) (*v1Models.GithubRepository, error)
 	EnableRepository(ctx context.Context, repositoryID string) error
@@ -159,7 +159,7 @@ func (s *service) GetProtectedBranch(ctx context.Context, repositoryID string) (
 	result := &v2Models.GithubRepositoryBranchProtection{
 		BranchName: &branchName,
 	}
-	branchProtection, err := github.GetProtectedBranch(ctx, githubClient, owner, githubRepoName, branchName)
+	branchProtection, err := github.GetProtectedBranch(ctx, githubClient.Repositories, owner, githubRepoName, branchName)
 	if err != nil {
 		if errors.Is(err, github.ErrBranchNotProtected) {
 			return result, nil
@@ -227,7 +227,7 @@ func (s *service) UpdateProtectedBranch(ctx context.Context, repositoryID string
 		}
 	}
 
-	err = github.EnableBranchProtection(ctx, githubClient, owner, githubRepoName, branchName, *input.EnforceAdmin, requiredChecks, disabledChecks)
+	err = github.EnableBranchProtection(ctx, githubClient.Repositories, owner, githubRepoName, branchName, *input.EnforceAdmin, requiredChecks, disabledChecks)
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +252,7 @@ func (s *service) getGithubClientForOrgName(ctx context.Context, githubOrgName s
 }
 
 func (s *service) getGithubOwnerBranchName(ctx context.Context, githubClient *githubsdk.Client, githubOrgName, githubRepoName string) (string, string, error) {
-	owner, err := github.GetOwnerName(ctx, githubClient, githubOrgName, githubRepoName)
+	owner, err := github.GetOwnerName(ctx, githubClient.Repositories, githubOrgName, githubRepoName)
 	if err != nil {
 		log.Warnf("getting the owner name for org : %s and repo : %s failed : %v", githubOrgName, githubRepoName, err)
 		return "", "", err
@@ -264,7 +264,7 @@ func (s *service) getGithubOwnerBranchName(ctx context.Context, githubClient *gi
 	}
 
 	log.Debugf("getGithubOwnerBranchName : owner of the repo : %s found : %s", owner, githubRepoName)
-	branchName, err := github.GetDefaultBranchForRepo(ctx, githubClient, owner, githubRepoName)
+	branchName, err := github.GetDefaultBranchForRepo(ctx, githubClient.Repositories, owner, githubRepoName)
 	if err != nil {
 		log.Warnf("getting default github branch failed for owner : %s and repo : %s : %v", owner, githubRepoName, err)
 		return "", "", err
