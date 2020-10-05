@@ -1515,6 +1515,12 @@ class DocuSign(signing_service_interface.SigningService):
             {get_email_sign_off_content()}
             '''
         recipient = user.get_user_email()
+
+        #Check if GH email is public
+        if "noreply.github.com" in recipient:
+            cla.log.debug(f'unable to send docusign email confirmation to the individual contributor - email is not public: {recipient}')
+            return 
+
         # Third, send the email.
         cla.log.info(f'Sending signed CLA document to {recipient} with subject: {subject}')
         cla.utils.get_email_service().send(subject, body, recipient)
