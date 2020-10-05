@@ -929,15 +929,6 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		return nil, companyErr
 	}
 
-	log.WithFields(f).Debugf("Getting CLA Project")
-	project, projErr := s.projectService.GetCLAGroupByID(ctx, projectID)
-	if projErr != nil {
-		msg := fmt.Sprintf("Unable to get CLA Project: %s, error: %+v ", projectID, projErr)
-		log.WithFields(f).Warnf("unable to get claGroup")
-		log.Warn(msg)
-		return nil, projErr
-	}
-
 	organization, orgErr := orgService.GetOrganization(companyModel.CompanyExternalID)
 	if orgErr != nil {
 		msg := fmt.Sprintf("Problem getting company by ID: %s ", companyID)
@@ -994,17 +985,10 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 	if userErr != nil || (user != nil && user.Username == "") {
 		msg := fmt.Sprintf("UserEmail: %s has no LF Login and has been sent an invite email to create an account , error: %+v", userEmail, userErr)
 		log.Warn(msg)
-		// Send Email
-		var contributorEmail *string
-		if len(contributor.UserEmails) > 0 {
-			contributorEmail = &contributor.UserEmails[0]
-		} else {
-			contributorEmail = &contributor.LFEmail
-		}
 
 		// Use FoundationSFID
 		foundationSFID := projectCLAGroups[0].FoundationSFID
-		sendErr := sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, &foundationSFID, "cla-manager-designee")
+		sendErr := sendDesigneeEmailToUserWithNoLFID(name, userEmail, organization.ID, &foundationSFID, "cla-manager-designee")
 		if sendErr != nil {
 			msg := fmt.Sprintf("Problem sending email to user: %s , error: %+v", userEmail, sendErr)
 			log.Warn(msg)
@@ -1309,6 +1293,27 @@ func sendEmailToCLAManagerDesignee(corporateConsole string, companyName string, 
 	} else {
 		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
 	}
+}
+
+func sendDesigneeEmailToUserWithNoLFID(userWithNoLFIDName, userWithNoLFIDEmail, organizationID string, projectID *string, role string) error {
+	subject := "EasyCLA: Invitation to create LF Login and complete process of becoming CLA Manager"
+	body := fmt.Sprintf(`
+	<p>Hello %s, </p>
+	<p> This email will guide you to completing the CLA Manager role assignment.
+	<p>1. Accept Invite link below will take you SSO login page where you can login with your LF Login or create a LF Login and then login.</p>
+	<p>2. After logging in SSO screen should direct you to CLA Corporate Console page where you will see the project you a re associated with.</p>
+	<p>3. Click on workflow steps to complete the signup process. Please follow this documentation to help you guide through the process - https://docs.linuxfoundation.org/docs/v/v2/communitybridge/easycla/cla-manager-designee-or-initial-cla-manager</p>
+	<p>4. Once you have completed CLA Manager workflow you will be able to manage the approved list of contributors </p>
+	<p> <a href="USERACCEPTLINK">Accept Invite</a> </p>
+	%s
+	%s
+	`, userWithNoLFIDName,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
+	acsClient := v2AcsService.GetClient()
+	automate := false
+
+	return acsClient.SendUserInvite(&userWithNoLFIDEmail, role, "project|organization", projectID, organizationID, "userinvite", &subject, &body, automate)
+
 }
 
 // sendEmailToUserWithNoLFID helper function to send email to a given user with no LFID
