@@ -35,8 +35,8 @@ type Service interface {
 	ListProjectRepositories(ctx context.Context, projectSFID string) (*v1Models.ListGithubRepositories, error)
 	GetRepository(ctx context.Context, repositoryID string) (*v1Models.GithubRepository, error)
 	DisableCLAGroupRepositories(ctx context.Context, claGroupID string) error
-	GetProtectedBranch(ctx context.Context, repositoryID string) (*v2Models.GithubRepositoryBranchProtection, error)
-	UpdateProtectedBranch(ctx context.Context, repositoryID string, input *v2Models.GithubRepositoryBranchProtectionInput) (*v2Models.GithubRepositoryBranchProtection, error)
+	GetProtectedBranch(ctx context.Context, projectSFID, repositoryID string) (*v2Models.GithubRepositoryBranchProtection, error)
+	UpdateProtectedBranch(ctx context.Context, projectSFID, repositoryID string, input *v2Models.GithubRepositoryBranchProtectionInput) (*v2Models.GithubRepositoryBranchProtection, error)
 }
 
 // GithubOrgRepo provide method to get github organization by name
@@ -135,10 +135,10 @@ func (s *service) GetRepository(ctx context.Context, repositoryID string) (*v1Mo
 	return s.repo.GetRepository(ctx, repositoryID)
 }
 
-func (s *service) GetProtectedBranch(ctx context.Context, repositoryID string) (*v2Models.GithubRepositoryBranchProtection, error) {
-	githubRepository, err := s.GetRepository(ctx, repositoryID)
+func (s *service) GetProtectedBranch(ctx context.Context, projectSFID, repositoryID string) (*v2Models.GithubRepositoryBranchProtection, error) {
+	githubRepository, err := s.getGithubRepo(ctx, projectSFID, repositoryID)
 	if err != nil {
-		log.Warnf("fetching repository failed : %s : %v", repositoryID, err)
+		log.Warnf("fetching repository %s, failed, error: %v", repositoryID, err)
 		return nil, err
 	}
 
@@ -180,8 +180,8 @@ func (s *service) GetProtectedBranch(ctx context.Context, repositoryID string) (
 	return result, nil
 }
 
-func (s *service) UpdateProtectedBranch(ctx context.Context, repositoryID string, input *v2Models.GithubRepositoryBranchProtectionInput) (*v2Models.GithubRepositoryBranchProtection, error) {
-	githubRepository, err := s.GetRepository(ctx, repositoryID)
+func (s *service) UpdateProtectedBranch(ctx context.Context, projectSFID, repositoryID string, input *v2Models.GithubRepositoryBranchProtectionInput) (*v2Models.GithubRepositoryBranchProtection, error) {
+	githubRepository, err := s.getGithubRepo(ctx, projectSFID, repositoryID)
 	if err != nil {
 		log.Warnf("fetching repository %s, failed, error: %v", repositoryID, err)
 		return nil, err
@@ -232,7 +232,29 @@ func (s *service) UpdateProtectedBranch(ctx context.Context, repositoryID string
 		return nil, err
 	}
 
-	return s.GetProtectedBranch(ctx, repositoryID)
+	return s.GetProtectedBranch(ctx, projectSFID, repositoryID)
+}
+
+func (s *service) getGithubRepo(ctx context.Context, projectSFID, repositoryID string) (*v1Models.GithubRepository, error) {
+	psc := v2ProjectService.GetClient()
+	_, err := psc.GetProject(projectSFID)
+	if err != nil {
+		return nil, err
+	}
+	githubRepository, err := s.GetRepository(ctx, repositoryID)
+	if err != nil {
+		log.Warnf("fetching repository failed : %s : %v", repositoryID, err)
+		return nil, err
+	}
+
+	// check if project and repo are actually associated
+	if githubRepository.ProjectSFID != projectSFID {
+		msg := fmt.Sprintf("github repository %s doesn't belong to project : %s", repositoryID, projectSFID)
+		log.Warn(msg)
+		return nil, errors.New(msg)
+	}
+
+	return githubRepository, nil
 }
 
 func (s *service) getGithubClientForOrgName(ctx context.Context, githubOrgName string) (*githubsdk.Client, error) {
