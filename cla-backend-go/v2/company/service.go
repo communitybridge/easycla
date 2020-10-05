@@ -836,7 +836,7 @@ func (s *service) AssignCompanyOwner(ctx context.Context, companySFID string, us
 		msg := fmt.Sprintf("Failed searching user by email :%s ", userEmail)
 		log.Warn(msg)
 		// Send user invite for company owner
-		emailErr := sendEmailToUserWithNoLFID(userEmail, assignOrg.Name, assignOrg.ID, "company-owner")
+		emailErr := sendOwnerEmailToUserWithNoLFID(userEmail, assignOrg.ID, "company-owner")
 		if emailErr != nil {
 			msg := fmt.Sprintf("error %+v", emailErr)
 			log.WithFields(f).Debug(msg)
@@ -1364,20 +1364,19 @@ func sendEmailToUserCompanyProfile(orgName string, userEmail string, username st
 	}
 }
 
-// sendEmailToUserWithNoLFID helper function to send email to a given user with no LFID
-func sendEmailToUserWithNoLFID(userWithNoLFIDEmail, organizationName string, organizationID string, role string) error {
-	// subject string, body string, recipients []string
-	subject := fmt.Sprintf("EasyCLA: Invitation to create LF Login and complete process of becoming CLA Manager with %s role", role)
+func sendOwnerEmailToUserWithNoLFID(userWithNoLFIDEmail, organizationID, role string) error {
+	subject := "EasyCLA: Invitation to create LF Login and complete process of becoming Company Owner"
 	body := fmt.Sprintf(`
-<p>Hello %s,</p>
-<p>This is a notification email from EasyCLA regarding the organization %s.</p>
-<p> You have been identified as company owner </p>
-<p> <a href="USERACCEPTLINK">Accept Invite</a> </p>
-%s
-%s`,
-		userWithNoLFIDEmail, organizationName,
+	<p>Hello %s, </p>
+	<p> This email will guide you to completing the Company Owner role assignment.
+	<p>1. Accept Invite link below will take you SSO login page where you can login with your LF Login or create a LF Login and then login.</p>
+	<p>2. After logging in SSO screen should direct you to Organization Profile page where you will see your company.</p>
+	<p>3. Please complete the company profile, you can follow this documentation to help you guide through the process - https://docs.linuxfoundation.org/docs/v/v2/communitybridge/company-dashboard/manage-your-organization</p>
+	<p> <a href="USERACCEPTLINK">Accept Invite</a> </p>
+	%s
+	%s
+	`, userWithNoLFIDEmail,
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
-
 	acsClient := acs_service.GetClient()
 	automate := false
 
@@ -1388,4 +1387,5 @@ func sendEmailToUserWithNoLFID(userWithNoLFIDEmail, organizationName string, org
 		return acsErr
 	}
 	return nil
+
 }
