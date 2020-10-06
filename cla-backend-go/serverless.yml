@@ -8,6 +8,7 @@ package:
   exclude:
     - auth/**
     - ./backend-aws-lambda
+    - ./user-subscribe-lambda
     - dev.sh
     - docs/**
     - helpers/**
@@ -296,7 +297,7 @@ functions:
     package:
       individually: true
       include:
-        - ./userSubscribeLambda
+        - ./user-subscribe-lambda
     reservedConcurrency: 5
     events:
       - sns:
