@@ -5,6 +5,7 @@ package cla_groups
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -77,19 +78,23 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			})
 		}
 
+		// Attempt to load the existing CLA Group model
+		log.WithFields(f).Debug("Loading existing CLA Group by ID...")
 		claGroupModel, err := v1ProjectService.GetCLAGroupByID(ctx, params.ClaGroupID)
 		if err != nil {
 			log.WithFields(f).Warn(err)
-			if err, ok := err.(*utils.CLAGroupNotFound); ok {
+			var e *utils.CLAGroupNotFound
+			//if err, ok := err.(*utils.CLAGroupNotFound); ok {
+			if errors.As(err, &e) {
 				return cla_group.NewUpdateClaGroupNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:    "404",
-					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+					Message: fmt.Sprintf("EasyCLA - 404 Not Found - CLA Group not found - %+v", err),
 				})
 			}
-			if err == v1Project.ErrProjectDoesNotExist {
+			if errors.Is(err, v1Project.ErrProjectDoesNotExist) {
 				return cla_group.NewUpdateClaGroupNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code: "404",
-					Message: fmt.Sprintf("EasyCLA - 404 Not Found - cla_group %s not found",
+					Message: fmt.Sprintf("EasyCLA - 404 Not Found - CLA Group %s not found",
 						params.ClaGroupID),
 				})
 			}
@@ -100,6 +105,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			})
 		}
 
+		// Check permissions now that we can identify the SF Foundation/Project details
 		if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) {
 			return cla_group.NewUpdateClaGroupForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "403",
