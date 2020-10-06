@@ -51,7 +51,11 @@ type service struct {
 	ghOrgRepo             GithubOrgRepo
 }
 
-var requiredBranchProtectionChecks = []string{"EasyCLA"}
+var (
+	requiredBranchProtectionChecks = []string{"EasyCLA"}
+	// ErrInvalidBranchProtectionName is returned when invalid protection option is supplied
+	ErrInvalidBranchProtectionName = errors.New("invalid protection option")
+)
 
 // NewService creates a new githubOrganizations service
 func NewService(repo v1Repositories.Repository, pcgRepo projects_cla_groups.Repository, ghOrgRepo GithubOrgRepo) Service {
@@ -216,7 +220,8 @@ func (s *service) UpdateProtectedBranch(ctx context.Context, projectSFID, reposi
 
 			// just ignore that check if it's something not in our options
 			if !found {
-				continue
+				log.Warnf("invalid branch protection option was found : %s", *inputCheck.Name)
+				return nil, ErrInvalidBranchProtectionName
 			}
 
 			if !*inputCheck.Enabled {
