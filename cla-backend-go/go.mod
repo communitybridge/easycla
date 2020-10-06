@@ -14,7 +14,6 @@ require (
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bradleyfalzon/ghinstallation v1.1.1
-	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fnproject/fdk-go v0.0.2
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
@@ -27,9 +26,9 @@ require (
 	github.com/go-openapi/validate v0.19.10
 	github.com/go-resty/resty/v2 v2.3.0
 	github.com/gofrs/uuid v3.2.0+incompatible
+	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/go-github v17.0.0+incompatible
-	github.com/google/go-github/v29 v29.0.2
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/sessions v1.2.0 // indirect
 	github.com/imroc/req v0.3.0
@@ -39,13 +38,11 @@ require (
 	github.com/juju/mempool v0.0.0-20160205104927-24974d6c264f // indirect
 	github.com/juju/zip v0.0.0-20160205105221-f6b1e93fa2e2
 	github.com/kr/pretty v0.2.0 // indirect
-	github.com/labstack/gommon v0.2.8
 	github.com/lytics/logrus v0.0.0-20170528191427-4389a17ed024
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/mozillazg/request v0.8.0 // indirect
 	github.com/pdfcpu/pdfcpu v0.3.5-0.20200802160406-be1e0eb55afc
 	github.com/pelletier/go-toml v1.8.0 // indirect
-	github.com/prometheus/common v0.4.0
 	github.com/rs/cors v1.7.0
 	github.com/savaki/dynastore v0.0.0-20171109173440-28d8558bb429
 	github.com/sirupsen/logrus v1.5.0

@@ -9,9 +9,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jinzhu/copier"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	githubpkg "github.com/google/go-github/github"
+)
+
+const (
+	defaultBranchName = "master"
 )
 
 var (
@@ -19,8 +25,17 @@ var (
 	ErrBranchNotProtected = errors.New("not protected")
 )
 
+// Repositories is part of the interface working with github repositories, it's inside of the github client
+// It's extracted here as interface so we can mock that functionality.
+type Repositories interface {
+	ListByOrg(ctx context.Context, org string, opt *githubpkg.RepositoryListByOrgOptions) ([]*githubpkg.Repository, *githubpkg.Response, error)
+	Get(ctx context.Context, owner, repo string) (*githubpkg.Repository, *githubpkg.Response, error)
+	GetBranchProtection(ctx context.Context, owner, repo, branch string) (*githubpkg.Protection, *githubpkg.Response, error)
+	UpdateBranchProtection(ctx context.Context, owner, repo, branch string, preq *githubpkg.ProtectionRequest) (*githubpkg.Protection, *githubpkg.Response, error)
+}
+
 // GetOwnerName retrieves the owner name of the given org and repo name
-func GetOwnerName(ctx context.Context, client *githubpkg.Client, orgName, repoName string) (string, error) {
+func GetOwnerName(ctx context.Context, githubRepo Repositories, orgName, repoName string) (string, error) {
 	repoName = CleanGithubRepoName(repoName)
 	log.Debugf("GetOwnerName : getting owner name for org %s and repoName : %s", orgName, repoName)
 	listOpt := &githubpkg.RepositoryListByOrgOptions{
@@ -29,7 +44,7 @@ func GetOwnerName(ctx context.Context, client *githubpkg.Client, orgName, repoNa
 		},
 	}
 	for {
-		repos, resp, err := client.Repositories.ListByOrg(ctx, orgName, listOpt)
+		repos, resp, err := githubRepo.ListByOrg(ctx, orgName, listOpt)
 		if err != nil {
 			if ok, wErr := checkAndWrapForKnownErrors(resp, err); ok {
 				return "", wErr
@@ -63,9 +78,9 @@ func GetOwnerName(ctx context.Context, client *githubpkg.Client, orgName, repoNa
 }
 
 // GetDefaultBranchForRepo helps with pulling the default branch for the given repo
-func GetDefaultBranchForRepo(ctx context.Context, client *githubpkg.Client, owner, repoName string) (string, error) {
+func GetDefaultBranchForRepo(ctx context.Context, githubRepo Repositories, owner, repoName string) (string, error) {
 	repoName = CleanGithubRepoName(repoName)
-	repo, resp, err := client.Repositories.Get(ctx, owner, repoName)
+	repo, resp, err := githubRepo.Get(ctx, owner, repoName)
 	if err != nil {
 		if ok, wErr := checkAndWrapForKnownErrors(resp, err); ok {
 			return "", wErr
@@ -75,7 +90,7 @@ func GetDefaultBranchForRepo(ctx context.Context, client *githubpkg.Client, owne
 
 	var defaultBranch string
 	if repo.DefaultBranch == nil {
-		defaultBranch = "master"
+		defaultBranch = defaultBranchName
 	} else {
 		defaultBranch = *repo.DefaultBranch
 	}
@@ -84,9 +99,9 @@ func GetDefaultBranchForRepo(ctx context.Context, client *githubpkg.Client, owne
 }
 
 // GetProtectedBranch fetches the protected branch details
-func GetProtectedBranch(ctx context.Context, client *githubpkg.Client, owner, repoName, protectedBranchName string) (*githubpkg.Protection, error) {
+func GetProtectedBranch(ctx context.Context, githubRepo Repositories, owner, repoName, protectedBranchName string) (*githubpkg.Protection, error) {
 	repoName = CleanGithubRepoName(repoName)
-	protection, resp, err := client.Repositories.GetBranchProtection(ctx, owner, repoName, protectedBranchName)
+	protection, resp, err := githubRepo.GetBranchProtection(ctx, owner, repoName, protectedBranchName)
 
 	if err != nil {
 		if ok, wErr := checkAndWrapForKnownErrors(resp, err); ok {
@@ -107,29 +122,97 @@ func GetProtectedBranch(ctx context.Context, client *githubpkg.Client, owner, re
 
 //EnableBranchProtection enables branch protection if not enabled and makes sure passed arguments such as enforceAdmin
 //statusChecks are applied. The operation makes sure it doesn't override the existing checks.
-func EnableBranchProtection(ctx context.Context, client *githubpkg.Client, owner, repoName, branchName string, enforceAdmin bool, enableStatusChecks, disableStatusChecks []string) error {
+func EnableBranchProtection(ctx context.Context, githubRepo Repositories, owner, repoName, branchName string, enforceAdmin bool, enableStatusChecks, disableStatusChecks []string) error {
 	repoName = CleanGithubRepoName(repoName)
-	protectedBranch, err := GetProtectedBranch(ctx, client, owner, repoName, branchName)
+	protectedBranch, err := GetProtectedBranch(ctx, githubRepo, owner, repoName, branchName)
 	if err != nil && !errors.Is(err, ErrBranchNotProtected) {
 		return fmt.Errorf("fetching the protected branch for repo : %s : %w", repoName, err)
 	}
 
-	var currentChecks *githubpkg.RequiredStatusChecks
-	if protectedBranch != nil {
-		currentChecks = protectedBranch.RequiredStatusChecks
+	branchProtectionRequest, err := createBranchProtectionRequest(protectedBranch, enableStatusChecks, disableStatusChecks, enforceAdmin)
+	if err != nil {
+		return fmt.Errorf("creating branch protection request failed : %v", err)
 	}
-	requiredStatusChecks := mergeStatusChecks(currentChecks, enableStatusChecks, disableStatusChecks)
 
-	branchProtection := &githubpkg.ProtectionRequest{
-		EnforceAdmins:        enforceAdmin,
-		RequiredStatusChecks: requiredStatusChecks,
-	}
-	_, resp, err := client.Repositories.UpdateBranchProtection(ctx, owner, repoName, branchName, branchProtection)
+	_, resp, err := githubRepo.UpdateBranchProtection(ctx, owner, repoName, branchName, branchProtectionRequest)
 
 	if ok, wErr := checkAndWrapForKnownErrors(resp, err); ok {
 		return wErr
 	}
 	return err
+}
+
+// createBranchProtectionRequest creates a branch protection request from existing protection
+func createBranchProtectionRequest(protection *githubpkg.Protection, enableStatusChecks, disableStatusChecks []string, enforceAdmin bool) (*githubpkg.ProtectionRequest, error) {
+	var currentChecks *githubpkg.RequiredStatusChecks
+	if protection != nil {
+		currentChecks = protection.RequiredStatusChecks
+	}
+	requiredStatusChecks := mergeStatusChecks(currentChecks, enableStatusChecks, disableStatusChecks)
+
+	branchProtection := &githubpkg.ProtectionRequest{
+		RequiredStatusChecks: requiredStatusChecks,
+		EnforceAdmins:        enforceAdmin,
+	}
+
+	// don't have to check further in this case
+	if protection == nil {
+		return branchProtection, nil
+	}
+
+	if protection.RequiredPullRequestReviews != nil {
+		var pullRequestReviewEnforcement githubpkg.PullRequestReviewsEnforcementRequest
+		if err := copier.Copy(&pullRequestReviewEnforcement, protection.RequiredPullRequestReviews); err != nil {
+			return nil, fmt.Errorf("copying from protected branch to request failed : requiredPullRequestReviews : %v", err)
+		}
+
+		if len(protection.RequiredPullRequestReviews.DismissalRestrictions.Users) > 0 {
+			var users []string
+			for _, user := range protection.RequiredPullRequestReviews.DismissalRestrictions.Users {
+				users = append(users, *user.Login)
+			}
+			if pullRequestReviewEnforcement.DismissalRestrictionsRequest == nil {
+				pullRequestReviewEnforcement.DismissalRestrictionsRequest = &githubpkg.DismissalRestrictionsRequest{}
+			}
+			pullRequestReviewEnforcement.DismissalRestrictionsRequest.Users = &users
+		}
+
+		if len(protection.RequiredPullRequestReviews.DismissalRestrictions.Teams) > 0 {
+			var teams []string
+			for _, team := range protection.RequiredPullRequestReviews.DismissalRestrictions.Teams {
+				teams = append(teams, *team.Slug)
+			}
+			if pullRequestReviewEnforcement.DismissalRestrictionsRequest == nil {
+				pullRequestReviewEnforcement.DismissalRestrictionsRequest = &githubpkg.DismissalRestrictionsRequest{}
+			}
+			pullRequestReviewEnforcement.DismissalRestrictionsRequest.Teams = &teams
+		}
+
+		branchProtection.RequiredPullRequestReviews = &pullRequestReviewEnforcement
+	}
+
+	if protection.Restrictions != nil {
+		var restrictions githubpkg.BranchRestrictionsRequest
+		if len(protection.Restrictions.Users) > 0 {
+			var users []string
+			for _, user := range protection.Restrictions.Users {
+				users = append(users, *user.Login)
+			}
+			restrictions.Users = users
+		}
+
+		if len(protection.Restrictions.Teams) > 0 {
+			var teams []string
+			for _, team := range protection.Restrictions.Teams {
+				teams = append(teams, *team.Slug)
+			}
+			restrictions.Teams = teams
+		}
+
+		branchProtection.Restrictions = &restrictions
+	}
+
+	return branchProtection, nil
 }
 
 //mergeStatusChecks merges the current checks with the new ones and disable the ones that are specified
@@ -192,33 +275,6 @@ func IsEnforceAdminEnabled(protection *githubpkg.Protection) bool {
 	}
 
 	return protection.EnforceAdmins.Enabled
-}
-
-//AreStatusChecksEnabled checks if all of the status checks are enabled
-func AreStatusChecksEnabled(protection *githubpkg.Protection, checks []string) bool {
-	if len(checks) == 0 {
-		return false
-	}
-
-	currentChecks := protection.RequiredStatusChecks
-	if currentChecks == nil || !protection.RequiredStatusChecks.Strict {
-		return false
-	}
-
-	if len(currentChecks.Contexts) < len(checks) {
-		return false
-	}
-
-	var found []string
-	for _, cc := range currentChecks.Contexts {
-		for _, c := range checks {
-			if c == cc {
-				found = append(found, cc)
-			}
-		}
-	}
-
-	return len(found) == len(checks)
 }
 
 // CleanGithubRepoName removes the orgname if existing in the string
