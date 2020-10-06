@@ -1485,9 +1485,9 @@ class DocuSign(signing_service_interface.SigningService):
         """Helper method to send the user their signed document."""
 
         # Check if the user's email is public
-        recipient = user.get_user_email()
-        if "noreply.github.com" in recipient:
-            cla.log.debug(f'unable to send docusign email confirmation to the individual contributor - email is not public: {recipient}')
+        recipient = cla.utils.get_public_email(user)
+        if not recipient:
+            cla.log.debug(f'No email found for user : {user.get_user_id()}')
             return
 
         # Load and ensure the CLA Group/Project record exists

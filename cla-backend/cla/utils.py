@@ -1478,3 +1478,11 @@ def get_formatted_time(the_time: datetime) -> str:
     :return:
     """
     return the_time.strftime("%Y-%m-%dT%H:%M:%S.%f%z") + "+0000"
+
+def get_public_email(user):
+    """
+    Helper function to return public user email to send emails
+    """
+    if len(user.get_all_user_emails()) > 0:
+        return next((email for email in user.get_all_user_emails() if "noreply.github.com" not in email), None)
+    
