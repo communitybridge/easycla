@@ -5,9 +5,8 @@ package dynamo_events
 
 import (
 	"fmt"
+	"strings"
 	"time"
-
-	"golang.org/x/sync/errgroup"
 
 	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
 
@@ -175,95 +174,29 @@ func (s *service) removeCLAPermissions(projectSFID string) error {
 	}
 	log.WithFields(f).Debug("removing CLA permissions...")
 
-	roleErr := s.removeCLAPermissionsByProjectRole(projectSFID, utils.CLAManagerRole)
-	if roleErr != nil {
-		return roleErr
-	}
-	roleErr = s.removeCLAPermissionsByProjectRole(projectSFID, utils.CLADesigneeRole)
-	if roleErr != nil {
-		return roleErr
-	}
-	roleErr = s.removeCLAPermissionsByProjectRole(projectSFID, utils.CLASignatoryRole)
-	if roleErr != nil {
-		return roleErr
-	}
-
-	return nil
-}
-
-// removeCLAPermissionsByProjectRole handles removal of the specified role for the given SF Project
-func (s *service) removeCLAPermissionsByProjectRole(projectSFID, roleName string) error {
-	f := logrus.Fields{
-		"functionName": "removeCLAPermissionsByProjectRole",
-		"projectSFID":  projectSFID,
-		"roleName":     roleName,
-	}
-	log.WithFields(f).Debugf("removing CLA permissions for %s...", roleName)
 	client := acs_service.GetClient()
-	//roleID, roleLookupErr := client.GetRoleID(roleName)
-	_, roleLookupErr := client.GetRoleID(roleName)
-	if roleLookupErr != nil {
-		log.WithFields(f).Warnf("problem looking up role ID for %s, error: %+v", roleName, roleLookupErr)
-		return roleLookupErr
+	err := client.RemoveCLAUserRolesByProject(projectSFID, []string{utils.CLAManagerRole, utils.CLADesigneeRole, utils.CLASignatoryRole})
+	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem removing CLA user roles by projectSFID")
 	}
 
-	// TODO: figure out how to query ACS for the list of role assignments matching the provided projectSFID and roleID
-
-	return nil
+	return err
 }
 
 // removeCLAPermissionsByProjectOrganizationRole handles removal of the specified role for the given SF Project and SF Organization
-func (s *service) removeCLAPermissionsByProjectOrganizationRole(projectSFID, organizationSFID, roleName string) error {
+func (s *service) removeCLAPermissionsByProjectOrganizationRole(projectSFID, organizationSFID string, roleNames []string) error {
 	f := logrus.Fields{
 		"functionName":     "removeCLAPermissionsByProjectOrganizationRole",
 		"projectSFID":      projectSFID,
 		"organizationSFID": organizationSFID,
-		"roleName":         roleName,
+		"roleNames":        strings.Join(roleNames, ","),
 	}
 	log.WithFields(f).Debug("removing CLA permissions...")
 	client := acs_service.GetClient()
-
-	log.WithFields(f).Debugf("locating users with assigned role of %s with matching scope...", roleName)
-	assignedRoles, assignedRolesErr := client.GetAssignedRoles(roleName, projectSFID, organizationSFID)
-	if assignedRolesErr != nil {
-		log.WithFields(f).Warnf("problem looking up assigned roles of %s, error: %+v", roleName, assignedRolesErr)
-		return assignedRolesErr
+	err := client.RemoveCLAUserRolesByProjectOrganization(projectSFID, organizationSFID, roleNames)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem removing CLA user roles by projectSFID and organizationSFID")
 	}
 
-	var eg errgroup.Group
-	for _, assignedRoleData := range assignedRoles.Data {
-		// Grab the user name for the printout/log
-		username := "<not defined>"
-		if assignedRoleData.User != nil && assignedRoleData.User.Username != "" {
-			username = assignedRoleData.User.Username
-		}
-
-		for _, assignedRole := range assignedRoleData.Roles {
-			// Only delete the roles which match the provided role name - the above query returns ALL roles
-			// that match this object (e.g. project|organization) and
-			// the scope of: {projectSFID}|{organizationSFID}
-			// Still need to filter on the name, e.g. cla-manager, cla-manager-designee or cla-signatory
-			if roleName == assignedRole.Name {
-				eg.Go(func() error {
-					log.WithFields(f).Debugf("deleting role using role ID: %s with name: %s for user: %s",
-						assignedRole.ID, assignedRole.Name, username)
-					deleteErr := client.DeleteRoleByID(assignedRole.ID)
-					if deleteErr != nil {
-						log.WithFields(f).Warnf("problem deleting  assigned role of %s, error: %+v", roleName, deleteErr)
-						return deleteErr
-					}
-
-					log.WithFields(f).Debugf("deleted role using role ID: %s with name: %s for user: %s",
-						assignedRole.ID, assignedRole.Name, username)
-					return nil
-				})
-			}
-		}
-	}
-
-	log.WithFields(f).Debug("waiting for role cleanup...")
-	if loadErr := eg.Wait(); loadErr != nil {
-		return loadErr
-	}
-	return nil
+	return err
 }
