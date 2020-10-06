@@ -45,7 +45,7 @@ func v2EventList(eventList *v1Models.EventList) (*models.EventList, error) {
 }
 
 // Configure setups handlers on api with service
-func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRepo v1Company.IRepository, projectsClaGroupsRepo projects_cla_groups.Repository) {
+func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRepo v1Company.IRepository, projectsClaGroupsRepo projects_cla_groups.Repository) { // nolint
 	api.EventsGetRecentEventsHandler = events.GetRecentEventsHandlerFunc(
 		func(params events.GetRecentEventsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
@@ -60,6 +60,14 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			result, err := service.GetRecentEvents(params.PageSize)
 			if err != nil {
 				return events.NewGetRecentEventsBadRequest().WithPayload(errorResponse(err))
+			}
+
+			// Return an empty list
+			if result == nil || len(result.Events) == 0 {
+				return events.NewGetRecentEventsOK().WithPayload(&models.EventList{
+					Events:  []*models.Event{},
+					NextKey: "",
+				})
 			}
 
 			resp, err := v2EventList(result)
@@ -90,6 +98,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			csvResponder := CSVEventsResponse(filename, result)
 			return csvResponder
 		})
+
 	api.EventsGetFoundationEventsHandler = events.GetFoundationEventsHandlerFunc(
 		func(params events.GetFoundationEventsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
@@ -105,6 +114,15 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			if err != nil {
 				return events.NewGetFoundationEventsBadRequest().WithPayload(errorResponse(err))
 			}
+
+			// Return an empty list
+			if result == nil || len(result.Events) == 0 {
+				return events.NewGetFoundationEventsOK().WithPayload(&models.EventList{
+					Events:  []*models.Event{},
+					NextKey: "",
+				})
+			}
+
 			resp, err := v2EventList(result)
 			if err != nil {
 				return events.NewGetFoundationEventsInternalServerError().WithPayload(errorResponse(err))
@@ -115,6 +133,12 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 	api.EventsGetProjectEventsAsCSVHandler = events.GetProjectEventsAsCSVHandlerFunc(
 		func(params events.GetProjectEventsAsCSVParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			f := logrus.Fields{
+				"functionName":  "EventsGetProjectEventsAsCSVHandler",
+				"authUserName":  authUser.UserName,
+				"authUserEmail": authUser.Email,
+				"projectSFID":   params.ProjectSFID,
+			}
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return WriteResponse(http.StatusForbidden, runtime.JSONMime, runtime.JSONProducer(), &models.ErrorResponse{
 					Code: "403",
@@ -122,6 +146,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 						authUser.UserName, params.ProjectSFID),
 				})
 			}
+
 			pm, err := projectsClaGroupsRepo.GetClaGroupIDForProject(params.ProjectSFID)
 			if err != nil {
 				if err == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
@@ -132,8 +157,10 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 				}
 				return WriteResponse(http.StatusInternalServerError, runtime.JSONMime, runtime.JSONProducer(), errorResponse(err))
 			}
+
 			result, err := service.GetClaGroupEvents(pm.ClaGroupID, nil, nil, v1Events.ReturnAllEvents, nil)
 			if err != nil {
+				log.WithFields(f).Warnf("problem loading events for CLA Group: %s with ID: %s", pm.ClaGroupName, pm.ClaGroupID)
 				return events.NewGetProjectEventsAsCSVBadRequest().WithPayload(errorResponse(err))
 			}
 
@@ -201,6 +228,13 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 	api.EventsGetCompanyProjectEventsHandler = events.GetCompanyProjectEventsHandlerFunc(
 		func(params events.GetCompanyProjectEventsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			f := logrus.Fields{
+				"functionName":  "EventsGetCompanyProjectEventsHandler",
+				"authUserName":  authUser.UserName,
+				"authUserEmail": authUser.Email,
+				"projectSFID":   params.ProjectSFID,
+				"companySFID":   params.CompanySFID,
+			}
 			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
 				return events.NewGetCompanyProjectEventsForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -213,8 +247,10 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			psc := v2ProjectService.GetClient()
 			projectDetails, err := psc.GetProject(params.ProjectSFID)
 			if err != nil {
+				log.WithFields(f).Warnf("problem loading project by SFID: %s", params.ProjectSFID)
 				return events.NewGetCompanyProjectEventsBadRequest().WithPayload(errorResponse(err))
 			}
+
 			var result *v1Models.EventList
 			if projectDetails.ProjectType == FoundationType {
 				result, err = service.GetCompanyFoundationEvents(params.CompanySFID, params.ProjectSFID, params.NextKey, params.PageSize, aws.BoolValue(params.ReturnAllEvents))
@@ -222,20 +258,34 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 				pm, perr := projectsClaGroupsRepo.GetClaGroupIDForProject(params.ProjectSFID)
 				if perr != nil {
 					if perr == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
-						return events.NewGetCompanyProjectEventsBadRequest().WithPayload(&models.ErrorResponse{
-							Code:    "400",
-							Message: fmt.Sprintf("EasyCLA - 400 Bad Request - No cla group associated with this project: %s", params.ProjectSFID),
+						// Although the API should view this as a bad request since the project doesn't seem to belong to a
+						// CLA Group...just return a successful 200 with an empty list to the caller - nothing to see here, move along.
+						return events.NewGetCompanyProjectEventsOK().WithPayload(&models.EventList{
+							Events:  []*models.Event{},
+							NextKey: "",
 						})
 					}
-					return events.NewGetCompanyProjectEventsInternalServerError().WithPayload(errorResponse(err))
+					log.WithFields(f).WithError(perr).Warnf("problem determining CLA Group for project SFID: %s", params.ProjectSFID)
+					return events.NewGetCompanyProjectEventsInternalServerError().WithPayload(errorResponse(perr))
 				}
 				result, err = service.GetCompanyClaGroupEvents(params.CompanySFID, pm.ClaGroupID, params.NextKey, params.PageSize, aws.BoolValue(params.ReturnAllEvents))
 			}
 			if err != nil {
+				log.WithFields(f).WithError(err).Warn("problem loading events")
 				return events.NewGetCompanyProjectEventsBadRequest().WithPayload(errorResponse(err))
 			}
+
+			// Return an empty list
+			if result == nil || len(result.Events) == 0 {
+				return events.NewGetCompanyProjectEventsOK().WithPayload(&models.EventList{
+					Events:  []*models.Event{},
+					NextKey: "",
+				})
+			}
+
 			resp, err := v2EventList(result)
 			if err != nil {
+				log.WithFields(f).WithError(err).Warnf("problem converting events to a v2 object")
 				return events.NewGetCompanyProjectEventsInternalServerError().WithPayload(errorResponse(err))
 			}
 			return events.NewGetCompanyProjectEventsOK().WithPayload(resp)
