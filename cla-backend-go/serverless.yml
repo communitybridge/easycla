@@ -8,7 +8,6 @@ package:
   exclude:
     - auth/**
     - ./backend-aws-lambda
-    - ./user-subscribe-lambda
     - dev.sh
     - docs/**
     - helpers/**
