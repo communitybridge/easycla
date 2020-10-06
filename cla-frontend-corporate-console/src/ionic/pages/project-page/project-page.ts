@@ -1,15 +1,16 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component} from '@angular/core';
-import {AlertController, IonicPage, ModalController, NavController, NavParams, ViewController} from 'ionic-angular';
-import {ClaService} from '../../services/cla.service';
-import {ClaCompanyModel} from '../../models/cla-company';
-import {ClaUserModel} from '../../models/cla-user';
-import {ClaSignatureModel} from '../../models/cla-signature';
-import {ClaManager} from '../../models/cla-manager';
-import {SortService} from '../../services/sort.service';
-import {Restricted} from '../../decorators/restricted';
+import { Component } from '@angular/core';
+import { AlertController, IonicPage, ModalController, NavController, NavParams, ViewController } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
+import { ClaCompanyModel } from '../../models/cla-company';
+import { ClaUserModel } from '../../models/cla-user';
+import { ClaSignatureModel } from '../../models/cla-signature';
+import { ClaManager } from '../../models/cla-manager';
+import { SortService } from '../../services/sort.service';
+import { Restricted } from '../../decorators/restricted';
+import { bool } from 'aws-sdk/clients/signer';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -49,7 +50,8 @@ export class ProjectPage {
   userEmail: any;
   sort: any;
   canEdit: boolean = false;
-
+  expanded: boolean = true;
+  
   constructor(
     public navParams: NavParams,
     private claService: ClaService,
@@ -520,4 +522,10 @@ export class ProjectPage {
   showRequestType(requestType: string) {
     // TODO: implement filter to show which items should be selected
   }
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
+  }
+
 }
+

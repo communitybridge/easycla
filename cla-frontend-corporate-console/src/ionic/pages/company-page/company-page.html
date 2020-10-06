@@ -1,24 +1,9 @@
-<ion-header>
-  <ion-navbar>
-    <button ion-button menuToggle>
-      <ion-icon name="menu"></ion-icon>
-    </button>
-    <ion-title>{{company.company_name | trimCharacters:35}}</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
-  </ion-navbar>
-  <get-help></get-help>
-</ion-header>
 
-<ion-content headerspacing>
-  <div class="page-content">
-    <header>
-      <ion-grid>
-        <ion-row>
-        </ion-row>
-      </ion-grid>
-    </header>
+<cla-header [title]="company.company_name | trimCharacters:60" (onToggle)="onClickToggle($event)"></cla-header>
 
-    <ion-grid margin-top>
+<ion-content>
+  <div class="page-content" [ngClass]="{'expanded':expanded}">
+    <ion-grid>
       <ion-row justify-content-center>
         <ion-col col-12 col-md-8>
           <ion-card>
