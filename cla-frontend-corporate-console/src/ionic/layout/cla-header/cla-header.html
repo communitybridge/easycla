@@ -3,7 +3,7 @@
 
 <ion-header class="cla-header" [ngClass]="{'expanded':hasExpanded}">
   <ion-navbar >
-    <button ion-button menuToggle>
+    <button *ngIf="hasShowMenu" ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>{{title}}</ion-title>
