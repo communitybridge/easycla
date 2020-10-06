@@ -159,7 +159,7 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 					// Remove any roles that were previously assigned for cla-manager-designee
 					log.WithFields(f).Debugf("removing existing %s role for project: '%s' (%s) and company: '%s' (%s)",
 						utils.CLADesigneeRole, projectCLAGroup.ProjectName, projectCLAGroup.ProjectSFID, companyModel.CompanyName, companyModel.CompanyExternalID)
-					err = s.removeCLAPermissionsByProjectOrganizationRole(projectCLAGroup.ProjectSFID, companyModel.CompanyExternalID, utils.CLADesigneeRole)
+					err = s.removeCLAPermissionsByProjectOrganizationRole(projectCLAGroup.ProjectSFID, companyModel.CompanyExternalID, []string{utils.CLADesigneeRole})
 					if err != nil {
 						log.WithFields(f).Warnf("failed to remove %s roles for project: '%s' (%s) and company: '%s' (%s), error: %+v",
 							utils.CLADesigneeRole, projectCLAGroup.ProjectName, projectCLAGroup.ProjectSFID, companyModel.CompanyName, companyModel.CompanyExternalID, err)
