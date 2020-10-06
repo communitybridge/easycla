@@ -90,7 +90,7 @@ func (ac *Client) SendUserInvite(email *string,
 
 	tok, err := token.GetToken()
 	if err != nil {
-		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
+		log.WithFields(f).WithError(err).Warnf("problem obtaining token, error: %+v", err)
 		return err
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
@@ -143,7 +143,7 @@ func (ac *Client) GetRoleID(roleName string) (string, error) {
 
 	tok, err := token.GetToken()
 	if err != nil {
-		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
+		log.WithFields(f).WithError(err).Warnf("problem obtaining token, error: %+v", err)
 		return "", err
 	}
 
@@ -154,7 +154,7 @@ func (ac *Client) GetRoleID(roleName string) (string, error) {
 	clientAuth := runtimeClient.BearerToken(tok)
 	response, err := ac.cl.Role.GetRoles(rolesParams, clientAuth)
 	if err != nil {
-		log.WithFields(f).Warnf("problem fetching GetRole, error: %+v", err)
+		log.WithFields(f).WithError(err).Warnf("problem fetching GetRole, error: %+v", err)
 		return "", err
 	}
 
@@ -266,6 +266,106 @@ func (ac *Client) DeleteRoleByID(roleID string) error {
 	_, err = ac.cl.Role.DeleteRole(roleParams, clientAuth) // nolint
 	if err != nil {
 		log.WithFields(f).Warnf("problem with DeleteRole using roleID: %s, error: %+v", roleID, err)
+		return err
+	}
+
+	return nil
+}
+
+// RemoveCLAUserRolesByProject will remove user CLA roles for the specified project SFID
+func (ac *Client) RemoveCLAUserRolesByProject(projectSFID string, roleNames []string) error {
+	f := logrus.Fields{
+		"functionName": "DeleteRolesByObjectType",
+		"projectSFID":  projectSFID,
+		"roleNames":    strings.Join(roleNames, ","),
+	}
+
+	if projectSFID == "" {
+		log.WithFields(f).Warn("unable to delete roles by project SFID - projectSFID is empty")
+		return errors.New("empty project SFID")
+	}
+
+	if len(roleNames) == 0 {
+		log.WithFields(f).Warn("unable to delete roles by project SFID with empty roleName list")
+		return errors.New("empty role name list")
+	}
+
+	tok, err := token.GetToken()
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem obtaining token, error: %+v", err)
+		return err
+	}
+
+	objectTypeID, err := ac.GetObjectTypeIDByName(utils.ProjectOrgScope)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem obtaining object type id by name: %s, error: %+v",
+			utils.ProjectOrgScope, err)
+		return err
+	}
+
+	params := &object_type.DeleteRolesByObjectTypeParams{
+		ID:        int64(objectTypeID),
+		Objectid:  projectSFID + "|*", // wildcard for organization scope - applies to all
+		Rolenames: strings.Join(roleNames, ","),
+		Context:   context.Background(),
+	}
+
+	_, err = ac.cl.ObjectType.DeleteRolesByObjectType(params, runtimeClient.BearerToken(tok)) // nolint
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem with DeleteRolesByObjectType using objectTypeID: %d and projectSFID: %s, error: %+v", objectTypeID, projectSFID, err)
+		return err
+	}
+
+	return nil
+}
+
+// RemoveCLAUserRolesByProjectOrganization will remove user CLA roles for the specified project SFID
+func (ac *Client) RemoveCLAUserRolesByProjectOrganization(projectSFID, organizationSFID string, roleNames []string) error {
+	f := logrus.Fields{
+		"functionName":     "RemoveCLAUserRolesByProjectOrganization",
+		"projectSFID":      projectSFID,
+		"organizationSFID": organizationSFID,
+		"roleNames":        strings.Join(roleNames, ","),
+	}
+
+	if projectSFID == "" {
+		log.WithFields(f).Warn("unable to delete roles by project SFID - projectSFID is empty")
+		return errors.New("empty project SFID")
+	}
+
+	if organizationSFID == "" {
+		log.WithFields(f).Warn("unable to delete roles by organization SFID - organizationSFID is empty")
+		return errors.New("empty organization SFID")
+	}
+
+	if len(roleNames) == 0 {
+		log.WithFields(f).Warn("unable to delete roles by project SFID and organization SFID with empty roleName list")
+		return errors.New("empty role name list")
+	}
+
+	tok, err := token.GetToken()
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem obtaining token, error: %+v", err)
+		return err
+	}
+
+	objectTypeID, err := ac.GetObjectTypeIDByName(utils.ProjectOrgScope)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem obtaining object type id by name: %s, error: %+v",
+			utils.ProjectOrgScope, err)
+		return err
+	}
+
+	params := &object_type.DeleteRolesByObjectTypeParams{
+		ID:        int64(objectTypeID),
+		Objectid:  projectSFID + "|" + organizationSFID,
+		Rolenames: strings.Join(roleNames, ","),
+		Context:   context.Background(),
+	}
+
+	_, err = ac.cl.ObjectType.DeleteRolesByObjectType(params, runtimeClient.BearerToken(tok)) // nolint
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem with DeleteRolesByObjectType using objectTypeID: %d, error: %+v", objectTypeID, err)
 		return err
 	}
 
