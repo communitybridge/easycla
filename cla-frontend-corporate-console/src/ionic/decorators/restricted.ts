@@ -27,7 +27,7 @@ export function Restricted(restrictions: any) {
             return true;
           } else {
             console.log('no access');
-            window.open(EnvConfig['cla-landing-page-url'], '_self');
+            window.open(EnvConfig['cla-landing-page'], '_self');
             return false;
           }
         });
