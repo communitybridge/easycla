@@ -19,6 +19,11 @@ func (e *SFProjectNotFound) Error() string {
 	return fmt.Sprintf("salesforce project %s not found: %+v", e.ProjectSFID, e.Err)
 }
 
+// Unwrap method returns its contained error
+func (e *SFProjectNotFound) Unwrap() error {
+	return e.Err
+}
+
 // CLAGroupNotFound is an error model for CLA Group not found errors
 type CLAGroupNotFound struct {
 	CLAGroupID string
@@ -31,6 +36,11 @@ func (e *CLAGroupNotFound) Error() string {
 		return fmt.Sprintf("cla group %s not found", e.CLAGroupID)
 	}
 	return fmt.Sprintf("cla group %s not found: %+v", e.CLAGroupID, e.Err)
+}
+
+// Unwrap method returns its contained error
+func (e *CLAGroupNotFound) Unwrap() error {
+	return e.Err
 }
 
 // CLAGroupICLANotConfigured is an error model for CLA Group ICLA not configured
@@ -48,6 +58,11 @@ func (e *CLAGroupICLANotConfigured) Error() string {
 	return fmt.Sprintf("cla group %s (%s) is not configured for ICLAs: %+v", e.CLAGroupName, e.CLAGroupID, e.Err)
 }
 
+// Unwrap method returns its contained error
+func (e *CLAGroupICLANotConfigured) Unwrap() error {
+	return e.Err
+}
+
 // CLAGroupCCLANotConfigured is an error model for CLA Group CCLA not configured
 type CLAGroupCCLANotConfigured struct {
 	CLAGroupID   string
@@ -61,6 +76,11 @@ func (e *CLAGroupCCLANotConfigured) Error() string {
 		return fmt.Sprintf("cla group %s (%s) is not configured for CCLAs", e.CLAGroupName, e.CLAGroupID)
 	}
 	return fmt.Sprintf("cla group %s (%s) is not configured for CCLAs: %+v", e.CLAGroupName, e.CLAGroupID, e.Err)
+}
+
+// Unwrap method returns its contained error
+func (e *CLAGroupCCLANotConfigured) Unwrap() error {
+	return e.Err
 }
 
 // ProjectCLAGroupMappingNotFound is an error model for project CLA Group not found errors
@@ -86,4 +106,9 @@ func (e *ProjectCLAGroupMappingNotFound) Error() string {
 	}
 
 	return fmt.Sprintf("project %s cla group %s mapping not found: %+v", e.ProjectSFID, e.CLAGroupID, e.Err)
+}
+
+// Unwrap method returns its contained error
+func (e *ProjectCLAGroupMappingNotFound) Unwrap() error {
+	return e.Err
 }
