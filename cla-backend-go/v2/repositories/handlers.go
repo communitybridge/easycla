@@ -200,6 +200,10 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionInternalServerError().WithPayload(errorResponse(err))
 				}
 
+				if errors.Is(err, ErrInvalidBranchProtectionName) {
+					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionBadRequest().WithPayload(errorResponse(err))
+				}
+
 				return github_repositories.NewGetProjectGithubRepositoryBranchProtectionBadRequest().WithPayload(errorResponse(err))
 			}
 
