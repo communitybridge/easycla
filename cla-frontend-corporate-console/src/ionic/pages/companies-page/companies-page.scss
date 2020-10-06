@@ -1,17 +1,16 @@
 companies-page {
   .page-content {
-    min-height: calc(100vh - 200px);
-
-    ion-header {
-      border-bottom: 0px !important;
+    min-height: calc(100vh - 335px);
+    margin-top: 25px;
+    transition: margin 0.3s;
+    
+    &.expanded {
+      min-height: calc(100vh - 410px);
+      margin-top: 100px;
     }
 
     ion-label {
       color: dark;
-    }
-
-    ion-input {
-      border-bottom: 0.5px solid map-get($colors, primary);
     }
 
     ion-card-title {
@@ -42,18 +41,6 @@ companies-page {
   ion-footer {
     position: relative;
   }
-  ul {
-    list-style: none; /* Remove default bullets */
-  }
-
-  ul li::before {
-    content: "\2022"; /* Add content: \2022 is the CSS Code/unicode for a bullet */
-    color: #4c79b6; /* Change the color */
-    font-weight: bold; /* If you want it to be bold */
-    display: inline-block; /* Needed to add space between the bullet and the text */
-    width: 1em; /* Also needed for space (tweak if needed) */
-    margin-left: -1em; /* Also needed for space (tweak if needed) */
-  }
 
   a {
     font-weight: bold;
@@ -79,33 +66,6 @@ companies-page {
 
 span a {
   text-decoration: underline;
-}
-
-.cla-header {
-
-  .toolbar {
-    color: #7b7b7b;
-    background-color: white;
-    padding: 4px 25px;
-    height: 100px;
-
-    ion-icon {
-      color: #7b7b7b;
-      line-height: 6px;
-
-      &:before {
-        font-size: 19px;
-      }
-    }
-  }
-
-  .navbar-logo {
-    position: absolute;
-    left: calc(50% - 20px);
-    margin: -30px 0 -18px -138px;
-    width: 300px;
-    padding: 1rem;
-  }
 }
 
 .card-md {

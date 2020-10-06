@@ -14,7 +14,7 @@ import { ClaService } from '../../services/cla.service';
 })
 export class AuthorityYesnoPage {
   projectId: string;
-
+  expanded: boolean = true;
   company: any;
   project: any;
 
@@ -64,5 +64,9 @@ export class AuthorityYesnoPage {
 
   back() {
     this.navCtrl.pop();
+  }
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
   }
 }

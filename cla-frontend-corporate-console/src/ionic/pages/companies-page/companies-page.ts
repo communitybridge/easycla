@@ -27,6 +27,7 @@ export class CompaniesPage {
   rows: any[];
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
+  expanded: boolean = true;
 
   constructor(
     public navCtrl: NavController,
@@ -164,5 +165,9 @@ export class CompaniesPage {
       });
       modal.present();
     }
+  }
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
   }
 }

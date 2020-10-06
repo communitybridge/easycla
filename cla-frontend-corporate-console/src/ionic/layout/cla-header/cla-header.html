@@ -1,0 +1,11 @@
+<lfx-header product="LF CLA" id="lfx-header" docslink="https://docs.linuxfoundation.org/docs/communitybridge/easycla"
+  [expanded]="hasExpanded" (toggled)="onToggled()"></lfx-header>
+
+<ion-header class="cla-header" [ngClass]="{'expanded':hasExpanded}">
+  <ion-navbar >
+    <button *ngIf="hasShowMenu" ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>{{title}}</ion-title>
+  </ion-navbar>
+</ion-header>

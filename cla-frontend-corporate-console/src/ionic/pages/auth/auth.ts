@@ -5,6 +5,7 @@ import { Component } from '@angular/core';
 import { NavParams } from 'ionic-angular';
 import { NavController } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
+import { EnvConfig } from '../../services/cla.env.utils';
 import { RolesService } from '../../services/roles.service';
 
 /**
@@ -20,10 +21,10 @@ import { RolesService } from '../../services/roles.service';
 export class AuthPage {
   userRoles: any;
 
-  constructor(public navCtrl: NavController,public navParams: NavParams, public authService: AuthService, public rolesService: RolesService) {}
+  constructor(public navCtrl: NavController, public navParams: NavParams, public authService: AuthService, public rolesService: RolesService) { }
 
   ionViewDidEnter() {
-    console.log('token '+this.navParams.get('idToken'))
+    console.log('token ' + this.navParams.get('idToken'))
     setTimeout(() => {
       this.rolesService
         .getUserRolesPromise()
@@ -31,12 +32,12 @@ export class AuthPage {
           if (AuthPage.hasAccess(userRoles)) {
             this.navCtrl.setRoot('CompaniesPage');
           } else {
-            this.navCtrl.setRoot('LoginPage');
+            window.open(EnvConfig['cla-landing-page'], '_self');
           }
         })
         .catch((error) => {
           console.log('unable lookup user roles - possible session timeout: ' + error);
-          this.navCtrl.setRoot('LoginPage');
+          window.open(EnvConfig['cla-landing-page'], '_self');
         });
     }, 2000);
     // Artificial 2s delay isn't good, but the app may encoutner race condition between parse auth result and retrive user role

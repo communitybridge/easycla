@@ -44,6 +44,7 @@ export class CompanyPage {
   rows: any[] = [];
   allSignatures: any[];
   userEmail: string;
+  expanded: boolean = true;
 
   constructor(
     public navCtrl: NavController,
@@ -373,5 +374,9 @@ export class CompanyPage {
       ]
     });
     alert.present();
+  }
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
   }
 }

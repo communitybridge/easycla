@@ -675,8 +675,6 @@ export class ClaService {
     } else if (error.status && error.status === 401) {
       console.log(error._body + ' - redirecting to login page');
       this.authService.logout();
-      window.location.hash = '#/login';
-      window.location.reload(true);
       return Observable.throw(error);
     }
 
