@@ -5,6 +5,7 @@ package:
   exclude:
     - auth/**
     - ./backend-aws-lambda
+    - ./user-subscribe-lambda
     - ./metrics-aws-lambda
     - ./dynamo-events-lambda
     - ./zipbuilder-scheduler-lambda
@@ -36,6 +37,7 @@ custom:
   prune:
     automatic: true
     number: 3
+  userEventsSNSTopicARN: arn:aws:sns:us-east-2:#{AWS::AccountId}:userservice-triggers-${self:provider.stage}-user-sns-topic
 
 provider:
   name: aws
@@ -477,6 +479,21 @@ functions:
       - http:
           method: POST
           path: v2/github/activity
+
+  # User Subscribe event for dynamodb cla-stage-users table.
+  easyClaUserSubscribe:
+    name: easy-cla-user-subscribe
+    runtime: go1.x
+    description: Update easycla user data to user object in dynamodb
+    handler: user-subscribe-lambda
+    package:
+      individually: true
+      include:
+        - ./user-subscribe-lambda
+    reservedConcurrency: 5
+    events:
+      - sns:
+          arn: ${self:custom.userEventsSNSTopicARN}
 
 resources:
   Resources:
