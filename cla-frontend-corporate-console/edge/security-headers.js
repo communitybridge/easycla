@@ -39,7 +39,11 @@ function generateCSP(env, isDevServer) {
     'https://api.lfcla.com/',
     'https://communitybridge.org/'
   ];
-  let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE];
+  let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE,
+    'https://cdn.dev.platform.linuxfoundation.org/lfx-header-no-zone.js',
+    'https://cdn.staging.platform.linuxfoundation.org/lfx-header-no-zone.js',
+    'https://cdn.platform.linuxfoundation.org/lfx-header-no-zone.js'
+  ];
   let styleSources = [SELF, UNSAFE_INLINE, 'https://communitybridge.org/'];
 
   if (isDevServer) {
