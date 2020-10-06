@@ -1,16 +1,7 @@
-<ion-header class="cla-header">
-  <ion-navbar>
-    <button ion-button menuToggle>
-      <ion-icon name="menu"></ion-icon>
-    </button>
-    <ion-title>CLA Corporate Console</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
-  </ion-navbar>
-  <get-help></get-help>
-</ion-header>
+<cla-header title="CLA Corporate Console" (onToggle)="onClickToggle($event)"></cla-header>
 
 <ion-content>
-  <div class="page-content">
+  <div class="page-content" [ngClass]="{'expanded':expanded}">
     <ion-row>
       <ion-card class="sm-card">
         <ion-card-header>
@@ -45,8 +36,8 @@
             <ion-row justify-content-center>
               <ion-list>
                 <ion-item *ngFor="let company of rows">
-                  <!-- Note: we don't show request denied entries on this view -->
-                  <ion-label *ngIf="company.Status !== 'pending' && company.Status !== 'rejected'" (click)="viewCompany(company.CompanyID, company.Status)">
+                  <ion-label *ngIf="company.Status !== 'pending' && company.Status !== 'rejected'"
+                    (click)="viewCompany(company.CompanyID, company.Status)">
                     <a href="javascript:void(0);" [ngClass]="{'default-pointer':company.Status === 'pending'}"
                       [title]="company.CompanyName">{{ company.CompanyName | trimCharacters:25  }}</a>
                   </ion-label>

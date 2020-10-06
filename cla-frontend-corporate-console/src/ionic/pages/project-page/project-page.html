@@ -1,16 +1,7 @@
-<ion-header>
-  <ion-toolbar>
-    <button ion-button class="back-btn" (click)="back()">
-      <ion-icon name="arrow-round-back"></ion-icon>
-    </button>
-    <ion-title>{{title | trimCharacters:35 }}</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
-  </ion-toolbar>
-  <get-help></get-help>
-</ion-header>
+<cla-header [title]="title | trimCharacters:120" (onToggle)="onClickToggle($event)"></cla-header>
 
-<ion-content headerspacing>
-  <div class="page-content">
+<ion-content>
+  <div class="page-content" [ngClass]="{'expanded':expanded}">
 
     <ion-grid>
       <ion-row justify-content-center>
