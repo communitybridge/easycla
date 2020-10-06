@@ -1,7 +1,13 @@
 project-page {
   .page-content {
-    min-height: calc(100vh - 200px);
-    padding: 60px 10px;
+    min-height: calc(100vh - 335px);
+    margin-top: 25px;
+    transition: margin 0.3s;
+    
+    &.expanded {
+      min-height: calc(100vh - 410px);
+      margin-top: 100px;
+    }
 
     @media (min-width: 768px) and (max-width: 1200px) {
       padding: 16px 50px 162px;
@@ -72,7 +78,7 @@ project-page {
     .toolbar {
       color: #7b7b7b;
       background-color: white;
-      height: 100px;
+      height: 55px;
 
       ion-icon {
         color: #7b7b7b;

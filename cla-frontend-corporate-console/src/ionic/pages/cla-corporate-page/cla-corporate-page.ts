@@ -22,7 +22,8 @@ export class ClaCorporatePage {
   activeSignatures: boolean = true; // we assume true until otherwise
   signature: any;
   error: any = false;
-
+  expanded: boolean = true;
+  
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -84,5 +85,9 @@ export class ClaCorporatePage {
 
   createTicket() {
     window.open(generalConstants.createTicketURL, '_blank');
+  }
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
   }
 }

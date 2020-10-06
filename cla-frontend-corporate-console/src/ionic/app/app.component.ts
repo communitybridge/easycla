@@ -48,7 +48,7 @@ export class MyApp {
   ) {
     this.getDefaults();
     this.initializeApp();
-
+    this.mounted();
     // Determine if we're running in a local services (developer) mode - the USE_LOCAL_SERVICES environment variable
     // will be set to true, otherwise were using normal services deployed in each environment
     const localServicesMode = (process.env.USE_LOCAL_SERVICES || 'false').toLowerCase() === 'true';
@@ -59,6 +59,15 @@ export class MyApp {
     this.claService.setHttp(httpClient);
     // here to check authentication state
     this.authService.handleAuthentication();
+  }
+
+  mounted() {
+    const script = document.createElement('script');
+    script.setAttribute(
+      'src',
+      EnvConfig['lfx-header']
+    );
+    document.head.appendChild(script);
   }
 
   getDefaults() {

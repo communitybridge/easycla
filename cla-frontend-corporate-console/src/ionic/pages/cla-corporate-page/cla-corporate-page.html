@@ -1,15 +1,8 @@
-<ion-header>
-  <ion-navbar>
-    <button ion-button menuToggle>
-      <ion-icon name="menu"></ion-icon>
-    </button>
-    <ion-title>CLA - Corporate</ion-title>
-  </ion-navbar>
-  <get-help></get-help>
-</ion-header>
 
-<ion-content headerspacing overflow-scroll="true">
-  <div class="page-content">
+<cla-header title="CLA - Corporate" (onToggle)="onClickToggle($event)"></cla-header>
+
+<ion-content>
+  <div class="page-content" [ngClass]="{'expanded':expanded}">
     <header>
       <ion-grid>
         <ion-row>

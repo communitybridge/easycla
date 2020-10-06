@@ -1,16 +1,7 @@
-<ion-header>
-  <ion-toolbar>
-    <button ion-button class="back-btn" (click)="back()">
-      <ion-icon name="arrow-round-back"></ion-icon>
-    </button>
-    <ion-title>CLA - Corporate</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
-  </ion-toolbar>
-  <get-help></get-help>
-</ion-header>
+<cla-header title="CLA - Corporate" (onToggle)="onClickToggle($event)"></cla-header>
 
-<ion-content headerspacing overflow-scroll="true">
-  <div class="page-content">
+<ion-content>
+  <div class="page-content" [ngClass]="{'expanded':expanded}">
     <header>
       <ion-grid>
         <ion-row>
