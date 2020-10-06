@@ -9,6 +9,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 })
 export class ClaHeader {
   @Input() title = '';
+  @Input() hasShowMenu = true;
   @Output() onToggle: EventEmitter<any> = new EventEmitter<any>();
 
   hasExpanded: boolean = true;
