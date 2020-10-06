@@ -27,27 +27,17 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/jinzhu/copier"
 )
-
-const (
-	// FoundationType the SF foundation type string - previously was "Foundation", now "Project Group"
-	FoundationType = "Project Group"
-)
-
-func v2EventList(eventList *v1Models.EventList) (*models.EventList, error) {
-	var dst models.EventList
-	err := copier.Copy(&dst, eventList)
-	if err != nil {
-		return nil, err
-	}
-	return &dst, nil
-}
 
 // Configure setups handlers on api with service
 func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRepo v1Company.IRepository, projectsClaGroupsRepo projects_cla_groups.Repository) { // nolint
 	api.EventsGetRecentEventsHandler = events.GetRecentEventsHandlerFunc(
 		func(params events.GetRecentEventsParams, authUser *auth.User) middleware.Responder {
+			f := logrus.Fields{
+				"functionName":  "EventsGetRecentEventsHandler",
+				"authUserName":  authUser.UserName,
+				"authUserEmail": authUser.Email,
+			}
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !utils.IsUserAdmin(authUser) {
 				return events.NewGetRecentEventsForbidden().WithPayload(&models.ErrorResponse{
@@ -59,19 +49,20 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 
 			result, err := service.GetRecentEvents(params.PageSize)
 			if err != nil {
+				log.WithFields(f).WithError(err).Warnf("problem fetching recent events")
 				return events.NewGetRecentEventsBadRequest().WithPayload(errorResponse(err))
 			}
 
 			// Return an empty list
 			if result == nil || len(result.Events) == 0 {
 				return events.NewGetRecentEventsOK().WithPayload(&models.EventList{
-					Events:  []*models.Event{},
-					NextKey: "",
+					Events: []*models.Event{},
 				})
 			}
 
 			resp, err := v2EventList(result)
 			if err != nil {
+				log.WithFields(f).WithError(err).Warnf("problem converting events to a v2 object")
 				return events.NewGetRecentEventsInternalServerError().WithPayload(errorResponse(err))
 			}
 
@@ -80,6 +71,12 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 
 	api.EventsGetFoundationEventsAsCSVHandler = events.GetFoundationEventsAsCSVHandlerFunc(
 		func(params events.GetFoundationEventsAsCSVParams, authUser *auth.User) middleware.Responder {
+			f := logrus.Fields{
+				"functionName":   "EventsGetFoundationEventsAsCSVHandler",
+				"authUserName":   authUser.UserName,
+				"authUserEmail":  authUser.Email,
+				"foundationSFID": params.FoundationSFID,
+			}
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.FoundationSFID) {
 				return WriteResponse(http.StatusForbidden, runtime.JSONMime, runtime.JSONProducer(), &models.ErrorResponse{
@@ -91,6 +88,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 
 			result, err := service.GetFoundationEvents(params.FoundationSFID, nil, nil, v1Events.ReturnAllEvents, nil)
 			if err != nil {
+				log.WithFields(f).WithError(err).Warnf("problem fetching foundation events")
 				return WriteResponse(http.StatusBadRequest, runtime.JSONMime, runtime.JSONProducer(), errorResponse(err))
 			}
 
@@ -101,6 +99,12 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 
 	api.EventsGetFoundationEventsHandler = events.GetFoundationEventsHandlerFunc(
 		func(params events.GetFoundationEventsParams, authUser *auth.User) middleware.Responder {
+			f := logrus.Fields{
+				"functionName":   "EventsGetFoundationEventsHandler",
+				"authUserName":   authUser.UserName,
+				"authUserEmail":  authUser.Email,
+				"foundationSFID": params.FoundationSFID,
+			}
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.FoundationSFID) {
 				return events.NewGetRecentEventsForbidden().WithPayload(&models.ErrorResponse{
@@ -112,19 +116,20 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 
 			result, err := service.GetFoundationEvents(params.FoundationSFID, params.NextKey, params.PageSize, aws.BoolValue(params.ReturnAllEvents), params.SearchTerm)
 			if err != nil {
+				log.WithFields(f).WithError(err).Warnf("problem fetching foundation events")
 				return events.NewGetFoundationEventsBadRequest().WithPayload(errorResponse(err))
 			}
 
 			// Return an empty list
 			if result == nil || len(result.Events) == 0 {
 				return events.NewGetFoundationEventsOK().WithPayload(&models.EventList{
-					Events:  []*models.Event{},
-					NextKey: "",
+					Events: []*models.Event{},
 				})
 			}
 
 			resp, err := v2EventList(result)
 			if err != nil {
+				log.WithFields(f).WithError(err).Warnf("problem converting events to a v2 object")
 				return events.NewGetFoundationEventsInternalServerError().WithPayload(errorResponse(err))
 			}
 			return events.NewGetFoundationEventsOK().WithPayload(resp)
@@ -132,13 +137,13 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 
 	api.EventsGetProjectEventsAsCSVHandler = events.GetProjectEventsAsCSVHandlerFunc(
 		func(params events.GetProjectEventsAsCSVParams, authUser *auth.User) middleware.Responder {
-			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			f := logrus.Fields{
 				"functionName":  "EventsGetProjectEventsAsCSVHandler",
 				"authUserName":  authUser.UserName,
 				"authUserEmail": authUser.Email,
 				"projectSFID":   params.ProjectSFID,
 			}
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return WriteResponse(http.StatusForbidden, runtime.JSONMime, runtime.JSONProducer(), &models.ErrorResponse{
 					Code: "403",
@@ -171,13 +176,13 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 
 	api.EventsGetProjectEventsHandler = events.GetProjectEventsHandlerFunc(
 		func(params events.GetProjectEventsParams, authUser *auth.User) middleware.Responder {
-			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			f := logrus.Fields{
 				"functionName":  "EventsGetProjectEventsHandler",
 				"authUserName":  authUser.UserName,
 				"authUserEmail": authUser.Email,
 				"projectSFID":   params.ProjectSFID,
 			}
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return events.NewGetRecentEventsForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -193,8 +198,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 					// Although the API should view this as a bad request since the project doesn't seem to belong to a
 					// CLA Group...just return a successful 200 with an empty list to the caller - nothing to see here, move along.
 					return events.NewGetProjectEventsOK().WithPayload(&models.EventList{
-						Events:  []*models.Event{},
-						NextKey: "",
+						Events: []*models.Event{},
 					})
 				}
 				// Not an error that we are expecting - return an error and give up...
@@ -211,8 +215,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			// Return an empty list
 			if result == nil || len(result.Events) == 0 {
 				return events.NewGetProjectEventsOK().WithPayload(&models.EventList{
-					Events:  []*models.Event{},
-					NextKey: "",
+					Events: []*models.Event{},
 				})
 			}
 
@@ -252,7 +255,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			}
 
 			var result *v1Models.EventList
-			if projectDetails.ProjectType == FoundationType {
+			if projectDetails.ProjectType == utils.ProjectTypeProjectGroup {
 				result, err = service.GetCompanyFoundationEvents(params.CompanySFID, params.ProjectSFID, params.NextKey, params.PageSize, aws.BoolValue(params.ReturnAllEvents))
 			} else {
 				pm, perr := projectsClaGroupsRepo.GetClaGroupIDForProject(params.ProjectSFID)
@@ -261,8 +264,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 						// Although the API should view this as a bad request since the project doesn't seem to belong to a
 						// CLA Group...just return a successful 200 with an empty list to the caller - nothing to see here, move along.
 						return events.NewGetCompanyProjectEventsOK().WithPayload(&models.EventList{
-							Events:  []*models.Event{},
-							NextKey: "",
+							Events: []*models.Event{},
 						})
 					}
 					log.WithFields(f).WithError(perr).Warnf("problem determining CLA Group for project SFID: %s", params.ProjectSFID)
@@ -278,8 +280,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			// Return an empty list
 			if result == nil || len(result.Events) == 0 {
 				return events.NewGetCompanyProjectEventsOK().WithPayload(&models.EventList{
-					Events:  []*models.Event{},
-					NextKey: "",
+					Events: []*models.Event{},
 				})
 			}
 
@@ -290,24 +291,6 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			}
 			return events.NewGetCompanyProjectEventsOK().WithPayload(resp)
 		})
-}
-
-type codedResponse interface {
-	Code() string
-}
-
-func errorResponse(err error) *models.ErrorResponse {
-	code := ""
-	if e, ok := err.(codedResponse); ok {
-		code = e.Code()
-	}
-
-	e := models.ErrorResponse{
-		Code:    code,
-		Message: err.Error(),
-	}
-
-	return &e
 }
 
 // WriteResponse function writes http response.
