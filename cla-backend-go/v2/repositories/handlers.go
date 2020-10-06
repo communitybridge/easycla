@@ -67,7 +67,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_repositories.NewAddProjectGithubRepositoryForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Add GitHub Repository with Project scope of %s",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Add GitHub Repositories with Project scope of %s",
 						authUser.UserName, params.ProjectSFID),
 				})
 			}
@@ -108,7 +108,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_repositories.NewDeleteProjectGithubRepositoryForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Delete GitHub Repository with Project scope of %s",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Delete GitHub Repositories with Project scope of %s",
 						authUser.UserName, params.ProjectSFID),
 				})
 			}
@@ -147,12 +147,12 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_repositories.NewGetProjectGithubRepositoryBranchProtectionForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Query Protected Branch GitHub Repository with Project scope of %s",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Query Protected Branch GitHub Repositories with Project scope of %s",
 						authUser.UserName, params.ProjectSFID),
 				})
 			}
 
-			protectedBranch, err := service.GetProtectedBranch(ctx, params.RepositoryID)
+			protectedBranch, err := service.GetProtectedBranch(ctx, params.ProjectSFID, params.RepositoryID)
 			if err != nil {
 				if err == repositories.ErrGithubRepositoryNotFound {
 					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionNotFound()
@@ -180,12 +180,12 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return github_repositories.NewUpdateProjectGithubRepositoryBranchProtectionForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Update Protected Branch GitHub Repository with Project scope of %s",
+					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Update Protected Branch GitHub Repositories with Project scope of %s",
 						authUser.UserName, params.ProjectSFID),
 				})
 			}
 
-			protectedBranch, err := service.UpdateProtectedBranch(ctx, params.RepositoryID, params.GithubRepositoryBranchProtectionInput)
+			protectedBranch, err := service.UpdateProtectedBranch(ctx, params.RepositoryID, params.ProjectSFID, params.GithubRepositoryBranchProtectionInput)
 			if err != nil {
 				log.Warnf("UpdateProjectGithubRepositoryBranchProtectionHandler : failed for repo %s : %v", params.RepositoryID, err)
 				if err == repositories.ErrGithubRepositoryNotFound {

@@ -62,14 +62,14 @@ func (s *service) GitHubOrgUpdatedEvent(event events.DynamoDBEventRecord) error 
 				log.WithFields(f).Debugf("enabling branch protection for repository: %s", repo.RepositoryName)
 
 				log.WithFields(f).Debugf("looking up the default branch for the GitHub repository: %s...", repo.RepositoryName)
-				defaultBranch, branchErr := github.GetDefaultBranchForRepo(ctx, gitHubClient, newGitHubOrg.OrganizationName, repo.RepositoryName)
+				defaultBranch, branchErr := github.GetDefaultBranchForRepo(ctx, gitHubClient.Repositories, newGitHubOrg.OrganizationName, repo.RepositoryName)
 				if branchErr != nil {
 					return branchErr
 				}
 
 				log.WithFields(f).Debugf("enabling branch protection on the default branch %s for the GitHub repository: %s...",
 					defaultBranch, repo.RepositoryName)
-				return github.EnableBranchProtection(ctx, gitHubClient, newGitHubOrg.OrganizationName, repo.RepositoryName,
+				return github.EnableBranchProtection(ctx, gitHubClient.Repositories, newGitHubOrg.OrganizationName, repo.RepositoryName,
 					defaultBranch, true, []string{utils.GitHubBotName}, []string{})
 			})
 		}

@@ -134,14 +134,14 @@ func (s *service) EnableBranchProtectionServiceHandler(event events.DynamoDBEven
 			}
 
 			log.WithFields(f).Debug("looking up the default branch for the GitHub repository...")
-			defaultBranch, branchErr := github.GetDefaultBranchForRepo(ctx, gitHubClient, gitHubOrg.OrganizationName, newRepoModel.RepositoryName)
+			defaultBranch, branchErr := github.GetDefaultBranchForRepo(ctx, gitHubClient.Repositories, gitHubOrg.OrganizationName, newRepoModel.RepositoryName)
 			if branchErr != nil {
 				return branchErr
 			}
 
 			log.WithFields(f).Debugf("enabling branch protection on th default branch %s for the GitHub repository: %s...",
 				defaultBranch, newRepoModel.RepositoryName)
-			return github.EnableBranchProtection(ctx, gitHubClient,
+			return github.EnableBranchProtection(ctx, gitHubClient.Repositories,
 				parentOrgName, newRepoModel.RepositoryName,
 				defaultBranch, true, []string{utils.GitHubBotName}, []string{})
 		}
