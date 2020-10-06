@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/sirupsen/logrus"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/go-openapi/runtime"
@@ -143,6 +145,12 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 	api.EventsGetProjectEventsHandler = events.GetProjectEventsHandlerFunc(
 		func(params events.GetProjectEventsParams, authUser *auth.User) middleware.Responder {
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			f := logrus.Fields{
+				"functionName":  "EventsGetProjectEventsHandler",
+				"authUserName":  authUser.UserName,
+				"authUserEmail": authUser.Email,
+				"projectSFID":   params.ProjectSFID,
+			}
 			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
 				return events.NewGetRecentEventsForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -151,24 +159,42 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 				})
 			}
 
+			// Lookup the CLA Group associated with this Project SFID...
 			pm, err := projectsClaGroupsRepo.GetClaGroupIDForProject(params.ProjectSFID)
 			if err != nil {
 				if err == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
-					return events.NewGetProjectEventsBadRequest().WithPayload(&models.ErrorResponse{
-						Code:    "400",
-						Message: fmt.Sprintf("EasyCLA - 400 Bad Request - No cla group associated with this project: %s", params.ProjectSFID),
+					// Although the API should view this as a bad request since the project doesn't seem to belong to a
+					// CLA Group...just return a successful 200 with an empty list to the caller - nothing to see here, move along.
+					return events.NewGetProjectEventsOK().WithPayload(&models.EventList{
+						Events:  []*models.Event{},
+						NextKey: "",
 					})
 				}
+				// Not an error that we are expecting - return an error and give up...
 				return events.NewGetProjectEventsInternalServerError().WithPayload(errorResponse(err))
 			}
+
+			// Lookup any events for this CLA Group....
 			result, err := service.GetClaGroupEvents(pm.ClaGroupID, params.NextKey, params.PageSize, aws.BoolValue(params.ReturnAllEvents), params.SearchTerm)
 			if err != nil {
+				log.WithFields(f).Warnf("problem loading events for CLA Group: %s with ID: %s", pm.ClaGroupName, pm.ClaGroupID)
 				return events.NewGetProjectEventsBadRequest().WithPayload(errorResponse(err))
 			}
+
+			// Return an empty list
+			if result == nil || len(result.Events) == 0 {
+				return events.NewGetProjectEventsOK().WithPayload(&models.EventList{
+					Events:  []*models.Event{},
+					NextKey: "",
+				})
+			}
+
 			resp, err := v2EventList(result)
 			if err != nil {
+				log.WithFields(f).WithError(err).Warnf("problem converting events to a v2 object")
 				return events.NewGetProjectEventsInternalServerError().WithPayload(errorResponse(err))
 			}
+
 			return events.NewGetProjectEventsOK().WithPayload(resp)
 		})
 
