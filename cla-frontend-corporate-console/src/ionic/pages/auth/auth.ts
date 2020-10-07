@@ -32,12 +32,12 @@ export class AuthPage {
           if (AuthPage.hasAccess(userRoles)) {
             this.navCtrl.setRoot('CompaniesPage');
           } else {
-            window.open(EnvConfig['cla-landing-page'], '_self');
+            window.open(EnvConfig['landing-page'], '_self');
           }
         })
         .catch((error) => {
           console.log('unable lookup user roles - possible session timeout: ' + error);
-          window.open(EnvConfig['cla-landing-page'], '_self');
+          window.open(EnvConfig['landing-page'], '_self');
         });
     }, 2000);
     // Artificial 2s delay isn't good, but the app may encoutner race condition between parse auth result and retrive user role
