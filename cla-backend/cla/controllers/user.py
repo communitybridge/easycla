@@ -260,7 +260,7 @@ def invite_cla_manager(contributor_id, contributor_name, contributor_email, cla_
         event_user_id=contributor_id,
         event_project_name=project_name,
         event_data=log_msg,
-        event_sumamry=log_msg,
+        event_summary=log_msg,
         event_type=EventType.InviteAdmin,
         contains_pii=True,
     )
