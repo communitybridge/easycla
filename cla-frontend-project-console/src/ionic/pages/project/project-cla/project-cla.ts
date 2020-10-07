@@ -1,13 +1,13 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component, ViewChild} from '@angular/core';
-import {AlertController, Events, IonicPage, ModalController, Nav, NavController, NavParams} from 'ionic-angular';
-import {ClaService} from '../../../services/cla.service';
-import {RolesService} from '../../../services/roles.service';
-import {Restricted} from '../../../decorators/restricted';
-import {GithubOrganisationModel} from '../../../models/github-organisation-model';
-import {PlatformLocation} from '@angular/common';
+import { Component, ViewChild } from '@angular/core';
+import { AlertController, Events, IonicPage, ModalController, Nav, NavController, NavParams } from 'ionic-angular';
+import { ClaService } from '../../../services/cla.service';
+import { RolesService } from '../../../services/roles.service';
+import { Restricted } from '../../../decorators/restricted';
+import { GithubOrganisationModel } from '../../../models/github-organisation-model';
+import { PlatformLocation } from '@angular/common';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -82,9 +82,49 @@ export class ProjectClaPage {
       return projects;
     }
 
+    for (const project of projects) {
+      this.sortDocuments(project);
+    }
+
     return projects.sort((a, b) => {
       return a.projectName.trim().localeCompare(b.projectName.trim());
     });
+  }
+
+  sortDocuments(project) {
+    const corporateDocuments = project.projectCorporateDocuments;
+    const individualDocuments = project.projectIndividualDocuments;
+    if (corporateDocuments !== null) {
+      this.sortAsPerDateAndVersion(corporateDocuments);
+    }
+    if (individualDocuments !== null) {
+      this.sortAsPerDateAndVersion(individualDocuments);
+    }
+  }
+
+  sortAsPerDateAndVersion(documents) {
+    this.sortByDate(documents);
+    this.sortByVersion(documents);
+  }
+
+  sortByDate(documents) {
+    // sort document by date first
+    documents.sort(function (a, b) {
+      a = new Date(a.documentCreationDate);
+      b = new Date(b.documentCreationDate);
+      return a > b ? -1 : a < b ? 1 : 0;
+    });
+    return documents;
+  }
+
+  sortByVersion(documents) {
+    // sort document by version
+    documents.sort(function (a, b) {
+      const versionA = parseFloat(a.documentMajorVersion + '.' + a.documentMinorVersion).toFixed(2);
+      const versionB = parseFloat(b.documentMajorVersion + '.' + b.documentMinorVersion).toFixed(2);
+      return versionA > versionB ? -1 : versionA < versionB ? 1 : 0;
+    });
+    return documents;
   }
 
   sortGithubOrganisation(githubOrganizations) {
@@ -435,26 +475,11 @@ export class ProjectClaPage {
     return false;
   }
 
-  getCorporateDocumentName(project) {
-    if (project.projectCorporateDocuments !== null && project.projectCorporateDocuments.length > 0) {
-      return project.projectCorporateDocuments[project.projectCorporateDocuments.length - 1].documentName
-    } else {
-      return "No Document";
-    }
-  }
-
-  getCorporateDocumentDate(project) {
-    if (project.projectCorporateDocuments !== null && project.projectCorporateDocuments.length > 0) {
-      return project.projectCorporateDocuments[project.projectCorporateDocuments.length - 1].documentCreationDate
-    } else {
-      return "No Document";
-    }
-  }
-
-  getCorporateDocumentVersion(project) {
-    if (project.projectCorporateDocuments !== null && project.projectCorporateDocuments.length > 0) {
-      const major = project.projectCorporateDocuments[project.projectCorporateDocuments.length - 1].documentMajorVersion;
-      const minor = project.projectCorporateDocuments[project.projectCorporateDocuments.length - 1].documentMinorVersion;
+  getDocumentVersion(project, type) {
+    const documents = type === 'CCLA' ? project.projectCorporateDocuments : project.projectIndividualDocuments;
+    if (documents !== null && documents.length > 0) {
+      const major = documents[0].documentMajorVersion;
+      const minor = documents[0].documentMinorVersion;
       return `${major}.${minor}`;
     } else {
       return "v1.0";
@@ -470,32 +495,6 @@ export class ProjectClaPage {
         }
       }
     return false;
-  }
-
-  getIndividualDocumentName(project) {
-    if (project.projectIndividualDocuments !== null && project.projectIndividualDocuments.length > 0) {
-      return project.projectIndividualDocuments[project.projectIndividualDocuments.length - 1].documentName
-    } else {
-      return "No Document";
-    }
-  }
-
-  getIndividualDocumentDate(project) {
-    if (project.projectIndividualDocuments !== null && project.projectIndividualDocuments.length > 0) {
-      return project.projectIndividualDocuments[project.projectIndividualDocuments.length - 1].documentCreationDate
-    } else {
-      return "No Document";
-    }
-  }
-
-  getIndividualDocumentVersion(project) {
-    if (project.projectIndividualDocuments !== null && project.projectIndividualDocuments.length > 0) {
-      const major = project.projectIndividualDocuments[project.projectIndividualDocuments.length - 1].documentMajorVersion;
-      const minor = project.projectIndividualDocuments[project.projectIndividualDocuments.length - 1].documentMinorVersion;
-      return `${major}.${minor}`;
-    } else {
-      return "v1.0";
-    }
   }
 
 }

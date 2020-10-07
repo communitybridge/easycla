@@ -40,7 +40,6 @@ export class ClaContractVersionModal {
     this.documentType = this.navParams.get('documentType');
     this.documents = this.navParams.get('documents');
 
-    this.sortData();
     if (this.documents.length > 0) {
       this.currentDocument = this.documents.slice(0, 1);
       if (this.documents.length > 1) {
@@ -52,29 +51,6 @@ export class ClaContractVersionModal {
       this.dismiss();
     });
   }
-
-  sortData() {
-    this.sortByDate();
-    this.sortByVersion();
-  }
-
-  sortByVersion() {
-    this.documents.sort(function (a, b) {
-      const versionA = parseFloat(a.documentMajorVersion + '.' + a.documentMinorVersion).toFixed(2);
-      const versionB = parseFloat(b.documentMajorVersion + '.' + b.documentMinorVersion).toFixed(2);
-      return versionA > versionB ? -1 : versionA < versionB ? 1 : 0;
-    });
-  }
-
-  sortByDate() {
-    this.documents.sort(function (a, b) {
-      a = new Date(a.documentCreationDate);
-      b = new Date(b.documentCreationDate);
-      return a > b ? -1 : a < b ? 1 : 0;
-    });
-  }
-
-  ngOnInit() { }
 
   /**
    * Called if popover dismissed with data. Passes data to a callback function
