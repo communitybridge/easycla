@@ -303,17 +303,17 @@ class DocuSign(signing_service_interface.SigningService):
         # For Gerrit users, we want the return_url to be the link to the Gerrit Instance's page.
         # Since Gerrit users will be able to make changes once they are part of the LDAP Group,
         # They do not need to be directed to a specific code submission on Gerrit.
-        if return_url is None:
-            try:
-                gerrits = Gerrit().get_gerrit_by_project_id(project_id)
-                if len(gerrits) >= 1:
-                    # Github sends the user back to the pull request.
-                    # Gerrit should send it back to the Gerrit instance url.
-                    return_url = gerrits[0].get_gerrit_url()
-            except DoesNotExist as err:
-                cla.log.error('Gerrit Instance not found by the given project ID: %s',
-                              project_id)
-                return {'errors': {'project_id': str(err)}}
+        # Ensure return_url is set to the Gerrit instance url
+        try:
+            gerrits = Gerrit().get_gerrit_by_project_id(project_id)
+            if len(gerrits) >= 1:
+                # Github sends the user back to the pull request.
+                # Gerrit should send it back to the Gerrit instance url.
+                return_url = gerrits[0].get_gerrit_url()
+        except DoesNotExist as err:
+            cla.log.error('Gerrit Instance not found by the given project ID: %s',
+                            project_id)
+            return {'errors': {'project_id': str(err)}}
 
         try:
             document = project.get_project_individual_document()
