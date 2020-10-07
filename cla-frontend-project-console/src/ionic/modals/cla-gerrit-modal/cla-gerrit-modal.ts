@@ -21,6 +21,7 @@ export class ClaGerritModal {
   currentlySubmitting: boolean = false;
   projectId: string;
   user: any;
+  errorMessage: string;
 
   constructor(
     public navParams: NavParams,
@@ -75,38 +76,24 @@ export class ClaGerritModal {
 
   postGerritInstance() {
     let gerrit = {
-      project_id: this.projectId,
-      gerrit_name: this.form.value.gerritName,
-      gerrit_url: this.form.value.URL
+      gerritName: this.form.value.gerritName,
+      gerritUrl: this.form.value.URL,
+      groupIdCcla: this.form.value.groupIdCcla,
+      groupIdIcla: this.form.value.groupIdIcla,
+      version: "v1"
     };
-    if (this.form.value.groupIdIcla && this.form.value.groupIdIcla.trim() != '') {
-      gerrit['group_id_icla'] = this.form.value.groupIdIcla;
-    }
-    if (this.form.value.groupIdCcla && this.form.value.groupIdCcla.trim() != '') {
-      gerrit['group_id_ccla'] = this.form.value.groupIdCcla;
-    }
-    this.claService.postGerritInstance(gerrit).subscribe(
+    this.claService.postGerritInstance(this.projectId, gerrit).subscribe(
       (response) => {
-        if (response.error_icla) {
-          this.form.controls['groupIdIcla'].setErrors({
-            groupNotExistentError: 'The specified LDAP group for ICLA does not exist.'
-          });
-        } else if (response.error_ccla) {
-          this.form.controls['groupIdCcla'].setErrors({
-            groupNotExistentError: 'The specified LDAP group for CCLA does not exist.'
-          });
-        } else {
-          this.dismiss(true);
-        }
+        this.dismiss(true);
       },
       (error) => {
-        let errorObject = error.json();
-        if (errorObject.errors) {
-          //TODO: Handle other types of backend errors.
-          this.form.controls['URL'].setErrors({ invalidURL: 'Invalid URL specified.' });
+        console.log(error)
+        if (error.status === 422) {
+          this.errorMessage = 'Invalid Gerrit Instance URL.';
+        } else if (error._body) {
+          this.errorMessage = JSON.parse(error._body).Message;
         }
-      },
-      (completion) => { }
+      }
     );
   }
 }
