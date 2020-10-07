@@ -4,6 +4,7 @@
 import { Component } from '@angular/core';
 import { NavController } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
+import { EnvConfig } from '../../services/cla.env.utils';
 import { RolesService } from '../../services/roles.service';
 
 /**
@@ -30,12 +31,12 @@ export class AuthPage {
           if (AuthPage.hasAccess(userRoles)) {
             this.navCtrl.setRoot('AllProjectsPage');
           } else {
-            this.navCtrl.setRoot('LoginPage');
+            window.open(EnvConfig['landing-page'], '_self');
           }
         })
         .catch((error) => {
           console.log('unable lookup user roles - possible session timeout: ' + error);
-          this.navCtrl.setRoot('LoginPage');
+          window.open(EnvConfig['landing-page'], '_self');
         });
     }, 2000);
     // Artificial 2s delay isn't good, but the app may encoutner race condition between parse auth result and retrive user role
