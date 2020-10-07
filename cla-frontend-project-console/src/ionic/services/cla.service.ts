@@ -7,7 +7,7 @@ import { AuthService } from './auth.service';
 
 import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
-import {Response} from "@angular/http/src/static_response";
+import { Response } from "@angular/http/src/static_response";
 
 @Injectable()
 export class ClaService {
@@ -232,16 +232,16 @@ export class ClaService {
   /**
    * POST /repository
    **/
-  postProjectRepository(repository) {
-    const url: URL = this.getV1Endpoint('/v1/repository');
+  postProjectRepository(projectSFID, repository) {
+    const url: URL = this.getV3Endpoint('/v3/project/' + projectSFID + '/github/repositories');
     return this.http.post(url, repository).map((res) => res.json());
   }
 
   /**
    * DELETE /repository
    */
-  removeProjectRepository(repositoryId) {
-    const url: URL = this.getV1Endpoint('/v1/repository/' + repositoryId);
+  removeProjectRepository(projectSFID, repositoryId) {
+    const url: URL = this.getV3Endpoint('/v3/project/' + projectSFID + '/github/repositories/' + repositoryId);
     return this.http.delete(url).map((res) => res.json());
   }
 
@@ -257,8 +257,6 @@ export class ClaService {
    * GET /sfdc/${sfid}/github/organizations
    */
   getOrganizations(sfid) {
-    // Outdated V1
-    // const url: URL = this.getV1Endpoint('/v1/sfdc/' + sfid + '/github/organizations');
     const url: URL = this.getV3Endpoint(`/v3/project/${sfid}/github/organizations`);
     return this.http.get(url).map((res) => res.json());
   }
@@ -266,17 +264,15 @@ export class ClaService {
   /**
    * POST /github/organizations
    */
-  postGithubOrganization(organization) {
-    const url: URL = this.getV1Endpoint('/v1/github/organizations');
+  postGithubOrganization(projectSFID, organization) {
+    const url: URL = this.getV3Endpoint('/v3/project/' + projectSFID + '/github/organizations');
     return this.http.post(url, organization).map((res) => res.json());
   }
 
   /**
    * DELETE /github/organizations/{organization_name}
    */
-  deleteGithubOrganization(projectSFID:string, organizationName:string) {
-    // outdated: v1
-    // const url: URL = this.getV1Endpoint('/v1/github/organizations/' + organizationName);
+  deleteGithubOrganization(projectSFID: string, organizationName: string) {
     const url: URL = this.getV3Endpoint(`/v3/project/${projectSFID}/github/organizations/${organizationName}`);
     return this.http.delete(url);
   }
@@ -311,13 +307,13 @@ export class ClaService {
     return { ...project, ...objLogoUrl };
   }
 
-  deleteGerritInstance(gerritId) {
-    const url: URL = this.getV1Endpoint('/v1/gerrit/' + gerritId);
+  deleteGerritInstance(projectId, gerritId) {
+    const url: URL = this.getV1Endpoint('/v3/project/' + projectId + '/gerrits/' + gerritId);
     return this.http.delete(url).map((res) => res.json());
   }
 
-  postGerritInstance(gerrit) {
-    const url: URL = this.getV1Endpoint('/v1/gerrit');
+  postGerritInstance(projectId, gerrit) {
+    const url: URL = this.getV1Endpoint('/v3/project/' + projectId + '/gerrits');
     return this.http.post(url, gerrit).map((res) => res.json());
   }
 
