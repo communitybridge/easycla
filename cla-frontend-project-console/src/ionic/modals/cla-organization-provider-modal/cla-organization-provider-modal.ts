@@ -22,6 +22,7 @@ export class ClaOrganizationProviderModal {
   claProjectId: any;
   showErrorMsg: boolean;
   loading: boolean;
+  sfdcProjectId: string;
 
   constructor(
     public navParams: NavParams,
@@ -32,6 +33,7 @@ export class ClaOrganizationProviderModal {
     private location: PlatformLocation
   ) {
     this.claProjectId = this.navParams.get('claProjectId');
+    this.sfdcProjectId = this.navParams.get('sfdcProjectId');
     this.form = formBuilder.group({
       orgName: ['', Validators.compose([Validators.required]) /*, this.urlCheck.bind(this)*/]
     });
@@ -71,24 +73,22 @@ export class ClaOrganizationProviderModal {
   }
 
   postClaGithubOrganization() {
-    let trimName = this.form.value.orgName.trim();
-    let organization = {
-      organization_sfid: this.claProjectId,
-      organization_name: trimName
+    const organization = {
+      autoEnabled: false,
+      branchProtectionEnabled: false,
+      organizationName: this.form.value.orgName.trim()
     };
-    this.claService.postGithubOrganization(organization).subscribe((response) => {
-      this.responseErrors = [];
-
-      if (response.errors) {
-        this.form.controls['orgName'].setErrors({ incorrect: true });
-
-        for (let errorKey in response.errors) {
-          this.responseErrors.push(response.errors[errorKey]);
-        }
-      } else {
+    this.claService.postGithubOrganization(this.sfdcProjectId, organization).subscribe(
+      () => {
         this.dismiss(true);
+      },
+      (error) => {
+        if (error._body) {
+          this.responseErrors = [];
+          this.responseErrors.push(JSON.parse(error._body).Message);
+        }
       }
-    });
+    );
   }
 
   dismiss(data = false) {
