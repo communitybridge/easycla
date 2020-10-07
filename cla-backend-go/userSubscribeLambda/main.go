@@ -75,6 +75,8 @@ func Handler(ctx context.Context, snsEvent events.SNSEvent) error {
 		switch model.Type {
 		case "UserUpdatedProfile":
 			Write(model)
+		case "UserAuthenticated":
+			Write(model)
 		default:
 			log.Warnf("unrecognized message type: %s - unable to process message ", model.Type)
 		}
