@@ -116,36 +116,11 @@ export class MyApp {
         access: true,
         component: 'AllProjectsPage'
       },
-      // {
-      //   title: "Member Companies",
-      //   access: this.userRoles.isPmcUser,
-      //   component: "AllMembersPage"
-      // },
-      // {
-      //   title: "All Invoices Status",
-      //   access: this.userRoles.isPmcUser,
-      //   component: "AllInvoicesPage"
-      // },
-      // {
-      //   title: "All Projects Logos",
-      //   access: this.userRoles.isPmcUser,
-      //   component: "AllProjectsLogosPage"
-      // },
-      // {
-      //   title: "Activity Log",
-      //   access: this.userRoles.isAdmin,
-      //   component: "ActivityLogPage"
-      // },
       {
         title: 'Sign Out',
         access: true,
         component: 'LogoutPage'
-      },
-      // {
-      //   title: 'Sign In',
-      //   access: !this.userRoles.isAuthenticated,
-      //   component: 'LoginPage'
-      // }
+      }
     ];
   }
 }
