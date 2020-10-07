@@ -70,7 +70,7 @@ export class AuthService {
 
         // Logout the user and redirect to the login page
         this.logout();
-        window.open(EnvConfig['cla-landing-page'], '_self');
+        window.open(EnvConfig['landing-page'], '_self');
       }
     }, FIVE_MINUTES_MS);
   }
@@ -87,7 +87,7 @@ export class AuthService {
     localStorage.removeItem('userid');
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_name');
-    const redirectUri = EnvConfig['cla-landing-page'];
+    const redirectUri = EnvConfig['landing-page'];
     this.auth0.logout({
       returnTo: redirectUri
     });
