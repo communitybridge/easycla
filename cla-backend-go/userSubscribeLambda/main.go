@@ -138,7 +138,7 @@ func Write(user event.Event) {
 		return
 	}
 
-	log.Debugf("sfdcUserObject %+v", sfdcUserObject)
+	log.Debugf("Salesforce user-service object : %+v", sfdcUserObject)
 
 	if sfdcUserObject == nil {
 		log.Debugf("User-service model is nil so skipping user %s with SFID %s", *uc.Username, uc.UserID)
@@ -164,7 +164,7 @@ func Write(user event.Event) {
 		Emails:         emails,
 	}
 
-	log.Debugf("updateUserModel %+v", updateUserModel)
+	log.Debugf("Updating user in Dynamo DB : %+v", updateUserModel)
 
 	_, updateErr := usersRepo.Save(updateUserModel)
 	if updateErr != nil {
