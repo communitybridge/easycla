@@ -3,6 +3,7 @@
 
 import { Component } from '@angular/core';
 import { NavController, NavParams, IonicPage, ModalController } from 'ionic-angular';
+import { EnvConfig } from '../../services/cla.env.utils';
 import { ClaService } from '../../services/cla.service';
 
 @IonicPage({
@@ -17,7 +18,8 @@ export class AuthorityYesnoPage {
   expanded: boolean = true;
   company: any;
   project: any;
-
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'];
+  
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,

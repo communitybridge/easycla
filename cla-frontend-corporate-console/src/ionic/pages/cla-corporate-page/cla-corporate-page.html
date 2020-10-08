@@ -2,7 +2,7 @@
 <cla-header title="CLA - Corporate" (onToggle)="onClickToggle($event)"></cla-header>
 
 <ion-content>
-  <div class="page-content" [ngClass]="{'expanded':expanded}">
+  <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
     <header>
       <ion-grid>
         <ion-row>
