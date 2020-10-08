@@ -14,48 +14,34 @@ func IsUserAdmin(user *auth.User) bool {
 
 // IsUserAuthorizedForOrganization helper function for determining if the user is authorized for this company
 func IsUserAuthorizedForOrganization(user *auth.User, companySFID string) bool {
-	if !user.Admin {
-		if !user.Allowed || !user.IsUserAuthorizedForOrganizationScope(companySFID) {
-			return false
-		}
-	}
-	return true
+	// Previously, we checked for user.Admin - admins should be in a separate role
+	// Previously, we checked for user.Allowed, which is currently not used (future flag that is currently not implemented)
+	return user.IsUserAuthorizedForOrganizationScope(companySFID)
 }
 
 // IsUserAuthorizedForProject helper function for determining if the user is authorized for this project
 func IsUserAuthorizedForProject(user *auth.User, projectSFID string) bool {
-	if !user.Admin {
-		if !user.Allowed || !user.IsUserAuthorizedForProjectScope(projectSFID) {
-			return false
-		}
-	}
-	return true
+	// Previously, we checked for user.Admin - admins should be in a separate role
+	// Previously, we checked for user.Allowed, which is currently not used (future flag that is currently not implemented)
+	return user.IsUserAuthorizedForProjectScope(projectSFID)
 }
 
 // IsUserAuthorizedForProjectTree helper function for determining if the user is authorized for this project hierarchy/tree
 func IsUserAuthorizedForProjectTree(user *auth.User, projectSFID string) bool {
-	if !user.Admin {
-		if !user.Allowed || !user.IsUserAuthorized(auth.Project, projectSFID, true) {
-			return false
-		}
-	}
-	return true
+	// Previously, we checked for user.Admin - admins should be in a separate role
+	// Previously, we checked for user.Allowed, which is currently not used (future flag that is currently not implemented)
+	return user.IsUserAuthorized(auth.Project, projectSFID, true)
 }
 
 // IsUserAuthorizedForProjectOrganization helper function for determining if the user is authorized for this project organization scope
 func IsUserAuthorizedForProjectOrganization(user *auth.User, projectSFID, companySFID string) bool {
-	if !user.Allowed || !user.IsUserAuthorizedByProject(projectSFID, companySFID) {
-		return false
-	}
-	return true
+	// Previously, we checked for user.Allowed, which is currently not used (future flag that is currently not implemented)
+	return user.IsUserAuthorizedByProject(projectSFID, companySFID)
 }
 
 // IsUserAuthorizedForProjectOrganizationTree helper function for determining if the user is authorized for this project organization scope and nested projects/orgs
 func IsUserAuthorizedForProjectOrganizationTree(user *auth.User, projectSFID, companySFID string) bool {
-	if !user.Admin {
-		if !user.Allowed || !user.IsUserAuthorized(auth.ProjectOrganization, projectSFID+"|"+companySFID, true) {
-			return false
-		}
-	}
-	return true
+	// Previously, we checked for user.Admin - admins should be in a separate role
+	// Previously, we checked for user.Allowed, which is currently not used (future flag that is currently not implemented)
+	return user.IsUserAuthorized(auth.ProjectOrganization, projectSFID+"|"+companySFID, true)
 }
