@@ -75,8 +75,6 @@ func Handler(ctx context.Context, snsEvent events.SNSEvent) error {
 		switch model.Type {
 		case "UserUpdatedProfile":
 			Write(model)
-		case "UserAuthenticated":
-			Write(model)
 		default:
 			log.Warnf("unrecognized message type: %s - unable to process message ", model.Type)
 		}
@@ -97,6 +95,7 @@ func Write(user event.Event) {
 	var userDetails *models.User
 	var userErr error
 	var awsSession = session.Must(session.NewSession(&aws.Config{}))
+
 	stage := os.Getenv("STAGE")
 	if stage == "" {
 		log.Fatal("stage not set")
@@ -139,6 +138,8 @@ func Write(user event.Event) {
 		return
 	}
 
+	log.Debugf("Salesforce user-service object : %+v", sfdcUserObject)
+
 	if sfdcUserObject == nil {
 		log.Debugf("User-service model is nil so skipping user %s with SFID %s", *uc.Username, uc.UserID)
 		return
@@ -162,6 +163,8 @@ func Write(user event.Event) {
 		Username:       fmt.Sprintf("%s %s", sfdcUserObject.FirstName, sfdcUserObject.LastName),
 		Emails:         emails,
 	}
+
+	log.Debugf("Updating user in Dynamo DB : %+v", updateUserModel)
 
 	_, updateErr := usersRepo.Save(updateUserModel)
 	if updateErr != nil {
