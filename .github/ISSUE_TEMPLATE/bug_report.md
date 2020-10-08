@@ -31,10 +31,16 @@ If applicable, add screenshots to help explain your problem.
 
 Please complete the following information:
 
-* Environment: STAGING and PROD 
-* OS: \[e.g. iOS\]
-* Browser \[e.g. chrome, safari\]
-* Version \[e.g. 22\]
+* Environment:
+  - [ ] DEV
+  - [ ] STAGING
+  - [ ] PROD 
+* Browser:
+  - [ ] Chrome/Brave
+  - [ ] Firefox
+  - [ ] Edge
+  - [ ] Lynx
+* Version: v1.0.XX
 
 ## Additional Context
 
@@ -44,15 +50,8 @@ Add any other context about the problem here.
 
 If you are assuming certain facts or scenarios, list them so we have a baseline to understand your request.
 
-- [...] Assumption 1
-- [...] Assumption 2
-
-## Questions
-
-List any questions or clarifications that are needed to addressed to satisfy this request.
-
-1. [...] Question 1...
-1. [...] Question 2...
+- Assumption 1
+- Assumption 2
 
 ## Acceptance Criteria
 
@@ -64,5 +63,6 @@ The "done" criteria when this feature or problem is resolved. Such as:
 
 ## References
 
-\(Optional\) Provide any code or specification references that would be helpful for the developer implementing this feature.
+- Provide any code or specification references that would be helpful for the developer implementing this feature.
+
 
