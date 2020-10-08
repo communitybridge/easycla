@@ -71,7 +71,7 @@ export class AuthService {
         // Logout the user and redirect to the login page
         this.logout();
 
-        if (EnvConfig['lfx-header-enabled']) {
+        if (EnvConfig['lfx-header-enabled'] === "true") {
           window.open(EnvConfig['landing-page'], '_self');
         } else {
           this.app.getRootNav()
@@ -96,7 +96,7 @@ export class AuthService {
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_name');
 
-    if (EnvConfig['lfx-header-enabled']) {
+    if (EnvConfig['lfx-header-enabled'] === "true") {
       redirectUri = EnvConfig['landing-page'];
     } else {
       redirectUri = EnvConfig['corp-console-link'] + '/#/login';

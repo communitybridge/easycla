@@ -1,22 +1,30 @@
 cla-corporate-page {
   .page-content {
-    min-height: calc(100vh - 239px);
+    min-height: calc(100vh - 335px);
     margin-top: 25px;
     transition: margin 0.3s;
-    
+
     &.expanded {
-      min-height: calc(100vh - 314px);
+      min-height: calc(100vh - 414px);
       margin-top: 100px;
     }
 
     &.without-lfx-header {
       margin-top: 50px;
-      min-height: calc(100vh - 268px) !important;
+      min-height: calc(100vh - 364px) !important;
     }
 
     @media (min-width: 768px) and (max-width: 1200px) {
       padding: 16px 50px 162px;
     }
+  }
+  
+  .pl-45 {
+    padding-left: 45px;
+  }
+
+  .scroll-content {
+    margin-top: 96px !important;
   }
 
   a {

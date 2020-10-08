@@ -27,7 +27,7 @@ export function Restricted(restrictions: any) {
             return true;
           } else {
             // No access
-            if (EnvConfig['lfx-header-enabled']) {
+            if (EnvConfig['lfx-header-enabled'] === "true") {
               window.open(EnvConfig['landing-page'], '_self');
             } else {
               window.location.hash = '#/login';

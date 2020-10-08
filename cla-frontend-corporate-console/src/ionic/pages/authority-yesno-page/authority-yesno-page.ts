@@ -18,8 +18,8 @@ export class AuthorityYesnoPage {
   expanded: boolean = true;
   company: any;
   project: any;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'];
-  
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -62,10 +62,6 @@ export class AuthorityYesnoPage {
       companyName: this.company.company_name
     });
     modal.present();
-  }
-
-  back() {
-    this.navCtrl.pop();
   }
 
   onClickToggle(hasExpanded) {
