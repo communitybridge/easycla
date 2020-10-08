@@ -3,10 +3,15 @@ authority-yesno-page {
     min-height: calc(100vh - 335px);
     margin-top: 25px;
     transition: margin 0.3s;
-    
+
     &.expanded {
-      min-height: calc(100vh - 410px);
+      min-height: calc(100vh - 414px);
       margin-top: 100px;
+    }
+
+    &.without-lfx-header {
+      margin-top: 50px;
+      min-height: calc(100vh - 364px) !important;
     }
 
     @media (min-width: 768px) and (max-width: 1200px) {
@@ -16,6 +21,10 @@ authority-yesno-page {
 
   .scroll-content {
     margin-top: 96px !important;
+  }
+
+  .pl-45 {
+    padding-left: 45px;
   }
 
   .back-btn {
