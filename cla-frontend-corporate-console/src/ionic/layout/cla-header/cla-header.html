@@ -1,11 +1,15 @@
-<lfx-header product="LF CLA" id="lfx-header" docslink="https://docs.linuxfoundation.org/docs/communitybridge/easycla"
-  [expanded]="hasExpanded" (toggled)="onToggled()"></lfx-header>
+<lfx-header *ngIf="hasEnabledLFXHeader" product="LF CLA" id="lfx-header"
+  docslink="https://docs.linuxfoundation.org/docs/communitybridge/easycla" [expanded]="hasExpanded"
+  (toggled)="onToggled()">
+</lfx-header>
 
-<ion-header class="cla-header" [ngClass]="{'expanded':hasExpanded}">
-  <ion-navbar >
+<ion-header class="cla-header" [ngClass]="{'without-lfx-header': !hasEnabledLFXHeader,'expanded':hasExpanded}">
+  <ion-navbar [ngClass]="{'with-lfx-header': hasEnabledLFXHeader}">
     <button *ngIf="hasShowMenu" ion-button menuToggle>
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>{{title}}</ion-title>
+    <img *ngIf="!hasEnabledLFXHeader" class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-navbar>
+  <get-help *ngIf="!hasEnabledLFXHeader"></get-help>
 </ion-header>
