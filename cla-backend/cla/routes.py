@@ -36,6 +36,18 @@ from cla.controllers.project_cla_group import get_project_cla_group
 # Middleware
 #
 
+@hug.request_middleware()
+def process_data(request, response):
+    """
+    This middleware is needed here to copy the stream so we can re-read it
+    later on in the other handlers, currently only active on /github/activity
+    endpoint because it's an expensive operation.
+    """
+    if "/github/activity" in request.path:
+        body = request.bounded_stream.read()
+        request.bounded_stream.read = lambda: body
+
+
 # CORS Middleware
 @hug.response_middleware()
 def process_data(request, response, resource):
@@ -133,14 +145,14 @@ def get_users_company(auth_user: check_auth, user_company_id: hug.types.uuid):
 
 @hug.post("/user/{user_id}/request-company-whitelist/{company_id}", versions=2)
 def request_company_whitelist(
-    user_id: hug.types.uuid,
-    company_id: hug.types.uuid,
-    user_name: hug.types.text,
-    user_email: cla.hug_types.email,
-    project_id: hug.types.uuid,
-    message=None,
-    recipient_name: hug.types.text = None,
-    recipient_email: cla.hug_types.email = None,
+        user_id: hug.types.uuid,
+        company_id: hug.types.uuid,
+        user_name: hug.types.text,
+        user_email: cla.hug_types.email,
+        project_id: hug.types.uuid,
+        message=None,
+        recipient_name: hug.types.text = None,
+        recipient_email: cla.hug_types.email = None,
 ):
     """
     POST: /user/{user_id}/request-company-whitelist/{company_id}
@@ -158,13 +170,13 @@ def request_company_whitelist(
 
 @hug.post("/user/{user_id}/invite-company-admin", versions=2)
 def invite_company_admin(
-    user_id: hug.types.uuid,
-    contributor_name: hug.types.text,
-    contributor_email: cla.hug_types.email,
-    cla_manager_name: hug.types.text,
-    cla_manager_email: cla.hug_types.email,
-    project_name: hug.types.text,
-    company_name: hug.types.text,
+        user_id: hug.types.uuid,
+        contributor_name: hug.types.text,
+        contributor_email: cla.hug_types.email,
+        cla_manager_name: hug.types.text,
+        cla_manager_email: cla.hug_types.email,
+        project_name: hug.types.text,
+        company_name: hug.types.text,
 ):
     """
     POST: /user/{user_id}/invite-company-admin
@@ -189,7 +201,8 @@ def invite_company_admin(
 
 @hug.post("/user/{user_id}/request-company-ccla", versions=2)
 def request_company_ccla(
-    user_id: hug.types.uuid, user_email: cla.hug_types.email, company_id: hug.types.uuid, project_id: hug.types.uuid,
+        user_id: hug.types.uuid, user_email: cla.hug_types.email, company_id: hug.types.uuid,
+        project_id: hug.types.uuid,
 ):
     """
     POST: /user/{user_id}/request_company_ccla
@@ -240,7 +253,7 @@ def get_user_project_last_signature(user_id: hug.types.uuid, project_id: hug.typ
 
 @hug.get("/user/{user_id}/project/{project_id}/last-signature/{company_id}", versions=1)
 def get_user_project_company_last_signature(
-    user_id: hug.types.uuid, project_id: hug.types.uuid, company_id: hug.types.uuid
+        user_id: hug.types.uuid, project_id: hug.types.uuid, company_id: hug.types.uuid
 ):
     """
     GET: /user/{user_id}/project/{project_id}/last-signature/{company_id}
@@ -271,16 +284,16 @@ def get_signature(auth_user: check_auth, signature_id: hug.types.uuid):
                         'signature_reference_type': 'individual'}",
 )
 def post_signature(
-    auth_user: check_auth,  # pylint: disable=too-many-arguments
-    signature_project_id: hug.types.uuid,
-    signature_reference_id: hug.types.text,
-    signature_reference_type: hug.types.one_of(["company", "user"]),
-    signature_type: hug.types.one_of(["cla", "dco"]),
-    signature_signed: hug.types.smart_boolean,
-    signature_approved: hug.types.smart_boolean,
-    signature_return_url: cla.hug_types.url,
-    signature_sign_url: cla.hug_types.url,
-    signature_user_ccla_company_id=None,
+        auth_user: check_auth,  # pylint: disable=too-many-arguments
+        signature_project_id: hug.types.uuid,
+        signature_reference_id: hug.types.text,
+        signature_reference_type: hug.types.one_of(["company", "user"]),
+        signature_type: hug.types.one_of(["cla", "dco"]),
+        signature_signed: hug.types.smart_boolean,
+        signature_approved: hug.types.smart_boolean,
+        signature_return_url: cla.hug_types.url,
+        signature_sign_url: cla.hug_types.url,
+        signature_user_ccla_company_id=None,
 ):
     """
     POST: /signature
@@ -320,20 +333,20 @@ def post_signature(
                        'signature_type': 'cla', 'signature_signed': true}",
 )
 def put_signature(
-    auth_user: check_auth,  # pylint: disable=too-many-arguments
-    signature_id: hug.types.uuid,
-    signature_project_id=None,
-    signature_reference_id=None,
-    signature_reference_type=None,
-    signature_type=None,
-    signature_signed=None,
-    signature_approved=None,
-    signature_return_url=None,
-    signature_sign_url=None,
-    domain_whitelist=None,
-    email_whitelist=None,
-    github_whitelist=None,
-    github_org_whitelist=None,
+        auth_user: check_auth,  # pylint: disable=too-many-arguments
+        signature_id: hug.types.uuid,
+        signature_project_id=None,
+        signature_reference_id=None,
+        signature_reference_type=None,
+        signature_type=None,
+        signature_signed=None,
+        signature_approved=None,
+        signature_return_url=None,
+        signature_sign_url=None,
+        domain_whitelist=None,
+        email_whitelist=None,
+        github_whitelist=None,
+        github_org_whitelist=None,
 ):
     """
     PUT: /signature
@@ -396,10 +409,10 @@ def get_signatures_user_project(auth_user: check_auth, user_id: hug.types.uuid, 
 
 @hug.get("/signatures/user/{user_id}/project/{project_id}/type/{signature_type}", versions=1)
 def get_signatures_user_project(
-    auth_user: check_auth,
-    user_id: hug.types.uuid,
-    project_id: hug.types.uuid,
-    signature_type: hug.types.one_of(["individual", "employee"]),
+        auth_user: check_auth,
+        user_id: hug.types.uuid,
+        project_id: hug.types.uuid,
+        signature_type: hug.types.one_of(["individual", "employee"]),
 ):
     """
     GET: /signatures/user/{user_id}/project/{project_id}/type/[individual|corporate|employee]
@@ -500,13 +513,13 @@ def get_repository(auth_user: check_auth, repository_id: hug.types.text):
                         'repository_url': 'http://url-to-repo.com'}",
 )
 def post_repository(
-    auth_user: check_auth,  # pylint: disable=too-many-arguments
-    repository_project_id: hug.types.uuid,
-    repository_name: hug.types.text,
-    repository_organization_name: hug.types.text,
-    repository_type: hug.types.one_of(get_supported_repository_providers().keys()),
-    repository_url: cla.hug_types.url,
-    repository_external_id=None,
+        auth_user: check_auth,  # pylint: disable=too-many-arguments
+        repository_project_id: hug.types.uuid,
+        repository_name: hug.types.text,
+        repository_organization_name: hug.types.text,
+        repository_type: hug.types.one_of(get_supported_repository_providers().keys()),
+        repository_url: cla.hug_types.url,
+        repository_external_id=None,
 ):
     """
     POST: /repository
@@ -541,13 +554,13 @@ def post_repository(
                        'repository_id': 'http://new-url-to-repository.com'}",
 )
 def put_repository(
-    auth_user: check_auth,  # pylint: disable=too-many-arguments
-    repository_id: hug.types.text,
-    repository_project_id=None,
-    repository_name=None,
-    repository_type=None,
-    repository_url=None,
-    repository_external_id=None,
+        auth_user: check_auth,  # pylint: disable=too-many-arguments
+        repository_id: hug.types.text,
+        repository_project_id=None,
+        repository_name=None,
+        repository_type=None,
+        repository_url=None,
+        repository_external_id=None,
 ):
     """
     PUT: /repository
@@ -629,12 +642,12 @@ def get_unsigned_projects_for_company(company_id: hug.types.text):
                         'company_manager_id': 'user-id'}",
 )
 def post_company(
-    auth_user: check_auth,
-    company_name: hug.types.text,
-    company_manager_user_name=None,
-    company_manager_user_email=None,
-    company_manager_id=None,
-    response=None
+        auth_user: check_auth,
+        company_name: hug.types.text,
+        company_manager_user_name=None,
+        company_manager_user_email=None,
+        company_manager_id=None,
+        response=None
 ):
     """
     POST: /company
@@ -666,10 +679,10 @@ def post_company(
                        'company_name': 'New Company Name'}",
 )
 def put_company(
-    auth_user: check_auth,  # pylint: disable=too-many-arguments
-    company_id: hug.types.uuid,
-    company_name=None,
-    company_manager_id=None,
+        auth_user: check_auth,  # pylint: disable=too-many-arguments
+        company_id: hug.types.uuid,
+        company_name=None,
+        company_manager_id=None,
 ):
     """
     PUT: /company
@@ -809,12 +822,12 @@ def get_external_project(auth_user: check_auth, project_external_id: hug.types.t
 
 @hug.post("/project", versions=1, examples=" - {'project_name': 'Project Name'}")
 def post_project(
-    auth_user: check_auth,
-    project_external_id: hug.types.text,
-    project_name: hug.types.text,
-    project_icla_enabled: hug.types.boolean,
-    project_ccla_enabled: hug.types.boolean,
-    project_ccla_requires_icla_signature: hug.types.boolean,
+        auth_user: check_auth,
+        project_external_id: hug.types.text,
+        project_name: hug.types.text,
+        project_icla_enabled: hug.types.boolean,
+        project_ccla_enabled: hug.types.boolean,
+        project_ccla_requires_icla_signature: hug.types.boolean,
 ):
     """
     POST: /project
@@ -844,12 +857,12 @@ def post_project(
                        'project_name': 'New Project Name'}",
 )
 def put_project(
-    auth_user: check_auth,
-    project_id: hug.types.uuid,
-    project_name=None,
-    project_icla_enabled=None,
-    project_ccla_enabled=None,
-    project_ccla_requires_icla_signature=None,
+        auth_user: check_auth,
+        project_id: hug.types.uuid,
+        project_name=None,
+        project_icla_enabled=None,
+        project_ccla_enabled=None,
+        project_ccla_requires_icla_signature=None,
 ):
     """
     PUT: /project
@@ -914,7 +927,7 @@ def get_project_configuration_orgs_and_repos(auth_user: check_auth, project_id: 
 
 @hug.get("/project/{project_id}/document/{document_type}", versions=2)
 def get_project_document(
-    project_id: hug.types.uuid, document_type: hug.types.one_of(["individual", "corporate"]),
+        project_id: hug.types.uuid, document_type: hug.types.one_of(["individual", "corporate"]),
 ):
     """
     GET: /project/{project_id}/document/{document_type}
@@ -926,10 +939,10 @@ def get_project_document(
 
 @hug.get("/project/{project_id}/document/{document_type}/pdf", version=2)
 def get_project_document_raw(
-    response,
-    auth_user: check_auth,
-    project_id: hug.types.uuid,
-    document_type: hug.types.one_of(["individual", "corporate"]),
+        response,
+        auth_user: check_auth,
+        project_id: hug.types.uuid,
+        document_type: hug.types.one_of(["individual", "corporate"]),
 ):
     """
     GET: /project/{project_id}/document/{document_type}/pdf
@@ -944,12 +957,12 @@ def get_project_document_raw(
     "/project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}", version=1,
 )
 def get_project_document_matching_version(
-    response,
-    auth_user: check_auth,
-    project_id: hug.types.uuid,
-    document_type: hug.types.one_of(["individual", "corporate"]),
-    document_major_version: hug.types.number,
-    document_minor_version: hug.types.number,
+        response,
+        auth_user: check_auth,
+        project_id: hug.types.uuid,
+        document_type: hug.types.one_of(["individual", "corporate"]),
+        document_major_version: hug.types.number,
+        document_minor_version: hug.types.number,
 ):
     """
     GET: /project/{project_id}/document/{document_type}/pdf/{document_major_version}/{document_minor_version}
@@ -984,15 +997,15 @@ s
                         'new_major_version': true}",
 )
 def post_project_document(
-    auth_user: check_auth,
-    project_id: hug.types.uuid,
-    document_type: hug.types.one_of(["individual", "corporate"]),
-    document_name: hug.types.text,
-    document_content_type: hug.types.one_of(get_supported_document_content_types()),
-    document_content: hug.types.text,
-    document_preamble=None,
-    document_legal_entity_name=None,
-    new_major_version=None,
+        auth_user: check_auth,
+        project_id: hug.types.uuid,
+        document_type: hug.types.one_of(["individual", "corporate"]),
+        document_name: hug.types.text,
+        document_content_type: hug.types.one_of(get_supported_document_content_types()),
+        document_content: hug.types.text,
+        document_preamble=None,
+        document_legal_entity_name=None,
+        new_major_version=None,
 ):
     """
     POST: /project/{project_id}/document/{document_type}
@@ -1036,24 +1049,24 @@ def post_project_document(
                         'new_major_version': true}",
 )
 def post_project_document_template(
-    auth_user: check_auth,
-    project_id: hug.types.uuid,
-    document_type: hug.types.one_of(["individual", "corporate"]),
-    document_name: hug.types.text,
-    document_preamble: hug.types.text,
-    document_legal_entity_name: hug.types.text,
-    template_name: hug.types.one_of(
-        [
-            "CNCFTemplate",
-            "OpenBMCTemplate",
-            "TungstenFabricTemplate",
-            "OpenColorIOTemplate",
-            "OpenVDBTemplate",
-            "ONAPTemplate",
-            "TektonTemplate",
-        ]
-    ),
-    new_major_version=None,
+        auth_user: check_auth,
+        project_id: hug.types.uuid,
+        document_type: hug.types.one_of(["individual", "corporate"]),
+        document_name: hug.types.text,
+        document_preamble: hug.types.text,
+        document_legal_entity_name: hug.types.text,
+        template_name: hug.types.one_of(
+            [
+                "CNCFTemplate",
+                "OpenBMCTemplate",
+                "TungstenFabricTemplate",
+                "OpenColorIOTemplate",
+                "OpenVDBTemplate",
+                "ONAPTemplate",
+                "TektonTemplate",
+            ]
+        ),
+        new_major_version=None,
 ):
     """
     POST: /project/{project_id}/document/template/{document_type}
@@ -1089,11 +1102,11 @@ def post_project_document_template(
     "/project/{project_id}/document/{document_type}/{major_version}/{minor_version}", versions=1,
 )
 def delete_project_document(
-    auth_user: check_auth,
-    project_id: hug.types.uuid,
-    document_type: hug.types.one_of(["individual", "corporate"]),
-    major_version: hug.types.number,
-    minor_version: hug.types.number,
+        auth_user: check_auth,
+        project_id: hug.types.uuid,
+        document_type: hug.types.one_of(["individual", "corporate"]),
+        major_version: hug.types.number,
+        minor_version: hug.types.number,
 ):
     #     """
     #     DELETE: /project/{project_id}/document/{document_type}/{revision}
@@ -1116,7 +1129,7 @@ def delete_project_document(
                         'user_id': 'some-user-uuid'}",
 )
 def request_individual_signature(
-    project_id: hug.types.uuid, user_id: hug.types.uuid, return_url_type=None, return_url=None,
+        project_id: hug.types.uuid, user_id: hug.types.uuid, return_url_type=None, return_url=None,
 ):
     """
     POST: /request-individual-signature
@@ -1149,14 +1162,14 @@ def request_individual_signature(
                         'company_id': 'some-company-uuid'}",
 )
 def request_corporate_signature(
-    auth_user: check_auth,
-    project_id: hug.types.uuid,
-    company_id: hug.types.uuid,
-    send_as_email=False,
-    authority_name=None,
-    authority_email=None,
-    return_url_type=None,
-    return_url=None,
+        auth_user: check_auth,
+        project_id: hug.types.uuid,
+        company_id: hug.types.uuid,
+        send_as_email=False,
+        authority_name=None,
+        authority_email=None,
+        return_url_type=None,
+        return_url=None,
 ):
     """
     POST: /request-corporate-signature
@@ -1193,11 +1206,11 @@ def request_corporate_signature(
 
 @hug.post("/request-employee-signature", versions=2)
 def request_employee_signature(
-    project_id: hug.types.uuid,
-    company_id: hug.types.uuid,
-    user_id: hug.types.uuid,
-    return_url_type: hug.types.text,
-    return_url=None,
+        project_id: hug.types.uuid,
+        company_id: hug.types.uuid,
+        user_id: hug.types.uuid,
+        return_url_type: hug.types.text,
+        return_url=None,
 ):
     """
     POST: /request-employee-signature
@@ -1219,7 +1232,7 @@ def request_employee_signature(
 
 @hug.post("/check-prepare-employee-signature", versions=2)
 def check_and_prepare_employee_signature(
-    project_id: hug.types.uuid, company_id: hug.types.uuid, user_id: hug.types.uuid
+        project_id: hug.types.uuid, company_id: hug.types.uuid, user_id: hug.types.uuid
 ):
     """
     POST: /check-prepare-employee-signature
@@ -1238,10 +1251,10 @@ def check_and_prepare_employee_signature(
     "/signed/individual/{installation_id}/{github_repository_id}/{change_request_id}", versions=2,
 )
 def post_individual_signed(
-    body,
-    installation_id: hug.types.number,
-    github_repository_id: hug.types.number,
-    change_request_id: hug.types.number,
+        body,
+        installation_id: hug.types.number,
+        github_repository_id: hug.types.number,
+        change_request_id: hug.types.number,
 ):
     """
     POST: /signed/individual/{installation_id}/{github_repository_id}/{change_request_id}
@@ -1298,11 +1311,11 @@ def get_return_url(signature_id: hug.types.uuid, event=None):
 
 @hug.post("/send-authority-email", versions=2)
 def send_authority_email(
-    auth_user: check_auth,
-    company_name: hug.types.text,
-    project_name: hug.types.text,
-    authority_name: hug.types.text,
-    authority_email: cla.hug_types.email,
+        auth_user: check_auth,
+        company_name: hug.types.text,
+        project_name: hug.types.text,
+        authority_name: hug.types.text,
+        authority_email: cla.hug_types.email,
 ):
     """
     POST: /send-authority-email
@@ -1324,11 +1337,11 @@ def send_authority_email(
     "/repository-provider/{provider}/sign/{installation_id}/{github_repository_id}/{change_request_id}", versions=2,
 )
 def sign_request(
-    provider: hug.types.one_of(get_supported_repository_providers().keys()),
-    installation_id: hug.types.text,
-    github_repository_id: hug.types.text,
-    change_request_id: hug.types.text,
-    request,
+        provider: hug.types.one_of(get_supported_repository_providers().keys()),
+        installation_id: hug.types.text,
+        github_repository_id: hug.types.text,
+        change_request_id: hug.types.text,
+        request,
 ):
     """
     GET: /repository-provider/{provider}/sign/{installation_id}/{repository_id}/{change_request_id}
@@ -1344,13 +1357,13 @@ def sign_request(
 
 @hug.get("/repository-provider/{provider}/oauth2_redirect", versions=2)
 def oauth2_redirect(
-    auth_user: check_auth,  # pylint: disable=too-many-arguments
-    provider: hug.types.one_of(get_supported_repository_providers().keys()),
-    state: hug.types.text,
-    code: hug.types.text,
-    repository_id: hug.types.text,
-    change_request_id: hug.types.text,
-    request=None,
+        auth_user: check_auth,  # pylint: disable=too-many-arguments
+        provider: hug.types.one_of(get_supported_repository_providers().keys()),
+        state: hug.types.text,
+        code: hug.types.text,
+        repository_id: hug.types.text,
+        change_request_id: hug.types.text,
+        request=None,
 ):
     """
     GET: /repository-provider/{provider}/oauth2_redirect
@@ -1427,9 +1440,9 @@ def get_github_organization_by_sfid(auth_user: check_auth, sfid: hug.types.text)
                         'organization_name': 'org-name'}",
 )
 def post_github_organization(
-    auth_user: check_auth,  # pylint: disable=too-many-arguments
-    organization_name: hug.types.text,
-    organization_sfid: hug.types.text,
+        auth_user: check_auth,  # pylint: disable=too-many-arguments
+        organization_name: hug.types.text,
+        organization_sfid: hug.types.text,
 ):
     """
     POST: /github/organizations
@@ -1489,18 +1502,22 @@ def github_app_activity(body, request, response):
     Acts upon any events triggered by our app installed in someone's organization.
     """
     # Verify that Webhook Signature is valid
-    # valid_request = cla.controllers.github.webhook_secret_validation(request.headers.get('X-HUB-SIGNATURE'), request.stream.read())
-    # cla.log.info(valid_request)
-    # if valid_request:
     event_type = request.headers.get('X-GITHUB-EVENT')
+    valid_request = cla.controllers.github.webhook_secret_validation(request.headers.get('X-HUB-SIGNATURE'),
+                                                                     request.bounded_stream.read())
+    if not valid_request:
+        cla.log.error("/github/activity webhook secret validation failed, sending email")
+        cla.controllers.github.webhook_secret_failed_email(event_type, body, cla.config.PLATFORM_MAINTAINERS)
+        response.status = HTTP_401
+        return {'status': "Invalid Secret Token"}
+
+    cla.log.debug("the webhook secret validation passed")
+
     if event_type is None:
         response.status = HTTP_400
         return {'status': 'Invalid request'}
 
     return cla.controllers.github.activity(event_type, body)
-    # else:
-    #     response.status = HTTP_403
-    #     return {'status': 'Not Authorized'}
 
 
 @hug.post("/github/validate", versions=1)
@@ -1558,11 +1575,11 @@ def get_gerrit_instance(gerrit_id: hug.types.uuid):
 
 @hug.post("/gerrit", versions=1)
 def create_gerrit_instance(
-    project_id: hug.types.uuid,
-    gerrit_name: hug.types.text,
-    gerrit_url: cla.hug_types.url,
-    group_id_icla=None,
-    group_id_ccla=None,
+        project_id: hug.types.uuid,
+        gerrit_name: hug.types.text,
+        gerrit_url: cla.hug_types.url,
+        group_id_icla=None,
+        group_id_ccla=None,
 ):
     """
     POST: /gerrit
@@ -1637,12 +1654,12 @@ def get_event(event_id: hug.types.text, response):
 
 @hug.post("/events", versions=1)
 def create_event(
-    event_data: hug.types.text,
-    event_type: hug.types.text = None,
-    user_id: hug.types.text = None,
-    event_project_id: hug.types.text = None,
-    event_company_id: hug.types.text = None,
-    response=None,
+        event_data: hug.types.text,
+        event_type: hug.types.text = None,
+        user_id: hug.types.text = None,
+        event_project_id: hug.types.text = None,
+        event_company_id: hug.types.text = None,
+        response=None,
 ):
     return cla.controllers.event.create_event(
         response=response,

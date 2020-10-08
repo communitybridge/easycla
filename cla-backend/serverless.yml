@@ -220,6 +220,7 @@ provider:
     GH_OAUTH_CLIENT_ID: ${file(./env.json):gh-oauth-client-id, ssm:/cla-gh-oauth-client-id-${opt:stage}~true}
     GH_OAUTH_SECRET: ${file(./env.json):gh-oauth-secret, ssm:/cla-gh-oauth-secret-${opt:stage}~true}
     GITHUB_OAUTH_TOKEN: ${file(./env.json):gh-access-token, ssm:/cla-gh-access-token-${opt:stage}~true}
+    GITHUB_APP_WEBHOOK_SECRET: ${file(./env.json):gh-app-webhook-secret, ssm:/cla-gh-app-webhook-secret-${opt:stage}~true}
     GH_STATUS_CTX_NAME: "EasyCLA"
     AUTH0_DOMAIN: ${file(./env.json):auth0-domain, ssm:/cla-auth0-domain-${opt:stage}~true}
     AUTH0_CLIENT_ID: ${file(./env.json):auth0-clientId, ssm:/cla-auth0-clientId-${opt:stage}~true}

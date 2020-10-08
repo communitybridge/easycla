@@ -1,7 +1,11 @@
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
 
+import unittest
+from cla.controllers.github import webhook_secret_validation, webhook_secret_failed_email, \
+    webhook_secret_failed_email_content
 from cla.utils import get_comment_badge, get_comment_body
+import cla
 
 SUCCESS = ":white_check_mark:"
 FAILED = ":x:"
@@ -127,3 +131,61 @@ def test_comment_badge_with_missing_whitelisted_user():
     confirmation_needed_badge = "cla-confirmation-needed.png"
     response = get_comment_badge("github", False, SIGN_URL, missing_user_id=False, is_approved_by_manager=True)
     assert confirmation_needed_badge in response
+
+
+class TestWebhookSecretValidation(unittest.TestCase):
+    def setUp(self) -> None:
+        self.old_email = cla.config.EMAIL_SERVICE
+        self.oldval = cla.config.GITHUB_APP_WEBHOOK_SECRET
+
+    def tearDown(self) -> None:
+        cla.config.GITHUB_APP_WEBHOOK_SECRET = self.oldval
+        cla.config.EMAIL_SERVICE = self.oldval
+
+    def test_webhook_secret_validation_empty(self):
+        """
+        Tests the webhook_secret_validation method
+        """
+        cla.config.GITHUB_APP_WEBHOOK_SECRET = ""
+        with self.assertRaises(RuntimeError) as ex:
+            _ = webhook_secret_validation("secret", b'')
+
+    def test_webhook_secret_validation_failed(self):
+        """
+        Tests the webhook_secret_validation method
+        """
+        cla.config.GITHUB_APP_WEBHOOK_SECRET = "secret"
+        assert not webhook_secret_validation("sha1=secret", ''.encode())
+
+    def test_webhook_secret_validation_success(self):
+        """
+        Tests the webhook_secret_validation method
+        """
+        cla.config.GITHUB_APP_WEBHOOK_SECRET = "secret"
+        input_data = 'data'.encode('utf-8')
+        assert webhook_secret_validation("sha1=9818e3306ba5ac267b5f2679fe4abd37e6cd7b54", input_data)
+
+    def test_webhook_secret_failed_email(self):
+        """
+        Tests the email sending of the failed webhook
+        :return:
+        """
+        with self.assertRaises(RuntimeError) as ex:
+            webhook_secret_failed_email_content("repositories", {}, [])
+
+        s, b, m = webhook_secret_failed_email_content("repositories", {}, ["john@gmail.com"])
+        assert s
+        assert "Hello EasyCLA Maintainer" in b
+        assert m == ["john@gmail.com"]
+
+        s, b, m = webhook_secret_failed_email_content("repositories", {
+            "sender": {"login": "john"},
+            "repository": {"id": "123", "full_name": "github.com/penguin/activity"},
+            "installation": {"id": 345}
+        }, ["john@gmail.com"])
+        assert s
+        assert "event type: repositories" in b
+        assert "user login: john" in b
+        assert "repository_id: 123" in b
+        assert "installation_id: 345" in b
+        assert m == ["john@gmail.com"]
