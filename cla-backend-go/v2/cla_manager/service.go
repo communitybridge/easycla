@@ -415,7 +415,7 @@ func (s *service) DeleteCLAManager(ctx context.Context, claGroupID string, param
 
 	acsClient := v2AcsService.GetClient()
 
-	roleID, roleErr := acsClient.GetRoleID("cla-manager")
+	roleID, roleErr := acsClient.GetRoleID(utils.CLAManagerRole)
 	if roleErr != nil {
 		msg := buildErrorMessageDelete(params, roleErr)
 		log.WithFields(f).Warn(msg)
@@ -439,8 +439,21 @@ func (s *service) DeleteCLAManager(ctx context.Context, claGroupID string, param
 
 	orgClient := v2OrgService.GetClient()
 
-	for _, projectCG := range projectCLAGroups {
-		scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, projectCG.ProjectSFID, "cla-manager", "project|organization", params.UserLFID)
+	// Check if Project is signed at Foundation or Project Level
+	foundationSFID := projectCLAGroups[0].FoundationSFID
+	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, foundationSFID)
+
+	if signedErr != nil {
+		msg := buildErrorMessageDelete(params, signedErr)
+		log.WithFields(f).Warn(msg)
+		return &models.ErrorResponse{
+			Message: msg,
+			Code:    "400",
+		}
+	}
+
+	if signedAtFoundation {
+		scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, foundationSFID, utils.CLAManagerRole, utils.ProjectOrgScope, params.UserLFID)
 		if scopeErr != nil {
 			msg := buildErrorMessageDelete(params, scopeErr)
 			log.WithFields(f).Warn(msg)
@@ -461,6 +474,47 @@ func (s *service) DeleteCLAManager(ctx context.Context, claGroupID string, param
 		deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(params.CompanySFID, roleID, scopeID, &user.Username, &email)
 		if deleteErr != nil {
 			msg := buildErrorMessageDelete(params, deleteErr)
+			log.WithFields(f).Warn(msg)
+			return &models.ErrorResponse{
+				Message: msg,
+				Code:    "400",
+			}
+		}
+	} else {
+		projectSFIDList := utils.NewStringSet()
+		for _, p := range projectCLAGroups {
+			projectSFIDList.Add(p.ProjectSFID)
+		}
+		var eg errgroup.Group
+		// remove user as cla-manager for all projects of cla-group
+		for _, projectSFID := range projectSFIDList.List() {
+			eg.Go(func() error {
+				scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, projectSFID, utils.CLAManagerRole, utils.ProjectOrgScope, params.UserLFID)
+				if scopeErr != nil {
+					msg := buildErrorMessageDelete(params, scopeErr)
+					log.WithFields(f).Warn(msg)
+					return scopeErr
+				}
+				if scopeID == "" {
+					msg := buildErrorMessageDelete(params, ErrScopeNotFound)
+					log.WithFields(f).Warn(msg)
+					return ErrScopeNotFound
+				}
+				email := *user.Emails[0].EmailAddress
+				deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(params.CompanySFID, roleID, scopeID, &user.Username, &email)
+				if deleteErr != nil {
+					msg := buildErrorMessageDelete(params, deleteErr)
+					log.WithFields(f).Warn(msg)
+					return deleteErr
+				}
+				return nil
+			})
+		}
+
+		// Wait for the go routines to finish
+		log.WithFields(f).Debugf("waiting for delete role assignment to complete for %d projects...", len(projectSFIDList.List()))
+		if loadErr := eg.Wait(); loadErr != nil {
+			msg := buildErrorMessageDelete(params, loadErr)
 			log.WithFields(f).Warn(msg)
 			return &models.ErrorResponse{
 				Message: msg,
