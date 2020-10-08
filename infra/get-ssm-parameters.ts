@@ -62,6 +62,8 @@ const parameters = [
   `cla-lf-group-refresh-token-${program.stage}`,
   `cla-lf-group-client-url-${program.stage}`,
   `cla-sns-event-topic-arn-${program.stage}`,
+  `cla-lfx-header-${program.stage}`,
+  `cla-lfx-header-enabled-${program.stage}`,
   `docraptor-test-mode-${program.stage}`,
   `cla-lfx-portal-url-${program.stage}`
 ];
