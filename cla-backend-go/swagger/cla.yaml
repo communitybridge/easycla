@@ -2240,7 +2240,7 @@ paths:
         - $ref: "#/parameters/path-projectID"
         - $ref: "#/parameters/path-gerritID"
       responses:
-        '200':
+        '204':
           description: 'Success'
           headers:
             x-request-id:
