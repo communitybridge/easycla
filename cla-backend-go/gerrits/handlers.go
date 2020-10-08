@@ -60,7 +60,7 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 					GerritRepositoryName: gerrit.GerritName,
 				},
 			})
-			return gerrits.NewDeleteGerritOK().WithXRequestID(reqID)
+			return gerrits.NewDeleteGerritNoContent().WithXRequestID(reqID)
 		})
 
 	api.GerritsAddGerritHandler = gerrits.AddGerritHandlerFunc(
