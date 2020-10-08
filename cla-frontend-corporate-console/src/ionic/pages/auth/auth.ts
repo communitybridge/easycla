@@ -47,7 +47,7 @@ export class AuthPage {
   }
 
   redirectToLogin() {
-    if (EnvConfig['lfx-header-enabled']) {
+    if (EnvConfig['lfx-header-enabled'] === "true") {
       window.open(EnvConfig['landing-page'], '_self');
     } else {
       this.navCtrl.setRoot('LoginPage');

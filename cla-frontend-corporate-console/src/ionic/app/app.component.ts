@@ -49,7 +49,7 @@ export class MyApp {
     this.getDefaults();
     this.initializeApp();
 
-    if (EnvConfig['lfx-header-enabled']) {
+    if (EnvConfig['lfx-header-enabled'] === "true") {
       this.mounted();
     }
 
