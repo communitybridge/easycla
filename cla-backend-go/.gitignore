@@ -50,6 +50,7 @@ vendor
 .terraform
 
 .env
+.gobincache/
 
 # Ignore the generated folder
 gen/

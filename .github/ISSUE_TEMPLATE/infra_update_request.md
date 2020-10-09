@@ -1,18 +1,18 @@
 ---
-name: Feature Request
-about: Suggest an idea for this project
-title: ''
+name: Infrastructure Update Request
+about: Request infrastructure updates
+title: 'Infra: '
 labels: 'enhancement'
 assignees: ''
 ---
 
 ## Summary
 
-Describe the feature - a clear and concise description of what the feature is.
+Describe the request (one-liner) ...
 
 ## Background
 
-Provide context to the feature request - provide steps to indicate how this feature would be realized, such as:
+Provide context to the infra update request - provide steps to what is wrong or what needs to be updated...
 
 1. Go to '...'
 1. Click on '....'
@@ -22,6 +22,13 @@ Provide context to the feature request - provide steps to indicate how this feat
 ## User Story
 
 - As a project manager, I want to...
+
+## Assumptions
+
+If you are assuming certain facts or scenarios, list them so we have a baseline to understand your request.
+
+- [...] Assumption 1
+- [...] Assumption 2
 
 ## Acceptance Criteria
 

@@ -10,6 +10,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
 
@@ -67,11 +70,11 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 
 		// Must be in the Project|Organization Scope to see this
 		if !utils.IsUserAuthorizedForProjectOrganizationTree(authUser, params.ProjectSFID, params.CompanySFID) {
-			msg := fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to update Project Company Approval List with Project|Organization scope of %s | %s",
-				authUser.UserName, params.ProjectSFID, params.CompanySFID)
+			msg := fmt.Sprintf("%s - user %s does not have access to update Project Company Approval List with Project|Organization scope of %s | %s",
+				utils.EasyCLA403Forbidden, authUser.UserName, params.ProjectSFID, params.CompanySFID)
 			log.Warn(msg)
 			return signatures.NewUpdateApprovalListForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "403",
+				Code:    utils.String403,
 				Message: msg,
 			})
 		}
@@ -313,13 +316,18 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	api.SignaturesGetProjectCompanySignaturesHandler = signatures.GetProjectCompanySignaturesHandlerFunc(func(params signatures.GetProjectCompanySignaturesParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-		// Must be in the Organization Scope to see this
-		if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-			msg := fmt.Sprintf("EasyCLA - 403 Forbidden - user %s is not authorized to view project company signatures with Organization scope: %s",
-				authUser.UserName, params.CompanySFID)
+		// Must be in the one of the above scopes to see this
+		// - if project scope (like a PM)
+		// - if project|organization scope (like CLA Manager, CLA Signatory)
+		// - if organization scope (like company admin)
+		if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) &&
+			!utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) &&
+			!utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+			msg := fmt.Sprintf("%s - user %s is not authorized to view project company signatures any scope of project: %s, organization %s",
+				utils.EasyCLA403Forbidden, authUser.UserName, params.ProjectSFID, params.CompanySFID)
 			log.Warn(msg)
 			return signatures.NewGetProjectCompanySignaturesForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "403",
+				Code:    utils.String403,
 				Message: msg,
 			})
 		}
@@ -337,23 +345,84 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	api.SignaturesGetProjectCompanyEmployeeSignaturesHandler = signatures.GetProjectCompanyEmployeeSignaturesHandlerFunc(func(params signatures.GetProjectCompanyEmployeeSignaturesParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		f := logrus.Fields{
+			"functionName":   "SignaturesGetProjectCompanyEmployeeSignaturesHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"projectSFID":    params.ProjectSFID,
+			"companySFID":    params.CompanySFID,
+			"nextKey":        aws.StringValue(params.NextKey),
+			"pageSize":       aws.Int64Value(params.PageSize),
+		}
+
+		log.WithFields(f).Debug("checking access control permissions...")
+		if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) &&
+			!utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) &&
+			!utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+			msg := fmt.Sprintf("%s - user %s is not authorized to view project company signatures any scope of project: %s, organization %s",
+				utils.EasyCLA403Forbidden, authUser.UserName, params.ProjectSFID, params.CompanySFID)
+			log.Warn(msg)
+			return signatures.NewGetProjectCompanyEmployeeSignaturesForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				Code:    utils.String403,
+				Message: msg,
+			})
+		}
+
+		// Locate the CLA Group for the provided project SFID
+		projectCLAGroupModel, err := projectClaGroupsRepo.GetClaGroupIDForProject(params.ProjectSFID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warnf("problem loading project -> cla group mapping")
+			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequestWithError(
+				fmt.Sprintf("problem loading project -> cla group mapping using project id: %s", params.ProjectSFID), err))
+		}
+		if projectCLAGroupModel == nil {
+			log.WithFields(f).WithError(err).Warnf("problem loading project -> cla group mapping - no mapping found")
+			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequest(
+				fmt.Sprintf("unable to locate cla group for project ID: %s", params.ProjectSFID)))
+		}
+
+		// Lookup the internal company ID
+		companyModel, err := companyService.GetCompanyByExternalID(ctx, params.CompanySFID)
+		if err != nil {
+			var companyDoesNotExistErr utils.CompanyDoesNotExist
+			if errors.Is(err, &companyDoesNotExistErr) {
+				log.WithFields(f).WithError(err).Warnf("problem loading company by ID")
+				return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+					Code:    utils.String404,
+					Message: fmt.Sprintf("%s - problem loading company by ID: %s - error: %+v", utils.EasyCLA404NotFound, params.CompanySFID, err),
+				})
+			}
+			log.WithFields(f).WithError(err).Warnf("problem loading company by ID")
+			return signatures.NewGetProjectCompanyEmployeeSignaturesInternalServerError().WithXRequestID(reqID).WithPayload(utils.ErrorResponseInternalServerErrorWithError(
+				fmt.Sprintf("problem loading company by ID: %s", params.CompanySFID), err))
+		}
+		if companyModel == nil {
+			log.WithFields(f).WithError(err).Warnf("problem loading project -> cla group mapping - no mapping found")
+			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseNotFound(
+				fmt.Sprintf("unable to locate cla group for project ID: %s", params.ProjectSFID)))
+		}
+
 		projectSignatures, err := v1SignatureService.GetProjectCompanyEmployeeSignatures(ctx, v1Signatures.GetProjectCompanyEmployeeSignaturesParams{
 			HTTPRequest: params.HTTPRequest,
-			CompanyID:   params.CompanyID,
+			ProjectID:   projectCLAGroupModel.ClaGroupID, // cla group ID
+			CompanyID:   companyModel.CompanyID,          // internal company id
 			NextKey:     params.NextKey,
 			PageSize:    params.PageSize,
-			ProjectID:   params.ProjectID,
 		})
 		if err != nil {
-			log.Warnf("error retrieving employee project signatures for project: %s, company: %s, error: %+v",
-				params.ProjectID, params.CompanyID, err)
-			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			log.WithFields(f).WithError(err).Warnf("error retrieving employee project signatures for project: %s, company: %s, error: %+v",
+				params.ProjectSFID, params.CompanySFID, err)
+			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequestWithError(
+				fmt.Sprintf("unable to fetch employee signatures for project ID: %s and company: %s", params.ProjectSFID, params.CompanySFID), err))
 		}
 
 		resp, err := v2Signatures(projectSignatures)
 		if err != nil {
-			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID)
+			msg := fmt.Sprintf("error converting project company signatures for project: %s, company name: %s, companyID: %s, company external ID: %s",
+				params.ProjectSFID, companyModel.CompanyName, companyModel.CompanyID, companyModel.CompanyExternalID)
+			log.WithFields(f).WithError(err).Warn(msg)
+			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequestWithError(msg, err))
 		}
+
 		return signatures.NewGetProjectCompanyEmployeeSignaturesOK().WithXRequestID(reqID).WithPayload(resp)
 	})
 
@@ -362,23 +431,48 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanyID) {
-			msg := fmt.Sprintf("EasyCLA - 403 Forbidden - user %s is not authorized to view company signatures with Organization scope: %s",
-				authUser.UserName, params.CompanyID)
-			log.Warn(msg)
+		f := logrus.Fields{
+			"functionName":   "SignaturesGetCompanySignaturesHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"companySFID":    params.CompanySFID,
+			"companyName":    aws.StringValue(params.CompanyName),
+			"signatureType":  aws.StringValue(params.SignatureType),
+			"nextKey":        aws.StringValue(params.NextKey),
+			"pageSize":       aws.Int64Value(params.PageSize),
+		}
+
+		// Lookup the internal company ID
+		companyModel, err := companyService.GetCompanyByExternalID(ctx, params.CompanySFID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warnf("problem loading company by SFID - returning empty response")
+			// Not sure this is the correct response as the LFX UI/Admin console wants 200 empty lists instead of non-200 status back
+			return signatures.NewGetCompanySignaturesOK().WithXRequestID(reqID).WithPayload(&models.Signatures{
+				Signatures:  []*models.Signature{},
+				ResultCount: 0,
+				TotalCount:  0,
+			})
+		}
+		if companyModel == nil {
+			log.WithFields(f).WithError(err).Warnf("problem loading company model by ID - returning empty response")
+			// Not sure this is the correct response as the LFX UI/Admin console wants 200 empty lists instead of non-200 status back
+			return signatures.NewGetCompanySignaturesOK().WithXRequestID(reqID).WithPayload(&models.Signatures{
+				Signatures:  []*models.Signature{},
+				ResultCount: 0,
+				TotalCount:  0,
+			})
+		}
+
+		if !utils.IsUserAuthorizedForOrganization(authUser, companyModel.CompanyExternalID) {
+			msg := fmt.Sprintf("%s - user %s is not authorized to view company signatures with Organization scope: %s",
+				utils.EasyCLA403Forbidden, authUser.UserName, companyModel.CompanyExternalID)
+			log.WithFields(f).Warn(msg)
 			return signatures.NewGetProjectCompanySignaturesForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "403",
+				Code:    utils.String403,
 				Message: msg,
 			})
 		}
 
-		// Lookup the internal company ID when provided the external ID via the v1SignatureService call
-		companyModel, compErr := companyService.GetCompanyByExternalID(ctx, params.CompanyID)
-		if compErr != nil || companyModel == nil {
-			log.Warnf("unable to locate company by external company ID: %s", params.CompanyID)
-			return signatures.NewGetCompanySignaturesNotFound().WithXRequestID(reqID)
-		}
-
+		log.WithFields(f).Debug("loading company signatures...")
 		companySignatures, err := v1SignatureService.GetCompanySignatures(ctx, v1Signatures.GetCompanySignaturesParams{
 			HTTPRequest:   params.HTTPRequest,
 			CompanyID:     companyModel.CompanyID, // need to internal company ID here
@@ -388,17 +482,33 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			SignatureType: params.SignatureType,
 		})
 		if err != nil {
-			log.Warnf("error retrieving company signatures for companyID: %s/%s, error: %+v",
-				params.CompanyID, companyModel.CompanyID, err)
-			return signatures.NewGetCompanySignaturesBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			msg := fmt.Sprintf("%s - error retrieving company signatures for company name: %s, companyID: %s, company external ID: %s, error: %+v",
+				utils.EasyCLA403Forbidden, companyModel.CompanyName, companyModel.CompanyID, companyModel.CompanyExternalID, err)
+			log.WithFields(f).WithError(err).Warn(msg)
+			return signatures.NewGetCompanySignaturesBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				Code:    utils.String403,
+				Message: msg,
+			})
 		}
 
+		// Nothing in the query response - return a empty model
+		if companySignatures == nil || len(companySignatures.Signatures) == 0 {
+			return signatures.NewGetCompanySignaturesOK().WithXRequestID(reqID).WithPayload(&models.Signatures{
+				Signatures:  []*models.Signature{},
+				ResultCount: 0,
+				TotalCount:  0,
+			})
+		}
+
+		log.WithFields(f).Debug("updating company IDs...")
 		resp, err := v2SignaturesReplaceCompanyID(companySignatures, companyModel.CompanyID, companyModel.CompanyExternalID)
 		if err != nil {
-			log.Warnf("error converting company signatures for companyID: %s/%s, error: %+v",
-				params.CompanyID, companyModel.CompanyID, err)
-			return signatures.NewGetCompanySignaturesBadRequest().WithXRequestID(reqID)
+			msg := fmt.Sprintf("error converting company signatures for company name: %s, companyID: %s, company external ID: %s",
+				companyModel.CompanyName, companyModel.CompanyID, companyModel.CompanyExternalID)
+			log.WithFields(f).WithError(err).Warn(msg)
+			return signatures.NewGetCompanySignaturesBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequestWithError(msg, err))
 		}
+
 		return signatures.NewGetCompanySignaturesOK().WithXRequestID(reqID).WithPayload(resp)
 	})
 
@@ -406,6 +516,15 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	api.SignaturesGetUserSignaturesHandler = signatures.GetUserSignaturesHandlerFunc(func(params signatures.GetUserSignaturesParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		f := logrus.Fields{
+			"functionName":   "SignaturesGetUserSignaturesHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"userID":         params.UserID,
+			"userName":       aws.StringValue(params.UserName),
+			"nextKey":        aws.StringValue(params.NextKey),
+			"pageSize":       aws.Int64Value(params.PageSize),
+		}
+
 		userSignatures, err := v1SignatureService.GetUserSignatures(ctx, v1Signatures.GetUserSignaturesParams{
 			HTTPRequest: params.HTTPRequest,
 			NextKey:     params.NextKey,
@@ -414,14 +533,18 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			UserID:      params.UserID,
 		})
 		if err != nil {
-			log.Warnf("error retrieving user signatures for userID: %s, error: %+v", params.UserID, err)
-			return signatures.NewGetUserSignaturesBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			msg := fmt.Sprintf("error retrieving user signatures for userID: %s", params.UserID)
+			log.WithFields(f).WithError(err).Warn(msg)
+			return signatures.NewGetUserSignaturesBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequestWithError(msg, err))
 		}
 
 		resp, err := v2Signatures(userSignatures)
 		if err != nil {
-			return signatures.NewGetUserSignaturesBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			msg := "problem converting signatures from v1 to v2"
+			log.WithFields(f).WithError(err).Warn(msg)
+			return signatures.NewGetUserSignaturesBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequestWithError(msg, err))
 		}
+
 		return signatures.NewGetUserSignaturesOK().WithXRequestID(reqID).WithPayload(resp)
 	})
 
@@ -430,6 +553,14 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		func(params signatures.DownloadProjectSignatureEmployeeAsCSVParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			f := logrus.Fields{
+				"functionName":   "SignaturesDownloadProjectSignatureEmployeeAsCSVHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"claGroupID":     params.ClaGroupID,
+				"companySFID":    params.CompanySFID,
+			}
+			log.WithFields(f).Debug("processing request...")
+
 			claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
 			if err != nil {
 				if err == project.ErrProjectDoesNotExist {
@@ -437,12 +568,10 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				}
 				return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
+
 			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) {
-				return signatures.NewDownloadProjectSignatureEmployeeAsCSVForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DownloadProjectSignatureEmployeeAsCSV with project scope of %s",
-						authUser.UserName, claGroupModel.FoundationSFID),
-				})
+				return signatures.NewDownloadProjectSignatureEmployeeAsCSVForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(
+					fmt.Sprintf("user %s does not have access to DownloadProjectSignatureEmployeeAsCSV with project scope of %s", authUser.UserName, claGroupModel.FoundationSFID)))
 			}
 
 			result, err := v2service.GetClaGroupCorporateContributorsCsv(ctx, params.ClaGroupID, params.CompanySFID)
@@ -452,12 +581,11 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 					return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithXRequestID(reqID).WithPayload(errorResponse(formatErr))
 				}
 				if ok := err.Error() == "not Found"; ok {
-					message := fmt.Sprintf("request not found for Company ID: %s, Cla Group ID: %s",
-						params.CompanySFID, params.ClaGroupID)
-					formatErr := errors.New(message)
-					return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithXRequestID(reqID).WithPayload(errorResponse(formatErr))
+					msg := fmt.Sprintf("request not found for Company ID: %s, Cla Group ID: %s", params.CompanySFID, params.ClaGroupID)
+					return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithXRequestID(reqID).WithPayload(utils.ErrorResponseNotFoundWithError(msg, err))
 				}
-				return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(utils.ErrorResponseInternalServerErrorWithError(
+					fmt.Sprintf("problem getting corporate contributors CSV for CLA Group: %s with company: %s", params.ClaGroupID, params.CompanySFID), err))
 			}
 
 			return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
@@ -484,15 +612,15 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			}
 			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) {
 				return signatures.NewListClaGroupIclaSignatureForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DownloadProjectSignatureICLAAsCSV with project scope of %s",
-						authUser.UserName, claGroupModel.FoundationSFID),
+					Code: utils.String403,
+					Message: fmt.Sprintf("%s - user %s does not have access to DownloadProjectSignatureICLAAsCSV with project scope of %s",
+						utils.EasyCLA403Forbidden, authUser.UserName, claGroupModel.FoundationSFID),
 				})
 			}
 			if !claGroupModel.ProjectICLAEnabled {
 				return signatures.NewListClaGroupIclaSignatureBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: "EasyCLA - 400 Bad Request - individual contribution is not supported for this project",
+					Code:    utils.String400,
+					Message: fmt.Sprintf("%s - individual contribution is not supported for this project", utils.EasyCLA403Forbidden),
 				})
 			}
 			result, err := v2service.GetProjectIclaSignatures(ctx, params.ClaGroupID, params.SearchTerm)
@@ -510,8 +638,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			// Make sure the user has provided the companySFID
 			if params.CompanySFID == nil {
 				return signatures.NewDownloadProjectSignatureICLABadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: "EasyCLA - 400 Bad Request - missing companySFID as input",
+					Code:    utils.String400,
+					Message: fmt.Sprintf("%s - missing companySFID as input", utils.EasyCLA400BadRequest),
 				})
 			}
 
@@ -527,17 +655,17 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			// Authorized to view this? Allow project scope and project|org scope for matching IDs
 			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) && !utils.IsUserAuthorizedForProjectOrganization(authUser, claGroupModel.FoundationSFID, *params.CompanySFID) {
 				return signatures.NewDownloadProjectSignatureICLAAsCSVForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to ListClaGroupCorporateContributors with project scope of %s or project|organization scope of %s|%s",
-						authUser.UserName, claGroupModel.FoundationSFID, claGroupModel.FoundationSFID, *params.CompanySFID),
+					Code: utils.String403,
+					Message: fmt.Sprintf("%s - user %s does not have access to ListClaGroupCorporateContributors with project scope of %s or project|organization scope of %s|%s",
+						utils.EasyCLA403Forbidden, authUser.UserName, claGroupModel.FoundationSFID, claGroupModel.FoundationSFID, *params.CompanySFID),
 				})
 			}
 
 			// Make sure CCLA is enabled for this CLA Group
 			if !claGroupModel.ProjectCCLAEnabled {
 				return signatures.NewDownloadProjectSignatureICLABadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: "EasyCLA - 400 Bad Request - This project does not support corporate contribution",
+					Code:    utils.String400,
+					Message: fmt.Sprintf("%s - This project does not support corporate contribution", utils.EasyCLA400BadRequest),
 				})
 			}
 
@@ -566,8 +694,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 		if !haveAccess {
 			return signatures.NewGetSignatureSignedDocumentForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "403",
-				Message: "EasyCLA - 403 Forbidden : user does not have access of signature",
+				Code:    utils.String403,
+				Message: fmt.Sprintf("%s : user does not have access of signature", utils.EasyCLA403Forbidden),
 			})
 		}
 		doc, err := v2service.GetSignedDocument(ctx, signature.SignatureID.String())
@@ -593,22 +721,22 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			}
 			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroup.FoundationSFID) {
 				return signatures.NewDownloadProjectSignatureICLAsForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "403",
-					Message: fmt.Sprintf("EasyCLA: 403 Forbidden : User does not have permission to access project : %s", claGroup.FoundationSFID),
+					Code:    utils.String403,
+					Message: fmt.Sprintf("%s User does not have permission to access project : %s", utils.EasyCLA403Forbidden, claGroup.FoundationSFID),
 				})
 			}
 			if !claGroup.ProjectICLAEnabled {
 				return signatures.NewDownloadProjectSignatureICLAsBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: "EasyCLA : 400 Bad Request : icla is not enabled on this project",
+					Code:    utils.String400,
+					Message: fmt.Sprintf("%s icla is not enabled on this project", utils.EasyCLA400BadRequest),
 				})
 			}
 			result, err := v2service.GetSignedIclaZipPdf(params.ClaGroupID)
 			if err != nil {
 				if err == ErrZipNotPresent {
 					return signatures.NewDownloadProjectSignatureICLAsNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-						Code:    "404",
-						Message: "EasyCLA: 404 Not found : no icla signatures found for this cla-group",
+						Code:    utils.String404,
+						Message: fmt.Sprintf("%s no icla signatures found for this cla-group", utils.EasyCLA404NotFound),
 					})
 				}
 				return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
@@ -631,15 +759,15 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			}
 			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) {
 				return signatures.NewDownloadProjectSignatureICLAAsCSVForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DownloadProjectSignatureICLAAsCSV with project scope of %s",
+					Code: utils.String403,
+					Message: fmt.Sprintf("user %s does not have access to DownloadProjectSignatureICLAAsCSV with project scope of %s",
 						authUser.UserName, claGroupModel.FoundationSFID),
 				})
 			}
 			if !claGroupModel.ProjectICLAEnabled {
 				return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: "EasyCLA - 400 Bad Request - individual contribution is not supported for this project",
+					Code:    utils.String400,
+					Message: fmt.Sprintf("%s - individual contribution is not supported for this project", utils.EasyCLA400BadRequest),
 				})
 			}
 
@@ -671,22 +799,22 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			}
 			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroup.FoundationSFID) {
 				return signatures.NewDownloadProjectSignatureCCLAsForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "403",
-					Message: fmt.Sprintf("EasyCLA: 403 Forbidden : User does not have permission to access project : %s", claGroup.FoundationSFID),
+					Code:    utils.String403,
+					Message: fmt.Sprintf("%s - User does not have permission to access project : %s", utils.EasyCLA403Forbidden, claGroup.FoundationSFID),
 				})
 			}
 			if !claGroup.ProjectCCLAEnabled {
 				return signatures.NewDownloadProjectSignatureCCLAsBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: "EasyCLA : 400 Bad Request : ccla is not enabled on this project",
+					Code:    utils.String400,
+					Message: fmt.Sprintf("%s - ccla is not enabled on this project", utils.EasyCLA400BadRequest),
 				})
 			}
 			result, err := v2service.GetSignedCclaZipPdf(params.ClaGroupID)
 			if err != nil {
 				if err == ErrZipNotPresent {
 					return signatures.NewDownloadProjectSignatureCCLAsNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-						Code:    "404",
-						Message: "EasyCLA: 404 Not found : no ccla signatures found for this cla-group",
+						Code:    utils.String404,
+						Message: fmt.Sprintf("%s - no ccla signatures found for this cla-group", utils.EasyCLA404NotFound),
 					})
 				}
 				return signatures.NewDownloadProjectSignatureCCLAsInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
@@ -708,15 +836,15 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			}
 			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) {
 				return signatures.NewDownloadProjectSignatureCCLAAsCSVForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DownloadProjectSignatureCCLAAsCSV with project scope of %s",
-						authUser.UserName, claGroupModel.FoundationSFID),
+					Code: utils.String403,
+					Message: fmt.Sprintf("%s - user %s does not have access to DownloadProjectSignatureCCLAAsCSV with project scope of %s",
+						utils.EasyCLA403Forbidden, authUser.UserName, claGroupModel.FoundationSFID),
 				})
 			}
 			if !claGroupModel.ProjectCCLAEnabled {
 				return signatures.NewDownloadProjectSignatureCCLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: "EasyCLA - 400 Bad Request - corporate contribution is not supported for this project",
+					Code:    utils.String400,
+					Message: fmt.Sprintf("%s - corporate contribution is not supported for this project", utils.EasyCLA400BadRequest),
 				})
 			}
 

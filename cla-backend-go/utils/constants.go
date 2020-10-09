@@ -3,6 +3,30 @@
 
 package utils
 
+// String400 string version of 400
+const String400 = "400"
+
+// String403 string version of 403
+const String403 = "403"
+
+// String404 string version of 404
+const String404 = "404"
+
+// String500 string version of 500
+const String500 = "500"
+
+// EasyCLA400BadRequest common string for handler bad request error messages
+const EasyCLA400BadRequest = "EasyCLA - 400 Bad Request"
+
+// EasyCLA403Forbidden common string for handler forbidden error messages
+const EasyCLA403Forbidden = "EasyCLA - 403 Forbidden"
+
+// EasyCLA404NotFound common string for handler not found error messages
+const EasyCLA404NotFound = "EasyCLA - 404 Not Found"
+
+// EasyCLA500InternalServerError common string for handler internal server error messages
+const EasyCLA500InternalServerError = "EasyCLA - 500 Internal Server Error"
+
 // GitHubBotName is the name of the GitHub bot
 const GitHubBotName = "EasyCLA"
 

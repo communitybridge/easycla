@@ -1,13 +1,13 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component, ViewChild} from '@angular/core';
-import {AlertController, Events, IonicPage, ModalController, Nav, NavController, NavParams} from 'ionic-angular';
-import {ClaService} from '../../../services/cla.service';
-import {RolesService} from '../../../services/roles.service';
-import {Restricted} from '../../../decorators/restricted';
-import {GithubOrganisationModel} from '../../../models/github-organisation-model';
-import {PlatformLocation} from '@angular/common';
+import { Component, ViewChild } from '@angular/core';
+import { AlertController, Events, IonicPage, ModalController, Nav, NavController, NavParams } from 'ionic-angular';
+import { ClaService } from '../../../services/cla.service';
+import { RolesService } from '../../../services/roles.service';
+import { Restricted } from '../../../decorators/restricted';
+import { GithubOrganisationModel } from '../../../models/github-organisation-model';
+import { PlatformLocation } from '@angular/common';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -197,7 +197,8 @@ export class ProjectClaPage {
 
   openClaOrganizationProviderModal(claProjectId) {
     let modal = this.modalCtrl.create('ClaOrganizationProviderModal', {
-      claProjectId: claProjectId
+      claProjectId: claProjectId,
+      sfdcProjectId: this.sfdcProjectId
     });
     modal.onDidDismiss((data) => {
       if (data) {
@@ -209,7 +210,8 @@ export class ProjectClaPage {
 
   openClaConfigureGithubRepositoriesModal(claProjectId) {
     let modal = this.modalCtrl.create('ClaConfigureGithubRepositoriesModal', {
-      claProjectId: claProjectId
+      claProjectId: claProjectId,
+      sfdcProjectId: this.sfdcProjectId
     });
     modal.onDidDismiss((data) => {
       this.getClaProjects();
@@ -252,7 +254,7 @@ export class ProjectClaPage {
     return found;
   }
 
-  deleteConfirmation(type, payload) {
+  deleteConfirmation(type, payload, projectId) {
     this.alert = this.alertCtrl.create({
       subTitle: `Delete ${type}`,
       message: `Are you sure you want to delete this ${type}?`,
@@ -273,7 +275,7 @@ export class ProjectClaPage {
                 break;
 
               case 'Gerrit Instance':
-                this.deleteGerritInstance(payload);
+                this.deleteGerritInstance(payload, projectId);
                 break;
             }
           }
@@ -377,8 +379,8 @@ export class ProjectClaPage {
     });
   }
 
-  deleteGerritInstance(gerrit) {
-    this.claService.deleteGerritInstance(gerrit.gerrit_id).subscribe((response) => {
+  deleteGerritInstance(gerrit, projectId) {
+    this.claService.deleteGerritInstance(projectId, gerrit.gerrit_id).subscribe((response) => {
       this.getClaProjects();
     });
   }
