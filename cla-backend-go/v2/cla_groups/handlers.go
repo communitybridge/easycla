@@ -214,6 +214,15 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+		f := logrus.Fields{
+			"functionName":    "ClaGroupEnrollProjectsHandler",
+			utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
+			"ClaGroupID":      params.ClaGroupID,
+			"authUsername":    params.XUSERNAME,
+			"authEmail":       params.XEMAIL,
+			"projectSFIDList": strings.Join(params.ProjectSFIDList, ","),
+		}
+
 		cg, err := v1ProjectService.GetCLAGroupByID(ctx, params.ClaGroupID)
 		if err != nil {
 			if err, ok := err.(*utils.CLAGroupNotFound); ok {
@@ -234,7 +243,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
 			})
 		}
+
 		if !utils.IsUserAuthorizedForProjectTree(authUser, cg.FoundationSFID) {
+			log.WithFields(f).Warnf("user %s does not have access with project scope of: %s", authUser.UserName, cg.FoundationSFID)
 			return cla_group.NewEnrollProjectsForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to enroll with Project scope of %s",
@@ -270,6 +281,15 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+		f := logrus.Fields{
+			"functionName":    "ClaGroupUnenrollProjectsHandler",
+			utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
+			"ClaGroupID":      params.ClaGroupID,
+			"authUsername":    params.XUSERNAME,
+			"authEmail":       params.XEMAIL,
+			"projectSFIDList": strings.Join(params.ProjectSFIDList, ","),
+		}
+
 		cg, err := v1ProjectService.GetCLAGroupByID(ctx, params.ClaGroupID)
 		if err != nil {
 			if err, ok := err.(*utils.CLAGroupNotFound); ok {
@@ -290,7 +310,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
 			})
 		}
+
 		if !utils.IsUserAuthorizedForProjectTree(authUser, cg.FoundationSFID) {
+			log.WithFields(f).Warnf("user %s does not have access with project scope of: %s", authUser.UserName, cg.FoundationSFID)
 			return cla_group.NewUnenrollProjectsForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to unenroll with Project scope of %s",
@@ -328,7 +350,16 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+		f := logrus.Fields{
+			"functionName":   "ClaGroupListClaGroupsUnderFoundationHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"projectSFID":    params.ProjectSFID,
+			"authUsername":   params.XUSERNAME,
+			"authEmail":      params.XEMAIL,
+		}
+
 		if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
+			log.WithFields(f).Warnf("user %s does not have access with project scope of: %s", authUser.UserName, params.ProjectSFID)
 			return cla_group.NewListClaGroupsUnderFoundationForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to ListCLAGroupsUnderFoundation with Project scope of %s",
