@@ -7,6 +7,7 @@ import { ClaService } from '../../../services/cla.service';
 import { Restricted } from '../../../decorators/restricted';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { EmailValidator } from '../../../validators/email';
+import { EnvConfig } from '../../../services/cla.env.utils';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -37,7 +38,8 @@ export class ProjectClaTemplatePage {
     documents: false
   };
   submitAttempt = false;
-
+  expanded: boolean = true;
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
   @Input() form: FormGroup;
   @ViewChild(Nav) nav: Nav;
 
@@ -153,6 +155,10 @@ export class ProjectClaTemplatePage {
     this.loading = {
       documents: value
     };
+  }
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
   }
 }
 

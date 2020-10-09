@@ -1,17 +1,9 @@
-<ion-header>
-  <ion-navbar>
-    <button ion-button menuToggle>
-      <ion-icon name="menu"></ion-icon>
-    </button>
-    <ion-title>CLA Management Console</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
-  </ion-navbar>
-  <get-help></get-help>
-</ion-header>
+
+<cla-header title="CLA Management Console" (onToggle)="onClickToggle($event)"></cla-header>
 
 <ion-content>
 
-  <div class="page-content">
+  <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
     <loading-spinner [loading]="loading.projects"></loading-spinner>
 
     <h3 class="error-message" *ngIf="errorMessage && errorStatus === 401">

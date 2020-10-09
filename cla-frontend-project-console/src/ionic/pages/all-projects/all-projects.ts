@@ -8,6 +8,7 @@ import { FilterService } from '../../services/filter.service';
 import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
 import { generalConstants } from '../../constants/general';
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -27,6 +28,8 @@ export class AllProjectsPage {
   userRoles: any;
   errorMessage = null;
   errorStatus = null;
+  expanded: boolean = true;
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
 
   constructor(
     public navCtrl: NavController,
@@ -104,5 +107,9 @@ export class AllProjectsPage {
 
   openAccessPage() {
     window.open(generalConstants.getAccessURL, '_blank');
+  }
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
   }
 }
