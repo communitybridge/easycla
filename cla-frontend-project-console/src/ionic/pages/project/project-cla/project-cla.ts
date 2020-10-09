@@ -8,6 +8,7 @@ import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
 import { GithubOrganisationModel } from '../../../models/github-organisation-model';
 import { PlatformLocation } from '@angular/common';
+import { EnvConfig } from '../../../services/cla.env.utils';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -21,15 +22,15 @@ import { PlatformLocation } from '@angular/common';
 })
 export class ProjectClaPage {
   loading: any;
-
   sfdcProjectId: string;
   githubOrganizations: GithubOrganisationModel[];
-
   claProjects: any = [];
   projectsByExternalId: any;
   alert;
   iclaUploadInfo: any;
   cclaUploadInfo: any;
+  expanded: boolean = true;
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
   @ViewChild(Nav) nav: Nav;
 
   constructor(
@@ -500,4 +501,7 @@ export class ProjectClaPage {
     }
   }
 
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
+  }
 }

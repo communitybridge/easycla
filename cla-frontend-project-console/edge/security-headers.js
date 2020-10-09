@@ -41,14 +41,23 @@ function generateCSP(env, isDevServer) {
         'https://communitybridge.org/',
     ];
 
-    let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE];
+    let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE,
+        'https://cdn.dev.platform.linuxfoundation.org/lfx-header-no-zone.js',
+        'https://cdn.staging.platform.linuxfoundation.org/lfx-header-no-zone.js',
+        'https://cdn.platform.linuxfoundation.org/lfx-header-no-zone.js'
+    ];
+
     let styleSources = [SELF, UNSAFE_INLINE, 'https://communitybridge.org/'];
 
     if (isDevServer) {
         connectSources = [...connectSources, 'https://localhost:8100/sockjs-node/', 'wss://localhost:8100/sockjs-node/'];
         // The webpack dev server uses system js which violates the unsafe-eval exception. This doesn't happen in the
         // production AOT build.
-        scriptSources = [...scriptSources, UNSAFE_EVAL];
+        scriptSources = [...scriptSources, UNSAFE_EVAL,
+            'https://cdn.dev.platform.linuxfoundation.org/lfx-header-no-zone.js',
+            'https://cdn.staging.platform.linuxfoundation.org/lfx-header-no-zone.js',
+            'https://cdn.platform.linuxfoundation.org/lfx-header-no-zone.js'
+        ];
         // The development build needs unsafe inline assets.
     }
 
