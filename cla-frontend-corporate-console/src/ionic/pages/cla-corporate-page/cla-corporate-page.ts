@@ -5,6 +5,7 @@ import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { generalConstants } from '../../constant/general';
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @IonicPage({
   segment: 'project/:projectId'
@@ -23,7 +24,8 @@ export class ClaCorporatePage {
   signature: any;
   error: any = false;
   expanded: boolean = true;
-  
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,

@@ -10,6 +10,7 @@ import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import Timer = NodeJS.Timer;
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -45,6 +46,7 @@ export class CompanyPage {
   allSignatures: any[];
   userEmail: string;
   expanded: boolean = true;
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
 
   constructor(
     public navCtrl: NavController,
@@ -66,6 +68,7 @@ export class CompanyPage {
       projects: true
     };
     this.company = new ClaCompanyModel();
+    this.company.company_name = 'CLA Corporate Console';
     this.pendingRequests = [];
     this.userEmail = localStorage.getItem('user_email');
 

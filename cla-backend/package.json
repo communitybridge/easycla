@@ -24,7 +24,7 @@
     "install": "^0.13.0",
     "node.extend": "^2.0.2",
     "request": "^2.88.0",
-    "serverless": "^1.80.0",
+    "serverless": "^2.5.0",
     "serverless-finch": "^2.3.2",
     "serverless-layers": "^1.4.3",
     "serverless-offline": "^6.1.5",
