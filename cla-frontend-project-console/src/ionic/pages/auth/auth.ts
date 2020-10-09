@@ -21,7 +21,7 @@ import { RolesService } from '../../services/roles.service';
 export class AuthPage {
   userRoles: any;
 
-  constructor(public navCtrl: NavController, public authService: AuthService, public rolesService: RolesService) {}
+  constructor(public navCtrl: NavController, public authService: AuthService, public rolesService: RolesService) { }
 
   ionViewDidEnter() {
     setTimeout(() => {
@@ -31,17 +31,25 @@ export class AuthPage {
           if (AuthPage.hasAccess(userRoles)) {
             this.navCtrl.setRoot('AllProjectsPage');
           } else {
-            window.open(EnvConfig['landing-page'], '_self');
+            this.redirectToLogin();
           }
         })
         .catch((error) => {
           console.log('unable lookup user roles - possible session timeout: ' + error);
-          window.open(EnvConfig['landing-page'], '_self');
+          this.redirectToLogin();
         });
     }, 2000);
     // Artificial 2s delay isn't good, but the app may encoutner race condition between parse auth result and retrive user role
     // since this un-typical Ionic app does strange auth redirect, it's hard to eliminate this hack.
     // Refactoring to Ionic 4.0+ with default Ng Route Module may resolve this problem but it's over work balance.
+  }
+
+  redirectToLogin() {
+    if (EnvConfig['lfx-header-enabled'] === "true") {
+      window.open(EnvConfig['landing-page'], '_self');
+    } else {
+      this.navCtrl.setRoot('LoginPage');
+    }
   }
 
   private static hasAccess(userRoles: any): boolean {

@@ -93,6 +93,10 @@ export class MyApp {
       this.userRoles = userRoles;
       this.regeneratePagesMenu();
     });
+
+    if (EnvConfig['lfx-header-enabled'] === "true") {
+      this.mounted();
+    }
   }
 
   initializeApp() {
@@ -102,6 +106,15 @@ export class MyApp {
       // this.statusBar.styleDefault();
       // this.splashScreen.hide();
     });
+  }
+
+  mounted() {
+    const script = document.createElement('script');
+    script.setAttribute(
+      'src',
+      EnvConfig['lfx-header']
+    );
+    document.head.appendChild(script);
   }
 
   openPage(page) {

@@ -57,7 +57,14 @@ export class AuthService {
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_name');
 
-    const redirectUri = EnvConfig['landing-page'];
+    let redirectUri = '';
+
+    if (EnvConfig['lfx-header-enabled'] === "true") {
+      redirectUri = EnvConfig['landing-page'];
+    } else {
+      redirectUri = EnvConfig['corp-console-link'] + '/#/login';
+    }
+
     this.auth0.logout({
       returnTo: redirectUri
     });
