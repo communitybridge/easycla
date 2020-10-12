@@ -20,7 +20,7 @@ class GitHubInstallation(object):
 
     @property
     def private_key(self):
-        return os.environ['GH_APP_PRIVATE_SECRET']
+        return cla.config.GITHUB_PRIVATE_KEY
 
     @property
     def repos(self):
