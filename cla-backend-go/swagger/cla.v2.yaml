@@ -4344,7 +4344,7 @@ definitions:
         type: string
         example: 'John Doe'
         description: name of the cla signatory
-        pattern: "^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$"
+        pattern: "^[a-zA-Z0-9]+(([',. -][a-zA-Z0-9 ])?[a-zA-Z0-9]*)*$"
       authority_email:
         $ref: './common/properties/email.yaml'
         description: Email of the CLA Signatory
