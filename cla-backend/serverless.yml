@@ -220,6 +220,7 @@ provider:
     GH_OAUTH_CLIENT_ID: ${file(./env.json):gh-oauth-client-id, ssm:/cla-gh-oauth-client-id-${opt:stage}~true}
     GH_OAUTH_SECRET: ${file(./env.json):gh-oauth-secret, ssm:/cla-gh-oauth-secret-${opt:stage}~true}
     GITHUB_OAUTH_TOKEN: ${file(./env.json):gh-access-token, ssm:/cla-gh-access-token-${opt:stage}~true}
+    GITHUB_APP_WEBHOOK_SECRET: ${file(./env.json):gh-app-webhook-secret, ssm:/cla-gh-app-webhook-secret-${opt:stage}~true}
     GH_STATUS_CTX_NAME: "EasyCLA"
     AUTH0_DOMAIN: ${file(./env.json):auth0-domain, ssm:/cla-auth0-domain-${opt:stage}~true}
     AUTH0_CLIENT_ID: ${file(./env.json):auth0-clientId, ssm:/cla-auth0-clientId-${opt:stage}~true}
@@ -243,6 +244,7 @@ provider:
     CLA_SIGNATURE_FILES_BUCKET: ${file(./env.json):cla-signature-files-bucket, ssm:/cla-signature-files-bucket-${opt:stage}~true}
     CLA_BUCKET_LOGO_URL: ${file(./env.json):cla-logo-s3-url, ssm:/cla-cla-logo-s3-url-${opt:stage}~true}
     SES_SENDER_EMAIL_ADDRESS: ${file(./env.json):cla-ses-sender-email-address, ssm:/cla-ses-sender-email-address-${opt:stage}}
+    SMTP_SENDER_EMAIL_ADDRESS: ${file(./env.json):cla-smtp-sender-email-address, ssm:/cla-smtp-sender-email-address-${opt:stage}}
     LF_GROUP_CLIENT_ID: ${file(./env.json):lf-group-client-id, ssm:/cla-lf-group-client-id-${opt:stage}}
     LF_GROUP_CLIENT_SECRET: ${file(./env.json):lf-group-client-secret, ssm:/cla-lf-group-client-secret-${opt:stage}}
     LF_GROUP_REFRESH_TOKEN: ${file(./env.json):lf-group-refresh-token, ssm:/cla-lf-group-refresh-token-${opt:stage}}
@@ -253,6 +255,7 @@ provider:
     PLATFORM_AUTH0_CLIENT_SECRET: ${file(./env.json):cla-auth0-platform-client-secret, ssm:/cla-auth0-platform-client-secret-${opt:stage}}
     PLATFORM_AUTH0_AUDIENCE: ${file(./env.json):cla-auth0-platform-audience, ssm:/cla-auth0-platform-audience-${opt:stage}}
     PLATFORM_GATEWAY_URL: ${file(./env.json):platform-gateway-url, ssm:/cla-auth0-platform-api-gw-${opt:stage}}
+    PLATFORM_MAINTAINERS: ${file(./env.json):platform-maintainers, ssm:/cla-lf-platform-maintainers-${opt:stage}}
     # Set to true for verbose API logging - useful when Debugging API calls for Core Platform Services or other external services
     # LOG_DEVEL: debug              # default is debug
     # DEBUG: false                  # default is false

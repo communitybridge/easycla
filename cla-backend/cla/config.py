@@ -68,7 +68,7 @@ GITHUB_OAUTH_TOKEN_URL = 'https://github.com/login/oauth/access_token'
 GITHUB_PR_NOTIFICATION = 'status+comment'
 
 # GitHub Application Service.
-GITHUB_APP_WEBHOOK_SECRET = 'webhook-secret'
+GITHUB_APP_WEBHOOK_SECRET = os.getenv("GITHUB_APP_WEBHOOK_SECRET", "")
 
 # GitHub Oauth token used for authenticated GitHub API calls and testing
 GITHUB_OAUTH_TOKEN = os.environ.get('GITHUB_OAUTH_TOKEN', '')
@@ -77,9 +77,12 @@ GITHUB_OAUTH_TOKEN = os.environ.get('GITHUB_OAUTH_TOKEN', '')
 EMAIL_SERVICE = 'SNS'  #: Email service to use for notification emails.
 EMAIL_ON_SIGNATURE_APPROVED = True  #: Whether to email the user when signature has been approved.
 
+# Platform Maintainers
+PLATFORM_MAINTAINERS = os.environ.get('PLATFORM_MAINTAINERS', [])
+
 # SMTP Configuration.
 #: Sender email address for SMTP service (from address).
-SMTP_SENDER_EMAIL_ADDRESS = 'test@cla.system'
+SMTP_SENDER_EMAIL_ADDRESS = os.environ.get('SMTP_SENDER_EMAIL_ADDRESS', 'test@cla.system')
 SMTP_HOST = ''  #: Host of the SMTP service.
 SMTP_PORT = '0'  #: Port of the SMTP service.
 
