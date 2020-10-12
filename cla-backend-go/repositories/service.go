@@ -6,15 +6,12 @@ package repositories
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/github"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
-	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 )
 
@@ -36,18 +33,23 @@ type GithubOrgRepo interface {
 	GetGithubOrganization(ctx context.Context, githubOrganizationName string) (*models.GithubOrganization, error)
 }
 
+// ProjectRepo contains project repo methods
+type ProjectRepo interface {
+	GetCLAGroupByID(ctx context.Context, projectID string, loadRepoDetails bool) (*models.ClaGroup, error)
+}
+
 type service struct {
-	repo                  Repository
-	ghOrgRepo             GithubOrgRepo
-	projectsClaGroupsRepo projects_cla_groups.Repository
+	repo        Repository
+	ghOrgRepo   GithubOrgRepo
+	projectRepo ProjectRepo
 }
 
 // NewService creates a new githubOrganizations service
-func NewService(repo Repository, ghOrgRepo GithubOrgRepo, pcgRepo projects_cla_groups.Repository) Service {
+func NewService(repo Repository, ghOrgRepo GithubOrgRepo, projectRepo ProjectRepo) Service {
 	return &service{
-		repo:                  repo,
-		ghOrgRepo:             ghOrgRepo,
-		projectsClaGroupsRepo: pcgRepo,
+		repo:        repo,
+		ghOrgRepo:   ghOrgRepo,
+		projectRepo: projectRepo,
 	}
 }
 
@@ -57,19 +59,9 @@ func (s *service) AddGithubRepository(ctx context.Context, externalProjectID str
 	}
 	projectSFID := externalProjectID
 
-	allMappings, err := s.projectsClaGroupsRepo.GetProjectsIdsForClaGroup(aws.StringValue(input.RepositoryProjectID))
-	if err != nil {
-		return nil, err
-	}
-	var valid bool
-	for _, cgm := range allMappings {
-		if cgm.ProjectSFID == projectSFID || cgm.FoundationSFID == projectSFID {
-			valid = true
-			break
-		}
-	}
-	if !valid {
-		return nil, fmt.Errorf("provided cla group id %s is not linked to project sfid %s", utils.StringValue(input.RepositoryProjectID), projectSFID)
+	_, projErr := s.projectRepo.GetCLAGroupByID(ctx, externalProjectID, false)
+	if projErr != nil {
+		return nil, errors.New("provided repository projectID is invalid")
 	}
 
 	org, err := s.ghOrgRepo.GetGithubOrganizationByName(ctx, utils.StringValue(input.RepositoryOrganizationName))
