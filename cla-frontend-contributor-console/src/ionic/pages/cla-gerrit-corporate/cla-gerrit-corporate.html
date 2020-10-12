@@ -1,26 +1,17 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>
-      Select Company
-    </ion-title>
-    <!-- <ion-buttons start>
-      <button ion-button (click)="dismiss()">
-        <ion-icon name="close"></ion-icon>
-      </button>
-    </ion-buttons> -->
-  </ion-toolbar>
-</ion-header>
+<cla-header title="CLA - Corporate" hasShowBackBtn="false" (onToggle)="onClickToggle($event)"></cla-header>
 
 <ion-content>
-<loading-spinner [loading]="loading.companies"></loading-spinner>
-  <div>
-    <table id="table" class="table table-hover" [loading-display]="loading.companies">
-      <tbody>
-        <tr *ngFor="let company of companies" (click)="openClaEmployeeCompanyConfirmPage(company)">
-          <td>{{ company.company_name }}</td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
+    <loading-spinner [loading]="loading.companies"></loading-spinner>
+    <div>
+      <table id="table" class="table table-hover" [loading-display]="loading.companies">
+        <tbody>
+          <tr *ngFor="let company of companies" (click)="openClaEmployeeCompanyConfirmPage(company)">
+            <td>{{ company.company_name }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </ion-content>
 

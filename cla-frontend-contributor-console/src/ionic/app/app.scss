@@ -17,24 +17,20 @@
 //@import url('https://fonts.googleapis.com/css?family=Lato');
 //@import url('https://fonts.googleapis.com/css?family=Open+Sans');
 //@import url('https://fonts.googleapis.com/css?family=Work+Sans');
-@import '../assets/fonts/lato-font.scss';
-@import '../assets/fonts/open-sans-font.scss';
-@import '../assets/fonts/work-sans-font.scss';
-@import '../theme/styles.scss';
+@import "../assets/fonts/lato-font.scss";
+@import "../assets/fonts/open-sans-font.scss";
+@import "../theme/styles.scss";
 
 body ion-app.ios {
-  font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;
-  // font-family: -apple-system, "Helvetica Neue", "Roboto", sans-serif;
+  font-family: "Lato", sans-serif !important; // font-family: -apple-system, "Helvetica Neue", "Roboto", sans-serif;
 }
 
 body ion-app.md {
-  font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;
-  // font-family: "Roboto", "Helvetica Neue", sans-serif;
+  font-family: "Lato", sans-serif !important;
 }
 
 body ion-app.wp {
-  font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;
-  // font-family: "Segoe UI", "Noto Sans", sans-serif;
+  font-family: "Lato", sans-serif !important;
 }
 
 .grid {
@@ -46,7 +42,7 @@ ion-icon {
   color: color($colors, gray);
 }
 
-ion-icon[name='menu'] {
+ion-icon[name="menu"] {
   color: color($colors, white);
 }
 

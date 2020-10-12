@@ -5,4 +5,30 @@ cla-gerrit-individual {
   .card-md p {
     margin-bottom: 1rem;
   }
+  .scroll-content {
+    margin-top: 96px !important;
+  }
+
+  .page-content {
+    min-height: calc(100vh - 356px);
+    margin-top: 25px;
+    transition: margin 0.3s;
+
+    &.expanded {
+      min-height: calc(100vh - 414px);
+      margin-top: 100px;
+    }
+
+    &.without-lfx-header {
+      margin-top: 50px;
+      min-height: calc(100vh - 364px) !important;
+    }
+
+    @media (min-width: 768px) and (max-width: 1200px) {
+      padding: 16px 50px 162px;
+    }
+  }
+  ion-footer {
+    position: relative;
+  }
 }

@@ -1,15 +1,8 @@
-<ion-header class="cla-header">
-  <ion-navbar>
-    <button ion-button menuToggle>
-      <ion-icon name="menu"></ion-icon>
-    </button>
-    <ion-title>CLA - Individual</ion-title>
-  </ion-navbar>
-  <get-help></get-help>
-</ion-header>
+
+<cla-header title="CLA - Individual" hasShowBackBtn="true" (onToggle)="onClickToggle($event)"></cla-header>
 
 <ion-content headerspacing overflow-scroll="true">
-  <div class="page-content">
+  <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
     <ion-grid style="margin-top: 42px;">
       <ion-row align-items-center>
         <ion-col col-12 col-md-2>

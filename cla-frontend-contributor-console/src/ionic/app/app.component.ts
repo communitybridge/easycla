@@ -31,7 +31,6 @@ export class MyApp {
     public httpClient: HttpClient,
     public keycloak: KeycloakService
   ) {
-    this.getDefaults();
     this.initializeApp();
 
     // Determine if we're running in a local services (developer) mode - the USE_LOCAL_SERVICES environment variable
@@ -46,12 +45,21 @@ export class MyApp {
     this.authService.handleAuthentication();
   }
 
-  getDefaults() {}
-
-  ngOnInit() {}
+  ngOnInit() {
+    this.mounted();
+  }
 
   initializeApp() {
-    this.platform.ready().then(() => {});
+    this.platform.ready().then(() => { });
+  }
+
+  mounted() {
+    const script = document.createElement('script');
+    script.setAttribute(
+      'src',
+      EnvConfig['lfx-header']
+    );
+    document.head.appendChild(script);
   }
 
   openPage(page) {

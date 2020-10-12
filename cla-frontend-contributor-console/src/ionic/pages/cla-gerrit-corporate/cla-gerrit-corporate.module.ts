@@ -6,14 +6,17 @@ import { IonicPageModule } from 'ionic-angular';
 import { ClaGerritCorporatePage } from './cla-gerrit-corporate';
 import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/loading-spinner.module';
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
+import { LayoutModule } from '../../layout/layout.module';
 
 @NgModule({
   declarations: [ClaGerritCorporatePage],
   imports: [
     LoadingSpinnerComponentModule,
     LoadingDisplayDirectiveModule,
-    IonicPageModule.forChild(ClaGerritCorporatePage)
+    IonicPageModule.forChild(ClaGerritCorporatePage),
+    LayoutModule
+
   ],
   entryComponents: [ClaGerritCorporatePage]
 })
-export class ClaGerritCorporatePageModule {}
+export class ClaGerritCorporatePageModule { }

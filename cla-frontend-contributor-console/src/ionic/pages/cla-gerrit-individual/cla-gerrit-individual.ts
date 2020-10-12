@@ -8,6 +8,7 @@ import { RolesService } from '../../services/roles.service';
 import { AuthService } from '../../services/auth.service';
 import { Restricted } from '../../decorators/restricted';
 import { generalConstants } from '../../constants/general';
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -29,7 +30,8 @@ export class ClaGerritIndividualPage {
   signatureIntent: any;
   activeSignatures: boolean = true; // we assume true until otherwise
   signature: any;
-
+  expanded: boolean = true;
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
   userRoles: any;
 
   constructor(
@@ -62,12 +64,18 @@ export class ClaGerritIndividualPage {
 
   ionViewCanEnter() {
     if (!this.authService.isAuthenticated) {
-      setTimeout(() => this.navCtrl.setRoot('LoginPage'));
+      setTimeout(() => this.redirectToLogin());
     }
     return this.authService.isAuthenticated;
   }
 
-  ngAfterViewInit() { }
+  redirectToLogin() {
+    // if (EnvConfig['lfx-header-enabled'] === "true") {
+    //   window.open(EnvConfig['landing-page'], '_self');
+    // } else {
+      this.navCtrl.setRoot('LoginPage');
+    // }
+  }
 
   getProject(gerritId) {
     //retrieve projectId from this Gerrit
@@ -106,5 +114,9 @@ export class ClaGerritIndividualPage {
       return;
     }
     window.open(this.signature.sign_url, '_self');
+  }
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
   }
 }
