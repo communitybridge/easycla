@@ -22,15 +22,16 @@ type codedResponse interface {
 	Code() string
 }
 
-func errorResponse(err error) *models.ErrorResponse {
+func errorResponse(reqID string, err error) *models.ErrorResponse {
 	code := ""
 	if e, ok := err.(codedResponse); ok {
 		code = e.Code()
 	}
 
 	e := models.ErrorResponse{
-		Code:    code,
-		Message: err.Error(),
+		Code:       code,
+		Message:    err.Error(),
+		XRequestID: reqID,
 	}
 
 	return &e

@@ -14,14 +14,14 @@ import (
 )
 
 // validateApprovalListInput is a helper function to validate the update approval list input parameters
-func validateApprovalListInput(params signatures.UpdateApprovalListParams) middleware.Responder {
+func validateApprovalListInput(reqID string, params signatures.UpdateApprovalListParams) middleware.Responder {
 	if !hasApprovalListUpdates(params) {
-		return signatures.NewUpdateApprovalListBadRequest().WithPayload(errorResponse(errors.New("missing approval list items")))
+		return signatures.NewUpdateApprovalListBadRequest().WithPayload(errorResponse(reqID, errors.New("missing approval list items")))
 	}
 
 	msg, valid := entriesAreValid(params)
 	if !valid {
-		return signatures.NewUpdateApprovalListBadRequest().WithPayload(errorResponse(errors.New(msg)))
+		return signatures.NewUpdateApprovalListBadRequest().WithPayload(errorResponse(reqID, errors.New(msg)))
 	}
 	return nil
 }
