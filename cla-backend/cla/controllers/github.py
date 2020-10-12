@@ -793,6 +793,7 @@ def webhook_secret_failed_email_content(event_type: str, req_body: dict, maintai
     repository_name = req_body.get('repository', {}).get('full_name', None)
     installation_id = req_body.get('installation', {}).get('id', None)
     msg = f"""webhook secret validation failed :
+    stage: {cla.config.stage},
     event type: {event_type},
     user login: {user_login},
     repository_id: {repository_id}, repository_name : {repository_name},
@@ -801,7 +802,14 @@ def webhook_secret_failed_email_content(event_type: str, req_body: dict, maintai
     body = f"""
     <p>Hello EasyCLA Maintainer,</p>
     <p>This is a notification email from EasyCLA regarding failure of webhook secret validation.</p>
-    <p>{msg}</p>"""
+    <p>{msg}</p>
+    <p>Please verify the EasyCLA settings to ensure EasyCLA webhook secret is set correctly. \
+    See: <a href="https://github.com/organizations/LF-Engineering/settings/apps"> EasyCLA app setting</a> \
+    <p>For more information on how to setup GitHub webhook secret, please consult About Securing Your Webhooks\
+    <a href="https://docs.github.com/en/free-pro-team@latest/developers/webhooks-and-events/securing-your-webhooks"> \
+    in the GitHub Online Help Pages</a>.</p>
+    {get_email_sign_off_content()}
+    """
     cla.log.debug(msg)
 
     subject = f'EasyCLA: Webhook Secret Failure'

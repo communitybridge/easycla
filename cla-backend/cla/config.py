@@ -78,11 +78,11 @@ EMAIL_SERVICE = 'SNS'  #: Email service to use for notification emails.
 EMAIL_ON_SIGNATURE_APPROVED = True  #: Whether to email the user when signature has been approved.
 
 # Platform Maintainers
-PLATFORM_MAINTAINERS = ["ddeal@linuxfoundation.org", "makkalot@gmail.com"]
+PLATFORM_MAINTAINERS = os.environ.get('PLATFORM_MAINTAINERS', [])
 
 # SMTP Configuration.
 #: Sender email address for SMTP service (from address).
-SMTP_SENDER_EMAIL_ADDRESS = 'test@cla.system'
+SMTP_SENDER_EMAIL_ADDRESS = os.environ.get('SMTP_SENDER_EMAIL_ADDRESS', 'test@cla.system')
 SMTP_HOST = ''  #: Host of the SMTP service.
 SMTP_PORT = '0'  #: Port of the SMTP service.
 
