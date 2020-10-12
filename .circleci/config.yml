@@ -84,6 +84,20 @@ jobs:
           fingerprints:
             - "e9:13:85:f1:b1:a1:25:bf:f5:44:34:66:82:1e:31:59"
       - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
+      - run:
+          name: Setup AWS key
+          command: |
+            echo "export AWS_ACCESS_KEY_ID=${!AWS_ACCESS_KEY_ID_ENV_VAR}" >> ${BASH_ENV}
+            echo "export AWS_SECRET_ACCESS_KEY=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" >> ${BASH_ENV}
+      - run:
+          name: Install AWS Profile
+          command: |
+            echo "PROJECT_DIR=${PROJECT_DIR}"
+            echo "Installing Profile '${AWS_PROFILE}'..."
+            mkdir -p ~/.aws
+            printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
+            printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
+            echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
       - *install-node-12
       - run:
           name: Install Top Level Dependencies
