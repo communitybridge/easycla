@@ -14,6 +14,8 @@ import os
 
 import logging
 
+from utils import get_ssm_key
+
 stage = os.environ.get('STAGE', '')
 
 LOG_LEVEL = logging.DEBUG  #: Logging level.
@@ -91,3 +93,6 @@ LOCAL_STORAGE_FOLDER = '/tmp/cla'  #: Local folder when using the LocalStorage s
 
 # PDF Generation.
 PDF_SERVICE = 'DocRaptor'
+
+# GH Private Key
+GITHUB_PRIVATE_KEY = get_ssm_key('us-east-1', f'cla-gh-app-private-key-{stage}')

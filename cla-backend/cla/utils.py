@@ -5,6 +5,7 @@
 Utility functions for the CLA project.
 """
 
+from boto3 import client
 import inspect
 import json
 import os
@@ -1486,3 +1487,13 @@ def get_public_email(user):
     if len(user.get_all_user_emails()) > 0:
         return next((email for email in user.get_all_user_emails() if "noreply.github.com" not in email), None)
     
+
+def get_ssm_key(region, key):
+    """
+    Fetches the specified SSM key value from the SSM key store
+    """
+    ssm_client = client('ssm', region_name=region)
+    cla.log.debug(f'Fetching Key: {key}')
+    response = ssm_client.get_parameter(Name=key, WithDecryption=True)
+    cla.log.debug(f'Fetched Key: {key}, value: {response["Parameter"]["Value"]}')
+    return response['Parameter']['Value']
