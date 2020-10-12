@@ -37,14 +37,16 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAGroup with Project scope of %s",
 					authUser.UserName, *params.ClaGroupInput.FoundationSfid),
+				XRequestID: reqID,
 			})
 		}
 
 		claGroup, err := service.CreateCLAGroup(ctx, params.ClaGroupInput, utils.StringValue(params.XUSERNAME))
 		if err != nil {
 			return cla_group.NewCreateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "400",
-				Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", err.Error()),
+				Code:       "400",
+				Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - %s", err.Error()),
+				XRequestID: reqID,
 			})
 		}
 
@@ -73,8 +75,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		// Make sure we have some parameters to process...
 		if params.Body == nil || (params.Body.ClaGroupName == "" && params.Body.ClaGroupDescription == "") {
 			return cla_group.NewUpdateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "400",
-				Message: "EasyCLA - 400 Bad Request - missing update parameters - body missing required values",
+				Code:       "400",
+				Message:    "EasyCLA - 400 Bad Request - missing update parameters - body missing required values",
+				XRequestID: reqID,
 			})
 		}
 
@@ -87,8 +90,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			//if err, ok := err.(*utils.CLAGroupNotFound); ok {
 			if errors.As(err, &e) {
 				return cla_group.NewUpdateClaGroupNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "404",
-					Message: fmt.Sprintf("EasyCLA - 404 Not Found - CLA Group not found - %+v", err),
+					Code:       "404",
+					Message:    fmt.Sprintf("EasyCLA - 404 Not Found - CLA Group not found - %+v", err),
+					XRequestID: reqID,
 				})
 			}
 			if errors.Is(err, v1Project.ErrProjectDoesNotExist) {
@@ -96,12 +100,14 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 					Code: "404",
 					Message: fmt.Sprintf("EasyCLA - 404 Not Found - CLA Group %s not found",
 						params.ClaGroupID),
+					XRequestID: reqID,
 				})
 			}
 			return cla_group.NewUpdateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "400",
 				Message: fmt.Sprintf("EasyCLA - 400 Bad Request - unable to lookup CLA Group by ID: %s, error: %+v",
 					params.ClaGroupID, err),
+				XRequestID: reqID,
 			})
 		}
 
@@ -111,29 +117,33 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to UpdateCLAGroup with Project scope of %s",
 					authUser.UserName, claGroupModel.FoundationSFID),
+				XRequestID: reqID,
 			})
 		}
 
 		// Don't try to update values that are the same... that would be pointless
 		if claGroupModel.ProjectName == params.Body.ClaGroupName {
 			return cla_group.NewUpdateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "400",
-				Message: fmt.Sprintf("EasyCLA - 400 Bad Request - cannot update CLA Group Name - existing CLA Group name matches updated name value: %s", claGroupModel.ProjectName),
+				Code:       "400",
+				Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - cannot update CLA Group Name - existing CLA Group name matches updated name value: %s", claGroupModel.ProjectName),
+				XRequestID: reqID,
 			})
 		}
 		// Don't try to update values that are the same... that would be pointless
 		if claGroupModel.ProjectDescription == params.Body.ClaGroupDescription {
 			return cla_group.NewUpdateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "400",
-				Message: fmt.Sprintf("EasyCLA - 400 Bad Request - cannot update CLA Group Description - existing CLA Group description matches updated description value: %s", claGroupModel.ProjectDescription),
+				Code:       "400",
+				Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - cannot update CLA Group Description - existing CLA Group description matches updated description value: %s", claGroupModel.ProjectDescription),
+				XRequestID: reqID,
 			})
 		}
 
 		claGroup, err := service.UpdateCLAGroup(ctx, params.ClaGroupID, params.Body, utils.StringValue(params.XUSERNAME))
 		if err != nil {
 			return cla_group.NewUpdateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "400",
-				Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", err.Error()),
+				Code:       "400",
+				Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - %s", err.Error()),
+				XRequestID: reqID,
 			})
 		}
 
@@ -164,8 +174,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			log.WithFields(f).Warn(err)
 			if err, ok := err.(*utils.CLAGroupNotFound); ok {
 				return cla_group.NewDeleteClaGroupNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "404",
-					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+					Code:       "404",
+					Message:    fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+					XRequestID: reqID,
 				})
 			}
 			if err == v1Project.ErrProjectDoesNotExist {
@@ -173,12 +184,14 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 					Code: "404",
 					Message: fmt.Sprintf("EasyCLA - 404 Not Found - cla_group %s not found",
 						params.ClaGroupID),
+					XRequestID: reqID,
 				})
 			}
 			return cla_group.NewDeleteClaGroupInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "500",
 				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - unable to lookup CLA Group by ID: %s, error: %+v",
 					params.ClaGroupID, err),
+				XRequestID: reqID,
 			})
 		}
 
@@ -187,6 +200,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DeleteCLAGroup with Project scope of %s",
 					authUser.UserName, claGroupModel.FoundationSFID),
+				XRequestID: reqID,
 			})
 		}
 
@@ -197,6 +211,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Code: "500",
 				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error deleting CLA Group %s, error: %+v",
 					params.ClaGroupID, err),
+				XRequestID: reqID,
 			})
 		}
 
@@ -227,8 +242,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		if err != nil {
 			if err, ok := err.(*utils.CLAGroupNotFound); ok {
 				return cla_group.NewEnrollProjectsNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "404",
-					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+					Code:       "404",
+					Message:    fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+					XRequestID: reqID,
 				})
 			}
 			if err == v1Project.ErrProjectDoesNotExist {
@@ -236,11 +252,13 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 					Code: "404",
 					Message: fmt.Sprintf("EasyCLA - 404 Not Found - cla_group %s not found",
 						params.ClaGroupID),
+					XRequestID: reqID,
 				})
 			}
 			return cla_group.NewEnrollProjectsInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "400",
-				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+				Code:       "400",
+				Message:    fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+				XRequestID: reqID,
 			})
 		}
 
@@ -250,6 +268,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to enroll with Project scope of %s",
 					authUser.UserName, cg.FoundationSFID),
+				XRequestID: reqID,
 			})
 		}
 
@@ -257,13 +276,15 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		if err != nil {
 			if strings.Contains(err.Error(), "bad request") {
 				return cla_group.NewEnrollProjectsBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", err.Error()),
+					Code:       "400",
+					Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - %s", err.Error()),
+					XRequestID: reqID,
 				})
 			}
 			return cla_group.NewEnrollProjectsInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "500",
-				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+				Code:       "500",
+				Message:    fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+				XRequestID: reqID,
 			})
 		}
 
@@ -294,20 +315,22 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		if err != nil {
 			if err, ok := err.(*utils.CLAGroupNotFound); ok {
 				return cla_group.NewUnenrollProjectsNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "404",
-					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+					Code:       "404",
+					Message:    fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+					XRequestID: reqID,
 				})
 			}
 			if err == v1Project.ErrProjectDoesNotExist {
 				return cla_group.NewUnenrollProjectsNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code: "404",
-					Message: fmt.Sprintf("EasyCLA - 404 Not Found - cla_group %s not found",
-						params.ClaGroupID),
+					Code:       "404",
+					Message:    fmt.Sprintf("EasyCLA - 404 Not Found - cla_group %s not found", params.ClaGroupID),
+					XRequestID: reqID,
 				})
 			}
 			return cla_group.NewUnenrollProjectsInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "400",
-				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+				Code:       "400",
+				Message:    fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+				XRequestID: reqID,
 			})
 		}
 
@@ -317,6 +340,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to unenroll with Project scope of %s",
 					authUser.UserName, cg.FoundationSFID),
+				XRequestID: reqID,
 			})
 		}
 
@@ -324,13 +348,15 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		if err != nil {
 			if strings.Contains(err.Error(), "bad request") {
 				return cla_group.NewUnenrollProjectsBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", err.Error()),
+					Code:       "400",
+					Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - %s", err.Error()),
+					XRequestID: reqID,
 				})
 			}
 			return cla_group.NewUnenrollProjectsInternalServerError().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "500",
-				Message: fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+				Code:       "500",
+				Message:    fmt.Sprintf("EasyCLA - 500 Internal server error - error = %s", err.Error()),
+				XRequestID: reqID,
 			})
 		}
 
@@ -364,6 +390,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to ListCLAGroupsUnderFoundation with Project scope of %s",
 					authUser.UserName, params.ProjectSFID),
+				XRequestID: reqID,
 			})
 		}
 
@@ -371,8 +398,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		if err != nil {
 			if err, ok := err.(*utils.SFProjectNotFound); ok {
 				return cla_group.NewListClaGroupsUnderFoundationNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "404",
-					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+					Code:       "404",
+					Message:    fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+					XRequestID: reqID,
 				})
 			}
 			if _, ok := err.(*utils.ProjectCLAGroupMappingNotFound); ok {
@@ -382,8 +410,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			}
 			if err, ok := err.(*utils.CLAGroupNotFound); ok {
 				return cla_group.NewListClaGroupsUnderFoundationNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "404",
-					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+					Code:       "404",
+					Message:    fmt.Sprintf("EasyCLA - 404 Not Found - %s", err.Error()),
+					XRequestID: reqID,
 				})
 			}
 			return cla_group.NewListClaGroupsUnderFoundationBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{

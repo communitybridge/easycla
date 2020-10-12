@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/stretchr/testify/assert"
@@ -303,6 +305,24 @@ func TestGetPathFromURL(t *testing.T) {
 	input := "https://cla-signature-files-dev.s3.amazonaws.com/contract-group/66b97366-a298-4625-965e-0c292c39f9a2/template/ccla-2020-09-25T22-37-51Z.pdf"
 	expected := "/contract-group/66b97366-a298-4625-965e-0c292c39f9a2/template/ccla-2020-09-25T22-37-51Z.pdf"
 	result, err := utils.GetPathFromURL(input)
-	assert.Nil(t, err, "GetPathFromURL error is not nil")
+	assert.Nil(t, err, "GetPathFromURL error is nil")
 	assert.Equal(t, expected, result)
+}
+
+func TestIsUUIDv4True(t *testing.T) {
+	v4, err := uuid.NewV4()
+	assert.Nil(t, err, "NewV4 UUID is nil")
+	assert.True(t, utils.IsUUIDv4(v4.String()), fmt.Sprintf("%s is a v4 UUID", v4.String()))
+}
+
+func TestIsUUIDv4LikeV2(t *testing.T) {
+	var b byte = 'b'
+	v2, err := uuid.NewV2(b)
+	assert.Nil(t, err, "NewV4 UUID is nil")
+	assert.False(t, utils.IsUUIDv4(v2.String()), fmt.Sprintf("%s is not a v4 UUID", v2.String()))
+}
+
+func TestIsUUIDv4LikeSFID(t *testing.T) {
+	sfid := "0014100000TdznWAAR"
+	assert.False(t, utils.IsUUIDv4(sfid), fmt.Sprintf("%s is not v4 UUID", sfid))
 }

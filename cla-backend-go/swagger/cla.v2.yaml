@@ -1190,6 +1190,7 @@ paths:
       operationId: getCLATemplatePreview
       security: []
       parameters:
+        - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/path-claGroupID"
         - $ref: "#/parameters/templateCLAType"
         - in: query
@@ -4656,6 +4657,10 @@ definitions:
         description: The error message
         example: "unable to find project Acme, Inc."
         type: string
+      x-request-id:
+        description: The unique request ID value - assigned/set by the API Gateway or the API based on the login session
+        example: 'b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f'
+        type: string
 
   success-response:
     type: object
@@ -4670,4 +4675,8 @@ definitions:
       Message:
         description: The success message
         example: "unable to find project Acme, Inc."
+        type: string
+      x-request-id:
+        description: The unique request ID value - assigned/set by the API Gateway or the API based on the login session
+        example: 'b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f'
         type: string

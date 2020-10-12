@@ -12,6 +12,8 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
@@ -254,4 +256,14 @@ func ValidGitHubOrg(githubOrg string) (string, bool) {
 	}
 
 	return "", true
+}
+
+// IsUUIDv4 returns true if the specified ID is in the UUIDv4 format, otherwise returns false
+func IsUUIDv4(id string) bool {
+	value, err := uuid.FromString(id)
+	if err != nil {
+		return false
+	}
+
+	return value.Version() == uuid.V4
 }

@@ -45,6 +45,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Company Project CLA Managers with Organization scope of %s",
 						authUser.UserName, params.CompanySFID),
+					XRequestID: reqID,
 				})
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(ctx, params.CompanySFID)
@@ -56,7 +57,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 
 			result, err := service.GetCompanyProjectCLAManagers(ctx, comp.CompanyID, params.ProjectSFID)
 			if err != nil {
-				return company.NewGetCompanyProjectClaManagersBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return company.NewGetCompanyProjectClaManagersBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 			return company.NewGetCompanyProjectClaManagersOK().WithXRequestID(reqID).WithPayload(result)
 		})
@@ -69,7 +70,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			result, err := service.GetCompanyCLAGroupManagers(ctx, params.CompanyID, params.ClaGroupID)
 			if err != nil {
 				if err == v1Company.ErrCompanyDoesNotExist {
-					return company.NewGetCompanyCLAGroupManagersNotFound().WithXRequestID(reqID).WithPayload(errorResponse(err))
+					return company.NewGetCompanyCLAGroupManagersNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 				}
 			}
 
@@ -86,14 +87,16 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAManager with Project|Organization scope of %s | %s",
 						authUser.UserName, params.ProjectSFID, params.CompanySFID),
+					XRequestID: reqID,
 				})
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(ctx, params.CompanySFID)
 			if err != nil {
 				if err == v1Company.ErrCompanyDoesNotExist {
 					return company.NewGetCompanyProjectActiveClaNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-						Code:    "404",
-						Message: fmt.Sprintf("Company not found with given ID. [%s]", params.CompanySFID),
+						Code:       "404",
+						Message:    fmt.Sprintf("Company not found with given ID. [%s]", params.CompanySFID),
+						XRequestID: reqID,
 					})
 				}
 			}
@@ -101,11 +104,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			if err != nil {
 				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
 					return company.NewGetCompanyProjectActiveClaNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-						Code:    "404",
-						Message: fmt.Sprintf("clagroup not found with given ID. [%s]", params.ProjectSFID),
+						Code:       "404",
+						Message:    fmt.Sprintf("clagroup not found with given ID. [%s]", params.ProjectSFID),
+						XRequestID: reqID,
 					})
 				}
-				return company.NewGetCompanyProjectActiveClaBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return company.NewGetCompanyProjectActiveClaBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 			return company.NewGetCompanyProjectActiveClaOK().WithXRequestID(reqID).WithPayload(result)
 		})
@@ -123,6 +127,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to get contributors with Project scope of %s or Project|Organization scope of %s | %s",
 						authUser.UserName, params.ProjectSFID, params.ProjectSFID, params.CompanySFID),
+					XRequestID: reqID,
 				})
 			}
 
@@ -131,7 +136,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				if err == v1Company.ErrCompanyDoesNotExist {
 					return company.NewGetCompanyProjectContributorsNotFound().WithXRequestID(reqID)
 				}
-				return company.NewGetCompanyProjectContributorsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return company.NewGetCompanyProjectContributorsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 			return company.NewGetCompanyProjectContributorsOK().WithXRequestID(reqID).WithPayload(result)
 		})
@@ -146,17 +151,18 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAManager with Project|Organization scope of %s | %s",
 						authUser.UserName, params.ProjectSFID, params.CompanySFID),
+					XRequestID: reqID,
 				})
 			}
 			result, err := service.GetCompanyProjectCLA(ctx, authUser, params.CompanySFID, params.ProjectSFID)
 			if err != nil {
 				if err == v1Company.ErrCompanyDoesNotExist {
-					return company.NewGetCompanyProjectClaNotFound().WithXRequestID(reqID).WithPayload(errorResponse(err))
+					return company.NewGetCompanyProjectClaNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 				}
 				if err == ErrProjectNotFound {
-					return company.NewGetCompanyProjectClaNotFound().WithXRequestID(reqID).WithPayload(errorResponse(err))
+					return company.NewGetCompanyProjectClaNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 				}
-				return company.NewGetCompanyProjectClaBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return company.NewGetCompanyProjectClaBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 			return company.NewGetCompanyProjectClaOK().WithXRequestID(reqID).WithPayload(result)
 		})
@@ -170,8 +176,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			// Quick validation of the input parameters
 			if !utils.ValidCompanyName(*params.Input.CompanyName) {
 				return company.NewCreateCompanyBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: "EasyCLA - 400 Bad Request - Company Name is not valid",
+					Code:       "400",
+					Message:    "EasyCLA - 400 Bad Request - Company Name is not valid",
+					XRequestID: reqID,
 				})
 			}
 
@@ -180,13 +187,13 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				log.Warnf("error returned from create company api: %+v", err)
 				if strings.Contains(err.Error(), "website already exists") {
 					formatErr := errors.New("website already exists")
-					return company.NewCreateCompanyConflict().WithXRequestID(reqID).WithPayload(errorResponse(formatErr))
+					return company.NewCreateCompanyConflict().WithXRequestID(reqID).WithPayload(errorResponse(reqID, formatErr))
 				}
 				if _, ok := err.(*organizations.CreateOrgConflict); ok {
 					formatErr := errors.New("organization already exists")
-					return company.NewCreateCompanyConflict().WithXRequestID(reqID).WithPayload(errorResponse(formatErr))
+					return company.NewCreateCompanyConflict().WithXRequestID(reqID).WithPayload(errorResponse(reqID, formatErr))
 				}
-				return company.NewCreateCompanyBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return company.NewCreateCompanyBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 			return company.NewCreateCompanyOK().WithXRequestID(reqID).WithPayload(companyModel)
 		})
@@ -200,15 +207,16 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			companyModel, err := service.GetCompanyByName(ctx, params.CompanyName)
 			if err != nil {
 				log.Warnf("unable to locate company by name: %s, error: %+v", params.CompanyName, err)
-				return company.NewGetCompanyByNameBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return company.NewGetCompanyByNameBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 
 			if companyModel == nil {
 				msg := fmt.Sprintf("unable to locate company by name: %s", params.CompanyName)
 				log.Warn(msg)
 				return company.NewGetCompanyByNameNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", msg),
+					Code:       "400",
+					Message:    fmt.Sprintf("EasyCLA - 404 Not Found - %s", msg),
+					XRequestID: reqID,
 				})
 			}
 
@@ -228,8 +236,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					params.CompanyID, getErr)
 				log.Warn(msg)
 				return company.NewDeleteCompanyByIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
+					Code:       "400",
+					Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
+					XRequestID: reqID,
 				})
 			}
 
@@ -238,8 +247,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				msg := fmt.Sprintf("unable to locate company by ID: %s", params.CompanyID)
 				log.Warn(msg)
 				return company.NewDeleteCompanyByIDNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "404",
-					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", msg),
+					Code:       "404",
+					Message:    fmt.Sprintf("EasyCLA - 404 Not Found - %s", msg),
+					XRequestID: reqID,
 				})
 			}
 
@@ -249,8 +259,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					companyModel.CompanyName, params.CompanyID)
 				log.Warn(msg)
 				return company.NewDeleteCompanyByIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
+					Code:       "400",
+					Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
+					XRequestID: reqID,
 				})
 			}
 
@@ -260,15 +271,16 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					authUser.UserName, companyModel.CompanyName, companyModel.CompanyExternalID)
 				log.Warn(msg)
 				return company.NewDeleteCompanyByIDForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - %s", msg),
+					Code:       "403",
+					Message:    fmt.Sprintf("EasyCLA - 403 Forbidden - %s", msg),
+					XRequestID: reqID,
 				})
 			}
 
 			err := service.DeleteCompanyByID(ctx, params.CompanyID)
 			if err != nil {
 				log.Warnf("unable to delete company by ID: %s, error: %+v", params.CompanyID, err)
-				return company.NewDeleteCompanyByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return company.NewDeleteCompanyByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 
 			return company.NewDeleteCompanyByIDNoContent().WithXRequestID(reqID)
@@ -287,8 +299,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					params.CompanySFID, getErr)
 				log.Warn(msg)
 				return company.NewDeleteCompanyBySFIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
+					Code:       "400",
+					Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
+					XRequestID: reqID,
 				})
 			}
 
@@ -297,8 +310,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				msg := fmt.Sprintf("unable to locate company by SFID: %s", params.CompanySFID)
 				log.Warn(msg)
 				return company.NewDeleteCompanyBySFIDNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: fmt.Sprintf("EasyCLA - 404 Not Found - %s", msg),
+					Code:       "400",
+					Message:    fmt.Sprintf("EasyCLA - 404 Not Found - %s", msg),
+					XRequestID: reqID,
 				})
 			}
 
@@ -309,8 +323,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					companyModel.CompanyName, params.CompanySFID)
 				log.Warn(msg)
 				return company.NewDeleteCompanyBySFIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "400",
-					Message: fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
+					Code:       "400",
+					Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
+					XRequestID: reqID,
 				})
 			}
 
@@ -320,15 +335,16 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					authUser.UserName, companyModel.CompanyName, companyModel.CompanyExternalID)
 				log.Warn(msg)
 				return company.NewDeleteCompanyBySFIDForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:    "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - %s", msg),
+					Code:       "403",
+					Message:    fmt.Sprintf("EasyCLA - 403 Forbidden - %s", msg),
+					XRequestID: reqID,
 				})
 			}
 
 			err := service.DeleteCompanyBySFID(ctx, params.CompanySFID)
 			if err != nil {
 				log.Warnf("unable to delete company by SFID: %s, error: %+v", params.CompanySFID, err)
-				return company.NewDeleteCompanyBySFIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return company.NewDeleteCompanyBySFIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 
 			return company.NewDeleteCompanyBySFIDNoContent().WithXRequestID(reqID)
@@ -342,9 +358,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			if contributorErr != nil {
 				if _, ok := contributorErr.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
 					formatErr := errors.New("user already assigned contributor role for company")
-					return company.NewContributorAssociationConflict().WithXRequestID(reqID).WithPayload(errorResponse(formatErr))
+					return company.NewContributorAssociationConflict().WithXRequestID(reqID).WithPayload(errorResponse(reqID, formatErr))
 				}
-				return company.NewContributorAssociationBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(contributorErr))
+				return company.NewContributorAssociationBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, contributorErr))
 			}
 			return company.NewContributorAssociationOK().WithXRequestID(reqID).WithPayload(contributor)
 		})
@@ -355,7 +371,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			adminList, adminErr := service.GetCompanyAdmins(ctx, params.CompanySFID)
 			if adminErr != nil {
-				return company.NewGetCompanyAdminsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(adminErr))
+				return company.NewGetCompanyAdminsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, adminErr))
 			}
 			return company.NewGetCompanyAdminsOK().WithXRequestID(reqID).WithPayload(adminList)
 		})
@@ -380,8 +396,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				log.WithFields(f).Warn(msg)
 				return company.NewContributorRoleScopAssociationBadRequest().WithXRequestID(reqID).WithPayload(
 					&models.ErrorResponse{
-						Message: msg,
-						Code:    BadRequest,
+						Message:    msg,
+						Code:       BadRequest,
+						XRequestID: reqID,
 					})
 			}
 			log.WithFields(f).Debugf("found %d project IDs for CLA group", len(projectCLAGroups))
@@ -390,8 +407,9 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				log.WithFields(f).Warn(msg)
 				return company.NewContributorRoleScopAssociationNotFound().WithXRequestID(reqID).WithPayload(
 					&models.ErrorResponse{
-						Message: msg,
-						Code:    BadRequest,
+						Message:    msg,
+						Code:       BadRequest,
+						XRequestID: reqID,
 					})
 
 			}
@@ -401,15 +419,17 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				if err == ErrContributorConflict {
 					return company.NewContributorRoleScopAssociationConflict().WithXRequestID(reqID).WithPayload(
 						&models.ErrorResponse{
-							Message: msg,
-							Code:    Conflict,
+							Message:    msg,
+							Code:       Conflict,
+							XRequestID: reqID,
 						})
 				}
 				log.WithFields(f).Warn(msg)
 				return company.NewContributorRoleScopAssociationBadRequest().WithXRequestID(reqID).WithPayload(
 					&models.ErrorResponse{
-						Message: msg,
-						Code:    BadRequest,
+						Message:    msg,
+						Code:       BadRequest,
+						XRequestID: reqID,
 					})
 			}
 			return company.NewContributorRoleScopAssociationOK().WithXRequestID(reqID).WithPayload(&models.Contributors{
@@ -443,15 +463,16 @@ type codedResponse interface {
 	Code() string
 }
 
-func errorResponse(err error) *models.ErrorResponse {
+func errorResponse(reqID string, err error) *models.ErrorResponse {
 	code := ""
 	if e, ok := err.(codedResponse); ok {
 		code = e.Code()
 	}
 
 	e := models.ErrorResponse{
-		Code:    code,
-		Message: err.Error(),
+		Code:       code,
+		Message:    err.Error(),
+		XRequestID: reqID,
 	}
 
 	return &e

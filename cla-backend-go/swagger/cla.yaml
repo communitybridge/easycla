@@ -2885,6 +2885,10 @@ definitions:
         type: string
         description: an API message string, typically used by developers to encode additional call/trace information
         example: 'CLA Group with ID 123445 was not found'
+      x-request-id:
+        description: The unique request ID value - assigned/set by the API Gateway or the API based on the login session
+        example: 'b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f'
+        type: string
 
   #delete-response:
   #  type: object
