@@ -10,7 +10,7 @@ import os
 import uuid
 from datetime import datetime
 from pprint import pprint
-from typing import Optional
+from typing import Optional, List
 
 import requests
 
@@ -759,21 +759,76 @@ def validate_organization(body):
             return {"status": "error"}
 
 
-def webhook_secret_validation(webhook_signature, data):
+def webhook_secret_validation(webhook_signature: str, data: bytes) -> bool:
+    """
+    webhook_secret_validation checks if webhook_signature is same as incoming data's
+    :param webhook_signature:
+    :param data:
+    :return:
+    """
+    cla.log.debug(f"webhook_secret_validation for signature {webhook_signature} and env : {cla.config.GITHUB_APP_WEBHOOK_SECRET}")
+    if cla.config.GITHUB_APP_WEBHOOK_SECRET == "":
+        raise RuntimeError("GITHUB_APP_WEBHOOK_SECRET is empty")
+
     if not webhook_signature:
         return False
 
     sha_name, signature = webhook_signature.split('=')
-
     if not sha_name == 'sha1':
         return False
 
-    mac = hmac.new(os.environ.get('GH_APP_WEBHOOK_SECRET', '').encode('utf-8'), msg=data, digestmod='sha1')
-    pprint(str(mac.hexdigest()))
-    pprint(str(signature))
-    pprint(data)
+    mac = hmac.new(cla.config.GITHUB_APP_WEBHOOK_SECRET.encode('utf-8'), msg=data, digestmod='sha1')
+    hex_digest = mac.hexdigest()
+    return True if hmac.compare_digest(hex_digest, signature.strip()) else False
 
-    return True if hmac.compare_digest(mac.hexdigest(), signature) else False
+
+def webhook_secret_failed_email_content(event_type: str, req_body: dict, maintainers: List[str]):
+    """Helper function to update maintainers about failed webhook secrets"""
+    if not maintainers:
+        cla.log.warning("webhook_secret_failed_email - maintainers list is empty can't send the email.")
+        raise RuntimeError("no maintainers set")
+
+    user_login = req_body.get('sender', {}).get('login', None)
+    repository_id = req_body.get('repository', {}).get('id', None)
+    repository_name = req_body.get('repository', {}).get('full_name', None)
+    installation_id = req_body.get('installation', {}).get('id', None)
+    msg = f"""webhook secret validation failed :
+    stage: {cla.config.stage},
+    event type: {event_type},
+    user login: {user_login},
+    repository_id: {repository_id}, repository_name : {repository_name},
+    installation_id: {installation_id}"""
+
+    body = f"""
+    <p>Hello EasyCLA Maintainer,</p>
+    <p>This is a notification email from EasyCLA regarding failure of webhook secret validation.</p>
+    <p>{msg}</p>
+    <p>Please verify the EasyCLA settings to ensure EasyCLA webhook secret is set correctly. \
+    See: <a href="https://github.com/organizations/LF-Engineering/settings/apps"> EasyCLA app setting</a> \
+    <p>For more information on how to setup GitHub webhook secret, please consult About Securing Your Webhooks\
+    <a href="https://docs.github.com/en/free-pro-team@latest/developers/webhooks-and-events/securing-your-webhooks"> \
+    in the GitHub Online Help Pages</a>.</p>
+    {get_email_sign_off_content()}
+    """
+    cla.log.debug(msg)
+
+    subject = f'EasyCLA: Webhook Secret Failure'
+    body = '<p>' + body.replace('\n', '<br>') + '</p>'
+    return subject, body, maintainers
+
+
+def webhook_secret_failed_email(event_type: str, req_body: dict, maintainers: List[str]):
+    """
+    sends the notification email for the failing webhook secret validation
+    :param event_type:
+    :param req_body:
+    :param maintainers:
+    :return:
+    """
+    subject, body, maintainers = webhook_secret_failed_email_content(event_type, req_body, maintainers)
+    get_email_service().send(subject, body, maintainers)
+    cla.log.debug('webhook_secret_failed_email - sending notification email '
+                  f' to maintainers: {maintainers}')
 
 
 def check_namespace(namespace):
