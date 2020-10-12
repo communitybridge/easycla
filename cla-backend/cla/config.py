@@ -12,9 +12,11 @@ configuration, etc) in cla_config.py somewhere in your Python path.
 
 import os
 
+from boto3 import client
 import logging
+from cla.client import get_ssm_key
 
-from utils import get_ssm_key
+# from utils import get_ssm_key
 
 stage = os.environ.get('STAGE', '')
 
@@ -96,6 +98,14 @@ LOCAL_STORAGE_FOLDER = '/tmp/cla'  #: Local folder when using the LocalStorage s
 
 # PDF Generation.
 PDF_SERVICE = 'DocRaptor'
+
+def get_ssm_key(region, key):
+    """
+    Fetches the specified SSM key value from the SSM key store
+    """
+    ssm_client = client('ssm', region_name=region)
+    response = ssm_client.get_parameter(Name=key, WithDecryption=True)
+    return response['Parameter']['Value']
 
 # GH Private Key
 GITHUB_PRIVATE_KEY = get_ssm_key('us-east-1', f'cla-gh-app-private-key-{stage}')
