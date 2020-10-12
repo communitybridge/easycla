@@ -17,8 +17,10 @@ export class ClaConfigureGithubRepositoriesModal {
   loading: any;
   responseErrors: string[] = [];
   claProjectId: any;
+  sfdcProjectId: any;
   orgAndRepositories: any[];
   assignedRepositories: any[];
+  errorMessage: string = '';
 
   constructor(
     public navParams: NavParams,
@@ -28,6 +30,7 @@ export class ClaConfigureGithubRepositoriesModal {
     private location: PlatformLocation
   ) {
     this.claProjectId = this.navParams.get('claProjectId');
+    this.sfdcProjectId = this.navParams.get('sfdcProjectId');
     this.getDefaults();
 
     this.location.onPopState(() => {
@@ -58,7 +61,7 @@ export class ClaConfigureGithubRepositoriesModal {
 
   checkAssignedRepositories(data) {
     //console.log('Received response: ');
-    //console.log(data);
+    // console.log(data);
     this.assignedRepositories = data['repositories'];
     this.orgAndRepositories = data['orgs_and_repos']
       .map((organization) => {
@@ -106,48 +109,62 @@ export class ClaConfigureGithubRepositoriesModal {
   }
 
   assignRepository(repository) {
-    const payload = { ...repository };
-    delete payload.status;
     this.loading.activateSpinner = true;
-
-    payload.repository_project_id = this.claProjectId;
-    payload.repository_external_id = payload.repository_github_id;
-    delete payload.repository_github_id;
-
-    this.claService.postProjectRepository(payload).subscribe(() => this.getOrgRepositories());
+    this.errorMessage = '';
+    const payload = {
+      repositoryExternalID: repository.repository_github_id + '',
+      repositoryName: repository.repository_name,
+      repositoryOrganizationName: repository.repository_organization_name,
+      repositoryProjectID: this.claProjectId,
+      repositoryType: repository.repository_type,
+      repositoryUrl: repository.repository_url
+    };
+    this.claService.postProjectRepository(this.sfdcProjectId, payload).subscribe(
+      () => {
+        this.getOrgRepositories();
+      },
+      (error) => {
+        this.loading.activateSpinner = false;
+        if (error._body) {
+          this.errorMessage = JSON.parse(error._body).Message;
+        }
+      }
+    );
   }
 
   removeRepository(repository) {
     this.loading.activateSpinner = true;
-    this.claService.removeProjectRepository(repository.repository_id).subscribe(() => this.getOrgRepositories());
+    this.errorMessage = '';
+    this.claService.removeProjectRepository(this.sfdcProjectId, repository.repository_id).subscribe(
+      () => {
+        this.getOrgRepositories();
+      },
+      (error) => {
+        this.loading.activateSpinner = false;
+        if (error._body) {
+          this.errorMessage = JSON.parse(error._body).Message;
+        }
+      }
+    );
   }
 
   /**
    * Add all available repositories.
    */
   addAll(organizationName: string) {
-    //console.log(this.orgAndRepositories);
     for (const orgRepo in this.orgAndRepositories) {
       const theOrg = this.orgAndRepositories[orgRepo];
-      // No data?
       if (theOrg == null || theOrg.repositories == null || theOrg.repositories == 0) {
-        //console.log('addAll() - skipping organization/repo at: ' + orgRepo);
         continue;
       }
 
-      //console.log('addAll() - processing organization: ' + theOrg.organizationName);
-
       if (theOrg.organization_name != organizationName) {
-        //console.log('addAll() - skipping organization: ' + organizationName + ', does not match: ' + theOrg.organization_name);
         continue;
       }
 
       for (const repo in theOrg.repositories) {
         const theRepo = theOrg.repositories[repo];
-        // No data? - move on
         if (theRepo == null || theRepo.status == null) {
-          //console.log('addAll() - skipping organization: ' + organizationName + ', repository or repository status is empty.');
-          console.log(theOrg);
           continue;
         }
 
@@ -165,33 +182,23 @@ export class ClaConfigureGithubRepositoriesModal {
    * Remove all available repositories.
    */
   removeAll(organizationName: string) {
-    //console.log(this.orgAndRepositories);
     for (const orgRepo in this.orgAndRepositories) {
       const theOrg = this.orgAndRepositories[orgRepo];
-      // No data?
       if (theOrg == null || theOrg.repositories == null || theOrg.repositories == 0) {
-        //console.log('removeAll() - skipping organization/repo at: ' + orgRepo);
         continue;
       }
 
-      //console.log('removeAll() - skipping organization: ' + organizationName + ', does not match: ' + theOrg.organization_name);
-
       if (theOrg.organization_name != organizationName) {
-        //console.log('removeAll() - skipping organization: ' + organizationName);
         continue;
       }
 
       for (const repo in theOrg.repositories) {
         const theRepo = theOrg.repositories[repo];
-        // No data? - move on
         if (theRepo == null || theRepo.status == null) {
-          //console.log('removeAll() - skipping organization: ' + organizationName + ', repository or repository status is empty.');
-          console.log(theOrg);
           continue;
         }
 
         if (theRepo.status == 'assigned') {
-          console.log('removeAll() - Removing repo: ' + theRepo.repository_name);
           this.removeRepository(theRepo);
         } else {
           console.log('removeAll() - Skipping repo: ' + theRepo.repository_name + ', status is: ' + theRepo.status);

@@ -43,10 +43,14 @@ tool-setup:
 
 setup_dev: setup-dev
 setup-dev: tool-setup
+	@echo "Removing previously install version of swagger..."
+	@rm -Rf $(shell echo $(GOPATH))/bin/swagger $(shell echo $(GOPATH))/src/github.com/go-swagger
+	@echo "Installing swagger version: '$(SWAGGER_TOOL_VERSION)'..."
 	gobin github.com/go-swagger/go-swagger/cmd/swagger@$(SWAGGER_TOOL_VERSION)
+	@echo "Installing goimports..."
 	gobin golang.org/x/tools/cmd/goimports
+	@echo "Installing cover..."
 	gobin golang.org/x/tools/cmd/cover
-	# npm install -g multi-file-swagger
 	@echo "Installing multi-file-swagger tool..."
 	cd $(dir $(realpath $(firstword $(MAKEFILE_LIST))))swagger && pip3 install virtualenv && virtualenv .venv && source .venv/bin/activate && pip3 install -r requirements.txt
 
@@ -72,8 +76,8 @@ swagger-prep:
 	@mkdir gen
 
 swagger-build-v1-services:
+	@echo
 	@echo "Generating v1 legacy API models..."
-	#cd swagger; multi-file-swagger -o yaml cla.yaml > cla.compiled.yaml
 	cd swagger; source .venv/bin/activate && python3 multi-file-swagger.py --spec-input-file cla.yaml --spec-output-file cla.compiled.yaml
 	swagger -q generate server \
 		-t gen \
@@ -84,8 +88,8 @@ swagger-build-v1-services:
 		-P user.CLAUser
 
 swagger-build-v2-services:
+	@echo
 	@echo "Generating v2 API models..."
-	#cd swagger; multi-file-swagger -o yaml cla.v2.yaml > cla.v2.compiled.yaml
 	cd swagger; source .venv/bin/activate && python3 multi-file-swagger.py --spec-input-file cla.v2.yaml --spec-output-file cla.v2.compiled.yaml
 	swagger -q generate server \
 		-t gen \
@@ -98,6 +102,7 @@ swagger-build-v2-services:
 		-P auth.User
 
 swagger-build-project-service:
+	@echo
 	@echo "Generating swagger client for the project-service..."
 	@mkdir -p v2/project-service
 	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/project-service/swagger.json --output swagger/project-service.yaml
@@ -108,6 +113,7 @@ swagger-build-project-service:
 		-f swagger/project-service.yaml
 
 swagger-build-organization-service:
+	@echo
 	@echo "Generating swagger client for the organization-service..."
 	@mkdir -p v2/organization-service
 	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/organization-service/swagger.json --output swagger/organization-service.yaml
@@ -118,6 +124,7 @@ swagger-build-organization-service:
 		-f swagger/organization-service.yaml
 
 swagger-build-user-service:
+	@echo
 	@echo "Generating swagger client for the user-service..."
 	@mkdir -p v2/user-service
 	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/user-service/swagger.json --output swagger/user-service.yaml
@@ -128,6 +135,7 @@ swagger-build-user-service:
 		-f swagger/user-service.yaml
 
 swagger-build-acs-service:
+	@echo
 	@echo "Generating swagger client for the acs-service..."
 	@mkdir -p v2/acs-service
 	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/acs/v1/api-docs/swagger/swagger.json --output swagger/acs-service.yaml
@@ -143,12 +151,12 @@ swagger-validate: swagger-v1-validate swagger-v2-validate
 
 swagger-v1-validate:
 	@echo ""
-	@echo "Validating v1 legacy API specification..."
+	@echo "Validating EasyCLA v1 legacy API specification..."
 	@swagger validate --stop-on-error swagger/cla.compiled.yaml
 
 swagger-v2-validate:
 	@echo ""
-	@echo "Validating v2 API specification..."
+	@echo "Validating EasyCLA v2 API specification..."
 	@swagger validate --stop-on-error swagger/cla.v2.compiled.yaml
 
 fmt:

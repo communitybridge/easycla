@@ -8,6 +8,7 @@ import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
 import { GithubOrganisationModel } from '../../../models/github-organisation-model';
 import { PlatformLocation } from '@angular/common';
+import { EnvConfig } from '../../../services/cla.env.utils';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -21,15 +22,15 @@ import { PlatformLocation } from '@angular/common';
 })
 export class ProjectClaPage {
   loading: any;
-
   sfdcProjectId: string;
   githubOrganizations: GithubOrganisationModel[];
-
   claProjects: any = [];
   projectsByExternalId: any;
   alert;
   iclaUploadInfo: any;
   cclaUploadInfo: any;
+  expanded: boolean = true;
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
   @ViewChild(Nav) nav: Nav;
 
   constructor(
@@ -237,7 +238,8 @@ export class ProjectClaPage {
 
   openClaOrganizationProviderModal(claProjectId) {
     let modal = this.modalCtrl.create('ClaOrganizationProviderModal', {
-      claProjectId: claProjectId
+      claProjectId: claProjectId,
+      sfdcProjectId: this.sfdcProjectId
     });
     modal.onDidDismiss((data) => {
       if (data) {
@@ -249,7 +251,8 @@ export class ProjectClaPage {
 
   openClaConfigureGithubRepositoriesModal(claProjectId) {
     let modal = this.modalCtrl.create('ClaConfigureGithubRepositoriesModal', {
-      claProjectId: claProjectId
+      claProjectId: claProjectId,
+      sfdcProjectId: this.sfdcProjectId
     });
     modal.onDidDismiss((data) => {
       this.getClaProjects();
@@ -292,7 +295,7 @@ export class ProjectClaPage {
     return found;
   }
 
-  deleteConfirmation(type, payload) {
+  deleteConfirmation(type, payload, projectId) {
     this.alert = this.alertCtrl.create({
       subTitle: `Delete ${type}`,
       message: `Are you sure you want to delete this ${type}?`,
@@ -313,7 +316,7 @@ export class ProjectClaPage {
                 break;
 
               case 'Gerrit Instance':
-                this.deleteGerritInstance(payload);
+                this.deleteGerritInstance(payload, projectId);
                 break;
             }
           }
@@ -417,8 +420,8 @@ export class ProjectClaPage {
     });
   }
 
-  deleteGerritInstance(gerrit) {
-    this.claService.deleteGerritInstance(gerrit.gerrit_id).subscribe((response) => {
+  deleteGerritInstance(gerrit, projectId) {
+    this.claService.deleteGerritInstance(projectId, gerrit.gerrit_id).subscribe((response) => {
       this.getClaProjects();
     });
   }
@@ -497,4 +500,33 @@ export class ProjectClaPage {
     return false;
   }
 
+  getIndividualDocumentName(project) {
+    if (project.projectIndividualDocuments !== null && project.projectIndividualDocuments.length > 0) {
+      return project.projectIndividualDocuments[project.projectIndividualDocuments.length - 1].documentName
+    } else {
+      return "No Document";
+    }
+  }
+
+  getIndividualDocumentDate(project) {
+    if (project.projectIndividualDocuments !== null && project.projectIndividualDocuments.length > 0) {
+      return project.projectIndividualDocuments[project.projectIndividualDocuments.length - 1].documentCreationDate
+    } else {
+      return "No Document";
+    }
+  }
+
+  getIndividualDocumentVersion(project) {
+    if (project.projectIndividualDocuments !== null && project.projectIndividualDocuments.length > 0) {
+      const major = project.projectIndividualDocuments[project.projectIndividualDocuments.length - 1].documentMajorVersion;
+      const minor = project.projectIndividualDocuments[project.projectIndividualDocuments.length - 1].documentMinorVersion;
+      return `${major}.${minor}`;
+    } else {
+      return "v1.0";
+    }
+  }
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
+  }
 }

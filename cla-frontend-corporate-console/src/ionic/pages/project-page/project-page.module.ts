@@ -8,7 +8,6 @@ import { LoadingSpinnerComponentModule } from '../../components/loading-spinner/
 import { LoadingDisplayDirectiveModule } from '../../directives/loading-display/loading-display.module';
 import { SortingDisplayComponentModule } from '../../components/sorting-display/sorting-display.module';
 import { LayoutModule } from '../../layout/layout.module';
-import { GetHelpComponentModule } from '../../components/get-help/get-help.module';
 import { SharedModule } from '../../shared.module';
 
 @NgModule({
@@ -19,8 +18,7 @@ import { SharedModule } from '../../shared.module';
     SortingDisplayComponentModule,
     SharedModule,
     IonicPageModule.forChild(ProjectPage),
-    LayoutModule,
-    GetHelpComponentModule
+    LayoutModule
   ],
   entryComponents: [ProjectPage]
 })

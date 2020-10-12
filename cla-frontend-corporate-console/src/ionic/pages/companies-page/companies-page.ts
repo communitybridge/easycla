@@ -6,6 +6,7 @@ import { IonicPage, ModalController, NavController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { Restricted } from '../../decorators/restricted';
 import { RolesService } from '../../services/roles.service';
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -28,6 +29,7 @@ export class CompaniesPage {
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
   expanded: boolean = true;
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
 
   constructor(
     public navCtrl: NavController,

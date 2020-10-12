@@ -21,25 +21,7 @@ Provide context to the feature request - provide steps to indicate how this feat
 
 ## User Story
 
-A description from a user's perspective.
-
-For example:
-
-- As a project manager, I want to see the list of project sorted alphabetically when I select this button...
-
-## Assumptions
-
-If you are assuming certain facts or scenarios, list them so we have a baseline to understand your request.
-
-- [...] Assumption 1
-- [...] Assumption 2
-
-## Questions
-
-List any questions or clarifications that are needed to addressed to satisfy this request.
-
-1. [...] Question 1...
-1. [...] Question 2...
+- As a project manager, I want to...
 
 ## Acceptance Criteria
 
@@ -51,4 +33,5 @@ The "done" criteria when this feature or problem is resolved. Such as:
 
 ## References
 
-\(Optional\) Provide any code or specification references that would be helpful for the developer implementing this feature.
+- Provide any code or specification references that would be helpful for the developer implementing this feature.
+

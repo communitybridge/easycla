@@ -26,8 +26,13 @@ export function Restricted(restrictions: any) {
           if (access) {
             return true;
           } else {
-            console.log('no access');
-            window.open(EnvConfig['cla-landing-page'], '_self');
+            // No access
+            if (EnvConfig['lfx-header-enabled'] === "true") {
+              window.open(EnvConfig['landing-page'], '_self');
+            } else {
+              window.location.hash = '#/login';
+              window.location.reload(true);
+            }
             return false;
           }
         });

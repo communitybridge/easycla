@@ -10,7 +10,6 @@ import { SortingDisplayComponentModule } from '../../components/sorting-display/
 import { LayoutModule } from '../../layout/layout.module';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
-import { GetHelpComponentModule } from '../../components/get-help/get-help.module';
 import { SharedModule } from '../../shared.module';
 
 @NgModule({
@@ -25,8 +24,7 @@ import { SharedModule } from '../../shared.module';
     IonicPageModule.forChild(CompanyPage),
     NgxDatatableModule,
     NgxDatatableModule,
-    SharedModule,
-    GetHelpComponentModule
+    SharedModule
   ],
   entryComponents: [CompanyPage]
 })

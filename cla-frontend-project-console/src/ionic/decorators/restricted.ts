@@ -1,9 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
+import { EnvConfig } from "../services/cla.env.utils";
+
 export function Restricted(restrictions: any) {
-  return function(target: Function) {
-    target.prototype.ionViewCanEnter = function() {
+  return function (target: Function) {
+    target.prototype.ionViewCanEnter = function () {
       if (restrictions.roles) {
         if (!this.rolesService) {
           console.warn('[WARNING] this.rolesService is not defined for ' + target.prototype.constructor.name);
@@ -21,24 +23,16 @@ export function Restricted(restrictions: any) {
             }
           }
 
-          if (access) {
-            return true;
-          } else {
-            console.log('no access');
-            // let navObject = {
-            //   page: target.prototype.constructor.name,
-            //   params: {},
-            //   roles: restrictions.roles,
-            // };
-            // if (this.navParams) {
-            //   navObject.params = this.navParams.data;
-            // }
-            // let navString = JSON.stringify(navObject);
-            // window.location.hash = '#/login/' + navString;
-            window.location.hash = '#/login';
-            window.location.reload(true);
+          if (!access) {
+            if (EnvConfig['lfx-header-enabled'] === "true") {
+              window.open(EnvConfig['landing-page'], '_self');
+            } else {
+              window.location.hash = '#/login';
+              window.location.reload(true);
+            }
             return false;
           }
+          return true;
         });
       } else {
         // no other restrictions implemented yet

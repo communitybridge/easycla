@@ -112,3 +112,34 @@ func (e *ProjectCLAGroupMappingNotFound) Error() string {
 func (e *ProjectCLAGroupMappingNotFound) Unwrap() error {
 	return e.Err
 }
+
+// CompanyDoesNotExist is an error model for company does not exist errors
+type CompanyDoesNotExist struct {
+	CompanyName string
+	CompanyID   string
+	CompanySFID string
+	Err         error
+}
+
+// Error is an error string function for company does not exist errs
+func (e *CompanyDoesNotExist) Error() string {
+	var errMsg = "company does not exist"
+	if e.CompanyName == "" {
+		errMsg = fmt.Sprintf("%s company name: %s", errMsg, e.CompanyName)
+	}
+	if e.CompanyID == "" {
+		errMsg = fmt.Sprintf("%s company id: %s", errMsg, e.CompanyID)
+	}
+	if e.CompanySFID == "" {
+		errMsg = fmt.Sprintf("%s company sfid: %s", errMsg, e.CompanySFID)
+	}
+	if e.Err != nil {
+		errMsg = fmt.Sprintf("%s error: %+v", errMsg, e.Err)
+	}
+	return errMsg
+}
+
+// Unwrap method returns its contained error
+func (e *CompanyDoesNotExist) Unwrap() error {
+	return e.Err
+}
