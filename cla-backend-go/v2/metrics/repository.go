@@ -977,11 +977,14 @@ func (repo *repo) getClaGroupProjectsMapping() (map[string]*claGroup, error) {
 func (repo *repo) saveCompanyProjectMetrics(in *CompanyProjectMetrics, pmm map[string]*ProjectMetric, cmm map[string]*CompanyMetric) error {
 	t := time.Now()
 	log.Println("saving company_project_metrics")
-	psc := project_service.GetClient()
+
 	claGroupMapping, err := repo.getClaGroupProjectsMapping()
 	if err != nil {
 		return err
 	}
+
+	filterProjectMap := repo.projectHelperMap(in, claGroupMapping)
+
 	for id, cpm := range in.CompanyProjectMetrics {
 		pm, ok := pmm[cpm.ProjectID]
 		if !ok {
@@ -1003,12 +1006,13 @@ func (repo *repo) saveCompanyProjectMetrics(in *CompanyProjectMetrics, pmm map[s
 		} else {
 			cpm.ProjectSFID = claGroupMap.foundationSFID
 		}
-		projectDetails, err := psc.GetProject(cpm.ProjectSFID)
-		if err != nil {
+
+		projectName, ok := filterProjectMap[cpm.ProjectSFID]
+		if !ok {
 			log.Warnf("saveCompanyProjectMetrics error = unable to get project details from project-service. %s", cpm.ProjectSFID)
 			continue
 		}
-		cpm.ProjectName = projectDetails.Name
+		cpm.ProjectName = projectName
 
 		cpm.CompanyName = cm.CompanyName
 		cpm.ClaGroupName = pm.ProjectName
@@ -1030,6 +1034,51 @@ func (repo *repo) saveCompanyProjectMetrics(in *CompanyProjectMetrics, pmm map[s
 	}
 	log.Printf("saving company_project_metrics took :%s \n", time.Since(t).String())
 	return nil
+}
+
+func (repo *repo) projectHelperMap(in *CompanyProjectMetrics, claGroupMapping map[string]*claGroup) map[string]string {
+	projectIDArray := map[string]bool{}
+	filterProjectMap := map[string]string{}
+
+	psc := project_service.GetClient()
+
+	for _, cpm := range in.CompanyProjectMetrics {
+		claGroupMap, ok := claGroupMapping[cpm.ProjectID]
+		if !ok {
+			continue
+		}
+		if len(claGroupMap.projectSFIDList) == 1 {
+			cpm.ProjectSFID = claGroupMap.projectSFIDList[0]
+		} else {
+			cpm.ProjectSFID = claGroupMap.foundationSFID
+		}
+		if _, ok := projectIDArray[cpm.ProjectSFID]; !ok {
+			projectIDArray[cpm.ProjectSFID] = true
+		}
+	}
+
+	log.Printf("length of projectIDArray %d", len(projectIDArray))
+
+	for projectSFID := range projectIDArray {
+		projectData, err := repo.projectsClaGroupsRepo.GetClaGroupIDForProject(projectSFID)
+		if err != nil {
+			log.Warnf("projectHelperMap/GetClaGroupIDForProject error = unable to get project details from easycla. %s", projectSFID)
+			continue
+		}
+
+		if projectData == nil {
+			projectDetails, err := psc.GetProject(projectSFID)
+			if err != nil {
+				log.Warnf("projectHelperMap/GetProject error = unable to get project details from project-service. %s", projectSFID)
+				continue
+			}
+			filterProjectMap[projectSFID] = projectDetails.Name
+		}
+		filterProjectMap[projectData.ProjectSFID] = projectData.ProjectName
+
+	}
+	log.Printf("Length of filterProjectMap %d \n", len(filterProjectMap))
+	return filterProjectMap
 }
 
 func (repo *repo) CalculateAndSaveMetrics() error {
