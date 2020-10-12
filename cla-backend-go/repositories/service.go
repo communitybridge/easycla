@@ -59,9 +59,9 @@ func (s *service) AddGithubRepository(ctx context.Context, externalProjectID str
 	}
 	projectSFID := externalProjectID
 
-	_, projErr := s.projectRepo.GetCLAGroupByID(ctx, externalProjectID, false)
+	_, projErr := s.projectRepo.GetCLAGroupByID(ctx, *input.RepositoryProjectID, false)
 	if projErr != nil {
-		return nil, errors.New("provided repository projectID is invalid")
+		return nil, projErr
 	}
 
 	org, err := s.ghOrgRepo.GetGithubOrganizationByName(ctx, utils.StringValue(input.RepositoryOrganizationName))

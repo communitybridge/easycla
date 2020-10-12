@@ -49,6 +49,9 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 			}
 			result, err := service.AddGithubRepository(ctx, params.ProjectSFID, params.GithubRepositoryInput)
 			if err != nil {
+				if err, ok := err.(*utils.CLAGroupNotFound); ok {
+					return github_repositories.NewAddProjectGithubRepositoryNotFound().WithPayload(errorResponse(err))
+				}
 				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
 			}
 			eventService.LogEvent(&events.LogEventArgs{
