@@ -23,7 +23,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			result, err := service.GetCLAManagerDistribution()
 			if err != nil {
-				return metrics.NewGetClaManagerDistributionBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return metrics.NewGetClaManagerDistributionBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 			return metrics.NewGetClaManagerDistributionOK().WithXRequestID(reqID).WithPayload(result)
 		})
@@ -33,7 +33,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			result, err := service.GetTotalCountMetrics()
 			if err != nil {
-				return metrics.NewGetTotalCountBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return metrics.NewGetTotalCountBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 			return metrics.NewGetTotalCountOK().WithXRequestID(reqID).WithPayload(result)
 		})
@@ -43,7 +43,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			result, err := service.GetCompanyMetric(params.CompanyID)
 			if err != nil {
-				return metrics.NewGetCompanyMetricBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return metrics.NewGetCompanyMetricBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 			return metrics.NewGetCompanyMetricOK().WithXRequestID(reqID).WithPayload(result)
 		})
@@ -56,7 +56,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				if err.Error() == "metric not found" {
 					return metrics.NewGetProjectMetricNotFound().WithXRequestID(reqID)
 				}
-				return metrics.NewGetProjectMetricBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return metrics.NewGetProjectMetricBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 			return metrics.NewGetProjectMetricOK().WithXRequestID(reqID).WithPayload(result)
 		})
@@ -66,7 +66,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			result, err := service.GetTopCompanies()
 			if err != nil {
-				return metrics.NewGetTopCompaniesBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return metrics.NewGetTopCompaniesBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 			return metrics.NewGetTopCompaniesOK().WithXRequestID(reqID).WithPayload(result)
 		})
@@ -76,7 +76,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			result, err := service.GetTopProjects()
 			if err != nil {
-				return metrics.NewGetTopProjectsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return metrics.NewGetTopProjectsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 			return metrics.NewGetTopProjectsOK().WithXRequestID(reqID).WithPayload(result)
 		})
@@ -86,7 +86,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			result, err := service.ListProjectMetrics(params.PageSize, params.NextKey)
 			if err != nil {
-				return metrics.NewListProjectMetricsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return metrics.NewListProjectMetricsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 			return metrics.NewListProjectMetricsOK().WithXRequestID(reqID).WithPayload(result)
 		})
@@ -101,6 +101,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to List Company Project Metrics with Organization scope of %s",
 						authUser.UserName, params.CompanySFID),
+					XRequestID: reqID,
 				})
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(ctx, params.CompanySFID)
@@ -111,7 +112,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 			result, err := service.ListCompanyProjectMetrics(comp.CompanyID, params.ProjectSFID)
 			if err != nil {
-				return metrics.NewListCompanyProjectMetricsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return metrics.NewListCompanyProjectMetricsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
 			return metrics.NewListCompanyProjectMetricsOK().WithXRequestID(reqID).WithPayload(result)
 		})
@@ -121,15 +122,16 @@ type codedResponse interface {
 	Code() string
 }
 
-func errorResponse(err error) *models.ErrorResponse {
+func errorResponse(reqID string, err error) *models.ErrorResponse {
 	code := ""
 	if e, ok := err.(codedResponse); ok {
 		code = e.Code()
 	}
 
 	e := models.ErrorResponse{
-		Code:    code,
-		Message: err.Error(),
+		Code:       code,
+		Message:    err.Error(),
+		XRequestID: reqID,
 	}
 
 	return &e

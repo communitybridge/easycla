@@ -38,6 +38,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get GitHub Repositories with Project scope of %s",
 						authUser.UserName, params.ProjectSFID),
+					XRequestID: reqID,
 				})
 			}
 
@@ -45,16 +46,17 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			if err != nil {
 				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
 					return github_repositories.NewGetProjectGithubRepositoriesNotFound().WithPayload(&models.ErrorResponse{
-						Code:    "404",
-						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
+						Code:       "404",
+						Message:    fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
+						XRequestID: reqID,
 					})
 				}
-				return github_repositories.NewGetProjectGithubRepositoriesBadRequest().WithPayload(errorResponse(err))
+				return github_repositories.NewGetProjectGithubRepositoriesBadRequest().WithPayload(errorResponse(reqID, err))
 			}
 			response := &models.ListGithubRepositories{}
 			err = copier.Copy(response, result)
 			if err != nil {
-				return github_repositories.NewGetProjectGithubRepositoriesInternalServerError().WithPayload(errorResponse(err))
+				return github_repositories.NewGetProjectGithubRepositoriesInternalServerError().WithPayload(errorResponse(reqID, err))
 			}
 			return github_repositories.NewGetProjectGithubRepositoriesOK().WithPayload(response)
 		})
@@ -69,12 +71,13 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Add GitHub Repositories with Project scope of %s",
 						authUser.UserName, params.ProjectSFID),
+					XRequestID: reqID,
 				})
 			}
 
 			result, err := service.AddGithubRepository(ctx, params.ProjectSFID, params.GithubRepositoryInput)
 			if err != nil {
-				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
+				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(reqID, err))
 			}
 
 			eventService.LogEvent(&events.LogEventArgs{
@@ -94,7 +97,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			response := &models.GithubRepository{}
 			err = copier.Copy(response, result)
 			if err != nil {
-				return github_repositories.NewAddProjectGithubRepositoryInternalServerError().WithPayload(errorResponse(err))
+				return github_repositories.NewAddProjectGithubRepositoryInternalServerError().WithPayload(errorResponse(reqID, err))
 			}
 
 			return github_repositories.NewAddProjectGithubRepositoryOK().WithPayload(response)
@@ -110,6 +113,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Delete GitHub Repositories with Project scope of %s",
 						authUser.UserName, params.ProjectSFID),
+					XRequestID: reqID,
 				})
 			}
 
@@ -118,12 +122,12 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				if err == repositories.ErrGithubRepositoryNotFound {
 					return github_repositories.NewDeleteProjectGithubRepositoryNotFound()
 				}
-				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
+				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(reqID, err))
 			}
 
 			err = service.DisableRepository(ctx, params.RepositoryID)
 			if err != nil {
-				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
+				return github_repositories.NewDeleteProjectGithubRepositoryBadRequest().WithPayload(errorResponse(reqID, err))
 			}
 
 			eventService.LogEvent(&events.LogEventArgs{
@@ -149,6 +153,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Query Protected Branch GitHub Repositories with Project scope of %s",
 						authUser.UserName, params.ProjectSFID),
+					XRequestID: reqID,
 				})
 			}
 
@@ -158,7 +163,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionNotFound()
 				}
 				if errors.Is(err, github.ErrAccessDenied) {
-					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionForbidden().WithPayload(errorResponse(err))
+					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionForbidden().WithPayload(errorResponse(reqID, err))
 				}
 
 				// shall we return the actual code for rate liming ?
@@ -166,7 +171,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionInternalServerError()
 				}
 
-				return github_repositories.NewGetProjectGithubRepositoryBranchProtectionBadRequest().WithPayload(errorResponse(err))
+				return github_repositories.NewGetProjectGithubRepositoryBranchProtectionBadRequest().WithPayload(errorResponse(reqID, err))
 			}
 
 			return github_repositories.NewGetProjectGithubRepositoryBranchProtectionOK().WithPayload(protectedBranch)
@@ -182,6 +187,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Update Protected Branch GitHub Repositories with Project scope of %s",
 						authUser.UserName, params.ProjectSFID),
+					XRequestID: reqID,
 				})
 			}
 
@@ -192,19 +198,19 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionNotFound()
 				}
 				if errors.Is(err, github.ErrAccessDenied) {
-					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionForbidden().WithPayload(errorResponse(err))
+					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionForbidden().WithPayload(errorResponse(reqID, err))
 				}
 
 				// shall we return the actual code for rate liming ?
 				if errors.Is(err, github.ErrRateLimited) {
-					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionInternalServerError().WithPayload(errorResponse(err))
+					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionInternalServerError().WithPayload(errorResponse(reqID, err))
 				}
 
 				if errors.Is(err, ErrInvalidBranchProtectionName) {
-					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionBadRequest().WithPayload(errorResponse(err))
+					return github_repositories.NewGetProjectGithubRepositoryBranchProtectionBadRequest().WithPayload(errorResponse(reqID, err))
 				}
 
-				return github_repositories.NewGetProjectGithubRepositoryBranchProtectionBadRequest().WithPayload(errorResponse(err))
+				return github_repositories.NewGetProjectGithubRepositoryBranchProtectionBadRequest().WithPayload(errorResponse(reqID, err))
 			}
 
 			return github_repositories.NewGetProjectGithubRepositoryBranchProtectionOK().WithPayload(protectedBranch)
@@ -217,15 +223,16 @@ type codedResponse interface {
 }
 
 // errorResponse is a helper to wrap the specified error into an error response model
-func errorResponse(err error) *models.ErrorResponse {
+func errorResponse(reqID string, err error) *models.ErrorResponse {
 	code := ""
 	if e, ok := err.(codedResponse); ok {
 		code = e.Code()
 	}
 
 	e := models.ErrorResponse{
-		Code:    code,
-		Message: err.Error(),
+		Code:       code,
+		Message:    err.Error(),
+		XRequestID: reqID,
 	}
 
 	return &e

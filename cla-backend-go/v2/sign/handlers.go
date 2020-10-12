@@ -33,35 +33,36 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Request Corporate Signature with Project|Organization scope of %s | %s",
 						user.UserName, utils.StringValue(params.Input.ProjectSfid), utils.StringValue(params.Input.CompanySfid)),
+					XRequestID: reqID,
 				})
 			}
 
 			resp, err := service.RequestCorporateSignature(ctx, utils.StringValue(params.XUSERNAME), params.Authorization, params.Input)
 			if err != nil {
 				if strings.Contains(err.Error(), "does not exist") {
-					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(err))
+					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(reqID, err))
 				}
 				if strings.Contains(err.Error(), "internal server error") {
-					return sign.NewRequestCorporateSignatureInternalServerError().WithPayload(errorResponse(err))
+					return sign.NewRequestCorporateSignatureInternalServerError().WithPayload(errorResponse(reqID, err))
 				}
 				if err == projects_cla_groups.ErrProjectNotAssociatedWithClaGroup {
-					return sign.NewRequestCorporateSignatureBadRequest().WithPayload(errorResponse(err))
+					return sign.NewRequestCorporateSignatureBadRequest().WithPayload(errorResponse(reqID, err))
 				}
 				if err == ErrCCLANotEnabled || err == ErrTemplateNotConfigured {
-					return sign.NewRequestCorporateSignatureBadRequest().WithPayload(errorResponse(err))
+					return sign.NewRequestCorporateSignatureBadRequest().WithPayload(errorResponse(reqID, err))
 				}
 				if _, ok := err.(*organizations.ListOrgUsrAdminScopesNotFound); ok {
 					formatErr := errors.New("user role scopes not found for cla-signatory role ")
-					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(formatErr))
+					return sign.NewRequestCorporateSignatureNotFound().WithPayload(errorResponse(reqID, formatErr))
 				}
 				if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
 					formatErr := errors.New("user role scope conflict")
-					return sign.NewRequestCorporateSignatureConflict().WithPayload(errorResponse(formatErr))
+					return sign.NewRequestCorporateSignatureConflict().WithPayload(errorResponse(reqID, formatErr))
 				}
 				if err == ErrNotInOrg {
-					return sign.NewRequestCorporateSignatureConflict().WithPayload(errorResponse(err))
+					return sign.NewRequestCorporateSignatureConflict().WithPayload(errorResponse(reqID, err))
 				}
-				return sign.NewRequestCorporateSignatureBadRequest().WithPayload(errorResponse(err))
+				return sign.NewRequestCorporateSignatureBadRequest().WithPayload(errorResponse(reqID, err))
 			}
 			return sign.NewRequestCorporateSignatureOK().WithPayload(resp)
 		})
@@ -71,15 +72,16 @@ type codedResponse interface {
 	Code() string
 }
 
-func errorResponse(err error) *models.ErrorResponse {
+func errorResponse(reqID string, err error) *models.ErrorResponse {
 	code := ""
 	if e, ok := err.(codedResponse); ok {
 		code = e.Code()
 	}
 
 	e := models.ErrorResponse{
-		Code:    code,
-		Message: err.Error(),
+		Code:       code,
+		Message:    err.Error(),
+		XRequestID: reqID,
 	}
 
 	return &e

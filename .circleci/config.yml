@@ -5,6 +5,51 @@ version: 2.1
 environment:
   BASH_ENV: ~/.bashrc
 
+setup_aws: &setup_aws
+  run:
+    name: Setup AWS key and Profile
+    command: |
+      touch ${BASH_ENV}
+      if ! grep -q AWS_ACCESS_KEY_ID ${BASH_ENV} ; then
+        echo "export AWS_ACCESS_KEY_ID='${!AWS_ACCESS_KEY_ID_ENV_VAR}'" >> ${BASH_ENV}
+        echo "Added AWS_ACCESS_KEY_ID to ${BASH_ENV}"
+      else
+        echo "Skipped adding AWS_ACCESS_KEY_ID to ${BASH_ENV} - already there"
+      fi
+
+      if ! grep -q AWS_SECRET_ACCESS_KEY ${BASH_ENV} ; then
+        echo "export AWS_SECRET_ACCESS_KEY='${!AWS_SECRET_ACCESS_KEY_ENV_VAR}'" >> ${BASH_ENV}
+        echo "Added AWS_SECRET_ACCESS_KEY to ${BASH_ENV}"
+      else
+        echo "Skipped adding AWS_SECRET_ACCESS_KEY to ${BASH_ENV} - already there"
+      fi
+
+      echo "Installing Profile '${AWS_PROFILE}'..."
+      mkdir -p ~/.aws
+
+      touch ~/.aws/config
+      if ! grep -q AWS_PROFILE ~/.aws/config; then
+        printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
+        echo "Added ${AWS_PROFILE} profile to ~/.aws/config"
+      else
+        echo "Skipped adding ${AWS_PROFILE} to ~/.aws/config - already there"
+      fi
+
+      touch ~/.aws/credentials
+      if ! grep -q AWS_PROFILE ~/.aws/credentials; then
+        printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
+        echo "Added ${AWS_PROFILE} profile to ~/.aws/credentials"
+      else
+        echo "Skipped adding ${AWS_PROFILE} to ~/.aws/credentials - already there"
+      fi
+
+      if ! grep -q AWS_PROFILE ${BASH_ENV}; then
+        echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+        echo "Added ${AWS_PROFILE} profile to ${BASH_ENV}"
+      else
+        echo "Skipped adding ${AWS_PROFILE} to ${BASH_ENV} - already there"
+      fi
+
 set_functional_test_environment: &set_functional_test_environment
   run:
     name: set deployment environment
@@ -83,21 +128,8 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "e9:13:85:f1:b1:a1:25:bf:f5:44:34:66:82:1e:31:59"
+      - *setup_aws
       - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
-      - run:
-          name: Setup AWS key
-          command: |
-            echo "export AWS_ACCESS_KEY_ID=${!AWS_ACCESS_KEY_ID_ENV_VAR}" >> ${BASH_ENV}
-            echo "export AWS_SECRET_ACCESS_KEY=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" >> ${BASH_ENV}
-      - run:
-          name: Install AWS Profile
-          command: |
-            echo "PROJECT_DIR=${PROJECT_DIR}"
-            echo "Installing Profile '${AWS_PROFILE}'..."
-            mkdir -p ~/.aws
-            printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
-            printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
-            echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
       - *install-node-12
       - run:
           name: Install Top Level Dependencies
@@ -133,22 +165,28 @@ jobs:
   buildBackendDev:
     <<: *buildBackendAnchor
     environment:
-      STAGE: dev
-
-  buildNightlyBackendDev:
-    <<: *buildBackendAnchor
-    environment:
-      CI_NIGHTLY: true
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
       STAGE: dev
 
   buildBackendStaging:
     <<: *buildBackendAnchor
     environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_STAGING
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_STAGING
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
       STAGE: staging
 
   buildBackendProd:
     <<: *buildBackendAnchor
     environment:
+      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_PROD
+      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_PROD
+      AWS_PROFILE: lf-cla
+      AWS_REGION: us-east-1
       STAGE: prod
 
   buildGoBackend: &buildGoBackendAnchor
@@ -238,12 +276,6 @@ jobs:
     environment:
       STAGE: dev
 
-  buildNightlyGoBackendDev:
-    <<: *buildGoBackendAnchor
-    environment:
-      CI_NIGHTLY: true
-      STAGE: dev
-
   buildGoBackendStaging:
     <<: *buildGoBackendAnchor
     environment:
@@ -265,6 +297,7 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "e9:13:85:f1:b1:a1:25:bf:f5:44:34:66:82:1e:31:59"
+      - *setup_aws
       - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
       - *install-node-12
       - run:
@@ -273,19 +306,6 @@ jobs:
             echo "Node version is: $(node --version)"
             echo "Running top level install..."
             yarn install
-      - run:
-          name: Setup AWS key
-          command: |
-            echo "export AWS_ACCESS_KEY_ID=${!AWS_ACCESS_KEY_ID_ENV_VAR}" >> ${BASH_ENV}
-            echo "export AWS_SECRET_ACCESS_KEY=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" >> ${BASH_ENV}
-      - run:
-          name: Install AWS Profile
-          command: |
-            echo "Installing Profile '${AWS_PROFILE}'..."
-            mkdir -p ~/.aws
-            printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
-            printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
-            echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
       - run:
           name: Deploy EasyCLA v1
           command: |
@@ -423,18 +443,6 @@ jobs:
       ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
       PRODUCT_DOMAIN: dev.lfcla.com
 
-  deployNightlyBackendDev:
-    <<: *deployBackendAnchor
-    environment:
-      CI_NIGHTLY: true
-      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
-      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
-      AWS_PROFILE: lf-cla
-      AWS_REGION: us-east-1
-      STAGE: dev
-      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
-      PRODUCT_DOMAIN: dev.lfcla.com
-
   deployBackendStaging:
     <<: *deployBackendAnchor
     environment:
@@ -462,20 +470,7 @@ jobs:
       - image: circleci/node:8-browsers
     steps:
       - checkout
-      - run:
-          name: Setup AWS key
-          command: |
-            echo "export AWS_ACCESS_KEY_ID=${!AWS_ACCESS_KEY_ID_ENV_VAR}" >> ${BASH_ENV}
-            echo "export AWS_SECRET_ACCESS_KEY=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" >> ${BASH_ENV}
-      - run:
-          name: Install AWS Profile
-          command: |
-            echo "PROJECT_DIR=${PROJECT_DIR}"
-            echo "Installing Profile '${AWS_PROFILE}'..."
-            mkdir -p ~/.aws
-            printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
-            printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
-            echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+      - *setup_aws
       - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
       - *install-node-12
       - run:
@@ -556,20 +551,7 @@ jobs:
       - image: circleci/node:8-browsers
     steps:
       - checkout
-      - run:
-          name: Setup AWS key
-          command: |
-            echo "export AWS_ACCESS_KEY_ID=${!AWS_ACCESS_KEY_ID_ENV_VAR}" >> ${BASH_ENV}
-            echo "export AWS_SECRET_ACCESS_KEY=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" >> ${BASH_ENV}
-      - run:
-          name: Install AWS Profile
-          command: |
-            echo "PROJECT_DIR=${PROJECT_DIR}"
-            echo "Installing Profile '${AWS_PROFILE}'..."
-            mkdir -p ~/.aws
-            printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
-            printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
-            echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+      - *setup_aws
       - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
       - *install-node-12
       - run:
@@ -642,19 +624,6 @@ jobs:
       ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
       PRODUCT_DOMAIN: dev.lfcla.com
 
-  deployNightlyProjectManagementConsoleDev:
-    <<: *deployFrontendAnchor
-    environment:
-      CI_NIGHTLY: true
-      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
-      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
-      AWS_PROFILE: lf-cla
-      AWS_REGION: us-east-1
-      STAGE: dev
-      PROJECT_DIR: cla-frontend-project-console
-      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
-      PRODUCT_DOMAIN: dev.lfcla.com
-
   deployProjectManagementConsoleStaging:
     <<: *deployFrontendAnchor
     environment:
@@ -683,19 +652,6 @@ jobs:
   deployCorporateConsoleDev:
     <<: *deployFrontendAnchor
     environment:
-      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
-      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
-      AWS_PROFILE: lf-cla
-      AWS_REGION: us-east-1
-      STAGE: dev
-      PROJECT_DIR: cla-frontend-corporate-console
-      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
-      PRODUCT_DOMAIN: dev.lfcla.com
-
-  deployNightlyCorporateConsoleDev:
-    <<: *deployFrontendAnchor
-    environment:
-      CI_NIGHTLY: true
       AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
       AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
       AWS_PROFILE: lf-cla
@@ -742,19 +698,6 @@ jobs:
       ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
       PRODUCT_DOMAIN: dev.lfcla.com
 
-  deployNightlyContributorConsoleDev:
-    <<: *deployFrontendAnchor
-    environment:
-      CI_NIGHTLY: true
-      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
-      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
-      AWS_PROFILE: lf-cla
-      AWS_REGION: us-east-1
-      STAGE: dev
-      PROJECT_DIR: cla-frontend-contributor-console
-      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
-      PRODUCT_DOMAIN: dev.lfcla.com
-
   deployContributorConsoleStaging:
     <<: *deployFrontendAnchor
     environment:
@@ -784,20 +727,7 @@ jobs:
       - image: circleci/node:8-browsers
     steps:
       - checkout
-      - run:
-          name: Setup AWS key
-          command: |
-            echo "export AWS_ACCESS_KEY_ID=${!AWS_ACCESS_KEY_ID_ENV_VAR}" >> ${BASH_ENV}
-            echo "export AWS_SECRET_ACCESS_KEY=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" >> ${BASH_ENV}
-      - run:
-          name: Install AWS Profile
-          command: |
-            echo "PROJECT_DIR=${PROJECT_DIR}"
-            echo "Installing Profile '${AWS_PROFILE}'..."
-            mkdir -p ~/.aws
-            printf "[profile ${AWS_PROFILE}]\nregion=${AWS_REGION}\noutput=json" > ~/.aws/config
-            printf "[${AWS_PROFILE}]\naws_access_key_id=${!AWS_ACCESS_KEY_ID_ENV_VAR}\naws_secret_access_key=${!AWS_SECRET_ACCESS_KEY_ENV_VAR}" > ~/.aws/credentials
-            echo "export AWS_PROFILE=${AWS_PROFILE}" >> ${BASH_ENV}
+      - *setup_aws
       - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
       - *install-node-12
       - run:
@@ -853,19 +783,6 @@ jobs:
   deployLandingFrontendDev:
     <<: *deployLandingFrontendAnchor
     environment:
-      AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
-      AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
-      AWS_PROFILE: lf-cla
-      AWS_REGION: us-east-1
-      STAGE: dev
-      PROJECT_DIR: cla-next
-      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
-      PRODUCT_DOMAIN: dev.lfcla.com
-
-  deployNightlyLandingFrontendDev:
-    <<: *deployLandingFrontendAnchor
-    environment:
-      CI_NIGHTLY: true
       AWS_ACCESS_KEY_ID_ENV_VAR: AWS_ACCESS_KEY_ID_DEV
       AWS_SECRET_ACCESS_KEY_ENV_VAR: AWS_SECRET_ACCESS_KEY_DEV
       AWS_PROFILE: lf-cla

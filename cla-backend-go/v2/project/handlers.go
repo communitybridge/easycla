@@ -41,13 +41,13 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			SearchTerm:  params.SearchTerm,
 		})
 		if err != nil {
-			return project.NewGetProjectsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewGetProjectsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
 		result := &models.ClaGroups{}
 		err = copier.Copy(result, projects)
 		if err != nil {
-			return project.NewGetProjectsInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewGetProjectsInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 		return project.NewGetProjectsOK().WithXRequestID(reqID).WithPayload(result)
 	})
@@ -61,9 +61,9 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		if err != nil {
 
 			if err.Error() == "project does not exist" {
-				return project.NewGetProjectByIDNotFound().WithXRequestID(reqID).WithPayload(errorResponse(err))
+				return project.NewGetProjectByIDNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
-			return project.NewGetProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewGetProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
 		if claGroupModel == nil {
@@ -75,12 +75,13 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project By ID with Project scope of %s",
 					user.UserName, claGroupModel.ProjectExternalID),
+				XRequestID: reqID,
 			})
 		}
 
 		result, err := v2ProjectModel(claGroupModel)
 		if err != nil {
-			return project.NewGetProjectByIDInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewGetProjectByIDInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
 		return project.NewGetProjectByIDOK().WithXRequestID(reqID).WithPayload(result)
@@ -95,6 +96,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Projects By External ID with Project scope of %s",
 					user.UserName, params.ExternalID),
+				XRequestID: reqID,
 			})
 		}
 
@@ -105,18 +107,19 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			PageSize:    params.PageSize,
 		})
 		if err != nil {
-			return project.NewGetProjectsByExternalIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewGetProjectsByExternalIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
 		results := &models.ClaGroups{}
 		err = copier.Copy(results, claGroupModel)
 		if err != nil {
-			return project.NewGetProjectsByExternalIDInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewGetProjectsByExternalIDInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 		if results.Projects == nil {
 			return project.NewGetProjectsByExternalIDNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Code:    "404",
-				Message: fmt.Sprintf("project not found with id. [%s]", params.ExternalID),
+				Code:       "404",
+				Message:    fmt.Sprintf("project not found with id. [%s]", params.ExternalID),
+				XRequestID: reqID,
 			})
 		}
 		return project.NewGetProjectsByExternalIDOK().WithXRequestID(reqID).WithPayload(results)
@@ -130,7 +133,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 
 		claGroupModel, err := service.GetCLAGroupByName(ctx, params.ProjectName)
 		if err != nil {
-			return project.NewGetProjectByNameBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewGetProjectByNameBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 		if claGroupModel == nil {
 			return project.NewGetProjectByNameNotFound().WithXRequestID(reqID)
@@ -141,12 +144,13 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project By Name with Project scope of %s",
 					user.UserName, claGroupModel.ProjectExternalID),
+				XRequestID: reqID,
 			})
 		}
 
 		result, err := v2ProjectModel(claGroupModel)
 		if err != nil {
-			return project.NewGetProjectByNameInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewGetProjectByNameInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 		return project.NewGetProjectByNameOK().WithXRequestID(reqID).WithPayload(result)
 	})
@@ -169,7 +173,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			if err == ErrCLAGroupDoesNotExist {
 				return project.NewDeleteProjectByIDNotFound().WithXRequestID(reqID)
 			}
-			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
 		if !utils.IsUserAuthorizedForProjectTree(user, claGroupModel.ProjectExternalID) {
@@ -177,6 +181,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Delete Project By ID with Project scope of %s",
 					user.UserName, claGroupModel.ProjectExternalID),
+				XRequestID: reqID,
 			})
 		}
 
@@ -185,7 +190,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			if err == ErrCLAGroupDoesNotExist {
 				return project.NewDeleteProjectByIDNotFound()
 			}
-			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
 			EventType:     events.CLAGroupDeleted,
@@ -207,19 +212,20 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			if err == ErrCLAGroupDoesNotExist {
 				return project.NewUpdateProjectNotFound()
 			}
-			return project.NewUpdateProjectNotFound().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewUpdateProjectNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 		if !utils.IsUserAuthorizedForProjectTree(user, claGroupModel.ProjectExternalID) {
 			return project.NewUpdateProjectForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Update Project By ID with Project scope of %s",
 					user.UserName, claGroupModel.ProjectExternalID),
+				XRequestID: reqID,
 			})
 		}
 
 		in, err := v1ProjectModel(&params.Body)
 		if err != nil {
-			return project.NewUpdateProjectInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewUpdateProjectInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
 		claGroupModel, err = service.UpdateCLAGroup(ctx, in)
@@ -227,7 +233,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			if err == ErrCLAGroupDoesNotExist {
 				return project.NewUpdateProjectNotFound().WithXRequestID(reqID)
 			}
-			return project.NewUpdateProjectBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewUpdateProjectBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
@@ -239,7 +245,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 
 		result, err := v2ProjectModel(claGroupModel)
 		if err != nil {
-			return project.NewUpdateProjectInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(err))
+			return project.NewUpdateProjectInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 		return project.NewUpdateProjectOK().WithXRequestID(reqID).WithPayload(result)
 	})
@@ -251,7 +257,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		// No auth checks - anyone including contributors can request
 		claProjects, getErr := v2Service.GetCLAProjectsByID(ctx, params.FoundationSFID)
 		if getErr != nil {
-			return project.NewGetCLAProjectsByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(getErr))
+			return project.NewGetCLAProjectsByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, getErr))
 		}
 
 		return project.NewGetCLAProjectsByIDOK().WithXRequestID(reqID).WithPayload(claProjects)
