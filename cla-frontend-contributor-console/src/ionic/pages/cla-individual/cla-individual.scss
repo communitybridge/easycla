@@ -11,7 +11,25 @@ cla-individual {
   }
 
   .page-content {
-    min-height: calc(100vh - 276px);
+    min-height: calc(100vh - 356px);
+    margin-top: 25px;
+    transition: margin 0.3s;
+
+    &.expanded {
+      min-height: calc(100vh - 414px);
+      margin-top: 100px;
+    }
+
+    &.without-lfx-header {
+      margin-top: 50px;
+      min-height: calc(100vh - 364px) !important;
+    }
+
+
+    img {
+      background-size: contain;
+      max-height: 150px;
+    }
   }
 
   .clear-div {
@@ -19,7 +37,7 @@ cla-individual {
   }
 
   .scroll-content {
-    padding-bottom: 162px;
+    margin-top: 96px !important;
   }
 
   .error {

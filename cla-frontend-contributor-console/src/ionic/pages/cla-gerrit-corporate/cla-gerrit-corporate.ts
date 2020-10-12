@@ -7,6 +7,7 @@ import { ClaService } from '../../services/cla.service';
 import { AuthService } from '../../services/auth.service';
 import { Restricted } from '../../decorators/restricted';
 import { generalConstants } from '../../constants/general';
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -26,7 +27,8 @@ export class ClaGerritCorporatePage {
   userId: string;
   signature: string;
   companies: any;
-
+  expanded: boolean = true;
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -56,14 +58,18 @@ export class ClaGerritCorporatePage {
 
   ionViewCanEnter() {
     if (!this.authService.isAuthenticated) {
-      setTimeout(() => this.navCtrl.setRoot('LoginPage'));
+      setTimeout(() => this.redirectToLogin);
     }
     return this.authService.isAuthenticated;
   }
 
-  // dismiss() {
-  //   this.viewCtrl.dismiss();
-  // }
+  redirectToLogin() {
+    // if (EnvConfig['lfx-header-enabled'] === "true") {
+    //   window.open(EnvConfig['landing-page'], '_self');
+    // } else {
+    this.navCtrl.setRoot('LoginPage');
+    // }
+  }
 
   getCompanies() {
     this.claService.getGerrit(this.gerritId).subscribe((gerrit) => {
@@ -84,7 +90,7 @@ export class ClaGerritCorporatePage {
     }, (error) => {
       // Got an auth error, redirect to the login
       console.log('Got an auth error, redirect to the login...');
-      setTimeout(() => this.navCtrl.setRoot('LoginPage'));
+      setTimeout(() => this.redirectToLogin());
     });
   }
 
@@ -164,5 +170,9 @@ export class ClaGerritCorporatePage {
         localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(project));
       });
     });
+  }
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
   }
 }

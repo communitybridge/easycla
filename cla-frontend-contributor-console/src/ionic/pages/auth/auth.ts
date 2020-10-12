@@ -4,6 +4,7 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
+import { EnvConfig } from '../../services/cla.env.utils';
 import { RolesService } from '../../services/roles.service';
 
 @Component({
@@ -39,12 +40,20 @@ export class AuthPage {
             localStorage.removeItem('gerritId');
             localStorage.removeItem('gerritClaType');
           } else {
-            this.navCtrl.setRoot('LoginPage');
+            this.redirectToLogin();
           }
         })
-        .catch((error) => {
-          this.navCtrl.setRoot('LoginPage');
+        .catch(() => {
+          this.redirectToLogin();
         });
     }, 2000);
+  }
+
+  redirectToLogin() {
+    // if (EnvConfig['lfx-header-enabled'] === "true") {
+    //   window.open(EnvConfig['landing-page'], '_self');
+    // } else {
+      this.navCtrl.setRoot('LoginPage');
+    // }
   }
 }

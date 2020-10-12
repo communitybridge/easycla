@@ -7,6 +7,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CheckboxValidator } from '../../validators/checkbox';
 import { ClaService } from '../../services/cla.service';
 import { generalConstants } from '../../constants/general';
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @IonicPage({
   segment: 'project/:projectId/user/:userId/employee/company/:companyId/confirm'
@@ -31,6 +32,8 @@ export class ClaEmployeeCompanyConfirmPage {
   currentlySubmitting: boolean = false;
   errorMessage: string = null;
   helpDeskLink: URL = new URL(generalConstants.getHelpURL);
+  expanded: boolean = true;
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
 
   constructor(
     public navCtrl: NavController,
@@ -140,5 +143,9 @@ export class ClaEmployeeCompanyConfirmPage {
       userId: this.userId,
       companyId: this.companyId
     });
+  }
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
   }
 }
