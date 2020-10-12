@@ -2016,7 +2016,7 @@ paths:
       tags:
         - signatures
 
-  /signatures/company/{companyID}:
+  /signatures/company/{companySFID}:
     get:
       summary: Get company signatures
       description: Returns a list of company signatures when provided the company ID
@@ -2026,12 +2026,8 @@ paths:
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
+        - $ref: '#/parameters/path-companySFID'
         - $ref: '#/parameters/signatureType'
-        - name: companyID
-          description: the company ID
-          in: path
-          type: string
-          required: true
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/companyName'
@@ -2095,7 +2091,7 @@ paths:
       tags:
         - signatures
 
-  /signatures/project/{projectID}/company/{companyID}/employee:
+  /signatures/project/{projectSFID}/company/{companySFID}/employee:
     get:
       summary: Get project company signatures for the employees
       description: Returns a list of employee project signature models when provided the project ID and company ID
@@ -2105,16 +2101,8 @@ paths:
         - $ref: "#/parameters/x-acl"
         - $ref: "#/parameters/x-username"
         - $ref: "#/parameters/x-email"
-        - name: projectID
-          description: the project ID
-          in: path
-          type: string
-          required: true
-        - name: companyID
-          description: the company ID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-projectSFID"
+        - $ref: "#/parameters/path-companySFID"
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
       responses:

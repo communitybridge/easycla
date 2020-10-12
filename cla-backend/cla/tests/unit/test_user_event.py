@@ -61,6 +61,7 @@ def test_request_company_whitelist(mock_event, create_event_user, project, compa
 def test_invite_cla_manager(mock_event, create_event_user, user):
     """ Test send email to CLA manager event """
     User.load = Mock()
+    Project.load_project_by_name = Mock()
     CCLAWhitelistRequest.save = Mock()
     user_controller.send_email_to_cla_manager = Mock()
     contributor_id = user.get_user_id()
@@ -74,16 +75,17 @@ def test_invite_cla_manager(mock_event, create_event_user, user):
                   f'for project {project_name} and company {company_name} '
                   f'to user {contributor_name} with email {contributor_email}')
     # TODO FIX Unit test - need to mock Project load_project_by_name() function
-    #user_controller.invite_cla_manager(contributor_id, contributor_name, contributor_email,
-    #                                   cla_manager_name, cla_manager_email,
-    #                                   project_name, company_name)
-    #mock_event.assert_called_once_with(
-    #    event_user_id=contributor_id,
-    #    event_project_name=project_name,
-    #    event_data=event_data,
-    #    event_type=EventType.InviteAdmin,
-    #    contains_pii=True,
-    #)
+    user_controller.invite_cla_manager(contributor_id, contributor_name, contributor_email,
+                                      cla_manager_name, cla_manager_email,
+                                      project_name, company_name)
+    mock_event.assert_called_once_with(
+       event_user_id=contributor_id,
+       event_project_name=project_name,
+       event_data=event_data,
+       event_type=EventType.InviteAdmin,
+       event_summary=event_data,
+       contains_pii=True,
+    )
 
 
 @patch('cla.controllers.user.Event.create_event')

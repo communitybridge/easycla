@@ -70,7 +70,14 @@ export class AuthService {
 
         // Logout the user and redirect to the login page
         this.logout();
-        window.open(EnvConfig['cla-landing-page'], '_self');
+
+        if (EnvConfig['lfx-header-enabled'] === "true") {
+          window.open(EnvConfig['landing-page'], '_self');
+        } else {
+          this.app.getRootNav()
+            .setRoot('LoginPage')
+            .catch((error) => this.warn(error));
+        }
       }
     }, FIVE_MINUTES_MS);
   }
@@ -81,13 +88,20 @@ export class AuthService {
 
   public logout(): void {
     // Remove tokens and expiry time from localStorage
+    let redirectUri = '';
     localStorage.removeItem('access_token');
     localStorage.removeItem('id_token');
     localStorage.removeItem('expires_at');
     localStorage.removeItem('userid');
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_name');
-    const redirectUri = EnvConfig['cla-landing-page'];
+
+    if (EnvConfig['lfx-header-enabled'] === "true") {
+      redirectUri = EnvConfig['landing-page'];
+    } else {
+      redirectUri = EnvConfig['corp-console-link'] + '/#/login';
+    }
+    
     this.auth0.logout({
       returnTo: redirectUri
     });

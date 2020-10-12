@@ -1,13 +1,8 @@
-<ion-header>
-  <ion-navbar>
-    <ion-title (click)="backToProject()">Back to project</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
-  </ion-navbar>
-  <get-help></get-help>
-</ion-header>
 
-<ion-content headerspacing>
-  <div class="page-content">
+<cla-header title="Back to all Projects" hasShowBackBtn="true" (onToggle)="onClickToggle($event)"></cla-header>
+
+<ion-content>
+  <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
     <ion-grid class="project-grid">
       <ion-row>
         <h1>Select a template</h1>

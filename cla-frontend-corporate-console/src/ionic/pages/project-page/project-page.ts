@@ -11,6 +11,7 @@ import { ClaManager } from '../../models/cla-manager';
 import { SortService } from '../../services/sort.service';
 import { Restricted } from '../../decorators/restricted';
 import { bool } from 'aws-sdk/clients/signer';
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -33,7 +34,7 @@ export class ProjectPage {
   company: ClaCompanyModel;
   manager: ClaUserModel;
   showModal: any;
-
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
   noPendingContributorRequests: boolean;
   allContributorRequests: any[];
   approvedContributorRequests: any[];
@@ -51,7 +52,7 @@ export class ProjectPage {
   sort: any;
   canEdit: boolean = false;
   expanded: boolean = true;
-  
+
   constructor(
     public navParams: NavParams,
     private claService: ClaService,

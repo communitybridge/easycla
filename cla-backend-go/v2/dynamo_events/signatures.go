@@ -153,33 +153,48 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 
 			var eg errgroup.Group
 
-			// Kick off a set of go routines to adjust the roles
-			for _, projectCLAGroup := range projectCLAGroups {
-				eg.Go(func() error {
-					// Remove any roles that were previously assigned for cla-manager-designee
-					log.WithFields(f).Debugf("removing existing %s role for project: '%s' (%s) and company: '%s' (%s)",
-						utils.CLADesigneeRole, projectCLAGroup.ProjectName, projectCLAGroup.ProjectSFID, companyModel.CompanyName, companyModel.CompanyExternalID)
-					err = s.removeCLAPermissionsByProjectOrganizationRole(projectCLAGroup.ProjectSFID, companyModel.CompanyExternalID, []string{utils.CLADesigneeRole})
-					if err != nil {
-						log.WithFields(f).Warnf("failed to remove %s roles for project: '%s' (%s) and company: '%s' (%s), error: %+v",
-							utils.CLADesigneeRole, projectCLAGroup.ProjectName, projectCLAGroup.ProjectSFID, companyModel.CompanyName, companyModel.CompanyExternalID, err)
-						return err
-					}
-
-					return nil
-				})
+			// Remove designee role based on project type(foundation or Project level)
+			foundationSFID := projectCLAGroups[0].FoundationSFID
+			signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, foundationSFID)
+			if signedErr != nil {
+				log.WithFields(f).Debugf("failed to check signed level for ID: %s ", foundationSFID)
+				return signedErr
 			}
+			if signedAtFoundation {
+				log.WithFields(f).Debugf("removing existing %s role for project: '%s' (%s) and company: '%s' (%s)",
+					utils.CLADesigneeRole, projectCLAGroups[0].ProjectName, foundationSFID, companyModel.CompanyName, companyModel.CompanyExternalID)
+				err = s.removeCLAPermissionsByProjectOrganizationRole(foundationSFID, companyModel.CompanyExternalID, []string{utils.CLADesigneeRole})
+				if err != nil {
+					log.WithFields(f).Warnf("failed to remove %s roles for project: '%s' (%s) and company: '%s' (%s), error: %+v",
+						utils.CLADesigneeRole, projectCLAGroups[0].ProjectName, foundationSFID, companyModel.CompanyName, companyModel.CompanyExternalID, err)
+					return err
+				}
+			} else {
+				for _, projectCLAGroup := range projectCLAGroups {
+					eg.Go(func() error {
+						// Remove any roles that were previously assigned for cla-manager-designee
+						log.WithFields(f).Debugf("removing existing %s role for project: '%s' (%s) and company: '%s' (%s)",
+							utils.CLADesigneeRole, projectCLAGroup.ProjectName, projectCLAGroup.ProjectSFID, companyModel.CompanyName, companyModel.CompanyExternalID)
+						err = s.removeCLAPermissionsByProjectOrganizationRole(projectCLAGroup.ProjectSFID, companyModel.CompanyExternalID, []string{utils.CLADesigneeRole})
+						if err != nil {
+							log.WithFields(f).Warnf("failed to remove %s roles for project: '%s' (%s) and company: '%s' (%s), error: %+v",
+								utils.CLADesigneeRole, projectCLAGroup.ProjectName, projectCLAGroup.ProjectSFID, companyModel.CompanyName, companyModel.CompanyExternalID, err)
+							return err
+						}
 
-			// Wait for the go routines to finish
-			log.WithFields(f).Debug("waiting for role assignment and cleanup...")
-			var lastRoleErr error
-			if roleErr := eg.Wait(); roleErr != nil {
-				log.WithFields(f).Warnf("encountered error while processing roles: %+v", roleErr)
-				lastRoleErr = roleErr
+						return nil
+					})
+				}
+				// Wait for the go routines to finish
+				log.WithFields(f).Debug("waiting for role assignment and cleanup...")
+				var lastRoleErr error
+				if roleErr := eg.Wait(); roleErr != nil {
+					log.WithFields(f).Warnf("encountered error while processing roles: %+v", roleErr)
+					lastRoleErr = roleErr
+				}
+				// Could be nil or the last error encountered
+				return lastRoleErr
 			}
-
-			// Could be nil or the last error encountered
-			return lastRoleErr
 		}
 	}
 

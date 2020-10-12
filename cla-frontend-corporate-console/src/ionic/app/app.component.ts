@@ -48,7 +48,11 @@ export class MyApp {
   ) {
     this.getDefaults();
     this.initializeApp();
-    this.mounted();
+
+    if (EnvConfig['lfx-header-enabled'] === "true") {
+      this.mounted();
+    }
+
     // Determine if we're running in a local services (developer) mode - the USE_LOCAL_SERVICES environment variable
     // will be set to true, otherwise were using normal services deployed in each environment
     const localServicesMode = (process.env.USE_LOCAL_SERVICES || 'false').toLowerCase() === 'true';

@@ -1,4 +1,4 @@
-<ion-header>
+<!-- <ion-header>
   <ion-navbar>
     <button ion-button [clear]="true" (click)="backToProjects()">
       <ion-icon name="arrow-back"></ion-icon>
@@ -7,11 +7,13 @@
     <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-navbar>
   <get-help></get-help>
-</ion-header>
+</ion-header> -->
+
+<cla-header title="Back to all Projects" hasShowBackBtn="true" (onToggle)="onClickToggle($event)"></cla-header>
 
 <ion-content headerspacing overflow-scroll="true">
 
-  <div class="page-content">
+  <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
     <section-header [projectId]="sfdcProjectId"></section-header>
 
     <loading-spinner *ngIf="claProjects!== null" [loading]="loading.claProjects"></loading-spinner>

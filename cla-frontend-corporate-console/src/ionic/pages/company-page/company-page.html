@@ -1,8 +1,8 @@
 
-<cla-header [title]="company.company_name | trimCharacters:60" (onToggle)="onClickToggle($event)"></cla-header>
+<cla-header [title]="company.company_name | trimCharacters:35" (onToggle)="onClickToggle($event)"></cla-header>
 
 <ion-content>
-  <div class="page-content" [ngClass]="{'expanded':expanded}">
+  <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
     <ion-grid>
       <ion-row justify-content-center>
         <ion-col col-12 col-md-8>
