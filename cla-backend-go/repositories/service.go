@@ -10,12 +10,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/github"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 )
 
 // Service contains functions of Github Repository service
@@ -52,24 +54,23 @@ func NewService(repo Repository, ghOrgRepo GithubOrgRepo, pcgRepo projects_cla_g
 }
 
 func (s *service) AddGithubRepository(ctx context.Context, externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
+	f := logrus.Fields{
+		"functionName":   "AddGithubRepository",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectSFID":    externalProjectID,
+		"claGroupID":     input.RepositoryProjectID,
+	}
 	if input.RepositoryName != nil && *input.RepositoryName == "" {
 		return nil, errors.New("github repository name required")
 	}
 	projectSFID := externalProjectID
-
-	allMappings, err := s.projectsClaGroupsRepo.GetProjectsIdsForClaGroup(aws.StringValue(input.RepositoryProjectID))
-	if err != nil {
-		return nil, err
-	}
-	var valid bool
-	for _, cgm := range allMappings {
-		if cgm.ProjectSFID == projectSFID || cgm.FoundationSFID == projectSFID {
-			valid = true
-			break
-		}
-	}
-	if !valid {
-		return nil, fmt.Errorf("provided cla group id %s is not linked to project sfid %s", utils.StringValue(input.RepositoryProjectID), projectSFID)
+	// Check if project exists in project service
+	psc := project_service.GetClient()
+	project, projectErr := psc.GetProject(projectSFID)
+	if projectErr != nil || project == nil {
+		msg := fmt.Sprintf("Failed to get salesforce project: %s", projectSFID)
+		log.WithFields(f).Warn(msg)
+		return nil, projectErr
 	}
 
 	org, err := s.ghOrgRepo.GetGithubOrganizationByName(ctx, utils.StringValue(input.RepositoryOrganizationName))
