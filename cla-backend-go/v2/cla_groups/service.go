@@ -280,18 +280,7 @@ func (s *service) UpdateCLAGroup(ctx context.Context, claGroupID string, input *
 		return projectList[i].ProjectName < projectList[j].ProjectName
 	})
 
-	iclaTemplate, err := s.v1ProjectService.GetCLAGroupCurrentICLATemplateURLByID(ctx, claGroupID)
-	if err != nil {
-		log.WithFields(f).WithError(err).Warnf("problem getting project ICLA templates for CLA Group: %s", claGroupID)
-		return nil, err
-	}
-	cclaTemplate, err := s.v1ProjectService.GetCLAGroupCurrentCCLATemplateURLByID(ctx, claGroupID)
-	if err != nil {
-		log.WithFields(f).WithError(err).Warnf("problem getting project CCLA templates for CLA Group: %s", claGroupID)
-		return nil, err
-	}
-
-	return &models.ClaGroupSummary{
+	claGroupSummary := &models.ClaGroupSummary{
 		FoundationLevelCLA:  isFoundationLevelCLA(existingCLAGroup.FoundationSFID, subProjectList),
 		CclaEnabled:         claGroup.ProjectCCLAEnabled,
 		CclaRequiresIcla:    claGroup.ProjectCCLARequiresICLA,
@@ -302,9 +291,31 @@ func (s *service) UpdateCLAGroup(ctx context.Context, claGroupID string, input *
 		FoundationName:      foundationName,
 		IclaEnabled:         claGroup.ProjectICLAEnabled,
 		ProjectList:         projectList,
-		IclaPdfURL:          iclaTemplate,
-		CclaPdfURL:          cclaTemplate,
-	}, nil
+	}
+
+	// Load and set the ICLA template - if set
+	var iclaTemplate string
+	if claGroup.ProjectICLAEnabled {
+		iclaTemplate, err = s.v1ProjectService.GetCLAGroupCurrentICLATemplateURLByID(ctx, claGroupID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warnf("problem getting project ICLA templates for CLA Group: %s", claGroupID)
+			return nil, err
+		}
+		claGroupSummary.IclaPdfURL = iclaTemplate
+	}
+
+	// Load and set the CCLA template - if set
+	var cclaTemplate string
+	if claGroup.ProjectCCLAEnabled {
+		cclaTemplate, err = s.v1ProjectService.GetCLAGroupCurrentCCLATemplateURLByID(ctx, claGroupID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warnf("problem getting project CCLA templates for CLA Group: %s", claGroupID)
+			return nil, err
+		}
+		claGroupSummary.CclaPdfURL = cclaTemplate
+	}
+
+	return claGroupSummary, nil
 }
 
 // ListClaGroupsForFoundationOrProject returns the CLA Group list for the specified foundation ID
