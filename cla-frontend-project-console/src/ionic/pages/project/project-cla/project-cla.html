@@ -180,15 +180,15 @@
                           <ion-row>
                             <ion-col>
                               <span>
-                                {{ getCorporateDocumentName(project) }}
+                                {{ project.projectCorporateDocuments !== null ? project.projectCorporateDocuments[0].documentName : 'No Document' }}
                               </span>
                               <br>
                               <span>
-                                {{ getCorporateDocumentDate(project) | date:'medium' }}
+                                {{ project.projectCorporateDocuments !== null ? (project.projectCorporateDocuments[0].documentCreationDate | date:'medium') : 'No Document' }}
                               </span>
                               <br>
                               <span>
-                                Version {{ getCorporateDocumentVersion(project)}}
+                                Version {{ getDocumentVersion(project,'CCLA')}}
                               </span>
                               <br>
                             </ion-col>
@@ -225,15 +225,15 @@
                           <ion-row>
                             <ion-col>
                               <span>
-                                {{ getIndividualDocumentName(project) }}
+                                {{ project.projectIndividualDocuments !== null ? project.projectIndividualDocuments[0].documentName : 'No Document' }}
                               </span>
                               <br>
                               <span>
-                                {{ getIndividualDocumentDate(project) | date:'medium' }}
+                                {{ project.projectIndividualDocuments !== null ? (project.projectIndividualDocuments[0].documentCreationDate | date:'medium') : 'No Document' }}
                               </span>
                               <br>
                               <span>
-                                Version {{ getIndividualDocumentVersion(project)}}
+                                Version {{ getDocumentVersion(project,'ICLA')}}
                               </span>
                               <br>
                             </ion-col>
@@ -315,15 +315,15 @@
                           <ion-row>
                             <ion-col>
                               <span>
-                                {{ getCorporateDocumentName(project) }}
+                                {{ project.projectCorporateDocuments !== null ? project.projectCorporateDocuments[0].documentName : 'No Document' }}
                               </span>
                               <br>
                               <span>
-                                {{ getCorporateDocumentDate(project) | date:'medium' }}
+                                {{ project.projectCorporateDocuments!== null ? (project.projectCorporateDocuments[0].documentCreationDate | date:'medium') : 'No Document' }}
                               </span>
                               <br>
                               <span>
-                                Version {{ getCorporateDocumentVersion(project) }}
+                                Version {{ getDocumentVersion(project,'CCLA') }}
                               </span>
                               <br>
                             </ion-col>
@@ -360,15 +360,15 @@
                           <ion-row>
                             <ion-col>
                               <span>
-                                {{ getIndividualDocumentName(project) }}
+                                {{ project.projectIndividualDocuments !== null ? project.projectIndividualDocuments[0].documentName : 'No Document' }}
                               </span>
                               <br>
                               <span>
-                                {{ getIndividualDocumentDate(project) | date:'medium' }}
+                                {{ project.projectIndividualDocuments !== null ? (project.projectIndividualDocuments[0].documentCreationDate | date:'medium') : 'No Document' }}
                               </span>
                               <br>
                               <span>
-                                Version {{ getIndividualDocumentVersion(project) }}
+                                Version {{ getDocumentVersion(project,'ICLA') }}
                               </span>
                               <br>
                             </ion-col>
