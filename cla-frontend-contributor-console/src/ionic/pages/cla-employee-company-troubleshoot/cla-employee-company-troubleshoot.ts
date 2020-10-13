@@ -6,6 +6,7 @@ import { IonicPage, ModalController, NavParams } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { ClaSignatureModel } from '../../../../../cla-frontend-corporate-console/src/ionic/models/cla-signature';
 import { generalConstants } from '../../constants/general';
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/employee/company/:companyId/troubleshoot'
@@ -25,7 +26,9 @@ export class ClaEmployeeCompanyTroubleshootPage {
   project: any;
   company: any;
   gitService: string;
-
+  expanded: boolean = true;
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
+  
   constructor(
     private modalCtrl: ModalController,
     public navParams: NavParams,
@@ -111,5 +114,10 @@ export class ClaEmployeeCompanyTroubleshootPage {
       authenticated: this.authenticated
     });
     modal.present();
+  }
+
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
   }
 }
