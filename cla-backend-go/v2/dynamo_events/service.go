@@ -112,6 +112,7 @@ func NewService(stage string,
 
 	// GitHub organization table modified event
 	s.registerCallback(githubOrgTableName, Modify, s.GitHubOrgUpdatedEvent)
+	s.registerCallback(githubOrgTableName, Insert, s.GitHubOrgAddedEvent)
 
 	s.registerCallback(repositoryTableName, Insert, s.GithubRepoAddedEvent)
 	s.registerCallback(repositoryTableName, Remove, s.GithubRepoDeletedEvent)
