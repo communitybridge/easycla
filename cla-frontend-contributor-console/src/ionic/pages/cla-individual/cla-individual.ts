@@ -5,6 +5,7 @@ import { Component } from '@angular/core';
 import { NavParams, IonicPage } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { generalConstants } from '../../constants/general';
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId/individual'
@@ -23,6 +24,8 @@ export class ClaIndividualPage {
   signature: any;
   loadingSignature: boolean = true;
   error: any = false;
+  expanded: boolean = true;
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
 
   constructor(
     public navParams: NavParams,
@@ -92,5 +95,9 @@ export class ClaIndividualPage {
       return;
     }
     window.open(this.signature.sign_url, '_self');
+  }
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
   }
 }

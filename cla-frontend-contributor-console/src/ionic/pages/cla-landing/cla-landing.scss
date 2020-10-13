@@ -1,58 +1,40 @@
 cla-landing {
-  .scroll-content {
-    padding-top: 40px !important;
-  }
+  .page-content {
+    min-height: calc(100vh - 339px);
+    margin-top: 25px;
+    transition: margin 0.3s;
 
-  .project-name{
-    text-align: center;
-    font-size: 25px;
-  }
+    &.expanded {
+      min-height: calc(100vh - 414px);
+      margin-top: 100px;
+    }
 
-  .xc {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-}
+    &.without-lfx-header {
+      margin-top: 50px;
+      min-height: calc(100vh - 364px) !important;
+    }
 
-.cla-header {
+    img {
+      max-height: 150px;
+    }
 
-  .toolbar {
-    color: #7b7b7b;
-    background-color: white;
-    padding: 4px 25px;
+    .project-name {
+      text-align: center;
+      font-size: 25px;
+    }
 
-    ion-icon {
-      color: #7b7b7b;
-      line-height: 6px;
+    .xc {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-      &:before {
-        font-size: 19px;
-      }
+    @media (min-width: 768px) and (max-width: 1200px) {
+      padding: 16px 50px 100px;
     }
   }
 
-  .navbar-logo {
-    width: 100px;
-    position: absolute;
-    left: calc(50% - 20px);
-    top: 30%;
-  }
-
   .scroll-content {
-    padding-bottom: 162px;
-  }
-}
-
-.page-content {
-  min-height: calc(100vh - 314px);
-  padding: 10px 10px;
-
-  img {
-    max-height: 150px;
-  }
-
-  @media (min-width: 768px) and (max-width: 1200px) {
-    padding: 16px 50px 100px;
+    margin-top: 96px !important;
   }
 }

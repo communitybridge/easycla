@@ -5,6 +5,7 @@ import { Component } from '@angular/core';
 import { IonicPage, ModalController, NavController, NavParams } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { generalConstants } from '../../constants/general';
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @IonicPage({
   segment: 'cla/project/:projectId/user/:userId'
@@ -18,7 +19,9 @@ export class ClaLandingPage {
   userId: string;
   user: any;
   project: any;
-
+  expanded: boolean = true;
+  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
+  
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -69,5 +72,9 @@ export class ClaLandingPage {
       localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(response));
       this.project = response;
     });
+  }
+
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
   }
 }
