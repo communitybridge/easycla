@@ -270,7 +270,10 @@ type ClaManagerAccessRequestDeletedEventData struct {
 type CLAGroupCreatedEventData struct{}
 
 // CLAGroupUpdatedEventData . . .
-type CLAGroupUpdatedEventData struct{}
+type CLAGroupUpdatedEventData struct {
+	ClaGroupName        string
+	ClaGroupDescription string
+}
 
 // CLAGroupDeletedEventData . . .
 type CLAGroupDeletedEventData struct{}
@@ -558,8 +561,8 @@ func (ed *CLAGroupCreatedEventData) GetEventDetailsString(args *LogEventArgs) (s
 
 // GetEventDetailsString . . .
 func (ed *CLAGroupUpdatedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user [%s] has updated CLA Group [%s - %s]",
-		args.userName, args.projectName, args.ProjectID)
+	data := fmt.Sprintf("user [%s] has updated CLA Group [%s - %s] with name: %s and/or description: %s",
+		args.userName, args.projectName, args.ProjectID, ed.ClaGroupName, ed.ClaGroupDescription)
 	return data, true
 }
 
@@ -900,8 +903,7 @@ func (ed *CLAGroupCreatedEventData) GetEventSummaryString(args *LogEventArgs) (s
 
 // GetEventSummaryString . . .
 func (ed *CLAGroupUpdatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s has updated CLA Group %s",
-		args.userName, args.projectName)
+	data := fmt.Sprintf("user %s has updated CLA Group %s", args.userName, args.projectName)
 	return data, true
 }
 
