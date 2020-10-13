@@ -155,7 +155,8 @@ func (s *service) GetProtectedBranch(ctx context.Context, projectSFID, repositor
 		return nil, err
 	}
 
-	owner, branchName, err := s.getGithubOwnerBranchName(ctx, githubClient, githubOrgName, githubRepoName)
+	branchProtectionRepository := github.NewBranchProtectionRepository(githubClient.Repositories, github.EnableNonBlockingLimiter())
+	owner, branchName, err := s.getGithubOwnerBranchName(ctx, branchProtectionRepository, githubOrgName, githubRepoName)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +164,8 @@ func (s *service) GetProtectedBranch(ctx context.Context, projectSFID, repositor
 	result := &v2Models.GithubRepositoryBranchProtection{
 		BranchName: &branchName,
 	}
-	branchProtection, err := github.GetProtectedBranch(ctx, githubClient.Repositories, owner, githubRepoName, branchName)
+
+	branchProtection, err := branchProtectionRepository.GetProtectedBranch(ctx, owner, githubRepoName, branchName)
 	if err != nil {
 		if errors.Is(err, github.ErrBranchNotProtected) {
 			return result, nil
@@ -200,7 +202,8 @@ func (s *service) UpdateProtectedBranch(ctx context.Context, projectSFID, reposi
 		return nil, err
 	}
 
-	owner, branchName, err := s.getGithubOwnerBranchName(ctx, githubClient, githubOrgName, githubRepoName)
+	branchProtectionRepository := github.NewBranchProtectionRepository(githubClient.Repositories, github.EnableNonBlockingLimiter())
+	owner, branchName, err := s.getGithubOwnerBranchName(ctx, branchProtectionRepository, githubOrgName, githubRepoName)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +235,8 @@ func (s *service) UpdateProtectedBranch(ctx context.Context, projectSFID, reposi
 		}
 	}
 
-	err = github.EnableBranchProtection(ctx, githubClient.Repositories, owner, githubRepoName, branchName, *input.EnforceAdmin, requiredChecks, disabledChecks)
+	branchPtorectionRepository := github.NewBranchProtectionRepository(githubClient.Repositories, github.EnableNonBlockingLimiter())
+	err = branchPtorectionRepository.EnableBranchProtection(ctx, owner, githubRepoName, branchName, *input.EnforceAdmin, requiredChecks, disabledChecks)
 	if err != nil {
 		return nil, err
 	}
@@ -278,8 +282,8 @@ func (s *service) getGithubClientForOrgName(ctx context.Context, githubOrgName s
 	return githubClient, nil
 }
 
-func (s *service) getGithubOwnerBranchName(ctx context.Context, githubClient *githubsdk.Client, githubOrgName, githubRepoName string) (string, string, error) {
-	owner, err := github.GetOwnerName(ctx, githubClient.Repositories, githubOrgName, githubRepoName)
+func (s *service) getGithubOwnerBranchName(ctx context.Context, branchProtectionRepository *github.BranchProtectionRepository, githubOrgName, githubRepoName string) (string, string, error) {
+	owner, err := branchProtectionRepository.GetOwnerName(ctx, githubOrgName, githubRepoName)
 	if err != nil {
 		log.Warnf("getting the owner name for org : %s and repo : %s failed : %v", githubOrgName, githubRepoName, err)
 		return "", "", err
@@ -291,7 +295,7 @@ func (s *service) getGithubOwnerBranchName(ctx context.Context, githubClient *gi
 	}
 
 	log.Debugf("getGithubOwnerBranchName : owner of the repo : %s found : %s", owner, githubRepoName)
-	branchName, err := github.GetDefaultBranchForRepo(ctx, githubClient.Repositories, owner, githubRepoName)
+	branchName, err := branchProtectionRepository.GetDefaultBranchForRepo(ctx, owner, githubRepoName)
 	if err != nil {
 		log.Warnf("getting default github branch failed for owner : %s and repo : %s : %v", owner, githubRepoName, err)
 		return "", "", err
