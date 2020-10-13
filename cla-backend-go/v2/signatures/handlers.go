@@ -708,27 +708,39 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+		f := logrus.Fields{
+			"functionName":   "SignaturesGetSignatureSignedDocumentHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"signatureID":    params.SignatureID,
+		}
 
-		signature, err := v1SignatureService.GetSignature(ctx, params.SignatureID)
+		signatureModel, err := v1SignatureService.GetSignature(ctx, params.SignatureID)
 		if err != nil {
+			log.WithFields(f).WithError(err).Warn("problem loading signature")
 			return signatures.NewGetSignatureSignedDocumentInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
-		if signature == nil {
+		if signatureModel == nil {
+			log.WithFields(f).Warn("problem loading signature - signature not found")
 			return signatures.NewGetSignatureSignedDocumentNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, errors.New("signature not found")))
 		}
-		haveAccess, err := isUserHaveAccessOfSignedSignaturePDF(ctx, authUser, signature, companyService, projectClaGroupsRepo)
+
+		haveAccess, err := isUserHaveAccessOfSignedSignaturePDF(ctx, authUser, signatureModel, companyService, projectClaGroupsRepo)
 		if err != nil {
+			log.WithFields(f).WithError(err).Warn("problem determining signature access")
 			return signatures.NewGetSignatureSignedDocumentInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
+
 		if !haveAccess {
 			return signatures.NewGetSignatureSignedDocumentForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:       utils.String403,
-				Message:    fmt.Sprintf("%s : user does not have access of signature", utils.EasyCLA403Forbidden),
+				Message:    fmt.Sprintf("%s - user %s does not have access to the specified signature", utils.EasyCLA403Forbidden, authUser.UserName),
 				XRequestID: reqID,
 			})
 		}
-		doc, err := v2service.GetSignedDocument(ctx, signature.SignatureID.String())
+
+		doc, err := v2service.GetSignedDocument(ctx, signatureModel.SignatureID.String())
 		if err != nil {
+			log.WithFields(f).WithError(err).Warn("problem fetching signed document")
 			if strings.Contains(err.Error(), "bad request") {
 				return signatures.NewGetSignatureSignedDocumentBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
@@ -903,36 +915,76 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		})
 }
 
+// isUserHaveAccessOfSignedSignaturePDF returns true if the specified user has access to the provided signature, false otherwise
 func isUserHaveAccessOfSignedSignaturePDF(ctx context.Context, authUser *auth.User, signature *v1Models.Signature, companyService company.IService, projectClaGroupRepo projects_cla_groups.Repository) (bool, error) {
-	if authUser.Admin {
-		return true, nil
+	f := logrus.Fields{
+		"functionName":           "isUserHaveAccessOfSignedSignaturePDF",
+		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
+		"authUserName":           authUser.UserName,
+		"authUserEmail":          authUser.Email,
+		"signatureID":            signature.SignatureID,
+		"claGroupID":             signature.ProjectID,
+		"signatureType":          signature.SignatureType,
+		"signatureReferenceType": signature.SignatureReferenceType,
 	}
+
 	projects, err := projectClaGroupRepo.GetProjectsIdsForClaGroup(signature.ProjectID)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("error loading load project IDs for CLA Group")
 		return false, err
 	}
 	if len(projects) == 0 {
+		log.WithFields(f).Warn("unable to locate any project IDs for CLA Group")
 		return false, fmt.Errorf("cannot find project(s) associated with CLA group cla_group_id: %s - please update the database with the foundation/project mapping",
 			signature.ProjectID)
 	}
-	foundationID := projects[0].FoundationSFID
-	projectSFID := projects[0].ProjectSFID
 
-	pmScope := authUser.ResourceIDsByTypeAndRole(auth.Project, "project-manager")
-	if len(pmScope) > 0 && utils.NewStringSetFromStringArray(pmScope).Include(foundationID) {
+	// Foundation ID's should be all the same for each project ID - just grab the first one
+	foundationID := projects[0].FoundationSFID
+
+	// First, check for PM access
+	if utils.IsUserAuthorizedForProjectTree(authUser, foundationID) {
+		log.WithFields(f).Debugf("user is authorized for %s scope for foundation ID: %s", utils.ProjectScope, foundationID)
 		return true, nil
 	}
-	if signature.SignatureType == CclaSignatureType {
-		comp, err := companyService.GetCompany(ctx, signature.SignatureReferenceID.String())
-		if err != nil {
-			return false, err
-		}
-		expectedScope := fmt.Sprintf("%s|%s", projectSFID, comp.CompanyExternalID)
-		cmScope := authUser.ResourceIDsByTypeAndRole(auth.ProjectOrganization, "cla-manager")
-		if len(cmScope) > 0 && utils.NewStringSetFromStringArray(cmScope).Include(expectedScope) {
+
+	// In case the project tree didn't pass, let's check the project list individually - if any has access, we return true
+	for _, proj := range projects {
+		if utils.IsUserAuthorizedForProject(authUser, proj.ProjectSFID) {
+			log.WithFields(f).Debugf("user is authorized for %s scope for project ID: %s", utils.ProjectScope, proj.ProjectSFID)
 			return true, nil
 		}
 	}
+
+	// Corporate signature...we can check the company details
+	if signature.SignatureType == CclaSignatureType {
+		comp, err := companyService.GetCompany(ctx, signature.SignatureReferenceID.String())
+		if err != nil {
+			log.WithFields(f).WithError(err).Warnf("failed to load company record using signature reference id: %s", signature.SignatureReferenceID.String())
+			return false, err
+		}
+
+		// No company SFID? Then, we can't check permissions...
+		if comp == nil || comp.CompanyExternalID == "" {
+			log.WithFields(f).Warnf("failed to load company record with external SFID using signature reference id: %s", signature.SignatureReferenceID.String())
+			return false, err
+		}
+
+		// Check the project|org tree starting with the foundation
+		if utils.IsUserAuthorizedForProjectOrganizationTree(authUser, foundationID, comp.CompanyExternalID) {
+			return true, nil
+		}
+
+		// In case the project organization tree didn't pass, let's check the project list individually - if any has access, we return true
+		for _, proj := range projects {
+			if utils.IsUserAuthorizedForProjectOrganization(authUser, proj.ProjectSFID, comp.CompanyExternalID) {
+				log.WithFields(f).Debugf("user is authorized for %s scope for project ID: %s, org iD: %s", utils.ProjectOrgScope, proj.ProjectSFID, comp.CompanyExternalID)
+				return true, nil
+			}
+		}
+	}
+
+	log.WithFields(f).Debug("tried everything - user doesn't have access with project or project|org scope")
 	return false, nil
 }
 
