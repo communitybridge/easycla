@@ -569,7 +569,7 @@ def unable_to_do_cla_check_email_content(project, managers, repositories):
 
     repo_content = "<ul>"
     for repo in repositories:
-        repo_content += "<li>" + repo + "<ul>"
+        repo_content += "<li>" + repo + "</li>"
     repo_content += "</ul>"
 
     body = f"""
