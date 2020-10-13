@@ -297,11 +297,16 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			}
 			return project.NewUpdateProjectBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
+
+		// Log an event
 		eventsService.LogEvent(&events.LogEventArgs{
 			EventType:     events.CLAGroupUpdated,
 			ClaGroupModel: claGroupModel,
 			UserID:        claUser.UserID,
-			EventData:     &events.CLAGroupUpdatedEventData{},
+			EventData: &events.CLAGroupUpdatedEventData{
+				ClaGroupName:        projectParams.Body.ProjectName,
+				ClaGroupDescription: projectParams.Body.ProjectDescription,
+			},
 		})
 
 		return project.NewUpdateProjectOK().WithXRequestID(reqID).WithPayload(claGroupModel)

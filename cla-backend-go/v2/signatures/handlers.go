@@ -586,7 +586,9 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 
 			claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
 			if err != nil {
+				log.WithFields(f).WithError(err).Warn("problem loading cla group mapping")
 				if err == project.ErrProjectDoesNotExist {
+					log.WithFields(f).WithError(err).Warn("problem loading cla group mapping - cla group doesn't exist")
 					return signatures.NewDownloadProjectSignatureEmployeeAsCSVBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 				}
 				return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))

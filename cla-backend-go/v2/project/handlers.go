@@ -240,7 +240,10 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			EventType:     events.CLAGroupUpdated,
 			ClaGroupModel: claGroupModel,
 			LfUsername:    user.UserName,
-			EventData:     &events.CLAGroupUpdatedEventData{},
+			EventData: &events.CLAGroupUpdatedEventData{
+				ClaGroupName:        claGroupModel.ProjectName,
+				ClaGroupDescription: claGroupModel.ProjectDescription,
+			},
 		})
 
 		result, err := v2ProjectModel(claGroupModel)
