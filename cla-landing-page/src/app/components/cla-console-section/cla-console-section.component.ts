@@ -4,6 +4,8 @@
 import { Component, Input } from '@angular/core';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { AppSettings } from 'src/app/config/app-settings';
+import { AUTH_ROUTE, getAuthURLFromWindow } from 'src/app/config/auth-utils';
+import { StorageService } from 'src/app/core/services/storage.service';
 
 @Component({
   selector: 'app-cla-console-section',
@@ -14,11 +16,13 @@ export class ClaConsoleSectionComponent {
   @Input() consoleMetadata: any;
 
   constructor(
-    private authService: AuthService
+    private authService: AuthService,
+    private storageService: StorageService
   ) { }
 
   onClickProceed(type: string) {
-    this.authService.login(type);
+    this.storageService.setItem('type', type);
+    this.authService.login(AUTH_ROUTE);
   }
 
   onClickRequestAccess() {
