@@ -84,23 +84,32 @@ func (s *service) enableBranchProtectionForGithubOrg(f logrus.Fields, newGitHubO
 		return clientErr
 	}
 
+	branchProtectionRepo := github.NewBranchProtectionRepository(gitHubClient.Repositories, github.EnableBlockingLimiter())
+
 	var eg errgroup.Group
+	// a pool of 5 concurrent workers
+	var workerTokens = make(chan struct{}, 5)
 	for _, repo := range repos {
 		// this is for goroutine local variables
 		repo := repo
+		// acquire a worker token to create a new goroutine
+		workerTokens <- struct{}{}
 		// Update the branch protection in a go routine...
 		eg.Go(func() error {
+			defer func() {
+				<-workerTokens // release the workerToken
+			}()
 			log.WithFields(f).Debugf("enabling branch protection for repository: %s", repo.RepositoryName)
 
 			log.WithFields(f).Debugf("looking up the default branch for the GitHub repository: %s...", repo.RepositoryName)
-			defaultBranch, branchErr := github.GetDefaultBranchForRepo(ctx, gitHubClient.Repositories, newGitHubOrg.OrganizationName, repo.RepositoryName)
+			defaultBranch, branchErr := branchProtectionRepo.GetDefaultBranchForRepo(ctx, newGitHubOrg.OrganizationName, repo.RepositoryName)
 			if branchErr != nil {
 				return branchErr
 			}
 
 			log.WithFields(f).Debugf("enabling branch protection on the default branch %s for the GitHub repository: %s...",
 				defaultBranch, repo.RepositoryName)
-			return github.EnableBranchProtection(ctx, gitHubClient.Repositories, newGitHubOrg.OrganizationName, repo.RepositoryName,
+			return branchProtectionRepo.EnableBranchProtection(ctx, newGitHubOrg.OrganizationName, repo.RepositoryName,
 				defaultBranch, true, []string{utils.GitHubBotName}, []string{})
 		})
 	}
