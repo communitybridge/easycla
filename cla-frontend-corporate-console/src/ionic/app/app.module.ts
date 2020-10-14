@@ -22,6 +22,7 @@ import { AuthPage } from '../pages/auth/auth';
 
 import { MyApp } from './app.component';
 import { LayoutModule } from '../layout/layout.module';
+import { StorageService } from '../services/storage.service';
 
 @NgModule({
   declarations: [MyApp, AuthPage],
@@ -40,6 +41,7 @@ import { LayoutModule } from '../layout/layout.module';
     SortService,
     ClaService,
     AuthService,
+    StorageService,
     DatePipe,
     { provide: ErrorHandler, useClass: IonicErrorHandler }
   ]

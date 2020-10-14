@@ -51,7 +51,7 @@ export class CompaniesPage {
   }
 
   ngOnInit() {
-    this.getCompanies();
+    // this.getCompanies();
   }
 
   /**

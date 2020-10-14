@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NavParams } from 'ionic-angular';
 import { NavController } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
@@ -15,10 +15,10 @@ import { RolesService } from '../../services/roles.service';
  * Ionic pages and navigation.
  */
 @Component({
-  selector: 'page-auth',
+  selector: 'auth-page',
   templateUrl: 'auth.html'
 })
-export class AuthPage {
+export class AuthPage implements OnInit {
   userRoles: any;
 
   constructor(
@@ -28,21 +28,14 @@ export class AuthPage {
     public rolesService: RolesService
   ) { }
 
-  ionViewDidEnter() {
-    console.log('token ' + this.navParams.get('idToken'))
+  ngOnInit() {
     setTimeout(() => {
-      this.rolesService
-        .getUserRolesPromise()
-        .then((userRoles) => {
-          if (AuthPage.hasAccess(userRoles)) {
-            this.navCtrl.setRoot('CompaniesPage');
-          } else {
-            this.redirectToLogin();
-          }
-        })
-        .catch((error) => {
-          this.redirectToLogin();
-        });
+      console.log(this.authService.loggedIn);
+    if (this.authService.loggedIn) {
+      this.navCtrl.setRoot('CompaniesPage');
+    } else {
+      this.redirectToLogin();
+    }
     }, 2000);
   }
 
@@ -52,9 +45,5 @@ export class AuthPage {
     } else {
       this.navCtrl.setRoot('LoginPage');
     }
-  }
-
-  private static hasAccess(userRoles: any): boolean {
-    return userRoles.isAuthenticated;
   }
 }
