@@ -76,15 +76,14 @@ export class MyApp {
 
   getDefaults() {
     this.pages = [];
-    this.userRoles = this.rolesService.userRoles;
     this.regeneratePagesMenu();
   }
 
   ngOnInit() {
-    this.rolesService.getUserRolesPromise().then((userRoles) => {
-      this.userRoles = userRoles;
-      this.regeneratePagesMenu();
-    });
+    // this.rolesService.getUserRolesPromise().then((userRoles) => {
+    //   this.userRoles = userRoles;
+    //   this.regeneratePagesMenu();
+    // });
   }
 
   initializeApp() {
