@@ -62,7 +62,7 @@ export class MyApp {
     this.claService.setApiUrl(EnvConfig['cla-api-url']);
     this.claService.setHttp(httpClient);
     // here to check authentication state
-    this.authService.handleAuthentication();
+    // this.authService.handleAuthentication();
   }
 
   mounted() {

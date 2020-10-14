@@ -4,7 +4,7 @@
 import { Component, Input } from '@angular/core';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { AppSettings } from 'src/app/config/app-settings';
-import { AUTH_ROUTE, getAuthURLFromWindow } from 'src/app/config/auth-utils';
+import { AUTH_ROUTE } from 'src/app/config/auth-utils';
 import { StorageService } from 'src/app/core/services/storage.service';
 
 @Component({

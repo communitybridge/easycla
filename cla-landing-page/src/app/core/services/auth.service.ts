@@ -6,6 +6,8 @@ import { tap, catchError, concatMap, shareReplay } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { EnvConfig } from 'src/app/config/cla-env-utils';
 import { AUTH_ROUTE } from 'src/app/config/auth-utils';
+import { AppSettings } from 'src/app/config/app-settings';
+import { StorageService } from './storage.service';
 
 @Injectable({
   providedIn: 'root',
@@ -58,7 +60,10 @@ export class AuthService {
   );
 
 
-  constructor(private router: Router) {
+  constructor(
+    private router: Router,
+    private storageService: StorageService
+  ) {
     // On initial load, check authentication state with authorization server
     // Set up local auth streams if user is already authenticated
     this.localAuthSetup();
@@ -73,6 +78,8 @@ export class AuthService {
     return this.auth0Client$.pipe(
       concatMap((client: Auth0Client) => from(client.getUser(options))),
       tap((user) => {
+        console.log(user)
+        this.setSession(user);
         this.userProfileSubject$.next(user);
       })
     );
@@ -99,7 +106,6 @@ export class AuthService {
     // A desired redirect path can be passed to login method
     // (e.g., from a route guard)
     // Ensure Auth0 client instance exists
-    this.auth0Options.redirectUri = redirectPath;
     this.auth0Client$.subscribe((client: Auth0Client) => {
       // Call method to log in
       client.loginWithRedirect({
@@ -134,6 +140,12 @@ export class AuthService {
         this.router.navigate([targetRoute]);
       });
     }
+  }
+
+  private setSession(authResult): void {
+    this.storageService.setItem(AppSettings.USER_ID, authResult.nickname);
+    this.storageService.setItem(AppSettings.USER_EMAIL, authResult.email);
+    this.storageService.setItem(AppSettings.USER_NAME, authResult.name);
   }
 
   logout() {
