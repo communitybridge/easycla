@@ -9,11 +9,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/go-openapi/swag"
+
 	"github.com/jinzhu/copier"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
-	githubpkg "github.com/google/go-github/github"
+	githubpkg "github.com/google/go-github/v32/github"
 	"go.uber.org/ratelimit"
 	"golang.org/x/time/rate"
 )
@@ -273,14 +275,26 @@ func createBranchProtectionRequest(protection *githubpkg.Protection, enableStatu
 	}
 	requiredStatusChecks := mergeStatusChecks(currentChecks, enableStatusChecks, disableStatusChecks)
 
-	branchProtection := &githubpkg.ProtectionRequest{
+	branchProtectionRequest := &githubpkg.ProtectionRequest{
 		RequiredStatusChecks: requiredStatusChecks,
 		EnforceAdmins:        enforceAdmin,
 	}
 
 	// don't have to check further in this case
 	if protection == nil {
-		return branchProtection, nil
+		return branchProtectionRequest, nil
+	}
+
+	if protection.RequireLinearHistory != nil {
+		branchProtectionRequest.RequireLinearHistory = swag.Bool(protection.RequireLinearHistory.Enabled)
+	}
+
+	if protection.AllowForcePushes != nil {
+		branchProtectionRequest.AllowForcePushes = swag.Bool(protection.AllowForcePushes.Enabled)
+	}
+
+	if protection.AllowDeletions != nil {
+		branchProtectionRequest.AllowDeletions = swag.Bool(protection.AllowDeletions.Enabled)
 	}
 
 	if protection.RequiredPullRequestReviews != nil {
@@ -289,7 +303,13 @@ func createBranchProtectionRequest(protection *githubpkg.Protection, enableStatu
 			return nil, fmt.Errorf("copying from protected branch to request failed : requiredPullRequestReviews : %v", err)
 		}
 
+		// github is not happy about null arrays, prefers empty arrays ...
+		//No subschema in "anyOf" matched.
+		//For 'properties/teams', nil is not an array.
+		//Not all subschemas of "allOf" matched.
+		var anyEnabled bool
 		if len(protection.RequiredPullRequestReviews.DismissalRestrictions.Users) > 0 {
+			anyEnabled = true
 			var users []string
 			for _, user := range protection.RequiredPullRequestReviews.DismissalRestrictions.Users {
 				users = append(users, *user.Login)
@@ -301,6 +321,7 @@ func createBranchProtectionRequest(protection *githubpkg.Protection, enableStatu
 		}
 
 		if len(protection.RequiredPullRequestReviews.DismissalRestrictions.Teams) > 0 {
+			anyEnabled = true
 			var teams []string
 			for _, team := range protection.RequiredPullRequestReviews.DismissalRestrictions.Teams {
 				teams = append(teams, *team.Slug)
@@ -311,12 +332,25 @@ func createBranchProtectionRequest(protection *githubpkg.Protection, enableStatu
 			pullRequestReviewEnforcement.DismissalRestrictionsRequest.Teams = &teams
 		}
 
-		branchProtection.RequiredPullRequestReviews = &pullRequestReviewEnforcement
+		if anyEnabled {
+			if pullRequestReviewEnforcement.DismissalRestrictionsRequest.Users == nil {
+				pullRequestReviewEnforcement.DismissalRestrictionsRequest.Users = &[]string{}
+			}
+
+			if pullRequestReviewEnforcement.DismissalRestrictionsRequest.Teams == nil {
+				pullRequestReviewEnforcement.DismissalRestrictionsRequest.Teams = &[]string{}
+			}
+
+		}
+
+		branchProtectionRequest.RequiredPullRequestReviews = &pullRequestReviewEnforcement
 	}
 
 	if protection.Restrictions != nil {
 		var restrictions githubpkg.BranchRestrictionsRequest
+		var anyEnabled bool
 		if len(protection.Restrictions.Users) > 0 {
+			anyEnabled = true
 			var users []string
 			for _, user := range protection.Restrictions.Users {
 				users = append(users, *user.Login)
@@ -325,6 +359,7 @@ func createBranchProtectionRequest(protection *githubpkg.Protection, enableStatu
 		}
 
 		if len(protection.Restrictions.Teams) > 0 {
+			anyEnabled = true
 			var teams []string
 			for _, team := range protection.Restrictions.Teams {
 				teams = append(teams, *team.Slug)
@@ -332,10 +367,34 @@ func createBranchProtectionRequest(protection *githubpkg.Protection, enableStatu
 			restrictions.Teams = teams
 		}
 
-		branchProtection.Restrictions = &restrictions
+		if len(protection.Restrictions.Apps) > 0 {
+			anyEnabled = true
+			var apps []string
+			for _, app := range protection.Restrictions.Apps {
+				apps = append(apps, *app.Slug)
+			}
+			restrictions.Apps = apps
+		}
+
+		// make sure we don't send nil arrays ...
+		if anyEnabled {
+			if restrictions.Users == nil {
+				restrictions.Users = []string{}
+			}
+
+			if restrictions.Teams == nil {
+				restrictions.Teams = []string{}
+			}
+
+			if restrictions.Apps == nil {
+				restrictions.Apps = []string{}
+			}
+		}
+
+		branchProtectionRequest.Restrictions = &restrictions
 	}
 
-	return branchProtection, nil
+	return branchProtectionRequest, nil
 }
 
 //mergeStatusChecks merges the current checks with the new ones and disable the ones that are specified

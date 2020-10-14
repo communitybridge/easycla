@@ -14,7 +14,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/bmizerany/assert"
-	githubsdk "github.com/google/go-github/github"
+	githubsdk "github.com/google/go-github/v32/github"
 )
 
 // TestMergeStatusChecks tests the functionality of where we enable/disable checks
@@ -134,7 +134,7 @@ func TestEnableBranchProtection(t *testing.T) {
 				RequiredPullRequestReviews: &githubsdk.PullRequestReviewsEnforcement{
 					RequireCodeOwnerReviews:      true,
 					RequiredApprovingReviewCount: 2,
-					DismissalRestrictions: githubsdk.DismissalRestrictions{
+					DismissalRestrictions: &githubsdk.DismissalRestrictions{
 						Users: []*githubsdk.User{
 							{Login: swag.String("alex")},
 						},
@@ -151,6 +151,9 @@ func TestEnableBranchProtection(t *testing.T) {
 						{Slug: swag.String("easyCLA-Team")},
 					},
 				},
+				RequireLinearHistory: &githubsdk.RequireLinearHistory{Enabled: true},
+				AllowForcePushes:     &githubsdk.AllowForcePushes{Enabled: true},
+				AllowDeletions:       &githubsdk.AllowDeletions{Enabled: true},
 			},
 			ProtectionRequest: &githubsdk.ProtectionRequest{
 				RequiredPullRequestReviews: &githubsdk.PullRequestReviewsEnforcementRequest{
@@ -164,12 +167,16 @@ func TestEnableBranchProtection(t *testing.T) {
 				Restrictions: &githubsdk.BranchRestrictionsRequest{
 					Users: []string{"john"},
 					Teams: []string{"easyCLA-Team"},
+					Apps:  []string{},
 				},
 				EnforceAdmins: true,
 				RequiredStatusChecks: &githubsdk.RequiredStatusChecks{
 					Strict:   true,
 					Contexts: []string{"easyCLA"},
 				},
+				RequireLinearHistory: swag.Bool(true),
+				AllowForcePushes:     swag.Bool(true),
+				AllowDeletions:       swag.Bool(true),
 			},
 		},
 	}
