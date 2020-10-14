@@ -763,6 +763,7 @@ def get_github_repositories_by_org(project):
             'repository_name': ''
             'repository_type': ''
             'repository_url': ''
+            'enabled': ''
         }]
     }]
     :rtype: array
@@ -774,6 +775,7 @@ def get_github_repositories_by_org(project):
     github_organizations = GitHubOrg().get_organization_by_sfid(project.get_project_external_id())
     cla.log.info("Retrieved {} GH organizations using ID: {}".format(
         len(github_organizations), project.get_project_external_id))
+    repository_instance = cla.utils.get_repository_instance()
 
     # Iterate over each organization
     for github_organization in github_organizations:
@@ -792,12 +794,18 @@ def get_github_repositories_by_org(project):
                     github_repos, installation_id))
                 if github_repos is not None:
                     for repo in github_repos:
+                        # enabled flag checks whether repo has been added or removed from org
+                        enabled = False
+                        record_repo = repository_instance.get_repository_by_external_id(repo.id, "github")
+                        if record_repo:
+                            enabled = record_repo.get_enabled()
                         # Convert repository entities from lib to a dict.
                         repo_dict = {
                             'repository_github_id': repo.id,
                             'repository_name': repo.full_name,
                             'repository_type': 'github',
-                            'repository_url': repo.html_url
+                            'repository_url': repo.html_url,
+                            'enabled': enabled,
                         }
                         # Add repository to organization repositories list
                         organization_dict['repositories'].append(repo_dict)
