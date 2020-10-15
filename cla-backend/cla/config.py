@@ -10,11 +10,27 @@ Please put custom non-tracked configuration options (debug mode, keys, database
 configuration, etc) in cla_config.py somewhere in your Python path.
 """
 
+import logging
 import os
 
 from boto3 import client
-import logging
-from cla.client import get_ssm_key
+from botocore.exceptions import ClientError, ProfileNotFound
+
+
+def get_ssm_key(region, key):
+    """
+    Fetches the specified SSM key value from the SSM key store
+    """
+    ssm_client = client('ssm', region_name=region)
+    try:
+        print(f'Loading config with key: {key}')
+        response = ssm_client.get_parameter(Name=key, WithDecryption=True)
+        if response and 'Parameter' in response and 'Value' in response['Parameter']:
+            print(f'Loaded config value with key: {key}')
+        return response['Parameter']['Value']
+    except (ClientError, ProfileNotFound) as e:
+        print(f'Unable to load SSM config with key: {key} due to {e}')
+
 
 # from utils import get_ssm_key
 
@@ -98,14 +114,6 @@ LOCAL_STORAGE_FOLDER = '/tmp/cla'  #: Local folder when using the LocalStorage s
 
 # PDF Generation.
 PDF_SERVICE = 'DocRaptor'
-
-def get_ssm_key(region, key):
-    """
-    Fetches the specified SSM key value from the SSM key store
-    """
-    ssm_client = client('ssm', region_name=region)
-    response = ssm_client.get_parameter(Name=key, WithDecryption=True)
-    return response['Parameter']['Value']
 
 # GH Private Key
 GITHUB_PRIVATE_KEY = get_ssm_key('us-east-1', f'cla-gh-app-private-key-{stage}')

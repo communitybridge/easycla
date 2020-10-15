@@ -61,6 +61,8 @@ const parameters = [
   `cla-lf-group-client-secret-${program.stage}`,
   `cla-lf-group-refresh-token-${program.stage}`,
   `cla-lf-group-client-url-${program.stage}`,
+  `cla-lf-platform-maintainers-${program.stage}`,
+  `cla-smtp-sender-email-address-${program.stage}`,
   `cla-sns-event-topic-arn-${program.stage}`,
   `cla-lfx-header-${program.stage}`,
   `cla-lfx-header-enabled-${program.stage}`,
