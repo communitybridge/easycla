@@ -124,7 +124,7 @@ func (osc *Client) IsCompanyOwner(userSFID string, orgs []string) (bool, error) 
 }
 
 // IsUserHaveRoleScope checks if user have required role and scope
-func (osc *Client) IsUserHaveRoleScope(rolename string, userSFID string, organizationID string, projectSFID string) (bool, error) {
+func (osc *Client) IsUserHaveRoleScope(roleName string, userSFID string, organizationID string, projectSFID string) (bool, error) {
 	objectID := fmt.Sprintf("%s|%s", projectSFID, organizationID)
 	var offset int64
 	var pageSize int64 = 1000
@@ -138,7 +138,7 @@ func (osc *Client) IsUserHaveRoleScope(rolename string, userSFID string, organiz
 			Offset:       aws.String(strconv.FormatInt(offset, 10)),
 			PageSize:     aws.String(strconv.FormatInt(pageSize, 10)),
 			SalesforceID: organizationID,
-			Rolename:     []string{rolename},
+			Rolename:     []string{roleName},
 			Context:      context.Background(),
 		}
 		result, err := osc.cl.Organizations.ListOrgUsrServiceScopes(params, clientAuth)
