@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 
@@ -150,14 +151,33 @@ func (s *service) ProcessEvents(events events.DynamoDBEvent) {
 		//fields["events_data"] = string(b)
 		log.WithFields(fields).Debug("processing event record")
 		key := fmt.Sprintf("%s:%s", tableName, event.EventName)
-		for _, f := range s.functions[key] {
-			fields["key"] = key
-			fields["functionType"] = fmt.Sprintf("%T", f)
-			log.WithFields(fields).Debug("invoking handler")
-			err := f(event)
-			if err != nil {
-				log.WithFields(fields).WithField("event", event).Error("unable to process event", err)
+
+		// If we have any functions registered
+		if len(s.functions[key]) > 0 {
+
+			// Setup a wait group for the go routine
+			var wg sync.WaitGroup
+			wg.Add(len(s.functions[key]))
+
+			// For each function handler...
+			for _, eventHandlerFunction := range s.functions[key] {
+				fields["key"] = key
+				fields["functionType"] = fmt.Sprintf("%T", eventHandlerFunction)
+				log.WithFields(fields).Debug("invoking handler")
+
+				go func(f EventHandlerFunc) {
+					defer wg.Done()
+					err := f(event)
+					if err != nil {
+						log.WithFields(fields).WithError(err).WithField("event", event).Error("unable to process event", err)
+					}
+				}(eventHandlerFunction)
 			}
+
+			// Wait until the registered handlers/functions have completed for this event type...
+			log.WithFields(fields).Debugf("waiting for %d event handler functions to complete...", len(s.functions[key]))
+			wg.Wait()
+			log.WithFields(fields).Debugf("%d event handler functions to completed", len(s.functions[key]))
 		}
 	}
 }
