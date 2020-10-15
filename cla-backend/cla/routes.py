@@ -1507,7 +1507,9 @@ def github_app_activity(body, request, response):
                                                                      request.bounded_stream.read())
     if not valid_request:
         cla.log.error("/github/activity webhook secret validation failed, sending email")
-        cla.controllers.github.webhook_secret_failed_email(event_type, body, cla.config.PLATFORM_MAINTAINERS)
+        maintainers = cla.config.PLATFORM_MAINTAINERS.split(',') if cla.config.PLATFORM_MAINTAINERS else []
+        cla.log.error(f"/github/activity maintainer list: {maintainers}")
+        cla.controllers.github.webhook_secret_failed_email(event_type, body, maintainers)
         response.status = HTTP_401
         return {'status': "Invalid Secret Token"}
 
