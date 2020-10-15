@@ -825,6 +825,10 @@ def webhook_secret_failed_email(event_type: str, req_body: dict, maintainers: Li
     :param maintainers:
     :return:
     """
+    if maintainers is None or type(maintainers) is not list:
+        cla.log.warning(f'webhook_secret_failed_email - unable to emails - no maintainers defined.')
+        return
+
     subject, body, maintainers = webhook_secret_failed_email_content(event_type, req_body, maintainers)
     get_email_service().send(subject, body, maintainers)
     cla.log.debug('webhook_secret_failed_email - sending notification email '

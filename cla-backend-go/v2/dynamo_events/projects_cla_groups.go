@@ -56,11 +56,14 @@ func (s *service) ProjectServiceEnableCLAServiceHandler(event events.DynamoDBEve
 
 	psc := v2ProjectService.GetClient()
 	log.WithFields(f).Debug("enabling CLA service...")
+	start, _ := utils.CurrentTime()
 	err = psc.EnableCLA(newProject.ProjectSFID)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("enabling CLA service failed")
 		return err
 	}
+	finish, _ := utils.CurrentTime()
+	log.WithFields(f).Debugf("enabling CLA service completed - took: %s", finish.Sub(start).String())
 
 	// Log the event
 	eventErr := s.eventsRepo.CreateEvent(&models.Event{
