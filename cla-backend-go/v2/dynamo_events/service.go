@@ -139,10 +139,11 @@ func (s *service) ProcessEvents(events events.DynamoDBEvent) {
 	for _, event := range events.Records {
 		tableName := strings.Split(event.EventSourceArn, "/")[1]
 		fields := logrus.Fields{
-			"table_name":  tableName,
-			"eventID":     event.EventID,
-			"eventName":   event.EventName,
-			"eventSource": event.EventSource,
+			"functionName": "ProcessEvents",
+			"table_name":   tableName,
+			"eventID":      event.EventID,
+			"eventName":    event.EventName,
+			"eventSource":  event.EventSource,
 			// Dumping the event is super verbose
 			// "event":      event,
 		}
