@@ -107,7 +107,8 @@ func NewService(stage string,
 	s.registerCallback(projectsCLAGroupsTable, Insert, s.ProjectServiceEnableCLAServiceHandler)
 	s.registerCallback(projectsCLAGroupsTable, Remove, s.ProjectServiceDisableCLAServiceHandler)
 
-	// Remove any lingering CLA Permissions for the specified project which was unenrolled/disabled
+	// Add or Remove any CLA Permissions for the specified project
+	s.registerCallback(projectsCLAGroupsTable, Insert, s.AddCLAPermissions)
 	s.registerCallback(projectsCLAGroupsTable, Remove, s.RemoveCLAPermissions)
 
 	// GitHub organization table modified event
