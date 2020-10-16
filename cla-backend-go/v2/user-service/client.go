@@ -12,6 +12,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	"github.com/sirupsen/logrus"
+
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/user-service/client/staff"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -61,46 +65,75 @@ func GetClient() *Client {
 
 // GetUsersByUsernames search users by lf username
 func (usc *Client) GetUsersByUsernames(lfUsernames []string) ([]*models.User, error) {
+	f := logrus.Fields{
+		"functionName": "GetUsersByUsernames",
+		"lfUsernames":  strings.Join(lfUsernames, ","),
+	}
+
+	tok, err := token.GetToken()
+	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem obtaining token")
+		return nil, err
+	}
+
 	params := bulk.NewSearchBulkParams()
 	params.SearchBulk = &models.SearchBulk{
 		List: lfUsernames,
 		Type: aws.String("username"),
 	}
-	tok, err := token.GetToken()
-	if err != nil {
-		return nil, err
-	}
 	clientAuth := runtimeClient.BearerToken(tok)
 	result, err := usc.cl.Bulk.SearchBulk(params, clientAuth)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem with the bulk search")
 		return nil, err
 	}
+
 	return result.Payload.Data, nil
 }
 
 // GetUserByUsername returns user by lfUsername
 func (usc *Client) GetUserByUsername(lfUsername string) (*models.User, error) {
-	users, err := usc.GetUsersByUsernames([]string{lfUsername})
+	f := logrus.Fields{
+		"functionName": "GetUserByUsername",
+		"lfUsername":   lfUsername,
+	}
+
+	log.WithFields(f).Debug("querying user by username...")
+	// use the ListUsers API endpoint (actually called FindUsers) with the lfUsername filter
+	userModel, err := usc.ListUsersByUsername(lfUsername)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem loading user by username")
 		return nil, err
 	}
-	if len(users) == 0 {
+	if userModel == nil {
+		log.WithFields(f).Debug("get by username returned no results")
 		return nil, ErrUserNotFound
 	}
-	return users[0], nil
+
+	return userModel, nil
 }
 
 // SearchUsers returns a single user based on firstName, lastName and email parameters
 func (usc *Client) SearchUsers(firstName string, lastName string, email string) (*models.User, error) {
+	f := logrus.Fields{
+		"functionName": "SearchUsers",
+		"firstName":    firstName,
+		"lastName":     lastName,
+		"email":        email,
+	}
 
+	// TODO: DAD - let's replace this with the client sub implementation rather than a manual HTTP request
 	query := fmt.Sprintf("email=%s&firstname=%s&lastname=%s", email, firstName, lastName)
 	url := fmt.Sprintf("https://%s/user-service/v1/users/search?%s", usc.apiGwURL, query)
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem searching user")
 		return nil, err
 	}
+	log.WithFields(f).Debug("searching for user...")
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem building new request")
 		return nil, err
 	}
 
@@ -109,20 +142,29 @@ func (usc *Client) SearchUsers(firstName string, lastName string, email string) 
 	request.Header.Set("Content-Type", "application/json")
 
 	response, err := http.DefaultClient.Do(request)
-
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem searching user")
 		return nil, err
 	}
 
-	defer response.Body.Close()
+	defer func() {
+		closeErr := response.Body.Close()
+		if closeErr != nil {
+			log.WithFields(f).WithError(closeErr).Warn("error closing body")
+		}
+	}()
+
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem decoding the user response")
 		return nil, err
 	}
 	userList, err := getUsers(data)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem processing the user response")
 		return nil, err
 	}
+
 	for _, userItem := range userList {
 		for _, userEmail := range userItem.Emails {
 			if *userEmail.EmailAddress == email {
@@ -136,24 +178,66 @@ func (usc *Client) SearchUsers(firstName string, lastName string, email string) 
 	return nil, errors.New("user not found")
 }
 
-// SearchUsersByEmail returns a single user based on the email parameter
-func (usc *Client) SearchUsersByEmail(email string) (*models.User, error) {
-	params := &user.FindUsersParams{
-		Email:   &email,
-		Context: context.Background(),
+// ListUsersByUsername returns the username
+func (usc *Client) ListUsersByUsername(lfUsername string) (*models.User, error) {
+	f := logrus.Fields{
+		"functionName": "ListUsersByUsername",
+		"lfUsername":   lfUsername,
 	}
+
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem obtaining token")
 		return nil, err
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
+
+	params := &user.FindUsersParams{
+		Username: &lfUsername,
+		Context:  utils.NewContext(),
+	}
 	result, err := usc.cl.User.FindUsers(params, clientAuth)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem finding user by lfUsername")
 		return nil, err
 	}
 	users := result.Payload.Data
 
 	if len(users) == 0 {
+		log.WithFields(f).Debug("get by lfUsername returned no results")
+		return nil, ErrUserNotFound
+	}
+
+	return users[0], nil
+}
+
+// SearchUsersByEmail returns a single user based on the email parameter
+func (usc *Client) SearchUsersByEmail(email string) (*models.User, error) {
+	f := logrus.Fields{
+		"functionName": "SearchUsersByEmail",
+		"email":        email,
+	}
+
+	tok, err := token.GetToken()
+	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem obtaining token")
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+
+	params := &user.FindUsersParams{
+		Email:   &email,
+		Context: context.Background(),
+	}
+	result, err := usc.cl.User.FindUsers(params, clientAuth)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem finding user by email")
+		return nil, err
+	}
+	users := result.Payload.Data
+
+	if len(users) == 0 {
+		log.WithFields(f).Debug("get by lfUsername returned no results")
 		return nil, ErrUserNotFound
 	}
 	return users[0], nil
@@ -170,22 +254,29 @@ func getUsers(body []byte) ([]*models.User, error) {
 
 // SearchUserByEmail search user by email
 func (usc *Client) SearchUserByEmail(email string) (*models.User, error) {
+	f := logrus.Fields{
+		"functionName": "SearchUserByEmail",
+		"email":        email,
+	}
 	params := &user.SearchUsersParams{
 		Email:   &email,
 		Context: context.Background(),
 	}
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem obtaining token")
 		return nil, err
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
 	result, err := usc.cl.User.SearchUsers(params, clientAuth)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem finding user by email")
 		return nil, err
 	}
 	users := result.Payload.Data
 
 	if len(users) == 0 {
+		log.WithFields(f).Debug("get by lfUsername returned no results")
 		return nil, ErrUserNotFound
 	}
 	return users[0], nil
