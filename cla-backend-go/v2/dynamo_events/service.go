@@ -113,8 +113,9 @@ func NewService(stage string,
 	s.registerCallback(projectsCLAGroupsTable, Remove, s.RemoveCLAPermissions)
 
 	// GitHub organization table modified event
-	s.registerCallback(githubOrgTableName, Modify, s.GitHubOrgUpdatedEvent)
 	s.registerCallback(githubOrgTableName, Insert, s.GitHubOrgAddedEvent)
+	s.registerCallback(githubOrgTableName, Modify, s.GitHubOrgUpdatedEvent)
+	s.registerCallback(githubOrgTableName, Remove, s.GitHubOrgDeletedEvent)
 
 	s.registerCallback(repositoryTableName, Insert, s.GithubRepoAddedEvent)
 	s.registerCallback(repositoryTableName, Remove, s.GithubRepoDeletedEvent)
