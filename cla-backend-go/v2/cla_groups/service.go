@@ -224,6 +224,25 @@ func (s *service) UpdateCLAGroup(ctx context.Context, claGroupID string, input *
 		"ClaGroupDescription": input.ClaGroupDescription,
 	}
 
+	// Search other CLA Groups - any name conflicts?
+	if input.ClaGroupName != "" {
+		existingCLAGroup, groupLookupErr := s.v1ProjectService.GetCLAGroupByName(ctx, input.ClaGroupName)
+		if groupLookupErr != nil {
+			log.WithFields(f).WithError(groupLookupErr).Warnf("update - error looking up CLA Group by name: %s", input.ClaGroupName)
+			return nil, groupLookupErr
+		}
+
+		// Expecting no/nil result - if we find an existing CLA Group with the specified input name - this is a name conflict - not allowed
+		if existingCLAGroup != nil {
+			log.WithFields(f).Warnf("found existing CLA Group with name: %s - unable to update", input.ClaGroupName)
+			return nil, &utils.CLAGroupNameConflict{
+				CLAGroupID:   claGroupID,
+				CLAGroupName: input.ClaGroupName,
+				Err:          nil,
+			}
+		}
+	}
+
 	existingCLAGroup, getErr := s.v1ProjectService.GetCLAGroupByID(ctx, claGroupID)
 	if getErr != nil {
 		log.WithFields(f).WithError(getErr).Warnf("update - error locating the project id: %s", claGroupID)

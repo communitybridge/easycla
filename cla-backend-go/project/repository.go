@@ -384,7 +384,8 @@ func (repo *repo) GetCLAGroupByName(ctx context.Context, projectName string) (*m
 		"functionName":   "GetCLAGroupByName",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"projectName":    projectName,
-		"tableName":      repo.claGroupTable}
+		"tableName":      repo.claGroupTable,
+	}
 	log.WithFields(f).Debugf("loading project")
 
 	// This is the key we want to match
@@ -393,8 +394,7 @@ func (repo *repo) GetCLAGroupByName(ctx context.Context, projectName string) (*m
 	// Use the builder to create the expression
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
 	if err != nil {
-		log.WithFields(f).Warnf("error building expression for CLAGroup query, projectName: %s, error: %v",
-			projectName, err)
+		log.WithFields(f).WithError(err).Warnf("error building expression for CLAGroup query, projectName: %s", projectName)
 		return nil, err
 	}
 
