@@ -44,14 +44,14 @@ export class CompaniesPage {
     this.loading = {
       companies: true
     };
-    this.userId = localStorage.getItem('userid');
+    this.userId = localStorage.getItem('userid').trim();
     this.userEmail = localStorage.getItem('user_email');
     this.userName = localStorage.getItem('user_name');
     this.companies = [];
   }
 
   ngOnInit() {
-    // this.getCompanies();
+    this.getCompanies();
   }
 
   /**
@@ -59,6 +59,7 @@ export class CompaniesPage {
    */
   getCompanies() {
     this.loading.companies = true;
+    console.log(this.userId);
     this.claService.getUserByUserName(this.userId).subscribe(
       (response) => {
         // We need the user's unique ID - grab it from the first record

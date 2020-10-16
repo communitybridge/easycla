@@ -8,7 +8,7 @@
     "build:dev": "yarn prebuild:dev && ./node_modules/@angular/cli/bin/ng build --prod --configuration=dev",
     "build:staging": "yarn prebuild:dev && ./node_modules/@angular/cli/bin/ng build --prod --configuration=staging",
     "build:prod": "yarn prebuild:dev && ./node_modules/@angular/cli/bin/ng build --prod --configuration=production",
-    "serve:local": "ng serve --port 8102",
+    "serve:local": "ng serve --port 8100",
     "test": "yarn test:unit",
     "test:unit": "ng test --watch=false --progress=false --browsers=ChromeHeadless",
     "lint": "./node_modules/@angular/cli/bin/ng lint",

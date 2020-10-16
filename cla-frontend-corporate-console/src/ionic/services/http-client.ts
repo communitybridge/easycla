@@ -9,7 +9,11 @@ import { AuthService } from './auth.service';
 
 @Injectable()
 export class HttpClient {
-  constructor(public http: Http, private keycloak: KeycloakService, private authService: AuthService) {
+  constructor(
+    public http: Http,
+    private keycloak: KeycloakService,
+    private authService: AuthService
+  ) {
   }
 
   private buildAuthHeaders(contentType: string = 'application/json') {
@@ -17,19 +21,24 @@ export class HttpClient {
       Accept: 'application/json',
       'Content-Type': contentType
     });
-
-    // if (this.authService.isAuthenticated()) {
-    //   return this.authService.getIdToken().then((token) => {
-    //     if (token) {
-    //       headers.append('Authorization', 'Bearer ' + token);
-    //       return headers;
-    //     } else {
-    //       console.log('Token is empty - unable to set authorization header.');
-    //     }
-    //   });
+    // if (this.authService.loggedIn) {
+    return this.authService.getIdToken().then((token) => {
+      if (token) {
+        headers.append('Authorization', 'Bearer ' + token);
+        return headers;
+      }
+    });
     // } else {
-    return Promise.resolve(headers);
+    //   return Promise.resolve(headers);
     // }
+  }
+
+  private buildWithoutAuthHeaders(contentType: string = 'application/json') {
+    let headers = new Headers({
+      Accept: 'application/json',
+      'Content-Type': contentType
+    });
+    return Promise.resolve(headers);
   }
 
   buildS3Headers(contentType) {
@@ -48,6 +57,13 @@ export class HttpClient {
       this.http.get(url, { headers: headers })
     );
   }
+
+  getWithoutAuth(url) {
+    return Observable.fromPromise(this.buildWithoutAuthHeaders()).switchMap((headers) =>
+      this.http.get(url, { headers: headers })
+    );
+  }
+
 
   getWithCreds(url) {
     return Observable.fromPromise(this.buildAuthHeaders()).switchMap((headers) =>

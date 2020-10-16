@@ -1,17 +1,14 @@
 import { Injectable } from '@angular/core';
 import createAuth0Client from '@auth0/auth0-spa-js';
 import Auth0Client from '@auth0/auth0-spa-js/dist/typings/Auth0Client';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, Subject } from 'rxjs';
 import { tap, catchError, concatMap, shareReplay, mergeMap } from 'rxjs/operators';
 import { from } from 'rxjs/observable/from';
 import { of } from 'rxjs/observable/of';
 import { combineLatest } from 'rxjs/observable/combineLatest';
 import { reject } from 'lodash';
-import { App, NavController } from 'ionic-angular';
 import { AUTH_ROUTE } from './auth.utils';
-import { StorageService } from './storage.service';
 import { EnvConfig } from './cla.env.utils';
-import { CompaniesPage } from '../pages/companies-page/companies-page';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +18,8 @@ export class AuthService {
   userProfile$ = this.userProfileSubject$.asObservable();
   // Create a local property for login status
   loggedIn = false;
+  redirectRoot: Subject<any> = new Subject<any>();
+  checkSession: Subject<any> = new Subject<any>();
 
   auth0Options = {
     clientId: EnvConfig['auth0-clientId'],
@@ -41,7 +40,7 @@ export class AuthService {
     shareReplay(1), // Every subscription receives the same shared value
     catchError((err) => {
       this.loading$.next(false);
-      return throwError(err);
+      return reject(err);
     })
   );
   // Define observables for SDK methods that return promises by default
@@ -61,17 +60,12 @@ export class AuthService {
   );
 
 
-  constructor(
-    private storageService: StorageService,
-    private app: App,
-    // public navCtrl: NavController
-  ) {
+  constructor() {
     // On initial load, check authentication state with authorization server
     // Set up local auth streams if user is already authenticated
     this.localAuthSetup();
     // Handle redirect from Auth0 login
     this.handleAuthCallback();
-    console.log(this.auth0Options);
   }
 
   // When calling, options can be passed if desired
@@ -80,7 +74,6 @@ export class AuthService {
     return this.auth0Client$.pipe(
       concatMap((client: Auth0Client) => from(client.getUser(options))),
       tap((user) => {
-        console.log(user)
         this.setSession(user);
         this.userProfileSubject$.next(user);
       })
@@ -92,12 +85,14 @@ export class AuthService {
     // Set up local authentication streams
     const checkAuth$ = this.isAuthenticated$.pipe(
       concatMap((loggedIn: boolean) => {
+        this.loggedIn = loggedIn;
+        this.checkSession.next(loggedIn);
         if (loggedIn) {
           // If authenticated, get user and set in app
           // NOTE: you could pass options here if needed
           return this.getUser$();
         }
-        // If not authenticated, return stream that emits 'false'
+        // If not authenticated, retur\n stream that emits 'false'
         return of(loggedIn);
       })
     );
@@ -141,17 +136,15 @@ export class AuthService {
       // Response will be an array of user and login status
       authComplete$.subscribe(() => {
         // Redirect to target route after callback processing
-        // this.router.navigate([targetRoute]);
-        // this.navCtrl.setRoot('CompaniesPage');
-        window.open(`${window.location.origin}` + targetRoute, '_self');
+        this.redirectRoot.next(targetRoute);
       });
     }
   }
 
   private setSession(authResult): void {
-    this.storageService.setItem('userid', authResult.nickname);
-    this.storageService.setItem('user_email', authResult.email);
-    this.storageService.setItem('user_name', authResult.name);
+    localStorage.setItem('userid', authResult.nickname);
+    localStorage.setItem('user_email', authResult.email);
+    localStorage.setItem('user_name', authResult.name);
   }
 
   logout() {
@@ -173,10 +166,17 @@ export class AuthService {
     return this.auth0Client$.pipe(concatMap((client: Auth0Client) => from(client.getTokenSilently(options))));
   }
 
-  // getIdToken$(options?): Observable<any> {
-  //   return this.auth0Client$.pipe(
-  //     concatMap((client: Auth0Client) => from(client.getIdTokenClaims(options))),
-  //     concatMap((claims: any) => of(claims.__raw))
-  //   );
-  // }
+  public getIdToken(): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      const token = this.getIdToken$({ ignoreCache: true }).toPromise();
+      resolve(token);
+    });
+  }
+
+  getIdToken$(options?): Observable<any> {
+    return this.auth0Client$.pipe(
+      concatMap((client: Auth0Client) => from(client.getIdTokenClaims(options))),
+      concatMap((claims: any) => of(claims.__raw))
+    );
+  }
 }
