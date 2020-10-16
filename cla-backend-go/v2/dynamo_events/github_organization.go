@@ -21,7 +21,7 @@ func (s *service) GitHubOrgAddedEvent(event events.DynamoDBEventRecord) error {
 		"functionName": "GitHubOrgAddedEvent",
 	}
 
-	log.WithFields(f).Debug("GitHubOrgAddedEvent called")
+	log.WithFields(f).Debug("processing event")
 	var newGitHubOrg github_organizations.GithubOrganization
 	err := unmarshalStreamImage(event.Change.NewImage, &newGitHubOrg)
 	if err != nil {
@@ -45,7 +45,7 @@ func (s *service) GitHubOrgUpdatedEvent(event events.DynamoDBEventRecord) error 
 		"functionName": "GitHubOrgUpdatedEvent",
 	}
 
-	log.WithFields(f).Debug("GitHubOrgUpdatedEvent called")
+	log.WithFields(f).Debug("processing event")
 	var newGitHubOrg, oldGitHubOrg github_organizations.GithubOrganization
 	err := unmarshalStreamImage(event.Change.NewImage, &newGitHubOrg)
 	if err != nil {
@@ -65,6 +65,47 @@ func (s *service) GitHubOrgUpdatedEvent(event events.DynamoDBEventRecord) error 
 	}
 
 	log.WithFields(f).Debug("no transition of branchProtectionEnabled false => true - ignoring...")
+	return nil
+}
+
+// GitHubOrgDeletedEvent github repository deleted event
+func (s *service) GitHubOrgDeletedEvent(event events.DynamoDBEventRecord) error {
+	ctx := utils.NewContext()
+	f := logrus.Fields{
+		"functionName":   "GitHubOrgDeletedEvent",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
+
+	log.WithFields(f).Debug("processing event")
+	var oldGitHubOrg github_organizations.GithubOrganization
+	err := unmarshalStreamImage(event.Change.OldImage, &oldGitHubOrg)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem unmarshalling the old github organization model from the deleted event")
+		return err
+	}
+
+	orgName := oldGitHubOrg.OrganizationName
+	f["organizationName"] = orgName
+
+	repoModels, err := s.repositoryService.GetRepositoriesByOrganizationName(ctx, orgName)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading repositories using org name: %s", orgName)
+		return err
+	}
+
+	if len(repoModels) == 0 {
+		log.WithFields(f).Debug("no repositories found for organization")
+		return nil
+	}
+
+	log.WithFields(f).Debug("no repositories found for organization")
+	for _, repo := range repoModels {
+		disableErr := s.repositoryService.DisableRepository(ctx, repo.RepositoryID)
+		if disableErr != nil {
+			log.WithFields(f).WithError(disableErr).Warnf("problem disabling repository: %s", repo.RepositoryName)
+		}
+	}
+
 	return nil
 }
 
