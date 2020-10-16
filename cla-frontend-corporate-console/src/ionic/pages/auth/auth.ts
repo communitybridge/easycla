@@ -15,7 +15,7 @@ import { RolesService } from '../../services/roles.service';
  * Ionic pages and navigation.
  */
 @Component({
-  selector: 'auth-page',
+  selector: 'page-auth',
   templateUrl: 'auth.html'
 })
 export class AuthPage implements OnInit {
@@ -29,21 +29,8 @@ export class AuthPage implements OnInit {
   ) { }
 
   ngOnInit() {
-    setTimeout(() => {
-      console.log(this.authService.loggedIn);
-    if (this.authService.loggedIn) {
-      this.navCtrl.setRoot('CompaniesPage');
-    } else {
-      this.redirectToLogin();
-    }
-    }, 2000);
-  }
-
-  redirectToLogin() {
-    if (EnvConfig['lfx-header-enabled'] === "true") {
-      window.open(EnvConfig['landing-page'], '_self');
-    } else {
-      this.navCtrl.setRoot('LoginPage');
-    }
+    this.authService.redirectRoot.subscribe((target) => {
+      this.navCtrl.setRoot(target);
+    });
   }
 }

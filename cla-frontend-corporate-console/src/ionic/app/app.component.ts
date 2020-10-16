@@ -61,8 +61,14 @@ export class MyApp {
 
     this.claService.setApiUrl(EnvConfig['cla-api-url']);
     this.claService.setHttp(httpClient);
-    // here to check authentication state
-    // this.authService.handleAuthentication();
+
+    this.authService.checkSession.subscribe((loggedIn) => {
+      if (loggedIn) {
+        this.nav.setRoot('CompaniesPage');
+      } else {
+        this.redirectToLogin();
+      }
+    });
   }
 
   mounted() {
@@ -72,6 +78,14 @@ export class MyApp {
       EnvConfig['lfx-header']
     );
     document.head.appendChild(script);
+  }
+
+  redirectToLogin() {
+    if (EnvConfig['lfx-header-enabled'] === "true") {
+      window.open(EnvConfig['landing-page'], '_self');
+    } else {
+      this.nav.setRoot('LoginPage');
+    }
   }
 
   getDefaults() {

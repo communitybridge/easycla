@@ -30,6 +30,7 @@ import { StorageService } from '../services/storage.service';
   bootstrap: [IonicApp],
   entryComponents: [MyApp, AuthPage],
   providers: [
+    AuthService,
     StatusBar,
     SplashScreen,
     CurrencyPipe,
@@ -40,7 +41,6 @@ import { StorageService } from '../services/storage.service';
     KEYCLOAK_HTTP_PROVIDER,
     SortService,
     ClaService,
-    AuthService,
     StorageService,
     DatePipe,
     { provide: ErrorHandler, useClass: IonicErrorHandler }
