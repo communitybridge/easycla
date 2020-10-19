@@ -21,16 +21,12 @@ export class HttpClient {
       Accept: 'application/json',
       'Content-Type': contentType
     });
-    // if (this.authService.loggedIn) {
     return this.authService.getIdToken().then((token) => {
       if (token) {
         headers.append('Authorization', 'Bearer ' + token);
         return headers;
       }
     });
-    // } else {
-    //   return Promise.resolve(headers);
-    // }
   }
 
   private buildWithoutAuthHeaders(contentType: string = 'application/json') {

@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: MIT
 
 import { Component, OnInit } from '@angular/core';
-import { NavParams } from 'ionic-angular';
 import { NavController } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
 import { EnvConfig } from '../../services/cla.env.utils';
-import { RolesService } from '../../services/roles.service';
 
 /**
  * Generated class for the AuthPage page.
@@ -23,9 +21,7 @@ export class AuthPage implements OnInit {
 
   constructor(
     public navCtrl: NavController,
-    public navParams: NavParams,
     public authService: AuthService,
-    public rolesService: RolesService
   ) { }
 
   ngOnInit() {

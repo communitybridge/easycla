@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { IonicPage } from 'ionic-angular';
+import { IonicPage, NavController } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
+import { AUTH_ROUTE } from '../../services/auth.utils';
 
 @IonicPage({
   name: 'LoginPage',
@@ -17,9 +18,14 @@ export class LoginPage {
 
   constructor(
     public authService: AuthService,
+    private navCtrl: NavController
   ) { }
 
   login() {
-    this.authService.login();
+    if (this.authService.loggedIn) {
+      this.navCtrl.setRoot('AllProjectsPage');
+    } else {
+      this.authService.login(AUTH_ROUTE);
+    }
   }
 }

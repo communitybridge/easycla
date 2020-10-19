@@ -25,7 +25,7 @@ export class AllProjectsPage {
   loading: any;
   allProjects: any;
   allFilteredProjects: any;
-  userRoles: any;
+  // userRoles: any;
   errorMessage = null;
   errorStatus = null;
   expanded: boolean = true;
@@ -86,8 +86,7 @@ export class AllProjectsPage {
   }
 
   getDefaults() {
-    this.userRoles = this.rolesService.userRoleDefaults;
-
+    // this.userRoles = this.rolesService.userRoleDefaults;
     this.setLoadingSpinner(true);
   }
 
