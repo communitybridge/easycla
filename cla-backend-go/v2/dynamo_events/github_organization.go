@@ -98,7 +98,7 @@ func (s *service) GitHubOrgDeletedEvent(event events.DynamoDBEventRecord) error 
 		return nil
 	}
 
-	log.WithFields(f).Debug("no repositories found for organization")
+	log.WithFields(f).Debugf("disabling %d repositories for organization: %s", len(repoModels), orgName)
 	for _, repo := range repoModels {
 		disableErr := s.repositoryService.DisableRepository(ctx, repo.RepositoryID)
 		if disableErr != nil {
