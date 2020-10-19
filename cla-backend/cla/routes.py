@@ -1129,7 +1129,7 @@ def delete_project_document(
                         'user_id': 'some-user-uuid'}",
 )
 def request_individual_signature(
-        project_id: hug.types.uuid, user_id: hug.types.uuid, return_url_type=None, return_url=None,
+        request, project_id: hug.types.uuid, user_id: hug.types.uuid, return_url_type=None, return_url=None,
 ):
     """
     POST: /request-individual-signature
@@ -1152,7 +1152,8 @@ def request_individual_signature(
     User should hit the provided URL to initiate the signing process through the
     signing service provider.
     """
-    return cla.controllers.signing.request_individual_signature(project_id, user_id, return_url_type, return_url)
+    return cla.controllers.signing.request_individual_signature(project_id, user_id, return_url_type, return_url,
+                                                                request=request)
 
 
 @hug.post(

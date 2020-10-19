@@ -5,6 +5,7 @@
 Holds the signing service interfaces that all signing service models must implement.
 """
 
+
 class SigningService(object):
     """
     Interface to the signing service.
@@ -21,7 +22,8 @@ class SigningService(object):
         """
         raise NotImplementedError()
 
-    def request_individual_signature(self, project_id, user_id, return_url_type, return_url, callback_url=None):
+    def request_individual_signature(self, project_id, user_id, return_url_type, return_url, callback_url=None,
+                                     preferred_email=None):
         """
         Method that will request a new signature from the user.
 
@@ -39,6 +41,8 @@ class SigningService(object):
         :param callback_url: The URL that will be hit by the signing provider after successful
             signature from the user.
         :type callback_url: string
+        :param preferred_email: preferred email to use when creating signature
+        :type preferred_email: string
         :return: All data necessary to notify the user of the signing URL.
             Should return a dict of:
 
