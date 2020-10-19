@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "deploy": "../scripts/deploy-frontend.sh",
-    "sls": "../node_modules/serverless/bin/serverless",
+    "sls": "../node_modules/serverless/bin/serverless.js",
     "install-frontend": "../scripts/install-frontend.sh"
   },
   "dependencies": {
@@ -14,5 +14,9 @@
     "serverless-cloudfront-invalidate": "^1.2.1",
     "serverless-pseudo-parameters": "^2.5.0",
     "serverless-plugin-tracing": "^2.0.0"
+  },
+  "resolutions": {
+    "bl": "^1.2.3",
+    "http-proxy": "^1.18.1"
   }
 }
