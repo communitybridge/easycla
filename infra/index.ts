@@ -405,6 +405,12 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
           rangeKey: 'sigtype_signed_approved_id',
           projectionType: 'ALL',
         },
+        {
+          name: 'signature-id-signature-project-id-index',
+          hashKey: 'signature_id',
+          rangeKey: 'signature_project_id',
+          projectionType: 'ALL',
+        },
       ],
       pointInTimeRecovery: {
         enabled: pointInTimeRecoveryEnabled,
