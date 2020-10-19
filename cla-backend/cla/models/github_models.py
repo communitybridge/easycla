@@ -7,6 +7,7 @@ Holds the GitHub repository service.
 import json
 import os
 import uuid
+from typing import List, Union, Optional
 
 import falcon
 import github
@@ -494,7 +495,7 @@ class GitHub(repository_service_interface.RepositoryService):
             return {'error': 'Could not get user data: %s' % github_user['message']}
         return github_user
 
-    def get_user_emails(self, session, client_id):  # pylint: disable=no-self-use
+    def get_user_emails(self, session, client_id) -> Union[List[str], dict]:  # pylint: disable=no-self-use
         """
         Mockable method to get all user emails based on OAuth2 session.
 
@@ -503,15 +504,43 @@ class GitHub(repository_service_interface.RepositoryService):
         :param client_id: The GitHub OAuth2 client ID.
         :type client_id: string
         """
+        emails = self._fetch_github_emails(session=session, client_id=client_id)
+        cla.log.debug('GitHub user emails: %s', emails)
+        if 'error' in emails:
+            return emails
+        return [item['email'] for item in emails if item['verified']]
+
+    def get_primary_user_email(self, request) -> Union[Optional[str], dict]:
+        """
+        gets the user primary email from the registered emails from the github api
+        """
+        cla.log.debug("Fetching Github primary email")
+        session = self._get_request_session(request)
+        client_id = os.environ['GH_OAUTH_CLIENT_ID']
+        emails = self._fetch_github_emails(session=session, client_id=client_id)
+        if "error" in emails:
+            return None
+
+        for email in emails:
+            if email.get("verified", False) and email.get("primary", False):
+                return email["email"]
+        return None
+
+    def _fetch_github_emails(self, session, client_id) -> Union[List[dict], dict]:
+        """
+        Method is reponsible for fetching the user emails from /user/emails endpoint
+        :param session:
+        :param client_id:
+        :return:
+        """
         token = session['github_oauth2_token']
         oauth2 = OAuth2Session(client_id, token=token)
         request = oauth2.get('https://api.github.com/user/emails')
-        emails = request.json()
-        cla.log.debug('GitHub user emails: %s', emails)
-        if 'message' in emails:
-            cla.log.warning('Could not get user emails with OAuth2 token: %s', emails['message'])
-            return {'error': 'Could not get user emails: %s' % emails['message']}
-        return [item['email'] for item in emails if item['verified']]
+        resp = request.json()
+        if 'message' in resp:
+            cla.log.warning('Could not get user emails with OAuth2 token: %s', resp['message'])
+            return {'error': 'Could not get user emails: %s' % resp['message']}
+        return resp
 
     def process_reopened_pull_request(self, data):
         """
@@ -811,7 +840,8 @@ def has_check_previously_failed(pull_request: PullRequest) -> bool:
     return False
 
 
-def update_pull_request(installation_id, github_repository_id, pull_request, repository_name, signed, missing):  # pylint: disable=too-many-locals
+def update_pull_request(installation_id, github_repository_id, pull_request, repository_name, signed,
+                        missing):  # pylint: disable=too-many-locals
     """
     Helper function to update a PR's comment and status based on the list of signers.
 

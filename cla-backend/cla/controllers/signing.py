@@ -9,13 +9,13 @@ import falcon
 
 import cla
 from cla.models import DoesNotExist
-from cla.utils import get_signing_service, get_signature_instance, get_email_service
+from cla.utils import get_signing_service, get_signature_instance, get_email_service, \
+    get_supported_repository_providers, get_repository_service
 
 
-def request_individual_signature(project_id, user_id, return_url_type, return_url=None):
+def request_individual_signature(project_id, user_id, return_url_type, return_url=None, request=None):
     """
     Handle POST request to send ICLA signature request to user.
-
     :param project_id: The project to sign for.
     :type project_id: string
     :param user_id: The ID of the user that will sign.
@@ -24,12 +24,18 @@ def request_individual_signature(project_id, user_id, return_url_type, return_ur
     :type return_url_type: string
     :param return_url: The URL to return the user to after signing is complete.
     :type return_url: string
+    :param request: The Falcon Request object.
+    :type request: object
     """
     signing_service = get_signing_service()
     if return_url_type == "Gerrit":
         return signing_service.request_individual_signature_gerrit(str(project_id), str(user_id), return_url)
     elif return_url_type == "Github":
-        return signing_service.request_individual_signature(str(project_id), str(user_id), return_url)
+        # fetching the primary for the account
+        github = get_repository_service("github")
+        primary_user_email = github.get_primary_user_email(request)
+        return signing_service.request_individual_signature(str(project_id), str(user_id), return_url,
+                                                            preferred_email=primary_user_email)
 
 
 def request_corporate_signature(auth_user, project_id, company_id, send_as_email=False,
