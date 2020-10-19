@@ -2,18 +2,16 @@
 // SPDX-License-Identifier: MIT
 
 import { Component, ViewChild } from '@angular/core';
-import { DatePipe, PlatformLocation } from '@angular/common';
+import { PlatformLocation } from '@angular/common';
 import {
   Events,
   IonicPage,
   ModalController,
-  NavController,
   NavParams,
   PopoverController,
   ViewController,
 } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
-import { RolesService } from '../../services/roles.service';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 
 @IonicPage({

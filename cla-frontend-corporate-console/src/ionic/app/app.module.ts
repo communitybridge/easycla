@@ -12,7 +12,6 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { HttpClient } from '../services/http-client';
 import { CincoService } from '../services/cinco.service';
-import { RolesService } from '../services/roles.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
 import { KEYCLOAK_HTTP_PROVIDER } from '../services/keycloak/keycloak.http';
 import { SortService } from '../services/sort.service';
@@ -22,7 +21,6 @@ import { AuthPage } from '../pages/auth/auth';
 
 import { MyApp } from './app.component';
 import { LayoutModule } from '../layout/layout.module';
-import { StorageService } from '../services/storage.service';
 
 @NgModule({
   declarations: [MyApp, AuthPage],
@@ -36,12 +34,10 @@ import { StorageService } from '../services/storage.service';
     CurrencyPipe,
     HttpClient,
     CincoService,
-    RolesService,
     KeycloakService,
     KEYCLOAK_HTTP_PROVIDER,
     SortService,
     ClaService,
-    StorageService,
     DatePipe,
     { provide: ErrorHandler, useClass: IonicErrorHandler }
   ]

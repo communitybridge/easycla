@@ -4,7 +4,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { AlertController, Events, IonicPage, ModalController, Nav, NavController, NavParams } from 'ionic-angular';
 import { ClaService } from '../../../services/cla.service';
-import { RolesService } from '../../../services/roles.service';
 import { Restricted } from '../../../decorators/restricted';
 import { GithubOrganisationModel } from '../../../models/github-organisation-model';
 import { PlatformLocation } from '@angular/common';
@@ -39,7 +38,6 @@ export class ProjectClaPage {
     public modalCtrl: ModalController,
     public alertCtrl: AlertController,
     public claService: ClaService,
-    public rolesService: RolesService,
     public events: Events,
     private location: PlatformLocation
   ) {

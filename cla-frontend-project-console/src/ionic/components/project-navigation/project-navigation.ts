@@ -3,7 +3,6 @@
 
 import { Input, Component, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
 import { ViewController, NavController } from 'ionic-angular';
-import { RolesService } from '../../services/roles.service';
 
 @Component({
   selector: 'project-navigation',
@@ -29,28 +28,17 @@ export class ProjectNavigationComponent implements AfterViewChecked {
 
   constructor(
     private navCtrl: NavController,
-    private rolesService: RolesService,
     private viewCtrl: ViewController
   ) {
     this.context;
     this.scrollChange = 40;
-    // this.getDefaults();
   }
-
-  // getDefaults() {
-  //   this.userRoles = this.rolesService.userRoles;
-  // }
 
   ngOnInit() {
     this.generateNavItems();
     this.scrollArea.nativeElement.onscroll = function () {
       this.checkScroll();
     }.bind(this);
-
-    // this.rolesService.getUserRolesPromise().then((userRoles) => {
-    //   this.userRoles = userRoles;
-    //   this.generateNavItems();
-    // });
   }
 
   ngAfterViewChecked() {

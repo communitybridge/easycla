@@ -5,7 +5,6 @@ import { Component } from '@angular/core';
 import { IonicPage, ModalController, NavController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { Restricted } from '../../decorators/restricted';
-import { RolesService } from '../../services/roles.service';
 import { EnvConfig } from '../../services/cla.env.utils';
 
 @Restricted({
@@ -35,7 +34,6 @@ export class CompaniesPage {
     public navCtrl: NavController,
     private claService: ClaService,
     public modalCtrl: ModalController,
-    private rolesService: RolesService // for @Restricted
   ) {
     this.getDefaults();
   }
@@ -59,7 +57,6 @@ export class CompaniesPage {
    */
   getCompanies() {
     this.loading.companies = true;
-    console.log(this.userId);
     this.claService.getUserByUserName(this.userId).subscribe(
       (response) => {
         // We need the user's unique ID - grab it from the first record
