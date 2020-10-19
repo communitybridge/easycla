@@ -1,11 +1,10 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NavController } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
 import { EnvConfig } from '../../services/cla.env.utils';
-import { RolesService } from '../../services/roles.service';
 
 /**
  * Generated class for the AuthPage page.
@@ -18,41 +17,20 @@ import { RolesService } from '../../services/roles.service';
   selector: 'page-auth',
   templateUrl: 'auth.html'
 })
-export class AuthPage {
-  userRoles: any;
+export class AuthPage implements OnInit {
+  constructor(
+    public navCtrl: NavController,
+    public authService: AuthService
+  ) { }
 
-  constructor(public navCtrl: NavController, public authService: AuthService, public rolesService: RolesService) { }
-
-  ionViewDidEnter() {
-    setTimeout(() => {
-      this.rolesService
-        .getUserRolesPromise()
-        .then((userRoles) => {
-          if (AuthPage.hasAccess(userRoles)) {
-            this.navCtrl.setRoot('AllProjectsPage');
-          } else {
-            this.redirectToLogin();
-          }
-        })
-        .catch((error) => {
-          console.log('unable lookup user roles - possible session timeout: ' + error);
-          this.redirectToLogin();
-        });
-    }, 2000);
-    // Artificial 2s delay isn't good, but the app may encoutner race condition between parse auth result and retrive user role
-    // since this un-typical Ionic app does strange auth redirect, it's hard to eliminate this hack.
-    // Refactoring to Ionic 4.0+ with default Ng Route Module may resolve this problem but it's over work balance.
-  }
-
-  redirectToLogin() {
-    if (EnvConfig['lfx-header-enabled'] === "true") {
-      window.open(EnvConfig['landing-page'], '_self');
-    } else {
-      this.navCtrl.setRoot('LoginPage');
-    }
-  }
-
-  private static hasAccess(userRoles: any): boolean {
-    return userRoles.isAuthenticated && userRoles.isPmcUser;
+  ngOnInit() {
+    this.authService.redirectRoot.subscribe((target) => {
+      if (EnvConfig['lfx-header-enabled'] === "true") {
+        this.navCtrl.setRoot('AllProjectsPage');
+      } else {
+        // Redirected forcefully for without LFX-header due to auth token persist in URL. 
+        window.open(target, '_self');
+      }
+    });
   }
 }

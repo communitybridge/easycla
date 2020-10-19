@@ -27,29 +27,30 @@ export class ProjectNavigationComponent implements AfterViewChecked {
   @ViewChild('scrollLeft') scrollLeft: ElementRef;
   @ViewChild('scrollRight') scrollRight: ElementRef;
 
-  constructor(private navCtrl: NavController, private rolesService: RolesService, private viewCtrl: ViewController) {
+  constructor(
+    private navCtrl: NavController,
+    private rolesService: RolesService,
+    private viewCtrl: ViewController
+  ) {
     this.context;
     this.scrollChange = 40;
-    this.getDefaults();
+    // this.getDefaults();
   }
 
-  getDefaults() {
-    this.userRoles = this.rolesService.userRoles;
-  }
+  // getDefaults() {
+  //   this.userRoles = this.rolesService.userRoles;
+  // }
 
   ngOnInit() {
-    this.scrollArea.nativeElement.onscroll = function() {
+    this.generateNavItems();
+    this.scrollArea.nativeElement.onscroll = function () {
       this.checkScroll();
     }.bind(this);
 
-    this.rolesService.getUserRolesPromise().then((userRoles) => {
-      this.userRoles = userRoles;
-      this.generateNavItems();
-    });
-  }
-
-  ngOnDestroy() {
-    // remove scroll listener
+    // this.rolesService.getUserRolesPromise().then((userRoles) => {
+    //   this.userRoles = userRoles;
+    //   this.generateNavItems();
+    // });
   }
 
   ngAfterViewChecked() {
@@ -118,7 +119,7 @@ export class ProjectNavigationComponent implements AfterViewChecked {
       {
         label: 'CLA',
         page: 'ProjectClaPage',
-        access: this.userRoles.isAdmin
+        access: true
       }
     ];
   }

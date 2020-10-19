@@ -69,7 +69,6 @@ export class AuthService {
     this.localAuthSetup();
     // Handle redirect from Auth0 login
     this.handleAuthCallback();
-    console.log(this.auth0Options)
   }
 
   // When calling, options can be passed if desired

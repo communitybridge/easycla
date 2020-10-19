@@ -92,13 +92,6 @@ export class MyApp {
     this.regeneratePagesMenu();
   }
 
-  ngOnInit() {
-    // this.rolesService.getUserRolesPromise().then((userRoles) => {
-    //   this.userRoles = userRoles;
-    //   this.regeneratePagesMenu();
-    // });
-  }
-
   initializeApp() {
     this.platform.ready().then(() => {
       // Okay, so the platform is ready and our plugins are available.
