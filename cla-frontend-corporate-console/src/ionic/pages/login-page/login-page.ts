@@ -5,7 +5,7 @@ import { Component } from '@angular/core';
 import { NavController } from 'ionic-angular';
 import { IonicPage } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
-import { AUTH_REDIRECT_STATE } from '../../services/auth.utils';
+import { AUTH_ROUTE } from '../../services/auth.utils';
 
 @IonicPage({
   name: 'LoginPage',
@@ -25,7 +25,7 @@ export class LoginPage {
     if (this.authService.loggedIn) {
       this.navCtrl.setRoot('CompaniesPage');
     } else {
-      this.authService.login(AUTH_REDIRECT_STATE);
+      this.authService.login(AUTH_ROUTE);
     }
   }
 }
