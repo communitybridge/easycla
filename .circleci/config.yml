@@ -767,13 +767,13 @@ jobs:
             yarn export
 
             echo "Running deploy in folder: `pwd`"
-            SLS_DEBUG=* ../node_modules/serverless/bin/serverless deploy -s ${STAGE} -r ${AWS_REGION} --verbose
+            SLS_DEBUG=* ../node_modules/serverless/bin/serverless.js deploy -s ${STAGE} -r ${AWS_REGION} --verbose
 
             echo "Running client deploy in folder: `pwd`"
-            SLS_DEBUG=* ../node_modules/serverless/bin/serverless client deploy -s ${STAGE} -r ${AWS_REGION} --cloudfront=true --no-confirm --no-policy-change --no-config-change
+            SLS_DEBUG=* ../node_modules/serverless/bin/serverless.js client deploy -s ${STAGE} -r ${AWS_REGION} --cloudfront=true --no-confirm --no-policy-change --no-config-change
 
             echo "Invalidating Cloudfront caches in folder: `pwd`"
-            SLS_DEBUG=* ../node_modules/serverless/bin/serverless cloudfrontInvalidate -s ${STAGE} -r ${AWS_REGION} --cloudfront=true
+            SLS_DEBUG=* ../node_modules/serverless/bin/serverless.js cloudfrontInvalidate -s ${STAGE} -r ${AWS_REGION} --cloudfront=true
 
             popd
 
