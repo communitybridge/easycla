@@ -43,6 +43,7 @@ const (
 	SignatureProjectIDSigTypeSignedApprovedIDIndex = "signature-project-id-sigtype-signed-approved-id-index"
 	SignatureProjectIDTypeIndex                    = "signature-project-id-type-index"
 	SignatureReferenceIndex                        = "reference-signature-index"
+	SignatureIDSignatureProjectIDIndex             = "signature-id-signature-project-id-index"
 
 	HugePageSize = 10000
 )
@@ -79,6 +80,10 @@ type SignatureRepository interface {
 
 	GetClaGroupICLASignatures(ctx context.Context, claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
 	GetClaGroupCorporateContributors(ctx context.Context, claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error)
+
+	// PDFs
+	GetProjectSignatureICLAPDF(ctx context.Context, signatureID string, claGroupID string) (*models.IclaSignatures, error)
+	GetProjectSignatureCCLAPDF(ctx context.Context, signatureID string, claGroupID string) (*models.Signatures, error)
 }
 
 // repository data model
@@ -2463,4 +2468,162 @@ func (repo repository) GetClaGroupCorporateContributors(ctx context.Context, cla
 	})
 
 	return out, nil
+}
+
+func (repo repository) GetProjectSignatureICLAPDF(ctx context.Context, signatureID string, claGroupID string) (*models.IclaSignatures, error) {
+	f := logrus.Fields{
+		"functionName":   "GetProjectSignatureICLAPDF",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"claGroupID":     claGroupID,
+		"signatureID":    signatureID,
+	}
+
+	// This is the key we want to match
+	condition := expression.Key("signature_id").Equal(expression.Value(signatureID)).
+		And(expression.Key("signature_project_id").Equal(expression.Value(claGroupID)))
+
+	// Use the builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	if err != nil {
+		log.WithFields(f).Warnf("error building expression for get cla group icla signatures, signatureID %s, claGroupID: %s, error: %v",
+			signatureID, claGroupID, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(repo.signatureTableName),
+		IndexName:                 aws.String(SignatureIDSignatureProjectIDIndex),
+		Limit:                     aws.Int64(HugePageSize),
+	}
+	out := &models.IclaSignatures{List: make([]*models.IclaSignature, 0)}
+
+	for {
+		// Make the DynamoDB Query API call
+		results, queryErr := repo.dynamoDBClient.Query(queryInput)
+		if queryErr != nil {
+			log.WithFields(f).Warnf("error retrieving icla signatures for project: %s, signatureID %s, error: %v", claGroupID, signatureID, queryErr)
+			return nil, queryErr
+		}
+
+		var dbSignatures []ItemSignature
+
+		err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &dbSignatures)
+		if err != nil {
+			log.WithFields(f).Warnf("error unmarshalling icla signatures from database for cla group: %s, signatureID %s, error: %v",
+				claGroupID, signatureID, err)
+			return nil, err
+		}
+
+		for _, sig := range dbSignatures {
+			signedOn := sig.DateCreated
+			if sig.SignedOn != "" {
+				signedOn = sig.SignedOn
+			}
+			out.List = append(out.List, &models.IclaSignature{
+				GithubUsername: sig.UserGithubUsername,
+				LfUsername:     sig.UserLFUsername,
+				SignatureID:    sig.SignatureID,
+				UserEmail:      sig.UserEmail,
+				UserName:       sig.UserName,
+				SignedOn:       signedOn,
+			})
+		}
+
+		if len(results.LastEvaluatedKey) == 0 {
+			break
+		}
+		queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+		log.WithFields(f).Debug("querying next page")
+	}
+	return out, nil
+}
+
+func (repo repository) GetProjectSignatureCCLAPDF(ctx context.Context, signatureID string, claGroupID string) (*models.Signatures, error) {
+	f := logrus.Fields{
+		"functionName":   "GetProjectSignatureCCLAPDF",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"claGroupID":     claGroupID,
+		"signatureID":    signatureID,
+	}
+
+	// This is the key we want to match
+	condition := expression.Key("signature_id").Equal(expression.Value(signatureID)).
+		And(expression.Key("signature_project_id").Equal(expression.Value(claGroupID)))
+
+	// Use the builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	if err != nil {
+		log.WithFields(f).Warnf("error building expression for get cla group ccla signatures, signatureID %s, claGroupID: %s, error: %v",
+			signatureID, claGroupID, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(repo.signatureTableName),
+		IndexName:                 aws.String(SignatureIDSignatureProjectIDIndex),
+		Limit:                     aws.Int64(HugePageSize),
+	}
+	sigs := make([]*models.Signature, 0)
+	var lastEvaluatedKey string
+
+	// Loop until we have all the records
+	for {
+		// Make the DynamoDB Query API call
+		// log.WithFields(f).Debugf("Running signature project query using queryInput: %+v", queryInput)
+		results, errQuery := repo.dynamoDBClient.Query(queryInput)
+		if errQuery != nil {
+			log.WithFields(f).Warnf("error retrieving project ccla signature for claGroupID: %s, signatureID %s error: %v",
+				claGroupID, signatureID, errQuery)
+			return nil, errQuery
+		}
+
+		// Convert the list of DB models to a list of response models
+		signatureList, modelErr := repo.buildProjectSignatureModels(ctx, results, claGroupID, LoadACLDetails)
+		if modelErr != nil {
+			log.WithFields(f).Warnf("error converting DB model to response model for ccla signatures with project %s, signatureID %s, error: %v",
+				claGroupID, signatureID, modelErr)
+			return nil, modelErr
+		}
+
+		// Add to the signatures response model to the list
+		sigs = append(sigs, signatureList...)
+
+		if len(results.LastEvaluatedKey) == 0 {
+			break
+		}
+		queryInput.ExclusiveStartKey = results.LastEvaluatedKey
+		log.WithFields(f).Debug("querying next page")
+
+	}
+
+	// How many total records do we have - may not be up-to-date as this value is updated only periodically
+	describeTableInput := &dynamodb.DescribeTableInput{
+		TableName: &repo.signatureTableName,
+	}
+	describeTableResult, err := repo.dynamoDBClient.DescribeTable(describeTableInput)
+	if err != nil {
+		log.WithFields(f).Warnf("error retrieving total record count for project: %s, signatureID %s,  error: %v", claGroupID, signatureID, err)
+		return nil, err
+	}
+
+	// Meta-data for the response
+	totalCount := *describeTableResult.Table.ItemCount
+
+	return &models.Signatures{
+		ProjectID:      claGroupID,
+		ResultCount:    int64(len(sigs)),
+		TotalCount:     totalCount,
+		LastKeyScanned: lastEvaluatedKey,
+		Signatures:     sigs,
+	}, nil
 }

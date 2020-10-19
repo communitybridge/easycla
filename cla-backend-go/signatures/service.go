@@ -55,6 +55,9 @@ type SignatureService interface {
 	GetClaGroupICLASignatures(ctx context.Context, claGroupID string, searchTerm *string) (*models.IclaSignatures, error)
 	GetClaGroupCCLASignatures(ctx context.Context, claGroupID string) (*models.Signatures, error)
 	GetClaGroupCorporateContributors(ctx context.Context, claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error)
+	// PDFs
+	GetProjectSignatureICLAPDF(ctx context.Context, signatureID string, claGroupID string) (*models.IclaSignatures, error)
+	GetProjectSignatureCCLAPDF(ctx context.Context, signatureID string, claGroupID string) (*models.Signatures, error)
 }
 
 type service struct {
@@ -794,6 +797,14 @@ func (s service) createEventLogEntries(companyModel *models.Company, claGroupMod
 
 func (s service) GetClaGroupICLASignatures(ctx context.Context, claGroupID string, searchTerm *string) (*models.IclaSignatures, error) {
 	return s.repo.GetClaGroupICLASignatures(ctx, claGroupID, searchTerm)
+}
+
+func (s service) GetProjectSignatureICLAPDF(ctx context.Context, signatureID string, claGroupID string) (*models.IclaSignatures, error) {
+	return s.repo.GetProjectSignatureICLAPDF(ctx, signatureID, claGroupID)
+}
+
+func (s service) GetProjectSignatureCCLAPDF(ctx context.Context, signatureID string, claGroupID string) (*models.Signatures, error) {
+	return s.repo.GetProjectSignatureCCLAPDF(ctx, signatureID, claGroupID)
 }
 
 func (s service) GetClaGroupCCLASignatures(ctx context.Context, claGroupID string) (*models.Signatures, error) {

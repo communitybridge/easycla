@@ -6,6 +6,7 @@ package signatures
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -62,6 +63,8 @@ type Service interface {
 	GetSignedDocument(ctx context.Context, signatureID string) (*models.SignedDocument, error)
 	GetSignedIclaZipPdf(claGroupID string) (*models.URLObject, error)
 	GetSignedCclaZipPdf(claGroupID string) (*models.URLObject, error)
+	GetProjectSignatureICLAPDF(ctx context.Context, signatureID string, claGroupID string) ([]byte, error)
+	GetProjectSignatureCCLAPDF(ctx context.Context, signatureID string, claGroupID string) ([]byte, error)
 }
 
 // NewService creates instance of v2 signature service
@@ -137,6 +140,42 @@ func (s service) GetClaGroupCorporateContributorsCsv(ctx context.Context, claGro
 		b.WriteString(eclaSigCsvLine(sig))
 	}
 	return b.Bytes(), nil
+}
+
+func (s service) GetProjectSignatureICLAPDF(ctx context.Context, signatureID string, claGroupID string) ([]byte, error) {
+	result, err := s.v1SignatureService.GetProjectSignatureICLAPDF(ctx, signatureID, claGroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.List) == 0 {
+		return nil, errors.New("not Found")
+	}
+
+	b, err := json.Marshal(result.List)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
+	return b, nil
+}
+
+func (s service) GetProjectSignatureCCLAPDF(ctx context.Context, signatureID string, claGroupID string) ([]byte, error) {
+	result, err := s.v1SignatureService.GetProjectSignatureCCLAPDF(ctx, signatureID, claGroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Signatures) == 0 {
+		return nil, errors.New("not Found")
+	}
+
+	b, err := json.Marshal(result.Signatures)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
+	return b, nil
 }
 
 func (s service) GetProjectIclaSignaturesCsv(ctx context.Context, claGroupID string) ([]byte, error) {

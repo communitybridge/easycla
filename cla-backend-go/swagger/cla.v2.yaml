@@ -1817,7 +1817,7 @@ paths:
     get:
       summary: Downloads the user's ICLA for this project
       description: Downloads the user's ICLA for this project
-      operationId: downloadProjectSignatureICLA
+      operationId: downloadProjectSignatureICLAAsPDF
       parameters:
         - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/x-acl"
@@ -1840,6 +1840,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
         '500':
           $ref: '#/responses/internal-server-error'
       tags:
@@ -1910,6 +1912,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
         '500':
           $ref: '#/responses/internal-server-error'
       tags:
@@ -1919,7 +1923,7 @@ paths:
     get:
       summary: Downloads the corporate CLA for this project
       description: Downloads the corporate CLA for this project
-      operationId: downloadProjectSignatureCorporateCLA
+      operationId: downloadProjectSignatureCorporateCLAAsPDF
       parameters:
         - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/x-acl"
@@ -1942,6 +1946,8 @@ paths:
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
         '500':
           $ref: '#/responses/internal-server-error'
       tags:

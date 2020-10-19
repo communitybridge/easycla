@@ -624,6 +624,114 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			})
 		})
 
+	api.SignaturesDownloadProjectSignatureICLAAsPDFHandler = signatures.DownloadProjectSignatureICLAAsPDFHandlerFunc(
+		func(params signatures.DownloadProjectSignatureICLAAsPDFParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
+			f := logrus.Fields{
+				"functionName":   "SignaturesDownloadProjectSignatureICLAAsPDFHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"claGroupID":     params.ClaGroupID,
+				"signatureID":    params.SignatureID,
+			}
+			log.WithFields(f).Debug("processing request...")
+
+			claGroup, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
+			if err != nil {
+				if err == project.ErrProjectDoesNotExist {
+					return signatures.NewDownloadProjectSignatureICLAAsPDFNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+				}
+				return signatures.NewDownloadProjectSignatureICLAAsPDFInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+			}
+			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroup.FoundationSFID) {
+				return signatures.NewDownloadProjectSignatureICLAAsPDFForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+					Code:       utils.String403,
+					Message:    fmt.Sprintf("%s User does not have permission to access project : %s", utils.EasyCLA403Forbidden, claGroup.FoundationSFID),
+					XRequestID: reqID,
+				})
+			}
+			if !claGroup.ProjectICLAEnabled {
+				return signatures.NewDownloadProjectSignatureICLAAsPDFBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+					Code:       utils.String400,
+					Message:    fmt.Sprintf("%s icla is not enabled on this project", utils.EasyCLA400BadRequest),
+					XRequestID: reqID,
+				})
+			}
+			pdf, err := v2service.GetProjectSignatureICLAPDF(ctx, params.SignatureID, params.ClaGroupID)
+			if err != nil {
+				if err == ErrZipNotPresent {
+					return signatures.NewDownloadProjectSignatureICLAAsPDFNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+						Code:       utils.String404,
+						Message:    fmt.Sprintf("%s no icla signatures found for this cla-group", utils.EasyCLA404NotFound),
+						XRequestID: reqID,
+					})
+				}
+				return signatures.NewDownloadProjectSignatureICLAAsPDFInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+			}
+			return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+				rw.WriteHeader(http.StatusOK)
+				_, err := rw.Write(pdf)
+				if err != nil {
+					log.WithFields(f).WithError(err).Warnf("Error writing pdf, error: %v", err)
+				}
+			})
+		})
+
+	api.SignaturesDownloadProjectSignatureCorporateCLAAsPDFHandler = signatures.DownloadProjectSignatureCorporateCLAAsPDFHandlerFunc(
+		func(params signatures.DownloadProjectSignatureCorporateCLAAsPDFParams, authUser *auth.User) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
+			f := logrus.Fields{
+				"functionName":   "SignaturesDownloadProjectSignatureCorporateCLAAsPDFHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"claGroupID":     params.ClaGroupID,
+				"signatureID":    params.SignatureID,
+			}
+			log.WithFields(f).Debug("processing request...")
+
+			claGroup, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
+			if err != nil {
+				if err == project.ErrProjectDoesNotExist {
+					return signatures.NewDownloadProjectSignatureCorporateCLAAsPDFNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+				}
+				return signatures.NewDownloadProjectSignatureICLAAsPDFInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+			}
+			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroup.FoundationSFID) {
+				return signatures.NewDownloadProjectSignatureCorporateCLAAsPDFForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+					Code:       utils.String403,
+					Message:    fmt.Sprintf("%s User does not have permission to access project : %s", utils.EasyCLA403Forbidden, claGroup.FoundationSFID),
+					XRequestID: reqID,
+				})
+			}
+			if !claGroup.ProjectCCLAEnabled {
+				return signatures.NewDownloadProjectSignatureCorporateCLAAsPDFBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+					Code:       utils.String400,
+					Message:    fmt.Sprintf("%s icla is not enabled on this project", utils.EasyCLA400BadRequest),
+					XRequestID: reqID,
+				})
+			}
+			pdf, err := v2service.GetProjectSignatureCCLAPDF(ctx, params.SignatureID, params.ClaGroupID)
+			if err != nil {
+				if err == ErrZipNotPresent {
+					return signatures.NewDownloadProjectSignatureCorporateCLAAsPDFNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+						Code:       utils.String404,
+						Message:    fmt.Sprintf("%s no icla signatures found for this cla-group", utils.EasyCLA404NotFound),
+						XRequestID: reqID,
+					})
+				}
+				return signatures.NewDownloadProjectSignatureCorporateCLAAsPDFInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+			}
+			return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+				rw.WriteHeader(http.StatusOK)
+				_, err := rw.Write(pdf)
+				if err != nil {
+					log.WithFields(f).WithError(err).Warnf("Error writing pdf, error: %v", err)
+				}
+			})
+		})
+
 	api.SignaturesListClaGroupIclaSignatureHandler = signatures.ListClaGroupIclaSignatureHandlerFunc(
 		func(params signatures.ListClaGroupIclaSignatureParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
@@ -664,7 +772,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 
 			// Make sure the user has provided the companySFID
 			if params.CompanySFID == nil {
-				return signatures.NewDownloadProjectSignatureICLABadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:       utils.String400,
 					Message:    fmt.Sprintf("%s - missing companySFID as input", utils.EasyCLA400BadRequest),
 					XRequestID: reqID,
@@ -692,7 +800,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 
 			// Make sure CCLA is enabled for this CLA Group
 			if !claGroupModel.ProjectCCLAEnabled {
-				return signatures.NewDownloadProjectSignatureICLABadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code:       utils.String400,
 					Message:    fmt.Sprintf("%s - This project does not support corporate contribution", utils.EasyCLA400BadRequest),
 					XRequestID: reqID,
