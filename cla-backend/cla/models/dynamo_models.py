@@ -1364,6 +1364,10 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             lf_sub=None,
             user_company_id=None,
             note=None,
+            # this is for cases when the user has more than one email (eg. github) and the get_email
+            # function is used in all over the places in legacy code. It's just not possible to introduce
+            # new functionality and not forget to update any of those references
+            preferred_email=None,
     ):
         super(User).__init__()
         self.model = UserModel()
@@ -1377,6 +1381,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         self.model.lf_sub = lf_sub
         self.model.user_company_id = user_company_id
         self.model.note = note
+        self._preferred_email = preferred_email
 
     def __str__(self):
         return (
@@ -1457,7 +1462,19 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
     def get_lf_sub(self):
         return self.model.lf_sub
 
-    def get_user_email(self):
+    def get_user_email(self, preferred_email=None):
+        """
+        :param preferred_email: if the preferred email is in list of registered emails
+        it'd be returned, otherwise whatever email is present will be returned randomly
+        :return:
+        """
+        if preferred_email and self.model.lf_email is None and preferred_email == self.model.lf_email:
+            return preferred_email
+
+        preferred_email = preferred_email or self._preferred_email
+        if preferred_email and preferred_email in self.model.user_emails:
+            return preferred_email
+
         if self.model.lf_email is not None:
             return self.model.lf_email
         elif len(self.model.user_emails) > 0:
