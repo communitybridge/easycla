@@ -13,7 +13,7 @@
     "test:unit": "ng test --watch=false --progress=false --browsers=ChromeHeadless",
     "lint": "./node_modules/@angular/cli/bin/ng lint",
     "e2e": "./node_modules/@angular/cli/bin/ng e2e",
-    "sls": "./node_modules/serverless/bin/serverless",
+    "sls": "./node_modules/serverless/bin/serverless.js",
     "eslint": "./node_modules/.bin/eslint \"./src/**/*.ts\"",
     "eslint-fix": "./node_modules/.bin/eslint \"./src/**/*.ts\" --fix",
     "deploy:cloudfront:dev": "SLS_DEBUG=* ROOT_DOMAIN=dev.communitybridge.org PRODUCT_DOMAIN=easycla.dev.communitybridge.org yarn sls deploy --stage='dev' --cloudfront=true --verbose",
