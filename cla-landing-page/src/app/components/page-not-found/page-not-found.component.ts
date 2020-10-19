@@ -20,8 +20,11 @@ export class PageNotFoundComponent implements OnInit {
   ngOnInit(): void {
     if (this.authService.loggedIn) {
       const type = JSON.parse(this.storageService.getItem('type'));
+      this.message = 'Wait we are redirecting you to ' + (type === 'Projects' ? 'Project' : 'Corporate') + ' Console.';
       const redirectConsole = (type === 'Projects') ? AppSettings.PROJECT_CONSOLE_LINK : AppSettings.CORPORATE_CONSOLE_LINK;
-      window.open(EnvConfig.default[redirectConsole] + REDIRECT_AUTH_ROUTE, '_self');
+      setTimeout(() => {
+        window.open(EnvConfig.default[redirectConsole] + REDIRECT_AUTH_ROUTE, '_self');
+      }, 1500);
     } else {
       this.message = 'The page you are looking for was not found.';
     }

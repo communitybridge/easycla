@@ -41,7 +41,6 @@ export class MyApp {
     public splashScreen: SplashScreen,
     private cincoService: CincoService,
     private keycloak: KeycloakService,
-    private rolesService: RolesService,
     public claService: ClaService,
     public httpClient: HttpClient,
     public authService: AuthService
