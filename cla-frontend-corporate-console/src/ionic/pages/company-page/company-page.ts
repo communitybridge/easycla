@@ -6,7 +6,6 @@ import { AlertController, IonicPage, ModalController, NavController, NavParams }
 import { ClaService } from '../../services/cla.service';
 import { ClaCompanyModel } from '../../models/cla-company';
 import { ClaUserModel } from '../../models/cla-user';
-import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
 import { ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import Timer = NodeJS.Timer;
@@ -54,7 +53,6 @@ export class CompanyPage {
     public alertCtrl: AlertController,
     private claService: ClaService,
     public modalCtrl: ModalController,
-    private rolesService: RolesService // for @Restricted
   ) {
     this.companyId = navParams.get('companyId');
     this.getDefaults();

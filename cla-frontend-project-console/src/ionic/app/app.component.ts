@@ -9,7 +9,6 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 import { CincoService } from '../services/cinco.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
 import { KeycloakHttp } from '../services/keycloak/keycloak.http';
-import { RolesService } from '../services/roles.service';
 import { S3Service } from '../services/s3.service';
 import { ClaService } from '../services/cla.service';
 import { HttpClient } from '../services/http-client';
@@ -44,7 +43,6 @@ export class MyApp {
     private cincoService: CincoService,
     private keycloak: KeycloakService,
     private keycloakHttp: KeycloakHttp,
-    private rolesService: RolesService,
     public claService: ClaService,
     public s3service: S3Service,
     public http: Http,
@@ -90,7 +88,6 @@ export class MyApp {
 
   getDefaults() {
     this.pages = [];
-    // this.userRoles = this.rolesService.userRoles;
     this.regeneratePagesMenu();
   }
 

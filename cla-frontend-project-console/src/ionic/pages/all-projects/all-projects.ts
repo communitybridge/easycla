@@ -5,7 +5,6 @@ import { Component } from '@angular/core';
 import { NavController, IonicPage } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { FilterService } from '../../services/filter.service';
-import { RolesService } from '../../services/roles.service';
 import { Restricted } from '../../decorators/restricted';
 import { generalConstants } from '../../constants/general';
 import { EnvConfig } from '../../services/cla.env.utils';
@@ -34,7 +33,6 @@ export class AllProjectsPage {
   constructor(
     public navCtrl: NavController,
     private claService: ClaService,
-    private rolesService: RolesService,
     private filterService: FilterService
   ) {
     this.getDefaults();
@@ -86,7 +84,6 @@ export class AllProjectsPage {
   }
 
   getDefaults() {
-    // this.userRoles = this.rolesService.userRoleDefaults;
     this.setLoadingSpinner(true);
   }
 

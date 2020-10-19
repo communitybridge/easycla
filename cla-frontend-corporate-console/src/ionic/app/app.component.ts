@@ -8,7 +8,6 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { CincoService } from '../services/cinco.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
-import { RolesService } from '../services/roles.service';
 import { ClaService } from '../services/cla.service';
 import { HttpClient } from '../services/http-client';
 
