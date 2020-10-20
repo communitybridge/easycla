@@ -17,7 +17,8 @@ from cla.controllers import company
 from cla.models import DoesNotExist
 from cla.models.event_types import EventType
 from cla.models.dynamo_models import User, Project, Signature, Company, Event
-from cla.utils import get_email_service, get_email_help_content, get_email_sign_off_content
+from cla.utils import get_email_service, get_email_help_content, get_email_sign_off_content, \
+    append_email_help_sign_off_content
 
 
 def get_signatures():
@@ -304,7 +305,7 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
     )
 
     signature.save()
-    notify_whitelist_change(auth_user=auth_user, old_signature=old_signature,new_signature=signature)
+    notify_whitelist_change(auth_user=auth_user, old_signature=old_signature, new_signature=signature)
     return signature.to_dict()
 
 
@@ -313,8 +314,8 @@ def change_in_list(old_list, new_list, msg_added, msg_deleted):
         old_list = []
     if new_list is None:
         new_list = []
-    added = list(set(new_list)-set(old_list))
-    deleted = list(set(old_list)-set(new_list))
+    added = list(set(new_list) - set(old_list))
+    deleted = list(set(old_list) - set(new_list))
     change = []
     if len(added) > 0:
         change.append(msg_added.format('\n'.join(added)))
@@ -332,10 +333,10 @@ def notify_whitelist_change(auth_user, old_signature: Signature, new_signature: 
     changes = []
     domain_msg_added = '{} was added to the domain approval list'
     domain_msg_deleted = '{} was deleted from the domain approval list'
-    domain_changes,_,_ = change_in_list(old_list=old_signature.get_domain_whitelist(),
-                                        new_list=new_signature.get_domain_whitelist(),
-                                        msg_added=domain_msg_added,
-                                        msg_deleted=domain_msg_deleted)
+    domain_changes, _, _ = change_in_list(old_list=old_signature.get_domain_whitelist(),
+                                          new_list=new_signature.get_domain_whitelist(),
+                                          msg_added=domain_msg_added,
+                                          msg_deleted=domain_msg_deleted)
     changes = changes + domain_changes
 
     email_msg_added = '{} was added to the email approval list'
@@ -437,10 +438,10 @@ def get_contributor_whitelist_update_email_content(project, action, company_name
 CLA Manager {cla_manager}. This means that you are now authorized to contribute to {project_name} \
 on behalf of {company_name}.</p> \
 <p>If you had previously submitted one or more pull requests to {project_name} that had failed, you should \
-close and re-open the pull request to force a recheck by the EasyCLA system.</p> \
-{get_email_help_content(project.get_version() == 'v2')} \
-{get_email_sign_off_content()}"""
+close and re-open the pull request to force a recheck by the EasyCLA system.</p> 
+"""
     body = '<p>' + body.replace('\n', '<br>') + '</p>'
+    body = append_email_help_sign_off_content(body, project.get_version())
     recipients = [email]
     return subject, body, recipients
 
@@ -458,10 +459,9 @@ def approval_list_change_email_content(project, company_name, project_name, cla_
 <p>The modification was as follows:</p> \
 {change_string} \
 <p>Contributors with previously failed pull requests to {project_name} can close \
-and re-open the pull request to force a recheck by the EasyCLA system.</p> \
-{get_email_help_content(project.get_version() == 'v2')}
-{get_email_sign_off_content()}
+and re-open the pull request to force a recheck by the EasyCLA system.</p> 
 """
+    body = append_email_help_sign_off_content(body, project.get_version())
     recipients = []
     for manager in cla_managers:
         email = manager.get_user_email()
@@ -846,6 +846,7 @@ def get_project(project_id):
         raise DoesNotExist('errors: {project_id: %s}' % str(err))
     return project
 
+
 def get_company(company_id):
     try:
         company = Company()
@@ -866,7 +867,7 @@ def add_cla_manager_email_content(lfid, project, company, managers):
 
     subject = f'CLA: Access to Corporate CLA for Project {project.get_project_name()}'
 
-    manager_list = ['%s <%s>' %(mgr.get('name', ' '), mgr.get('email', ' ')) for mgr in managers]
+    manager_list = ['%s <%s>' % (mgr.get('name', ' '), mgr.get('email', ' ')) for mgr in managers]
     manager_list_str = '-'.join(manager_list) + '\n'
     body = f"""
     <p>Hello {lfid}, </p> \
@@ -875,10 +876,9 @@ def add_cla_manager_email_content(lfid, project, company, managers):
        {company.get_company_name()}.</p> \
     <p> If you have further questions, please contact one of the existing CLA Managers: </p> \
     {manager_list_str}
-    {get_email_help_content(project.get_version() == 'v2')}
-    {get_email_sign_off_content()}
     """
     body = '<p>' + body.replace('\n', '<br>') + '</p>'
+    body = append_email_help_sign_off_content(body, project.get_version())
     return subject, body, recipients
 
 
@@ -892,7 +892,7 @@ def remove_cla_manager_email_content(lfid, project, company, managers):
 
     subject = f'CLA: Access to Corporate CLA for Project {project.get_project_name()}'
 
-    manager_list = ['%s <%s>' %(mgr.get('name', ' '), mgr.get('email', ' ')) for mgr in managers]
+    manager_list = ['%s <%s>' % (mgr.get('name', ' '), mgr.get('email', ' ')) for mgr in managers]
     manager_list_str = '-'.join(manager_list) + '\n'
     body = f"""
     <p> Hello {lfid}, </p> \
@@ -901,10 +901,9 @@ def remove_cla_manager_email_content(lfid, project, company, managers):
        {company.get_company_name()} </p> \
     <p> If you have further questions, please contact one of the existing CLA Managers: </p> \
     {manager_list_str}
-    {get_email_help_content(project.get_version() == 'v2')}
-    {get_email_sign_off_content()}
     """
     body = '<p>' + body.replace('\n', '<br>') + '</p>'
+    body = append_email_help_sign_off_content(body, project.get_version())
     return subject, body, recipients
 
 

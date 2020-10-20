@@ -1467,6 +1467,20 @@ def get_email_sign_off_content() -> str:
     """
 
 
+def append_email_help_sign_off_content(body: str, project_version: str) -> str:
+    """
+    helper method which appends the help and sign off content to the body of the email
+    :param body:
+    :param project_version:
+    :return:
+    """
+    return "\n".join([
+        body,
+        get_email_help_content(project_version == "v2"),
+        get_email_sign_off_content(),
+    ])
+
+
 def get_current_time() -> str:
     """
     Helper function to return the current UTC datetime in an ISO standard format with timezone

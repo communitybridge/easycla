@@ -28,7 +28,7 @@ from cla.models.dynamo_models import Signature, User, \
     Document, Event
 from cla.models.event_types import EventType
 from cla.models.s3_storage import S3Storage
-from cla.utils import get_email_help_content, get_email_sign_off_content
+from cla.utils import get_email_help_content, get_email_sign_off_content, append_email_help_sign_off_content
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
@@ -1023,9 +1023,8 @@ class DocuSign(signing_service_interface.SigningService):
                your initial CLA Manager for {project_name}, please click the link below to review and sign the CLA.</p>
             <p>If you have questions, or if you are not an authorized signatory of this company, please contact
                the requester at {cla_manager_email}.</p>
-            {get_email_help_content(project.get_version() == 'v2')}
-            {get_email_sign_off_content()}
             '''
+            email_body = append_email_help_sign_off_content(email_body, project.get_version())
             cla.log.debug(f'populate_sign_url - {sig_type} - generating a docusign signer object form email with'
                           f'name: {signatory_name}, email: {signatory_email}, subject: {email_subject}')
             signer = pydocusign.Signer(email=signatory_email,
@@ -1522,9 +1521,8 @@ class DocuSign(signing_service_interface.SigningService):
                <a href="{pdf_link}" target="_blank" alt="{'ICLA' if icla else 'CCLA'} Document Link">
                from our website<a>.
             </p>
-            {get_email_help_content(project.get_version() == 'v2')}
-            {get_email_sign_off_content()}
             '''
+        body = append_email_help_sign_off_content(body, project.get_version())
 
         # Third, send the email.
         cla.log.info(f'Sending signed CLA document to {recipient} with subject: {subject}')
