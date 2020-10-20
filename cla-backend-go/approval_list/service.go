@@ -154,7 +154,7 @@ func (s service) ApproveCclaWhitelistRequest(ctx context.Context, companyID, cla
 	}
 
 	// Send the email
-	s.sendRequestApprovedEmailToRecipient(companyModel, claGroupModel, requestModel.UserName, requestModel.UserEmails[0])
+	sendRequestApprovedEmailToRecipient(companyModel, claGroupModel, requestModel.UserName, requestModel.UserEmails[0])
 
 	return nil
 }
@@ -292,37 +292,6 @@ repository. This will permit them to begin contributing to %s on behalf of %s.</
 	}
 }
 
-// sendRequestApprovedEmailToRecipient generates and sends an email to the specified recipient
-func (s service) sendRequestApprovedEmailToRecipient(companyModel *models.Company, claGroupModel *models.ClaGroup, recipientName, recipientAddress string) {
-	companyName := companyModel.CompanyName
-	projectName := claGroupModel.ProjectName
-
-	// subject string, body string, recipients []string
-	subject := fmt.Sprintf("EasyCLA: Contributor Access Approved for %s", projectName)
-	recipients := []string{recipientAddress}
-	body := fmt.Sprintf(`
-<p>Hello %s,</p>
-<p>This is a notification email from EasyCLA regarding the project %s.</p>
-<p>You have now been approved as a contributor from %s for the project %s.</p>
-<p> To get started, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>,
-and select your company and then the project %s. From here you will
-be able to edit the list of approved employees and CLA Managers.
-</p>
-%s
-%s`,
-		recipientName, projectName,
-		companyName, projectName,
-		utils.GetCorporateURL(claGroupModel.Version == utils.V2), projectName,
-		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
-
-	err := utils.SendEmail(subject, body, recipients)
-	if err != nil {
-		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
-	} else {
-		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
-	}
-}
-
 // sendRequestRejectedEmailToRecipient generates and sends an email to the specified recipient
 func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Company, claGroupModel *models.ClaGroup, signature *models.Signature, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
@@ -369,6 +338,41 @@ If you have further questions about this denial, please contact one of the exist
 		claManagerText,
 		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
+	err := utils.SendEmail(subject, body, recipients)
+	if err != nil {
+		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+	} else {
+		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	}
+}
+
+func requestApprovedEmailToRecipientContent(companyModel *models.Company, claGroupModel *models.ClaGroup, recipientName, recipientAddress string) (string, string, []string) {
+	companyName := companyModel.CompanyName
+
+	// subject string, body string, recipients []string
+	subject := fmt.Sprintf("EasyCLA: Company Manager Access Approved for %s", companyName)
+	recipients := []string{recipientAddress}
+	body := fmt.Sprintf(`
+<p>Hello %s,</p>
+<p>This is a notification email from EasyCLA regarding the company %s.</p>
+<p>You have now been approved as a Company Manager for %s. 
+This means that you can now view and apply for CLA Manager status on projects associated with your company.</p>
+<p> To get started, please log into the EasyCLA Corporate Console at %s, and select your company. 
+From there you will be able to view the list of projects which have EasyCLA configured and apply for CLA Manager status.
+</p>
+%s
+%s`,
+		recipientName, companyName,
+		companyName,
+		utils.GetCorporateURL(claGroupModel.Version == utils.V2),
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
+
+	return subject, body, recipients
+}
+
+// sendRequestApprovedEmailToRecipient generates and sends an email to the specified recipient
+func sendRequestApprovedEmailToRecipient(companyModel *models.Company, claGroupModel *models.ClaGroup, recipientName, recipientAddress string) {
+	subject, body, recipients := requestApprovedEmailToRecipientContent(companyModel, claGroupModel, recipientName, recipientAddress)
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
 		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)

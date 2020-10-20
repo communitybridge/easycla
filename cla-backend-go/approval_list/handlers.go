@@ -60,7 +60,7 @@ func Configure(api *operations.ClaAPI, service IService, sessionStore *dynastore
 				EventData: &events.CCLAApprovalListRequestApprovedEventData{RequestID: params.RequestID},
 			})
 
-			return company.NewRejectCclaWhitelistRequestOK().WithXRequestID(reqID)
+			return company.NewApproveCclaWhitelistRequestOK().WithXRequestID(reqID)
 		})
 
 	api.CompanyRejectCclaWhitelistRequestHandler = company.RejectCclaWhitelistRequestHandlerFunc(
