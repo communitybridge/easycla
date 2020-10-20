@@ -4,11 +4,11 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams, IonicPage } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
-import { RolesService } from '../../services/roles.service';
 import { AuthService } from '../../services/auth.service';
 import { Restricted } from '../../decorators/restricted';
 import { generalConstants } from '../../constants/general';
 import { EnvConfig } from '../../services/cla.env.utils';
+import { bool } from 'aws-sdk/clients/signer';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -32,13 +32,12 @@ export class ClaGerritIndividualPage {
   signature: any;
   expanded: boolean = true;
   hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
-  userRoles: any;
+  hasLoggedIn: boolean = false;
 
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
     private claService: ClaService,
-    private rolesService: RolesService,
     private authService: AuthService,
   ) {
     this.getDefaults();
@@ -48,8 +47,6 @@ export class ClaGerritIndividualPage {
   }
 
   getDefaults() {
-    this.userRoles = this.rolesService.userRoleDefaults;
-
     this.project = {
       project_name: ''
     };
@@ -59,22 +56,16 @@ export class ClaGerritIndividualPage {
   }
 
   ngOnInit() {
-    this.getProject(this.gerritId);
-  }
-
-  ionViewCanEnter() {
-    if (!this.authService.isAuthenticated) {
-      setTimeout(() => this.redirectToLogin());
+    this.hasLoggedIn = this.authService.loggedIn;
+    if (!this.hasLoggedIn) {
+      this.redirectToLogin();
+    } else {
+      this.getProject(this.gerritId);
     }
-    return this.authService.isAuthenticated;
   }
 
   redirectToLogin() {
-    // if (EnvConfig['lfx-header-enabled'] === "true") {
-    //   window.open(EnvConfig['landing-page'], '_self');
-    // } else {
-      this.navCtrl.setRoot('LoginPage');
-    // }
+    this.navCtrl.setRoot('LoginPage');
   }
 
   getProject(gerritId) {

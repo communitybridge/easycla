@@ -226,6 +226,6 @@ export class ClaService {
 
   getReleaseVersion() {
     const url: URL = this.getV3Endpoint('/v3/ops/version');
-    return this.http.get(url).map((res) => res.json());
+    return this.http.getWithoutAuth(url).map((res) => res.json());
   }
 }

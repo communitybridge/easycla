@@ -1,11 +1,10 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
+import { Location } from '@angular/common';
 import { Component } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
-import { EnvConfig } from '../../services/cla.env.utils';
-import { RolesService } from '../../services/roles.service';
 
 @Component({
   selector: 'page-auth',
@@ -18,42 +17,26 @@ export class AuthPage {
 
   constructor(
     public navCtrl: NavController,
-    public navParams: NavParams,
     public authService: AuthService,
-    public rolesService: RolesService
+    private location: Location
   ) {
     this.gerritId = localStorage.getItem('gerritId');
     this.claType = localStorage.getItem('gerritClaType');
   }
 
-  ionViewDidEnter() {
-    setTimeout(() => {
-      this.rolesService
-        .getUserRolesPromise()
-        .then((userRoles) => {
-          if (userRoles.isAuthenticated) {
-            if (this.claType == 'ICLA') {
-              this.navCtrl.setRoot('ClaGerritIndividualPage', { gerritId: this.gerritId });
-            } else if (this.claType == 'CCLA') {
-              this.navCtrl.setRoot('ClaGerritCorporatePage', { gerritId: this.gerritId });
-            }
-            localStorage.removeItem('gerritId');
-            localStorage.removeItem('gerritClaType');
-          } else {
-            this.redirectToLogin();
-          }
-        })
-        .catch(() => {
-          this.redirectToLogin();
-        });
-    }, 2000);
+  ngOnInit() {
+    this.authService.redirectRoot.subscribe((target) => {
+      if (this.authService.loggedIn) {
+        window.history.replaceState(null, null, window.location.pathname);
+        if (this.claType == 'ICLA') {
+          this.navCtrl.setRoot('ClaGerritIndividualPage', { gerritId: this.gerritId });
+        } else if (this.claType == 'CCLA') {
+          this.navCtrl.setRoot('ClaGerritCorporatePage', { gerritId: this.gerritId });
+        }
+      } else {
+        console.log('Redirect to login');
+      }
+    });
   }
 
-  redirectToLogin() {
-    // if (EnvConfig['lfx-header-enabled'] === "true") {
-    //   window.open(EnvConfig['landing-page'], '_self');
-    // } else {
-      this.navCtrl.setRoot('LoginPage');
-    // }
-  }
 }

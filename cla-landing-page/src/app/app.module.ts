@@ -11,6 +11,8 @@ import { ClaFooterComponent } from './components/cla-footer/cla-footer.component
 import { LfxHeaderComponent } from './components/lfx-header/lfx-header.component';
 import { AuthService } from './core/services/auth.service';
 import { HomeComponent } from './components/home/home.component';
+import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
+import { StorageService } from './core/services/storage.service';
 
 @NgModule({
   declarations: [
@@ -19,12 +21,13 @@ import { HomeComponent } from './components/home/home.component';
     ClaFooterComponent,
     LfxHeaderComponent,
     HomeComponent,
+    PageNotFoundComponent,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule
   ],
-  providers: [AuthService],
+  providers: [AuthService, StorageService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

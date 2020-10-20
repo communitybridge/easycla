@@ -8,7 +8,6 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { CincoService } from '../services/cinco.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
-import { RolesService } from '../services/roles.service';
 import { ClaService } from '../services/cla.service';
 import { HttpClient } from '../services/http-client';
 
@@ -41,7 +40,6 @@ export class MyApp {
     public splashScreen: SplashScreen,
     private cincoService: CincoService,
     private keycloak: KeycloakService,
-    private rolesService: RolesService,
     public claService: ClaService,
     public httpClient: HttpClient,
     public authService: AuthService
@@ -61,8 +59,14 @@ export class MyApp {
 
     this.claService.setApiUrl(EnvConfig['cla-api-url']);
     this.claService.setHttp(httpClient);
-    // here to check authentication state
-    this.authService.handleAuthentication();
+
+    this.authService.checkSession.subscribe((loggedIn) => {
+      if (loggedIn) {
+        this.nav.setRoot('CompaniesPage');
+      } else {
+        this.redirectToLogin();
+      }
+    });
   }
 
   mounted() {
@@ -74,17 +78,17 @@ export class MyApp {
     document.head.appendChild(script);
   }
 
-  getDefaults() {
-    this.pages = [];
-    this.userRoles = this.rolesService.userRoles;
-    this.regeneratePagesMenu();
+  redirectToLogin() {
+    if (EnvConfig['lfx-header-enabled'] === "true") {
+      window.open(EnvConfig['landing-page'], '_self');
+    } else {
+      this.nav.setRoot('LoginPage');
+    }
   }
 
-  ngOnInit() {
-    this.rolesService.getUserRolesPromise().then((userRoles) => {
-      this.userRoles = userRoles;
-      this.regeneratePagesMenu();
-    });
+  getDefaults() {
+    this.pages = [];
+    this.regeneratePagesMenu();
   }
 
   initializeApp() {

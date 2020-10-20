@@ -9,24 +9,37 @@ import { AuthService } from './auth.service';
 
 @Injectable()
 export class HttpClient {
-  constructor(public http: Http, private keycloak: KeycloakService, private authService: AuthService) {}
+  constructor(
+    public http: Http,
+    private keycloak: KeycloakService,
+    private authService: AuthService
+  ) { }
 
   private buildAuthHeaders(contentType: string = 'application/json') {
     let headers = new Headers({
       Accept: 'application/json',
       'Content-Type': contentType
     });
+    return this.authService.getIdToken().then((token) => {
+      if (token) {
+        headers.append('Authorization', 'Bearer ' + token);
+        return headers;
+      }
+    });
+  }
 
-    if (this.authService.isAuthenticated()) {
-      return this.authService.getIdToken().then((token) => {
-        if (token) {
-          headers.append('Authorization', 'Bearer ' + token);
-          return headers;
-        }
-      });
-    } else {
-      return Promise.resolve(headers);
-    }
+  private buildWithoutAuthHeaders(contentType: string = 'application/json') {
+    let headers = new Headers({
+      Accept: 'application/json',
+      'Content-Type': contentType
+    });
+    return Promise.resolve(headers);
+  }
+
+  getWithoutAuth(url) {
+    return Observable.fromPromise(this.buildWithoutAuthHeaders()).switchMap((headers) =>
+      this.http.get(url, { headers: headers })
+    );
   }
 
   setHttp(http: Http) {
@@ -73,7 +86,7 @@ export class HttpClient {
 
   putWithCreds(url, data, contentType: string = 'application/json') {
     return Observable.fromPromise(this.buildAuthHeaders(contentType)).switchMap((headers) =>
-      this.http.put(url, data, {headers: headers, withCredentials: true})
+      this.http.put(url, data, { headers: headers, withCredentials: true })
     );
   }
 

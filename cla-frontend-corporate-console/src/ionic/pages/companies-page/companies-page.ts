@@ -5,7 +5,6 @@ import { Component } from '@angular/core';
 import { IonicPage, ModalController, NavController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { Restricted } from '../../decorators/restricted';
-import { RolesService } from '../../services/roles.service';
 import { EnvConfig } from '../../services/cla.env.utils';
 
 @Restricted({
@@ -35,7 +34,6 @@ export class CompaniesPage {
     public navCtrl: NavController,
     private claService: ClaService,
     public modalCtrl: ModalController,
-    private rolesService: RolesService // for @Restricted
   ) {
     this.getDefaults();
   }
@@ -44,7 +42,7 @@ export class CompaniesPage {
     this.loading = {
       companies: true
     };
-    this.userId = localStorage.getItem('userid');
+    this.userId = localStorage.getItem('userid').trim();
     this.userEmail = localStorage.getItem('user_email');
     this.userName = localStorage.getItem('user_name');
     this.companies = [];

@@ -12,7 +12,6 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { HttpClient } from '../services/http-client';
 import { CincoService } from '../services/cinco.service';
-import { RolesService } from '../services/roles.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
 import { KEYCLOAK_HTTP_PROVIDER } from '../services/keycloak/keycloak.http';
 import { SortService } from '../services/sort.service';
@@ -29,17 +28,16 @@ import { LayoutModule } from '../layout/layout.module';
   bootstrap: [IonicApp],
   entryComponents: [MyApp, AuthPage],
   providers: [
+    AuthService,
     StatusBar,
     SplashScreen,
     CurrencyPipe,
     HttpClient,
     CincoService,
-    RolesService,
     KeycloakService,
     KEYCLOAK_HTTP_PROVIDER,
     SortService,
     ClaService,
-    AuthService,
     DatePipe,
     { provide: ErrorHandler, useClass: IonicErrorHandler }
   ]

@@ -232,25 +232,25 @@ export class AddCompanyModal {
   }
 
   private updateUserInfoBasedLFID() {
-    if (this.authService.isAuthenticated()) {
-      this.authService
-        .getIdToken()
-        .then((token) => {
-          return this.authService.parseIdToken(token);
-        })
-        .then((tokenParsed) => {
-          if (tokenParsed && tokenParsed['email']) {
-            this.userEmail = tokenParsed['email'];
-          }
-          if (tokenParsed && tokenParsed['name']) {
-            this.userName = tokenParsed['name'];
-          }
-        })
-        .catch((error) => {
-          console.warn(JSON.stringify(error));
-          return;
-        });
-    }
+    // if (this.authService.isAuthenticated()) {
+    //   this.authService
+    //     .getIdToken()
+    //     .then((token) => {
+    //       return this.authService.parseIdToken(token);
+    //     })
+    //     .then((tokenParsed) => {
+    //       if (tokenParsed && tokenParsed['email']) {
+    //         this.userEmail = tokenParsed['email'];
+    //       }
+    //       if (tokenParsed && tokenParsed['name']) {
+    //         this.userName = tokenParsed['name'];
+    //       }
+    //     })
+    //     .catch((error) => {
+    //       console.warn(JSON.stringify(error));
+    //       return;
+    //     });
+    // }
     return;
   }
 }

@@ -1,12 +1,18 @@
 page-auth {
+  .message {
+    margin-top: 25px;
+    text-align: center;
+    font-size: 20px;
+  }
+
   .loader {
     margin: auto;
     margin-top: 200px;
     border: 6px solid #f3f3f3;
     border-radius: 50%;
     border-top: 6px solid #003764;
-    width: 100px;
-    height: 100px;
+    width: 70px;
+    height: 70px;
     -webkit-animation: spin 2s linear infinite; /* Safari */
     animation: spin 2s linear infinite;
   }
