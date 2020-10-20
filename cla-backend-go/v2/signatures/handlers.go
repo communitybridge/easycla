@@ -56,6 +56,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			"signatureID":    params.SignatureID,
 		}
 
+		log.WithFields(f).Debug("loading signature...")
 		signature, err := v1SignatureService.GetSignature(ctx, params.SignatureID)
 		if err != nil {
 			msg := "error retrieving signatures by signature ID"
@@ -68,40 +69,9 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			return signatures.NewGetSignatureNotFound().WithXRequestID(reqID).WithPayload(utils.ErrorResponseNotFound(reqID, msg))
 		}
 
-		log.WithFields(f).Debug("looking up CLA Group by ID...")
-		claGroupModel, err := projectService.GetCLAGroupByID(ctx, signature.ProjectID)
-		if err != nil {
-			log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
-			if err == project.ErrProjectDoesNotExist {
-				return signatures.NewGetSignatureNotFound().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
-			}
-			return signatures.NewGetSignatureInternalServerError().WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
-		}
-		f["foundationSFID"] = claGroupModel.FoundationSFID
-
-		// Lookup the project IDs for the CLA Group
-		log.WithFields(f).Debug("looking up projects associated with the CLA Group...")
-		projectCLAGroupModels, err := projectClaGroupsRepo.GetProjectsIdsForClaGroup(signature.ProjectID)
-		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID")
-			if err == project.ErrProjectDoesNotExist {
-				return signatures.NewGetSignatureNotFound().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseNotFoundWithError(reqID, "problem loading project cla group mappings by CLA Group ID", err))
-			}
-			return signatures.NewGetSignatureInternalServerError().WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected error when looking up project cla group mappings by CLA Group ID", err))
-		}
-
-		projectSFIDs := getProjectIDsFromModels(f, claGroupModel, projectCLAGroupModels)
-		f["projectIDs"] = strings.Join(projectSFIDs, ",")
-
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) &&
-			!utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
-			msg := fmt.Sprintf("%s - user %s is not authorized to view project ICLA signatures any scope of project: %s",
-				utils.EasyCLA403Forbidden, authUser.UserName, strings.Join(projectSFIDs, ","))
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, signature.ProjectID, projectClaGroupsRepo) {
+			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures", authUser.UserName)
 			log.Warn(msg)
 			return signatures.NewGetProjectCompanyEmployeeSignaturesForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
 		}
@@ -125,14 +95,14 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		f := logrus.Fields{
-			"functionName":   "SignaturesGetGitHubOrgWhitelistHandler",
+			"functionName":   "SignaturesUpdateApprovalListHandler",
 			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 			"claGroupID":     params.ClaGroupID,
 			"projectSFID":    params.ProjectSFID,
 			"companySFID":    params.CompanySFID,
 		}
 
-		// Must be in the Project|Organization Scope to see this
+		// Must be in the Project|Organization Scope to see this - ACL is checked in the service when the signature is loaded
 		if !utils.IsUserAuthorizedForProjectOrganizationTree(authUser, params.ProjectSFID, params.CompanySFID) {
 			msg := fmt.Sprintf("user %s does not have access to update Project Company Approval List with Project|Organization scope of %s | %s",
 				authUser.UserName, params.ProjectSFID, params.CompanySFID)
@@ -166,8 +136,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		// Lookup the internal project ID when provided the external ID via the v1SignatureService call
-		projectModel, projErr := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
-		if projErr != nil || projectModel == nil {
+		claGroupModel, projErr := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
+		if projErr != nil || claGroupModel == nil {
 			msg := fmt.Sprintf("unable to locate project by CLA Group ID: %s", params.ClaGroupID)
 			log.WithFields(f).Warn(msg)
 			return signatures.NewUpdateApprovalListNotFound().WithXRequestID(reqID).WithPayload(utils.ErrorResponseNotFound(reqID, msg))
@@ -184,7 +154,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		// Invoke the update v1SignatureService function
-		updatedSig, updateErr := v1SignatureService.UpdateApprovalList(ctx, authUser, projectModel, companyModel, params.ClaGroupID, &v1ApprovalList)
+		updatedSig, updateErr := v1SignatureService.UpdateApprovalList(ctx, authUser, claGroupModel, companyModel, params.ClaGroupID, &v1ApprovalList)
 		if updateErr != nil || updatedSig == nil {
 			msg := fmt.Sprintf("unable to update signature approval list using CLA Group ID: %s", params.ClaGroupID)
 			log.WithFields(f).Warn(msg)
@@ -408,27 +378,9 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				utils.ErrorResponseBadRequest(reqID, iclaNotSupportedForCLAGroup))
 		}
 
-		// Lookup the project IDs for the CLA Group
-		log.WithFields(f).Debug("looking up projects associated with the CLA Group...")
-		projectCLAGroupModels, err := projectClaGroupsRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
-		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID")
-			if err == project.ErrProjectDoesNotExist {
-				return signatures.NewGetProjectSignaturesNotFound().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseNotFoundWithError(reqID, "problem loading project cla group mappings by CLA Group ID", err))
-			}
-			return signatures.NewGetProjectSignaturesInternalServerError().WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected error when looking up project cla group mappings by CLA Group ID", err))
-		}
-
-		projectSFIDs := getProjectIDsFromModels(f, claGroupModel, projectCLAGroupModels)
-		f["projectIDs"] = strings.Join(projectSFIDs, ",")
-
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) &&
-			!utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
-			msg := fmt.Sprintf("%s - user %s is not authorized to view project ICLA signatures any scope of project: %s",
-				utils.EasyCLA403Forbidden, authUser.UserName, strings.Join(projectSFIDs, ","))
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
 			log.Warn(msg)
 			return signatures.NewGetProjectSignaturesForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
 		}
@@ -479,9 +431,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		// - if project scope (like a PM)
 		// - if project|organization scope (like CLA Manager, CLA Signatory)
 		// - if organization scope (like company admin)
-		if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) &&
-			!utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) &&
-			!utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+		if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, params.ProjectSFID, params.CompanySFID, projectClaGroupsRepo) {
 			msg := fmt.Sprintf("user %s is not authorized to view project company signatures any scope of project: %s, organization %s",
 				authUser.UserName, params.ProjectSFID, params.CompanySFID)
 			log.WithFields(f).Warn(msg)
@@ -555,11 +505,9 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		log.WithFields(f).Debug("checking access control permissions...")
-		if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) &&
-			!utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) &&
-			!utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-			msg := fmt.Sprintf("%s - user %s is not authorized to view project company signatures any scope of project: %s, organization %s",
-				utils.EasyCLA403Forbidden, authUser.UserName, params.ProjectSFID, params.CompanySFID)
+		if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, params.ProjectSFID, params.CompanySFID, projectClaGroupsRepo) {
+			msg := fmt.Sprintf("user %s is not authorized to view project company signatures any scope of project: %s, organization %s",
+				authUser.UserName, params.ProjectSFID, params.CompanySFID)
 			log.Warn(msg)
 			return signatures.NewGetProjectCompanyEmployeeSignaturesForbidden().WithXRequestID(reqID).WithPayload(
 				utils.ErrorResponseForbidden(reqID, msg))
@@ -730,240 +678,184 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 	})
 
 	// Download ECLAs as a CSV document
-	api.SignaturesDownloadProjectSignatureEmployeeAsCSVHandler = signatures.DownloadProjectSignatureEmployeeAsCSVHandlerFunc(
-		func(params signatures.DownloadProjectSignatureEmployeeAsCSVParams, authUser *auth.User) middleware.Responder {
-			reqID := utils.GetRequestID(params.XREQUESTID)
-			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			f := logrus.Fields{
-				"functionName":   "SignaturesDownloadProjectSignatureEmployeeAsCSVHandler",
-				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-				"claGroupID":     params.ClaGroupID,
-				"companySFID":    params.CompanySFID,
-			}
-			log.WithFields(f).Debug("processing request...")
+	api.SignaturesDownloadProjectSignatureEmployeeAsCSVHandler = signatures.DownloadProjectSignatureEmployeeAsCSVHandlerFunc(func(params signatures.DownloadProjectSignatureEmployeeAsCSVParams, authUser *auth.User) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		f := logrus.Fields{
+			"functionName":   "SignaturesDownloadProjectSignatureEmployeeAsCSVHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"claGroupID":     params.ClaGroupID,
+			"companySFID":    params.CompanySFID,
+		}
+		log.WithFields(f).Debug("processing request...")
 
-			log.WithFields(f).Debug("looking up CLA Group by ID...")
-			claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
+		log.WithFields(f).Debug("looking up CLA Group by ID...")
+		claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
+			if err == project.ErrProjectDoesNotExist {
+				return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
+			}
+			return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+		}
+		f["foundationSFID"] = claGroupModel.FoundationSFID
+
+		// Check to see if this CLA Group is configured for ICLAs...
+		if !claGroupModel.ProjectCCLAEnabled {
+			log.WithFields(f).Warn(cclaNotSupportedForCLAGroup)
+			return signatures.NewDownloadProjectSignatureEmployeeAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequest(reqID, cclaNotSupportedForCLAGroup))
+		}
+
+		log.WithFields(f).Debug("checking access control permissions for user...")
+		if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, claGroupModel.FoundationSFID, params.CompanySFID, projectClaGroupsRepo) {
+			msg := fmt.Sprintf(" user %s is not authorized to view project employee signatures any scope of project",
+				authUser.UserName)
+			log.Warn(msg)
+			return signatures.NewDownloadProjectSignatureEmployeeAsCSVForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
+		}
+		log.WithFields(f).Debug("user has access for this query")
+
+		log.WithFields(f).Debug("searching for corporate contributor signatures...")
+		result, err := v2service.GetClaGroupCorporateContributorsCsv(ctx, params.ClaGroupID, params.CompanySFID)
+		if err != nil {
+			msg := fmt.Sprintf("problem getting corporate contributors CSV for CLA Group: %s with company: %s", params.ClaGroupID, params.CompanySFID)
+			if _, ok := err.(*organizations.GetOrgNotFound); ok {
+				formatErr := errors.New("error retrieving company using companySFID")
+				return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, msg, formatErr))
+			}
+			if ok := err.Error() == "not Found"; ok {
+				return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, msg, err))
+			}
+			return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+		}
+
+		log.WithFields(f).Debug("returning CSV response...")
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+			rw.Header().Set("Content-Type", "text/csv")
+			rw.Header().Set(utils.XREQUESTID, reqID)
+			rw.WriteHeader(http.StatusOK)
+			_, err := rw.Write(result)
 			if err != nil {
-				log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
-				}
-				return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+				log.WithFields(f).Warn("error writing csv file")
 			}
-			f["foundationSFID"] = claGroupModel.FoundationSFID
-
-			// Check to see if this CLA Group is configured for ICLAs...
-			if !claGroupModel.ProjectCCLAEnabled {
-				log.WithFields(f).Warn(cclaNotSupportedForCLAGroup)
-				return signatures.NewDownloadProjectSignatureEmployeeAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseBadRequest(reqID, cclaNotSupportedForCLAGroup))
-			}
-
-			// Lookup the project IDs for the CLA Group
-			log.WithFields(f).Debug("looking up projects associated with the CLA Group...")
-			projectCLAGroupModels, err := projectClaGroupsRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
-			if err != nil {
-				log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID")
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, "problem loading project cla group mappings by CLA Group ID", err))
-				}
-				return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected error when looking up project cla group mappings by CLA Group ID", err))
-			}
-
-			projectSFIDs := getProjectIDsFromModels(f, claGroupModel, projectCLAGroupModels)
-			f["projectIDs"] = strings.Join(projectSFIDs, ",")
-
-			log.WithFields(f).Debug("checking access control permissions for user...")
-			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) &&
-				!utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
-				msg := fmt.Sprintf("%s - user %s is not authorized to view project employee signatures any scope of project: %s",
-					utils.EasyCLA403Forbidden, authUser.UserName, strings.Join(projectSFIDs, ","))
-				log.Warn(msg)
-				return signatures.NewDownloadProjectSignatureEmployeeAsCSVForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
-			}
-			log.WithFields(f).Debug("user has access for this query")
-
-			log.WithFields(f).Debug("searching for corporate contributor signatures...")
-			result, err := v2service.GetClaGroupCorporateContributorsCsv(ctx, params.ClaGroupID, params.CompanySFID)
-			if err != nil {
-				msg := fmt.Sprintf("problem getting corporate contributors CSV for CLA Group: %s with company: %s", params.ClaGroupID, params.CompanySFID)
-				if _, ok := err.(*organizations.GetOrgNotFound); ok {
-					formatErr := errors.New("error retrieving company using companySFID")
-					return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, msg, formatErr))
-				}
-				if ok := err.Error() == "not Found"; ok {
-					return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, msg, err))
-				}
-				return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
-			}
-
-			log.WithFields(f).Debug("returning CSV response...")
-			return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
-				rw.Header().Set("Content-Type", "text/csv")
-				rw.Header().Set(utils.XREQUESTID, reqID)
-				rw.WriteHeader(http.StatusOK)
-				_, err := rw.Write(result)
-				if err != nil {
-					log.WithFields(f).Warn("error writing csv file")
-				}
-			})
 		})
+	})
 
-	api.SignaturesListClaGroupIclaSignatureHandler = signatures.ListClaGroupIclaSignatureHandlerFunc(
-		func(params signatures.ListClaGroupIclaSignatureParams, authUser *auth.User) middleware.Responder {
-			reqID := utils.GetRequestID(params.XREQUESTID)
-			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			f := logrus.Fields{
-				"functionName":   "SignaturesListClaGroupIclaSignatureHandler",
-				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-				"claGroupID":     params.ClaGroupID,
+	api.SignaturesListClaGroupIclaSignatureHandler = signatures.ListClaGroupIclaSignatureHandlerFunc(func(params signatures.ListClaGroupIclaSignatureParams, authUser *auth.User) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		f := logrus.Fields{
+			"functionName":   "SignaturesListClaGroupIclaSignatureHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"claGroupID":     params.ClaGroupID,
+		}
+
+		log.WithFields(f).Debug("looking up CLA Group by ID...")
+		claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
+			if err == project.ErrProjectDoesNotExist {
+				return signatures.NewListClaGroupIclaSignatureNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
+			}
+			return signatures.NewListClaGroupIclaSignatureInternalServerError().WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+		}
+		f["foundationSFID"] = claGroupModel.FoundationSFID
+
+		// Check to see if this CLA Group is configured for ICLAs...
+		if !claGroupModel.ProjectICLAEnabled {
+			log.WithFields(f).Warn(iclaNotSupportedForCLAGroup)
+			return signatures.NewListClaGroupIclaSignatureBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequest(reqID, iclaNotSupportedForCLAGroup))
+		}
+
+		log.WithFields(f).Debug("checking access control permissions for user...")
+		if isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
+			log.Warn(msg)
+			return signatures.NewGetProjectCompanyEmployeeSignaturesForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
+		}
+		log.WithFields(f).Debug("user has access for this query")
+
+		log.WithFields(f).Debug("searching for ICLA signatures...")
+		result, err := v2service.GetProjectIclaSignatures(ctx, params.ClaGroupID, params.SearchTerm)
+		if err != nil {
+			msg := fmt.Sprintf("problem loading ICLA signatures by CLA Group ID search term: %s", aws.StringValue(params.SearchTerm))
+			log.WithFields(f).WithError(err).Warn(msg)
+			return signatures.NewListClaGroupIclaSignatureInternalServerError().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+		}
+
+		log.WithFields(f).Debugf("returning %d ICLA signatures to caller...", len(result.List))
+		return signatures.NewListClaGroupIclaSignatureOK().WithXRequestID(reqID).WithPayload(result)
+	})
+
+	api.SignaturesListClaGroupCorporateContributorsHandler = signatures.ListClaGroupCorporateContributorsHandlerFunc(func(params signatures.ListClaGroupCorporateContributorsParams, authUser *auth.User) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		f := logrus.Fields{
+			"functionName":   "SignaturesListClaGroupCorporateContributorsHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"claGroupID":     params.ClaGroupID,
+			"companySFID":    params.CompanySFID,
+		}
+
+		// Make sure the user has provided the companySFID
+		if params.CompanySFID == nil {
+			msg := "missing companySFID as input"
+			log.WithFields(f).Warn(msg)
+			return signatures.NewListClaGroupCorporateContributorsBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequest(reqID, msg))
+		}
+
+		// Lookup the CLA Group by ID - make sure it's valid
+		claGroupModel, err := projectRepo.GetCLAGroupByID(ctx, params.ClaGroupID, project.DontLoadRepoDetails)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
+			if err == project.ErrProjectDoesNotExist {
+				return signatures.NewListClaGroupCorporateContributorsNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
 			}
 
-			log.WithFields(f).Debug("looking up CLA Group by ID...")
-			claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
-			if err != nil {
-				log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewListClaGroupIclaSignatureNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
-				}
-				return signatures.NewListClaGroupIclaSignatureInternalServerError().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
-			}
-			f["foundationSFID"] = claGroupModel.FoundationSFID
+			return signatures.NewListClaGroupCorporateContributorsInternalServerError().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+		}
 
-			// Check to see if this CLA Group is configured for ICLAs...
-			if !claGroupModel.ProjectICLAEnabled {
-				log.WithFields(f).Warn(iclaNotSupportedForCLAGroup)
-				return signatures.NewListClaGroupIclaSignatureBadRequest().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseBadRequest(reqID, iclaNotSupportedForCLAGroup))
-			}
+		// Make sure CCLA is enabled for this CLA Group
+		if !claGroupModel.ProjectCCLAEnabled {
+			msg := "cla group does not support corporate contribution"
+			log.WithFields(f).Warn(msg)
+			return signatures.NewListClaGroupCorporateContributorsBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequest(reqID, msg))
+		}
+		f["foundationSFID"] = claGroupModel.FoundationSFID
 
-			// Lookup the project IDs for the CLA Group
-			log.WithFields(f).Debug("looking up projects associated with the CLA Group...")
-			projectCLAGroupModels, err := projectClaGroupsRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
-			if err != nil {
-				log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID")
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewListClaGroupIclaSignatureNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, "problem loading project cla group mappings by CLA Group ID", err))
-				}
-				return signatures.NewListClaGroupIclaSignatureInternalServerError().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected error when looking up project cla group mappings by CLA Group ID", err))
-			}
+		log.WithFields(f).Debug("checking access control permissions for user...")
+		if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, claGroupModel.FoundationSFID, *params.CompanySFID, projectClaGroupsRepo) {
+			msg := fmt.Sprintf("user %s is not authorized to view project CCLA signatures any scope of project or project|organization scope with company ID: %s",
+				authUser.UserName, aws.StringValue(params.CompanySFID))
+			log.Warn(msg)
+			return signatures.NewListClaGroupCorporateContributorsForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
+		}
+		log.WithFields(f).Debug("user has access for this query")
 
-			projectSFIDs := getProjectIDsFromModels(f, claGroupModel, projectCLAGroupModels)
-			f["projectIDs"] = strings.Join(projectSFIDs, ",")
+		log.WithFields(f).Debug("searching for CCLA signatures...")
+		result, err := v2service.GetClaGroupCorporateContributors(ctx, params.ClaGroupID, params.CompanySFID, params.SearchTerm)
+		if err != nil {
+			return signatures.NewListClaGroupCorporateContributorsInternalServerError().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected error when searching for corporate contributors", err))
+		}
 
-			log.WithFields(f).Debug("checking access control permissions for user...")
-			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) &&
-				!utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
-				msg := fmt.Sprintf("%s - user %s is not authorized to view project ICLA signatures any scope of project: %s",
-					utils.EasyCLA403Forbidden, authUser.UserName, strings.Join(projectSFIDs, ","))
-				log.Warn(msg)
-				return signatures.NewGetProjectCompanyEmployeeSignaturesForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
-			}
-			log.WithFields(f).Debug("user has access for this query")
-
-			log.WithFields(f).Debug("searching for ICLA signatures...")
-			result, err := v2service.GetProjectIclaSignatures(ctx, params.ClaGroupID, params.SearchTerm)
-			if err != nil {
-				msg := fmt.Sprintf("problem loading ICLA signatures by CLA Group ID search term: %s", aws.StringValue(params.SearchTerm))
-				log.WithFields(f).WithError(err).Warn(msg)
-				return signatures.NewListClaGroupIclaSignatureInternalServerError().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
-			}
-
-			log.WithFields(f).Debugf("returning %d ICLA signatures to caller...", len(result.List))
-			return signatures.NewListClaGroupIclaSignatureOK().WithXRequestID(reqID).WithPayload(result)
-		})
-
-	api.SignaturesListClaGroupCorporateContributorsHandler = signatures.ListClaGroupCorporateContributorsHandlerFunc(
-		func(params signatures.ListClaGroupCorporateContributorsParams, authUser *auth.User) middleware.Responder {
-			reqID := utils.GetRequestID(params.XREQUESTID)
-			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			f := logrus.Fields{
-				"functionName":   "SignaturesListClaGroupCorporateContributorsHandler",
-				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-				"claGroupID":     params.ClaGroupID,
-				"companySFID":    params.CompanySFID,
-			}
-
-			// Make sure the user has provided the companySFID
-			if params.CompanySFID == nil {
-				msg := "missing companySFID as input"
-				log.WithFields(f).Warn(msg)
-				return signatures.NewListClaGroupCorporateContributorsBadRequest().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseBadRequest(reqID, msg))
-			}
-
-			// Lookup the CLA Group by ID - make sure it'iclaNotSupported valid
-			claGroupModel, err := projectRepo.GetCLAGroupByID(ctx, params.ClaGroupID, project.DontLoadRepoDetails)
-			if err != nil {
-				log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewListClaGroupCorporateContributorsNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
-				}
-
-				return signatures.NewListClaGroupCorporateContributorsInternalServerError().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
-			}
-
-			// Make sure CCLA is enabled for this CLA Group
-			if !claGroupModel.ProjectCCLAEnabled {
-				msg := "cla group does not support corporate contribution"
-				log.WithFields(f).Warn(msg)
-				return signatures.NewListClaGroupCorporateContributorsBadRequest().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseBadRequest(reqID, msg))
-			}
-			f["foundationSFID"] = claGroupModel.FoundationSFID
-
-			// Lookup the project IDs for the CLA Group
-			log.WithFields(f).Debug("looking up projects associated with the CLA Group...")
-			projectCLAGroupModels, err := projectClaGroupsRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
-			if err != nil {
-				log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID")
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewListClaGroupCorporateContributorsNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, "problem loading project cla group mappings by CLA Group ID", err))
-				}
-				return signatures.NewListClaGroupCorporateContributorsInternalServerError().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected error when looking up project cla group mappings by CLA Group ID", err))
-			}
-
-			projectSFIDs := getProjectIDsFromModels(f, claGroupModel, projectCLAGroupModels)
-			f["projectIDs"] = strings.Join(projectSFIDs, ",")
-
-			log.WithFields(f).Debug("checking access control permissions for user...")
-			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) &&
-				!utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) &&
-				!utils.IsUserAuthorizedForProjectOrganization(authUser, claGroupModel.FoundationSFID, *params.CompanySFID) {
-				msg := fmt.Sprintf("%s - user %s is not authorized to view project CCLA signatures any scope of project: %s or project|organization scope with company ID: %s",
-					utils.EasyCLA403Forbidden, authUser.UserName, strings.Join(projectSFIDs, ","), aws.StringValue(params.CompanySFID))
-				log.Warn(msg)
-				return signatures.NewListClaGroupCorporateContributorsForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
-			}
-			log.WithFields(f).Debug("user has access for this query")
-
-			log.WithFields(f).Debug("searching for CCLA signatures...")
-			result, err := v2service.GetClaGroupCorporateContributors(ctx, params.ClaGroupID, params.CompanySFID, params.SearchTerm)
-			if err != nil {
-				return signatures.NewListClaGroupCorporateContributorsInternalServerError().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected error when searching for corporate contributors", err))
-			}
-
-			log.WithFields(f).Debugf("returning %d CCLA signatures to caller...", len(result.List))
-			return signatures.NewListClaGroupCorporateContributorsOK().WithXRequestID(reqID).WithPayload(result)
-		})
+		log.WithFields(f).Debugf("returning %d CCLA signatures to caller...", len(result.List))
+		return signatures.NewListClaGroupCorporateContributorsOK().WithXRequestID(reqID).WithPayload(result)
+	})
 
 	api.SignaturesGetSignatureSignedDocumentHandler = signatures.GetSignatureSignedDocumentHandlerFunc(func(params signatures.GetSignatureSignedDocumentParams, authUser *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
@@ -1010,306 +902,231 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		return signatures.NewGetSignatureSignedDocumentOK().WithXRequestID(reqID).WithPayload(doc)
 	})
 
-	api.SignaturesDownloadProjectSignatureICLAsHandler = signatures.DownloadProjectSignatureICLAsHandlerFunc(
-		func(params signatures.DownloadProjectSignatureICLAsParams, authUser *auth.User) middleware.Responder {
-			reqID := utils.GetRequestID(params.XREQUESTID)
-			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			f := logrus.Fields{
-				"functionName":   "SignaturesDownloadProjectSignatureICLAsHandler",
-				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-				"claGroupID":     params.ClaGroupID,
+	api.SignaturesDownloadProjectSignatureICLAsHandler = signatures.DownloadProjectSignatureICLAsHandlerFunc(func(params signatures.DownloadProjectSignatureICLAsParams, authUser *auth.User) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		f := logrus.Fields{
+			"functionName":   "SignaturesDownloadProjectSignatureICLAsHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"claGroupID":     params.ClaGroupID,
+		}
+
+		log.WithFields(f).Debug("loading cla group by id...")
+		claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
+			if err == project.ErrProjectDoesNotExist {
+				return signatures.NewDownloadProjectSignatureICLAsNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
 			}
+			return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+		}
 
-			log.WithFields(f).Debug("loading cla group by id...")
-			claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
-			if err != nil {
-				log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewDownloadProjectSignatureICLAsNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
-				}
-				return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+		if !claGroupModel.ProjectICLAEnabled {
+			return signatures.NewDownloadProjectSignatureICLAsBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequest(reqID, "icla is not enabled for this cla group"))
+		}
+
+		log.WithFields(f).Debug("checking access control permissions for user...")
+		if isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
+			log.Warn(msg)
+			return signatures.NewDownloadProjectSignatureICLAsForbidden().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseForbidden(reqID, msg))
+		}
+		log.WithFields(f).Debug("user has access for this query")
+
+		log.WithFields(f).Debug("searching for ICLA signatures...")
+		result, err := v2service.GetSignedIclaZipPdf(params.ClaGroupID)
+		if err != nil {
+			if err == ErrZipNotPresent {
+				msg := "no icla signatures found for this cla group"
+				log.WithFields(f).Warn(msg)
+				return signatures.NewDownloadProjectSignatureICLAsNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, msg, err))
 			}
+			return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected response from query", err))
+		}
 
-			if !claGroupModel.ProjectICLAEnabled {
-				return signatures.NewDownloadProjectSignatureICLAsBadRequest().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseBadRequest(reqID, "icla is not enabled for this cla group"))
-			}
-
-			// Lookup the project IDs for the CLA Group
-			log.WithFields(f).Debug("looking up projects associated with the CLA Group...")
-			projectCLAGroupModels, err := projectClaGroupsRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
-			if err != nil {
-				log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID")
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewDownloadProjectSignatureICLAsNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, "problem loading project cla group mappings by CLA Group ID", err))
-				}
-				return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected error when looking up project cla group mappings by CLA Group ID", err))
-			}
-
-			projectSFIDs := getProjectIDsFromModels(f, claGroupModel, projectCLAGroupModels)
-			f["projectIDs"] = strings.Join(projectSFIDs, ",")
-
-			log.WithFields(f).Debug("checking access control permissions for user...")
-			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) &&
-				!utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
-				msg := fmt.Sprintf("%s - user %s is not authorized to view project ICLA signatures any scope of project: %s",
-					utils.EasyCLA403Forbidden, authUser.UserName, strings.Join(projectSFIDs, ","))
-				log.Warn(msg)
-				return signatures.NewDownloadProjectSignatureICLAsForbidden().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseForbidden(reqID, msg))
-			}
-			log.WithFields(f).Debug("user has access for this query")
-
-			log.WithFields(f).Debug("searching for ICLA signatures...")
-			result, err := v2service.GetSignedIclaZipPdf(params.ClaGroupID)
-			if err != nil {
-				if err == ErrZipNotPresent {
-					msg := "no icla signatures found for this cla group"
-					log.WithFields(f).Warn(msg)
-					return signatures.NewDownloadProjectSignatureICLAsNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, msg, err))
-				}
-				return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected response from query", err))
-			}
-
-			log.WithFields(f).Debug("returning signatures to caller...")
-			return signatures.NewDownloadProjectSignatureICLAsOK().WithXRequestID(reqID).WithPayload(result)
-		})
+		log.WithFields(f).Debug("returning signatures to caller...")
+		return signatures.NewDownloadProjectSignatureICLAsOK().WithXRequestID(reqID).WithPayload(result)
+	})
 
 	// Download ICLAs as a CSV document
-	api.SignaturesDownloadProjectSignatureICLAAsCSVHandler = signatures.DownloadProjectSignatureICLAAsCSVHandlerFunc(
-		func(params signatures.DownloadProjectSignatureICLAAsCSVParams, authUser *auth.User) middleware.Responder {
-			reqID := utils.GetRequestID(params.XREQUESTID)
-			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			f := logrus.Fields{
-				"functionName":   "SignaturesDownloadProjectSignatureICLAAsCSVHandler",
-				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-				"claGroupID":     params.ClaGroupID,
-			}
+	api.SignaturesDownloadProjectSignatureICLAAsCSVHandler = signatures.DownloadProjectSignatureICLAAsCSVHandlerFunc(func(params signatures.DownloadProjectSignatureICLAAsCSVParams, authUser *auth.User) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		f := logrus.Fields{
+			"functionName":   "SignaturesDownloadProjectSignatureICLAAsCSVHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"claGroupID":     params.ClaGroupID,
+		}
 
-			log.WithFields(f).Debug("looking up CLA Group by ID...")
-			claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
+		log.WithFields(f).Debug("looking up CLA Group by ID...")
+		claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
+			if err == project.ErrProjectDoesNotExist {
+				return signatures.NewDownloadProjectSignatureICLAAsCSVNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
+			}
+			return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+		}
+		if !claGroupModel.ProjectICLAEnabled {
+			log.WithFields(f).Warn(iclaNotSupportedForCLAGroup)
+			return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequest(reqID, iclaNotSupportedForCLAGroup))
+		}
+		f["foundationSFID"] = claGroupModel.FoundationSFID
+
+		log.WithFields(f).Debug("checking access control permissions for user...")
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
+			log.Warn(msg)
+			return signatures.NewDownloadProjectSignatureICLAAsCSVForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
+		}
+		log.WithFields(f).Debug("user has access for this query")
+
+		log.WithFields(f).Debug("generating ICLA signatures for CSV...")
+		result, err := v2service.GetProjectIclaSignaturesCsv(ctx, params.ClaGroupID)
+		if err != nil {
+			msg := "unable to load ICLA signatures for CSV"
+			log.WithFields(f).Warn(msg)
+			return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+		}
+
+		log.WithFields(f).Debug("returning CSV response...")
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+			rw.Header().Set("Content-Type", "text/csv")
+			rw.Header().Set(utils.XREQUESTID, reqID)
+			rw.WriteHeader(http.StatusOK)
+			_, err := rw.Write(result)
 			if err != nil {
-				log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewDownloadProjectSignatureICLAAsCSVNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
-				}
-				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+				log.WithFields(f).WithError(err).Warn("error writing csv file")
 			}
-			if !claGroupModel.ProjectICLAEnabled {
-				log.WithFields(f).Warn(iclaNotSupportedForCLAGroup)
-				return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseBadRequest(reqID, iclaNotSupportedForCLAGroup))
+		})
+	})
+
+	api.SignaturesDownloadProjectSignatureCCLAsHandler = signatures.DownloadProjectSignatureCCLAsHandlerFunc(func(params signatures.DownloadProjectSignatureCCLAsParams, authUser *auth.User) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		f := logrus.Fields{
+			"functionName":   "SignaturesDownloadProjectSignatureCCLAsHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"claGroupID":     params.ClaGroupID,
+		}
+
+		log.WithFields(f).Debug("looking up CLA Group by ID...")
+		claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
+			if err == project.ErrProjectDoesNotExist {
+				return signatures.NewDownloadProjectSignatureCCLAsNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
 			}
-			f["foundationSFID"] = claGroupModel.FoundationSFID
+			return signatures.NewDownloadProjectSignatureCCLAsInternalServerError().WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+		}
+		if !claGroupModel.ProjectCCLAEnabled {
+			log.WithFields(f).Warn(cclaNotSupportedForCLAGroup)
+			return signatures.NewDownloadProjectSignatureCCLAsBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequest(reqID, cclaNotSupportedForCLAGroup))
+		}
+		f["foundationSFID"] = claGroupModel.FoundationSFID
 
-			// Lookup the project IDs for the CLA Group
-			log.WithFields(f).Debug("looking up projects associated with the CLA Group...")
-			projectCLAGroupModels, err := projectClaGroupsRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
-			if err != nil {
-				log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID")
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewDownloadProjectSignatureICLAAsCSVNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, "problem loading project cla group mappings by CLA Group ID", err))
-				}
-				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected error when looking up project cla group mappings by CLA Group ID", err))
-			}
+		log.WithFields(f).Debug("checking access control permissions for user...")
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
+			log.Warn(msg)
+			return signatures.NewDownloadProjectSignatureCCLAsForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
+		}
+		log.WithFields(f).Debug("user has access for this query")
 
-			projectSFIDs := getProjectIDsFromModels(f, claGroupModel, projectCLAGroupModels)
-			f["projectIDs"] = strings.Join(projectSFIDs, ",")
-
-			log.WithFields(f).Debug("checking access control permissions for user...")
-			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) &&
-				!utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
-				msg := fmt.Sprintf("%s - user %s is not authorized to view project ICLA signatures any scope of project: %s",
-					utils.EasyCLA403Forbidden, authUser.UserName, strings.Join(projectSFIDs, ","))
-				log.Warn(msg)
-				return signatures.NewDownloadProjectSignatureICLAAsCSVForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
-			}
-			log.WithFields(f).Debug("user has access for this query")
-
-			log.WithFields(f).Debug("generating ICLA signatures for CSV...")
-			result, err := v2service.GetProjectIclaSignaturesCsv(ctx, params.ClaGroupID)
-			if err != nil {
-				msg := "unable to load ICLA signatures for CSV"
+		log.WithFields(f).Debug("searching for CCLA signatures...")
+		result, err := v2service.GetSignedCclaZipPdf(params.ClaGroupID)
+		if err != nil {
+			if err == ErrZipNotPresent {
+				msg := "no ccla signatures found for this cla group"
 				log.WithFields(f).Warn(msg)
-				return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+				return signatures.NewDownloadProjectSignatureCCLAsNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, msg, err))
 			}
+			return signatures.NewDownloadProjectSignatureCCLAsInternalServerError().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected response from query", err))
+		}
 
-			log.WithFields(f).Debug("returning CSV response...")
-			return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
-				rw.Header().Set("Content-Type", "text/csv")
-				rw.Header().Set(utils.XREQUESTID, reqID)
-				rw.WriteHeader(http.StatusOK)
-				_, err := rw.Write(result)
-				if err != nil {
-					log.WithFields(f).WithError(err).Warn("error writing csv file")
-				}
-			})
-		})
-
-	api.SignaturesDownloadProjectSignatureCCLAsHandler = signatures.DownloadProjectSignatureCCLAsHandlerFunc(
-		func(params signatures.DownloadProjectSignatureCCLAsParams, authUser *auth.User) middleware.Responder {
-			reqID := utils.GetRequestID(params.XREQUESTID)
-			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			f := logrus.Fields{
-				"functionName":   "SignaturesDownloadProjectSignatureCCLAsHandler",
-				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-				"claGroupID":     params.ClaGroupID,
-			}
-
-			log.WithFields(f).Debug("looking up CLA Group by ID...")
-			claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
-			if err != nil {
-				log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewDownloadProjectSignatureCCLAsNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
-				}
-				return signatures.NewDownloadProjectSignatureCCLAsInternalServerError().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
-			}
-			if !claGroupModel.ProjectCCLAEnabled {
-				log.WithFields(f).Warn(cclaNotSupportedForCLAGroup)
-				return signatures.NewDownloadProjectSignatureCCLAsBadRequest().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseBadRequest(reqID, cclaNotSupportedForCLAGroup))
-			}
-			f["foundationSFID"] = claGroupModel.FoundationSFID
-
-			// Lookup the project IDs for the CLA Group
-			log.WithFields(f).Debug("looking up projects associated with the CLA Group...")
-			projectCLAGroupModels, err := projectClaGroupsRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
-			if err != nil {
-				log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID")
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewDownloadProjectSignatureCCLAsNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, "problem loading project cla group mappings by CLA Group ID", err))
-				}
-				return signatures.NewDownloadProjectSignatureCCLAsInternalServerError().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected error when looking up project cla group mappings by CLA Group ID", err))
-			}
-
-			projectSFIDs := getProjectIDsFromModels(f, claGroupModel, projectCLAGroupModels)
-			f["projectIDs"] = strings.Join(projectSFIDs, ",")
-
-			log.WithFields(f).Debug("checking access control permissions for user...")
-			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) &&
-				!utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
-				msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project: %s",
-					authUser.UserName, strings.Join(projectSFIDs, ","))
-				log.Warn(msg)
-				return signatures.NewDownloadProjectSignatureCCLAsForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
-			}
-			log.WithFields(f).Debug("user has access for this query")
-
-			log.WithFields(f).Debug("searching for CCLA signatures...")
-			result, err := v2service.GetSignedCclaZipPdf(params.ClaGroupID)
-			if err != nil {
-				if err == ErrZipNotPresent {
-					msg := "no ccla signatures found for this cla group"
-					log.WithFields(f).Warn(msg)
-					return signatures.NewDownloadProjectSignatureCCLAsNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, msg, err))
-				}
-				return signatures.NewDownloadProjectSignatureCCLAsInternalServerError().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected response from query", err))
-			}
-
-			log.WithFields(f).Debug("returning signatures to caller...")
-			return signatures.NewDownloadProjectSignatureCCLAsOK().WithXRequestID(reqID).WithPayload(result)
-		})
+		log.WithFields(f).Debug("returning signatures to caller...")
+		return signatures.NewDownloadProjectSignatureCCLAsOK().WithXRequestID(reqID).WithPayload(result)
+	})
 
 	// Download CCLAs as a CSV document
-	api.SignaturesDownloadProjectSignatureCCLAAsCSVHandler = signatures.DownloadProjectSignatureCCLAAsCSVHandlerFunc(
-		func(params signatures.DownloadProjectSignatureCCLAAsCSVParams, authUser *auth.User) middleware.Responder {
-			reqID := utils.GetRequestID(params.XREQUESTID)
-			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			f := logrus.Fields{
-				"functionName":   "SignaturesDownloadProjectSignatureCCLAAsCSVHandler",
-				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-				"claGroupID":     params.ClaGroupID,
-			}
+	api.SignaturesDownloadProjectSignatureCCLAAsCSVHandler = signatures.DownloadProjectSignatureCCLAAsCSVHandlerFunc(func(params signatures.DownloadProjectSignatureCCLAAsCSVParams, authUser *auth.User) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		f := logrus.Fields{
+			"functionName":   "SignaturesDownloadProjectSignatureCCLAAsCSVHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"claGroupID":     params.ClaGroupID,
+		}
 
-			log.WithFields(f).Debug("looking up CLA Group by ID...")
-			claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
+		log.WithFields(f).Debug("looking up CLA Group by ID...")
+		claGroupModel, err := projectService.GetCLAGroupByID(ctx, params.ClaGroupID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
+			if err == project.ErrProjectDoesNotExist {
+				return signatures.NewDownloadProjectSignatureCCLAAsCSVNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
+			}
+			return signatures.NewDownloadProjectSignatureCCLAAsCSVInternalServerError().WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+		}
+		if !claGroupModel.ProjectCCLAEnabled {
+			log.WithFields(f).Warn(cclaNotSupportedForCLAGroup)
+			return signatures.NewDownloadProjectSignatureCCLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequest(reqID, cclaNotSupportedForCLAGroup))
+		}
+		f["foundationSFID"] = claGroupModel.FoundationSFID
+
+		log.WithFields(f).Debug("checking access control permissions for user...")
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+			msg := fmt.Sprintf("user %s is not authorized to view project CCLA signatures any scope of project", authUser.UserName)
+			log.Warn(msg)
+			return signatures.NewDownloadProjectSignatureCCLAAsCSVForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
+		}
+		log.WithFields(f).Debug("user has access for this query")
+
+		log.WithFields(f).Debug("generating ICLA signatures for CSV...")
+		result, err := v2service.GetProjectCclaSignaturesCsv(ctx, params.ClaGroupID)
+		if err != nil {
+			msg := "unable to load CCLA signatures for CSV"
+			log.WithFields(f).Warn(msg)
+			return signatures.NewDownloadProjectSignatureCCLAAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+		}
+
+		log.WithFields(f).Debug("returning CSV response...")
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+			rw.Header().Set("Content-Type", "text/csv")
+			rw.Header().Set(utils.XREQUESTID, reqID)
+			rw.WriteHeader(http.StatusOK)
+			_, err := rw.Write(result)
 			if err != nil {
-				log.WithFields(f).WithError(err).Warn(problemLoadingCLAGroupByID)
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewDownloadProjectSignatureCCLAAsCSVNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
-				}
-				return signatures.NewDownloadProjectSignatureCCLAAsCSVInternalServerError().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+				log.WithFields(f).WithError(err).Warn("error writing csv file")
 			}
-			if !claGroupModel.ProjectCCLAEnabled {
-				log.WithFields(f).Warn(cclaNotSupportedForCLAGroup)
-				return signatures.NewDownloadProjectSignatureCCLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseBadRequest(reqID, cclaNotSupportedForCLAGroup))
-			}
-			f["foundationSFID"] = claGroupModel.FoundationSFID
-
-			// Lookup the project IDs for the CLA Group
-			log.WithFields(f).Debug("looking up projects associated with the CLA Group...")
-			projectCLAGroupModels, err := projectClaGroupsRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
-			if err != nil {
-				log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID")
-				if err == project.ErrProjectDoesNotExist {
-					return signatures.NewDownloadProjectSignatureCCLAAsCSVNotFound().WithXRequestID(reqID).WithPayload(
-						utils.ErrorResponseNotFoundWithError(reqID, "problem loading project cla group mappings by CLA Group ID", err))
-				}
-				return signatures.NewDownloadProjectSignatureCCLAAsCSVInternalServerError().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected error when looking up project cla group mappings by CLA Group ID", err))
-			}
-
-			projectSFIDs := getProjectIDsFromModels(f, claGroupModel, projectCLAGroupModels)
-			f["projectIDs"] = strings.Join(projectSFIDs, ",")
-
-			log.WithFields(f).Debug("checking access control permissions for user...")
-			if !utils.IsUserAuthorizedForProjectTree(authUser, claGroupModel.FoundationSFID) &&
-				!utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
-				msg := fmt.Sprintf("user %s is not authorized to view project CCLA signatures any scope of project: %s",
-					authUser.UserName, strings.Join(projectSFIDs, ","))
-				log.Warn(msg)
-				return signatures.NewDownloadProjectSignatureCCLAAsCSVForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
-			}
-			log.WithFields(f).Debug("user has access for this query")
-
-			log.WithFields(f).Debug("generating ICLA signatures for CSV...")
-			result, err := v2service.GetProjectCclaSignaturesCsv(ctx, params.ClaGroupID)
-			if err != nil {
-				msg := "unable to load CCLA signatures for CSV"
-				log.WithFields(f).Warn(msg)
-				return signatures.NewDownloadProjectSignatureCCLAAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
-			}
-
-			log.WithFields(f).Debug("returning CSV response...")
-			return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
-				rw.Header().Set("Content-Type", "text/csv")
-				rw.Header().Set(utils.XREQUESTID, reqID)
-				rw.WriteHeader(http.StatusOK)
-				_, err := rw.Write(result)
-				if err != nil {
-					log.WithFields(f).WithError(err).Warn("error writing csv file")
-				}
-			})
 		})
+	})
 }
 
-func getProjectIDsFromModels(f logrus.Fields, claGroupModel *v1Models.ClaGroup, projectCLAGroupModels []*projects_cla_groups.ProjectClaGroup) []string {
+// getProjectIDsFromModels is a helper function to extract the project SFIDs from the project CLA Group models
+func getProjectIDsFromModels(f logrus.Fields, foundationSFID string, projectCLAGroupModels []*projects_cla_groups.ProjectClaGroup) []string {
 	// Build a list of projects associated with this CLA Group
 	log.WithFields(f).Debug("building list of project IDs associated with the CLA Group...")
 	var projectSFIDs []string
-	projectSFIDs = append(projectSFIDs, claGroupModel.FoundationSFID)
+	projectSFIDs = append(projectSFIDs, foundationSFID)
 	for _, projectCLAGroupModel := range projectCLAGroupModels {
 		projectSFIDs = append(projectSFIDs, projectCLAGroupModel.ProjectSFID)
 	}
@@ -1408,4 +1225,209 @@ func errorResponse(reqID string, err error) *models.ErrorResponse {
 	}
 
 	return &e
+}
+
+// isUserHaveAccessToCLAGroupProjects is a helper function to determine if the user has access to the specified CLA Group projects
+func isUserHaveAccessToCLAGroupProjects(ctx context.Context, authUser *auth.User, claGroupID string, projectClaGroupsRepo projects_cla_groups.Repository) bool {
+	f := logrus.Fields{
+		"functionName":   "isUserHaveAccessToCLAGroupProjects",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"claGroupID":     claGroupID,
+		"userName":       authUser.UserName,
+		"userEmail":      authUser.Email,
+	}
+
+	// Lookup the project IDs for the CLA Group
+	log.WithFields(f).Debug("looking up projects associated with the CLA Group...")
+	projectCLAGroupModels, err := projectClaGroupsRepo.GetProjectsIdsForClaGroup(claGroupID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID - failed permission check")
+		return false
+	}
+	if len(projectCLAGroupModels) == 0 {
+		log.WithFields(f).Debug("no project cla group mappings by CLA Group ID - failed permission check")
+		return false
+	}
+
+	foundationSFID := projectCLAGroupModels[0].FoundationSFID
+	f["foundationSFID"] = foundationSFID
+	log.WithFields(f).Debug("testing if user has access to parent foundation...")
+	if utils.IsUserAuthorizedForProjectTree(authUser, foundationSFID) {
+		log.WithFields(f).Debug("user has access to parent foundation tree...")
+		return true
+	}
+	if utils.IsUserAuthorizedForProject(authUser, foundationSFID) {
+		log.WithFields(f).Debug("user has access to parent foundation...")
+		return true
+	}
+	log.WithFields(f).Debug("user does not have access to parent foundation...")
+
+	projectSFIDs := getProjectIDsFromModels(f, foundationSFID, projectCLAGroupModels)
+	f["projectIDs"] = strings.Join(projectSFIDs, ",")
+	log.WithFields(f).Debug("testing if user has access to any projects")
+	if utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
+		log.WithFields(f).Debug("user has access to at least of of the projects...")
+		return true
+	}
+
+	log.WithFields(f).Debug("exhausted project checks - user does not have access to project")
+	return false
+}
+
+// isUserHaveAccessToCLAProject is a helper function to determine if the user has access to the specified project
+func isUserHaveAccessToCLAProject(ctx context.Context, authUser *auth.User, projectSFID string, projectClaGroupsRepo projects_cla_groups.Repository) bool { // nolint
+	f := logrus.Fields{
+		"functionName":   "isUserHaveAccessToCLAProject",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectSFID":    projectSFID,
+		"userName":       authUser.UserName,
+		"userEmail":      authUser.Email,
+	}
+
+	log.WithFields(f).Debug("testing if user has access to project SFID")
+	if utils.IsUserAuthorizedForProject(authUser, projectSFID) {
+		return true
+	}
+
+	log.WithFields(f).Debug("user doesn't have direct access to the projectSFID - loading CLA Group from project id...")
+	projectCLAGroupModel, err := projectClaGroupsRepo.GetClaGroupIDForProject(projectSFID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading project -> cla group mapping - returning false")
+		return false
+	}
+	if projectCLAGroupModel == nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading project -> cla group mapping - no mapping found - returning false")
+		return false
+	}
+
+	f["foundationSFID"] = projectCLAGroupModel.FoundationSFID
+	log.WithFields(f).Debug("testing if user has access to parent foundation...")
+	if utils.IsUserAuthorizedForProjectTree(authUser, projectCLAGroupModel.FoundationSFID) {
+		log.WithFields(f).Debug("user has access to parent foundation tree...")
+		return true
+	}
+	if utils.IsUserAuthorizedForProject(authUser, projectCLAGroupModel.FoundationSFID) {
+		log.WithFields(f).Debug("user has access to parent foundation...")
+		return true
+	}
+	log.WithFields(f).Debug("user does not have access to parent foundation...")
+
+	// Lookup the other project IDs for the CLA Group
+	log.WithFields(f).Debug("looking up other projects associated with the CLA Group...")
+	projectCLAGroupModels, err := projectClaGroupsRepo.GetProjectsIdsForClaGroup(projectCLAGroupModel.ClaGroupID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID - returning false")
+		return false
+	}
+
+	projectSFIDs := getProjectIDsFromModels(f, projectCLAGroupModel.FoundationSFID, projectCLAGroupModels)
+	f["projectIDs"] = strings.Join(projectSFIDs, ",")
+	log.WithFields(f).Debug("testing if user has access to any projects")
+	if utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
+		log.WithFields(f).Debug("user has access to at least of of the projects...")
+		return true
+	}
+
+	log.WithFields(f).Debug("exhausted project checks - user does not have access to project")
+	return false
+}
+
+// isUserHaveAccessToCLAProjectOrganization is a helper function to determine if the user has access to the specified project and organization
+func isUserHaveAccessToCLAProjectOrganization(ctx context.Context, authUser *auth.User, projectSFID, organizationSFID string, projectClaGroupsRepo projects_cla_groups.Repository) bool {
+	f := logrus.Fields{
+		"functionName":     "isUserHaveAccessToCLAProjectOrganization",
+		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
+		"projectSFID":      projectSFID,
+		"organizationSFID": organizationSFID,
+		"userName":         authUser.UserName,
+		"userEmail":        authUser.Email,
+	}
+
+	log.WithFields(f).Debug("testing if user has access to project SFID...")
+	if utils.IsUserAuthorizedForProject(authUser, projectSFID) {
+		log.WithFields(f).Debug("user has access to project SFID...")
+		return true
+	}
+
+	log.WithFields(f).Debug("testing if user has access to project SFID tree...")
+	if utils.IsUserAuthorizedForProjectTree(authUser, projectSFID) {
+		log.WithFields(f).Debug("user has access to project SFID tree...")
+		return true
+	}
+
+	log.WithFields(f).Debug("testing if user has access to project SFID and organization SFID...")
+	if utils.IsUserAuthorizedForProjectOrganization(authUser, projectSFID, organizationSFID) {
+		log.WithFields(f).Debug("user has access to project SFID and organization SFID...")
+		return true
+	}
+
+	log.WithFields(f).Debug("testing if user has access to project SFID and organization SFID tree...")
+	if utils.IsUserAuthorizedForProjectOrganizationTree(authUser, projectSFID, organizationSFID) {
+		log.WithFields(f).Debug("user has access to project SFID and organization SFID tree...")
+		return true
+	}
+
+	log.WithFields(f).Debug("testing if user has access to organization SFID...")
+	if utils.IsUserAuthorizedForOrganization(authUser, organizationSFID) {
+		log.WithFields(f).Debug("user has access to organization SFID...")
+		return true
+	}
+
+	// No luck so far...let's load up the Project => CLA Group mapping and check to see if the user has access to the
+	// other projects or the parent project group/foundation
+
+	log.WithFields(f).Debug("user doesn't have direct access to the project only, project + organization, or organization only - loading CLA Group from project id...")
+	projectCLAGroupModel, err := projectClaGroupsRepo.GetClaGroupIDForProject(projectSFID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading project -> cla group mapping - returning false")
+		return false
+	}
+	if projectCLAGroupModel == nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading project -> cla group mapping - no mapping found - returning false")
+		return false
+	}
+
+	// Check the foundation permissions
+	f["foundationSFID"] = projectCLAGroupModel.FoundationSFID
+	log.WithFields(f).Debug("testing if user has access to parent foundation...")
+	if utils.IsUserAuthorizedForProject(authUser, projectCLAGroupModel.FoundationSFID) {
+		log.WithFields(f).Debug("user has access to parent foundation...")
+		return true
+	}
+	log.WithFields(f).Debug("testing if user has access to parent foundation truee...")
+	if utils.IsUserAuthorizedForProjectTree(authUser, projectCLAGroupModel.FoundationSFID) {
+		log.WithFields(f).Debug("user has access to parent foundation tree...")
+		return true
+	}
+
+	log.WithFields(f).Debug("testing if user has access to foundation SFID and organization SFID...")
+	if utils.IsUserAuthorizedForProjectOrganization(authUser, projectCLAGroupModel.FoundationSFID, organizationSFID) {
+		log.WithFields(f).Debug("user has access to foundation SFID and organization SFID...")
+		return true
+	}
+
+	log.WithFields(f).Debug("testing if user has access to foundation SFID and organization SFID tree...")
+	if utils.IsUserAuthorizedForProjectOrganizationTree(authUser, projectCLAGroupModel.FoundationSFID, organizationSFID) {
+		log.WithFields(f).Debug("user has access to foundation SFID and organization SFID tree...")
+		return true
+	}
+
+	// Lookup the other project IDs associated with this CLA Group
+	log.WithFields(f).Debug("looking up other projects associated with the CLA Group...")
+	projectCLAGroupModels, err := projectClaGroupsRepo.GetProjectsIdsForClaGroup(projectCLAGroupModel.ClaGroupID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID - returning false")
+		return false
+	}
+
+	projectSFIDs := getProjectIDsFromModels(f, projectCLAGroupModel.FoundationSFID, projectCLAGroupModels)
+	f["projectIDs"] = strings.Join(projectSFIDs, ",")
+	log.WithFields(f).Debug("testing if user has access to any cla group project + organization")
+	if utils.IsUserAuthorizedForAnyProjectOrganization(authUser, projectSFIDs, organizationSFID) {
+		log.WithFields(f).Debug("user has access to at least of of the projects...")
+		return true
+	}
+
+	log.WithFields(f).Debug("exhausted project checks - user does not have access to project")
+	return false
 }
