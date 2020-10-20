@@ -25,12 +25,8 @@ export class AuthPage implements OnInit {
 
   ngOnInit() {
     this.authService.redirectRoot.subscribe((target) => {
-      if (EnvConfig['lfx-header-enabled'] === "true") {
-        this.navCtrl.setRoot('AllProjectsPage');
-      } else {
-        // Redirected forcefully for without LFX-header due to auth token persist in URL. 
-        window.open(target, '_self');
-      }
+      window.history.replaceState(null, null, window.location.pathname);
+      this.navCtrl.setRoot('AllProjectsPage');
     });
   }
 }
