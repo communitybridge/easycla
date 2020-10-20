@@ -777,7 +777,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
 			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
 			log.Warn(msg)
 			return signatures.NewGetProjectCompanyEmployeeSignaturesForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
@@ -929,7 +929,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
 			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
 			log.Warn(msg)
 			return signatures.NewDownloadProjectSignatureICLAsForbidden().WithXRequestID(reqID).WithPayload(
