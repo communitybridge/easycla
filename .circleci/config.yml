@@ -774,7 +774,6 @@ jobs:
 
             echo "Invalidating Cloudfront caches in folder: `pwd`"
             SLS_DEBUG=* ../node_modules/serverless/bin/serverless.js cloudfrontInvalidate -s ${STAGE} -r ${AWS_REGION} --cloudfront=true
-
             popd
 
           no_output_timeout: 1.5h
@@ -788,7 +787,7 @@ jobs:
       AWS_PROFILE: lf-cla
       AWS_REGION: us-east-1
       STAGE: dev
-      PROJECT_DIR: cla-next
+      PROJECT_DIR: cla-landing-page
       ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
       PRODUCT_DOMAIN: dev.lfcla.com
 
@@ -800,7 +799,7 @@ jobs:
       AWS_PROFILE: lf-cla
       AWS_REGION: us-east-1
       STAGE: staging
-      PROJECT_DIR: cla-next
+      PROJECT_DIR: cla-landing-page
       ROOT_DOMAIN: lfcla.staging.platform.linuxfoundation.org
       PRODUCT_DOMAIN: staging.lfcla.com
 
@@ -812,7 +811,7 @@ jobs:
       AWS_PROFILE: lf-cla
       AWS_REGION: us-east-1
       STAGE: prod
-      PROJECT_DIR: cla-next
+      PROJECT_DIR: cla-landing-page
       ROOT_DOMAIN: lfcla.platform.linuxfoundation.org
       PRODUCT_DOMAIN: lfcla.com
 
