@@ -5,11 +5,11 @@
 Utility functions for the CLA project.
 """
 
-from boto3 import client
 import inspect
 import json
 import os
 import urllib.parse
+from datetime import datetime
 from typing import List, Optional
 
 import falcon
@@ -23,7 +23,6 @@ from cla.models.dynamo_models import User, Signature, Repository, \
     Company, Project, Document, \
     GitHubOrg, Gerrit, UserPermissions, Event, CompanyInvite, ProjectCLAGroup, CCLAWhitelistRequest
 from cla.models.event_types import EventType
-from datetime import datetime
 
 API_BASE_URL = os.environ.get('CLA_API_BASE', '')
 CLA_LOGO_URL = os.environ.get('CLA_BUCKET_LOGO_URL', '')
@@ -245,7 +244,7 @@ def get_project_cla_group_instance(conf=None) -> ProjectCLAGroup:
     """
     Helper function to get a database ProjectCLAGroup model
 
-    :paran conf: Same as get_database_nodels()
+    :param conf: the configuration model
     :type conf: dict
     :return: A ProjectCLAGroup model instance based on configuration
     :rtype: cla.models.model_interfaces.ProjectCLAGroup
@@ -258,7 +257,7 @@ def get_ccla_whitelist_request_instance(conf=None) -> CCLAWhitelistRequest:
     """
     Helper function to get a database CCLAWhitelistRequest model
 
-    :param conf: Same as get_database_nodels()
+    :param conf: the configuration model
     :type conf: dict
     :return: A CCLAWhitelistRequest model instance based on configuration
     :rtype: cla.models.model_interfaces.CCLAWhitelistRequest
@@ -546,7 +545,7 @@ def get_last_version(documents):
             continue
         if current_major == last_major and current_minor > last_minor:
             last_minor = current_minor
-    return (last_major, last_minor)
+    return last_major, last_minor
 
 
 def user_icla_check(user: User, project: Project, signature: Signature, latest_major_version=False) -> bool:
@@ -602,10 +601,8 @@ def user_signed_project_signature(user: User, project: Project):
 
     :param user: The user object to check for.
     :type user: cla.models.model_interfaces.User
-    :param project_id: The project to check for.
-    :type project_id: string
-    :param latest_major_version: True means only the latest document major version will be considered.
-    :type latest_major_version: bool
+    :param project: the project model
+    :type project: cla.models.model_interfaces.Project
     :return: Whether or not the user has an signature that's signed and approved
         for this project.
     :rtype: boolean
@@ -1082,6 +1079,8 @@ def get_active_signature_return_url(user_id, metadata=None):
 
     :param user_id: The user ID in question.
     :type user_id: string
+    :param metadata: The signature metadata
+    :type metadata: dict
     :return: The URL the user will be redirected to upon successful signature.
     :rtype: string
     """
@@ -1142,6 +1141,8 @@ def get_individual_signature_callback_url(user_id, metadata=None):
 
     :param user_id: The user ID in question.
     :type user_id: string
+    :param metadata: The signature metadata
+    :type metadata: dict
     :return: The callback URL that will be hit by the signing service provider.
     :rtype: string
     """
@@ -1171,8 +1172,10 @@ def request_individual_signature(installation_id, github_repository_id, user, ch
 
     :TODO: Update comments.
 
-    :param repository: The repository object in question.
-    :type repository: cla.models.model_interfaces.Repository
+    :param installation_id: The GitHub installation ID
+    :type installation_id: int
+    :param github_repository_id: The GitHub repository ID ID
+    :type github_repository_id: int
     :param user: The user in question.
     :type user: cla.models.model_interfaces.User
     :param change_request_id: The change request ID (used to redirect the user after signing).
@@ -1480,10 +1483,10 @@ def get_formatted_time(the_time: datetime) -> str:
     """
     return the_time.strftime("%Y-%m-%dT%H:%M:%S.%f%z") + "+0000"
 
+
 def get_public_email(user):
     """
     Helper function to return public user email to send emails
     """
     if len(user.get_all_user_emails()) > 0:
         return next((email for email in user.get_all_user_emails() if "noreply.github.com" not in email), None)
-    

@@ -5,14 +5,16 @@ package github
 
 import (
 	"context"
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/go-openapi/swag"
 
 	"github.com/golang/mock/gomock"
 
 	"github.com/bmizerany/assert"
-	githubsdk "github.com/google/go-github/github"
+	githubsdk "github.com/google/go-github/v32/github"
 )
 
 // TestMergeStatusChecks tests the functionality of where we enable/disable checks
@@ -85,8 +87,8 @@ func TestMergeStatusChecks(t *testing.T) {
 }
 
 func TestEnableBranchProtection(t *testing.T) {
-	owner := "john"
-	repo := "johnsrepo"
+	owner := "johnenable"
+	repo := "johnsrepoenable"
 	branchName := defaultBranchName
 
 	testCases := []struct {
@@ -132,7 +134,7 @@ func TestEnableBranchProtection(t *testing.T) {
 				RequiredPullRequestReviews: &githubsdk.PullRequestReviewsEnforcement{
 					RequireCodeOwnerReviews:      true,
 					RequiredApprovingReviewCount: 2,
-					DismissalRestrictions: githubsdk.DismissalRestrictions{
+					DismissalRestrictions: &githubsdk.DismissalRestrictions{
 						Users: []*githubsdk.User{
 							{Login: swag.String("alex")},
 						},
@@ -149,6 +151,9 @@ func TestEnableBranchProtection(t *testing.T) {
 						{Slug: swag.String("easyCLA-Team")},
 					},
 				},
+				RequireLinearHistory: &githubsdk.RequireLinearHistory{Enabled: true},
+				AllowForcePushes:     &githubsdk.AllowForcePushes{Enabled: true},
+				AllowDeletions:       &githubsdk.AllowDeletions{Enabled: true},
 			},
 			ProtectionRequest: &githubsdk.ProtectionRequest{
 				RequiredPullRequestReviews: &githubsdk.PullRequestReviewsEnforcementRequest{
@@ -162,12 +167,16 @@ func TestEnableBranchProtection(t *testing.T) {
 				Restrictions: &githubsdk.BranchRestrictionsRequest{
 					Users: []string{"john"},
 					Teams: []string{"easyCLA-Team"},
+					Apps:  []string{},
 				},
 				EnforceAdmins: true,
 				RequiredStatusChecks: &githubsdk.RequiredStatusChecks{
 					Strict:   true,
 					Contexts: []string{"easyCLA"},
 				},
+				RequireLinearHistory: swag.Bool(true),
+				AllowForcePushes:     swag.Bool(true),
+				AllowDeletions:       swag.Bool(true),
 			},
 		},
 	}
@@ -188,11 +197,155 @@ func TestEnableBranchProtection(t *testing.T) {
 				UpdateBranchProtection(gomock.Any(), owner, repo, branchName, tc.ProtectionRequest).
 				Return(nil, nil, nil)
 
-			err := EnableBranchProtection(context.Background(), m, owner, repo, branchName, true, tc.Checks, nil)
+			branchProtectionRepo := NewBranchProtectionRepository(m)
+			err := branchProtectionRepo.EnableBranchProtection(context.Background(), owner, repo, branchName, true, tc.Checks, nil)
 			if err != nil {
 				tt.Errorf("enable branch proteciton failed : %v", err)
 			}
 		})
 	}
 
+}
+
+func TestNonBlockingRateLimitRepositories_GetBranchProtection(t *testing.T) {
+	owner := "johnblocking"
+	repo := "johnsrepoblocking"
+	branchName := defaultBranchName
+
+	t.Run("no limit reached", func(tt *testing.T) {
+		ctrl := gomock.NewController(tt)
+		defer ctrl.Finish()
+
+		protection := &githubsdk.Protection{
+			RequiredStatusChecks: &githubsdk.RequiredStatusChecks{
+				Strict:   false,
+				Contexts: []string{"circle/ci"},
+			},
+		}
+
+		m := NewMockRepositories(ctrl)
+		m.
+			EXPECT().
+			GetBranchProtection(gomock.Any(), owner, repo, branchName).
+			Return(protection, nil, nil)
+
+		nonBlockLimitRepo := NewBranchProtectionRepository(m, EnableNonBlockingLimiter())
+		p, err := nonBlockLimitRepo.GetProtectedBranch(context.Background(), owner, repo, branchName)
+		if err != nil {
+			tt.Errorf("no error expected : %v", err)
+		}
+		assert.Equal(tt, protection, p)
+	})
+
+	t.Run("limit reached", func(tt *testing.T) {
+		ctrl := gomock.NewController(tt)
+		defer ctrl.Finish()
+
+		protection := &githubsdk.Protection{
+			RequiredStatusChecks: &githubsdk.RequiredStatusChecks{
+				Strict:   false,
+				Contexts: []string{"circle/ci"},
+			},
+		}
+
+		m := NewMockRepositories(ctrl)
+		m.
+			EXPECT().
+			GetBranchProtection(gomock.Any(), owner, repo, branchName).
+			Return(protection, nil, nil).AnyTimes()
+
+		nonBlockLimitRepo := NewBranchProtectionRepository(m, EnableNonBlockingLimiter())
+		// call it 100 times in loop to make it fail
+		var expectedErr error
+		for i := 0; i < 100; i++ {
+			_, err := nonBlockLimitRepo.GetProtectedBranch(context.Background(), owner, repo, branchName)
+			if err != nil {
+				expectedErr = err
+				break
+			}
+		}
+
+		if expectedErr == nil {
+			tt.Fatalf("no error returned")
+			return
+		}
+
+		if !errors.Is(expectedErr, ErrRateLimited) {
+			tt.Fatalf("was expecting ErrRateLimited got : %v", expectedErr)
+			return
+		}
+	})
+}
+
+func TestBlockingRateLimitRepositories_GetBranchProtection(t *testing.T) {
+	owner := "john"
+	repo := "johnsrepo"
+	branchName := defaultBranchName
+
+	t.Run("no limit reached", func(tt *testing.T) {
+		ctrl := gomock.NewController(tt)
+		defer ctrl.Finish()
+
+		protection := &githubsdk.Protection{
+			RequiredStatusChecks: &githubsdk.RequiredStatusChecks{
+				Strict:   false,
+				Contexts: []string{"circle/ci"},
+			},
+		}
+
+		m := NewMockRepositories(ctrl)
+		m.
+			EXPECT().
+			GetBranchProtection(gomock.Any(), owner, repo, branchName).
+			Return(protection, nil, nil)
+
+		blockLimitRepo := NewBranchProtectionRepository(m, EnableBlockingLimiter())
+		p, err := blockLimitRepo.GetProtectedBranch(context.Background(), owner, repo, branchName)
+		if err != nil {
+			tt.Errorf("no error expected : %v", err)
+		}
+		assert.Equal(tt, protection, p)
+	})
+
+	t.Run("limit reached", func(tt *testing.T) {
+		ctrl := gomock.NewController(tt)
+		defer ctrl.Finish()
+
+		protection := &githubsdk.Protection{
+			RequiredStatusChecks: &githubsdk.RequiredStatusChecks{
+				Strict:   false,
+				Contexts: []string{"circle/ci"},
+			},
+		}
+
+		m := NewMockRepositories(ctrl)
+		m.
+			EXPECT().
+			GetBranchProtection(gomock.Any(), owner, repo, branchName).
+			Return(protection, nil, nil).AnyTimes()
+
+		blockLimitRepo := NewBranchProtectionRepository(m, EnableBlockingLimiter())
+
+		// call it 100 times in loop to make it fail
+		var expectedErr error
+		start := time.Now()
+		for i := 0; i < 10; i++ {
+			_, err := blockLimitRepo.GetProtectedBranch(context.Background(), owner, repo, branchName)
+			if err != nil {
+				expectedErr = err
+				break
+			}
+		}
+		elapsed := time.Since(start)
+
+		if expectedErr != nil {
+			tt.Fatalf("no error was expected got : %v", expectedErr)
+			return
+		}
+
+		if elapsed < 4*time.Second {
+			tt.Fatalf("is rate limit enabled")
+		}
+
+	})
 }

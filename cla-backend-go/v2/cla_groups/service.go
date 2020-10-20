@@ -224,6 +224,25 @@ func (s *service) UpdateCLAGroup(ctx context.Context, claGroupID string, input *
 		"ClaGroupDescription": input.ClaGroupDescription,
 	}
 
+	// Search other CLA Groups - any name conflicts?
+	if input.ClaGroupName != "" {
+		existingCLAGroup, groupLookupErr := s.v1ProjectService.GetCLAGroupByName(ctx, input.ClaGroupName)
+		if groupLookupErr != nil {
+			log.WithFields(f).WithError(groupLookupErr).Warnf("update - error looking up CLA Group by name: %s", input.ClaGroupName)
+			return nil, groupLookupErr
+		}
+
+		// Expecting no/nil result - if we find an existing CLA Group with the specified input name - this is a name conflict - not allowed
+		if existingCLAGroup != nil {
+			log.WithFields(f).Warnf("found existing CLA Group with name: %s - unable to update", input.ClaGroupName)
+			return nil, &utils.CLAGroupNameConflict{
+				CLAGroupID:   claGroupID,
+				CLAGroupName: input.ClaGroupName,
+				Err:          nil,
+			}
+		}
+	}
+
 	existingCLAGroup, getErr := s.v1ProjectService.GetCLAGroupByID(ctx, claGroupID)
 	if getErr != nil {
 		log.WithFields(f).WithError(getErr).Warnf("update - error locating the project id: %s", claGroupID)
@@ -280,18 +299,7 @@ func (s *service) UpdateCLAGroup(ctx context.Context, claGroupID string, input *
 		return projectList[i].ProjectName < projectList[j].ProjectName
 	})
 
-	iclaTemplate, err := s.v1ProjectService.GetCLAGroupCurrentICLATemplateURLByID(ctx, claGroupID)
-	if err != nil {
-		log.WithFields(f).WithError(err).Warnf("problem getting project ICLA templates for CLA Group: %s", claGroupID)
-		return nil, err
-	}
-	cclaTemplate, err := s.v1ProjectService.GetCLAGroupCurrentCCLATemplateURLByID(ctx, claGroupID)
-	if err != nil {
-		log.WithFields(f).WithError(err).Warnf("problem getting project CCLA templates for CLA Group: %s", claGroupID)
-		return nil, err
-	}
-
-	return &models.ClaGroupSummary{
+	claGroupSummary := &models.ClaGroupSummary{
 		FoundationLevelCLA:  isFoundationLevelCLA(existingCLAGroup.FoundationSFID, subProjectList),
 		CclaEnabled:         claGroup.ProjectCCLAEnabled,
 		CclaRequiresIcla:    claGroup.ProjectCCLARequiresICLA,
@@ -302,9 +310,31 @@ func (s *service) UpdateCLAGroup(ctx context.Context, claGroupID string, input *
 		FoundationName:      foundationName,
 		IclaEnabled:         claGroup.ProjectICLAEnabled,
 		ProjectList:         projectList,
-		IclaPdfURL:          iclaTemplate,
-		CclaPdfURL:          cclaTemplate,
-	}, nil
+	}
+
+	// Load and set the ICLA template - if set
+	var iclaTemplate string
+	if claGroup.ProjectICLAEnabled {
+		iclaTemplate, err = s.v1ProjectService.GetCLAGroupCurrentICLATemplateURLByID(ctx, claGroupID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warnf("problem getting project ICLA templates for CLA Group: %s", claGroupID)
+			return nil, err
+		}
+		claGroupSummary.IclaPdfURL = iclaTemplate
+	}
+
+	// Load and set the CCLA template - if set
+	var cclaTemplate string
+	if claGroup.ProjectCCLAEnabled {
+		cclaTemplate, err = s.v1ProjectService.GetCLAGroupCurrentCCLATemplateURLByID(ctx, claGroupID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warnf("problem getting project CCLA templates for CLA Group: %s", claGroupID)
+			return nil, err
+		}
+		claGroupSummary.CclaPdfURL = cclaTemplate
+	}
+
+	return claGroupSummary, nil
 }
 
 // ListClaGroupsForFoundationOrProject returns the CLA Group list for the specified foundation ID

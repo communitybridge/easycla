@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 
@@ -107,12 +108,14 @@ func NewService(stage string,
 	s.registerCallback(projectsCLAGroupsTable, Insert, s.ProjectServiceEnableCLAServiceHandler)
 	s.registerCallback(projectsCLAGroupsTable, Remove, s.ProjectServiceDisableCLAServiceHandler)
 
-	// Remove any lingering CLA Permissions for the specified project which was unenrolled/disabled
+	// Add or Remove any CLA Permissions for the specified project
+	s.registerCallback(projectsCLAGroupsTable, Insert, s.AddCLAPermissions)
 	s.registerCallback(projectsCLAGroupsTable, Remove, s.RemoveCLAPermissions)
 
 	// GitHub organization table modified event
-	s.registerCallback(githubOrgTableName, Modify, s.GitHubOrgUpdatedEvent)
 	s.registerCallback(githubOrgTableName, Insert, s.GitHubOrgAddedEvent)
+	s.registerCallback(githubOrgTableName, Modify, s.GitHubOrgUpdatedEvent)
+	s.registerCallback(githubOrgTableName, Remove, s.GitHubOrgDeletedEvent)
 
 	s.registerCallback(repositoryTableName, Insert, s.GithubRepoAddedEvent)
 	s.registerCallback(repositoryTableName, Remove, s.GithubRepoDeletedEvent)
@@ -137,10 +140,11 @@ func (s *service) ProcessEvents(events events.DynamoDBEvent) {
 	for _, event := range events.Records {
 		tableName := strings.Split(event.EventSourceArn, "/")[1]
 		fields := logrus.Fields{
-			"table_name":  tableName,
-			"eventID":     event.EventID,
-			"eventName":   event.EventName,
-			"eventSource": event.EventSource,
+			"functionName": "ProcessEvents",
+			"table_name":   tableName,
+			"eventID":      event.EventID,
+			"eventName":    event.EventName,
+			"eventSource":  event.EventSource,
 			// Dumping the event is super verbose
 			// "event":      event,
 		}
@@ -149,14 +153,33 @@ func (s *service) ProcessEvents(events events.DynamoDBEvent) {
 		//fields["events_data"] = string(b)
 		log.WithFields(fields).Debug("processing event record")
 		key := fmt.Sprintf("%s:%s", tableName, event.EventName)
-		for _, f := range s.functions[key] {
-			fields["key"] = key
-			fields["functionType"] = fmt.Sprintf("%T", f)
-			log.WithFields(fields).Debug("invoking handler")
-			err := f(event)
-			if err != nil {
-				log.WithFields(fields).WithField("event", event).Error("unable to process event", err)
+
+		// If we have any functions registered
+		if len(s.functions[key]) > 0 {
+
+			// Setup a wait group for the go routine
+			var wg sync.WaitGroup
+			wg.Add(len(s.functions[key]))
+
+			// For each function handler...
+			for _, eventHandlerFunction := range s.functions[key] {
+				fields["key"] = key
+				fields["functionType"] = fmt.Sprintf("%T", eventHandlerFunction)
+				log.WithFields(fields).Debug("invoking handler")
+
+				go func(f EventHandlerFunc) {
+					defer wg.Done()
+					err := f(event)
+					if err != nil {
+						log.WithFields(fields).WithError(err).WithField("event", event).Error("unable to process event", err)
+					}
+				}(eventHandlerFunction)
 			}
+
+			// Wait until the registered handlers/functions have completed for this event type...
+			log.WithFields(fields).Debugf("waiting for %d event handler functions to complete...", len(s.functions[key]))
+			wg.Wait()
+			log.WithFields(fields).Debugf("%d event handler functions to completed", len(s.functions[key]))
 		}
 	}
 }

@@ -9,11 +9,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/go-openapi/swag"
+
 	"github.com/jinzhu/copier"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
-	githubpkg "github.com/google/go-github/github"
+	githubpkg "github.com/google/go-github/v32/github"
+	"go.uber.org/ratelimit"
+	"golang.org/x/time/rate"
 )
 
 const (
@@ -25,6 +29,15 @@ var (
 	ErrBranchNotProtected = errors.New("not protected")
 )
 
+// rate limiting variables
+var (
+	// blockingRateLimit is useful for background tasks where the interaction is more predictable
+	blockingRateLimit = ratelimit.New(2)
+	// nonBlockingRateLimit is preferred when the github methods would be called realtime
+	// in this case we can call Allow method to check if can proceed or return error
+	nonBlockingRateLimit = rate.NewLimiter(2, 5)
+)
+
 // Repositories is part of the interface working with github repositories, it's inside of the github client
 // It's extracted here as interface so we can mock that functionality.
 type Repositories interface {
@@ -34,8 +47,120 @@ type Repositories interface {
 	UpdateBranchProtection(ctx context.Context, owner, repo, branch string, preq *githubpkg.ProtectionRequest) (*githubpkg.Protection, *githubpkg.Response, error)
 }
 
+type blockingRateLimitRepositories struct {
+	Repositories
+}
+
+// NewBlockLimiterRepositories returns a new instance of Repositories interface with blocking rate limiting
+// where when the limit is reached the next call blocks till the bucket is ready again
+func NewBlockLimiterRepositories(repos Repositories) Repositories {
+	return blockingRateLimitRepositories{repos}
+}
+
+func (b blockingRateLimitRepositories) ListByOrg(ctx context.Context, org string, opt *githubpkg.RepositoryListByOrgOptions) ([]*githubpkg.Repository, *githubpkg.Response, error) {
+	blockingRateLimit.Take()
+	return b.Repositories.ListByOrg(ctx, org, opt)
+}
+
+func (b blockingRateLimitRepositories) Get(ctx context.Context, owner, repo string) (*githubpkg.Repository, *githubpkg.Response, error) {
+	blockingRateLimit.Take()
+	return b.Repositories.Get(ctx, owner, repo)
+}
+
+func (b blockingRateLimitRepositories) GetBranchProtection(ctx context.Context, owner, repo, branch string) (*githubpkg.Protection, *githubpkg.Response, error) {
+	blockingRateLimit.Take()
+	return b.Repositories.GetBranchProtection(ctx, owner, repo, branch)
+}
+
+func (b blockingRateLimitRepositories) UpdateBranchProtection(ctx context.Context, owner, repo, branch string, preq *githubpkg.ProtectionRequest) (*githubpkg.Protection, *githubpkg.Response, error) {
+	blockingRateLimit.Take()
+	return b.Repositories.UpdateBranchProtection(ctx, owner, repo, branch, preq)
+}
+
+type nonBlockingRateLimitRepositories struct {
+	Repositories
+}
+
+// NewNonBlockLimiterRepositories returns a new instance of Repositories interface with non blocking rate limiting
+func NewNonBlockLimiterRepositories(repos Repositories) Repositories {
+	return nonBlockingRateLimitRepositories{repos}
+}
+
+func (nb nonBlockingRateLimitRepositories) ListByOrg(ctx context.Context, org string, opt *githubpkg.RepositoryListByOrgOptions) ([]*githubpkg.Repository, *githubpkg.Response, error) {
+	if nonBlockingRateLimit.Allow() {
+		return nb.Repositories.ListByOrg(ctx, org, opt)
+	}
+	return nil, nil, fmt.Errorf("too many requests : %w", ErrRateLimited)
+}
+
+func (nb nonBlockingRateLimitRepositories) Get(ctx context.Context, owner, repo string) (*githubpkg.Repository, *githubpkg.Response, error) {
+	if nonBlockingRateLimit.Allow() {
+		return nb.Repositories.Get(ctx, owner, repo)
+	}
+	return nil, nil, fmt.Errorf("too many requests : %w", ErrRateLimited)
+}
+
+func (nb nonBlockingRateLimitRepositories) GetBranchProtection(ctx context.Context, owner, repo, branch string) (*githubpkg.Protection, *githubpkg.Response, error) {
+	if nonBlockingRateLimit.Allow() {
+		return nb.Repositories.GetBranchProtection(ctx, owner, repo, branch)
+	}
+	return nil, nil, fmt.Errorf("too many requests : %w", ErrRateLimited)
+}
+
+func (nb nonBlockingRateLimitRepositories) UpdateBranchProtection(ctx context.Context, owner, repo, branch string, preq *githubpkg.ProtectionRequest) (*githubpkg.Protection, *githubpkg.Response, error) {
+	if nonBlockingRateLimit.Allow() {
+		return nb.Repositories.UpdateBranchProtection(ctx, owner, repo, branch, preq)
+	}
+	return nil, nil, fmt.Errorf("too many requests : %w", ErrRateLimited)
+}
+
+type branchProtectionRepositoryConfig struct {
+	enableBlockingLimiter    bool
+	enableNonBlockingLimiter bool
+}
+
+// BranchProtectionRepositoryOption enables optional parameters to BranchProtectionRepository
+type BranchProtectionRepositoryOption func(config *branchProtectionRepositoryConfig)
+
+// EnableBlockingLimiter enables the blocking limiter
+func EnableBlockingLimiter() BranchProtectionRepositoryOption {
+	return func(config *branchProtectionRepositoryConfig) {
+		config.enableBlockingLimiter = true
+	}
+}
+
+// EnableNonBlockingLimiter enables the non-blocking limiter
+func EnableNonBlockingLimiter() BranchProtectionRepositoryOption {
+	return func(config *branchProtectionRepositoryConfig) {
+		config.enableNonBlockingLimiter = true
+	}
+}
+
+// BranchProtectionRepository contains helper methods interacting with github api related to branch protection
+type BranchProtectionRepository struct {
+	githubRepo Repositories
+}
+
+// NewBranchProtectionRepository creates a new BranchProtectionRepository
+func NewBranchProtectionRepository(githubRepo Repositories, opts ...BranchProtectionRepositoryOption) *BranchProtectionRepository {
+	config := &branchProtectionRepositoryConfig{}
+	for _, o := range opts {
+		o(config)
+	}
+
+	if config.enableNonBlockingLimiter {
+		githubRepo = NewNonBlockLimiterRepositories(githubRepo)
+	} else if config.enableBlockingLimiter {
+		githubRepo = NewBlockLimiterRepositories(githubRepo)
+	}
+
+	return &BranchProtectionRepository{
+		githubRepo: githubRepo,
+	}
+}
+
 // GetOwnerName retrieves the owner name of the given org and repo name
-func GetOwnerName(ctx context.Context, githubRepo Repositories, orgName, repoName string) (string, error) {
+func (bp *BranchProtectionRepository) GetOwnerName(ctx context.Context, orgName, repoName string) (string, error) {
 	repoName = CleanGithubRepoName(repoName)
 	log.Debugf("GetOwnerName : getting owner name for org %s and repoName : %s", orgName, repoName)
 	listOpt := &githubpkg.RepositoryListByOrgOptions{
@@ -44,7 +169,7 @@ func GetOwnerName(ctx context.Context, githubRepo Repositories, orgName, repoNam
 		},
 	}
 	for {
-		repos, resp, err := githubRepo.ListByOrg(ctx, orgName, listOpt)
+		repos, resp, err := bp.githubRepo.ListByOrg(ctx, orgName, listOpt)
 		if err != nil {
 			if ok, wErr := checkAndWrapForKnownErrors(resp, err); ok {
 				return "", wErr
@@ -78,9 +203,9 @@ func GetOwnerName(ctx context.Context, githubRepo Repositories, orgName, repoNam
 }
 
 // GetDefaultBranchForRepo helps with pulling the default branch for the given repo
-func GetDefaultBranchForRepo(ctx context.Context, githubRepo Repositories, owner, repoName string) (string, error) {
+func (bp *BranchProtectionRepository) GetDefaultBranchForRepo(ctx context.Context, owner, repoName string) (string, error) {
 	repoName = CleanGithubRepoName(repoName)
-	repo, resp, err := githubRepo.Get(ctx, owner, repoName)
+	repo, resp, err := bp.githubRepo.Get(ctx, owner, repoName)
 	if err != nil {
 		if ok, wErr := checkAndWrapForKnownErrors(resp, err); ok {
 			return "", wErr
@@ -99,9 +224,9 @@ func GetDefaultBranchForRepo(ctx context.Context, githubRepo Repositories, owner
 }
 
 // GetProtectedBranch fetches the protected branch details
-func GetProtectedBranch(ctx context.Context, githubRepo Repositories, owner, repoName, protectedBranchName string) (*githubpkg.Protection, error) {
+func (bp *BranchProtectionRepository) GetProtectedBranch(ctx context.Context, owner, repoName, protectedBranchName string) (*githubpkg.Protection, error) {
 	repoName = CleanGithubRepoName(repoName)
-	protection, resp, err := githubRepo.GetBranchProtection(ctx, owner, repoName, protectedBranchName)
+	protection, resp, err := bp.githubRepo.GetBranchProtection(ctx, owner, repoName, protectedBranchName)
 
 	if err != nil {
 		if ok, wErr := checkAndWrapForKnownErrors(resp, err); ok {
@@ -122,9 +247,9 @@ func GetProtectedBranch(ctx context.Context, githubRepo Repositories, owner, rep
 
 //EnableBranchProtection enables branch protection if not enabled and makes sure passed arguments such as enforceAdmin
 //statusChecks are applied. The operation makes sure it doesn't override the existing checks.
-func EnableBranchProtection(ctx context.Context, githubRepo Repositories, owner, repoName, branchName string, enforceAdmin bool, enableStatusChecks, disableStatusChecks []string) error {
+func (bp *BranchProtectionRepository) EnableBranchProtection(ctx context.Context, owner, repoName, branchName string, enforceAdmin bool, enableStatusChecks, disableStatusChecks []string) error {
 	repoName = CleanGithubRepoName(repoName)
-	protectedBranch, err := GetProtectedBranch(ctx, githubRepo, owner, repoName, branchName)
+	protectedBranch, err := bp.GetProtectedBranch(ctx, owner, repoName, branchName)
 	if err != nil && !errors.Is(err, ErrBranchNotProtected) {
 		return fmt.Errorf("fetching the protected branch for repo : %s : %w", repoName, err)
 	}
@@ -134,7 +259,7 @@ func EnableBranchProtection(ctx context.Context, githubRepo Repositories, owner,
 		return fmt.Errorf("creating branch protection request failed : %v", err)
 	}
 
-	_, resp, err := githubRepo.UpdateBranchProtection(ctx, owner, repoName, branchName, branchProtectionRequest)
+	_, resp, err := bp.githubRepo.UpdateBranchProtection(ctx, owner, repoName, branchName, branchProtectionRequest)
 
 	if ok, wErr := checkAndWrapForKnownErrors(resp, err); ok {
 		return wErr
@@ -150,14 +275,26 @@ func createBranchProtectionRequest(protection *githubpkg.Protection, enableStatu
 	}
 	requiredStatusChecks := mergeStatusChecks(currentChecks, enableStatusChecks, disableStatusChecks)
 
-	branchProtection := &githubpkg.ProtectionRequest{
+	branchProtectionRequest := &githubpkg.ProtectionRequest{
 		RequiredStatusChecks: requiredStatusChecks,
 		EnforceAdmins:        enforceAdmin,
 	}
 
 	// don't have to check further in this case
 	if protection == nil {
-		return branchProtection, nil
+		return branchProtectionRequest, nil
+	}
+
+	if protection.RequireLinearHistory != nil {
+		branchProtectionRequest.RequireLinearHistory = swag.Bool(protection.RequireLinearHistory.Enabled)
+	}
+
+	if protection.AllowForcePushes != nil {
+		branchProtectionRequest.AllowForcePushes = swag.Bool(protection.AllowForcePushes.Enabled)
+	}
+
+	if protection.AllowDeletions != nil {
+		branchProtectionRequest.AllowDeletions = swag.Bool(protection.AllowDeletions.Enabled)
 	}
 
 	if protection.RequiredPullRequestReviews != nil {
@@ -166,7 +303,13 @@ func createBranchProtectionRequest(protection *githubpkg.Protection, enableStatu
 			return nil, fmt.Errorf("copying from protected branch to request failed : requiredPullRequestReviews : %v", err)
 		}
 
+		// github is not happy about null arrays, prefers empty arrays ...
+		//No subschema in "anyOf" matched.
+		//For 'properties/teams', nil is not an array.
+		//Not all subschemas of "allOf" matched.
+		var anyEnabled bool
 		if len(protection.RequiredPullRequestReviews.DismissalRestrictions.Users) > 0 {
+			anyEnabled = true
 			var users []string
 			for _, user := range protection.RequiredPullRequestReviews.DismissalRestrictions.Users {
 				users = append(users, *user.Login)
@@ -178,6 +321,7 @@ func createBranchProtectionRequest(protection *githubpkg.Protection, enableStatu
 		}
 
 		if len(protection.RequiredPullRequestReviews.DismissalRestrictions.Teams) > 0 {
+			anyEnabled = true
 			var teams []string
 			for _, team := range protection.RequiredPullRequestReviews.DismissalRestrictions.Teams {
 				teams = append(teams, *team.Slug)
@@ -188,12 +332,25 @@ func createBranchProtectionRequest(protection *githubpkg.Protection, enableStatu
 			pullRequestReviewEnforcement.DismissalRestrictionsRequest.Teams = &teams
 		}
 
-		branchProtection.RequiredPullRequestReviews = &pullRequestReviewEnforcement
+		if anyEnabled {
+			if pullRequestReviewEnforcement.DismissalRestrictionsRequest.Users == nil {
+				pullRequestReviewEnforcement.DismissalRestrictionsRequest.Users = &[]string{}
+			}
+
+			if pullRequestReviewEnforcement.DismissalRestrictionsRequest.Teams == nil {
+				pullRequestReviewEnforcement.DismissalRestrictionsRequest.Teams = &[]string{}
+			}
+
+		}
+
+		branchProtectionRequest.RequiredPullRequestReviews = &pullRequestReviewEnforcement
 	}
 
 	if protection.Restrictions != nil {
 		var restrictions githubpkg.BranchRestrictionsRequest
+		var anyEnabled bool
 		if len(protection.Restrictions.Users) > 0 {
+			anyEnabled = true
 			var users []string
 			for _, user := range protection.Restrictions.Users {
 				users = append(users, *user.Login)
@@ -202,6 +359,7 @@ func createBranchProtectionRequest(protection *githubpkg.Protection, enableStatu
 		}
 
 		if len(protection.Restrictions.Teams) > 0 {
+			anyEnabled = true
 			var teams []string
 			for _, team := range protection.Restrictions.Teams {
 				teams = append(teams, *team.Slug)
@@ -209,10 +367,34 @@ func createBranchProtectionRequest(protection *githubpkg.Protection, enableStatu
 			restrictions.Teams = teams
 		}
 
-		branchProtection.Restrictions = &restrictions
+		if len(protection.Restrictions.Apps) > 0 {
+			anyEnabled = true
+			var apps []string
+			for _, app := range protection.Restrictions.Apps {
+				apps = append(apps, *app.Slug)
+			}
+			restrictions.Apps = apps
+		}
+
+		// make sure we don't send nil arrays ...
+		if anyEnabled {
+			if restrictions.Users == nil {
+				restrictions.Users = []string{}
+			}
+
+			if restrictions.Teams == nil {
+				restrictions.Teams = []string{}
+			}
+
+			if restrictions.Apps == nil {
+				restrictions.Apps = []string{}
+			}
+		}
+
+		branchProtectionRequest.Restrictions = &restrictions
 	}
 
-	return branchProtection, nil
+	return branchProtectionRequest, nil
 }
 
 //mergeStatusChecks merges the current checks with the new ones and disable the ones that are specified

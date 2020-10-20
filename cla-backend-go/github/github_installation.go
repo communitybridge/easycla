@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v32/github"
 
 	"github.com/communitybridge/easycla/cla-backend-go/logging"
 )

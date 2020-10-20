@@ -28,7 +28,7 @@ require (
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.2 // indirect
-	github.com/google/go-github v17.0.0+incompatible
+	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/sessions v1.2.0 // indirect
 	github.com/imroc/req v0.3.0
@@ -55,12 +55,14 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/tencentyun/scf-go-lib v0.0.0-20200116145541-9a6ea1bf75b8
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
+	go.uber.org/ratelimit v0.1.0
 	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9 // indirect
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	golang.org/x/sys v0.0.0-20200622182413-4b0db7f3f76b // indirect
 	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/protobuf v1.24.0 // indirect
 	gopkg.in/ini.v1 v1.57.0 // indirect

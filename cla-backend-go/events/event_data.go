@@ -90,8 +90,9 @@ type CLATemplateCreatedEventData struct{}
 
 // GithubOrganizationAddedEventData . . .
 type GithubOrganizationAddedEventData struct {
-	GithubOrganizationName string
-	AutoEnabled            bool
+	GithubOrganizationName  string
+	AutoEnabled             bool
+	BranchProtectionEnabled bool
 }
 
 // GithubOrganizationDeletedEventData . . .
@@ -270,7 +271,10 @@ type ClaManagerAccessRequestDeletedEventData struct {
 type CLAGroupCreatedEventData struct{}
 
 // CLAGroupUpdatedEventData . . .
-type CLAGroupUpdatedEventData struct{}
+type CLAGroupUpdatedEventData struct {
+	ClaGroupName        string
+	ClaGroupDescription string
+}
 
 // CLAGroupDeletedEventData . . .
 type CLAGroupDeletedEventData struct{}
@@ -383,8 +387,8 @@ func (ed *CLATemplateCreatedEventData) GetEventDetailsString(args *LogEventArgs)
 
 // GetEventDetailsString . . .
 func (ed *GithubOrganizationAddedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user [%s] added github organization [%s] with auto-enabled: %t",
-		args.userName, ed.GithubOrganizationName, ed.AutoEnabled)
+	data := fmt.Sprintf("user [%s] added github organization [%s] with auto-enabled: %t, branch protection enabled: %t",
+		args.userName, ed.GithubOrganizationName, ed.AutoEnabled, ed.BranchProtectionEnabled)
 	return data, true
 }
 
@@ -558,8 +562,8 @@ func (ed *CLAGroupCreatedEventData) GetEventDetailsString(args *LogEventArgs) (s
 
 // GetEventDetailsString . . .
 func (ed *CLAGroupUpdatedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user [%s] has updated CLA Group [%s - %s]",
-		args.userName, args.projectName, args.ProjectID)
+	data := fmt.Sprintf("user [%s] has updated CLA Group [%s - %s] with name: %s and/or description: %s",
+		args.userName, args.projectName, args.ProjectID, ed.ClaGroupName, ed.ClaGroupDescription)
 	return data, true
 }
 
@@ -725,8 +729,8 @@ func (ed *CLATemplateCreatedEventData) GetEventSummaryString(args *LogEventArgs)
 
 // GetEventSummaryString . . .
 func (ed *GithubOrganizationAddedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s added github organization %s with auto-enabled: %t",
-		args.userName, ed.GithubOrganizationName, ed.AutoEnabled)
+	data := fmt.Sprintf("user %s added github organization %s with auto-enabled: %t, branch protection enabled: %t",
+		args.userName, ed.GithubOrganizationName, ed.AutoEnabled, ed.BranchProtectionEnabled)
 	return data, true
 }
 
@@ -900,8 +904,7 @@ func (ed *CLAGroupCreatedEventData) GetEventSummaryString(args *LogEventArgs) (s
 
 // GetEventSummaryString . . .
 func (ed *CLAGroupUpdatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s has updated CLA Group %s",
-		args.userName, args.projectName)
+	data := fmt.Sprintf("user %s has updated CLA Group %s", args.userName, args.projectName)
 	return data, true
 }
 

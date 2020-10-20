@@ -70,14 +70,19 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 			if params.Body.AutoEnabled != nil {
 				autoEnabled = *params.Body.AutoEnabled
 			}
+			branchProtectionEnabled := false
+			if params.Body.BranchProtectionEnabled != nil {
+				branchProtectionEnabled = *params.Body.BranchProtectionEnabled
+			}
 			eventService.LogEvent(&events.LogEventArgs{
 				UserID:            claUser.UserID,
 				EventType:         events.GithubOrganizationAdded,
 				ExternalProjectID: params.ProjectSFID,
 				LfUsername:        claUser.LFUsername,
 				EventData: &events.GithubOrganizationAddedEventData{
-					GithubOrganizationName: *params.Body.OrganizationName,
-					AutoEnabled:            autoEnabled,
+					GithubOrganizationName:  *params.Body.OrganizationName,
+					AutoEnabled:             autoEnabled,
+					BranchProtectionEnabled: branchProtectionEnabled,
 				},
 			})
 			return github_organizations.NewAddProjectGithubOrganizationOK().WithPayload(result)

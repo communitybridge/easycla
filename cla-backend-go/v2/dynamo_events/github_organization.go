@@ -21,7 +21,7 @@ func (s *service) GitHubOrgAddedEvent(event events.DynamoDBEventRecord) error {
 		"functionName": "GitHubOrgAddedEvent",
 	}
 
-	log.WithFields(f).Debug("GitHubOrgAddedEvent called")
+	log.WithFields(f).Debug("processing event")
 	var newGitHubOrg github_organizations.GithubOrganization
 	err := unmarshalStreamImage(event.Change.NewImage, &newGitHubOrg)
 	if err != nil {
@@ -45,7 +45,7 @@ func (s *service) GitHubOrgUpdatedEvent(event events.DynamoDBEventRecord) error 
 		"functionName": "GitHubOrgUpdatedEvent",
 	}
 
-	log.WithFields(f).Debug("GitHubOrgUpdatedEvent called")
+	log.WithFields(f).Debug("processing event")
 	var newGitHubOrg, oldGitHubOrg github_organizations.GithubOrganization
 	err := unmarshalStreamImage(event.Change.NewImage, &newGitHubOrg)
 	if err != nil {
@@ -68,6 +68,47 @@ func (s *service) GitHubOrgUpdatedEvent(event events.DynamoDBEventRecord) error 
 	return nil
 }
 
+// GitHubOrgDeletedEvent github repository deleted event
+func (s *service) GitHubOrgDeletedEvent(event events.DynamoDBEventRecord) error {
+	ctx := utils.NewContext()
+	f := logrus.Fields{
+		"functionName":   "GitHubOrgDeletedEvent",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
+
+	log.WithFields(f).Debug("processing event")
+	var oldGitHubOrg github_organizations.GithubOrganization
+	err := unmarshalStreamImage(event.Change.OldImage, &oldGitHubOrg)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem unmarshalling the old github organization model from the deleted event")
+		return err
+	}
+
+	orgName := oldGitHubOrg.OrganizationName
+	f["organizationName"] = orgName
+
+	repoModels, err := s.repositoryService.GetRepositoriesByOrganizationName(ctx, orgName)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading repositories using org name: %s", orgName)
+		return err
+	}
+
+	if len(repoModels) == 0 {
+		log.WithFields(f).Debug("no repositories found for organization")
+		return nil
+	}
+
+	log.WithFields(f).Debugf("disabling %d repositories for organization: %s", len(repoModels), orgName)
+	for _, repo := range repoModels {
+		disableErr := s.repositoryService.DisableRepository(ctx, repo.RepositoryID)
+		if disableErr != nil {
+			log.WithFields(f).WithError(disableErr).Warnf("problem disabling repository: %s", repo.RepositoryName)
+		}
+	}
+
+	return nil
+}
+
 func (s *service) enableBranchProtectionForGithubOrg(f logrus.Fields, newGitHubOrg github_organizations.GithubOrganization) error {
 	// Locate the repositories already saved under this organization
 	log.WithFields(f).Debugf("loading repositories under the organization : %s", newGitHubOrg.OrganizationName)
@@ -84,23 +125,32 @@ func (s *service) enableBranchProtectionForGithubOrg(f logrus.Fields, newGitHubO
 		return clientErr
 	}
 
+	branchProtectionRepo := github.NewBranchProtectionRepository(gitHubClient.Repositories, github.EnableBlockingLimiter())
+
 	var eg errgroup.Group
+	// a pool of 5 concurrent workers
+	var workerTokens = make(chan struct{}, 5)
 	for _, repo := range repos {
 		// this is for goroutine local variables
 		repo := repo
+		// acquire a worker token to create a new goroutine
+		workerTokens <- struct{}{}
 		// Update the branch protection in a go routine...
 		eg.Go(func() error {
+			defer func() {
+				<-workerTokens // release the workerToken
+			}()
 			log.WithFields(f).Debugf("enabling branch protection for repository: %s", repo.RepositoryName)
 
 			log.WithFields(f).Debugf("looking up the default branch for the GitHub repository: %s...", repo.RepositoryName)
-			defaultBranch, branchErr := github.GetDefaultBranchForRepo(ctx, gitHubClient.Repositories, newGitHubOrg.OrganizationName, repo.RepositoryName)
+			defaultBranch, branchErr := branchProtectionRepo.GetDefaultBranchForRepo(ctx, newGitHubOrg.OrganizationName, repo.RepositoryName)
 			if branchErr != nil {
 				return branchErr
 			}
 
 			log.WithFields(f).Debugf("enabling branch protection on the default branch %s for the GitHub repository: %s...",
 				defaultBranch, repo.RepositoryName)
-			return github.EnableBranchProtection(ctx, gitHubClient.Repositories, newGitHubOrg.OrganizationName, repo.RepositoryName,
+			return branchProtectionRepo.EnableBranchProtection(ctx, newGitHubOrg.OrganizationName, repo.RepositoryName,
 				defaultBranch, true, []string{utils.GitHubBotName}, []string{})
 		})
 	}

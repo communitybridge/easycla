@@ -71,6 +71,7 @@
     "ionic-plugin-keyboard"
   ],
   "resolutions": {
+    "bl": "^1.2.3",
     "node-sass": "4.13.1",
     "mem": "^4.0.0",
     "tunnel-agent": "^0.6.0",
