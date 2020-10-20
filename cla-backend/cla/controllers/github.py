@@ -21,7 +21,7 @@ from cla.controllers.project import check_user_authorization
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import Event, UserPermissions, Repository, GitHubOrg
 from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client, get_email_service, \
-    get_email_sign_off_content, get_email_help_content, get_project_instance
+    get_email_sign_off_content, get_email_help_content, get_project_instance, append_email_help_sign_off_content
 from cla.models.event_types import EventType
 
 
@@ -585,9 +585,8 @@ def unable_to_do_cla_check_email_content(project, managers, repositories):
     <li>Then click "Configure" associated with the EasyCLA App</li>
     <li>Finally, click the "All Repositories" radio button option</li>
     </ul>
-    {get_email_help_content(project.get_version() == 'v2')}
-    {get_email_sign_off_content()}
     """
+    body = append_email_help_sign_off_content(body, project.get_version())
     # body = '<p>' + body.replace('\n', '<br>') + '</p>'
     recipients = []
     for manager in managers:
@@ -663,10 +662,10 @@ def auto_enabled_repository_email_content(project, managers, organization_name, 
     in the GitHub Online Help Pages</a>.</p>
     <p>{repo_pronoun_upper}:</p>
     {repo_content}
-    {get_email_help_content(project.get_version() == 'v2')}
-    {get_email_sign_off_content()}
     """
     body = '<p>' + body.replace('\n', '<br>') + '</p>'
+    body = append_email_help_sign_off_content(body, project.get_version())
+
     recipients = []
     for manager in managers:
         recipients.append(manager["email"])

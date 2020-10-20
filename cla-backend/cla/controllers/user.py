@@ -11,7 +11,8 @@ import cla
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import User, Company, Project, Event, CCLAWhitelistRequest
 from cla.models.event_types import EventType
-from cla.utils import get_user_instance, get_email_service, get_email_sign_off_content, get_email_help_content
+from cla.utils import get_user_instance, get_email_service, get_email_sign_off_content, get_email_help_content, \
+    append_email_help_sign_off_content
 
 
 def get_users():
@@ -173,10 +174,9 @@ def request_company_whitelist(user_id: str, company_id: str, user_name: str, use
 Console</a>, where you can approve this user's request by selecting the 'Manage Approved List' and adding the \
 contributor's email, the contributor's entire email domain, their GitHub ID or the entire GitHub Organization for the \
 repository. This will permit them to begin contributing to {project_name} on behalf of {company}.</p> \
-<p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p> \
-{get_email_help_content(project.get_version() == 'v2')}
-{get_email_sign_off_content()} \
+<p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p> 
 '''
+    body = append_email_help_sign_off_content(body, project.get_version())
 
     cla.log.debug(f'request_company_approval_list - sending email '
                   f'to recipient {recipient_name}/{recipient_email} '
