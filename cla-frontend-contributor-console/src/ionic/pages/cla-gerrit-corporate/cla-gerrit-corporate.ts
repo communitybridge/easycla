@@ -29,7 +29,7 @@ export class ClaGerritCorporatePage {
   companies: any;
   expanded: boolean = true;
   hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
- 
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -52,24 +52,18 @@ export class ClaGerritCorporatePage {
   }
 
   ngOnInit() {
-    this.getCompanies();
-    this.getUserInfo();
-    this.getProject();
-  }
-
-  ionViewCanEnter() {
-    if (!this.authService.isAuthenticated) {
-      setTimeout(() => this.redirectToLogin);
+    console.log(this.authService.loggedIn);
+    if (!this.authService.loggedIn) {
+      this.redirectToLogin();
+    } else {
+      this.getCompanies();
+      this.getUserInfo();
+      this.getProject();
     }
-    return this.authService.isAuthenticated;
   }
 
   redirectToLogin() {
-    // if (EnvConfig['lfx-header-enabled'] === "true") {
-    //   window.open(EnvConfig['landing-page'], '_self');
-    // } else {
     this.navCtrl.setRoot('LoginPage');
-    // }
   }
 
   getCompanies() {
@@ -164,12 +158,17 @@ export class ClaGerritCorporatePage {
   }
 
   getProject() {
-    this.claService.getGerrit(this.gerritId).subscribe((gerrit) => {
-      this.projectId = gerrit.project_id;
-
-      this.claService.getProjectWithAuthToken(gerrit.project_id).subscribe((project) => {
-        localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(project));
-      });
+    this.claService.getGerrit(this.gerritId).subscribe((response) => {
+      if (response.errors) {
+        console.error(response.errors);
+        // Redirect to error page.
+        this.redirectToLogin();
+      } else {
+        this.projectId = response.project_id;
+        this.claService.getProjectWithAuthToken(response.project_id).subscribe((project) => {
+          localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(project));
+        });
+      }
     });
   }
 
