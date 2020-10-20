@@ -1,8 +1,6 @@
-
-
 <cla-header title="CLA - Individual" hasShowBackBtn="true" (onToggle)="onClickToggle($event)"></cla-header>
 
-<ion-content>
+<ion-content *ngIf="hasLoggedIn">
   <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
     <header>
       <ion-grid>

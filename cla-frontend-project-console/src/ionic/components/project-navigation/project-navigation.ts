@@ -3,7 +3,6 @@
 
 import { Input, Component, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
 import { ViewController, NavController } from 'ionic-angular';
-import { RolesService } from '../../services/roles.service';
 
 @Component({
   selector: 'project-navigation',
@@ -27,29 +26,19 @@ export class ProjectNavigationComponent implements AfterViewChecked {
   @ViewChild('scrollLeft') scrollLeft: ElementRef;
   @ViewChild('scrollRight') scrollRight: ElementRef;
 
-  constructor(private navCtrl: NavController, private rolesService: RolesService, private viewCtrl: ViewController) {
+  constructor(
+    private navCtrl: NavController,
+    private viewCtrl: ViewController
+  ) {
     this.context;
     this.scrollChange = 40;
-    this.getDefaults();
-  }
-
-  getDefaults() {
-    this.userRoles = this.rolesService.userRoles;
   }
 
   ngOnInit() {
-    this.scrollArea.nativeElement.onscroll = function() {
+    this.generateNavItems();
+    this.scrollArea.nativeElement.onscroll = function () {
       this.checkScroll();
     }.bind(this);
-
-    this.rolesService.getUserRolesPromise().then((userRoles) => {
-      this.userRoles = userRoles;
-      this.generateNavItems();
-    });
-  }
-
-  ngOnDestroy() {
-    // remove scroll listener
   }
 
   ngAfterViewChecked() {
@@ -118,7 +107,7 @@ export class ProjectNavigationComponent implements AfterViewChecked {
       {
         label: 'CLA',
         page: 'ProjectClaPage',
-        access: this.userRoles.isAdmin
+        access: true
       }
     ];
   }

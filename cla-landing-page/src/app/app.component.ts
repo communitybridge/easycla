@@ -13,8 +13,7 @@ export class AppComponent implements OnInit {
   hasExpanded: boolean;
   links: any[];
 
-  constructor(
-  ) {
+  constructor() {
     this.hasExpanded = true;
     this.links = [
       {

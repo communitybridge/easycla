@@ -9,7 +9,6 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 import { CincoService } from '../services/cinco.service';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
 import { KeycloakHttp } from '../services/keycloak/keycloak.http';
-import { RolesService } from '../services/roles.service';
 import { S3Service } from '../services/s3.service';
 import { ClaService } from '../services/cla.service';
 import { HttpClient } from '../services/http-client';
@@ -26,7 +25,7 @@ export class MyApp {
 
   rootPage: any = AuthPage;
 
-  userRoles: any;
+  // userRoles: any;
   pages: Array<{
     icon?: string;
     access: boolean;
@@ -44,7 +43,6 @@ export class MyApp {
     private cincoService: CincoService,
     private keycloak: KeycloakService,
     private keycloakHttp: KeycloakHttp,
-    private rolesService: RolesService,
     public claService: ClaService,
     public s3service: S3Service,
     public http: Http,
@@ -75,25 +73,25 @@ export class MyApp {
     this.cincoService.setApiUrl(EnvConfig['cinco-api-url']);
     this.cincoService.setHttp(kcHttpClient);
 
-    this.authService.handleAuthentication();
-
     events.subscribe('nav:allProjects', () => {
       this.nav.setRoot('AllProjectsPage');
+    });
+
+    this.authService.checkSession.subscribe((loggedIn) => {
+      if (loggedIn) {
+        this.nav.setRoot('AllProjectsPage');
+      } else {
+        this.redirectToLogin();
+      }
     });
   }
 
   getDefaults() {
     this.pages = [];
-    this.userRoles = this.rolesService.userRoles;
     this.regeneratePagesMenu();
   }
 
   ngOnInit() {
-    this.rolesService.getUserRolesPromise().then((userRoles) => {
-      this.userRoles = userRoles;
-      this.regeneratePagesMenu();
-    });
-
     if (EnvConfig['lfx-header-enabled'] === "true") {
       this.mounted();
     }
@@ -106,6 +104,14 @@ export class MyApp {
       // this.statusBar.styleDefault();
       // this.splashScreen.hide();
     });
+  }
+
+  redirectToLogin() {
+    if (EnvConfig['lfx-header-enabled'] === "true") {
+      window.open(EnvConfig['landing-page'], '_self');
+    } else {
+      this.nav.setRoot('LoginPage');
+    }
   }
 
   mounted() {

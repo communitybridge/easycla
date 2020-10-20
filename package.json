@@ -8,6 +8,7 @@
     "install-aws-profile": "./scripts/install-aws-profile.sh"
   },
   "dependencies": {
+    "@auth0/auth0-spa-js": "^1.12.1",
     "graceful-fs": "^4.2.2",
     "serverless": "^2.6.0"
   },
