@@ -119,7 +119,8 @@ class DocuSign(signing_service_interface.SigningService):
         self.s3storage = S3Storage()
         self.s3storage.initialize(None)
 
-    def request_individual_signature(self, project_id, user_id, return_url=None):
+    def request_individual_signature(self, project_id, user_id, return_url=None, callback_url=None,
+                                     preferred_email=None):
         request_info = 'project: {project_id}, user: {user_id} with return_url: {return_url}'.format(
             project_id=project_id, user_id=user_id, return_url=return_url)
         cla.log.debug('Individual Signature - creating new signature for: {}'.format(request_info))
@@ -127,7 +128,7 @@ class DocuSign(signing_service_interface.SigningService):
         # Ensure this is a valid user
         user_id = str(user_id)
         try:
-            user = User()
+            user = User(preferred_email=preferred_email)
             user.load(user_id)
             cla.log.debug('Individual Signature - loaded user name: {}, '
                           'user email: {}, gh user: {}, gh id: {}'.
@@ -180,7 +181,8 @@ class DocuSign(signing_service_interface.SigningService):
                           format(latest_signature.get_signature_id()))
 
             # Re-generate and set the signing url - this will update the signature record
-            self.populate_sign_url(latest_signature, callback_url, default_values=default_cla_values)
+            self.populate_sign_url(latest_signature, callback_url, default_values=default_cla_values,
+                                   preferred_email=preferred_email)
 
             return {'user_id': user_id,
                     'project_id': project_id,
@@ -242,7 +244,8 @@ class DocuSign(signing_service_interface.SigningService):
         signature.set_signature_acl('github:{}'.format(user.get_user_github_id()))
 
         # Populate sign url
-        self.populate_sign_url(signature, callback_url, default_values=default_cla_values)
+        self.populate_sign_url(signature, callback_url, default_values=default_cla_values,
+                               preferred_email=preferred_email)
 
         # Save signature
         signature.save()
@@ -312,7 +315,7 @@ class DocuSign(signing_service_interface.SigningService):
                 return_url = gerrits[0].get_gerrit_url()
         except DoesNotExist as err:
             cla.log.error('Gerrit Instance not found by the given project ID: %s',
-                            project_id)
+                          project_id)
             return {'errors': {'project_id': str(err)}}
 
         try:
@@ -870,7 +873,8 @@ class DocuSign(signing_service_interface.SigningService):
                           authority_or_signatory_email=None,
                           send_as_email=False,
                           cla_manager_name=None, cla_manager_email=None,
-                          default_values: Optional[Dict[str, Any]] = None):  # pylint: disable=too-many-locals
+                          default_values: Optional[Dict[str, Any]] = None,
+                          preferred_email: str = None):  # pylint: disable=too-many-locals
 
         sig_type = signature.get_signature_reference_type()
 
@@ -885,7 +889,8 @@ class DocuSign(signing_service_interface.SigningService):
 
         # Depending on the signature type - we'll need either the company or the user record
         company = Company()
-        user = User()
+        #  by passing the preferred email we make sure the get_user_email will return it if present
+        user = User(preferred_email=preferred_email)
 
         # We use user name/email non-email docusign user ICLA
         user_signature_name = 'Unknown'
@@ -1748,7 +1753,7 @@ def create_default_company_values(company: Company,
     return values
 
 
-def create_default_individual_values(user: User) -> Dict[str, Any]:
+def create_default_individual_values(user: User, preferred_email: str = None) -> Dict[str, Any]:
     values = {}
 
     if user is None:
@@ -1758,7 +1763,7 @@ def create_default_individual_values(user: User) -> Dict[str, Any]:
         values['full_name'] = user.get_user_name()
         values['public_name'] = user.get_user_name()
 
-    if user.get_user_email() is not None:
+    if user.get_user_email(preferred_email=preferred_email) is not None:
         values['email'] = user.get_user_email()
 
     return values

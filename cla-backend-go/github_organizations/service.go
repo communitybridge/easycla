@@ -42,9 +42,12 @@ func NewService(repo Repository, ghRepository repositories.Repository) Service {
 
 func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
 	f := logrus.Fields{
-		"functionName":   "AddGithubOrganization",
-		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-		"projectSFID":    projectSFID,
+		"functionName":            "AddGithubOrganization",
+		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
+		"projectSFID":             projectSFID,
+		"organizationName":        input.OrganizationName,
+		"autoEnabled":             input.AutoEnabled,
+		"branchProtectionEnabled": input.BranchProtectionEnabled,
 	}
 	// Lookup the parent
 	parentProjectSFID, projErr := v2ProjectService.GetClient().GetParentProject(projectSFID)

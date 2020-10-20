@@ -19,6 +19,13 @@ func IsUserAuthorizedForOrganization(user *auth.User, companySFID string) bool {
 	return user.IsUserAuthorizedForOrganizationScope(companySFID)
 }
 
+// IsUserAuthorizedForProjectTree helper function for determining if the user is authorized for this project hierarchy/tree
+func IsUserAuthorizedForProjectTree(user *auth.User, projectSFID string) bool {
+	// Previously, we checked for user.Admin - admins should be in a separate role
+	// Previously, we checked for user.Allowed, which is currently not used (future flag that is currently not implemented)
+	return user.IsUserAuthorized(auth.Project, projectSFID, true)
+}
+
 // IsUserAuthorizedForProject helper function for determining if the user is authorized for this project
 func IsUserAuthorizedForProject(user *auth.User, projectSFID string) bool {
 	// Previously, we checked for user.Admin - admins should be in a separate role
@@ -26,11 +33,15 @@ func IsUserAuthorizedForProject(user *auth.User, projectSFID string) bool {
 	return user.IsUserAuthorizedForProjectScope(projectSFID)
 }
 
-// IsUserAuthorizedForProjectTree helper function for determining if the user is authorized for this project hierarchy/tree
-func IsUserAuthorizedForProjectTree(user *auth.User, projectSFID string) bool {
-	// Previously, we checked for user.Admin - admins should be in a separate role
-	// Previously, we checked for user.Allowed, which is currently not used (future flag that is currently not implemented)
-	return user.IsUserAuthorized(auth.Project, projectSFID, true)
+// IsUserAuthorizedForAnyProjects helper function for determining if the user is authorized for any of the specified projects
+func IsUserAuthorizedForAnyProjects(user *auth.User, projectSFIDs []string) bool {
+	for _, projectSFID := range projectSFIDs {
+		if IsUserAuthorizedForProject(user, projectSFID) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // IsUserAuthorizedForProjectOrganization helper function for determining if the user is authorized for this project organization scope

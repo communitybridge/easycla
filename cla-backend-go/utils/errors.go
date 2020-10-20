@@ -43,6 +43,26 @@ func (e *CLAGroupNotFound) Unwrap() error {
 	return e.Err
 }
 
+// CLAGroupNameConflict is an error model for CLA Group name conflicts
+type CLAGroupNameConflict struct {
+	CLAGroupID   string
+	CLAGroupName string
+	Err          error
+}
+
+// Error is an error string function for CLA Group not found errors
+func (e *CLAGroupNameConflict) Error() string {
+	if e.Err == nil {
+		return fmt.Sprintf("cla group ID: %s, name: %s, conflict", e.CLAGroupID, e.CLAGroupName)
+	}
+	return fmt.Sprintf("cla group ID: %s, name: %s, conflict, error: %+v", e.CLAGroupID, e.CLAGroupName, e.Err)
+}
+
+// Unwrap method returns its contained error
+func (e *CLAGroupNameConflict) Unwrap() error {
+	return e.Err
+}
+
 // CLAGroupICLANotConfigured is an error model for CLA Group ICLA not configured
 type CLAGroupICLANotConfigured struct {
 	CLAGroupID   string

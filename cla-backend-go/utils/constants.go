@@ -36,6 +36,9 @@ const TheLinuxFoundation = "The Linux Foundation"
 // XREQUESTID is the client request id - used to trace a client request through the system/logs
 const XREQUESTID = "x-request-id"
 
+// CLAProjectManagerRole CLA project manager role identifier
+const CLAProjectManagerRole = "project-manager"
+
 // CLADesigneeRole CLA manager designee role identifier
 const CLADesigneeRole = "cla-manager-designee"
 
@@ -47,6 +50,9 @@ const CLASignatoryRole = "cla-signatory"
 
 // Lead representing type of user
 const Lead = "lead"
+
+// ProjectScope is the ACS project scope
+const ProjectScope = "project"
 
 // ProjectOrgScope is the ACS project + organiztion scope
 const ProjectOrgScope = "project|organization"
