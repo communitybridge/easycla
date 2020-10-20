@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: MIT
 
 import { Component } from '@angular/core';
-import { IonicPage, NavParams } from 'ionic-angular';
+import { IonicPage, NavController } from 'ionic-angular';
 import { RolesService } from '../../services/roles.service';
 import { AuthService } from '../../services/auth.service';
+import { AUTH_ROUTE } from '../../services/auth.utils';
 
 @IonicPage({
   name: 'LoginPage',
@@ -15,26 +16,29 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: 'login.html'
 })
 export class LoginPage {
-  userRoles: any;
   canAccess: boolean;
 
   constructor(
-    public navParams: NavParams,
+    public navCtrl: NavController,
     public rolesService: RolesService,
     public authService: AuthService
-  ) {
-    this.userRoles = this.rolesService.userRoles;
-    this.rolesService.getUserRolesPromise().then((userRoles) => {
-      this.userRoles = userRoles;
-      this.canAccess = this.hasAccess();
-    });
-  }
-
-  hasAccess() {
-    return this.userRoles.isAuthenticated;
-  }
+  ) { }
 
   login() {
-    this.authService.login();
+    if (this.authService.loggedIn) {
+      const gerritId = localStorage.getItem('gerritId');
+      const claType = localStorage.getItem('gerritClaType');
+      if (claType == 'ICLA') {
+        this.navCtrl.setRoot('ClaGerritIndividualPage', { gerritId: gerritId });
+      } else if (claType == 'CCLA') {
+        this.navCtrl.setRoot('ClaGerritCorporatePage', { gerritId: gerritId });
+      } else {
+        console.log('Invalid URL : Login flow work only for Gerrit.');
+      }
+      localStorage.removeItem('gerritId');
+      localStorage.removeItem('gerritClaType');
+    } else {
+      this.authService.login(AUTH_ROUTE);
+    }
   }
 }

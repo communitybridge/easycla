@@ -38,11 +38,22 @@ export class MyApp {
     const localServicesMode = (process.env.USE_LOCAL_SERVICES || 'false').toLowerCase() === 'true';
     // Set true for local debugging using localhost (local ports set in claService)
     this.claService.isLocalTesting(localServicesMode);
-
     this.claService.setApiUrl(EnvConfig['cla-api-url']);
     this.claService.setHttp(httpClient);
 
-    this.authService.handleAuthentication();
+    this.authService.checkSession.subscribe((loggedIn) => {
+      if (loggedIn) {
+        const gerritId = localStorage.getItem('gerritId');
+        const claType = localStorage.getItem('gerritClaType');
+        if (claType == 'ICLA') {
+          this.nav.setRoot('ClaGerritIndividualPage', { gerritId: gerritId });
+        } else if (claType == 'CCLA') {
+          this.nav.setRoot('ClaGerritCorporatePage', { gerritId: gerritId });
+        }
+      } else {
+        this.nav.setRoot('LoginPage');
+      }
+    });
   }
 
   ngOnInit() {

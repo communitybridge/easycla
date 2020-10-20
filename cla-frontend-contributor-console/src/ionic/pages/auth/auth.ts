@@ -18,42 +18,33 @@ export class AuthPage {
 
   constructor(
     public navCtrl: NavController,
-    public navParams: NavParams,
     public authService: AuthService,
-    public rolesService: RolesService
   ) {
     this.gerritId = localStorage.getItem('gerritId');
     this.claType = localStorage.getItem('gerritClaType');
   }
 
-  ionViewDidEnter() {
-    setTimeout(() => {
-      this.rolesService
-        .getUserRolesPromise()
-        .then((userRoles) => {
-          if (userRoles.isAuthenticated) {
-            if (this.claType == 'ICLA') {
-              this.navCtrl.setRoot('ClaGerritIndividualPage', { gerritId: this.gerritId });
-            } else if (this.claType == 'CCLA') {
-              this.navCtrl.setRoot('ClaGerritCorporatePage', { gerritId: this.gerritId });
-            }
-            localStorage.removeItem('gerritId');
-            localStorage.removeItem('gerritClaType');
-          } else {
-            this.redirectToLogin();
-          }
-        })
-        .catch(() => {
-          this.redirectToLogin();
-        });
-    }, 2000);
+  ngOnInit() {
+    this.authService.redirectRoot.subscribe((target) => {
+      if (this.authService.loggedIn) {
+        if (this.claType == 'ICLA') {
+          this.navCtrl.setRoot('ClaGerritIndividualPage', { gerritId: this.gerritId });
+        } else if (this.claType == 'CCLA') {
+          this.navCtrl.setRoot('ClaGerritCorporatePage', { gerritId: this.gerritId });
+        }
+      } else {
+        console.log('Redirect to login');
+      }
+    });
   }
 
-  redirectToLogin() {
-    // if (EnvConfig['lfx-header-enabled'] === "true") {
-    //   window.open(EnvConfig['landing-page'], '_self');
-    // } else {
-      this.navCtrl.setRoot('LoginPage');
-    // }
+  redirectAsPerType() {
+    let url = `${window.location.origin}`;
+    if (this.claType == 'ICLA') {
+      url += '/#/cla/gerrit/project/' + this.gerritId + '/individual';
+    } else if (this.claType == 'CCLA') {
+      url += '/#/cla/gerrit/project/' + this.gerritId + '/corporate';
+    }
+    window.open(url, '_self');
   }
 }
