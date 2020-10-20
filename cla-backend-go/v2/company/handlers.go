@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/sirupsen/logrus"
@@ -23,23 +25,23 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-const (
-	//BadRequest error Response code
-	BadRequest = "400"
-	//Conflict error Response code
-	Conflict = "409"
-	// NotFound error Response code
-	NotFound = "404"
-)
-
 // Configure sets up the middleware handlers
 func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Company.IRepository, projectClaGroupRepo projects_cla_groups.Repository, LFXPortalURL string) { // nolint
 
+	const msgUnableToLoadCompany = "unable to load company external ID"
 	api.CompanyGetCompanyProjectClaManagersHandler = company.GetCompanyProjectClaManagersHandlerFunc(
 		func(params company.GetCompanyProjectClaManagersParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			f := logrus.Fields{
+				"functionName":   "CompanyGetCompanyProjectClaManagersHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"projectSFID":    params.ProjectSFID,
+				"companySFID":    params.CompanySFID,
+			}
+
+			log.WithFields(f).Debug("checking permissions")
 			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
 				return company.NewGetCompanyProjectClaManagersForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -50,15 +52,29 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(ctx, params.CompanySFID)
 			if err != nil {
+				msg := "unable to load company by SFID"
+				log.WithFields(f).WithError(err).Warn(msg)
 				if err == v1Company.ErrCompanyDoesNotExist {
-					return company.NewGetCompanyProjectClaManagersNotFound().WithXRequestID(reqID)
+					return company.NewGetCompanyProjectClaManagersNotFound().WithXRequestID(reqID).WithPayload(
+						utils.ErrorResponseNotFoundWithError(reqID, msg, err))
 				}
+				return company.NewGetCompanyProjectClaManagersNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, msg, err))
+			}
+			if comp == nil {
+				log.WithFields(f).WithError(err).Warn(msgUnableToLoadCompany)
+				return company.NewGetCompanyProjectClaManagersNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFound(reqID, msgUnableToLoadCompany))
 			}
 
 			result, err := service.GetCompanyProjectCLAManagers(ctx, comp.CompanyID, params.ProjectSFID)
 			if err != nil {
-				return company.NewGetCompanyProjectClaManagersBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+				msg := "unable to load company project CLA managers"
+				log.WithFields(f).WithError(err).Warn(msg)
+				return company.NewGetCompanyProjectClaManagersBadRequest().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 			}
+
 			return company.NewGetCompanyProjectClaManagersOK().WithXRequestID(reqID).WithPayload(result)
 		})
 
@@ -67,10 +83,20 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 		func(params company.GetCompanyCLAGroupManagersParams) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			f := logrus.Fields{
+				"functionName":   "CompanyGetCompanyCLAGroupManagersHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"claGroupID":     params.ClaGroupID,
+				"companyID":      params.CompanyID,
+			}
+
 			result, err := service.GetCompanyCLAGroupManagers(ctx, params.CompanyID, params.ClaGroupID)
 			if err != nil {
+				msg := "problem loading company CLA group managers"
+				log.WithFields(f).WithError(err).Warn(msg)
 				if err == v1Company.ErrCompanyDoesNotExist {
-					return company.NewGetCompanyCLAGroupManagersNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+					return company.NewGetCompanyCLAGroupManagersNotFound().WithXRequestID(reqID).WithPayload(
+						utils.ErrorResponseNotFoundWithError(reqID, msg, err))
 				}
 			}
 
@@ -82,6 +108,14 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			f := logrus.Fields{
+				"functionName":   "CompanyGetCompanyProjectActiveClaHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"projectSFID":    params.ProjectSFID,
+				"companySFID":    params.CompanySFID,
+			}
+
+			log.WithFields(f).Debug("checking permissions")
 			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
 				return company.NewGetCompanyProjectActiveClaForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 					Code: "403",
@@ -90,6 +124,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					XRequestID: reqID,
 				})
 			}
+
 			comp, err := v1CompanyRepo.GetCompanyByExternalID(ctx, params.CompanySFID)
 			if err != nil {
 				if err == v1Company.ErrCompanyDoesNotExist {
@@ -100,6 +135,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					})
 				}
 			}
+			if comp == nil {
+				log.WithFields(f).WithError(err).Warn(msgUnableToLoadCompany)
+				return company.NewGetCompanyProjectActiveClaNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFound(reqID, msgUnableToLoadCompany))
+			}
+
 			result, err := service.GetCompanyProjectActiveCLAs(ctx, comp.CompanyID, params.ProjectSFID)
 			if err != nil {
 				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
@@ -119,16 +160,23 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			f := logrus.Fields{
+				"functionName":   "CompanyGetCompanyProjectContributorsHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"projectSFID":    params.ProjectSFID,
+				"companySFID":    params.CompanySFID,
+			}
+
 			// PM - check if authorized by project scope - allow if PM has project ID scope that matches
 			// Contact,Community Program Manager,CLA Manager,CLA Manager Designee,Company Admin - check if authorized by organization scope - allow if {Contact,Community Program Manager,CLA Manager,CLA Manager Designee,Company Admin} has organization ID scope that matches
 			// CLA Manager - check if authorized by project|organization scope - allow if CLA Manager (for example) has project ID + org DI scope that matches
-			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) && !utils.IsUserAuthorizedForProject(authUser, params.ProjectSFID) && !utils.IsUserAuthorizedForProjectOrganization(authUser, params.ProjectSFID, params.CompanySFID) {
-				return company.NewGetCompanyProjectContributorsForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to get contributors with Project scope of %s or Project|Organization scope of %s | %s",
-						authUser.UserName, params.ProjectSFID, params.ProjectSFID, params.CompanySFID),
-					XRequestID: reqID,
-				})
+			log.WithFields(f).Debug("checking permissions")
+			if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, params.ProjectSFID, params.CompanySFID, projectClaGroupRepo) {
+				return company.NewGetCompanyProjectContributorsForbidden().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseForbidden(
+						reqID,
+						fmt.Sprintf("user %s does not have access to get contributors with Project scope of %s or Project|Organization scope of %s | %s",
+							authUser.UserName, params.ProjectSFID, params.ProjectSFID, params.CompanySFID)))
 			}
 
 			result, err := service.GetCompanyProjectContributors(ctx, params.ProjectSFID, params.CompanySFID, utils.StringValue(params.SearchTerm))
@@ -146,24 +194,37 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
-				return company.NewGetCompanyProjectClaForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAManager with Project|Organization scope of %s | %s",
-						authUser.UserName, params.ProjectSFID, params.CompanySFID),
-					XRequestID: reqID,
-				})
+			f := logrus.Fields{
+				"functionName":   "CompanyGetCompanyProjectClaHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"projectSFID":    params.ProjectSFID,
+				"companySFID":    params.CompanySFID,
 			}
+
+			log.WithFields(f).Debug("checking permissions")
+			if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, params.ProjectSFID, params.CompanySFID, projectClaGroupRepo) {
+				msg := fmt.Sprintf("user %s does not have access to CreateCLAManager with Project|Organization scope of %s | %s", authUser.UserName, params.ProjectSFID, params.CompanySFID)
+				log.WithFields(f).Warn(msg)
+				return company.NewGetCompanyProjectClaForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
+			}
+
+			log.WithFields(f).Debug("loading project company CLAs")
 			result, err := service.GetCompanyProjectCLA(ctx, authUser, params.CompanySFID, params.ProjectSFID)
 			if err != nil {
+				msg := "unable to load project company CLAs"
+				log.WithFields(f).WithError(err).Warn(msg)
 				if err == v1Company.ErrCompanyDoesNotExist {
-					return company.NewGetCompanyProjectClaNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+					return company.NewGetCompanyProjectClaNotFound().WithXRequestID(reqID).WithPayload(
+						utils.ErrorResponseNotFoundWithError(reqID, msg, err))
 				}
 				if err == ErrProjectNotFound {
-					return company.NewGetCompanyProjectClaNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+					return company.NewGetCompanyProjectClaNotFound().WithXRequestID(reqID).WithPayload(
+						utils.ErrorResponseNotFoundWithError(reqID, msg, err))
 				}
-				return company.NewGetCompanyProjectClaBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+				return company.NewGetCompanyProjectClaBadRequest().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 			}
+
 			return company.NewGetCompanyProjectClaOK().WithXRequestID(reqID).WithPayload(result)
 		})
 
@@ -171,17 +232,24 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 		func(params company.CreateCompanyParams) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			f := logrus.Fields{
+				"functionName":   "CompanyCreateCompanyHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"userID":         params.UserID,
+				"companyName":    aws.StringValue(params.Input.CompanyName),
+				"companyWebsite": aws.StringValue(params.Input.CompanyWebsite),
+			}
 			// No permissions needed - anyone can create a company
 
 			// Quick validation of the input parameters
+			log.WithFields(f).Debug("validating company name...")
 			if !utils.ValidCompanyName(*params.Input.CompanyName) {
-				return company.NewCreateCompanyBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:       "400",
-					Message:    "EasyCLA - 400 Bad Request - Company Name is not valid",
-					XRequestID: reqID,
-				})
+				msg := "company name is not valid"
+				log.WithFields(f).Warn(msg)
+				return company.NewCreateCompanyBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequest(reqID, msg))
 			}
 
+			log.WithFields(f).Debug("creating company...")
 			companyModel, err := service.CreateCompany(ctx, *params.Input.CompanyName, *params.Input.CompanyWebsite, params.Input.UserEmail.String(), params.UserID)
 			if err != nil {
 				log.Warnf("error returned from create company api: %+v", err)
@@ -202,22 +270,25 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 		func(params company.GetCompanyByNameParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			f := logrus.Fields{
+				"functionName":   "CompanyGetCompanyByNameHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"companyName":    params.CompanyName,
+			}
 			// Anyone can query for a company by name
 
+			log.WithFields(f).Debug("loading company by name")
 			companyModel, err := service.GetCompanyByName(ctx, params.CompanyName)
 			if err != nil {
-				log.Warnf("unable to locate company by name: %s, error: %+v", params.CompanyName, err)
-				return company.NewGetCompanyByNameBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+				msg := fmt.Sprintf("unable to locate company by name: %s", params.CompanyName)
+				log.WithFields(f).WithError(err).Warn(msg)
+				return company.NewGetCompanyByNameBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 			}
 
 			if companyModel == nil {
 				msg := fmt.Sprintf("unable to locate company by name: %s", params.CompanyName)
-				log.Warn(msg)
-				return company.NewGetCompanyByNameNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:       "400",
-					Message:    fmt.Sprintf("EasyCLA - 404 Not Found - %s", msg),
-					XRequestID: reqID,
-				})
+				log.WithFields(f).Warn(msg)
+				return company.NewGetCompanyByNameNotFound().WithXRequestID(reqID).WithPayload(utils.ErrorResponseNotFound(reqID, msg))
 			}
 
 			return company.NewGetCompanyByNameOK().WithXRequestID(reqID).WithPayload(companyModel)
@@ -228,29 +299,26 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			f := logrus.Fields{
+				"functionName":   "CompanyDeleteCompanyByIDHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"companyID":      params.CompanyID,
+			}
 
 			// Attempt to locate the company by ID
+			log.WithFields(f).Debug("loading company by ID")
 			companyModel, getErr := service.GetCompanyByID(ctx, params.CompanyID)
 			if getErr != nil {
-				msg := fmt.Sprintf("error returned from get company by ID: %s, error: %+v",
-					params.CompanyID, getErr)
-				log.Warn(msg)
-				return company.NewDeleteCompanyByIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:       "400",
-					Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
-					XRequestID: reqID,
-				})
+				msg := "unable to load company by ID"
+				log.WithFields(f).WithError(getErr).Warn(msg)
+				return company.NewDeleteCompanyByIDBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequestWithError(reqID, msg, getErr))
 			}
 
 			// Didn't find the company
 			if companyModel == nil {
 				msg := fmt.Sprintf("unable to locate company by ID: %s", params.CompanyID)
-				log.Warn(msg)
-				return company.NewDeleteCompanyByIDNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:       "404",
-					Message:    fmt.Sprintf("EasyCLA - 404 Not Found - %s", msg),
-					XRequestID: reqID,
-				})
+				log.WithFields(f).Warn(msg)
+				return company.NewDeleteCompanyByIDNotFound().WithXRequestID(reqID).WithPayload(utils.ErrorResponseNotFound(reqID, msg))
 			}
 
 			// No external ID assigned - unable to check permissions
@@ -258,11 +326,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				msg := fmt.Sprintf("company %s does not have an external SFID assigned - unable to validate permissions, company ID: %s",
 					companyModel.CompanyName, params.CompanyID)
 				log.Warn(msg)
-				return company.NewDeleteCompanyByIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:       "400",
-					Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
-					XRequestID: reqID,
-				})
+				return company.NewDeleteCompanyByIDBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequest(reqID, msg))
 			}
 
 			// finally, we can check permissions for the delete operation
@@ -270,11 +334,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				msg := fmt.Sprintf(" user %s does not have access to company %s with Organization scope of %s",
 					authUser.UserName, companyModel.CompanyName, companyModel.CompanyExternalID)
 				log.Warn(msg)
-				return company.NewDeleteCompanyByIDForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:       "403",
-					Message:    fmt.Sprintf("EasyCLA - 403 Forbidden - %s", msg),
-					XRequestID: reqID,
-				})
+				return company.NewDeleteCompanyByIDForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
 			}
 
 			err := service.DeleteCompanyByID(ctx, params.CompanyID)
@@ -291,29 +351,27 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			f := logrus.Fields{
+				"functionName":   "CompanyDeleteCompanyBySFIDHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"companySFID":    params.CompanySFID,
+			}
 
 			// Attempt to locate the company by external SFID
+			log.WithFields(f).Debug("loading company by SFID")
 			companyModel, getErr := service.GetCompanyBySFID(ctx, params.CompanySFID)
 			if getErr != nil {
 				msg := fmt.Sprintf("error returned from get company by SFID: %s, error: %+v",
 					params.CompanySFID, getErr)
-				log.Warn(msg)
-				return company.NewDeleteCompanyBySFIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:       "400",
-					Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
-					XRequestID: reqID,
-				})
+				log.WithFields(f).Warn(msg)
+				return company.NewDeleteCompanyBySFIDBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequestWithError(reqID, msg, getErr))
 			}
 
 			// Didn't find the company
 			if companyModel == nil {
 				msg := fmt.Sprintf("unable to locate company by SFID: %s", params.CompanySFID)
-				log.Warn(msg)
-				return company.NewDeleteCompanyBySFIDNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:       "400",
-					Message:    fmt.Sprintf("EasyCLA - 404 Not Found - %s", msg),
-					XRequestID: reqID,
-				})
+				log.WithFields(f).Warn(msg)
+				return company.NewDeleteCompanyBySFIDNotFound().WithXRequestID(reqID).WithPayload(utils.ErrorResponseNotFound(reqID, msg))
 			}
 
 			// This should never ever happen given we searched by this key, keep it here anyway
@@ -321,30 +379,24 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			if companyModel.CompanyExternalID == "" {
 				msg := fmt.Sprintf("company %s does not have an external SFID assigned - unable to validate permissions, company ID: %s",
 					companyModel.CompanyName, params.CompanySFID)
-				log.Warn(msg)
-				return company.NewDeleteCompanyBySFIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:       "400",
-					Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - %s", msg),
-					XRequestID: reqID,
-				})
+				log.WithFields(f).Warn(msg)
+				return company.NewDeleteCompanyBySFIDBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequest(reqID, msg))
 			}
 
 			// finally, we can check permissions for the delete operation
+			log.WithFields(f).Debug("checking permissions")
 			if !utils.IsUserAuthorizedForOrganization(authUser, companyModel.CompanyExternalID) {
 				msg := fmt.Sprintf(" user %s does not have access to company %s with Organization scope of %s",
 					authUser.UserName, companyModel.CompanyName, companyModel.CompanyExternalID)
-				log.Warn(msg)
-				return company.NewDeleteCompanyBySFIDForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Code:       "403",
-					Message:    fmt.Sprintf("EasyCLA - 403 Forbidden - %s", msg),
-					XRequestID: reqID,
-				})
+				log.WithFields(f).Warn(msg)
+				return company.NewDeleteCompanyBySFIDForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
 			}
 
 			err := service.DeleteCompanyBySFID(ctx, params.CompanySFID)
 			if err != nil {
-				log.Warnf("unable to delete company by SFID: %s, error: %+v", params.CompanySFID, err)
-				return company.NewDeleteCompanyBySFIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+				msg := "unable to delete company by SFID"
+				log.WithFields(f).Warn(msg)
+				return company.NewDeleteCompanyBySFIDBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 			}
 
 			return company.NewDeleteCompanyBySFIDNoContent().WithXRequestID(reqID)
@@ -354,13 +406,24 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 		func(params company.ContributorAssociationParams) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			f := logrus.Fields{
+				"functionName":   "CompanyContributorAssociationHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"companySFID":    params.CompanySFID,
+				"userEmail":      params.Body.UserEmail.String(),
+			}
+
+			log.WithFields(f).Debug("associating contributor")
 			contributor, contributorErr := service.AssociateContributor(ctx, params.CompanySFID, params.Body.UserEmail.String())
 			if contributorErr != nil {
 				if _, ok := contributorErr.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
-					formatErr := errors.New("user already assigned contributor role for company")
+					msg := "user already assigned contributor role for company"
+					formatErr := errors.New(msg)
+					log.WithFields(f).WithError(formatErr).Warn(msg)
 					return company.NewContributorAssociationConflict().WithXRequestID(reqID).WithPayload(errorResponse(reqID, formatErr))
 				}
-				return company.NewContributorAssociationBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, contributorErr))
+				return company.NewContributorAssociationBadRequest().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseBadRequestWithError(reqID, "unable to associate user with company", contributorErr))
 			}
 			return company.NewContributorAssociationOK().WithXRequestID(reqID).WithPayload(contributor)
 		})
@@ -369,10 +432,21 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 		func(params company.GetCompanyAdminsParams) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			f := logrus.Fields{
+				"functionName":   "CompanyContributorAssociationHandler",
+				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+				"companySFID":    params.CompanySFID,
+			}
+
+			log.WithFields(f).Debug("loading company admins")
 			adminList, adminErr := service.GetCompanyAdmins(ctx, params.CompanySFID)
 			if adminErr != nil {
-				return company.NewGetCompanyAdminsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, adminErr))
+				msg := "unable to load company admins"
+				log.WithFields(f).WithError(adminErr).Warn(msg)
+				return company.NewGetCompanyAdminsBadRequest().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseBadRequestWithError(reqID, msg, adminErr))
 			}
+
 			return company.NewGetCompanyAdminsOK().WithXRequestID(reqID).WithPayload(adminList)
 		})
 
@@ -395,43 +469,32 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 				msg := fmt.Sprintf("Error getting SF projects for claGroup: %s ", params.ClaGroupID)
 				log.WithFields(f).Warn(msg)
 				return company.NewContributorRoleScopAssociationBadRequest().WithXRequestID(reqID).WithPayload(
-					&models.ErrorResponse{
-						Message:    msg,
-						Code:       BadRequest,
-						XRequestID: reqID,
-					})
+					utils.ErrorResponseBadRequestWithError(reqID, msg, getErr))
 			}
 			log.WithFields(f).Debugf("found %d project IDs for CLA group", len(projectCLAGroups))
 			if len(projectCLAGroups) == 0 {
 				msg := fmt.Sprintf("no projects associated with CLA Group: %s", params.ClaGroupID)
 				log.WithFields(f).Warn(msg)
 				return company.NewContributorRoleScopAssociationNotFound().WithXRequestID(reqID).WithPayload(
-					&models.ErrorResponse{
-						Message:    msg,
-						Code:       BadRequest,
-						XRequestID: reqID,
-					})
-
+					utils.ErrorResponseNotFound(reqID, msg))
 			}
 
+			log.WithFields(f).Debug("associating contributor by CLA Group")
 			contributor, msg, err := service.AssociateContributorByGroup(ctx, params.CompanySFID, params.Body.UserEmail.String(), projectCLAGroups, params.ClaGroupID)
 			if err != nil {
 				if err == ErrContributorConflict {
 					return company.NewContributorRoleScopAssociationConflict().WithXRequestID(reqID).WithPayload(
 						&models.ErrorResponse{
 							Message:    msg,
-							Code:       Conflict,
+							Code:       utils.String409,
 							XRequestID: reqID,
 						})
 				}
 				log.WithFields(f).Warn(msg)
 				return company.NewContributorRoleScopAssociationBadRequest().WithXRequestID(reqID).WithPayload(
-					&models.ErrorResponse{
-						Message:    msg,
-						Code:       BadRequest,
-						XRequestID: reqID,
-					})
+					utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 			}
+
 			return company.NewContributorRoleScopAssociationOK().WithXRequestID(reqID).WithPayload(&models.Contributors{
 				List: contributor,
 			})
@@ -476,4 +539,117 @@ func errorResponse(reqID string, err error) *models.ErrorResponse {
 	}
 
 	return &e
+}
+
+// isUserHaveAccessToCLAProjectOrganization is a helper function to determine if the user has access to the specified project and organization
+func isUserHaveAccessToCLAProjectOrganization(ctx context.Context, authUser *auth.User, projectSFID, organizationSFID string, projectClaGroupsRepo projects_cla_groups.Repository) bool {
+	f := logrus.Fields{
+		"functionName":     "isUserHaveAccessToCLAProjectOrganization",
+		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
+		"projectSFID":      projectSFID,
+		"organizationSFID": organizationSFID,
+		"userName":         authUser.UserName,
+		"userEmail":        authUser.Email,
+	}
+
+	log.WithFields(f).Debug("testing if user has access to project SFID...")
+	if utils.IsUserAuthorizedForProject(authUser, projectSFID) {
+		log.WithFields(f).Debug("user has access to project SFID...")
+		return true
+	}
+
+	log.WithFields(f).Debug("testing if user has access to project SFID tree...")
+	if utils.IsUserAuthorizedForProjectTree(authUser, projectSFID) {
+		log.WithFields(f).Debug("user has access to project SFID tree...")
+		return true
+	}
+
+	log.WithFields(f).Debug("testing if user has access to project SFID and organization SFID...")
+	if utils.IsUserAuthorizedForProjectOrganization(authUser, projectSFID, organizationSFID) {
+		log.WithFields(f).Debug("user has access to project SFID and organization SFID...")
+		return true
+	}
+
+	log.WithFields(f).Debug("testing if user has access to project SFID and organization SFID tree...")
+	if utils.IsUserAuthorizedForProjectOrganizationTree(authUser, projectSFID, organizationSFID) {
+		log.WithFields(f).Debug("user has access to project SFID and organization SFID tree...")
+		return true
+	}
+
+	log.WithFields(f).Debug("testing if user has access to organization SFID...")
+	if utils.IsUserAuthorizedForOrganization(authUser, organizationSFID) {
+		log.WithFields(f).Debug("user has access to organization SFID...")
+		return true
+	}
+
+	// No luck so far...let's load up the Project => CLA Group mapping and check to see if the user has access to the
+	// other projects or the parent project group/foundation
+
+	log.WithFields(f).Debug("user doesn't have direct access to the project only, project + organization, or organization only - loading CLA Group from project id...")
+	projectCLAGroupModel, err := projectClaGroupsRepo.GetClaGroupIDForProject(projectSFID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading project -> cla group mapping - returning false")
+		return false
+	}
+	if projectCLAGroupModel == nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading project -> cla group mapping - no mapping found - returning false")
+		return false
+	}
+
+	// Check the foundation permissions
+	f["foundationSFID"] = projectCLAGroupModel.FoundationSFID
+	log.WithFields(f).Debug("testing if user has access to parent foundation...")
+	if utils.IsUserAuthorizedForProject(authUser, projectCLAGroupModel.FoundationSFID) {
+		log.WithFields(f).Debug("user has access to parent foundation...")
+		return true
+	}
+	log.WithFields(f).Debug("testing if user has access to parent foundation truee...")
+	if utils.IsUserAuthorizedForProjectTree(authUser, projectCLAGroupModel.FoundationSFID) {
+		log.WithFields(f).Debug("user has access to parent foundation tree...")
+		return true
+	}
+
+	log.WithFields(f).Debug("testing if user has access to foundation SFID and organization SFID...")
+	if utils.IsUserAuthorizedForProjectOrganization(authUser, projectCLAGroupModel.FoundationSFID, organizationSFID) {
+		log.WithFields(f).Debug("user has access to foundation SFID and organization SFID...")
+		return true
+	}
+
+	log.WithFields(f).Debug("testing if user has access to foundation SFID and organization SFID tree...")
+	if utils.IsUserAuthorizedForProjectOrganizationTree(authUser, projectCLAGroupModel.FoundationSFID, organizationSFID) {
+		log.WithFields(f).Debug("user has access to foundation SFID and organization SFID tree...")
+		return true
+	}
+
+	// Lookup the other project IDs associated with this CLA Group
+	log.WithFields(f).Debug("looking up other projects associated with the CLA Group...")
+	projectCLAGroupModels, err := projectClaGroupsRepo.GetProjectsIdsForClaGroup(projectCLAGroupModel.ClaGroupID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID - returning false")
+		return false
+	}
+
+	projectSFIDs := getProjectIDsFromModels(f, projectCLAGroupModel.FoundationSFID, projectCLAGroupModels)
+	f["projectIDs"] = strings.Join(projectSFIDs, ",")
+	log.WithFields(f).Debug("testing if user has access to any cla group project + organization")
+	if utils.IsUserAuthorizedForAnyProjectOrganization(authUser, projectSFIDs, organizationSFID) {
+		log.WithFields(f).Debug("user has access to at least of of the projects...")
+		return true
+	}
+
+	log.WithFields(f).Debug("exhausted project checks - user does not have access to project")
+	return false
+}
+
+// getProjectIDsFromModels is a helper function to extract the project SFIDs from the project CLA Group models
+func getProjectIDsFromModels(f logrus.Fields, foundationSFID string, projectCLAGroupModels []*projects_cla_groups.ProjectClaGroup) []string {
+	// Build a list of projects associated with this CLA Group
+	log.WithFields(f).Debug("building list of project IDs associated with the CLA Group...")
+	var projectSFIDs []string
+	projectSFIDs = append(projectSFIDs, foundationSFID)
+	for _, projectCLAGroupModel := range projectCLAGroupModels {
+		projectSFIDs = append(projectSFIDs, projectCLAGroupModel.ProjectSFID)
+	}
+	log.WithFields(f).Debugf("%d projects associated with the CLA Group...", len(projectSFIDs))
+	return projectSFIDs
 }

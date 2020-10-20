@@ -3,16 +3,19 @@
 
 package utils
 
-// String400 string version of 400
+// String400 string version of 400 - http bad request
 const String400 = "400"
 
-// String403 string version of 403
+// String403 string version of 403 - http not authorized
 const String403 = "403"
 
-// String404 string version of 404
+// String404 string version of 404 - http not found
 const String404 = "404"
 
-// String500 string version of 500
+// String409 string version of 409 - http conflict
+const String409 = "409"
+
+// String500 string version of 500 - http internal server error
 const String500 = "500"
 
 // EasyCLA400BadRequest common string for handler bad request error messages
