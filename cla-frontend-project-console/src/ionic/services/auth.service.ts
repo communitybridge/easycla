@@ -1,14 +1,14 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import createAuth0Client from '@auth0/auth0-spa-js';
 import Auth0Client from '@auth0/auth0-spa-js/dist/typings/Auth0Client';
-import { Observable, BehaviorSubject, Subject } from 'rxjs';
-import { tap, catchError, concatMap, shareReplay, mergeMap } from 'rxjs/operators';
-import { from } from 'rxjs/observable/from';
-import { of } from 'rxjs/observable/of';
-import { combineLatest } from 'rxjs/observable/combineLatest';
-import { reject } from 'lodash';
-import { AUTH_ROUTE } from './auth.utils';
-import { EnvConfig } from './cla.env.utils';
+import {BehaviorSubject, Observable, Subject} from 'rxjs';
+import {catchError, concatMap, shareReplay, tap} from 'rxjs/operators';
+import {from} from 'rxjs/observable/from';
+import {of} from 'rxjs/observable/of';
+import {combineLatest} from 'rxjs/observable/combineLatest';
+import {reject} from 'lodash';
+import {AUTH_ROUTE} from './auth.utils';
+import {EnvConfig} from './cla.env.utils';
 
 @Injectable()
 export class AuthService {
@@ -20,11 +20,12 @@ export class AuthService {
   loggedIn = false;
   redirectRoot: Subject<any> = new Subject<any>();
   checkSession: Subject<any> = new Subject<any>();
+  currentHref = window.location.href;
 
   auth0Options = {
     clientId: EnvConfig['auth0-clientId'],
     domain: EnvConfig['auth0-domain'],
-    redirectUri: `${window.location.origin}` + AUTH_ROUTE, // *info from allowed_logout_urls
+    // redirectUri: `${window.location.origin}` //+ AUTH_ROUTE, // *info from allowed_logout_urls
   };
 
   // Create an observable of Auth0 instance of client
@@ -32,9 +33,10 @@ export class AuthService {
     createAuth0Client({
       domain: this.auth0Options.domain,
       client_id: this.auth0Options.clientId,
-      redirect_uri: this.auth0Options.redirectUri,
-      cacheLocation: 'memory',
-      useRefreshTokens: true,
+      // Luis said turn off for now
+      // redirect_uri: this.auth0Options.redirectUri,
+      //cacheLocation: 'memory',
+      //useRefreshTokens: true,
     })
   ) as Observable<Auth0Client>).pipe(
     shareReplay(1), // Every subscription receives the same shared value
@@ -43,6 +45,7 @@ export class AuthService {
       return reject(err);
     })
   );
+
   // Define observables for SDK methods that return promises by default
   // For each Auth0 SDK method, first ensure the client instance is ready
   // concatMap: Using the client instance, call SDK method; SDK returns a promise
@@ -50,14 +53,16 @@ export class AuthService {
   isAuthenticated$ = this.auth0Client$.pipe(
     concatMap((client: Auth0Client) => from(client.isAuthenticated())),
     tap((res: any) => {
-      // *info: once isAuthenticated$ responses , SSO sessiong is loaded
+      // *info: once isAuthenticated$ responses , SSO session is loaded
       this.loading$.next(false);
       this.loggedIn = res;
     })
   );
+
   handleRedirectCallback$ = this.auth0Client$.pipe(
-    concatMap((client: Auth0Client) => from(client.handleRedirectCallback()))
-  );
+    concatMap((client: Auth0Client) =>
+      from(client.handleRedirectCallback(this.currentHref))
+    ));
 
 
   constructor() {
@@ -85,6 +90,7 @@ export class AuthService {
     // Set up local authentication streams
     const checkAuth$ = this.isAuthenticated$.pipe(
       concatMap((loggedIn: boolean) => {
+        console.log('localAuthSetup - loggedIn: ' + loggedIn);
         this.loggedIn = loggedIn;
         this.checkSession.next(loggedIn);
         if (loggedIn) {
@@ -92,7 +98,7 @@ export class AuthService {
           // NOTE: you could pass options here if needed
           return this.getUser$();
         }
-        // If not authenticated, retur\n stream that emits 'false'
+        // If not authenticated, return stream that emits 'false'
         return of(loggedIn);
       })
     );
@@ -135,6 +141,7 @@ export class AuthService {
       // Subscribe to authentication completion observable
       // Response will be an array of user and login status
       authComplete$.subscribe(() => {
+        console.log('redirecting to: ' + targetRoute);
         // Redirect to target route after callback processing
         this.redirectRoot.next(targetRoute);
       });
@@ -151,7 +158,7 @@ export class AuthService {
     // Ensure Auth0 client instance exists
     this.auth0Client$.subscribe((client: Auth0Client) => {
       // Call method to log out
-      let redirectUri = this.auth0Options.redirectUri;
+      let redirectUri = window.location.origin; // this.auth0Options.redirectUri;
       if (EnvConfig['lfx-header-enabled'] === "true") {
         redirectUri = EnvConfig['landing-page'];
       }
