@@ -744,15 +744,6 @@ jobs:
             echo "Stage is: ${STAGE}"
             echo "PROJECT_DIR=${PROJECT_DIR}"
 
-            echo "Building edge..."
-            pushd $PROJECT_DIR/edge
-            echo "Current directory is: `pwd`"
-            echo "Running install: 'yarn install'..."
-            yarn install
-            echo "Running build: 'yarn build'..."
-            yarn build
-            popd
-
             # Run the deploy scripts
             pushd ${PROJECT_DIR}
             echo "Current directory is: `pwd`"
@@ -763,8 +754,6 @@ jobs:
             yarn prebuild:${STAGE}
             echo "Running build..."
             yarn build
-            echo "Running export..."
-            yarn export
 
             echo "Running deploy in folder: `pwd`"
             SLS_DEBUG=* ../node_modules/serverless/bin/serverless.js deploy -s ${STAGE} -r ${AWS_REGION} --verbose
@@ -788,7 +777,6 @@ jobs:
       AWS_REGION: us-east-1
       STAGE: dev
       PROJECT_DIR: cla-landing-page
-      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
       PRODUCT_DOMAIN: dev.lfcla.com
 
   deployLandingFrontendStaging:
@@ -800,7 +788,6 @@ jobs:
       AWS_REGION: us-east-1
       STAGE: staging
       PROJECT_DIR: cla-landing-page
-      ROOT_DOMAIN: lfcla.staging.platform.linuxfoundation.org
       PRODUCT_DOMAIN: staging.lfcla.com
 
   deployLandingFrontendProd:
@@ -812,7 +799,6 @@ jobs:
       AWS_REGION: us-east-1
       STAGE: prod
       PROJECT_DIR: cla-landing-page
-      ROOT_DOMAIN: lfcla.platform.linuxfoundation.org
       PRODUCT_DOMAIN: lfcla.com
 
   functionalTestsTavern: &functionalTestsTavern
