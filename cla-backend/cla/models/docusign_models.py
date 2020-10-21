@@ -431,6 +431,10 @@ class DocuSign(signing_service_interface.SigningService):
                           f'{user.get_user_id()} '
                           f'associated with company {company.get_company_name()} for '
                           f'project {project.get_project_name()}')
+            event_summary_data = (f'user {user.get_user_name()}/'
+                          f'{user.get_github_username()} '
+                          f'associated with company {company.get_company_name()} for '
+                          f'project {project.get_project_name()}')
             Event.create_event(
                 event_type=EventType.UserAssociatedWithCompany,
                 event_company_id=company_id,
@@ -439,7 +443,7 @@ class DocuSign(signing_service_interface.SigningService):
                 event_project_name=project.get_project_name(),
                 event_user_id=user.get_user_id(),
                 event_data=event_data,
-                event_summary=event_data,
+                event_summary=event_summary_data,
                 contains_pii=True,
             )
 
