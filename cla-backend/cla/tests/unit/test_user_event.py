@@ -157,6 +157,7 @@ class TestRequestCompanyCCLA:
         manager = User(lf_username="harold", user_email="foo@gmail.com")
         Company.get_managers = Mock(return_value=[manager, ])
         event_data = f"Sent email to sign ccla for {project.get_project_name()}"
+        CCLAWhitelistRequest.save = Mock(return_value=None)
         user_controller.request_company_ccla(
             user.get_user_id(), email, company.get_company_id(), project.get_project_id()
         )
