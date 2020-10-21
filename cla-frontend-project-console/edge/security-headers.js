@@ -79,7 +79,9 @@ function generateCSP(env, isDevServer) {
         'connect-src': connectSources,
         'frame-ancestors': [NONE],
         'form-action': [NONE],
-        'worker-src': [SELF],
+        // If 'workder-src' is absent, the user agent will first look for the child-src directive, then the script-src
+        // directive, then finally for the default-src directive, when governing worker execution.
+        //'worker-src': [SELF],
         'base-uri': [SELF],
         // frame-src restricts what iframe's you can put on your website
         'frame-src': [SELF, 'data:',
