@@ -1,6 +1,12 @@
 service: cla-landing-page
 frameworkVersion: ^2.8.0
 
+package:
+  exclude:
+    - "**"
+  include:
+    - dist/landing-page/*
+
 provider:
   name: aws
   runtime: nodejs12.x
