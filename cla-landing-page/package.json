@@ -19,6 +19,7 @@
     "deploy:cloudfront:dev": "SLS_DEBUG=* PRODUCT_DOMAIN=dev.lfcla.com yarn sls deploy --stage='dev' --cloudfront=true --verbose",
     "deploy:frontend:dev": "SLS_DEBUG=* PRODUCT_DOMAIN=dev.lfcla.com yarn sls client deploy --stage='dev' --cloudfront=true --no-confirm --no-policy-change --no-config-change --verbose",
     "deploy:invalidate:dev": "SLS_DEBUG=* PRODUCT_DOMAIN=dev.lfcla.org yarn sls cloudfrontInvalidate --stage='dev' --region='us-east-1' --cloudfront='true' --verbose",
+    "deploy:dev": "SLS_DEBUG=* PRODUCT_DOMAIN=dev.lfcla.com yarn sls deploy --stage='dev' --cloudfront=true --verbose && SLS_DEBUG=* PRODUCT_DOMAIN=dev.lfcla.com yarn sls client deploy --stage='dev' --cloudfront=true --no-confirm --no-policy-change --no-config-change --verbose && SLS_DEBUG=* PRODUCT_DOMAIN=dev.lfcla.org yarn sls cloudfrontInvalidate --stage='dev' --region='us-east-1' --cloudfront='true' --verbose",
     "remove:dev": "SLS_DEBUG=* yarn sls remove --stage='dev' --region='us-east-1' --verbose",
     "deploy:cloudfront:staging": "SLS_DEBUG=* PRODUCT_DOMAIN=staging.lfcla.com yarn sls deploy --stage='staging' --cloudfront=true --verbose",
     "deploy:frontend:staging": "SLS_DEBUG=* PRODUCT_DOMAIN=staging.lfcla.com yarn sls client deploy --stage='staging' --cloudfront=true --no-confirm --no-policy-change --no-config-change --verbose",
