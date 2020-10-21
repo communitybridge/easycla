@@ -1,3 +1,5 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
 module github.com/communitybridge/easycla/infra/ssm
 
 go 1.14
