@@ -9,7 +9,8 @@ package:
 
 provider:
   name: aws
-  runtime: nodejs8.10 # https://aws.amazon.com/about-aws/whats-new/2018/05/lambda-at-edge-adds-support-for-node-js-v8-10/
+  #runtime: nodejs8.10 # https://aws.amazon.com/about-aws/whats-new/2018/05/lambda-at-edge-adds-support-for-node-js-v8-10/
+  runtime: nodejs12.x
   region: us-east-1 # Region can't be configurable, lambda@edge is us-east-1 only.
   deploymentBucket:
     serverSideEncryption: AES256 # Make sure items are uploaded encrypted.
