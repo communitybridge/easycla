@@ -1,13 +1,6 @@
 service: cla-landing-page
 frameworkVersion: ^2.8.0
 
-# Only package lambda@edge function.
-package:
-  exclude:
-    - "**"
-  include:
-    - edge/dist/*
-
 provider:
   name: aws
   runtime: nodejs12.x
