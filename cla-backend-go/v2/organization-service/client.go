@@ -44,7 +44,7 @@ func InitClient(APIGwURL string, eventService events.Service) {
 	organizationServiceClient = &Client{
 		cl: client.NewHTTPClientWithConfig(strfmt.Default, &client.TransportConfig{
 			Host:     APIGwURL,
-			BasePath: "organization-service/v1",
+			BasePath: "organization-service",
 			Schemes:  []string{"https"},
 		}),
 	}
