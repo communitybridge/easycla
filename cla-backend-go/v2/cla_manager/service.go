@@ -959,6 +959,10 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		"userEmail":      userEmail,
 		"name":           name}
 
+	if contributor.UserID == "" {
+		return nil, ErrCLAUserNotFound
+	}
+
 	claGroupModel, projectErr := s.projectService.GetCLAGroupByID(ctx, projectID)
 	if projectErr != nil || claGroupModel == nil {
 		log.WithFields(f).WithError(projectErr).Warn("problem loading CLA group by ID")

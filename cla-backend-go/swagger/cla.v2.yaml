@@ -2211,6 +2211,10 @@ paths:
           in: body
           schema:
             type: object
+            required:
+              - claGroupID
+              - userEmail
+              - name
             x-nullable: false
             title: CLA Manager Designee
             properties:
