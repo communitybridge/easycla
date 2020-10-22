@@ -255,19 +255,20 @@ func (cpm *CompanyProjectMetric) toModel() *models.CompanyProjectMetric {
 
 func (tcm *TotalCountMetrics) toModel() *models.TotalCountMetrics {
 	return &models.TotalCountMetrics{
-		ClaManagersCount:                  tcm.ClaManagersCount,
-		ContributorsCount:                 tcm.ContributorsCount,
-		CorporateContributorsCount:        tcm.CorporateContributorsCount,
-		CreatedAt:                         tcm.CreatedAt,
-		IndividualContributorsCount:       tcm.IndividualContributorsCount,
-		CompaniesCount:                    tcm.CompaniesCount,
 		ProjectsCount:                     tcm.ProjectsCount,
-		RepositoriesCount:                 tcm.RepositoriesCount,
+		IndividualContributorsCount:       tcm.IndividualContributorsCount,
 		CompaniesProjectContributionCount: tcm.CompaniesProjectContributionCount,
-		GerritRepositoriesCount:           tcm.GerritRepositoriesCount,
-		GithubRepositoriesCount:           tcm.GithubRepositoriesCount,
-		LfMembersCLACount:                 tcm.LfMembersCLACount,
-		NonLfMembersCLACount:              tcm.NonLfMembersCLACount,
+		ContributorsCount:                 tcm.ContributorsCount,
+		RepositoriesCount:                 tcm.RepositoriesCount,
+		CreatedAt:                         tcm.CreatedAt,
+		// Removed the following metrics per stakeholder request
+		//CorporateContributorsCount:        tcm.CorporateContributorsCount,
+		//ClaManagersCount:                  tcm.ClaManagersCount,
+		//GerritRepositoriesCount:           tcm.GerritRepositoriesCount,
+		//CompaniesCount:                    tcm.CompaniesCount,
+		//GithubRepositoriesCount:           tcm.GithubRepositoriesCount,
+		//LfMembersCLACount:                 tcm.LfMembersCLACount,
+		//NonLfMembersCLACount:              tcm.NonLfMembersCLACount,
 	}
 }
 

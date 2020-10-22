@@ -3651,42 +3651,48 @@ definitions:
   total-count-metrics:
     type: object
     properties:
-      corporateContributorsCount:
-        type: integer
-        x-omitempty: false
       individualContributorsCount:
         type: integer
         x-omitempty: false
-      claManagersCount:
-        type: integer
-        x-omitempty: false
+        example: 10
       contributorsCount:
         type: integer
         x-omitempty: false
+        example: 100
       projectsCount:
         type: integer
         x-omitempty: false
-      companiesCount:
-        type: integer
-        x-omitempty: false
+        example: 900
       repositoriesCount:
         type: integer
         x-omitempty: false
-      githubRepositoriesCount:
-        type: integer
-        x-omitempty: false
-      gerritRepositoriesCount:
-        type: integer
-        x-omitempty: false
+        example: 1000
       companiesProjectContributionCount:
         type: integer
         x-omitempty: false
-      lfMembersCLACount:
-        type: integer
-        x-omitempty: false
-      nonLfMembersCLACount:
-        type: integer
-        x-omitempty: false
+        example: 100
+      # Omitted the following metrics at the request of stakeholders:
+      #corporateContributorsCount:
+      #  type: integer
+      #  x-omitempty: false
+      #claManagersCount:
+      #  type: integer
+      #  x-omitempty: false
+      #companiesCount:
+      #  type: integer
+      #  x-omitempty: false
+      #githubRepositoriesCount:
+      #  type: integer
+      #  x-omitempty: false
+      #gerritRepositoriesCount:
+      #  type: integer
+      #  x-omitempty: false
+      #lfMembersCLACount:
+      #  type: integer
+      #  x-omitempty: false
+      #nonLfMembersCLACount:
+      #  type: integer
+      #  x-omitempty: false
       createdAt:
         type: string
     title: CLA total metrics
