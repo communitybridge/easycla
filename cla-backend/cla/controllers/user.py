@@ -308,6 +308,24 @@ def request_company_ccla(user_id, user_email, company_id, project_id):
         contains_pii=False,
     )
 
+    msg = (f'user github_id {user.get_user_github_id()}'
+           f'user github_username {user.get_user_github_username()}'
+           f'user email {user_email}'
+           f'for project {project_name}'
+           f'for company {company_name}')
+    cla.log.debug(f'creating CCLA approval request table entry for {msg}')
+    # Add an entry into the CCLA request table
+    ccla_whitelist_request = CCLAWhitelistRequest()
+    ccla_whitelist_request.set_request_id(str(uuid.uuid4()))
+    ccla_whitelist_request.set_company_name(company_name)
+    ccla_whitelist_request.set_project_name(project_name)
+    ccla_whitelist_request.set_user_github_id(user.get_user_github_id())
+    ccla_whitelist_request.set_user_github_username(user.get_user_github_username())
+    ccla_whitelist_request.set_user_emails({user_email})
+    ccla_whitelist_request.set_request_status("pending")
+    ccla_whitelist_request.save()
+    cla.log.debug(f'created CCLA approval request table entry for {msg}')
+
 
 def send_email_to_cla_manager(project, contributor_name, contributor_email, cla_manager_name, cla_manager_email,
                               company_name, account_exists):
