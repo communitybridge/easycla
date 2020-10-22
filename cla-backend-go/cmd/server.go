@@ -309,7 +309,7 @@ func server(localMode bool) http.Handler {
 	cla_manager.Configure(api, v1ClaManagerService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 	v2ClaManager.Configure(v2API, v2ClaManagerService, configFile.LFXPortalURL, projectClaGroupRepo, userRepo)
 	sign.Configure(v2API, v2SignService)
-	cla_groups.Configure(v2API, v2ClaGroupService, projectService, eventsService)
+	cla_groups.Configure(v2API, v2ClaGroupService, projectService, projectClaGroupRepo, eventsService)
 
 	userCreaterMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
