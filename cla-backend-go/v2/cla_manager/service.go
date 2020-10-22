@@ -68,6 +68,10 @@ var (
 	ErrScopeNotFound = errors.New("scope not found")
 	//ErrProjectSigned returns error if project already signed
 	ErrProjectSigned = errors.New("project already signed")
+	//ErrClaGroupNotFound returns error if cla group not found
+	ErrClaGroupNotFound = errors.New("cla group not found")
+	//ErrClaGroupBadRequest returns error if cla group bad request
+	ErrClaGroupBadRequest = errors.New("cla group bad request")
 )
 
 const (
@@ -955,6 +959,28 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		"userEmail":      userEmail,
 		"name":           name}
 
+	if contributor.UserID == "" {
+		return nil, ErrCLAUserNotFound
+	}
+
+	claGroupModel, projectErr := s.projectService.GetCLAGroupByID(ctx, projectID)
+	if projectErr != nil || claGroupModel == nil {
+		log.WithFields(f).WithError(projectErr).Warn("problem loading CLA group by ID")
+
+		var e *utils.CLAGroupNotFound
+		if errors.As(projectErr, &e) {
+			log.WithFields(f).WithError(projectErr).Warn("problem loading CLA group by ID - cla group not found")
+			return nil, ErrClaGroupNotFound
+
+		}
+		if errors.Is(projectErr, project.ErrProjectDoesNotExist) {
+			log.WithFields(f).WithError(projectErr).Warn("problem cla group not found")
+			return nil, ErrClaGroupNotFound
+		}
+		return nil, ErrClaGroupBadRequest
+
+	}
+
 	// Get project cla Group records
 	log.WithFields(f).Debugf("Getting SalesForce Projects for claGroup: %s ", projectID)
 	projectCLAGroups, getErr := s.projectCGRepo.GetProjectsIdsForClaGroup(projectID)
@@ -974,13 +1000,18 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 	// Get company
 	log.WithFields(f).Debugf("Get company for companyID: %s ", companyID)
 	companyModel, companyErr := s.companyService.GetCompany(ctx, companyID)
-	if companyErr != nil || companyModel.CompanyExternalID == "" {
+	if companyErr != nil {
 		msg := fmt.Sprintf("Problem getting company for companyID: %s ", companyID)
 		log.Warn(msg)
+		log.Error("company error ", companyErr)
 		if companyErr.Error() == "company does not exist" {
 			return nil, ErrCLACompanyNotFound
 		}
 		return nil, companyErr
+	}
+
+	if companyModel.CompanyExternalID == "" {
+		return nil, ErrCLACompanyNotFound
 	}
 
 	organization, orgErr := orgService.GetOrganization(companyModel.CompanyExternalID)
