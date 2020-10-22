@@ -216,7 +216,6 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		// Get Contributor details
 		user, userErr := easyCLAUserRepo.GetUser(params.UserID)
-
 		if userErr != nil {
 			msg := fmt.Sprintf("Problem getting user by ID : %s, error: %+v ", params.UserID, userErr)
 			return cla_manager.NewInviteCompanyAdminBadRequest().WithXRequestID(reqID).WithPayload(
@@ -227,7 +226,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				})
 		}
 
-		claManagerDesignees, err := service.InviteCompanyAdmin(ctx, params.Body.ContactAdmin, params.Body.CompanyID, params.Body.ClaGroupID, params.Body.UserEmail.String(), params.Body.Name, &user, LfxPortalURL)
+		claManagerDesignees, err := service.InviteCompanyAdmin(ctx, params.Body.ContactAdmin, params.Body.CompanyID, *params.Body.ClaGroupID, params.Body.UserEmail.String(), *params.Body.Name, &user, LfxPortalURL)
 
 		if err != nil {
 			statusCode := buildErrorStatusCode(err)
@@ -375,7 +374,7 @@ func buildErrorMessageDelete(params cla_manager.DeleteCLAManagerParams, err erro
 
 // buildErrorStatusCode helper function to build an error statusCodes
 func buildErrorStatusCode(err error) string {
-	if err == ErrNoOrgAdmins || err == ErrCLACompanyNotFound {
+	if err == ErrNoOrgAdmins || err == ErrCLACompanyNotFound || err == ErrClaGroupNotFound || err == ErrCLAUserNotFound {
 		return NotFound
 	}
 	// Check if user is already assigned scope/role
