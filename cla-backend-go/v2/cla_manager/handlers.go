@@ -375,7 +375,7 @@ func buildErrorMessageDelete(params cla_manager.DeleteCLAManagerParams, err erro
 
 // buildErrorStatusCode helper function to build an error statusCodes
 func buildErrorStatusCode(err error) string {
-	if err == ErrNoOrgAdmins || err == ErrCLACompanyNotFound {
+	if err == ErrNoOrgAdmins || err == ErrCLACompanyNotFound || err == ErrClaGroupNotFound {
 		return NotFound
 	}
 	// Check if user is already assigned scope/role
