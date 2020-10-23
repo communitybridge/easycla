@@ -16,6 +16,7 @@ import { HttpClient } from '../services/http-client';
 import { AuthService } from '../services/auth.service';
 import { AuthPage } from '../pages/auth/auth';
 import { EnvConfig } from '../services/cla.env.utils';
+import { LfxHeaderService } from '../services/lfx-header.service';
 
 @Component({
   templateUrl: 'app.html'
@@ -48,7 +49,8 @@ export class MyApp {
     public http: Http,
     public httpClient: HttpClient,
     public authService: AuthService,
-    public events: Events
+    public events: Events,
+    private lfxHeaderService: LfxHeaderService
   ) {
     this.getDefaults();
     this.initializeApp();
@@ -76,17 +78,6 @@ export class MyApp {
     events.subscribe('nav:allProjects', () => {
       this.nav.setRoot('AllProjectsPage');
     });
-
-    // this.authService.checkSession.subscribe((loggedIn) => {
-    //   console.log('authService.checkSession.subscribe: Logged in: ' + loggedIn);
-    //   if (loggedIn) {
-    //     console.log('Logged in, redirecting to AllProjectsPage');
-    //     this.nav.setRoot('AllProjectsPage');
-    //   } else {
-    //     console.log('Not logged in, redirecting to login');
-    //     this.redirectToLogin();
-    //   }
-    // });
   }
 
   getDefaults() {
@@ -107,14 +98,6 @@ export class MyApp {
       // this.statusBar.styleDefault();
       // this.splashScreen.hide();
     });
-  }
-
-  redirectToLogin() {
-    if (EnvConfig['lfx-header-enabled'] === "true") {
-      window.open(EnvConfig['landing-page'], '_self');
-    } else {
-      this.nav.setRoot('LoginPage');
-    }
   }
 
   mounted() {

@@ -30,15 +30,13 @@ export class AuthPage implements OnInit {
     });
 
     this.authService.checkSession.subscribe((loggedIn) => {
-      console.log('authService.checkSession.subscribe: Logged in: ' + loggedIn);
       if (loggedIn) {
-        console.log('Logged in, redirecting to AllProjectsPage');
         this.navCtrl.setRoot('AllProjectsPage');
       } else {
-        console.log('Not logged in, redirecting to login');
         this.redirectToLogin();
       }
     });
+
   }
 
   redirectToLogin() {
