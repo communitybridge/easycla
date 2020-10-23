@@ -1,8 +1,3 @@
-/**
- * updated: 2020-10-21
- * v0.0.3
- *
- */
 
 import { Injectable } from '@angular/core';
 import createAuth0Client from '@auth0/auth0-spa-js';
