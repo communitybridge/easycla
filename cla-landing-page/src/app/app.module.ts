@@ -13,6 +13,7 @@ import { AuthService } from './core/services/auth.service';
 import { HomeComponent } from './components/home/home.component';
 import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
 import { StorageService } from './core/services/storage.service';
+import { LfxHeaderService } from './core/services/lfx-header.service';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,7 @@ import { StorageService } from './core/services/storage.service';
     BrowserModule,
     AppRoutingModule
   ],
-  providers: [AuthService, StorageService],
+  providers: [AuthService, StorageService, LfxHeaderService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

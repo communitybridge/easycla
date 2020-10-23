@@ -765,17 +765,23 @@ def webhook_secret_validation(webhook_signature: str, data: bytes) -> bool:
     :param data:
     :return:
     """
-    cla.log.debug(f"webhook_secret_validation for signature {webhook_signature} and env : {cla.config.GITHUB_APP_WEBHOOK_SECRET}")
+    cla.log.debug(f"webhook_secret_validation for signature {webhook_signature}")
     if cla.config.GITHUB_APP_WEBHOOK_SECRET == "":
+        cla.log.warning('webhook_secret_validation - GITHUB_APP_WEBHOOK_SECRET is empty')
         raise RuntimeError("GITHUB_APP_WEBHOOK_SECRET is empty")
 
     if not webhook_signature:
+        cla.log.warning('webhook_secret_validation - webhook_signature not provided - '
+                        'unable to validate webhook callback')
         return False
 
     sha_name, signature = webhook_signature.split('=')
     if not sha_name == 'sha1':
+        cla.log.warning(f'webhook_secret_validation - unsupported sha_name: {sha_name} - '
+                        'unable to validate webhook callback')
         return False
 
+    cla.log.debug(f'webhook_secret_validation - calculating and comparing webhook secret...')
     mac = hmac.new(cla.config.GITHUB_APP_WEBHOOK_SECRET.encode('utf-8'), msg=data, digestmod='sha1')
     hex_digest = mac.hexdigest()
     return True if hmac.compare_digest(hex_digest, signature.strip()) else False

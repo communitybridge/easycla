@@ -8,6 +8,7 @@ import { FilterService } from '../../services/filter.service';
 import { Restricted } from '../../decorators/restricted';
 import { generalConstants } from '../../constants/general';
 import { EnvConfig } from '../../services/cla.env.utils';
+import { AuthService } from '../../services/auth.service';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -33,7 +34,8 @@ export class AllProjectsPage {
   constructor(
     public navCtrl: NavController,
     private claService: ClaService,
-    private filterService: FilterService
+    private filterService: FilterService,
+    public auth: AuthService
   ) {
     this.getDefaults();
   }
