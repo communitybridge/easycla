@@ -79,23 +79,6 @@ export class AuthService {
     } else {
       this.localAuthSetup();
     }
-    this.handlerReturnToAferlogout();
-  }
-
-  handlerReturnToAferlogout() {
-    console.log(' handlerReturnToAferlogout > ', this.currentHref);
-    const { query } = querystring.parseUrl(this.currentHref);
-    console.log('query ? ', { query });
-
-    const returnTo = query.returnTo;
-
-    console.log(' returnTo ? ', { returnTo });
-
-    if (returnTo) {
-      const target = this.getTargetRouteFromReturnTo(returnTo);
-      this.redirectRoot.next(target);
-      // this.router.navigate([target]);
-    }
   }
 
   // When calling, options can be passed if desired
@@ -207,29 +190,17 @@ export class AuthService {
   }
 
   logout() {
-    const { query, fragmentIdentifier } = querystring.parseUrl(
-      window.location.href,
-      { parseFragmentIdentifier: true }
-    );
-
-    const qs = {
-      ...query,
-      returnTo: window.location.href,
-    };
-
-    const searchStr = querystring.stringify(qs);
-    const searchPart = searchStr ? `?${searchStr}` : '';
-
-    const fragmentPart = fragmentIdentifier ? `#${fragmentIdentifier}` : '';
-
-    const request = {
-      client_id: this.auth0Options.clientId,
-      returnTo: `${window.location.origin}${searchPart}${fragmentPart}`,
-    };
-
-    this.auth0Client$.subscribe((client: Auth0Client) =>
-      client.logout(request)
-    );
+    this.auth0Client$.subscribe((client: Auth0Client) => {
+      // Call method to log out
+      let redirectUri = window.location.origin; // this.auth0Options.redirectUri;
+      if (EnvConfig['lfx-header-enabled'] === "true") {
+        redirectUri = EnvConfig['landing-page'];
+      }
+      client.logout({
+        client_id: this.auth0Options.clientId,
+        returnTo: redirectUri,
+      });
+    });
   }
 
   getTokenSilently$(options?): Observable<any> {
