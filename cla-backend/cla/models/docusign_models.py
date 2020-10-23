@@ -1149,6 +1149,10 @@ class DocuSign(signing_service_interface.SigningService):
             # Save signature
             signature.save()
 
+            # Update the repository provider with this change - this will update the comment (if necessary)
+            # and the status - do this early in the flow as the user will be immediately redirected back
+            update_repository_provider(installation_id, github_repository_id, change_request_id)
+
             # Send user their signed document.
             user = User()
             user.load(signature.get_signature_reference_id())
@@ -1170,6 +1174,7 @@ class DocuSign(signing_service_interface.SigningService):
             project_id = signature.get_signature_project_id()
             self.send_to_s3(document_data, project_id, signature_id, 'icla', user_id)
 
+            # Log the event
             try:
                 # Load the Project by ID and send audit event
                 project = Project()
@@ -1191,9 +1196,6 @@ class DocuSign(signing_service_interface.SigningService):
                        f'unable to send audit event, error: {err}')
                 cla.log.warning(msg)
                 return
-
-            # Update the repository provider with this change.
-            update_repository_provider(installation_id, github_repository_id, change_request_id)
 
     def signed_individual_callback_gerrit(self, content, user_id):
         cla.log.debug('signed_individual_callback_gerrit - '
