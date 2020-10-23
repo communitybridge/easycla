@@ -8,7 +8,6 @@ export function Restricted(restrictions: any) {
     target.prototype.ionViewCanEnter = function () {
       return this.auth.isAuthenticated$.pipe(
         tap((loggedIn) => {
-          console.log('loggedIn ' +loggedIn);
           if (!loggedIn) {
             this.auth.login('');
           }
