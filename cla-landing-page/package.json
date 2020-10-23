@@ -49,6 +49,7 @@
     "auth0-js": "^9.13.2",
     "aws-sdk": "^2.733.0",
     "bootstrap": "^4.4.0",
+    "query-string": "^6.13.6",
     "rxjs": "~6.5.4",
     "serverless": "^2.8.0",
     "serverless-aws-alias": "^1.8.0",
@@ -58,6 +59,7 @@
     "serverless-plugin-tracing": "^2.0.0",
     "serverless-pseudo-parameters": "^2.5.0",
     "tslib": "^1.10.0",
+    "url-parse": "^1.4.7",
     "zone.js": "~0.10.2"
   },
   "devDependencies": {
