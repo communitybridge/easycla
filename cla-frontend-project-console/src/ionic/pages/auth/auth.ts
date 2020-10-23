@@ -38,7 +38,7 @@ export class AuthPage implements AfterViewInit {
       } else {
         this.redirectToLogin();
       }
-    }, 3000); // Added delay to initialse auth service.
+    }, 5000); // Added delay to initialse auth service.
   }
 
   redirectToLogin() {

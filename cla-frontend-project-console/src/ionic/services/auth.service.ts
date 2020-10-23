@@ -29,7 +29,6 @@ export class AuthService {
   };
 
   currentHref = window.location.href;
-  checkSession: Subject<any> = new Subject<any>();
   redirectRoot: Subject<any> = new Subject<any>();
   loading$ = new BehaviorSubject<any>(true);
   // Create an observable of Auth0 instance of client
@@ -88,7 +87,6 @@ export class AuthService {
       concatMap((client: Auth0Client) => from(client.getUser(options))),
       tap((user) => {
         this.setSession(user);
-        this.checkSession.next(this.loggedIn);
         this.userProfileSubject$.next(user);
       })
     );
