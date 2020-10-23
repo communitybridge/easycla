@@ -3,6 +3,7 @@
 
 import { Component, OnInit } from '@angular/core';
 import { environment } from 'src/environments/environment';
+import { LfxHeaderService } from './core/services/lfx-header.service';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +14,9 @@ export class AppComponent implements OnInit {
   hasExpanded: boolean;
   links: any[];
 
-  constructor() {
+  constructor(
+    private lfxHeaderService: LfxHeaderService
+  ) {
     this.hasExpanded = true;
     this.links = [
       {
