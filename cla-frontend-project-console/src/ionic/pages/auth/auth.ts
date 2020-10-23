@@ -4,6 +4,7 @@
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { NavController } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
+import { EnvConfig } from '../../services/cla.env.utils';
 import { LfxHeaderService } from '../../services/lfx-header.service';
 
 /**
@@ -29,8 +30,9 @@ export class AuthPage implements AfterViewInit {
       window.history.replaceState(null, null, window.location.pathname);
       this.navCtrl.setRoot('AllProjectsPage');
     });
-    console.log(this.authService.loggedIn)
+
     this.lfxHeaderService.setUserInLFxHeader();
     this.navCtrl.setRoot('AllProjectsPage');
+
   }
 }
