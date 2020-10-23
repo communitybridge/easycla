@@ -57,9 +57,11 @@
     "ng2-pdf-viewer": "5.2.3",
     "ngx-pagination": "^4.1.0",
     "pdfjs-dist": "2.0.943",
+    "query-string": "^6.13.6",
     "rxjs": "5.5.2",
     "sw-toolbox": "3.6.0",
     "timsort": "^0.3.0",
+    "url-parse": "^1.4.7",
     "zone.js": "0.8.18"
   },
   "devDependencies": {

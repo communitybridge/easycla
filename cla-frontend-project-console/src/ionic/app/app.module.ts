@@ -22,6 +22,7 @@ import { ClaService } from '../services/cla.service';
 import { AuthService } from '../services/auth.service';
 import { AuthPage } from '../pages/auth/auth';
 import { MyApp } from './app.component';
+import { LfxHeaderService } from '../services/lfx-header.service';
 
 @NgModule({
   declarations: [MyApp, AuthPage],
@@ -41,6 +42,7 @@ import { MyApp } from './app.component';
     FilterService,
     ClaService,
     AuthService,
+    LfxHeaderService,
     { provide: ErrorHandler, useClass: IonicErrorHandler },
     {
       provide: KeycloakHttp,
@@ -49,4 +51,4 @@ import { MyApp } from './app.component';
     }
   ]
 })
-export class AppModule {}
+export class AppModule { }
