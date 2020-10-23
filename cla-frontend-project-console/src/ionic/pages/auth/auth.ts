@@ -28,5 +28,24 @@ export class AuthPage implements OnInit {
       window.history.replaceState(null, null, window.location.pathname);
       this.navCtrl.setRoot('AllProjectsPage');
     });
+
+    this.authService.checkSession.subscribe((loggedIn) => {
+      console.log('authService.checkSession.subscribe: Logged in: ' + loggedIn);
+      if (loggedIn) {
+        console.log('Logged in, redirecting to AllProjectsPage');
+        this.navCtrl.setRoot('AllProjectsPage');
+      } else {
+        console.log('Not logged in, redirecting to login');
+        this.redirectToLogin();
+      }
+    });
+  }
+
+  redirectToLogin() {
+    if (EnvConfig['lfx-header-enabled'] === "true") {
+      window.open(EnvConfig['landing-page'], '_self');
+    } else {
+      this.navCtrl.setRoot('LoginPage');
+    }
   }
 }
