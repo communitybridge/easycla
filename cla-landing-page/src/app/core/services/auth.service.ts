@@ -1,8 +1,3 @@
-/**
- * updated: 2020-10-21
- * v0.0.3
- *
- */
 
 import { Injectable } from '@angular/core';
 import createAuth0Client from '@auth0/auth0-spa-js';
@@ -19,14 +14,15 @@ import { tap, catchError, concatMap, shareReplay } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import * as querystring from 'query-string';
 import Url from 'url-parse';
+import { EnvConfig } from '../../config/cla-env-utils';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   auth0Options = {
-    domain: 'linuxfoundation-dev.auth0.com', // e.g linuxfoundation-dev.auth0.com
-    clientId: 'O8sQ4Jbr3At8buVR3IkrTRlejPZFWenI',
+    domain: EnvConfig.default['auth0-domain'], // e.g linuxfoundation-dev.auth0.com
+    clientId: EnvConfig.default['auth0-clientId'],
   };
 
   currentHref = window.location.href;
@@ -77,6 +73,7 @@ export class AuthService {
     } else {
       this.localAuthSetup();
     }
+    console.log(this.auth0Options);
     // this.handlerReturnToAferlogout();
   }
 
@@ -118,7 +115,7 @@ export class AuthService {
         }
         this.auth0Client$
           .pipe(concatMap((client: Auth0Client) => from(client.checkSession())))
-          .subscribe((data) => {});
+          .subscribe((data) => { });
         // If not authenticated, return stream that emits 'false'
         return of(loggedIn);
       })
