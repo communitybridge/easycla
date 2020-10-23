@@ -12,16 +12,16 @@ export class LfxHeaderService {
     }
 
     setUserInLFxHeader(): void {
-        const lfHeaderEl: any = document.getElementById('lfx-header');
-        if (!lfHeaderEl) {
-            return;
-        }
-
-        this.auth.userProfile$.subscribe((data) => {
-            if (data) {
-                lfHeaderEl.authuser = data;
+        setTimeout(() => {
+            const lfHeaderEl: any = document.getElementById('lfx-header');
+            if (!lfHeaderEl) {
+                return;
             }
-        });
-
+            this.auth.userProfile$.subscribe((data) => {
+                if (data) {
+                    lfHeaderEl.authuser = data;
+                }
+            });
+        }, 1000);
     }
 }
