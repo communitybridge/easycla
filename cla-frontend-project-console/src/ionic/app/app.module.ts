@@ -23,10 +23,11 @@ import { AuthService } from '../services/auth.service';
 import { AuthPage } from '../pages/auth/auth';
 import { MyApp } from './app.component';
 import { LfxHeaderService } from '../services/lfx-header.service';
+import { LayoutModule } from '../layout/layout.module';
 
 @NgModule({
   declarations: [MyApp, AuthPage],
-  imports: [BrowserModule, HttpModule, IonicModule.forRoot(MyApp)],
+  imports: [BrowserModule, HttpModule, IonicModule.forRoot(MyApp), LayoutModule],
   bootstrap: [IonicApp],
   entryComponents: [MyApp, AuthPage],
   providers: [
