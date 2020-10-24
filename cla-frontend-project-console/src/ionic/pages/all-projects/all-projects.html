@@ -9,7 +9,7 @@
     <h3 class="error-message" *ngIf="errorMessage && errorStatus === 401">
       {{ errorMessage }}
       <br>
-      <a href="#/login">Go back to login</a>
+      <a (click)="redirectToLogin()">Go back to login</a>
     </h3>
 
     <h3 class="get-access-label text-align-center" *ngIf="errorMessage && errorStatus !== 401">
