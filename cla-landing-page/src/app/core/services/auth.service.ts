@@ -15,6 +15,9 @@ import { Router } from '@angular/router';
 import * as querystring from 'query-string';
 import Url from 'url-parse';
 import { EnvConfig } from '../../config/cla-env-utils';
+import { AppSettings } from 'src/app/config/app-settings';
+import { REDIRECT_AUTH_ROUTE } from 'src/app/config/auth-utils';
+import { StorageService } from './storage.service';
 
 @Injectable({
   providedIn: 'root',
@@ -64,7 +67,11 @@ export class AuthService {
   // Create a local property for login status
   loggedIn = false;
 
-  constructor(private router: Router) {
+  constructor(
+    private router: Router,
+    private storageService: StorageService
+  ) {
+
     // On initial load, check authentication state with authorization server
     // Set up local auth streams if user is already authenticated
     const params = this.currentHref;
@@ -74,7 +81,7 @@ export class AuthService {
       this.localAuthSetup();
     }
     console.log(this.auth0Options);
-    // this.handlerReturnToAferlogout();
+    this.handlerReturnToAferlogout();
   }
 
   handlerReturnToAferlogout() {
@@ -192,7 +199,10 @@ export class AuthService {
         // Redirect to target route after callback processing
         // *info: this url change will remove the code and state from the URL
         // * this is need to avoid invalid state in the next refresh
-        this.router.navigate([targetRoute]);
+        // this.router.navigate([targetRoute]);
+        const type = JSON.parse(this.storageService.getItem('type'));
+        const redirectConsole = (type === 'Projects') ? AppSettings.PROJECT_CONSOLE_LINK : AppSettings.CORPORATE_CONSOLE_LINK;
+        window.open(EnvConfig.default[redirectConsole] + REDIRECT_AUTH_ROUTE, '_self');
       });
     }
   }
