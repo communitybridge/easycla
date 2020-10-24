@@ -4,8 +4,9 @@
 import { Component, Input } from '@angular/core';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { AppSettings } from 'src/app/config/app-settings';
-import { AUTH_ROUTE } from 'src/app/config/auth-utils';
+import { AUTH_ROUTE, REDIRECT_AUTH_ROUTE } from 'src/app/config/auth-utils';
 import { StorageService } from 'src/app/core/services/storage.service';
+import { EnvConfig } from 'src/app/config/cla-env-utils';
 
 @Component({
   selector: 'app-cla-console-section',
@@ -22,7 +23,9 @@ export class ClaConsoleSectionComponent {
 
   onClickProceed(type: string) {
     this.storageService.setItem('type', type);
-    this.authService.login(AUTH_ROUTE);
+    const redirectConsole = (type === 'Projects') ? AppSettings.PROJECT_CONSOLE_LINK : AppSettings.CORPORATE_CONSOLE_LINK;
+    window.open(EnvConfig.default[redirectConsole] + '#/authorize', '_self');
+    // this.authService.login('#/projects');
   }
 
   onClickRequestAccess() {

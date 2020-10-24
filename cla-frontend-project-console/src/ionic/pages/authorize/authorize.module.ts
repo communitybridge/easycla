@@ -4,12 +4,14 @@
 import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
 import { LayoutModule } from '../../layout/layout.module';
-import { AuthPage } from './auth';
+import { Authorize } from './authorize';
 
 @NgModule({
-  declarations: [],
-  imports: [IonicPageModule.forChild(AuthPage),
+  declarations: [Authorize],
+  imports: [
+    IonicPageModule.forChild(Authorize),
     LayoutModule
-  ]
+  ],
+  entryComponents: [Authorize]
 })
-export class AuthPageModule { }
+export class AuthorizeModule { }

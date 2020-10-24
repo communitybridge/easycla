@@ -136,8 +136,11 @@ export class AuthService {
     // Ensure Auth0 client instance exists
     this.auth0Client$.subscribe((client: Auth0Client) => {
       // Call method to log in
+      const type = JSON.parse(this.storageService.getItem('type'));
+      const redirectConsole = (type === 'Projects') ? AppSettings.PROJECT_CONSOLE_LINK : AppSettings.CORPORATE_CONSOLE_LINK;
       client.loginWithRedirect({
-        redirect_uri: `${window.location.origin}${window.location.search}`,
+        // redirect_uri: `${window.location.origin}${window.location.search}`,
+        redirect_uri: EnvConfig.default[redirectConsole],
         appState: { target: redirectPath },
       });
     });
@@ -200,9 +203,13 @@ export class AuthService {
         // *info: this url change will remove the code and state from the URL
         // * this is need to avoid invalid state in the next refresh
         // this.router.navigate([targetRoute]);
-        const type = JSON.parse(this.storageService.getItem('type'));
-        const redirectConsole = (type === 'Projects') ? AppSettings.PROJECT_CONSOLE_LINK : AppSettings.CORPORATE_CONSOLE_LINK;
-        window.open(EnvConfig.default[redirectConsole] + REDIRECT_AUTH_ROUTE, '_self');
+        if (targetRoute !== '/') {
+          const type = JSON.parse(this.storageService.getItem('type'));
+          const redirectConsole = (type === 'Projects') ? AppSettings.PROJECT_CONSOLE_LINK : AppSettings.CORPORATE_CONSOLE_LINK;
+          window.open(EnvConfig.default[redirectConsole] + REDIRECT_AUTH_ROUTE, '_self');
+        } else {
+          this.router.navigate([targetRoute]);
+        }
       });
     }
   }
