@@ -62,9 +62,7 @@ export class AuthService {
   // Create a local property for login status
   loggedIn = false;
 
-  constructor(
-
-  ) {
+  constructor() {
     // On initial load, check authentication state with authorization server
     // Set up local auth streams if user is already authenticated
     const params = this.currentHref;
@@ -73,8 +71,23 @@ export class AuthService {
     } else {
       this.localAuthSetup();
     }
+    this.handlerReturnToAferlogout();
   }
 
+  handlerReturnToAferlogout() {
+    console.log(' handlerReturnToAferlogout > ', this.currentHref);
+    const { query } = querystring.parseUrl(this.currentHref);
+    console.log('query ? ', { query });
+
+    const returnTo = query.returnTo;
+
+    console.log(' returnTo ? ', { returnTo });
+
+    if (returnTo) {
+      const target = this.getTargetRouteFromReturnTo(returnTo);
+      this.redirectRoot.next(target);
+    }
+  }
   // When calling, options can be passed if desired
   // https://auth0.github.io/auth0-spa-js/classes/auth0client.html#getuser
   getUser$(options?): Observable<any> {
@@ -88,6 +101,7 @@ export class AuthService {
   }
 
   private localAuthSetup() {
+    console.log('Local setup called');
     // This should only be called on app initialization
     // Set up local authentication streams
     const checkAuth$ = this.isAuthenticated$.pipe(
