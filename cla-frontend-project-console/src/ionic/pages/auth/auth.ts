@@ -31,8 +31,9 @@ export class AuthPage implements AfterViewInit {
       this.navCtrl.setRoot('AllProjectsPage');
     });
 
-    this.lfxHeaderService.setUserInLFxHeader();
-    this.navCtrl.setRoot('AllProjectsPage');
-
+    setTimeout(() => {
+      this.lfxHeaderService.setUserInLFxHeader();
+      this.navCtrl.setRoot('AllProjectsPage');
+    }, 2000);
   }
 }
