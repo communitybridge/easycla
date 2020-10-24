@@ -71,7 +71,7 @@ export class AuthService {
     } else {
       this.localAuthSetup();
     }
-    this.handlerReturnToAferlogout();
+    // this.handlerReturnToAferlogout();
   }
 
   handlerReturnToAferlogout() {
@@ -166,16 +166,19 @@ export class AuthService {
   private handleAuthCallback() {
     // Call when app reloads after user logs in with Auth0
     const params = this.currentHref;
-
+    console.log('In handleAuthCallback');
     if (params.includes('code=') && params.includes('state=')) {
+      console.log('Session found');
       let targetRoute: string; // Path to redirect to after login processsed
       const authComplete$ = this.handleRedirectCallback$.pipe(
         // Have client, now call method to handle auth callback redirect
         tap((cbRes: any) => {
           targetRoute = this.getTargetRouteFromAppState(cbRes.appState);
+          console.log(targetRoute);
         }),
         concatMap(() => {
           // Redirect callback complete; get user and login status
+          console.log('authComplete');
           return combineLatest([this.getUser$(), this.isAuthenticated$]);
         })
       );
