@@ -307,7 +307,14 @@ func (repo *repository) SearchEvents(params *eventOps.SearchEventsParams, pageSi
 
 // queryEventsTable queries events table on index
 func (repo *repository) queryEventsTable(indexName string, condition expression.KeyConditionBuilder, nextKey *string, pageSize *int64, all bool, searchTerm *string) (*models.EventList, error) {
-	f := logrus.Fields{"indexName": indexName, "nextKey": aws.StringValue(nextKey), "pageSize": aws.Int64Value(pageSize), "all": all, "searchTerm": aws.StringValue(searchTerm)}
+	f := logrus.Fields{
+		"indexName":  indexName,
+		"nextKey":    aws.StringValue(nextKey),
+		"pageSize":   aws.Int64Value(pageSize),
+		"all":        all,
+		"searchTerm": aws.StringValue(searchTerm),
+	}
+
 	log.WithFields(f).Debug("querying events table")
 	builder := expression.NewBuilder() // .WithProjection(buildProjection())
 	// The table we're interested in
@@ -354,6 +361,7 @@ func (repo *repository) queryEventsTable(indexName string, condition expression.
 			return nil, err
 		}
 	}
+
 	log.WithField("queryInput", *queryInput).Debug("query")
 	var lastEvaluatedKey string
 	events := make([]*models.Event, 0)
@@ -387,17 +395,20 @@ func (repo *repository) queryEventsTable(indexName string, condition expression.
 		} else {
 			events = append(events, eventsList...)
 		}
+
 		if len(results.LastEvaluatedKey) != 0 {
 			queryInput.ExclusiveStartKey = results.LastEvaluatedKey
 		} else {
 			break
 		}
+
 		if !all {
 			if int64(len(events)) >= *pageSize {
 				break
 			}
 		}
 	}
+
 	if !all {
 		if int64(len(events)) >= *pageSize {
 			events = events[0:*pageSize]
@@ -408,9 +419,16 @@ func (repo *repository) queryEventsTable(indexName string, condition expression.
 		}
 	}
 
+	if len(events) > 0 {
+		return &models.EventList{
+			Events:  events,
+			NextKey: lastEvaluatedKey,
+		}, nil
+	}
+
+	// Just return an empty response - no events - just an empty list, and no nextKey
 	return &models.EventList{
-		Events:  events,
-		NextKey: lastEvaluatedKey,
+		Events: []*models.Event{},
 	}, nil
 }
 
