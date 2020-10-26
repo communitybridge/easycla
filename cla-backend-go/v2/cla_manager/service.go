@@ -959,8 +959,9 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		"userEmail":      userEmail,
 		"name":           name}
 
-	if contributor.UserID == "" {
-		return nil, ErrCLAUserNotFound
+	validateError := validateInviteCompanyAdmin(contactAdmin, userEmail, name, contributor)
+	if validateError != nil {
+		return nil, validateError
 	}
 
 	claGroupModel, projectErr := s.projectService.GetCLAGroupByID(ctx, projectID)
@@ -1126,6 +1127,21 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 
 	return designeeScopes, nil
 
+}
+
+func validateInviteCompanyAdmin(contactAdmin bool, userEmail string, name string, contributor *v1User.User) error {
+	if contributor.UserID == "" {
+		return ErrCLAUserNotFound
+	}
+	if !contactAdmin {
+		if name == "" {
+			return errors.New("name is required")
+		}
+		if userEmail == "" {
+			return errors.New("email is required")
+		}
+	}
+	return nil
 }
 
 func (s *service) NotifyCLAManagers(ctx context.Context, notifyCLAManagers *models.NotifyClaManagerList) error {
