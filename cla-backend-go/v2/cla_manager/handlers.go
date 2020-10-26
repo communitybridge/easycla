@@ -226,7 +226,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				})
 		}
 
-		claManagerDesignees, err := service.InviteCompanyAdmin(ctx, params.Body.ContactAdmin, params.Body.CompanyID, *params.Body.ClaGroupID, params.Body.UserEmail.String(), *params.Body.Name, &user, LfxPortalURL)
+		claManagerDesignees, err := service.InviteCompanyAdmin(ctx, params.Body.ContactAdmin, params.Body.CompanyID, *params.Body.ClaGroupID, params.Body.UserEmail.String(), params.Body.Name, &user, LfxPortalURL)
 
 		if err != nil {
 			statusCode := buildErrorStatusCode(err)
