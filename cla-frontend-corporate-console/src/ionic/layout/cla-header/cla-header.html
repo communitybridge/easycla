@@ -24,7 +24,7 @@
       <ion-icon name="arrow-round-back"></ion-icon>
     </button>
     <ion-title>{{title}}</ion-title>
-    <img class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
+    <img *ngIf="!hasEnabledLFXHeader" class="navbar-logo" src="/assets/logo/cp_app_easycla.svg" alt="">
   </ion-toolbar>
-  <get-help></get-help>
+  <get-help *ngIf="!hasEnabledLFXHeader"></get-help>
 </ion-header>
