@@ -66,6 +66,7 @@ function generateCSP(env, isDevServer) {
       'https://s3.amazonaws.com/cla-project-logo-prod/',
       'https://s3.amazonaws.com/lf-master-project-logos-prod/',
       'https://lf-master-project-logos-prod.s3.us-east-2.amazonaws.com/',
+      'https://lh3.googleusercontent.com/',
     ],
     'script-src': scriptSources,
     'style-src': styleSources, // Unfortunately using Angular basically requires inline styles.
@@ -84,7 +85,10 @@ function generateCSP(env, isDevServer) {
       'https://cla-signature-files-staging.s3.amazonaws.com/',
       'https://s3.amazonaws.com/cla-project-logo-staging/',
       'https://cla-signature-files-prod.s3.amazonaws.com/',
-      'https://s3.amazonaws.com/cla-project-logo-prod/'
+      'https://s3.amazonaws.com/cla-project-logo-prod/',
+      'https://linuxfoundation-dev.auth0.com',
+      'https://linuxfoundation-staging.auth0.com',
+      'https://linuxfoundation.auth0.com'
     ],
     'child-src': [],
     'media-src': [],
