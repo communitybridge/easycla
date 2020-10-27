@@ -82,6 +82,7 @@ func (repo repository) AddGithubOrganization(ctx context.Context, parentProjectS
 		OrganizationSFID:           parentProjectSFID,
 		ProjectSFID:                projectSFID,
 		AutoEnabled:                aws.BoolValue(input.AutoEnabled),
+		AutoEnabledClaGroupID:      input.AutoEnabledClaGroupID,
 		BranchProtectionEnabled:    aws.BoolValue(input.BranchProtectionEnabled),
 		Version:                    "v1",
 	}

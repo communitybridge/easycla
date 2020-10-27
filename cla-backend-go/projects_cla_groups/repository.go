@@ -48,7 +48,7 @@ type Repository interface {
 	GetProjectsIdsForAllFoundation() ([]*ProjectClaGroup, error)
 	AssociateClaGroupWithProject(claGroupID string, projectSFID string, foundationSFID string) error
 	RemoveProjectAssociatedWithClaGroup(claGroupID string, projectSFIDList []string, all bool) error
-	getCLAGroupNameByID(claGroupID string) (string, error)
+	GetCLAGroupNameByID(claGroupID string) (string, error)
 
 	IsExistingFoundationLevelCLAGroup(foundationSFID string) (bool, error)
 	IsAssociated(projectSFID string, claGroupID string) (bool, error)
@@ -239,7 +239,7 @@ func (repo *repo) AssociateClaGroupWithProject(claGroupID string, projectSFID st
 	}
 
 	// Lookup the CLA Group name/Project Name
-	claGroupName, claGroupLookupErr := repo.getCLAGroupNameByID(claGroupID)
+	claGroupName, claGroupLookupErr := repo.GetCLAGroupNameByID(claGroupID)
 	if claGroupLookupErr != nil {
 		claGroupName = NotDefined
 		log.Warnf("unable to lookup CLA Group/Project by ID, error: %+v - using '%s'",
@@ -335,7 +335,7 @@ func (repo *repo) RemoveProjectAssociatedWithClaGroup(claGroupID string, project
 }
 
 // getCLAGroupNameByID helper function to fetch the CLA Group name
-func (repo *repo) getCLAGroupNameByID(claGroupID string) (string, error) {
+func (repo *repo) GetCLAGroupNameByID(claGroupID string) (string, error) {
 	tableName := fmt.Sprintf("cla-%s-projects", repo.stage)
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(tableName),

@@ -25,6 +25,7 @@ type Service interface {
 	AddGithubRepository(ctx context.Context, externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
 	EnableRepository(ctx context.Context, repositoryID string) error
 	DisableRepository(ctx context.Context, repositoryID string) error
+	UpdateClaGroupID(ctx context.Context, repositoryID, claGroupID string) error
 	ListProjectRepositories(ctx context.Context, externalProjectID string) (*models.ListGithubRepositories, error)
 	GetRepository(ctx context.Context, repositoryID string) (*models.GithubRepository, error)
 	DisableRepositoriesByProjectID(ctx context.Context, projectID string) (int, error)
@@ -51,6 +52,11 @@ func NewService(repo Repository, ghOrgRepo GithubOrgRepo, pcgRepo projects_cla_g
 		ghOrgRepo:             ghOrgRepo,
 		projectsClaGroupsRepo: pcgRepo,
 	}
+}
+
+// UpdateClaGroupID updates the claGroupID
+func (s *service) UpdateClaGroupID(ctx context.Context, repositoryID, claGroupID string) error {
+	return s.repo.UpdateClaGroupID(ctx, repositoryID, claGroupID)
 }
 
 func (s *service) AddGithubRepository(ctx context.Context, externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {

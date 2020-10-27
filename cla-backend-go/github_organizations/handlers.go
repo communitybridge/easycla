@@ -5,7 +5,10 @@ package github_organizations
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -50,6 +53,13 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 				})
 			}
 
+			if !validateAutoEnabledClaGroupID(params.Body.AutoEnabled, params.Body.AutoEnabledClaGroupID) {
+				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA - 400 Bad Request - AutoEnabledClaGroupID can't be empty when AutoEnabled",
+				})
+			}
+
 			_, err := github.GetOrganization(ctx, *params.Body.OrganizationName)
 			if err != nil {
 				return github_organizations.NewAddProjectGithubOrganizationNotFound().WithPayload(errorResponse(err))
@@ -63,6 +73,11 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
 					})
 				}
+
+				if errors.Is(err, projects_cla_groups.ErrCLAGroupDoesNotExist) {
+					return github_organizations.NewUpdateProjectGithubOrganizationConfigNotFound().WithPayload(errorResponse(err))
+				}
+
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
 			}
 
@@ -82,6 +97,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 				EventData: &events.GithubOrganizationAddedEventData{
 					GithubOrganizationName:  *params.Body.OrganizationName,
 					AutoEnabled:             autoEnabled,
+					AutoEnabledClaGroupID:   params.Body.AutoEnabledClaGroupID,
 					BranchProtectionEnabled: branchProtectionEnabled,
 				},
 			})
@@ -132,8 +148,18 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 				})
 			}
 
-			err := service.UpdateGithubOrganization(ctx, params.ProjectSFID, params.OrgName, *params.Body.AutoEnabled, params.Body.BranchProtectionEnabled)
+			if !validateAutoEnabledClaGroupID(params.Body.AutoEnabled, params.Body.AutoEnabledClaGroupID) {
+				return github_organizations.NewUpdateProjectGithubOrganizationConfigBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA - 400 Bad Request - AutoEnabledClaGroupID can't be empty when AutoEnabled",
+				})
+			}
+
+			err := service.UpdateGithubOrganization(ctx, params.ProjectSFID, params.OrgName, *params.Body.AutoEnabled, params.Body.AutoEnabledClaGroupID, params.Body.BranchProtectionEnabled)
 			if err != nil {
+				if errors.Is(err, projects_cla_groups.ErrCLAGroupDoesNotExist) {
+					return github_organizations.NewUpdateProjectGithubOrganizationConfigNotFound().WithPayload(errorResponse(err))
+				}
 				return github_organizations.NewUpdateProjectGithubOrganizationConfigBadRequest().WithPayload(errorResponse(err))
 			}
 
@@ -168,4 +194,13 @@ func errorResponse(err error) *models.ErrorResponse {
 	}
 
 	return &e
+}
+
+// validateAutoEnabledClaGroupID checks for validation if autoEnabled flag is on autoEnabledClaGroupID is enabled as well
+func validateAutoEnabledClaGroupID(autoEnabled *bool, autoEnabledClaGroupID string) bool {
+	if autoEnabled == nil || !*autoEnabled {
+		return true
+	}
+
+	return autoEnabledClaGroupID != ""
 }

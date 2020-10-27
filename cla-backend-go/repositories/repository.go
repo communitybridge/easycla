@@ -43,6 +43,7 @@ var (
 // Repository defines functions of Repositories
 type Repository interface {
 	AddGithubRepository(ctx context.Context, externalProjectID string, projectSFID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
+	UpdateClaGroupID(ctx context.Context, repositoryID, claGroupID string) error
 	EnableRepository(ctx context.Context, repositoryID string) error
 	DisableRepository(ctx context.Context, repositoryID string) error
 	DisableRepositoriesByProjectID(ctx context.Context, projectID string) error
@@ -70,7 +71,7 @@ type repo struct {
 }
 
 // AddGithubRepository adds the specified repository
-func (repo repo) AddGithubRepository(ctx context.Context, externalProjectID string, projectSFID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
+func (r repo) AddGithubRepository(ctx context.Context, externalProjectID string, projectSFID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":               "AddGithubRepository",
 		utils.XREQUESTID:             ctx.Value(utils.XREQUESTID),
@@ -83,7 +84,7 @@ func (repo repo) AddGithubRepository(ctx context.Context, externalProjectID stri
 	}
 
 	// Check first to see if the repository already exists
-	_, err := repo.getRepositoryByGithubID(ctx, utils.StringValue(input.RepositoryExternalID), true)
+	_, err := r.getRepositoryByGithubID(ctx, utils.StringValue(input.RepositoryExternalID), true)
 	if err != nil {
 		// Expecting Not found - no issue if not found - all other error we throw
 		if err != ErrGithubRepositoryNotFound {
@@ -122,9 +123,9 @@ func (repo repo) AddGithubRepository(ctx context.Context, externalProjectID stri
 	}
 
 	log.WithFields(f).Debug("creating repository entry")
-	_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
+	_, err = r.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
 		Item:      av,
-		TableName: aws.String(repo.repositoryTableName),
+		TableName: aws.String(r.repositoryTableName),
 	})
 	if err != nil {
 		log.WithFields(f).Warnf("cannot add github repository, error: %+v", err)
@@ -134,25 +135,30 @@ func (repo repo) AddGithubRepository(ctx context.Context, externalProjectID stri
 	return repository.toModel(), nil
 }
 
+// UpdateClaGroupID updates the claGroupID of the repository
+func (r *repo) UpdateClaGroupID(ctx context.Context, repositoryID, claGroupID string) error {
+	return r.setClaGroupIDGithubRepository(ctx, repositoryID, claGroupID)
+}
+
 // EnableRepository enables the repository entry
-func (repo *repo) EnableRepository(ctx context.Context, repositoryID string) error {
-	return repo.enableGithubRepository(ctx, repositoryID)
+func (r *repo) EnableRepository(ctx context.Context, repositoryID string) error {
+	return r.enableGithubRepository(ctx, repositoryID)
 }
 
 // DisableRepository disables the repository entry (we don't delete)
-func (repo *repo) DisableRepository(ctx context.Context, repositoryID string) error {
-	return repo.disableGithubRepository(ctx, repositoryID)
+func (r *repo) DisableRepository(ctx context.Context, repositoryID string) error {
+	return r.disableGithubRepository(ctx, repositoryID)
 }
 
-func (repo *repo) DisableRepositoriesByProjectID(ctx context.Context, projectID string) error {
-	repoModels, err := repo.getProjectRepositories(ctx, projectID, true)
+func (r *repo) DisableRepositoriesByProjectID(ctx context.Context, projectID string) error {
+	repoModels, err := r.getProjectRepositories(ctx, projectID, true)
 	if err != nil {
 		return err
 	}
 
 	// For each model...
 	for _, repoModel := range repoModels {
-		disableErr := repo.DisableRepository(ctx, repoModel.RepositoryID)
+		disableErr := r.DisableRepository(ctx, repoModel.RepositoryID)
 		if disableErr != nil {
 			return disableErr
 		}
@@ -162,14 +168,14 @@ func (repo *repo) DisableRepositoriesByProjectID(ctx context.Context, projectID 
 }
 
 // DisableRepositoriesOfGithubOrganization disables the repositories under the GitHub organization
-func (repo repo) DisableRepositoriesOfGithubOrganization(ctx context.Context, externalProjectID, githubOrgName string) error {
-	repoModels, err := repo.getRepositoriesByGithubOrg(ctx, githubOrgName)
+func (r repo) DisableRepositoriesOfGithubOrganization(ctx context.Context, externalProjectID, githubOrgName string) error {
+	repoModels, err := r.getRepositoriesByGithubOrg(ctx, githubOrgName)
 	if err != nil {
 		return err
 	}
 	for _, repoModel := range repoModels {
 		if repoModel.RepositoryExternalID == externalProjectID || repoModel.RepositorySfdcID == externalProjectID {
-			err = repo.disableGithubRepository(ctx, repoModel.RepositoryID)
+			err = r.disableGithubRepository(ctx, repoModel.RepositoryID)
 			if err != nil {
 				return err
 			}
@@ -179,14 +185,14 @@ func (repo repo) DisableRepositoriesOfGithubOrganization(ctx context.Context, ex
 }
 
 // GetRepository by repository id
-func (repo *repo) GetRepository(ctx context.Context, repositoryID string) (*models.GithubRepository, error) {
+func (r *repo) GetRepository(ctx context.Context, repositoryID string) (*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":   "GetRepository",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"repositoryID":   repositoryID,
 	}
-	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(repo.repositoryTableName),
+	result, err := r.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(r.repositoryTableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"repository_id": {
 				S: aws.String(repositoryID),
@@ -213,7 +219,7 @@ func (repo *repo) GetRepository(ctx context.Context, repositoryID string) (*mode
 }
 
 // GetRepositoryByCLAGroup gets the list of repositories based on the CLA Group ID
-func (repo *repo) GetRepositoriesByCLAGroup(ctx context.Context, claGroupID string, enabled bool) ([]*models.GithubRepository, error) {
+func (r *repo) GetRepositoriesByCLAGroup(ctx context.Context, claGroupID string, enabled bool) ([]*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":   "GetRepositoryByCLAGroup",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -236,11 +242,11 @@ func (repo *repo) GetRepositoriesByCLAGroup(ctx context.Context, claGroupID stri
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(repo.repositoryTableName),
+		TableName:                 aws.String(r.repositoryTableName),
 		IndexName:                 aws.String(ProjectRepositoryIndex),
 	}
 
-	results, err := repo.dynamoDBClient.Query(queryInput)
+	results, err := r.dynamoDBClient.Query(queryInput)
 	if err != nil {
 		log.WithFields(f).Warnf("unable to get project github repositories. error: %+v", err)
 		return nil, err
@@ -261,7 +267,7 @@ func (repo *repo) GetRepositoriesByCLAGroup(ctx context.Context, claGroupID stri
 	return convertModels(repositories), nil
 }
 
-func (repo *repo) GetRepositoriesByOrganizationName(ctx context.Context, gitHubOrgName string) ([]*models.GithubRepository, error) {
+func (r *repo) GetRepositoriesByOrganizationName(ctx context.Context, gitHubOrgName string) ([]*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":   "GetRepositoriesByOrganizationName",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -283,12 +289,12 @@ func (repo *repo) GetRepositoriesByOrganizationName(ctx context.Context, gitHubO
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(repo.repositoryTableName),
+		TableName:                 aws.String(r.repositoryTableName),
 		IndexName:                 aws.String(RepositoryOrganizationNameIndex),
 	}
 
 	log.WithFields(f).Debug("querying repositories table by github organization name")
-	results, err := repo.dynamoDBClient.Query(queryInput)
+	results, err := r.dynamoDBClient.Query(queryInput)
 	if err != nil {
 		log.WithFields(f).Warnf("unable to get github repositories by organization name. error: %+v", err)
 		return nil, err
@@ -310,10 +316,10 @@ func (repo *repo) GetRepositoriesByOrganizationName(ctx context.Context, gitHubO
 }
 
 // GetCLAGroupRepositoriesGroupByOrgs returns a list of GH organizations by CLA Group - enabled flag indicates that we search the enabled repositories list
-func (repo repo) GetCLAGroupRepositoriesGroupByOrgs(ctx context.Context, projectID string, enabled bool) ([]*models.GithubRepositoriesGroupByOrgs, error) {
+func (r repo) GetCLAGroupRepositoriesGroupByOrgs(ctx context.Context, projectID string, enabled bool) ([]*models.GithubRepositoriesGroupByOrgs, error) {
 	out := make([]*models.GithubRepositoriesGroupByOrgs, 0)
 	outMap := make(map[string]*models.GithubRepositoriesGroupByOrgs)
-	ghrepos, err := repo.getProjectRepositories(ctx, projectID, enabled)
+	ghrepos, err := r.getProjectRepositories(ctx, projectID, enabled)
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +338,7 @@ func (repo repo) GetCLAGroupRepositoriesGroupByOrgs(ctx context.Context, project
 }
 
 // List github repositories of project by external/salesforce project id
-func (repo repo) ListProjectRepositories(ctx context.Context, externalProjectID string, projectSFID string, enabled bool) (*models.ListGithubRepositories, error) {
+func (r repo) ListProjectRepositories(ctx context.Context, externalProjectID string, projectSFID string, enabled bool) (*models.ListGithubRepositories, error) {
 	f := logrus.Fields{
 		"functionName":      "ListProjectRepositories",
 		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
@@ -368,11 +374,11 @@ func (repo repo) ListProjectRepositories(ctx context.Context, externalProjectID 
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(repo.repositoryTableName),
+		TableName:                 aws.String(r.repositoryTableName),
 		IndexName:                 aws.String(indexName),
 	}
 
-	results, err := repo.dynamoDBClient.Query(queryInput)
+	results, err := r.dynamoDBClient.Query(queryInput)
 	if err != nil {
 		log.WithFields(f).Warnf("unable to get project github repositories. error = %s", err.Error())
 		return nil, err
@@ -392,7 +398,7 @@ func (repo repo) ListProjectRepositories(ctx context.Context, externalProjectID 
 }
 
 // getProjectRepositories returns an array of GH repositories for the specified project ID
-func (repo repo) getProjectRepositories(ctx context.Context, projectID string, enabled bool) ([]*models.GithubRepository, error) {
+func (r repo) getProjectRepositories(ctx context.Context, projectID string, enabled bool) ([]*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":   "getProjectRepositories",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -416,11 +422,11 @@ func (repo repo) getProjectRepositories(ctx context.Context, projectID string, e
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(repo.repositoryTableName),
+		TableName:                 aws.String(r.repositoryTableName),
 		IndexName:                 aws.String(ProjectRepositoryIndex),
 	}
 
-	results, err := repo.dynamoDBClient.Query(queryInput)
+	results, err := r.dynamoDBClient.Query(queryInput)
 	if err != nil {
 		log.WithFields(f).Warnf("unable to get project github repositories. error = %s", err.Error())
 		return nil, err
@@ -440,7 +446,7 @@ func (repo repo) getProjectRepositories(ctx context.Context, projectID string, e
 }
 
 // getRepositoriesByGithubOrg returns an array of GH repositories for the specified project ID
-func (repo repo) getRepositoriesByGithubOrg(ctx context.Context, githubOrgName string) ([]*models.GithubRepository, error) {
+func (r repo) getRepositoriesByGithubOrg(ctx context.Context, githubOrgName string) ([]*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":   "getRepositoriesByGithubOrg",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -462,10 +468,10 @@ func (repo repo) getRepositoriesByGithubOrg(ctx context.Context, githubOrgName s
 		ExpressionAttributeValues: expr.Values(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(repo.repositoryTableName),
+		TableName:                 aws.String(r.repositoryTableName),
 	}
 
-	results, err := repo.dynamoDBClient.Scan(scanInput)
+	results, err := r.dynamoDBClient.Scan(scanInput)
 	if err != nil {
 		log.WithFields(f).Warnf("unable to get github organizations repositories. error = %s", err.Error())
 		return nil, err
@@ -484,7 +490,7 @@ func (repo repo) getRepositoriesByGithubOrg(ctx context.Context, githubOrgName s
 	return out, nil
 }
 
-func (repo repo) getRepositoryByGithubID(ctx context.Context, externalID string, enabled bool) (*models.GithubRepository, error) {
+func (r repo) getRepositoryByGithubID(ctx context.Context, externalID string, enabled bool) (*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":   "getRepositoryByGithubID",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -510,11 +516,11 @@ func (repo repo) getRepositoryByGithubID(ctx context.Context, externalID string,
 		KeyConditionExpression:    expr.KeyCondition(),
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
-		TableName:                 aws.String(repo.repositoryTableName),
+		TableName:                 aws.String(r.repositoryTableName),
 		IndexName:                 aws.String(ExternalRepositoryIndex),
 	}
 
-	results, err := repo.dynamoDBClient.Query(queryInput)
+	results, err := r.dynamoDBClient.Query(queryInput)
 	if err != nil {
 		log.WithFields(f).Warnf("unable to get project github repositories. error = %s", err.Error())
 		return nil, err
@@ -531,16 +537,16 @@ func (repo repo) getRepositoryByGithubID(ctx context.Context, externalID string,
 	return result.toModel(), nil
 }
 
-func (repo repo) enableGithubRepository(ctx context.Context, repositoryID string) error {
-	return repo.updateGithubRepository(ctx, repositoryID, true)
+func (r repo) enableGithubRepository(ctx context.Context, repositoryID string) error {
+	return r.setEnabledGithubRepository(ctx, repositoryID, true)
 }
 
-func (repo repo) disableGithubRepository(ctx context.Context, repositoryID string) error {
-	return repo.updateGithubRepository(ctx, repositoryID, false)
+func (r repo) disableGithubRepository(ctx context.Context, repositoryID string) error {
+	return r.setEnabledGithubRepository(ctx, repositoryID, false)
 }
 
-// deleteGithubRepository updates the existing repository record by setting the enabled flag to false
-func (repo repo) updateGithubRepository(ctx context.Context, repositoryID string, enabled bool) error {
+// setEnabledGithubRepository updates the existing repository record by setting the enabled flag to false
+func (r repo) setEnabledGithubRepository(ctx context.Context, repositoryID string, enabled bool) error {
 	f := logrus.Fields{
 		"functionName":   "deleteGithubRepository",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -549,7 +555,7 @@ func (repo repo) updateGithubRepository(ctx context.Context, repositoryID string
 	}
 
 	// Load the existing model - need to fetch the old note value, if available
-	existingModel, getErr := repo.GetRepository(ctx, repositoryID)
+	existingModel, getErr := r.GetRepository(ctx, repositoryID)
 	if getErr != nil {
 		return getErr
 	}
@@ -571,7 +577,7 @@ func (repo repo) updateGithubRepository(ctx context.Context, repositoryID string
 
 	_, now := utils.CurrentTime()
 	log.WithFields(f).Debug("updating repository record")
-	_, err := repo.dynamoDBClient.UpdateItem(&dynamodb.UpdateItemInput{
+	_, err := r.dynamoDBClient.UpdateItem(&dynamodb.UpdateItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"repository_id": {S: aws.String(repositoryID)},
 		},
@@ -592,7 +598,73 @@ func (repo repo) updateGithubRepository(ctx context.Context, repositoryID string
 			},
 		},
 		UpdateExpression: aws.String("SET #enabled = :enabledValue, #note = :noteValue, #dateModified = :dateModifiedValue"),
-		TableName:        aws.String(repo.repositoryTableName),
+		TableName:        aws.String(r.repositoryTableName),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case dynamodb.ErrCodeConditionalCheckFailedException:
+				return errors.New("github repository entry does not exist or repository_sfdc_id does not match with specified project id")
+			}
+		}
+		log.WithFields(f).Warnf("error disabling github repository, error: %+v", err)
+		return err
+	}
+
+	return nil
+}
+
+// setEnabledGithubRepository updates the existing repository record by setting the enabled flag to false
+func (r repo) setClaGroupIDGithubRepository(ctx context.Context, repositoryID, claGroupID string) error {
+	f := logrus.Fields{
+		"functionName":   "deleteGithubRepository",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"repositoryID":   repositoryID,
+		"claGroupID":     claGroupID,
+	}
+
+	// Load the existing model - need to fetch the old note value, if available
+	existingModel, getErr := r.GetRepository(ctx, repositoryID)
+	if getErr != nil {
+		return getErr
+	}
+	if existingModel == nil {
+		return fmt.Errorf("unable to locate existing repository entry by ID: %s", repositoryID)
+	}
+
+	// Enabled string for the note...
+	var claGroupString = "claGroupID"
+
+	// If we have an old note - grab it/save it
+	var existingNote = ""
+	if existingModel.Note != "" {
+		existingNote = existingModel.Note + ". "
+	}
+
+	_, now := utils.CurrentTime()
+	log.WithFields(f).Debug("updating repository record with cla group id")
+	_, err := r.dynamoDBClient.UpdateItem(&dynamodb.UpdateItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"repository_id": {S: aws.String(repositoryID)},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#repositoryProjectID": aws.String("repository_project_id"),
+			"#note":                aws.String("note"),
+			"#dateModified":        aws.String("date_modified"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":repositoryProjectIDValue": {
+				S: aws.String(claGroupID),
+			},
+			":noteValue": {
+				S: aws.String(fmt.Sprintf("%s%s on %s", existingNote, claGroupString, now)), // Add to existing note, if set
+			},
+			":dateModifiedValue": {
+				S: aws.String(now),
+			},
+		},
+		UpdateExpression: aws.String("SET #repositoryProjectID = :repositoryProjectIDValue, #note = :noteValue, #dateModified = :dateModifiedValue"),
+		TableName:        aws.String(r.repositoryTableName),
 	})
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
