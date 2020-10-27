@@ -57,7 +57,7 @@ export class AuthService {
     )
   );
   // Create subject and public observable of user profile data
-  private userProfileSubject$ = new BehaviorSubject<any>(null);
+  private userProfileSubject$ = new BehaviorSubject<any>(undefined);
   userProfile$ = this.userProfileSubject$.asObservable();
   // Create a local property for login status
   loggedIn = false;
@@ -107,6 +107,7 @@ export class AuthService {
         this.auth0Client$
           .pipe(concatMap((client: Auth0Client) => from(client.checkSession())))
           .subscribe((data) => { });
+        this.userProfileSubject$.next(null);
         // If not authenticated, return stream that emits 'false'
         return of(loggedIn);
       })
