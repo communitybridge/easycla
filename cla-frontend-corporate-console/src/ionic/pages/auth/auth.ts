@@ -35,18 +35,33 @@ export class AuthPage implements AfterViewInit {
       this.navCtrl.setRoot('CompaniesPage');
     });
 
-    this.timer = setTimeout(() => {
-      if (this.authService.loggedIn) {
-        this.lfxHeaderService.setUserInLFxHeader();
-        this.navCtrl.setRoot('CompaniesPage');
-      } else {
-        if (EnvConfig['lfx-header-enabled'] === "true") {
-          this.authService.login();
+    this.authService.userProfile$.subscribe(user => {
+      if (user !== undefined) {
+        if (user) {
+          this.lfxHeaderService.setUserInLFxHeader();
+          this.navCtrl.setRoot('CompaniesPage');
         } else {
-          this.navCtrl.setRoot('LoginPage');
+          if (EnvConfig['lfx-header-enabled'] === "true") {
+            this.authService.login();
+          } else {
+            this.navCtrl.setRoot('LoginPage');
+          }
         }
       }
-    }, 4000);
+    });
+
+    // this.timer = setTimeout(() => {
+    //   if (this.authService.loggedIn) {
+    //     this.lfxHeaderService.setUserInLFxHeader();
+    //     this.navCtrl.setRoot('CompaniesPage');
+    //   } else {
+    //     if (EnvConfig['lfx-header-enabled'] === "true") {
+    //       this.authService.login();
+    //     } else {
+    //       this.navCtrl.setRoot('LoginPage');
+    //     }
+    //   }
+    // }, 4000);
   }
 
   onClickToggle(toggle) {
