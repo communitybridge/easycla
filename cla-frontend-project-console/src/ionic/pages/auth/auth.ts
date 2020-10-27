@@ -26,24 +26,26 @@ export class AuthPage implements AfterViewInit {
   ) { }
 
   ngAfterViewInit() {
+    
     this.authService.redirectRoot.subscribe((target) => {
       window.history.replaceState(null, null, window.location.pathname);
       this.navCtrl.setRoot('AllProjectsPage');
     });
 
-    setTimeout(() => {
-      if (this.authService.loggedIn) {
-        this.lfxHeaderService.setUserInLFxHeader();
-        this.navCtrl.setRoot('AllProjectsPage');
-      } else {
-        if (EnvConfig['lfx-header-enabled'] === "true") {
-          window.open(EnvConfig['landing-page'], '_self');
+    if (EnvConfig['lfx-header-enabled'] === "false") {
+      setTimeout(() => {
+        if (this.authService.loggedIn) {
+          this.lfxHeaderService.setUserInLFxHeader();
+          this.navCtrl.setRoot('AllProjectsPage');
         } else {
-          this.navCtrl.setRoot('LoginPage');
+          if (EnvConfig['lfx-header-enabled'] === "true") {
+            window.open(EnvConfig['landing-page'], '_self');
+          } else {
+            this.navCtrl.setRoot('LoginPage');
+          }
         }
-      }
-    }, 4000);
-
+      }, 4000);
+    }
   }
 
   onClickToggle(toggle) {

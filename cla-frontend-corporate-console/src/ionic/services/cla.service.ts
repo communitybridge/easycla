@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import 'rxjs/Rx';
 import 'rxjs/add/operator/catch';
 import { Observable } from 'rxjs';
+import { EnvConfig } from './cla.env.utils';
 
 @Injectable()
 export class ClaService {
@@ -668,19 +669,25 @@ export class ClaService {
   private handleServiceError(error: any) {
     if (error.status && error._body && error.status === 500 && error._body.includes('Token is expired')) {
       this.authService.logout();
-      window.location.hash = '#/login';
-      window.location.reload(true);
+      this.redirectToLogin();
       return Observable.throw(error);
     } else if (error.status && error.status === 401) {
       this.authService.logout();
-      window.location.hash = '#/login';
-      window.location.reload(true);
+      this.redirectToLogin();
       return Observable.throw(error);
     }
-
     console.log('problem invoking service: ');
     console.log(error);
     return Observable.throw(error);
+  }
+
+  redirectToLogin() {
+    if (EnvConfig['lfx-header-enabled'] === "true") {
+      window.open(EnvConfig['landing-page'], '_self');
+    } else {
+      window.location.hash = '#/login';
+      window.location.reload(true);
+    }
   }
 
   getReleaseVersion() {
