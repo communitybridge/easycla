@@ -6,6 +6,8 @@ package github_organizations
 import (
 	"context"
 
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 
 	"github.com/sirupsen/logrus"
@@ -23,20 +25,22 @@ type Service interface {
 	GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.GithubOrganizations, error)
 	GetGithubOrganizationsByParent(ctx context.Context, parentProjectSFID string) (*models.GithubOrganizations, error)
 	GetGithubOrganizationByName(ctx context.Context, githubOrgName string) (*models.GithubOrganization, error)
-	UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, branchProtectionEnabled bool) error
+	UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, autoEnabledClaGroupID string, branchProtectionEnabled bool) error
 	DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error
 }
 
 type service struct {
-	repo         Repository
-	ghRepository repositories.Repository
+	repo          Repository
+	ghRepository  repositories.Repository
+	claRepository projects_cla_groups.Repository
 }
 
 // NewService creates a new githubOrganizations service
-func NewService(repo Repository, ghRepository repositories.Repository) Service {
+func NewService(repo Repository, ghRepository repositories.Repository, claRepository projects_cla_groups.Repository) Service {
 	return service{
-		repo:         repo,
-		ghRepository: ghRepository,
+		repo:          repo,
+		ghRepository:  ghRepository,
+		claRepository: claRepository,
 	}
 }
 
@@ -54,6 +58,13 @@ func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, 
 	if projErr != nil {
 		log.WithFields(f).Warnf("problem fetching github organizations by projectSFID, error: %+v", projErr)
 		return nil, projErr
+	}
+
+	// check if valid cla group id is passed
+	if input.AutoEnabledClaGroupID != "" {
+		if _, err := s.claRepository.GetCLAGroupNameByID(input.AutoEnabledClaGroupID); err != nil {
+			return nil, err
+		}
 	}
 
 	return s.repo.AddGithubOrganization(ctx, parentProjectSFID, projectSFID, input)
@@ -121,7 +132,13 @@ func (s service) GetGithubOrganizationByName(ctx context.Context, githubOrgName 
 	return gitHubOrgs.List[0], err
 }
 
-func (s service) UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, branchProtectionEnabled bool) error {
+func (s service) UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, autoEnabledClaGroupID string, branchProtectionEnabled bool) error {
+	// check if valid cla group id is passed
+	if autoEnabledClaGroupID != "" {
+		if _, err := s.claRepository.GetCLAGroupNameByID(autoEnabledClaGroupID); err != nil {
+			return err
+		}
+	}
 	return s.repo.UpdateGithubOrganization(ctx, projectSFID, organizationName, autoEnabled, branchProtectionEnabled)
 }
 

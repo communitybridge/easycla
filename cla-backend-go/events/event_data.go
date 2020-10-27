@@ -92,6 +92,7 @@ type CLATemplateCreatedEventData struct{}
 type GithubOrganizationAddedEventData struct {
 	GithubOrganizationName  string
 	AutoEnabled             bool
+	AutoEnabledClaGroupID   string
 	BranchProtectionEnabled bool
 }
 
@@ -104,6 +105,7 @@ type GithubOrganizationDeletedEventData struct {
 type GithubOrganizationUpdatedEventData struct {
 	GithubOrganizationName string
 	AutoEnabled            bool
+	AutoEnabledClaGroupID  string
 }
 
 // CCLAApprovalListRequestCreatedEventData . . .
@@ -389,6 +391,9 @@ func (ed *CLATemplateCreatedEventData) GetEventDetailsString(args *LogEventArgs)
 func (ed *GithubOrganizationAddedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user [%s] added github organization [%s] with auto-enabled: %t, branch protection enabled: %t",
 		args.userName, ed.GithubOrganizationName, ed.AutoEnabled, ed.BranchProtectionEnabled)
+	if ed.AutoEnabledClaGroupID != "" {
+		data = data + fmt.Sprintf(" with auto-enabled-cla-group: %s", ed.AutoEnabledClaGroupID)
+	}
 	return data, true
 }
 
@@ -731,6 +736,9 @@ func (ed *CLATemplateCreatedEventData) GetEventSummaryString(args *LogEventArgs)
 func (ed *GithubOrganizationAddedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("user %s added github organization %s with auto-enabled: %t, branch protection enabled: %t",
 		args.userName, ed.GithubOrganizationName, ed.AutoEnabled, ed.BranchProtectionEnabled)
+	if ed.AutoEnabledClaGroupID != "" {
+		data = data + fmt.Sprintf(" with auto-enabled-cla-group: %s", ed.AutoEnabledClaGroupID)
+	}
 	return data, true
 }
 
