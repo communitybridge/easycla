@@ -25,7 +25,7 @@ import { StorageService } from './storage.service';
 export class AuthService {
   auth0Options = {
     domain: EnvConfig.default['auth0-domain'], // e.g linuxfoundation-dev.auth0.com
-    clientId: EnvConfig.default['auth0-clientId'],
+    clientId: EnvConfig.default['auth0-clientId']
   };
 
   currentHref = window.location.href;
