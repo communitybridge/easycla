@@ -18,7 +18,9 @@ export class ClaHeader {
 
   constructor(
     public navCtrl: NavController,
-  ) { }
+  ) {
+    console.log(this.hasEnabledLFXHeader);
+  }
 
   onToggled() {
     this.hasExpanded = !this.hasExpanded;

@@ -30,7 +30,7 @@ export class AuthService {
   auth0Client$ = (from(
     createAuth0Client({
       domain: this.auth0Options.domain,
-      client_id: this.auth0Options.clientId,
+      client_id: this.auth0Options.clientId
     })
   ) as Observable<Auth0Client>).pipe(
     shareReplay(1), // Every subscription receives the same shared value
@@ -75,14 +75,8 @@ export class AuthService {
   }
 
   handlerReturnToAferlogout() {
-    console.log(' handlerReturnToAferlogout > ', this.currentHref);
     const { query } = querystring.parseUrl(this.currentHref);
-    console.log('query ? ', { query });
-
     const returnTo = query.returnTo;
-
-    console.log(' returnTo ? ', { returnTo });
-
     if (returnTo) {
       const target = this.getTargetRouteFromReturnTo(returnTo);
       this.redirectRoot.next(target);
@@ -101,7 +95,6 @@ export class AuthService {
   }
 
   private localAuthSetup() {
-    console.log('Local setup called');
     // This should only be called on app initialization
     // Set up local authentication streams
     const checkAuth$ = this.isAuthenticated$.pipe(
@@ -166,30 +159,26 @@ export class AuthService {
   private handleAuthCallback() {
     // Call when app reloads after user logs in with Auth0
     const params = this.currentHref;
-    console.log('In handleAuthCallback');
     if (params.includes('code=') && params.includes('state=')) {
-      console.log('Session found');
       let targetRoute: string; // Path to redirect to after login processsed
       const authComplete$ = this.handleRedirectCallback$.pipe(
         // Have client, now call method to handle auth callback redirect
         tap((cbRes: any) => {
           targetRoute = this.getTargetRouteFromAppState(cbRes.appState);
-          console.log(targetRoute);
         }),
         concatMap(() => {
           // Redirect callback complete; get user and login status
-          console.log('authComplete');
           return combineLatest([this.getUser$(), this.isAuthenticated$]);
         })
       );
       // Subscribe to authentication completion observable
       // Response will be an array of user and login status
       authComplete$.subscribe(() => {
-        console.log('navigating too', {
-          current: this.currentHref,
-          targetRoute,
-          href: window.location.href,
-        });
+        // console.log('navigating too', {
+        //   current: this.currentHref,
+        //   targetRoute,
+        //   href: window.location.href,
+        // });
         // Redirect to target route after callback processing
         // *info: this url change will remove the code and state from the URL
         // * this is need to avoid invalid state in the next refresh
