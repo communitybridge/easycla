@@ -258,7 +258,7 @@ func server(localMode bool) http.Handler {
 	approvalListService := approval_list.NewService(approvalListRepo, usersRepo, companyRepo, projectRepo, signaturesRepo, configFile.CorporateConsoleURL, http.DefaultClient)
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 	v2MetricsService := metrics.NewService(metricsRepo, projectClaGroupRepo)
-	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo)
+	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo, projectClaGroupRepo)
 	v2GithubOrganizationsService := v2GithubOrganizations.NewService(githubOrganizationsRepo, repositoriesRepo)
 	gerritService := gerrits.NewService(gerritRepo, &gerrits.LFGroup{
 		LfBaseURL:    configFile.LFGroup.ClientURL,

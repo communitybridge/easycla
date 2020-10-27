@@ -5,6 +5,11 @@ package dynamo_events
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+
+	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/communitybridge/easycla/cla-backend-go/github"
@@ -14,6 +19,88 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
+
+// AutoEnableService is an abstraction helping with managing autoEnabled flag for Github Organization
+// having it separated in its own struct makes testing easier.
+type AutoEnableService struct {
+	repositoryService repositories.Service
+}
+
+func (a *AutoEnableService) autoEnabledForGithubOrg(f logrus.Fields, gitHubOrg github_organizations.GithubOrganization) error {
+	orgName := gitHubOrg.OrganizationName
+	log.WithFields(f).Debugf("running AutoEnable for github org : %s", orgName)
+	if gitHubOrg.OrganizationInstallationID == 0 {
+		log.WithFields(f).Warnf("missing installation id for : %s", orgName)
+		return fmt.Errorf("missing installation id")
+	}
+
+	repos, err := a.repositoryService.ListProjectRepositories(context.Background(), gitHubOrg.ProjectSFID)
+	if err != nil {
+		log.WithFields(f).Warnf("problem fetching the repositories for orgName : %s for ProjectSFID : %s", orgName, gitHubOrg.ProjectSFID)
+		return err
+	}
+
+	if len(repos.List) == 0 {
+		log.WithFields(f).Warnf("no repositories found for orgName : %s, skipping autoEnabled", orgName)
+		return nil
+	}
+
+	claGroupID, err := a.determineClaGroupID(f, &gitHubOrg, repos)
+	if err != nil {
+		return err
+	}
+
+	for _, repo := range repos.List {
+		if repo.RepositoryProjectID == claGroupID {
+			continue
+		}
+
+		repo.RepositoryProjectID = claGroupID
+		if err := a.repositoryService.UpdateClaGroupID(context.Background(), repo.RepositoryID, claGroupID); err != nil {
+			log.WithFields(f).Warnf("updating claGroupID for repository : %s failed : %v", repo.RepositoryID, err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+// determineClaGroupID checks if AutoEnabledClaGroupID is set then returns it (high precedence) otherwise tries to determine
+// the autoEnabled claGroupID by guessing from existing repos
+func (a *AutoEnableService) determineClaGroupID(f logrus.Fields, gitHubOrg *github_organizations.GithubOrganization, repos *models.ListGithubRepositories) (string, error) {
+	if gitHubOrg.AutoEnabledClaGroupID != "" {
+		return gitHubOrg.AutoEnabledClaGroupID, nil
+	}
+
+	// fallback to old way of checking the cla group id by guessing it from the existing repos which has cla group id set
+	claGroupSet := map[string]bool{}
+	sfidSet := map[string]bool{}
+	// check if any of the repos is member to more than one cla group, in general shouldn't happen
+	var claGroupID string
+	for _, repo := range repos.List {
+		if repo.RepositoryProjectID == "" || repo.ProjectSFID == "" {
+			continue
+		}
+		claGroupSet[repo.RepositoryProjectID] = true
+		sfidSet[repo.ProjectSFID] = true
+		claGroupID = repo.RepositoryProjectID
+	}
+
+	if len(claGroupSet) == 0 && len(sfidSet) == 0 {
+		return "", fmt.Errorf("none of the existing repos have the clagroup set, can't determine the cla group, please set the claGroupID on githubOrg")
+	}
+
+	if len(claGroupSet) != 1 || len(sfidSet) != 1 {
+		log.WithFields(f).Errorf(`Auto Enabled set for Organization %s, '
+                                but we found repositories or SFIDs that belong to multiple CLA Groups.
+                                Auto Enable only works when all repositories under a given
+                                GitHub Organization are associated with a single CLA Group. This
+                                organization is associated with %d CLA Groups and %d SFIDs.`, gitHubOrg.OrganizationName, len(claGroupSet), len(sfidSet))
+		return "", fmt.Errorf("project and its repos should be part of the same cla group, can't determine main cla group, please set the claGroupID on githubOrg")
+	}
+
+	return claGroupID, nil
+}
 
 // GitHubOrgAddedEvent github repository added event
 func (s *service) GitHubOrgAddedEvent(event events.DynamoDBEventRecord) error {
@@ -33,6 +120,11 @@ func (s *service) GitHubOrgAddedEvent(event events.DynamoDBEventRecord) error {
 	if newGitHubOrg.BranchProtectionEnabled {
 		log.WithFields(f).Debug("branchProtectionEnabled - processing...")
 		return s.enableBranchProtectionForGithubOrg(f, newGitHubOrg)
+	}
+
+	if newGitHubOrg.AutoEnabled {
+		log.WithFields(f).Debug("autoEnabled - processing...")
+		return s.autoEnableService.autoEnabledForGithubOrg(f, newGitHubOrg)
 	}
 
 	log.WithFields(f).Debug("no transition of branchProtectionEnabled - ignoring...")
@@ -64,6 +156,10 @@ func (s *service) GitHubOrgUpdatedEvent(event events.DynamoDBEventRecord) error 
 		return s.enableBranchProtectionForGithubOrg(f, newGitHubOrg)
 	}
 
+	if !oldGitHubOrg.AutoEnabled && newGitHubOrg.AutoEnabled {
+		log.WithFields(f).Debug("transition of autoEnabled false => true - processing...")
+		return s.autoEnableService.autoEnabledForGithubOrg(f, newGitHubOrg)
+	}
 	log.WithFields(f).Debug("no transition of branchProtectionEnabled false => true - ignoring...")
 	return nil
 }
