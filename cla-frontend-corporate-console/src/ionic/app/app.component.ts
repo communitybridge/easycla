@@ -14,6 +14,7 @@ import { HttpClient } from '../services/http-client';
 import { AuthService } from '../services/auth.service';
 import { AuthPage } from '../pages/auth/auth';
 import { EnvConfig } from '../services/cla.env.utils';
+import { LfxHeaderService } from '../services/lfx-header.service';
 
 @Component({
   templateUrl: 'app.html'
@@ -42,7 +43,8 @@ export class MyApp {
     private keycloak: KeycloakService,
     public claService: ClaService,
     public httpClient: HttpClient,
-    public authService: AuthService
+    public authService: AuthService,
+    private lfxHeaderService: LfxHeaderService
   ) {
     this.getDefaults();
     this.initializeApp();
@@ -59,14 +61,6 @@ export class MyApp {
 
     this.claService.setApiUrl(EnvConfig['cla-api-url']);
     this.claService.setHttp(httpClient);
-
-    this.authService.checkSession.subscribe((loggedIn) => {
-      if (loggedIn) {
-        this.nav.setRoot('CompaniesPage');
-      } else {
-        this.redirectToLogin();
-      }
-    });
   }
 
   mounted() {
@@ -76,14 +70,6 @@ export class MyApp {
       EnvConfig['lfx-header']
     );
     document.head.appendChild(script);
-  }
-
-  redirectToLogin() {
-    if (EnvConfig['lfx-header-enabled'] === "true") {
-      window.open(EnvConfig['landing-page'], '_self');
-    } else {
-      this.nav.setRoot('LoginPage');
-    }
   }
 
   getDefaults() {

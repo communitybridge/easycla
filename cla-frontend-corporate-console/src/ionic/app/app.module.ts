@@ -21,6 +21,7 @@ import { AuthPage } from '../pages/auth/auth';
 
 import { MyApp } from './app.component';
 import { LayoutModule } from '../layout/layout.module';
+import { LfxHeaderService } from '../services/lfx-header.service';
 
 @NgModule({
   declarations: [MyApp, AuthPage],
@@ -38,6 +39,7 @@ import { LayoutModule } from '../layout/layout.module';
     KEYCLOAK_HTTP_PROVIDER,
     SortService,
     ClaService,
+    LfxHeaderService,
     DatePipe,
     { provide: ErrorHandler, useClass: IonicErrorHandler }
   ]
