@@ -35,8 +35,6 @@ import (
 	v2GithubOrganizations "github.com/communitybridge/easycla/cla-backend-go/v2/github_organizations"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
 
-	"github.com/communitybridge/easycla/cla-backend-go/token"
-
 	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
 	v2Gerrits "github.com/communitybridge/easycla/cla-backend-go/v2/gerrits"
 
@@ -206,8 +204,6 @@ func server(localMode bool) http.Handler {
 	if err != nil {
 		logrus.Panic(err)
 	}
-
-	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
 	github.Init(configFile.Github.AppID, configFile.Github.AppPrivateKey, configFile.Github.AccessToken)
 
 	// Our backend repository handlers
