@@ -42,11 +42,7 @@ export class AuthPage implements AfterViewInit {
           this.lfxHeaderService.setUserInLFxHeader();
           this.navCtrl.setRoot('AllProjectsPage');
         } else {
-          if (EnvConfig['lfx-header-enabled'] === "true") {
-            this.authService.login();
-          } else {
-            this.navCtrl.setRoot('LoginPage');
-          }
+          window.open(EnvConfig['landing-page'], '_self');
         }
       }
     });

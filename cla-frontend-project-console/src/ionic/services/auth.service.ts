@@ -30,8 +30,7 @@ export class AuthService {
   auth0Client$ = (from(
     createAuth0Client({
       domain: this.auth0Options.domain,
-      client_id: this.auth0Options.clientId,
-      cacheLocation: 'localstorage'
+      client_id: this.auth0Options.clientId
     })
   ) as Observable<Auth0Client>).pipe(
     shareReplay(1), // Every subscription receives the same shared value
