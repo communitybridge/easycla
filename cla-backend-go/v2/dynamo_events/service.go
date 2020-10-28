@@ -54,7 +54,7 @@ type service struct {
 	projectService           project.Service
 	githubOrgService         github_organizations.Service
 	repositoryService        repositories.Service
-	autoEnableService        *AutoEnableService
+	autoEnableService        *autoEnableServiceProvider
 	claManagerRequestsRepo   cla_manager.IRepository
 	approvalListRequestsRepo approval_list.IRepository
 }
@@ -94,7 +94,7 @@ func NewService(stage string,
 		projectService:           projService,
 		githubOrgService:         githubOrgService,
 		repositoryService:        repositoryService,
-		autoEnableService:        &AutoEnableService{repositoryService: repositoryService},
+		autoEnableService:        &autoEnableServiceProvider{repositoryService: repositoryService},
 		claManagerRequestsRepo:   claManagerRequestsRepo,
 		approvalListRequestsRepo: approvalListRequestsRepo,
 	}

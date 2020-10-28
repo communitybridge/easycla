@@ -14,6 +14,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/v2/dynamo_events"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/github_activity"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/communitybridge/easycla/cla-backend-go/approval_list"
@@ -252,6 +255,8 @@ func server(localMode bool) http.Handler {
 	v2MetricsService := metrics.NewService(metricsRepo, projectClaGroupRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo, projectClaGroupRepo)
 	v2GithubOrganizationsService := v2GithubOrganizations.NewService(githubOrganizationsRepo, repositoriesRepo)
+	autoEnableService := dynamo_events.NewAutoEnableService(repositoriesService, repositoriesRepo, githubOrganizationsRepo, projectClaGroupRepo)
+	v2GithubActivityService := github_activity.NewService(repositoriesRepo, eventsService, autoEnableService)
 	gerritService := gerrits.NewService(gerritRepo, &gerrits.LFGroup{
 		LfBaseURL:    configFile.LFGroup.ClientURL,
 		ClientID:     configFile.LFGroup.ClientID,
@@ -302,6 +307,7 @@ func server(localMode bool) http.Handler {
 	v2ClaManager.Configure(v2API, v2ClaManagerService, configFile.LFXPortalURL, projectClaGroupRepo, userRepo)
 	sign.Configure(v2API, v2SignService)
 	cla_groups.Configure(v2API, v2ClaGroupService, projectService, projectClaGroupRepo, eventsService)
+	github_activity.Configure(v2API, v2GithubActivityService)
 
 	userCreaterMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
