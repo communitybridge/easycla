@@ -374,8 +374,15 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		// Check to see if this CLA Group is configured for ICLAs...
 		if !claGroupModel.ProjectICLAEnabled {
 			log.WithFields(f).Warn(iclaNotSupportedForCLAGroup)
-			return signatures.NewGetProjectSignaturesBadRequest().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseBadRequest(reqID, iclaNotSupportedForCLAGroup))
+			// Return 200 as the retool UI can't handle 400's
+			return signatures.NewGetProjectSignaturesOK().WithXRequestID(reqID).WithPayload(&models.Signatures{
+				ProjectID:   params.ClaGroupID,
+				ResultCount: 0,
+				Signatures:  []*models.Signature{}, // empty list
+				TotalCount:  0,
+			})
+			//return signatures.NewGetProjectSignaturesBadRequest().WithXRequestID(reqID).WithPayload(
+			//	utils.ErrorResponseBadRequest(reqID, iclaNotSupportedForCLAGroup))
 		}
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
@@ -705,8 +712,19 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		// Check to see if this CLA Group is configured for ICLAs...
 		if !claGroupModel.ProjectCCLAEnabled {
 			log.WithFields(f).Warn(cclaNotSupportedForCLAGroup)
-			return signatures.NewDownloadProjectSignatureEmployeeAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseBadRequest(reqID, cclaNotSupportedForCLAGroup))
+			// Return 200 as the retool UI can't handle 400's
+			return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+				rw.Header().Set("Content-Type", "text/csv")
+				rw.Header().Set(utils.XREQUESTID, reqID)
+				rw.WriteHeader(http.StatusOK)
+				// Just the header information - no records
+				_, writeErr := rw.Write([]byte("Github ID,LF_ID,Name,Email,Date Signed"))
+				if writeErr != nil {
+					log.WithFields(f).WithError(writeErr).Warn("error writing csv file")
+				}
+			})
+			//return signatures.NewDownloadProjectSignatureEmployeeAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
+			//	utils.ErrorResponseBadRequest(reqID, cclaNotSupportedForCLAGroup))
 		}
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
@@ -772,8 +790,12 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		// Check to see if this CLA Group is configured for ICLAs...
 		if !claGroupModel.ProjectICLAEnabled {
 			log.WithFields(f).Warn(iclaNotSupportedForCLAGroup)
-			return signatures.NewListClaGroupIclaSignatureBadRequest().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseBadRequest(reqID, iclaNotSupportedForCLAGroup))
+			// Return 200 as the retool UI can't handle 400's
+			return signatures.NewListClaGroupIclaSignatureOK().WithXRequestID(reqID).WithPayload(&models.IclaSignatures{
+				List: []*models.IclaSignature{}, // empty list
+			})
+			//return signatures.NewListClaGroupIclaSignatureBadRequest().WithXRequestID(reqID).WithPayload(
+			//	utils.ErrorResponseBadRequest(reqID, iclaNotSupportedForCLAGroup))
 		}
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
@@ -832,8 +854,12 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		if !claGroupModel.ProjectCCLAEnabled {
 			msg := "cla group does not support corporate contribution"
 			log.WithFields(f).Warn(msg)
-			return signatures.NewListClaGroupCorporateContributorsBadRequest().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseBadRequest(reqID, msg))
+			// Return 200 as the retool UI can't handle 400's
+			return signatures.NewListClaGroupCorporateContributorsOK().WithXRequestID(reqID).WithPayload(&models.CorporateContributorList{
+				List: []*models.CorporateContributor{}, // empty list
+			})
+			//return signatures.NewListClaGroupCorporateContributorsBadRequest().WithXRequestID(reqID).WithPayload(
+			//	utils.ErrorResponseBadRequest(reqID, msg))
 		}
 		f["foundationSFID"] = claGroupModel.FoundationSFID
 
@@ -924,6 +950,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		if !claGroupModel.ProjectICLAEnabled {
+			log.WithFields(f).Warn(iclaNotSupportedForCLAGroup)
 			return signatures.NewDownloadProjectSignatureICLAsBadRequest().WithXRequestID(reqID).WithPayload(
 				utils.ErrorResponseBadRequest(reqID, "icla is not enabled for this cla group"))
 		}
@@ -977,8 +1004,19 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 		if !claGroupModel.ProjectICLAEnabled {
 			log.WithFields(f).Warn(iclaNotSupportedForCLAGroup)
-			return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseBadRequest(reqID, iclaNotSupportedForCLAGroup))
+			// Return 200 as the retool UI can't handle 400's
+			return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+				rw.Header().Set("Content-Type", "text/csv")
+				rw.Header().Set(utils.XREQUESTID, reqID)
+				rw.WriteHeader(http.StatusOK)
+				// Just the header information - no records
+				_, writeErr := rw.Write([]byte("Github ID,LF_ID,Name,Email,Date Signed"))
+				if writeErr != nil {
+					log.WithFields(f).WithError(writeErr).Warn("error writing csv file")
+				}
+			})
+			//return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
+			//	utils.ErrorResponseBadRequest(reqID, iclaNotSupportedForCLAGroup))
 		}
 		f["foundationSFID"] = claGroupModel.FoundationSFID
 
@@ -1086,8 +1124,19 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 		if !claGroupModel.ProjectCCLAEnabled {
 			log.WithFields(f).Warn(cclaNotSupportedForCLAGroup)
-			return signatures.NewDownloadProjectSignatureCCLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseBadRequest(reqID, cclaNotSupportedForCLAGroup))
+			// Return 200 as the retool UI can't handle 400's
+			return middleware.ResponderFunc(func(rw http.ResponseWriter, pr runtime.Producer) {
+				rw.Header().Set("Content-Type", "text/csv")
+				rw.Header().Set(utils.XREQUESTID, reqID)
+				rw.WriteHeader(http.StatusOK)
+				// Just the header information - no records
+				_, writeErr := rw.Write([]byte("Github ID,LF_ID,Name,Email,Date Signed"))
+				if writeErr != nil {
+					log.WithFields(f).WithError(writeErr).Warn("error writing csv file")
+				}
+			})
+			//return signatures.NewDownloadProjectSignatureCCLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
+			//	utils.ErrorResponseBadRequest(reqID, cclaNotSupportedForCLAGroup))
 		}
 		f["foundationSFID"] = claGroupModel.FoundationSFID
 
