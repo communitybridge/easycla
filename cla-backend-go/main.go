@@ -5,6 +5,8 @@ package main
 
 import (
 	"github.com/communitybridge/easycla/cla-backend-go/cmd"
+	ini "github.com/communitybridge/easycla/cla-backend-go/init"
+	token "github.com/communitybridge/easycla/cla-backend-go/token"
 )
 
 var (
@@ -20,6 +22,12 @@ var (
 	// build date
 	buildDate string
 )
+
+func init() {
+	ini.ConfigVariable()
+	configFile := ini.GetConfig()
+	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
+}
 
 func main() {
 	cmd.Version = version
