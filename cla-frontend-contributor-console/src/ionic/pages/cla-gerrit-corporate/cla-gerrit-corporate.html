@@ -2,8 +2,9 @@
 
 <ion-content>
   <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
-    <loading-spinner [loading]="loading.companies"></loading-spinner>
-    <div>
+    <div *ngIf="errorMessage" class="error">{{errorMessage}}</div>
+    <loading-spinner *ngIf="!errorMessage" [loading]="loading.companies"></loading-spinner>
+    <div *ngIf="!errorMessage">
       <table id="table" class="table table-hover" [loading-display]="loading.companies">
         <tbody>
           <tr *ngFor="let company of companies" (click)="openClaEmployeeCompanyConfirmPage(company)">

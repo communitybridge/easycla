@@ -18,7 +18,6 @@ import { LfxHeaderService } from '../../services/lfx-header.service';
   templateUrl: 'auth.html'
 })
 export class AuthPage implements AfterViewInit {
-  timer = null;
   constructor(
     public navCtrl: NavController,
     public authService: AuthService,
@@ -29,9 +28,6 @@ export class AuthPage implements AfterViewInit {
 
     this.authService.redirectRoot.subscribe((target) => {
       window.history.replaceState(null, null, window.location.pathname);
-      if (this.timer !== null) {
-        clearTimeout(this.timer);
-      }
       this.navCtrl.setRoot('CompaniesPage');
     });
 

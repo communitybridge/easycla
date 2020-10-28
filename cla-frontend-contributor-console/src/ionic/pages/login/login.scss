@@ -9,11 +9,23 @@ login {
   }
 
   .page-content {
-    min-height: calc(100vh - 274px);
+    min-height: calc(100vh - 416px);
+    margin-top: 25px;
+    transition: margin 0.3s;
+
+    &.expanded {
+      min-height: calc(100vh - 416px);
+      margin-top: 100px;
+    }
+
+    &.without-lfx-header {
+      margin-top: 50px;
+      min-height: calc(100vh - 364px) !important;
+    }
 
     .login-container {
       text-align: center;
-      margin: 60px 0;
+      margin-top: 215px;
       margin-left: auto;
       margin-right: auto;
       padding: 50px 20px;
@@ -25,6 +37,10 @@ login {
         width: 250px;
         max-width: 100%;
       }
+    }
+
+    @media (min-width: 768px) and (max-width: 1200px) {
+      padding: 16px 50px 162px;
     }
   }
 

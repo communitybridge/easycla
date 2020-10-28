@@ -1,7 +1,8 @@
-
+<cla-header title="CLA Developer Console" (onToggle)="onClickToggle($event)"></cla-header>
 
 <ion-content padding>
 
-  <div class="loader"></div>
+  <div *ngIf="!message" class="loader"></div>
+  <div *ngIf="message" class="message">{{message}}</div>
 
 </ion-content>
