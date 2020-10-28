@@ -66,7 +66,6 @@ import (
 
 	"github.com/communitybridge/easycla/cla-backend-go/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/company"
-	"github.com/communitybridge/easycla/cla-backend-go/config"
 	"github.com/communitybridge/easycla/cla-backend-go/docraptor"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi"
@@ -173,10 +172,7 @@ func server(localMode bool) http.Handler {
 		log.Panicf("Unable to load AWS session - Error: %v", err)
 	}
 
-	configFile, err := config.LoadConfig(configFile, awsSession, stage)
-	if err != nil {
-		log.Panicf("Unable to load config - Error: %v", err)
-	}
+	configFile := ini.GetConfig()
 
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
 	if err != nil {

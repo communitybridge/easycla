@@ -6,6 +6,7 @@ package init
 import (
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/config"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/spf13/viper"
 )
@@ -16,7 +17,9 @@ const (
 )
 
 var (
-	stage string
+	stage      string
+	configFile = ""
+	configVars config.Config
 )
 
 // CommonInit initializes the common properties
@@ -46,7 +49,21 @@ func Init() {
 	AWSInit()
 }
 
+// ConfigVariable loads all the SSM values based on stage.
+func ConfigVariable() {
+	var err error
+	configVars, err = config.LoadConfig(configFile, awsSession, stage)
+	if err != nil {
+		log.Panicf("Unable to load config - Error: %v", err)
+	}
+}
+
 // GetStage returns the deployment stage, e.g. dev, test, stage or prod
 func GetStage() string {
 	return stage
+}
+
+// GetConfig returns the configration SSM based on stage, e.g. dev, test, stage or prod
+func GetConfig() config.Config {
+	return configVars
 }
