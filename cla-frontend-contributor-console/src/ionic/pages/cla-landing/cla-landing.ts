@@ -21,7 +21,7 @@ export class ClaLandingPage {
   project: any;
   expanded: boolean = true;
   hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
-  
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -42,6 +42,7 @@ export class ClaLandingPage {
   ngOnInit() {
     this.getUser();
     this.getProject();
+    localStorage.removeItem('gerritClaType');
   }
 
   openClaIndividualPage() {

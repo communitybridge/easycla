@@ -10,16 +10,18 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { ClaService } from '../services/cla.service';
 import { AuthService } from '../services/auth.service';
+import { LfxHeaderService } from '../services/lfx-header.service';
 import { RolesService } from '../services/roles.service';
 import { HttpClient } from '../services/http-client';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
 import { KeycloakHttp, KEYCLOAK_HTTP_PROVIDER } from '../services/keycloak/keycloak.http';
 import { AuthPage } from '../pages/auth/auth';
 import { MyApp } from './app.component';
+import { LayoutModule } from '../layout/layout.module';
 
 @NgModule({
   declarations: [MyApp, AuthPage],
-  imports: [BrowserModule, HttpModule, IonicModule.forRoot(MyApp)],
+  imports: [BrowserModule, HttpModule, LayoutModule, IonicModule.forRoot(MyApp)],
   bootstrap: [IonicApp],
   entryComponents: [MyApp, AuthPage],
   providers: [
@@ -29,10 +31,11 @@ import { MyApp } from './app.component';
     HttpClient,
     ClaService,
     AuthService,
+    LfxHeaderService,
     KeycloakService,
     KEYCLOAK_HTTP_PROVIDER,
     RolesService,
     { provide: ErrorHandler, useClass: IonicErrorHandler }
   ]
 })
-export class AppModule {}
+export class AppModule { }

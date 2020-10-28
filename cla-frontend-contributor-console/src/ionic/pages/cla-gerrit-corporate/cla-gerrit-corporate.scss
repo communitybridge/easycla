@@ -1,41 +1,35 @@
-cla-gerrit-corporate-modal {
-  .field-notice {
-    font-size: 1.2rem;
-    color: #999;
-    text-align: right;
-  }
-  .toolbar-title .member-company {
-    font-weight: normal;
-  }
 
-  .input-forward-button {
-    margin-top: 2.6rem;
-  }
+.scroll-content {
+  margin-top: 96px !important;
+}
 
-  .scroll-content {
-    margin-top: 96px !important;
+.page-content {
+  min-height: calc(100vh - 356px);
+  margin-top: 25px;
+  transition: margin 0.3s;
+
+  &.expanded {
+    min-height: calc(100vh - 414px);
+    margin-top: 100px;
   }
 
-  .page-content {
-    min-height: calc(100vh - 356px);
-    margin-top: 25px;
-    transition: margin 0.3s;
-
-    &.expanded {
-      min-height: calc(100vh - 414px);
-      margin-top: 100px;
-    }
-
-    &.without-lfx-header {
-      margin-top: 50px;
-      min-height: calc(100vh - 364px) !important;
-    }
-
-    @media (min-width: 768px) and (max-width: 1200px) {
-      padding: 16px 50px 162px;
-    }
+  .error {
+    font-size: 18px;
+    color: red;
+    text-align: center;
+    margin-top: 115px;
   }
-  ion-footer {
-    position: relative;
+
+  &.without-lfx-header {
+    margin-top: 50px;
+    min-height: calc(100vh - 364px) !important;
   }
+
+  @media (min-width: 768px) and (max-width: 1200px) {
+    padding: 16px 50px 162px;
+  }
+}
+
+ion-footer {
+  position: relative;
 }
