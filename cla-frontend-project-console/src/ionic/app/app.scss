@@ -15,13 +15,26 @@
 // automatically applied to the <body> element in the app.
 
 //@import url('https://fonts.googleapis.com/css?family=Lato');
-@import '../assets/fonts/lato-font.scss';
-@import '../assets/fonts/open-sans-font.scss';
+// @import '../assets/fonts/lato-font.scss';
+// @import '../assets/fonts/open-sans-font.scss';
+
 @import '../assets/fonts/work-sans-font.scss';
 @import '../assets/_bootstrap.scss';
 @import '../assets/_marterial.scss';
 
 @import 'ionic.globals';
+
+@font-face {
+  font-family: "Lato";
+  src: url("../assets/fonts/Lato/Lato-Regular.ttf") format("truetype");
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: "sans-serif";
+  src: url("../assets/fonts/Open_Sans/OpenSans-Regular.ttf") format("truetype");
+  font-weight: 300;
+}
 
 body ion-app.ios {
   font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;

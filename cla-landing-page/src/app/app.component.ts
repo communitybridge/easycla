@@ -3,6 +3,7 @@
 
 import { Component, OnInit } from '@angular/core';
 import { environment } from 'src/environments/environment';
+import { AppSettings } from './config/app-settings';
 import { LfxHeaderService } from './core/services/lfx-header.service';
 
 @Component({
@@ -29,7 +30,7 @@ export class AppComponent implements OnInit {
       },
       {
         title: 'Developer',
-        url: environment.CONTRIBUTOR_LOGIN_URL
+        url: AppSettings.LEARN_MORE
       }
     ];
     this.mounted();
