@@ -49,6 +49,7 @@ type Repository interface {
 	DisableRepositoriesByProjectID(ctx context.Context, projectID string) error
 	DisableRepositoriesOfGithubOrganization(ctx context.Context, externalProjectID, githubOrgName string) error
 	GetRepository(ctx context.Context, repositoryID string) (*models.GithubRepository, error)
+	GetRepositoryByGithubID(ctx context.Context, externalID string, enabled bool) (*models.GithubRepository, error)
 	GetRepositoriesByCLAGroup(ctx context.Context, claGroup string, enabled bool) ([]*models.GithubRepository, error)
 	GetRepositoriesByOrganizationName(ctx context.Context, gitHubOrgName string) ([]*models.GithubRepository, error)
 	GetCLAGroupRepositoriesGroupByOrgs(ctx context.Context, projectID string, enabled bool) ([]*models.GithubRepositoriesGroupByOrgs, error)
@@ -84,7 +85,7 @@ func (r repo) AddGithubRepository(ctx context.Context, externalProjectID string,
 	}
 
 	// Check first to see if the repository already exists
-	_, err := r.getRepositoryByGithubID(ctx, utils.StringValue(input.RepositoryExternalID), true)
+	_, err := r.GetRepositoryByGithubID(ctx, utils.StringValue(input.RepositoryExternalID), true)
 	if err != nil {
 		// Expecting Not found - no issue if not found - all other error we throw
 		if err != ErrGithubRepositoryNotFound {
@@ -490,9 +491,10 @@ func (r repo) getRepositoriesByGithubOrg(ctx context.Context, githubOrgName stri
 	return out, nil
 }
 
-func (r repo) getRepositoryByGithubID(ctx context.Context, externalID string, enabled bool) (*models.GithubRepository, error) {
+// GetRepositoryByGithubID fetches the repository model by its external github id
+func (r repo) GetRepositoryByGithubID(ctx context.Context, externalID string, enabled bool) (*models.GithubRepository, error) {
 	f := logrus.Fields{
-		"functionName":   "getRepositoryByGithubID",
+		"functionName":   "GetRepositoryByGithubID",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"externalID":     externalID,
 		"enabled":        enabled,

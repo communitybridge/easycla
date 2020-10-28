@@ -3201,6 +3201,34 @@ paths:
       tags:
         - sign
 
+  /github/activity:
+    post:
+      summary: Github Activity Callback Handler
+      description: Github Activity Callback Handler reacts to github events emmited.
+      security: []
+      operationId: githubActivity
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-github-event"
+        - $ref: "#/parameters/x-hub-signature"
+        - name: githubActivityInput
+          in: body
+          schema:
+            $ref: '#/definitions/github-activity-input'
+      responses:
+        '200':
+          description: 'Success'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - github-activity
+
 responses:
   unauthorized:
     description: Unauthorized
@@ -3479,6 +3507,16 @@ parameters:
     description: The unique request ID value - assigned/set by the API Gateway based on the login session
     in: header
     type: string
+  x-github-event:
+    name: X-GITHUB-EVENT
+    description: Github event type header, it's sent from Github webhook callback
+    in: header
+    type: string
+  x-hub-signature:
+    name: X-HUB-SIGNATURE
+    description: Github event signature which is used for validation of the request body
+    in: header
+    type: string
 
 definitions:
   # Common definitions
@@ -3497,6 +3535,15 @@ definitions:
 
   event:
     $ref: './common/event.yaml'
+
+  github-activity-input:
+    type: object
+    required:
+      - action
+    properties:
+      action:
+          type: string
+    additionalProperties: true
 
   github-repository-input:
     type: object
