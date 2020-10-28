@@ -15,7 +15,6 @@ import { LayoutModule } from '../../layout/layout.module';
     LoadingDisplayDirectiveModule,
     IonicPageModule.forChild(ClaGerritCorporatePage),
     LayoutModule
-
   ],
   entryComponents: [ClaGerritCorporatePage]
 })

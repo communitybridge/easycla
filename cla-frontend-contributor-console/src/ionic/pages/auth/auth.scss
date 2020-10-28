@@ -11,6 +11,12 @@ page-auth {
     animation: spin 2s linear infinite;
   }
 
+  .message {
+    margin-top: 200px;
+    text-align: center;
+    font-size: 18px;
+  }
+
   /* Safari */
   @-webkit-keyframes spin {
     0% {

@@ -1,13 +1,7 @@
-<ion-header>
-  <ion-navbar>
-    <button ion-button menuToggle>
-      <ion-icon name="menu"></ion-icon>
-    </button>
-    <ion-title>CLA Contributor Console</ion-title>
-  </ion-navbar>
-</ion-header>
-<ion-content padding headerspacing overflow-scroll="true">
-  <div class="page-content">
+<cla-header title="CLA Contributor Console" (onToggle)="onClickToggle($event)"></cla-header>
+
+<ion-content>
+  <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
     <div class="login-container">
       <img src="/assets/img/lf_logo.png" alt="Linux Foundation Logo" class="logo" />
       <button id="sign-in" ion-button (click)="login()">
