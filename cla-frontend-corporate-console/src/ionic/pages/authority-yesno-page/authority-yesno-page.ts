@@ -18,7 +18,6 @@ export class AuthorityYesnoPage {
   expanded: boolean = true;
   company: any;
   project: any;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
 
   constructor(
     public navCtrl: NavController,

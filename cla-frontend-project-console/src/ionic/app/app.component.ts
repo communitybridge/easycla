@@ -86,9 +86,7 @@ export class MyApp {
   }
 
   ngOnInit() {
-    if (EnvConfig['lfx-header-enabled'] === "true") {
-      this.mounted();
-    }
+    this.mounted();
   }
 
   initializeApp() {

@@ -39,7 +39,6 @@ export class ProjectClaTemplatePage {
   };
   submitAttempt = false;
   expanded: boolean = true;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
   @Input() form: FormGroup;
   @ViewChild(Nav) nav: Nav;
 

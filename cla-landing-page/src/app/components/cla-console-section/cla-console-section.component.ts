@@ -23,7 +23,7 @@ export class ClaConsoleSectionComponent {
   onClickProceed(type: string) {
     this.storageService.setItem('type', type);
     const redirectConsole = (type === 'Projects') ? AppSettings.PROJECT_CONSOLE_LINK : AppSettings.CORPORATE_CONSOLE_LINK;
-    window.open(EnvConfig.default[redirectConsole] + '#/authorize', '_self');
+    window.open(EnvConfig.default[redirectConsole] + '#/login', '_self');
   }
 
   onClickRequestAccess() {

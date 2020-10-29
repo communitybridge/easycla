@@ -4,7 +4,6 @@
 import { AfterViewInit, Component } from '@angular/core';
 import { NavController } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
-import { EnvConfig } from '../../services/cla.env.utils';
 import { LfxHeaderService } from '../../services/lfx-header.service';
 
 /**
@@ -37,7 +36,7 @@ export class AuthPage implements AfterViewInit {
           this.lfxHeaderService.setUserInLFxHeader();
           this.navCtrl.setRoot('CompaniesPage');
         } else {
-          window.open(EnvConfig['landing-page'], '_self');
+          this.navCtrl.setRoot('LoginPage');
         }
       }
     });

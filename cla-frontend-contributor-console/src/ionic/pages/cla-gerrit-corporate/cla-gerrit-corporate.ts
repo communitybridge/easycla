@@ -28,7 +28,6 @@ export class ClaGerritCorporatePage {
   signature: string;
   companies: any;
   expanded: boolean = true;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
   errorMessage: string;
 
   constructor(

@@ -13,7 +13,6 @@ export class ClaHeader {
   @Input() title = '';
   @Input() hasShowMenu = true;
   @Output() onToggle: EventEmitter<any> = new EventEmitter<any>();
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
   hasExpanded: boolean = true;
 
   constructor(

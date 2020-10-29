@@ -30,7 +30,6 @@ export class AllProjectsPage {
   errorMessage = null;
   errorStatus = null;
   expanded: boolean = true;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
 
   constructor(
     public navCtrl: NavController,
@@ -82,11 +81,7 @@ export class AllProjectsPage {
   }
 
   redirectToLogin() {
-    if (EnvConfig['lfx-header-enabled'] === "true") {
-      window.open(EnvConfig['landing-page'], '_self');
-    } else {
-      this.navCtrl.setRoot('LoginPage');
-    }
+    this.navCtrl.setRoot('LoginPage');
   }
 
   viewProjectCLA(projectId) {
