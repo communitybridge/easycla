@@ -443,8 +443,9 @@ def handle_installation_repositories_added_event(action: str, body: dict):
                     repository_url='https://github.com/' + repository_full_name,
                     repository_organization_name=organization_name,
                     repository_external_id=repository_external_id,
-                    repository_sfdc_id=cla_group_repo_sfids.pop()
+                    repository_sfdc_id=cla_group_repo_sfids.pop(),
                 )
+                new_repository.set_enabled(True)
                 new_repository.save()
 
                 # Log the event
