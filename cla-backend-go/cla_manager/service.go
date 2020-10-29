@@ -319,7 +319,7 @@ func (s service) RemoveClaManager(ctx context.Context, companyID string, claGrou
 	claManagers := sigModel.SignatureACL
 	// Notify CLA Managers - send email to each manager
 	for _, manager := range claManagers {
-		sendClaManagerDeleteEmailToCLAManagers(companyModel, claGroupModel, userModel.LfUsername,
+		sendClaManagerDeleteEmailToCLAManagers(companyModel, claGroupModel, userModel.LfUsername, userModel.LfEmail,
 			manager.Username, manager.LfEmail)
 	}
 
@@ -475,7 +475,7 @@ func sendRemovedClaManagerEmailToRecipient(companyModel *models.Company, claGrou
 	}
 }
 
-func sendClaManagerDeleteEmailToCLAManagers(companyModel *models.Company, claGroupModel *models.ClaGroup, name, recipientName, recipientAddress string) {
+func sendClaManagerDeleteEmailToCLAManagers(companyModel *models.Company, claGroupModel *models.ClaGroup, name, email, recipientName, recipientAddress string) {
 	companyName := companyModel.CompanyName
 	projectName := claGroupModel.ProjectName
 
@@ -485,11 +485,11 @@ func sendClaManagerDeleteEmailToCLAManagers(companyModel *models.Company, claGro
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
-<p>%s has been removed as a CLA Manager from %s for the project %s.</p>
+<p>%s(%s) has been removed as a CLA Manager from %s for the project %s.</p>
 %s
 %s
 `,
-		recipientName, projectName, name, companyName, projectName,
+		recipientName, projectName, name, email, companyName, projectName,
 		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
