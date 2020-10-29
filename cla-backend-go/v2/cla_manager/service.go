@@ -329,7 +329,9 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 		}
 		var eg errgroup.Group
 		// add user as cla-manager for all projects of cla-group
-		for _, projectSFID := range projectSFIDList.List() {
+		for _, projectSfid := range projectSFIDList.List() {
+			// ensure that following goroutine gets a copy of projectSFID
+			projectSFID := projectSfid
 			eg.Go(func() error {
 				err := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(params.Body.UserEmail.String(), projectSFID, params.CompanySFID, roleID)
 				if err != nil {
@@ -491,7 +493,9 @@ func (s *service) DeleteCLAManager(ctx context.Context, claGroupID string, param
 		}
 		var eg errgroup.Group
 		// remove user as cla-manager for all projects of cla-group
-		for _, projectSFID := range projectSFIDList.List() {
+		for _, projectSfid := range projectSFIDList.List() {
+			// ensure that following goroutine gets a copy of projectSFID
+			projectSFID := projectSfid
 			eg.Go(func() error {
 				scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, projectSFID, utils.CLAManagerRole, utils.ProjectOrgScope, params.UserLFID)
 				if scopeErr != nil {
