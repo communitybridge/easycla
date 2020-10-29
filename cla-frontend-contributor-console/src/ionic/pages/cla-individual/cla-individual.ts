@@ -25,7 +25,6 @@ export class ClaIndividualPage {
   loadingSignature: boolean = true;
   error: any = false;
   expanded: boolean = true;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
 
   constructor(
     public navParams: NavParams,

@@ -12,6 +12,7 @@ import { AuthService } from '../services/auth.service';
 import { AuthPage } from '../pages/auth/auth';
 import { HttpClient } from '../services/http-client';
 import { KeycloakService } from '../services/keycloak/keycloak.service';
+import { LfxHeaderService } from '../services/lfx-header.service';
 
 @Component({
   templateUrl: 'app.html',
@@ -29,7 +30,8 @@ export class MyApp {
     public claService: ClaService,
     public authService: AuthService,
     public httpClient: HttpClient,
-    public keycloak: KeycloakService
+    public keycloak: KeycloakService,
+    private lfxHeaderService: LfxHeaderService
   ) {
     this.initializeApp();
 
@@ -40,26 +42,10 @@ export class MyApp {
     this.claService.isLocalTesting(localServicesMode);
     this.claService.setApiUrl(EnvConfig['cla-api-url']);
     this.claService.setHttp(httpClient);
-
-    this.authService.checkSession.subscribe((loggedIn) => {
-      if (loggedIn) {
-        const gerritId = localStorage.getItem('gerritId');
-        const claType = localStorage.getItem('gerritClaType');
-        if (claType == 'ICLA') {
-          this.nav.setRoot('ClaGerritIndividualPage', { gerritId: gerritId });
-        } else if (claType == 'CCLA') {
-          this.nav.setRoot('ClaGerritCorporatePage', { gerritId: gerritId });
-        }
-      } else {
-        this.nav.setRoot('LoginPage');
-      }
-    });
   }
 
   ngOnInit() {
-    if (EnvConfig['lfx-header-enabled'] === "true") {
-      this.mounted();
-    }
+    this.mounted();
   }
 
   initializeApp() {

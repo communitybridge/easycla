@@ -30,8 +30,7 @@ export class AuthService {
   auth0Client$ = (from(
     createAuth0Client({
       domain: this.auth0Options.domain,
-      client_id: this.auth0Options.clientId,
-      cacheLocation: 'localstorage'
+      client_id: this.auth0Options.clientId
     })
   ) as Observable<Auth0Client>).pipe(
     shareReplay(1), // Every subscription receives the same shared value
@@ -193,13 +192,9 @@ export class AuthService {
   logout() {
     this.auth0Client$.subscribe((client: Auth0Client) => {
       // Call method to log out
-      let redirectUri = window.location.origin; // this.auth0Options.redirectUri;
-      if (EnvConfig['lfx-header-enabled'] === "true") {
-        redirectUri = EnvConfig['landing-page'];
-      }
       client.logout({
         client_id: this.auth0Options.clientId,
-        returnTo: redirectUri,
+        returnTo: EnvConfig['landing-page'],
       });
     });
   }

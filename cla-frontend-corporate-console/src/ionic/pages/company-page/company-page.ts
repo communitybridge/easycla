@@ -45,7 +45,6 @@ export class CompanyPage {
   allSignatures: any[];
   userEmail: string;
   expanded: boolean = true;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
 
   constructor(
     public navCtrl: NavController,

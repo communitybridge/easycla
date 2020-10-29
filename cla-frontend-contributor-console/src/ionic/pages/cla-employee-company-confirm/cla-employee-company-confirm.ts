@@ -33,7 +33,6 @@ export class ClaEmployeeCompanyConfirmPage {
   errorMessage: string = null;
   helpDeskLink: URL = new URL(generalConstants.getHelpURL);
   expanded: boolean = true;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
 
   constructor(
     public navCtrl: NavController,

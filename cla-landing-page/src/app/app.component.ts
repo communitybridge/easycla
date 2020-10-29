@@ -3,6 +3,8 @@
 
 import { Component, OnInit } from '@angular/core';
 import { environment } from 'src/environments/environment';
+import { AppSettings } from './config/app-settings';
+import { EnvConfig } from './config/cla-env-utils';
 import { LfxHeaderService } from './core/services/lfx-header.service';
 
 @Component({
@@ -21,15 +23,15 @@ export class AppComponent implements OnInit {
     this.links = [
       {
         title: 'Project Login',
-        url: environment.PROJECT_LOGIN_URL
+        url: EnvConfig.default[AppSettings.PROJECT_CONSOLE_LINK] + '#/login'
       },
       {
         title: 'CLA Manager Login',
-        url: environment.CORPORATE_LOGIN_URL
+        url: EnvConfig.default[AppSettings.CORPORATE_CONSOLE_LINK] + '#/login'
       },
       {
         title: 'Developer',
-        url: environment.CONTRIBUTOR_LOGIN_URL
+        url: AppSettings.LEARN_MORE
       }
     ];
     this.mounted();

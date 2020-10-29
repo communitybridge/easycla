@@ -27,7 +27,6 @@ export class ClaEmployeeCompanyTroubleshootPage {
   company: any;
   gitService: string;
   expanded: boolean = true;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
   
   constructor(
     private modalCtrl: ModalController,

@@ -1,7 +1,10 @@
 <cla-header title="CLA - Individual" hasShowBackBtn="true" (onToggle)="onClickToggle($event)"></cla-header>
 
-<ion-content *ngIf="hasLoggedIn">
-  <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
+<ion-content>
+  <div class="page-content" [ngClass]="{'expanded':expanded}">
+
+    <div class="error">{{errorMessage}}</div>
+
     <header>
       <ion-grid>
         <ion-row>
