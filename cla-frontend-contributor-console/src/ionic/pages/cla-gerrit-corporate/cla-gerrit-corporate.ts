@@ -28,7 +28,7 @@ export class ClaGerritCorporatePage {
   signature: string;
   companies: any;
   expanded: boolean = true;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
+  errorMessage: string;
 
   constructor(
     public navCtrl: NavController,
@@ -42,6 +42,7 @@ export class ClaGerritCorporatePage {
     this.getDefaults();
     localStorage.setItem('gerritId', this.gerritId);
     localStorage.setItem('gerritClaType', 'CCLA');
+    console.log('Set');
   }
 
   getDefaults() {
@@ -52,14 +53,17 @@ export class ClaGerritCorporatePage {
   }
 
   ngOnInit() {
-    console.log(this.authService.loggedIn);
-    if (!this.authService.loggedIn) {
-      this.redirectToLogin();
-    } else {
-      this.getCompanies();
-      this.getUserInfo();
-      this.getProject();
-    }
+    this.authService.userProfile$.subscribe(user => {
+      if (user !== undefined) {
+        if (user) {
+          this.getCompanies();
+          this.getUserInfo();
+          this.getProject();
+        } else {
+          this.redirectToLogin();
+        }
+      }
+    });
   }
 
   redirectToLogin() {
@@ -160,9 +164,7 @@ export class ClaGerritCorporatePage {
   getProject() {
     this.claService.getGerrit(this.gerritId).subscribe((response) => {
       if (response.errors) {
-        console.error(response.errors);
-        // Redirect to error page.
-        this.redirectToLogin();
+        this.errorMessage = 'A gerrit instance does not exist in database';
       } else {
         this.projectId = response.project_id;
         this.claService.getProjectWithAuthToken(response.project_id).subscribe((project) => {

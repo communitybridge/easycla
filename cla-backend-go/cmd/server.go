@@ -35,8 +35,6 @@ import (
 	v2GithubOrganizations "github.com/communitybridge/easycla/cla-backend-go/v2/github_organizations"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
 
-	"github.com/communitybridge/easycla/cla-backend-go/token"
-
 	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
 	v2Gerrits "github.com/communitybridge/easycla/cla-backend-go/v2/gerrits"
 
@@ -68,7 +66,6 @@ import (
 
 	"github.com/communitybridge/easycla/cla-backend-go/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/company"
-	"github.com/communitybridge/easycla/cla-backend-go/config"
 	"github.com/communitybridge/easycla/cla-backend-go/docraptor"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi"
@@ -175,10 +172,7 @@ func server(localMode bool) http.Handler {
 		log.Panicf("Unable to load AWS session - Error: %v", err)
 	}
 
-	configFile, err := config.LoadConfig(configFile, awsSession, stage)
-	if err != nil {
-		log.Panicf("Unable to load config - Error: %v", err)
-	}
+	configFile := ini.GetConfig()
 
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
 	if err != nil {
@@ -206,8 +200,6 @@ func server(localMode bool) http.Handler {
 	if err != nil {
 		logrus.Panic(err)
 	}
-
-	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
 	github.Init(configFile.Github.AppID, configFile.Github.AppPrivateKey, configFile.Github.AccessToken)
 
 	// Our backend repository handlers

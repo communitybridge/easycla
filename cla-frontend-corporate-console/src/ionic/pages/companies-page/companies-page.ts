@@ -28,7 +28,6 @@ export class CompaniesPage {
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
   expanded: boolean = true;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
 
   constructor(
     public navCtrl: NavController,

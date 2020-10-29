@@ -351,7 +351,7 @@ func (repo *repository) queryEventsTable(indexName string, condition expression.
 		// since we are filtering data in client side, we should use large pageSize to avoid recursive query
 		queryInput.Limit = aws.Int64(HugePageSize)
 	} else {
-		queryInput.Limit = aws.Int64(*pageSize)
+		queryInput.Limit = aws.Int64(*pageSize + 1)
 	}
 
 	if nextKey != nil && !all {
@@ -384,7 +384,7 @@ func (repo *repository) queryEventsTable(indexName string, condition expression.
 		if searchTerm != nil {
 			for _, event := range eventsList {
 				if !all {
-					if int64(len(events)) >= *pageSize {
+					if int64(len(events)) >= (*pageSize + 1) {
 						break
 					}
 				}
@@ -403,19 +403,20 @@ func (repo *repository) queryEventsTable(indexName string, condition expression.
 		}
 
 		if !all {
-			if int64(len(events)) >= *pageSize {
+			if int64(len(events)) >= (*pageSize + 1) {
 				break
 			}
 		}
 	}
-
 	if !all {
-		if int64(len(events)) >= *pageSize {
+		if int64(len(events)) > *pageSize {
 			events = events[0:*pageSize]
 			lastEvaluatedKey, err = buildNextKey(indexName, events[*pageSize-1])
 			if err != nil {
 				log.Warnf("unable to build nextKey. index = %s, event = %#v error = %s", indexName, events[*pageSize-1], err.Error())
 			}
+		} else {
+			events = events[0:int64(len(events))]
 		}
 	}
 

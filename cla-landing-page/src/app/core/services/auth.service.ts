@@ -80,19 +80,12 @@ export class AuthService {
     } else {
       this.localAuthSetup();
     }
-    console.log(this.auth0Options);
     this.handlerReturnToAferlogout();
   }
 
   handlerReturnToAferlogout() {
-    console.log(' handlerReturnToAferlogout > ', this.currentHref);
     const { query } = querystring.parseUrl(this.currentHref);
-    console.log('query ? ', { query });
-
     const returnTo = query.returnTo;
-
-    console.log(' returnTo ? ', { returnTo });
-
     if (returnTo) {
       const target = this.getTargetRouteFromReturnTo(returnTo);
       this.router.navigate([target]);
@@ -194,11 +187,11 @@ export class AuthService {
       // Subscribe to authentication completion observable
       // Response will be an array of user and login status
       authComplete$.subscribe(() => {
-        console.log('navigating too', {
-          current: this.currentHref,
-          targetRoute,
-          href: window.location.href,
-        });
+        // console.log('navigating too', {
+        //   current: this.currentHref,
+        //   targetRoute,
+        //   href: window.location.href,
+        // });
         // Redirect to target route after callback processing
         // *info: this url change will remove the code and state from the URL
         // * this is need to avoid invalid state in the next refresh

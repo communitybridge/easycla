@@ -1,10 +1,9 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component } from '@angular/core';
 import { NavController } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
-import { EnvConfig } from '../../services/cla.env.utils';
 import { LfxHeaderService } from '../../services/lfx-header.service';
 
 /**
@@ -19,7 +18,6 @@ import { LfxHeaderService } from '../../services/lfx-header.service';
   templateUrl: 'auth.html'
 })
 export class AuthPage implements AfterViewInit {
-  timer = null;
   constructor(
     public navCtrl: NavController,
     public authService: AuthService,
@@ -30,9 +28,6 @@ export class AuthPage implements AfterViewInit {
 
     this.authService.redirectRoot.subscribe((target) => {
       window.history.replaceState(null, null, window.location.pathname);
-      if (this.timer !== null) {
-        clearTimeout(this.timer);
-      }
       this.navCtrl.setRoot('AllProjectsPage');
     });
 
@@ -42,27 +37,10 @@ export class AuthPage implements AfterViewInit {
           this.lfxHeaderService.setUserInLFxHeader();
           this.navCtrl.setRoot('AllProjectsPage');
         } else {
-          if (EnvConfig['lfx-header-enabled'] === "true") {
-            this.authService.login();
-          } else {
-            this.navCtrl.setRoot('LoginPage');
-          }
+          this.navCtrl.setRoot('LoginPage');
         }
       }
     });
-
-    // this.timer = setTimeout(() => {
-    //   if (this.authService.loggedIn) {
-    //     this.lfxHeaderService.setUserInLFxHeader();
-    //     this.navCtrl.setRoot('AllProjectsPage');
-    //   } else {
-    //     if (EnvConfig['lfx-header-enabled'] === "true") {
-    //       this.authService.login();
-    //     } else {
-    //       this.navCtrl.setRoot('LoginPage');
-    //     }
-    //   }
-    // }, 4000);
   }
 
   onClickToggle(toggle) {

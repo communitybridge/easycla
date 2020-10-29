@@ -1,42 +1,77 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Location } from '@angular/common';
-import { Component } from '@angular/core';
-import { NavController, NavParams } from 'ionic-angular';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { NavController } from 'ionic-angular';
 import { AuthService } from '../../services/auth.service';
+import { LfxHeaderService } from '../../services/lfx-header.service';
+
+/**
+ * Generated class for the AuthPage page.
+ *
+ * See https://ionicframework.com/docs/components/#navigation for more info on
+ * Ionic pages and navigation.
+ */
 
 @Component({
   selector: 'page-auth',
   templateUrl: 'auth.html'
 })
-export class AuthPage {
-  userRoles: any;
+export class AuthPage implements AfterViewInit {
   gerritId: string;
   claType: string;
+  message: string;
 
   constructor(
     public navCtrl: NavController,
     public authService: AuthService,
-    private location: Location
+    private lfxHeaderService: LfxHeaderService
   ) {
     this.gerritId = localStorage.getItem('gerritId');
     this.claType = localStorage.getItem('gerritClaType');
   }
 
-  ngOnInit() {
+  ngAfterViewInit() {
     this.authService.redirectRoot.subscribe((target) => {
-      if (this.authService.loggedIn) {
-        window.history.replaceState(null, null, window.location.pathname);
-        if (this.claType == 'ICLA') {
-          this.navCtrl.setRoot('ClaGerritIndividualPage', { gerritId: this.gerritId });
-        } else if (this.claType == 'CCLA') {
-          this.navCtrl.setRoot('ClaGerritCorporatePage', { gerritId: this.gerritId });
+      this.redirect(target);
+    });
+
+    this.authService.userProfile$.subscribe(user => {
+      if (user !== undefined) {
+        if (user) {
+          this.lfxHeaderService.setUserInLFxHeader();
+          if (this.claType == 'ICLA') {
+            window.history.replaceState(null, null, window.location.pathname);
+            this.navCtrl.setRoot('ClaGerritIndividualPage', { gerritId: this.gerritId });
+          } else if (this.claType == 'CCLA') {
+            window.history.replaceState(null, null, window.location.pathname);
+            this.navCtrl.setRoot('ClaGerritCorporatePage', { gerritId: this.gerritId });
+          } else {
+            setTimeout(() => {
+              this.message = 'Invalid URL. Please verify you follow the right steps.';
+            }, 1500);
+          }
+        } else {
+          this.navCtrl.setRoot('LoginPage');
         }
-      } else {
-        console.log('Redirect to login');
       }
     });
   }
 
+  redirect(target) {
+    this.lfxHeaderService.setUserInLFxHeader();
+    if (this.claType == 'ICLA') {
+      window.history.replaceState(null, null, window.location.pathname);
+      this.navCtrl.setRoot('ClaGerritIndividualPage', { gerritId: this.gerritId });
+    } else if (this.claType == 'CCLA') {
+      window.history.replaceState(null, null, window.location.pathname);
+      this.navCtrl.setRoot('ClaGerritCorporatePage', { gerritId: this.gerritId });
+    } else {
+      window.open(`${window.location.origin}` + '#' + target, '_self');
+    }
+  }
+
+  onClickToggle(toggle) {
+
+  }
 }

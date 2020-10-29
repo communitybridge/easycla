@@ -31,8 +31,7 @@ export class ClaGerritIndividualPage {
   activeSignatures: boolean = true; // we assume true until otherwise
   signature: any;
   expanded: boolean = true;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
-  hasLoggedIn: boolean = false;
+  errorMessage: string;
 
   constructor(
     public navCtrl: NavController,
@@ -56,12 +55,15 @@ export class ClaGerritIndividualPage {
   }
 
   ngOnInit() {
-    this.hasLoggedIn = this.authService.loggedIn;
-    if (!this.hasLoggedIn) {
-      this.redirectToLogin();
-    } else {
-      this.getProject(this.gerritId);
-    }
+    this.authService.userProfile$.subscribe(user => {
+      if (user !== undefined) {
+        if (user) {
+          this.getProject(this.gerritId);
+        } else {
+          this.redirectToLogin();
+        }
+      }
+    });
   }
 
   redirectToLogin() {
@@ -70,22 +72,25 @@ export class ClaGerritIndividualPage {
 
   getProject(gerritId) {
     //retrieve projectId from this Gerrit
-    this.claService.getGerrit(gerritId).subscribe((gerrit) => {
-      this.gerrit = gerrit;
-      this.projectId = gerrit.project_id;
-
-      //retrieve project info with project Id
-      this.claService.getProjectWithAuthToken(gerrit.project_id).subscribe((project) => {
-        this.project = project;
-        localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(project));
-        // retrieve userInfo from auth0 service
-        this.claService.postOrGetUserForGerrit().subscribe((user) => {
-          this.userId = user.user_id;
-          localStorage.setItem(generalConstants.USER_MODEL, JSON.stringify(user));
-          // get signatureIntent object, similar to the Github flow.
-          this.postSignatureRequest();
+    this.claService.getGerrit(gerritId).subscribe((response) => {
+      if (response.errors) {
+        this.errorMessage = 'A gerrit instance does not exist in database';
+      } else {
+        this.gerrit = response;
+        this.projectId = response.project_id;
+        //retrieve project info with project Id
+        this.claService.getProjectWithAuthToken(response.project_id).subscribe((project) => {
+          this.project = project;
+          localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(project));
+          // retrieve userInfo from auth0 service
+          this.claService.postOrGetUserForGerrit().subscribe((user) => {
+            this.userId = user.user_id;
+            localStorage.setItem(generalConstants.USER_MODEL, JSON.stringify(user));
+            // get signatureIntent object, similar to the Github flow.
+            this.postSignatureRequest();
+          });
         });
-      });
+      }
     });
   }
 

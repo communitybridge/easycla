@@ -1,6 +1,9 @@
 cla-gerrit-individual {
   .error {
+    font-size: 18px;
     color: red;
+    text-align: center;
+    margin-top: 115px;
   }
   .card-md p {
     margin-bottom: 1rem;
@@ -17,11 +20,6 @@ cla-gerrit-individual {
     &.expanded {
       min-height: calc(100vh - 414px);
       margin-top: 100px;
-    }
-
-    &.without-lfx-header {
-      margin-top: 50px;
-      min-height: calc(100vh - 364px) !important;
     }
 
     @media (min-width: 768px) and (max-width: 1200px) {
