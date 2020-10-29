@@ -31,7 +31,6 @@ export class ClaGerritIndividualPage {
   activeSignatures: boolean = true; // we assume true until otherwise
   signature: any;
   expanded: boolean = true;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
   errorMessage: string;
 
   constructor(

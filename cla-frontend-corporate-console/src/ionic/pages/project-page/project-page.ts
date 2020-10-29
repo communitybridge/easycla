@@ -34,7 +34,6 @@ export class ProjectPage {
   company: ClaCompanyModel;
   manager: ClaUserModel;
   showModal: any;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
   noPendingContributorRequests: boolean;
   allContributorRequests: any[];
   approvedContributorRequests: any[];

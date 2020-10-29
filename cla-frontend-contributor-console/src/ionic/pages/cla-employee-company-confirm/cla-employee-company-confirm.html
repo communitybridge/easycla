@@ -1,8 +1,8 @@
-
-<cla-header title="CLA - {{ company.company_name }} CCLA Company Confirm" hasShowBackBtn="true" (onToggle)="onClickToggle($event)"></cla-header>
+<cla-header title="CLA - {{ company.company_name }} CCLA Company Confirm" hasShowBackBtn="true"
+  (onToggle)="onClickToggle($event)"></cla-header>
 
 <ion-content>
-  <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
+  <div class="page-content" [ngClass]="{'expanded':expanded}">
     <ion-grid>
       <ion-row align-items-center>
         <ion-col col-12 col-md-2>

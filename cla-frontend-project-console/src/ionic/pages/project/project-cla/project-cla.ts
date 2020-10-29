@@ -29,7 +29,6 @@ export class ProjectClaPage {
   iclaUploadInfo: any;
   cclaUploadInfo: any;
   expanded: boolean = true;
-  hasEnabledLFXHeader = EnvConfig['lfx-header-enabled'] === "true" ? true : false;
   @ViewChild(Nav) nav: Nav;
 
   constructor(

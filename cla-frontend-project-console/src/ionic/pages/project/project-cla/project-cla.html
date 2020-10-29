@@ -1,9 +1,8 @@
-
 <cla-header title="Back to all Projects" hasShowBackBtn="true" (onToggle)="onClickToggle($event)"></cla-header>
 
 <ion-content headerspacing overflow-scroll="true">
 
-  <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
+  <div class="page-content" [ngClass]="{'expanded':expanded}">
     <section-header [projectId]="sfdcProjectId"></section-header>
 
     <loading-spinner *ngIf="claProjects!== null" [loading]="loading.claProjects"></loading-spinner>

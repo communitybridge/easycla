@@ -14,12 +14,10 @@ export class LfxHeaderService {
   setUserInLFxHeader(): void {
     setTimeout(() => {
       const lfHeaderEl: any = document.getElementById('lfx-header');
-      console.log(lfHeaderEl);
       if (!lfHeaderEl) {
         return;
       }
       this.auth.userProfile$.subscribe((data) => {
-        console.log(data);
         if (data) {
           lfHeaderEl.authuser = data;
         }

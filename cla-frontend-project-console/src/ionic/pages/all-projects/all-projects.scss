@@ -41,10 +41,6 @@ all-projects {
       margin-top: 100px;
     }
 
-    &.without-lfx-header {
-      min-height: calc(100vh - 410px) !important;
-    }
-
     @media (min-width: 768px) and (max-width: 1200px) {
       padding: 16px 50px 162px;
     }

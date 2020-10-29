@@ -1,7 +1,7 @@
 <cla-header [title]="title | trimCharacters:35" (onToggle)="onClickToggle($event)"></cla-header>
 
 <ion-content>
-  <div class="page-content" [ngClass]="{'without-lfx-header':!hasEnabledLFXHeader,'expanded':expanded}">
+  <div class="page-content" [ngClass]="{'expanded':expanded}">
 
     <ion-grid>
       <ion-row justify-content-center>
@@ -160,58 +160,59 @@
                 </ion-row>
                 <table class="table" *ngIf="!noPendingCLAManagerRequests && !loading.claManagerRequests">
                   <thead>
-                  <tr>
-                    <th class="clickable">
-                      Date/Time
-                    </th>
+                    <tr>
+                      <th class="clickable">
+                        Date/Time
+                      </th>
 
-                    <th class="clickable">
-                      User ID
-                    </th>
+                      <th class="clickable">
+                        User ID
+                      </th>
 
-                    <th class="clickable">
-                      User Name
-                    </th>
+                      <th class="clickable">
+                        User Name
+                      </th>
 
-                    <th class="clickable">
-                      User Email
-                    </th>
+                      <th class="clickable">
+                        User Email
+                      </th>
 
-                    <th class="clickable">
-                      Actions
-                    </th>
-                  </tr>
+                      <th class="clickable">
+                        Actions
+                      </th>
+                    </tr>
                   </thead>
                   <tbody>
 
-                  <tr *ngFor="let request of pendingCLAManagerRequests">
-                    <td data-title="Name">
-                      <span>{{ request.created | localTimeZone}}</span>
-                    </td>
+                    <tr *ngFor="let request of pendingCLAManagerRequests">
+                      <td data-title="Name">
+                        <span>{{ request.created | localTimeZone}}</span>
+                      </td>
 
-                    <td data-title="Name">
-                      <span>{{ request.userID}}</span>
-                    </td>
+                      <td data-title="Name">
+                        <span>{{ request.userID}}</span>
+                      </td>
 
-                    <td data-title="Name">
-                      <span>{{ request.userName}}</span>
-                    </td>
+                      <td data-title="Name">
+                        <span>{{ request.userName}}</span>
+                      </td>
 
-                    <td data-title="Email" class="wrap-word">
-                      <span>{{ request.userEmail}}</span>
-                    </td>
+                      <td data-title="Email" class="wrap-word">
+                        <span>{{ request.userEmail}}</span>
+                      </td>
 
-                    <td data-title="Actions">
-                      <button class="button" *ngIf="canEdit && request.status === 'pending'" clear ion-button
-                              color="secondary" (click)="approveCLAManagerRequest(request.companyID, request.companyName, request.projectID, request.projectName, request.requestID)">
-                        Accept
-                      </button>
-                      <button *ngIf="canEdit && request.status === 'pending'" clear ion-button color="danger"
-                              (click)="denyCLAManagerRequest(request.companyID, request.companyName, request.projectID, request.projectName, request.requestID)">
-                        Decline
-                      </button>
-                    </td>
-                  </tr>
+                      <td data-title="Actions">
+                        <button class="button" *ngIf="canEdit && request.status === 'pending'" clear ion-button
+                          color="secondary"
+                          (click)="approveCLAManagerRequest(request.companyID, request.companyName, request.projectID, request.projectName, request.requestID)">
+                          Accept
+                        </button>
+                        <button *ngIf="canEdit && request.status === 'pending'" clear ion-button color="danger"
+                          (click)="denyCLAManagerRequest(request.companyID, request.companyName, request.projectID, request.projectName, request.requestID)">
+                          Decline
+                        </button>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </ion-row>
