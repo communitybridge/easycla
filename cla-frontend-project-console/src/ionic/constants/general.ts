@@ -1,6 +1,6 @@
 export const generalConstants = {
     // Footer constants.
-    getHelpURL: 'https://jira.linuxfoundation.org/servicedesk/customer/portal/4',
+    getHelpURL: 'https://jira.linuxfoundation.org/plugins/servlet/theme/portal/4/create/143',
     acceptableUsePolicyURL: 'https://communitybridge.dev.platform.linuxfoundation.org/acceptable-use',
     serviceSpecificTermsURL: 'https://communitybridge.dev.platform.linuxfoundation.org/service-terms',
     platformUseAgreementURL: 'https://communitybridge.dev.platform.linuxfoundation.org/platform-use-agreement',
