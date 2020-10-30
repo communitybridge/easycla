@@ -17,7 +17,7 @@ export class ClaFooter {
   serviceSpecificTermsURL: string = generalConstants.serviceSpecificTermsURL;
   platformUseAgreementURL: string = generalConstants.platformUseAgreementURL;
   privacyPolicyURL: string = generalConstants.privacyPolicyURL;
-
+  documentationURL: string = generalConstants.easyCLADocURL;
   constructor(
     public claService: ClaService,
   ) {
