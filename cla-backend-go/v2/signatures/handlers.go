@@ -82,8 +82,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		if err != nil {
 			msg := "problem converting v1 signature to v2"
 			log.WithFields(f).WithError(err).Warn(msg)
-			return signatures.NewGetSignatureInternalServerError().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+			return signatures.NewGetSignatureBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 		}
 
 		log.WithFields(f).Debug("returning signature to caller...")
@@ -149,8 +149,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		if err != nil {
 			msg := "unable to convert v1 to v2 approval list"
 			log.WithFields(f).Warn(msg)
-			return signatures.NewUpdateApprovalListInternalServerError().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+			return signatures.NewUpdateApprovalListBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 		}
 
 		// Invoke the update v1SignatureService function
@@ -170,8 +170,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		if err != nil {
 			msg := "unable to convert v1 to v2 signature"
 			log.WithFields(f).Warn(msg)
-			return signatures.NewUpdateApprovalListInternalServerError().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+			return signatures.NewUpdateApprovalListBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 		}
 
 		log.WithFields(f).Debug("returning signature to caller...")
@@ -209,7 +209,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		var response []models.GithubOrg
 		err = copier.Copy(&response, ghWhiteList)
 		if err != nil {
-			return signatures.NewGetGitHubOrgWhitelistInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+			return signatures.NewGetGitHubOrgWhitelistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
 		return signatures.NewGetGitHubOrgWhitelistOK().WithXRequestID(reqID).WithPayload(response)
@@ -241,7 +241,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		input := v1Models.GhOrgWhitelist{}
 		err = copier.Copy(&input, &params.Body)
 		if err != nil {
-			return signatures.NewAddGitHubOrgWhitelistInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+			return signatures.NewAddGitHubOrgWhitelistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
 		ghApprovalList, err := v1SignatureService.AddGithubOrganizationToWhitelist(ctx, params.SignatureID, input, githubAccessToken)
@@ -277,7 +277,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		var response []models.GithubOrg
 		err = copier.Copy(&response, ghApprovalList)
 		if err != nil {
-			return signatures.NewAddGitHubOrgWhitelistInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+			return signatures.NewAddGitHubOrgWhitelistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
 		return signatures.NewAddGitHubOrgWhitelistOK().WithXRequestID(reqID).WithPayload(response)
@@ -308,7 +308,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		input := v1Models.GhOrgWhitelist{}
 		err = copier.Copy(&input, &params.Body)
 		if err != nil {
-			return signatures.NewDeleteGitHubOrgWhitelistInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+			return signatures.NewDeleteGitHubOrgWhitelistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
 		ghApprovalList, err := v1SignatureService.DeleteGithubOrganizationFromWhitelist(ctx, params.SignatureID, input, githubAccessToken)
@@ -342,7 +342,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		var response []models.GithubOrg
 		err = copier.Copy(&response, ghApprovalList)
 		if err != nil {
-			return signatures.NewDeleteGitHubOrgWhitelistInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+			return signatures.NewDeleteGitHubOrgWhitelistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
 		return signatures.NewDeleteGitHubOrgWhitelistNoContent().WithXRequestID(reqID).WithPayload(response)
@@ -366,8 +366,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				return signatures.NewGetProjectSignaturesNotFound().WithXRequestID(reqID).WithPayload(
 					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
 			}
-			return signatures.NewGetProjectSignaturesInternalServerError().WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+			return signatures.NewGetProjectSignaturesBadRequest().WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, problemLoadingCLAGroupByID, err))
 		}
 		f["foundationSFID"] = claGroupModel.FoundationSFID
 
@@ -501,8 +501,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			}
 
 			log.WithFields(f).WithError(err).Warnf("problem loading company by ID")
-			return signatures.NewGetProjectCompanyEmployeeSignaturesInternalServerError().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, fmt.Sprintf("problem loading company by ID: %s", params.CompanySFID), err))
+			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, fmt.Sprintf("problem loading company by ID: %s", params.CompanySFID), err))
 		}
 		if companyModel == nil {
 			msg := fmt.Sprintf("problem loading company by ID: %s", params.CompanySFID)
@@ -704,8 +704,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithXRequestID(reqID).WithPayload(
 					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
 			}
-			return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+			return signatures.NewDownloadProjectSignatureEmployeeAsCSVBadRequest().WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, problemLoadingCLAGroupByID, err))
 		}
 		f["foundationSFID"] = claGroupModel.FoundationSFID
 
@@ -749,8 +749,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				return signatures.NewDownloadProjectSignatureEmployeeAsCSVNotFound().WithXRequestID(reqID).WithPayload(
 					utils.ErrorResponseNotFoundWithError(reqID, msg, err))
 			}
-			return signatures.NewDownloadProjectSignatureEmployeeAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+			return signatures.NewDownloadProjectSignatureEmployeeAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 		}
 
 		log.WithFields(f).Debug("returning CSV response...")
@@ -782,8 +782,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				return signatures.NewListClaGroupIclaSignatureNotFound().WithXRequestID(reqID).WithPayload(
 					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
 			}
-			return signatures.NewListClaGroupIclaSignatureInternalServerError().WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+			return signatures.NewListClaGroupIclaSignatureBadRequest().WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, problemLoadingCLAGroupByID, err))
 		}
 		f["foundationSFID"] = claGroupModel.FoundationSFID
 
@@ -811,8 +811,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		if err != nil {
 			msg := fmt.Sprintf("problem loading ICLA signatures by CLA Group ID search term: %s", aws.StringValue(params.SearchTerm))
 			log.WithFields(f).WithError(err).Warn(msg)
-			return signatures.NewListClaGroupIclaSignatureInternalServerError().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+			return signatures.NewListClaGroupIclaSignatureBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 		}
 
 		log.WithFields(f).Debugf("returning %d ICLA signatures to caller...", len(result.List))
@@ -897,7 +897,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		signatureModel, err := v1SignatureService.GetSignature(ctx, params.SignatureID)
 		if err != nil {
 			log.WithFields(f).WithError(err).Warn("problem loading signature")
-			return signatures.NewGetSignatureSignedDocumentInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+			return signatures.NewGetSignatureSignedDocumentBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 		if signatureModel == nil {
 			log.WithFields(f).Warn("problem loading signature - signature not found")
@@ -907,7 +907,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		haveAccess, err := isUserHaveAccessOfSignedSignaturePDF(ctx, authUser, signatureModel, companyService, projectClaGroupsRepo)
 		if err != nil {
 			log.WithFields(f).WithError(err).Warn("problem determining signature access")
-			return signatures.NewGetSignatureSignedDocumentInternalServerError().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+			return signatures.NewGetSignatureSignedDocumentBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
 		if !haveAccess {
@@ -945,8 +945,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				return signatures.NewDownloadProjectSignatureICLAsNotFound().WithXRequestID(reqID).WithPayload(
 					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
 			}
-			return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+			return signatures.NewDownloadProjectSignatureICLAsBadRequest().WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, problemLoadingCLAGroupByID, err))
 		}
 
 		if !claGroupModel.ProjectICLAEnabled {
@@ -973,8 +973,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				return signatures.NewDownloadProjectSignatureICLAsNotFound().WithXRequestID(reqID).WithPayload(
 					utils.ErrorResponseNotFoundWithError(reqID, msg, err))
 			}
-			return signatures.NewDownloadProjectSignatureICLAsInternalServerError().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected response from query", err))
+			return signatures.NewDownloadProjectSignatureICLAsBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, "unexpected response from query", err))
 		}
 
 		log.WithFields(f).Debug("returning signatures to caller...")
@@ -999,8 +999,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				return signatures.NewDownloadProjectSignatureICLAAsCSVNotFound().WithXRequestID(reqID).WithPayload(
 					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
 			}
-			return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+			return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, problemLoadingCLAGroupByID, err))
 		}
 		if !claGroupModel.ProjectICLAEnabled {
 			log.WithFields(f).Warn(iclaNotSupportedForCLAGroup)
@@ -1033,8 +1033,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		if err != nil {
 			msg := "unable to load ICLA signatures for CSV"
 			log.WithFields(f).Warn(msg)
-			return signatures.NewDownloadProjectSignatureICLAAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+			return signatures.NewDownloadProjectSignatureICLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 		}
 
 		log.WithFields(f).Debug("returning CSV response...")
@@ -1066,8 +1066,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				return signatures.NewDownloadProjectSignatureCCLAsNotFound().WithXRequestID(reqID).WithPayload(
 					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
 			}
-			return signatures.NewDownloadProjectSignatureCCLAsInternalServerError().WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+			return signatures.NewDownloadProjectSignatureCCLAsBadRequest().WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, problemLoadingCLAGroupByID, err))
 		}
 		if !claGroupModel.ProjectCCLAEnabled {
 			log.WithFields(f).Warn(cclaNotSupportedForCLAGroup)
@@ -1093,8 +1093,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				return signatures.NewDownloadProjectSignatureCCLAsNotFound().WithXRequestID(reqID).WithPayload(
 					utils.ErrorResponseNotFoundWithError(reqID, msg, err))
 			}
-			return signatures.NewDownloadProjectSignatureCCLAsInternalServerError().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected response from query", err))
+			return signatures.NewDownloadProjectSignatureCCLAsBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, "unexpected response from query", err))
 		}
 
 		log.WithFields(f).Debug("returning signatures to caller...")
@@ -1119,8 +1119,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				return signatures.NewDownloadProjectSignatureCCLAAsCSVNotFound().WithXRequestID(reqID).WithPayload(
 					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
 			}
-			return signatures.NewDownloadProjectSignatureCCLAAsCSVInternalServerError().WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+			return signatures.NewDownloadProjectSignatureCCLAAsCSVBadRequest().WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, problemLoadingCLAGroupByID, err))
 		}
 		if !claGroupModel.ProjectCCLAEnabled {
 			log.WithFields(f).Warn(cclaNotSupportedForCLAGroup)
@@ -1153,8 +1153,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		if err != nil {
 			msg := "unable to load CCLA signatures for CSV"
 			log.WithFields(f).Warn(msg)
-			return signatures.NewDownloadProjectSignatureCCLAAsCSVInternalServerError().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+			return signatures.NewDownloadProjectSignatureCCLAAsCSVBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 		}
 
 		log.WithFields(f).Debug("returning CSV response...")
