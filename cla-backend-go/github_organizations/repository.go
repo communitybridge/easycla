@@ -111,7 +111,7 @@ func (repo repository) AddGithubOrganization(ctx context.Context, parentProjectS
 		return nil, err
 	}
 
-	return toModel(githubOrg), nil
+	return ToModel(githubOrg), nil
 }
 
 func (repo repository) GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.GithubOrganizations, error) {
@@ -295,7 +295,7 @@ func (repo repository) GetGithubOrganization(ctx context.Context, githubOrganiza
 		log.WithFields(f).Warnf("error unmarshalling organization table data, error: %v", err)
 		return nil, err
 	}
-	return toModel(&org), nil
+	return ToModel(&org), nil
 }
 
 // UpdateGithubOrganization updates the specified GitHub organization based on the update model provided

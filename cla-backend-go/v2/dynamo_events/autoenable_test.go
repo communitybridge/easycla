@@ -13,11 +13,11 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
-	"github.com/communitybridge/easycla/cla-backend-go/repositories"
+	repositoriesmock "github.com/communitybridge/easycla/cla-backend-go/repositories/mock"
 	"github.com/golang/mock/gomock"
 )
 
-func Test_AutoEnableService(t *testing.T) {
+func TestAutoEnableServiceProvider_AutoEnabledForGithubOrg(t *testing.T) {
 
 	externalProjectID := "sfd12343"
 	claGroupID := "da04291f-75d1-4e84-8275-9bc008205837"
@@ -25,7 +25,7 @@ func Test_AutoEnableService(t *testing.T) {
 	testCases := []struct {
 		name              string
 		githubOrg         github_organizations.GithubOrganization
-		repositoryService func(m *repositories.MockService)
+		repositoryService func(m *repositoriesmock.MockService)
 		errStr            string
 	}{
 		{
@@ -39,7 +39,7 @@ func Test_AutoEnableService(t *testing.T) {
 				OrganizationInstallationID: 12354,
 				ProjectSFID:                externalProjectID,
 			},
-			repositoryService: func(m *repositories.MockService) {
+			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
 					ListProjectRepositories(gomock.Any(), externalProjectID).
@@ -53,7 +53,7 @@ func Test_AutoEnableService(t *testing.T) {
 				OrganizationInstallationID: 12354,
 				ProjectSFID:                externalProjectID,
 			},
-			repositoryService: func(m *repositories.MockService) {
+			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
 					ListProjectRepositories(gomock.Any(), externalProjectID).
@@ -66,7 +66,7 @@ func Test_AutoEnableService(t *testing.T) {
 				OrganizationInstallationID: 12354,
 				ProjectSFID:                externalProjectID,
 			},
-			repositoryService: func(m *repositories.MockService) {
+			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
 					ListProjectRepositories(gomock.Any(), externalProjectID).
@@ -91,7 +91,7 @@ func Test_AutoEnableService(t *testing.T) {
 				OrganizationInstallationID: 12354,
 				ProjectSFID:                externalProjectID,
 			},
-			repositoryService: func(m *repositories.MockService) {
+			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
 					ListProjectRepositories(gomock.Any(), externalProjectID).
@@ -119,7 +119,7 @@ func Test_AutoEnableService(t *testing.T) {
 				ProjectSFID:                externalProjectID,
 				AutoEnabledClaGroupID:      claGroupID,
 			},
-			repositoryService: func(m *repositories.MockService) {
+			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
 					ListProjectRepositories(gomock.Any(), externalProjectID).
@@ -151,7 +151,7 @@ func Test_AutoEnableService(t *testing.T) {
 				OrganizationInstallationID: 12354,
 				ProjectSFID:                externalProjectID,
 			},
-			repositoryService: func(m *repositories.MockService) {
+			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
 					ListProjectRepositories(gomock.Any(), externalProjectID).
@@ -177,7 +177,7 @@ func Test_AutoEnableService(t *testing.T) {
 				OrganizationInstallationID: 12354,
 				ProjectSFID:                externalProjectID,
 			},
-			repositoryService: func(m *repositories.MockService) {
+			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
 					ListProjectRepositories(gomock.Any(), externalProjectID).
@@ -208,13 +208,13 @@ func Test_AutoEnableService(t *testing.T) {
 			ctrl := gomock.NewController(tt)
 			defer ctrl.Finish()
 
-			m := repositories.NewMockService(ctrl)
+			m := repositoriesmock.NewMockService(ctrl)
 			if tc.repositoryService != nil {
 				tc.repositoryService(m)
 			}
 
-			a := &AutoEnableService{repositoryService: m}
-			err := a.autoEnabledForGithubOrg(logrus.Fields{
+			a := &autoEnableServiceProvider{repositoryService: m}
+			err := a.AutoEnabledForGithubOrg(logrus.Fields{
 				"functionName": "TestAutoEnable",
 			}, tc.githubOrg)
 
@@ -225,4 +225,8 @@ func Test_AutoEnableService(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAutoEnableServiceProvider_CreateAutoEnabledRepository(t *testing.T) {
+
 }

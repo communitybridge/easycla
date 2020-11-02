@@ -20,7 +20,8 @@ type GithubOrganization struct {
 	Version                    string `json:"version,omitempty"`
 }
 
-func toModel(in *GithubOrganization) *models.GithubOrganization {
+// ToModel converts to models.GithubOrganization
+func ToModel(in *GithubOrganization) *models.GithubOrganization {
 	return &models.GithubOrganization{
 		DateCreated:                in.DateCreated,
 		DateModified:               in.DateModified,
@@ -38,7 +39,7 @@ func toModel(in *GithubOrganization) *models.GithubOrganization {
 func toModels(input []*GithubOrganization) []*models.GithubOrganization {
 	out := make([]*models.GithubOrganization, 0)
 	for _, in := range input {
-		out = append(out, toModel(in))
+		out = append(out, ToModel(in))
 	}
 	return out
 }
