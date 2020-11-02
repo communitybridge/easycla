@@ -1646,7 +1646,7 @@ def get_org_from_return_url(repo_provider_type, return_url, orgs):
     :return: List of Organizations of any repo service provider.
     :rtype: [any_repo_service_provider.Organization]
     """
-    if repo_provider_type is 'github':
+    if repo_provider_type == 'github':
         split_url = return_url.split('/')  # parse repo name from URL
         target_org_name = split_url[3]
         for org in orgs:
