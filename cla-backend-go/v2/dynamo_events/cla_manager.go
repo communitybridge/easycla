@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
@@ -16,7 +17,6 @@ import (
 	v2OrgService "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
 	v2UserService "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
 )
 
 // SetInitialCLAManagerACSPermissions
@@ -199,26 +199,31 @@ func (s service) assignCLAManager(ctx context.Context, email, username, companyS
 			projectSFIDList.Add(p.ProjectSFID)
 		}
 
-		var eg errgroup.Group
+		var assignErr error
+		var wg sync.WaitGroup
+		wg.Add(len(projectSFIDList.List()))
+
 		// add user as cla-manager for all projects of cla-group
 		for _, projectSFID := range projectSFIDList.List() {
-			eg.Go(func() error {
+			go func(projectSFID string) {
+				defer wg.Done()
 				err := orgService.CreateOrgUserRoleOrgScopeProjectOrg(email, projectSFID, companySFID, claManagerRoleID)
 				if err != nil {
 					log.WithFields(f).Warnf("unable to add %s scope for project: %s, company: %s using roleID: %s for user email: %s. error = %s",
 						utils.CLAManagerRole, projectSFID, companySFID, claManagerRoleID, email, err)
-					return err
+					if err != nil {
+						assignErr = err
+					}
 				}
-				return nil
-			})
+			}(projectSFID)
 		}
 
-		// Wait for the go routines to finish
-		log.WithFields(f).Debugf("waiting for create role assignment to complete for %d projects...", len(projectSFIDList.List()))
-		if loadErr := eg.Wait(); loadErr != nil {
-			return loadErr
+		wg.Wait()
+
+		if assignErr != nil {
+			return assignErr
 		}
-		return nil
+
 	}
 
 	return nil
