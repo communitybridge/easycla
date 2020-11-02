@@ -11,3 +11,21 @@ func GetRequestID(reqID *string) string {
 
 	return ""
 }
+
+// GetGithubEvent helper function to get the github Event Type from the session
+func GetGithubEvent(xGithubEvent *string) string {
+	if xGithubEvent != nil {
+		return *xGithubEvent
+	}
+
+	return ""
+}
+
+// GetGithubSignature helper function to get the github Event Type from the session
+func GetGithubSignature(xGithubSignature *string) string {
+	if xGithubSignature != nil {
+		return *xGithubSignature
+	}
+
+	return ""
+}
