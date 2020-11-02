@@ -846,8 +846,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 					utils.ErrorResponseNotFoundWithError(reqID, problemLoadingCLAGroupByID, err))
 			}
 
-			return signatures.NewListClaGroupCorporateContributorsInternalServerError().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseInternalServerErrorWithError(reqID, problemLoadingCLAGroupByID, err))
+			return signatures.NewListClaGroupCorporateContributorsBadRequest().WithXRequestID(reqID).WithPayload(
+				utils.ErrorResponseBadRequest(reqID, problemLoadingCLAGroupByID))
 		}
 
 		// Make sure CCLA is enabled for this CLA Group
@@ -875,6 +875,12 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		log.WithFields(f).Debug("searching for CCLA signatures...")
 		result, err := v2service.GetClaGroupCorporateContributors(ctx, params.ClaGroupID, params.CompanySFID, params.SearchTerm)
 		if err != nil {
+			msg := fmt.Sprintf("problem getting corporate contributors for CLA Group: %s with company: %s", params.ClaGroupID, *params.CompanySFID)
+			if _, ok := err.(*organizations.GetOrgNotFound); ok {
+				formatErr := errors.New("error retrieving company using companySFID")
+				return signatures.NewListClaGroupCorporateContributorsNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, msg, formatErr))
+			}
 			return signatures.NewListClaGroupCorporateContributorsInternalServerError().WithXRequestID(reqID).WithPayload(
 				utils.ErrorResponseInternalServerErrorWithError(reqID, "unexpected error when searching for corporate contributors", err))
 		}
