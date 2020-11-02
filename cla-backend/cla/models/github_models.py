@@ -514,16 +514,19 @@ class GitHub(repository_service_interface.RepositoryService):
         """
         gets the user primary email from the registered emails from the github api
         """
-        cla.log.debug("Fetching Github primary email")
-        session = self._get_request_session(request)
-        client_id = os.environ['GH_OAUTH_CLIENT_ID']
-        emails = self._fetch_github_emails(session=session, client_id=client_id)
-        if "error" in emails:
-            return None
+        try:
+            cla.log.debug("Fetching Github primary email")
+            session = self._get_request_session(request)
+            client_id = os.environ['GH_OAUTH_CLIENT_ID']
+            emails = self._fetch_github_emails(session=session, client_id=client_id)
+            if "error" in emails:
+                return None
 
-        for email in emails:
-            if email.get("verified", False) and email.get("primary", False):
-                return email["email"]
+            for email in emails:
+                if email.get("verified", False) and email.get("primary", False):
+                    return email["email"]
+        except Exception:
+            return None
         return None
 
     def _fetch_github_emails(self, session, client_id) -> Union[List[dict], dict]:
