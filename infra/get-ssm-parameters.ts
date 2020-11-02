@@ -65,6 +65,7 @@ const parameters = [
   `cla-smtp-sender-email-address-${program.stage}`,
   `cla-sns-event-topic-arn-${program.stage}`,
   `cla-lfx-header-${program.stage}`,
+  `cla-lfx-footer-${program.stage}`,
   `cla-lfx-header-enabled-${program.stage}`,
   `docraptor-test-mode-${program.stage}`,
   `cla-lfx-portal-url-${program.stage}`
