@@ -72,10 +72,7 @@ export class ClaConfigureGithubRepositoriesModal {
 
           if (this.isTaken(repository)) {
             repository.status = 'taken';
-
-            if (this.isAssignedToLocalContractGroup(repository)) {
-              repository.status = 'assigned';
-            }
+            this.isAssignedToLocalContractGroup(repository);
           }
 
           return repository;
@@ -94,7 +91,13 @@ export class ClaConfigureGithubRepositoriesModal {
   }
 
   isAssignedToLocalContractGroup(repository) {
-    return String(repository.repository_project_id) === String(this.claProjectId);
+    if (repository.repository_project_id === String(this.claProjectId)) {
+      if (repository.enabled) {
+        repository.status = 'assigned';
+      } else {
+        repository.status = 'free';
+      }
+    }
   }
 
   isTaken(repository) {
