@@ -86,25 +86,33 @@ class GitHub(repository_service_interface.RepositoryService):
         This method gets called when the OAuth2 app (NOT the GitHub App) needs to get info on the
         user trying to sign. In this case we begin an OAuth2 exchange with the 'user:email' scope.
         """
-        cla.log.debug('Initiating GitHub sign request for repository %s', github_repository_id)
+        cla.log.debug(f'Initiating GitHub sign request for installation_id: {installation_id}, '
+                      f'for repository {github_repository_id}, '
+                      f'for PR: {change_request_id}')
         # Not sure if we need a different token for each installation ID...
+        cla.log.debug(f'Loading session from request: {request}...')
         session = self._get_request_session(request)
+        cla.log.debug(f'Adding github details to session...')
         session['github_installation_id'] = installation_id
         session['github_repository_id'] = github_repository_id
         session['github_change_request_id'] = change_request_id
 
+        cla.log.debug('Determining return URL from the inbound request...')
         origin_url = self.get_return_url(github_repository_id, change_request_id, installation_id)
+        cla.log.debug(f'Return URL from the inbound request is {origin_url}...')
         session['github_origin_url'] = origin_url
         if 'github_oauth2_token' in session:
-            cla.log.debug('Using existing session OAuth2 token')
-            return self.redirect_to_console(installation_id, github_repository_id, change_request_id, origin_url,
-                                            request)
+            cla.log.debug('Using existing session GitHub OAuth2 token')
+            return self.redirect_to_console(
+                installation_id, github_repository_id, change_request_id,
+                origin_url, request)
         else:
-            cla.log.debug('Initiating GitHub OAuth2 exchange')
+            cla.log.debug('No existing GitHub OAuth2 token - Initiating GitHub OAuth2 exchange')
             authorization_url, state = self.get_authorization_url_and_state(installation_id,
                                                                             github_repository_id,
-                                                                            change_request_id,
+                                                                            int(change_request_id),
                                                                             ['user:email'])
+            cla.log.debug('Obtained GitHub OAuth2 state from authorization')
             session['github_oauth2_state'] = state
             cla.log.debug('GitHub OAuth2 request with state %s - sending user to %s',
                           state, authorization_url)
@@ -114,7 +122,11 @@ class GitHub(repository_service_interface.RepositoryService):
         """
         Mockable method used to get the current user session.
         """
-        return request.context['session']
+        # return request.context['session']
+        session = request.context.get('session')
+        if session is None:
+            cla.log.warning(f'Session is empty for request: {request}')
+        return session
 
     def get_authorization_url_and_state(self, installation_id, github_repository_id, pull_request_number, scope):
         """
@@ -135,6 +147,7 @@ class GitHub(repository_service_interface.RepositoryService):
         # origin = self.get_return_url(github_repository_id, pull_request_number, installation_id)
         # Add origin to user's session here?
         api_base_url = os.environ.get('CLA_API_BASE', '')
+        cla.log.debug(f'Directing user to authorization: {os.path.join(api_base_url, "v2/github/installation")}')
         return self._get_authorization_url_and_state(os.environ['GH_OAUTH_CLIENT_ID'],
                                                      os.path.join(api_base_url, 'v2/github/installation'),
                                                      scope,
@@ -145,8 +158,7 @@ class GitHub(repository_service_interface.RepositoryService):
         """
         Mockable helper method to do the fetching of the authorization URL and state from GitHub.
         """
-        return cla.utils.get_authorization_url_and_state(client_id, redirect_uri,
-                                                         scope, authorize_url)
+        return cla.utils.get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_url)
 
     def oauth2_redirect(self, state, code, request):  # pylint: disable=too-many-arguments
         """
@@ -156,11 +168,10 @@ class GitHub(repository_service_interface.RepositoryService):
         It will handle storing the OAuth2 session information for this user for
         further requests and initiate the signing workflow.
         """
-        cla.log.debug('Handling GitHub OAuth2 redirect with request: {}'.format(dir(request)))
+        cla.log.debug(f'Handling GitHub OAuth2 redirect with request: {dir(request)}')
         # TODO: should we load the session from the DynamoDB session table based on the 'state' value?
         session = self._get_request_session(request)  # request.context['session']
-
-        cla.log.debug('State: {}, Code: {}, Session: {}'.format(state, code, session))
+        cla.log.debug(f'State: {state}, Code: {code}, Session: {session}')
 
         if 'github_oauth2_state' in session:
             session_state = session['github_oauth2_state']
@@ -183,18 +194,22 @@ class GitHub(repository_service_interface.RepositoryService):
         token_url = cla.conf['GITHUB_OAUTH_TOKEN_URL']
         client_id = os.environ['GH_OAUTH_CLIENT_ID']
         client_secret = os.environ['GH_OAUTH_SECRET']
+        cla.log.debug('fetching token...')
         token = self._fetch_token(client_id, state, token_url, client_secret, code)
-        cla.log.debug('OAuth2 token received for state %s: %s', state, token)
+        cla.log.debug(f'OAuth2 token received for state {state}: {token} - storing token in session')
         session['github_oauth2_token'] = token
+        cla.log.debug(f'Redirecting the user back to the console...')
         return self.redirect_to_console(installation_id, github_repository_id, change_request_id, origin_url, request)
 
     def redirect_to_console(self, installation_id, repository_id, pull_request_id, redirect, request):
+        fn = 'redirect_to_console'
         console_endpoint = cla.conf['CONTRIBUTOR_BASE_URL']
         console_v2_endpoint = cla.conf['CONTRIBUTOR_V2_BASE_URL']
         # Get repository using github's repository ID.
         repository = Repository().get_repository_by_external_id(repository_id, "github")
         if repository is None:
-            cla.log.warning('Could not find repository with the following repository_id: %s', repository_id)
+            cla.log.warning(f'{fn} - Could not find repository with the following '
+                            f'repository_id: {repository_id}')
             return None
 
         # Get project ID from this repository
@@ -233,12 +248,14 @@ class GitHub(repository_service_interface.RepositoryService):
                           '/#/cla/project/' + project_id + \
                           '/user/' + user.get_user_id() + \
                           '?redirect=' + redirect
+            cla.log.debug(f'{fn} - redirecting to v2 console: {console_url}...')
         else:
             # Generate url for the v1 contributor console
             console_url = 'https://' + console_endpoint + \
                           '/#/cla/project/' + project_id + \
                           '/user/' + user.get_user_id() + \
                           '?redirect=' + redirect
+            cla.log.debug(f'{fn} - redirecting to v1 console: {console_url}...')
 
         raise falcon.HTTPFound(console_url)
 
@@ -254,8 +271,10 @@ class GitHub(repository_service_interface.RepositoryService):
         Once we have the 'github_oauth2_token' value in the user's session, we can initiate the
         signing workflow.
         """
-        cla.log.warning('Initiating GitHub signing workflow for GitHub repo %s PR: %s',
-                        github_repository_id, pull_request_number)
+        fn = 'sign_workflow'
+        cla.log.warning(f'{fn} - Initiating GitHub signing workflow for '
+                        f'GitHub repo {github_repository_id} '
+                        f'with PR: {pull_request_number}')
         user = self.get_or_create_user(request)
         signature = cla.utils.get_user_signature_by_github_repository(installation_id, user)
         project_id = cla.utils.get_project_id_from_installation_id(installation_id)
@@ -284,6 +303,7 @@ class GitHub(repository_service_interface.RepositoryService):
         return pull_request.html_url
 
     def update_change_request(self, installation_id, github_repository_id, change_request_id):
+        fn = 'update_change_request'
         # Queries GH for the complete pull request details, see:
         # https://developer.github.com/v3/pulls/#response-1
         try:
@@ -291,9 +311,9 @@ class GitHub(repository_service_interface.RepositoryService):
             _ = int(change_request_id)
             pull_request = self.get_pull_request(github_repository_id, change_request_id, installation_id)
         except ValueError:
-            cla.log.error('Invalid PR: %s . (Unable to cast to integer) ', change_request_id)
+            cla.log.error(f'{fn} - Invalid PR: {change_request_id} . (Unable to cast to integer) ')
             return
-        cla.log.debug(f'Retrieved pull request: {pull_request}')
+        cla.log.debug(f'{fn} - retrieved pull request: {pull_request}')
 
         # Get all unique users/authors involved in this PR - returns a list of
         # (commit_sha_string, (author_id, author_username, author_email) tuples
@@ -302,46 +322,44 @@ class GitHub(repository_service_interface.RepositoryService):
         try:
             # Get existing repository info using the repository's external ID,
             # which is the repository ID assigned by github.
-            cla.log.debug(f'PR: {pull_request.number}, Loading GitHub repository by id: {github_repository_id}')
+            cla.log.debug(f'{fn} - PR: {pull_request.number}, Loading GitHub repository by id: {github_repository_id}')
             repository = Repository().get_repository_by_external_id(github_repository_id, "github")
             if repository is None:
-                cla.log.warning(f'PR: {pull_request.number}, Failed to load GitHub repository by '
+                cla.log.warning(f'{fn} - PR: {pull_request.number}, Failed to load GitHub repository by '
                                 f'id: {github_repository_id} in our DB - repository reference is None - '
                                 'Is this org/repo configured in the Project Console?'
                                 ' Unable to update status.')
                 return
         except DoesNotExist:
-            cla.log.warning(f'PR: {pull_request.number}, could not find repository with the '
+            cla.log.warning(f'{fn} - PR: {pull_request.number}, could not find repository with the '
                             f'repository ID: {github_repository_id}')
-            cla.log.warning(f'PR: {pull_request.number}, failed to update change request of '
+            cla.log.warning(f'{fn} - PR: {pull_request.number}, failed to update change request of '
                             f'repository {github_repository_id} - returning')
             return
 
         # Get Github Organization name that the repository is configured to.
         organization_name = repository.get_repository_organization_name()
-        cla.log.debug('PR: {}, determined github organization is: {}'.
-                      format(pull_request.number, organization_name))
+        cla.log.debug(f'{fn} - PR: {pull_request.number}, determined github organization is: {organization_name}')
 
         # Check that the Github Organization exists.
         github_org = GitHubOrg()
         try:
             github_org.load(organization_name)
         except DoesNotExist:
-            cla.log.warning('PR: {}, Could not find Github Organization with the following organization name: {}'.
-                            format(pull_request.number, organization_name))
-            cla.log.warning('PR: {}, Failed to update change request of repository {} - returning'.
-                            format(pull_request.number, github_repository_id))
+            cla.log.warning(f'{fn} - PR: {pull_request.number}, Could not find Github Organization '
+                            f'with the following organization name: {organization_name}')
+            cla.log.warning(f'{fn}- PR: {pull_request.number}, Failed to update change request of '
+                            f'repository {github_repository_id} - returning')
             return
 
             # Ensure that installation ID for this organization matches the given installation ID
         if github_org.get_organization_installation_id() != installation_id:
-            cla.log.warning('PR: {}, the installation ID: {} of this organization does not match '
-                            'installation ID: {} given by the pull request.'.
-                            format(pull_request.number,
-                                   github_org.get_organization_installation_id(),
-                                   installation_id))
-            cla.log.error('PR: {}, Failed to update change request of repository {} - returning'.
-                          format(pull_request.number, github_repository_id))
+            cla.log.warning(f'{fn} - PR: {pull_request.number}, '
+                            f'the installation ID: {github_org.get_organization_installation_id()} '
+                            f'of this organization does not match installation ID: {installation_id} '
+                            'given by the pull request.')
+            cla.log.error(f'{fn} - PR: {pull_request.number}, Failed to update change request '
+                          f'of repository {github_repository_id} - returning')
             return
 
         # Retrieve project ID from the repository.
@@ -353,19 +371,22 @@ class GitHub(repository_service_interface.RepositoryService):
         signed = []
         missing = []
 
-        cla.log.debug(f'PR: {pull_request.number}, scanning users - determining who has signed a CLA an who has not.')
+        cla.log.debug(f'{fn} - PR: {pull_request.number}, scanning users - '
+                      'determining who has signed a CLA an who has not.')
         for commit_sha, author_info in commit_authors:
             # Extract the author info tuple details
             author_id = author_info[0]
             author_username = author_info[1]
             author_email = author_info[2]
-            cla.log.debug('PR: {}, processing sha: {} from author id: {}, username: {}, email: {}'.
-                          format(pull_request.number, commit_sha, author_id, author_username, author_email))
+            cla.log.debug(f'{fn} - PR: {pull_request.number}, '
+                          f'processing sha: {commit_sha} '
+                          f'from author id: {author_id}, username: {author_username}, email: {author_email}')
             handle_commit_from_user(project, commit_sha, author_info, signed, missing)
 
-        cla.log.debug('PR: {}, updating github pull request for repo: {}, '
-                      'with signed authors: {} with missing authors: {}'.
-                      format(pull_request.number, github_repository_id, signed, missing))
+        cla.log.debug(f'{fn} - PR: {pull_request.number}, '
+                      f'updating github pull request for repo: {github_repository_id}, '
+                      f'with signed authors: {signed} '
+                      f'with missing authors: {missing}')
         repository_name = repository.get_repository_name()
         update_pull_request(installation_id, github_repository_id, pull_request, repository_name,
                             signed=signed, missing=missing)
@@ -525,17 +546,20 @@ class GitHub(repository_service_interface.RepositoryService):
             for email in emails:
                 if email.get("verified", False) and email.get("primary", False):
                     return email["email"]
-        except Exception:
+        except Exception as e:
+            cla.log.warning(f'get_primary_user_email - lookup failed - {e} - returning None')
             return None
         return None
 
     def _fetch_github_emails(self, session, client_id) -> Union[List[dict], dict]:
         """
-        Method is reponsible for fetching the user emails from /user/emails endpoint
+        Method is responsible for fetching the user emails from /user/emails endpoint
         :param session:
         :param client_id:
         :return:
         """
+        # Use the user's token to fetch their public email(s) - don't use the system token as this endpoint won't work
+        # as expected
         token = session['github_oauth2_token']
         oauth2 = OAuth2Session(client_id, token=token)
         request = oauth2.get('https://api.github.com/user/emails')
