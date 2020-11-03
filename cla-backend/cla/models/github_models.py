@@ -86,36 +86,36 @@ class GitHub(repository_service_interface.RepositoryService):
         This method gets called when the OAuth2 app (NOT the GitHub App) needs to get info on the
         user trying to sign. In this case we begin an OAuth2 exchange with the 'user:email' scope.
         """
-        cla.log.debug(f'Initiating GitHub sign request for installation_id: {installation_id}, '
+        fn = 'sign_request' # function name
+        cla.log.debug(f'{fn} - Initiating GitHub sign request for installation_id: {installation_id}, '
                       f'for repository {github_repository_id}, '
                       f'for PR: {change_request_id}')
         # Not sure if we need a different token for each installation ID...
-        cla.log.debug(f'Loading session from request: {request}...')
+        cla.log.debug(f'{fn} - Loading session from request: {request}...')
         session = self._get_request_session(request)
-        cla.log.debug(f'Adding github details to session...')
+        cla.log.debug(f'{fn} - Adding github details to session...')
         session['github_installation_id'] = installation_id
         session['github_repository_id'] = github_repository_id
         session['github_change_request_id'] = change_request_id
 
-        cla.log.debug('Determining return URL from the inbound request...')
+        cla.log.debug(f'{fn} - Determining return URL from the inbound request...')
         origin_url = self.get_return_url(github_repository_id, change_request_id, installation_id)
-        cla.log.debug(f'Return URL from the inbound request is {origin_url}...')
+        cla.log.debug(f'{fn} = Return URL from the inbound request is {origin_url}...')
         session['github_origin_url'] = origin_url
         if 'github_oauth2_token' in session:
-            cla.log.debug('Using existing session GitHub OAuth2 token')
+            cla.log.debug(f'{fn} - Using existing session GitHub OAuth2 token')
             return self.redirect_to_console(
                 installation_id, github_repository_id, change_request_id,
                 origin_url, request)
         else:
-            cla.log.debug('No existing GitHub OAuth2 token - Initiating GitHub OAuth2 exchange')
+            cla.log.debug(f'{fn} - No existing GitHub OAuth2 token - building authorization url and state')
             authorization_url, state = self.get_authorization_url_and_state(installation_id,
                                                                             github_repository_id,
                                                                             int(change_request_id),
                                                                             ['user:email'])
-            cla.log.debug('Obtained GitHub OAuth2 state from authorization')
+            cla.log.debug(f'{fn} - Obtained GitHub OAuth2 state from authorization')
             session['github_oauth2_state'] = state
-            cla.log.debug('GitHub OAuth2 request with state %s - sending user to %s',
-                          state, authorization_url)
+            cla.log.debug(f'{fn} - GitHub OAuth2 request with state {state} - sending user to {authorization_url}')
             raise falcon.HTTPFound(authorization_url)
 
     def _get_request_session(self, request):  # pylint: disable=no-self-use
@@ -146,8 +146,9 @@ class GitHub(repository_service_interface.RepositoryService):
         # Get the PR's html_url property.
         # origin = self.get_return_url(github_repository_id, pull_request_number, installation_id)
         # Add origin to user's session here?
+        fn = 'get_authorization_url_and_state'
         api_base_url = os.environ.get('CLA_API_BASE', '')
-        cla.log.debug(f'Directing user to authorization: {os.path.join(api_base_url, "v2/github/installation")}')
+        cla.log.debug(f'{fn} - Directing user to authorization: {os.path.join(api_base_url, "v2/github/installation")}')
         return self._get_authorization_url_and_state(os.environ['GH_OAUTH_CLIENT_ID'],
                                                      os.path.join(api_base_url, 'v2/github/installation'),
                                                      scope,
@@ -535,8 +536,9 @@ class GitHub(repository_service_interface.RepositoryService):
         """
         gets the user primary email from the registered emails from the github api
         """
+        fn = 'github_models.get_primary_user_email'
         try:
-            cla.log.debug("Fetching Github primary email")
+            cla.log.debug(f'{fn} - Fetching Github primary email')
             session = self._get_request_session(request)
             client_id = os.environ['GH_OAUTH_CLIENT_ID']
             emails = self._fetch_github_emails(session=session, client_id=client_id)
@@ -547,7 +549,7 @@ class GitHub(repository_service_interface.RepositoryService):
                 if email.get("verified", False) and email.get("primary", False):
                     return email["email"]
         except Exception as e:
-            cla.log.warning(f'get_primary_user_email - lookup failed - {e} - returning None')
+            cla.log.warning(f'{fn} - lookup failed - {e} - returning None')
             return None
         return None
 
@@ -558,14 +560,17 @@ class GitHub(repository_service_interface.RepositoryService):
         :param client_id:
         :return:
         """
+        fn = 'github_models._fetch_github_emails' # function name
         # Use the user's token to fetch their public email(s) - don't use the system token as this endpoint won't work
         # as expected
-        token = session['github_oauth2_token']
+        token = session.get('github_oauth2_token')
+        if token is None:
+            cla.log.warning(f'{fn} - unable to load github_oauth2_token from the session - session is empty')
         oauth2 = OAuth2Session(client_id, token=token)
         request = oauth2.get('https://api.github.com/user/emails')
         resp = request.json()
         if 'message' in resp:
-            cla.log.warning('Could not get user emails with OAuth2 token: %s', resp['message'])
+            cla.log.warning(f'{fn} - could not get user emails with OAuth2 token: {resp["message"]}')
             return {'error': 'Could not get user emails: %s' % resp['message']}
         return resp
 
