@@ -6,7 +6,7 @@ import { ClaService } from '../../services/cla.service';
 import { generalConstants } from '../../constants/general';
 
 @Component({
-  selector: 'cla-footer',
+  selector: 'lfx-footer',
   templateUrl: 'cla-footer.html'
 })
 export class ClaFooter {
