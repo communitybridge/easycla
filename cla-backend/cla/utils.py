@@ -940,11 +940,12 @@ def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_ur
     :param authorize_url: The URL to submit the OAuth2 request.
     :type authorize_url: string
     """
+    fn = 'utils.get_authorization_url_and_state'
     oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
     authorization_url, state = oauth.authorization_url(authorize_url)
-    cla.log.debug(
-        'utils.py - get_authorization_url_and_state - authorization_url: {}, state: {}'.format(authorization_url,
-                                                                                               state))
+    cla.log.debug(f'{fn} - get_authorization_url_and_state - '
+                  f'authorization_url: {authorization_url}, '
+                  f'state: {state}')
     return authorization_url, state
 
 
@@ -966,12 +967,16 @@ def fetch_token(client_id, state, token_url, client_secret, code,
     :param redirect_uri: The redirect URI for this OAuth2 session.
     :type redirect_uri: string
     """
+    fn = 'utils.fetch_token'
     if redirect_uri is not None:
         oauth2 = OAuth2Session(client_id, state=state, scope=['user:email'], redirect_uri=redirect_uri)
     else:
         oauth2 = OAuth2Session(client_id, state=state, scope=['user:email'])
-    cla.log.debug('utils.py - oauth2.fetch_token - token_url: {}, client_id: {}, client_secret: {}, code: {}'.
-                  format(token_url, client_id, client_secret, code))
+    cla.log.debug(f'{fn} - oauth2.fetch_token - '
+                  f'token_url: {token_url}, '
+                  f'client_id: {client_id}, '
+                  f'client_secret: {client_secret}, '
+                  f'code: {code}')
     return oauth2.fetch_token(token_url, client_secret=client_secret, code=code)
 
 

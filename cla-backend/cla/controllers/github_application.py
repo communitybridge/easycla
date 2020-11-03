@@ -3,11 +3,11 @@
 
 import os
 import time
-import requests
-from requests.exceptions import RequestException
 
+import requests
 from github import BadCredentialsException, UnknownObjectException, GithubException, GithubIntegration, Github
 from jose import jwt
+from requests.exceptions import RequestException
 
 import cla
 
@@ -18,9 +18,17 @@ class GitHubInstallation(object):
     def app_id(self):
         return os.environ['GH_APP_ID']
 
+    def set_private_key(self, private_key):
+        self.private_key = private_key
+
     @property
     def private_key(self):
-        return cla.config.GITHUB_PRIVATE_KEY
+        # return cla.config.GITHUB_PRIVATE_KEY
+        return self.private_key
+
+    @private_key.setter
+    def private_key(self, value):
+        self._private_key = value
 
     @property
     def repos(self):
@@ -28,6 +36,7 @@ class GitHubInstallation(object):
 
     def __init__(self, installation_id):
         self.installation_id = installation_id
+        self.private_key = cla.config.get_ssm_key('us-east-1', f'cla-gh-app-private-key-{cla.config.stage}')
 
         cla.log.debug('Initializing github application - installation_id: {}, app id: {}, private key'
                       ' (minus header): {}...'.
@@ -75,10 +84,12 @@ class GitHubInstallation(object):
             cla.log.debug(err)
 
 
+
 class GithubCLAIntegration(GithubIntegration):
     """
     Custom GithubIntegration using python-jose instead of pyjwt for token creation.
     """
+
     def create_jwt(self):
         """
         Overloaded to use python-jose instead of pyjwt.
@@ -91,5 +102,5 @@ class GithubCLAIntegration(GithubIntegration):
             "iss": self.integration_id
         }
         gh_jwt = jwt.encode(payload, self.private_key, 'RS256')
-        #cla.log.debug('github jwt: {}'.format(gh_jwt))
+        # cla.log.debug('github jwt: {}'.format(gh_jwt))
         return gh_jwt

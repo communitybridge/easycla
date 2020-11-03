@@ -116,4 +116,7 @@ LOCAL_STORAGE_FOLDER = '/tmp/cla'  #: Local folder when using the LocalStorage s
 PDF_SERVICE = 'DocRaptor'
 
 # GH Private Key
-GITHUB_PRIVATE_KEY = get_ssm_key('us-east-1', f'cla-gh-app-private-key-{stage}')
+# Moved to GitHub application class GitHubInstallation as loading this property is taking ~1 sec on startup which is
+# killing our response performance - in most API calls this key/attribute is not used, so, we will lazy load this
+# property on class construction
+#GITHUB_PRIVATE_KEY = get_ssm_key('us-east-1', f'cla-gh-app-private-key-{stage}')
