@@ -49,7 +49,8 @@ export class MyApp {
     this.getDefaults();
     this.initializeApp();
 
-    this.mounted();
+    this.mountHeader();
+    this.mountFooter();
 
     // Determine if we're running in a local services (developer) mode - the USE_LOCAL_SERVICES environment variable
     // will be set to true, otherwise were using normal services deployed in each environment
@@ -61,11 +62,20 @@ export class MyApp {
     this.claService.setHttp(httpClient);
   }
 
-  mounted() {
+  mountHeader() {
     const script = document.createElement('script');
     script.setAttribute(
       'src',
       EnvConfig['lfx-header']
+    );
+    document.head.appendChild(script);
+  }
+
+  mountFooter() {
+    const script = document.createElement('script');
+    script.setAttribute(
+      'src',
+      EnvConfig['lfx-footer']
     );
     document.head.appendChild(script);
   }
