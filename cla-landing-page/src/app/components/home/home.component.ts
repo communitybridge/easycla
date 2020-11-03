@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { environment } from 'src/environments/environment';
+import {Component, OnInit} from '@angular/core';
+import {EnvConfig} from "../../config/cla-env-utils";
 
 @Component({
   selector: 'app-home',
@@ -11,7 +11,8 @@ export class HomeComponent implements OnInit {
   organizationSection: any;
   developerSection: any;
 
-  constructor() { }
+  constructor() {
+  }
 
   ngOnInit(): void {
     this.initializeData();
@@ -60,9 +61,8 @@ export class HomeComponent implements OnInit {
     const script = document.createElement('script');
     script.setAttribute(
       'src',
-      environment.LFX_HEADER_URL
+      EnvConfig.default['lfx-header']
     );
     document.head.appendChild(script);
   }
-
 }
