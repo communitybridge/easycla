@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 import { Component, OnInit } from '@angular/core';
-import { environment } from 'src/environments/environment';
 import { AppSettings } from './config/app-settings';
 import { EnvConfig } from './config/cla-env-utils';
 import { LfxHeaderService } from './core/services/lfx-header.service';
@@ -34,7 +33,8 @@ export class AppComponent implements OnInit {
         url: AppSettings.LEARN_MORE
       }
     ];
-    this.mounted();
+    this.mountHeader();
+    this.mountFooter();
   }
 
   onToggled() {
@@ -46,11 +46,20 @@ export class AppComponent implements OnInit {
     element.links = this.links;
   }
 
-  mounted() {
+  mountHeader() {
     const script = document.createElement('script');
     script.setAttribute(
       'src',
-      environment.LFX_HEADER_URL
+      EnvConfig.default['lfx-header']
+    );
+    document.head.appendChild(script);
+  }
+
+  mountFooter() {
+    const script = document.createElement('script');
+    script.setAttribute(
+      'src',
+      EnvConfig.default['lfx-footer']
     );
     document.head.appendChild(script);
   }
