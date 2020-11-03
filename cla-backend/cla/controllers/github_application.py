@@ -18,17 +18,10 @@ class GitHubInstallation(object):
     def app_id(self):
         return os.environ['GH_APP_ID']
 
-    def set_private_key(self, private_key):
-        self.private_key = private_key
-
     @property
     def private_key(self):
         # return cla.config.GITHUB_PRIVATE_KEY
-        return self.private_key
-
-    @private_key.setter
-    def private_key(self, value):
-        self._private_key = value
+        return cla.config.get_ssm_key('us-east-1', f'cla-gh-app-private-key-{cla.config.stage}')
 
     @property
     def repos(self):
@@ -36,7 +29,6 @@ class GitHubInstallation(object):
 
     def __init__(self, installation_id):
         self.installation_id = installation_id
-        self.private_key = cla.config.get_ssm_key('us-east-1', f'cla-gh-app-private-key-{cla.config.stage}')
 
         cla.log.debug('Initializing github application - installation_id: {}, app id: {}, private key'
                       ' (minus header): {}...'.
@@ -82,7 +74,6 @@ class GitHubInstallation(object):
 
         except RequestException as err:
             cla.log.debug(err)
-
 
 
 class GithubCLAIntegration(GithubIntegration):
