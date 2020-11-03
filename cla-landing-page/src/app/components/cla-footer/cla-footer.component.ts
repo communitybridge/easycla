@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
+import {Component} from '@angular/core';
 
 @Component({
   selector: 'lfx-footer',
@@ -9,6 +9,6 @@ import { Component } from '@angular/core';
   styleUrls: ['./cla-footer.component.scss']
 })
 export class ClaFooterComponent {
-  constructor() { }
-
+  constructor() {
+  }
 }
