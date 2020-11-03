@@ -86,7 +86,8 @@ export class MyApp {
   }
 
   ngOnInit() {
-    this.mounted();
+    this.mountHeader();
+    this.mountFooter();
   }
 
   initializeApp() {
@@ -98,11 +99,20 @@ export class MyApp {
     });
   }
 
-  mounted() {
+  mountHeader() {
     const script = document.createElement('script');
     script.setAttribute(
       'src',
       EnvConfig['lfx-header']
+    );
+    document.head.appendChild(script);
+  }
+
+  mountFooter() {
+    const script = document.createElement('script');
+    script.setAttribute(
+      'src',
+      EnvConfig['lfx-footer']
     );
     document.head.appendChild(script);
   }
