@@ -7,6 +7,8 @@ import (
 	"context"
 	"sync"
 
+	"github.com/communitybridge/easycla/cla-backend-go/users"
+
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/sirupsen/logrus"
@@ -35,6 +37,7 @@ type Service interface {
 	GetClaGroupsByFoundationSFID(ctx context.Context, foundationSFID string, loadRepoDetails bool) (*models.ClaGroups, error)
 	GetClaGroupByProjectSFID(ctx context.Context, projectSFID string, loadRepoDetails bool) (*models.ClaGroup, error)
 	SignedAtFoundationLevel(ctx context.Context, foundationSFID string) (bool, error)
+	GetCLAManagers(ctx context.Context, claGroupID string) ([]*models.ClaManagerUser, error)
 }
 
 // service
@@ -43,15 +46,17 @@ type service struct {
 	repositoriesRepo repositories.Repository
 	gerritRepo       gerrits.Repository
 	projectCGRepo    projects_cla_groups.Repository
+	usersRepo        users.UserRepository
 }
 
 // NewService returns an instance of the project service
-func NewService(projectRepo ProjectRepository, repositoriesRepo repositories.Repository, gerritRepo gerrits.Repository, pcgRepo projects_cla_groups.Repository) Service {
+func NewService(projectRepo ProjectRepository, repositoriesRepo repositories.Repository, gerritRepo gerrits.Repository, pcgRepo projects_cla_groups.Repository, usersRepo users.UserRepository) Service {
 	return service{
 		repo:             projectRepo,
 		repositoriesRepo: repositoriesRepo,
 		gerritRepo:       gerritRepo,
 		projectCGRepo:    pcgRepo,
+		usersRepo:        usersRepo,
 	}
 }
 
@@ -348,4 +353,33 @@ func (s service) SignedAtFoundationLevel(ctx context.Context, foundationSFID str
 	}
 
 	return foundationLevelCLAGroup, nil
+}
+
+// GetCLAManagers retrieves a list of managers for the give claGroupID
+func (s service) GetCLAManagers(ctx context.Context, claGroupID string) ([]*models.ClaManagerUser, error) {
+	claGroupModel, err := s.GetCLAGroupByID(ctx, claGroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(claGroupModel.ProjectACL) == 0 {
+		return nil, nil
+	}
+
+	var managers []*models.ClaManagerUser
+	for _, lfUserName := range claGroupModel.ProjectACL {
+		log.Debugf("getting cla manager  user : %s", lfUserName)
+		u, err := s.usersRepo.GetUserByLFUserName(lfUserName)
+		if err != nil {
+			log.Warnf("fetching the user with lfUserName : %s failed : %v", lfUserName, err)
+			return nil, err
+		}
+		managers = append(managers, &models.ClaManagerUser{
+			UserEmail: u.LfEmail,
+			UserLFID:  u.LfUsername,
+			UserName:  u.Username,
+		})
+	}
+
+	return managers, nil
 }

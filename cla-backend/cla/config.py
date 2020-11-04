@@ -100,6 +100,9 @@ EMAIL_ON_SIGNATURE_APPROVED = True  #: Whether to email the user when signature 
 # Platform Maintainers
 PLATFORM_MAINTAINERS = os.environ.get('PLATFORM_MAINTAINERS', [])
 
+# Platform Gateway URL
+PLATFORM_GATEWAY_URL = os.environ.get("PLATFORM_GATEWAY_URL")
+
 # SMTP Configuration.
 #: Sender email address for SMTP service (from address).
 SMTP_SENDER_EMAIL_ADDRESS = os.environ.get('SMTP_SENDER_EMAIL_ADDRESS', 'test@cla.system')
@@ -119,4 +122,4 @@ PDF_SERVICE = 'DocRaptor'
 # Moved to GitHub application class GitHubInstallation as loading this property is taking ~1 sec on startup which is
 # killing our response performance - in most API calls this key/attribute is not used, so, we will lazy load this
 # property on class construction
-#GITHUB_PRIVATE_KEY = get_ssm_key('us-east-1', f'cla-gh-app-private-key-{stage}')
+GITHUB_PRIVATE_KEY = get_ssm_key('us-east-1', f'cla-gh-app-private-key-{stage}')
