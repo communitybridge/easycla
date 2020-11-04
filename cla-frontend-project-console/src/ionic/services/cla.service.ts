@@ -330,7 +330,7 @@ export class ClaService {
   private handleServiceError(error: any) {
     const errString = String(error);
     if (errString.includes('401')) {
-      console.log('authentication error invoking service: ' + error + '. Forcing user to log out...');
+      console.log('authentication error invoking service: Forcing user to log out...');
       this.authService.logout();
     } else {
       console.log('problem invoking service: ' + error);
