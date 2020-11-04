@@ -27,6 +27,19 @@ func SetEmailSender(es EmailSender) {
 	emailSender = es
 }
 
+// GetEmailSender returns back the current email sender
+func GetEmailSender() EmailSender {
+	return emailSender
+}
+
+// MockEmailSender useful when working with tests
+type MockEmailSender struct{}
+
+// SendEmail does nothing
+func (m *MockEmailSender) SendEmail(subject string, body string, recipients []string) error {
+	return nil
+}
+
 type snsEmail struct {
 	snsClient          *sns.SNS
 	snsEventTopicARN   string

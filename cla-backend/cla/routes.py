@@ -5,9 +5,12 @@
 The entry point for the CLA service. Lays out all routes and controller functions.
 """
 
+import os
+
 import hug
-from falcon import HTTP_401, HTTP_400
+from falcon import HTTP_401, HTTP_400, HTTP_OK, HTTP_500
 from hug.middleware import LogMiddleware
+import requests
 
 import cla
 import cla.auth
@@ -24,6 +27,8 @@ import cla.controllers.signing
 import cla.controllers.user
 import cla.hug_types
 import cla.salesforce
+from cla.controllers.github import get_github_activity_action
+from cla.controllers.github_activity import v4_easycla_github_activity
 from cla.utils import (
     get_supported_repository_providers,
     get_supported_document_content_types,
@@ -1497,13 +1502,30 @@ def github_app_installation(body, request, response):
 def github_app_activity(body, request, response):
     """
     POST: /github/activity
-
-    TODO: Need to secure this endpoint with GitHub's Webhook secret.
-
     Acts upon any events triggered by our app installed in someone's organization.
     """
     # Verify that Webhook Signature is valid
     event_type = request.headers.get('X-GITHUB-EVENT')
+    action = get_github_activity_action(body)
+    if event_type == "installation_repositories" or \
+            event_type == "integration_installation_repositories" or \
+            event_type == "repository" or \
+            (event_type == "push" and action and action == "created"):
+        try:
+            cla.log.debug(f"redirecting event to {event_type} v4 golang api")
+            v4_easycla_github_activity(cla.config.PLATFORM_GATEWAY_URL, request)
+            response.status = HTTP_OK
+            return {"status": "OK"}
+        except requests.exceptions.HTTPError as ex:
+            response.status = str(ex.response.status_code)
+            cla.log.error(f"v4 golang api failed with : {ex.response.status_code} : {ex.response.json()}")
+            return ex.response.json()
+        except Exception as ex:
+            response.status = HTTP_500
+            cla.log.error("v4 golang api failed with : 500 : {}".format(str(ex)))
+            return {"status": "v4_easycla_github_activity failed {}".format(str(ex))}
+
+    # if not any of the events above we handle it via python
     valid_request = cla.controllers.github.webhook_secret_validation(request.headers.get('X-HUB-SIGNATURE'),
                                                                      request.bounded_stream.read())
     if not valid_request:

@@ -37,12 +37,14 @@ func signatureCheckMiddleware(next http.Handler) http.Handler {
 
 // Configure setups handlers on api with service
 func Configure(api *operations.EasyclaAPI, service Service) {
-	api.AddMiddlewareFor("POST", "/github/activity", signatureCheckMiddleware)
 	api.GithubActivityGithubActivityHandler = github_activity.GithubActivityHandlerFunc(
 		func(params github_activity.GithubActivityParams) middleware.Responder {
 			githubEvent := utils.GetGithubEvent(params.XGITHUBEVENT)
 			if githubEvent == "" {
-				return github_activity.NewGithubActivityBadRequest()
+				return github_activity.NewGithubActivityBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "missing github event",
+				})
 			}
 
 			// we need the raw payload so we can use the github utilities
@@ -85,6 +87,7 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 
 			return github_activity.NewGithubActivityOK()
 		})
+	api.AddMiddlewareFor("POST", "/github/activity", signatureCheckMiddleware)
 }
 
 type codedResponse interface {
