@@ -48,6 +48,9 @@ const CLADesigneeRole = "cla-manager-designee"
 // CLAManagerRole CLA manager role identifier
 const CLAManagerRole = "cla-manager"
 
+// CompanyAdminRole  Company admin for user
+const CompanyAdminRole = "company-admin"
+
 // CLASignatoryRole CLA signatory role identifier
 const CLASignatoryRole = "cla-signatory"
 
