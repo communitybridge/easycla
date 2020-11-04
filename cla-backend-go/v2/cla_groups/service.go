@@ -53,7 +53,7 @@ type service struct {
 // Service interface
 type Service interface {
 	CreateCLAGroup(ctx context.Context, input *models.CreateClaGroupInput, projectManagerLFID string) (*models.ClaGroupSummary, error)
-	UpdateCLAGroup(ctx context.Context, claGroupID string, input *models.UpdateClaGroupInput, projectManagerLFID string) (*models.ClaGroupSummary, error)
+	UpdateCLAGroup(ctx context.Context, claGroupModel *v1Models.ClaGroup, input *models.UpdateClaGroupInput, projectManagerLFID string) (*models.ClaGroupSummary, error)
 	ListClaGroupsForFoundationOrProject(ctx context.Context, foundationSFID string) (*models.ClaGroupListSummary, error)
 	ListAllFoundationClaGroups(ctx context.Context, foundationID *string) (*models.FoundationMappingList, error)
 	DeleteCLAGroup(ctx context.Context, claGroupModel *v1Models.ClaGroup, authUser *auth.User) error
@@ -214,18 +214,19 @@ func (s *service) CreateCLAGroup(ctx context.Context, input *models.CreateClaGro
 	}, nil
 }
 
-func (s *service) UpdateCLAGroup(ctx context.Context, claGroupID string, input *models.UpdateClaGroupInput, projectManagerLFID string) (*models.ClaGroupSummary, error) {
+func (s *service) UpdateCLAGroup(ctx context.Context, claGroupModel *v1Models.ClaGroup, input *models.UpdateClaGroupInput, projectManagerLFID string) (*models.ClaGroupSummary, error) {
 	// Validate the input
 	f := logrus.Fields{
-		"function":            "CreateCLAGroup",
+		"function":            "UpdateCLAGroup",
 		utils.XREQUESTID:      ctx.Value(utils.XREQUESTID),
-		"claGroupID":          claGroupID,
+		"claGroupID":          claGroupModel.ProjectID,
 		"ClaGroupName":        input.ClaGroupName,
 		"ClaGroupDescription": input.ClaGroupDescription,
 	}
 
-	// Search other CLA Groups - any name conflicts?
-	if input.ClaGroupName != "" {
+	// If we have an input CLA Group name (not empty) and the name doesn't match the current name...Search all the other
+	// CLA Groups and identify any name conflicts.
+	if input.ClaGroupName != "" && claGroupModel.ProjectName != input.ClaGroupName {
 		existingCLAGroup, groupLookupErr := s.v1ProjectService.GetCLAGroupByName(ctx, input.ClaGroupName)
 		if groupLookupErr != nil {
 			log.WithFields(f).WithError(groupLookupErr).Warnf("update - error looking up CLA Group by name: %s", input.ClaGroupName)
@@ -236,41 +237,35 @@ func (s *service) UpdateCLAGroup(ctx context.Context, claGroupID string, input *
 		if existingCLAGroup != nil {
 			log.WithFields(f).Warnf("found existing CLA Group with name: %s - unable to update", input.ClaGroupName)
 			return nil, &utils.CLAGroupNameConflict{
-				CLAGroupID:   claGroupID,
+				CLAGroupID:   claGroupModel.ProjectID,
 				CLAGroupName: input.ClaGroupName,
 				Err:          nil,
 			}
 		}
 	}
 
-	existingCLAGroup, getErr := s.v1ProjectService.GetCLAGroupByID(ctx, claGroupID)
-	if getErr != nil {
-		log.WithFields(f).WithError(getErr).Warnf("update - error locating the project id: %s", claGroupID)
-		return nil, getErr
-	}
-
-	// Create cla group
+	// Update the CLA Group
 	log.WithFields(f).WithField("input", input).Debugf("updating cla group...")
 	claGroup, err := s.v1ProjectService.UpdateCLAGroup(ctx, &v1Models.ClaGroup{
-		ProjectID:          claGroupID,
+		ProjectID:          claGroupModel.ProjectID,
 		ProjectName:        input.ClaGroupName,
 		ProjectDescription: input.ClaGroupDescription,
 		// Copy over the existing values
-		ProjectExternalID:            existingCLAGroup.ProjectExternalID,
-		FoundationSFID:               existingCLAGroup.FoundationSFID,
-		FoundationLevelCLA:           existingCLAGroup.FoundationLevelCLA,
-		Gerrits:                      existingCLAGroup.Gerrits,
-		GithubRepositories:           existingCLAGroup.GithubRepositories,
-		ProjectACL:                   existingCLAGroup.ProjectACL,
-		ProjectICLAEnabled:           existingCLAGroup.ProjectICLAEnabled,
-		ProjectCCLAEnabled:           existingCLAGroup.ProjectCCLAEnabled,
-		ProjectCCLARequiresICLA:      existingCLAGroup.ProjectCCLARequiresICLA,
-		ProjectIndividualDocuments:   existingCLAGroup.ProjectIndividualDocuments,
-		ProjectCorporateDocuments:    existingCLAGroup.ProjectCorporateDocuments,
-		ProjectMemberDocuments:       existingCLAGroup.ProjectMemberDocuments,
-		ProjectLive:                  existingCLAGroup.ProjectLive,
-		RootProjectRepositoriesCount: existingCLAGroup.RootProjectRepositoriesCount,
-		Version:                      existingCLAGroup.Version,
+		ProjectExternalID:            claGroupModel.ProjectExternalID,
+		FoundationSFID:               claGroupModel.FoundationSFID,
+		FoundationLevelCLA:           claGroupModel.FoundationLevelCLA,
+		Gerrits:                      claGroupModel.Gerrits,
+		GithubRepositories:           claGroupModel.GithubRepositories,
+		ProjectACL:                   claGroupModel.ProjectACL,
+		ProjectICLAEnabled:           claGroupModel.ProjectICLAEnabled,
+		ProjectCCLAEnabled:           claGroupModel.ProjectCCLAEnabled,
+		ProjectCCLARequiresICLA:      claGroupModel.ProjectCCLARequiresICLA,
+		ProjectIndividualDocuments:   claGroupModel.ProjectIndividualDocuments,
+		ProjectCorporateDocuments:    claGroupModel.ProjectCorporateDocuments,
+		ProjectMemberDocuments:       claGroupModel.ProjectMemberDocuments,
+		ProjectLive:                  claGroupModel.ProjectLive,
+		RootProjectRepositoriesCount: claGroupModel.RootProjectRepositoriesCount,
+		Version:                      claGroupModel.Version,
 	})
 	if err != nil {
 		log.WithFields(f).WithError(err).Warnf("cla group update failed")
@@ -278,9 +273,9 @@ func (s *service) UpdateCLAGroup(ctx context.Context, claGroupID string, input *
 	}
 
 	// Load the project IDs for this CLA Group
-	subProjectList, err := s.projectsClaGroupsRepo.GetProjectsIdsForClaGroup(claGroupID)
+	subProjectList, err := s.projectsClaGroupsRepo.GetProjectsIdsForClaGroup(claGroupModel.ProjectID)
 	if err != nil {
-		log.WithFields(f).WithError(err).Warnf("problem getting project IDs for CLA Group: %s", claGroupID)
+		log.WithFields(f).WithError(err).Warnf("problem getting project IDs for CLA Group")
 		return nil, err
 	}
 
@@ -300,7 +295,7 @@ func (s *service) UpdateCLAGroup(ctx context.Context, claGroupID string, input *
 	})
 
 	claGroupSummary := &models.ClaGroupSummary{
-		FoundationLevelCLA:  isFoundationLevelCLA(existingCLAGroup.FoundationSFID, subProjectList),
+		FoundationLevelCLA:  isFoundationLevelCLA(claGroupModel.FoundationSFID, subProjectList),
 		CclaEnabled:         claGroup.ProjectCCLAEnabled,
 		CclaRequiresIcla:    claGroup.ProjectCCLARequiresICLA,
 		ClaGroupDescription: claGroup.ProjectDescription,
@@ -315,9 +310,9 @@ func (s *service) UpdateCLAGroup(ctx context.Context, claGroupID string, input *
 	// Load and set the ICLA template - if set
 	var iclaTemplate string
 	if claGroup.ProjectICLAEnabled {
-		iclaTemplate, err = s.v1ProjectService.GetCLAGroupCurrentICLATemplateURLByID(ctx, claGroupID)
+		iclaTemplate, err = s.v1ProjectService.GetCLAGroupCurrentICLATemplateURLByID(ctx, claGroupModel.ProjectID)
 		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("problem getting project ICLA templates for CLA Group: %s", claGroupID)
+			log.WithFields(f).WithError(err).Warnf("problem getting project ICLA templates for CLA Group")
 			return nil, err
 		}
 		claGroupSummary.IclaPdfURL = iclaTemplate
@@ -326,9 +321,9 @@ func (s *service) UpdateCLAGroup(ctx context.Context, claGroupID string, input *
 	// Load and set the CCLA template - if set
 	var cclaTemplate string
 	if claGroup.ProjectCCLAEnabled {
-		cclaTemplate, err = s.v1ProjectService.GetCLAGroupCurrentCCLATemplateURLByID(ctx, claGroupID)
+		cclaTemplate, err = s.v1ProjectService.GetCLAGroupCurrentCCLATemplateURLByID(ctx, claGroupModel.ProjectID)
 		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("problem getting project CCLA templates for CLA Group: %s", claGroupID)
+			log.WithFields(f).WithError(err).Warnf("problem getting project CCLA templates for CLA Group")
 			return nil, err
 		}
 		claGroupSummary.CclaPdfURL = cclaTemplate
