@@ -26,6 +26,8 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	v1Project "github.com/communitybridge/easycla/cla-backend-go/project"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
+	psproject "github.com/communitybridge/easycla/cla-backend-go/v2/project-service/client/project"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -374,8 +376,26 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			"authEmail":      params.XEMAIL,
 		}
 
+		psc := project_service.GetClient()
+		project, projectErr := psc.GetProject(params.ProjectSFID)
+		if projectErr != nil || project == nil {
+			msg := fmt.Sprintf("Failed to get salesforce project: %s", params.ProjectSFID)
+			log.WithFields(f).Warn(msg)
+			if _, ok := projectErr.(*psproject.GetProjectNotFound); ok {
+				return cla_group.NewListClaGroupsUnderFoundationNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+					Code:    "404",
+					Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
+				})
+			}
+			return cla_group.NewListClaGroupsUnderFoundationBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseNotFoundWithError(reqID, msg, projectErr))
+		}
+
+		var projectSFIDs = []string{}
+		projectSFIDs = append(projectSFIDs, project.Foundation.ID)
+		projectSFIDs = append(projectSFIDs, project.ID)
+
 		// Check permissions
-		if !isUserHaveAccessToCLAProject(ctx, authUser, params.ProjectSFID, projectClaGroupsRepo) {
+		if utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
 			msg := fmt.Sprintf("user %s does not have access to list projects with project scope of: %s", authUser.UserName, params.ProjectSFID)
 			log.WithFields(f).Warn(msg)
 			return cla_group.NewListClaGroupsUnderFoundationForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
