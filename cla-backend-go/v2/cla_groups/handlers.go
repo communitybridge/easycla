@@ -128,7 +128,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 				utils.ErrorResponseBadRequest(reqID, fmt.Sprintf("unable to update the CLA Group Name or Description - values are the same for CLA Group ID: %s", params.ClaGroupID)))
 		}
 
-		claGroup, err := service.UpdateCLAGroup(ctx, params.ClaGroupID, params.Body, utils.StringValue(params.XUSERNAME))
+		claGroup, err := service.UpdateCLAGroup(ctx, claGroupModel, params.Body, utils.StringValue(params.XUSERNAME))
 		if err != nil {
 			log.WithFields(f).WithError(err).Warn("unable to update the CLA Group Name and/or Description - update failed")
 			return cla_group.NewUpdateClaGroupBadRequest().WithXRequestID(reqID).WithPayload(
