@@ -1,23 +1,15 @@
 
-.scroll-content {
-  margin-top: 96px !important;
-}
-
 .page-content {
-  min-height: calc(100vh - 404px);
-  margin-top: 25px;
-  transition: margin 0.3s;
-
-  &.expanded {
-    min-height: calc(100vh - 414px);
-    margin-top: 100px;
-  }
-
   .error {
     font-size: 18px;
     color: red;
     text-align: center;
-    margin-top: 115px;
+    padding-top: 15px;
+  }
+
+  .table-view {
+    height: 60vh;
+    overflow-y: auto;
   }
 
   @media (min-width: 768px) and (max-width: 1200px) {

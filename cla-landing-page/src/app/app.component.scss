@@ -5,10 +5,10 @@
     transition: margin 0.3s;
     margin-top: 40px;
     padding: 25px 0;
-    min-height: calc(100vh - 202px);
+    min-height: calc(100vh - 152px);
     &.expanded {
         margin-top: 115px;
-        min-height: calc(100vh - 277px);
+        min-height: calc(100vh - 227px);
     }
 }
 

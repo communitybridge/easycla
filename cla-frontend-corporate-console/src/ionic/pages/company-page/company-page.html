@@ -1,6 +1,6 @@
 <cla-header [title]="company.company_name | trimCharacters:35" (onToggle)="onClickToggle($event)"></cla-header>
 
-<ion-content>
+<ion-content [ngClass]="expanded ? 'content-top-show' : 'content-top-hide'">
   <div class="page-content" [ngClass]="{'expanded':expanded}">
     <ion-grid>
       <ion-row justify-content-center>
