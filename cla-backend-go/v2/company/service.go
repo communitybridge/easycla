@@ -320,7 +320,7 @@ func (s *service) CreateCompany(ctx context.Context, companyName string, company
 		return nil, err
 	}
 
-	// acsClient := acs_service.GetClient()
+	acsClient := acs_service.GetClient()
 	userClient := v2UserService.GetClient()
 
 	lfUser, lfErr := userClient.SearchUserByEmail(userEmail)
@@ -331,11 +331,24 @@ func (s *service) CreateCompany(ctx context.Context, companyName string, company
 	if lfUser != nil {
 
 		log.WithFields(f).Debugf("User :%s has been assigned the company-owner role to organization: %s ", userEmail, org.Name)
+		// Assign company-admin to user
+		roleID, adminErr := acsClient.GetRoleID(utils.CompanyAdminRole)
+		if adminErr != nil {
+			msg := "Problem getting companyAdmin role ID for contributor"
+			log.Warn(msg)
+			return nil, adminErr
+		}
+
+		scopeErr := orgClient.CreateOrgUserRoleOrgScope(userEmail, org.ID, roleID)
+		if scopeErr != nil {
+			msg := fmt.Sprintf("Problem creating Org scope for email: %s , companyID: %s", userEmail, org.ID)
+			log.Warn(msg)
+			return nil, scopeErr
+		}
 		// Associate User (Not associated) with Newly created org
 		if lfUser.Account.ID == NoAccount {
 			lfUser.Account.ID = org.ID
 		}
-
 	}
 
 	// Create Easy CLA Company

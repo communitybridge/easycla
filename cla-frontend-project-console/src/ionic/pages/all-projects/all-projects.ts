@@ -7,7 +7,6 @@ import { ClaService } from '../../services/cla.service';
 import { FilterService } from '../../services/filter.service';
 import { Restricted } from '../../decorators/restricted';
 import { generalConstants } from '../../constants/general';
-import { EnvConfig } from '../../services/cla.env.utils';
 import { AuthService } from '../../services/auth.service';
 import { LfxHeaderService } from '../../services/lfx-header.service';
 
@@ -26,9 +25,6 @@ export class AllProjectsPage {
   loading: any;
   allProjects: any;
   allFilteredProjects: any;
-  // userRoles: any;
-  errorMessage = null;
-  errorStatus = null;
   expanded: boolean = true;
 
   constructor(
@@ -67,16 +63,9 @@ export class AllProjectsPage {
   }
 
   handleErrors(error) {
-    this.setLoadingSpinner(false);
-    this.errorStatus = error.status;
-
     switch (error.status) {
       case 401:
-        this.errorMessage = `Your session may have expired or you don't have permissions to see any projects.`;
-        break;
-
-      default:
-        this.errorMessage = `An unknown error has occurred when retrieving the projects`;
+        this.auth.logout();
     }
   }
 
