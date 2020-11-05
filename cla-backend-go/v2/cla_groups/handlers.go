@@ -399,7 +399,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		projectSFIDs = append(projectSFIDs, project.ID)
 
 		// Check permissions
-		if utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
+		if !utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
 			msg := fmt.Sprintf("user %s does not have access to list projects with project scope of: %s", authUser.UserName, params.ProjectSFID)
 			log.WithFields(f).Warn(msg)
 			return cla_group.NewListClaGroupsUnderFoundationForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
