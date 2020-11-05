@@ -456,10 +456,20 @@ func (osc *Client) CreateOrg(companyName string, companyWebsite string) (*models
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
 	description := "No Description"
-	companyType := "No Type"
+	companyType := "Customer"
 	companySource := "No Source"
 	industry := "No Industry"
 	logoURL := linuxFoundation[0].LogoURL
+
+	f := logrus.Fields{
+		"functionName": "CreateOrg",
+		"Name":         companyName,
+		"Website":      companyWebsite,
+		"companyType":  companyType,
+		"industry":     industry,
+		"logoURL":      logoURL,
+		"type":         companyType,
+	}
 
 	org := models.CreateOrg{
 		Description: &description,
@@ -479,9 +489,10 @@ func (osc *Client) CreateOrg(companyName string, companyWebsite string) (*models
 	result, err := osc.cl.Organizations.CreateOrg(params, clientAuth)
 
 	if err != nil {
-		log.Warnf("Failed to create salesforce Company :%s , err: %+v ", companyName, err)
+		log.WithFields(f).Warnf("Failed to create salesforce Company :%s , err: %+v ", companyName, err)
 		return nil, err
 	}
+	log.WithFields(f).Infof("Company: %s  successfuly created ", companyName)
 
 	return result.Payload, err
 }
