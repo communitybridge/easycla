@@ -391,48 +391,52 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			return cla_group.NewListClaGroupsUnderFoundationBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseNotFoundWithError(reqID, msg, projectErr))
 		}
 
+		log.WithFields(f).Debug("found project - evaluating parent...")
 		var projectSFIDs []string
 		// Add the foundation ID, if available
 		if project.Foundation != nil && project.Foundation.ID != "" {
+			log.WithFields(f).Debugf("parent project - found %s - adding to list of project IDs...", project.Foundation.ID)
 			projectSFIDs = append(projectSFIDs, project.Foundation.ID)
 		}
+		log.WithFields(f).Debug("project - adding to list of project IDs...")
 		projectSFIDs = append(projectSFIDs, project.ID)
 
 		// Check permissions
+		log.WithFields(f).Debugf("checking permissions for %s", strings.Join(projectSFIDs, ","))
 		if !utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
 			msg := fmt.Sprintf("user %s does not have access to list projects with project scope of: %s", authUser.UserName, params.ProjectSFID)
 			log.WithFields(f).Warn(msg)
 			return cla_group.NewListClaGroupsUnderFoundationForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
 		}
 
+		log.WithFields(f).Debug("locating CLA groups for foundation or project...")
 		result, err := service.ListClaGroupsForFoundationOrProject(ctx, params.ProjectSFID)
 		if err != nil {
+			msg := fmt.Sprintf("problem loading CLA Group for foundation or project: %s", params.ProjectSFID)
+			log.WithFields(f).WithError(err).Warn(msg)
+
 			if err, ok := err.(*utils.SFProjectNotFound); ok {
 				msg := fmt.Sprintf("salesforce project not found: %s", params.ProjectSFID)
 				log.WithFields(f).WithError(err).Warn(msg)
-				return cla_group.NewListClaGroupsUnderFoundationNotFound().WithXRequestID(reqID).WithPayload(utils.ErrorResponseNotFoundWithError(reqID, msg, err))
 			}
 			if _, ok := err.(*utils.ProjectCLAGroupMappingNotFound); ok {
 				msg := fmt.Sprintf("project cla grouping not found for project: %s", params.ProjectSFID)
 				log.WithFields(f).WithError(err).Warn(msg)
-				return cla_group.NewListClaGroupsUnderFoundationOK().WithXRequestID(reqID).WithPayload(&models.ClaGroupListSummary{
-					List: []*models.ClaGroupSummary{},
-				})
 			}
 			if err, ok := err.(*utils.CLAGroupNotFound); ok {
 				msg := fmt.Sprintf("project cla group not found for project: %s", params.ProjectSFID)
 				log.WithFields(f).WithError(err).Warn(msg)
-				return cla_group.NewListClaGroupsUnderFoundationNotFound().WithXRequestID(reqID).WithPayload(utils.ErrorResponseNotFoundWithError(reqID, msg, err))
 			}
 
-			msg := fmt.Sprintf("problem loading CLA Group for foundation or project: %s", params.ProjectSFID)
-			log.WithFields(f).WithError(err).Warn(msg)
-			return cla_group.NewListClaGroupsUnderFoundationBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequestWithError(reqID, msg, err))
+			// UI wants 200 empty list response
+			return cla_group.NewListClaGroupsUnderFoundationOK().WithXRequestID(reqID).WithPayload(&models.ClaGroupListSummary{
+				List: []*models.ClaGroupSummary{},
+			})
 		}
 
 		// No results - empty OK response
 		if result == nil {
-			log.WithFields(f).Debug("no results found")
+			log.WithFields(f).Debug("no results found - returning empty list")
 			return cla_group.NewListClaGroupsUnderFoundationOK().WithXRequestID(reqID).WithPayload(&models.ClaGroupListSummary{
 				List: []*models.ClaGroupSummary{},
 			})
