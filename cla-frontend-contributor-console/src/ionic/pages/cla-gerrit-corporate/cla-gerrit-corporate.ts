@@ -28,7 +28,7 @@ export class ClaGerritCorporatePage {
   signature: string;
   companies: any;
   expanded: boolean = true;
-  errorMessage: string;
+  errorMessage: string = null;
 
   constructor(
     public navCtrl: NavController,
@@ -42,7 +42,6 @@ export class ClaGerritCorporatePage {
     this.getDefaults();
     localStorage.setItem('gerritId', this.gerritId);
     localStorage.setItem('gerritClaType', 'CCLA');
-    console.log('Set');
   }
 
   getDefaults() {
@@ -166,6 +165,7 @@ export class ClaGerritCorporatePage {
       if (response.errors) {
         this.errorMessage = 'A gerrit instance does not exist in database';
       } else {
+        this.errorMessage = '';
         this.projectId = response.project_id;
         this.claService.getProjectWithAuthToken(response.project_id).subscribe((project) => {
           localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(project));

@@ -80,3 +80,28 @@ ion-icon[name="menu"] {
 .row .col .card {
   min-height: calc(100% - 20px);
 }
+
+.content-top-show {
+  .scroll-content {
+    overflow-y: auto;
+    margin-top: 182px;
+  }
+}
+.content-top-hide {
+  .scroll-content {
+    overflow-y: auto;
+    margin-top: 102px;
+  }
+}
+// set footer + header height to keep footer at bottom;
+// $headerAndFooterCollapseHeight: 200px;
+// $headerAndFooterExpandHeight: 280px;
+
+.page-content {
+  transition: margin 0.3s;
+  min-height: calc(100vh - 200px);
+
+  &.expanded {
+    min-height: calc(100vh - 280px);
+  }
+}
