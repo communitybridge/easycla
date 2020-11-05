@@ -1,6 +1,6 @@
 <cla-header title="Back to all Projects" hasShowBackBtn="true" (onToggle)="onClickToggle($event)"></cla-header>
 
-<ion-content headerspacing overflow-scroll="true">
+<ion-content headerspacing overflow-scroll="true" [ngClass]="expanded ? 'content-top-show' : 'content-top-hide'">
 
   <div class="page-content" [ngClass]="{'expanded':expanded}">
     <section-header [projectId]="sfdcProjectId"></section-header>

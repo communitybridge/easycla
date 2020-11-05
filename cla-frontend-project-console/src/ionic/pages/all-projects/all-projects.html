@@ -1,6 +1,6 @@
 <cla-header title="CLA Management Console" (onToggle)="onClickToggle($event)"></cla-header>
 
-<ion-content>
+<ion-content [ngClass]="expanded ? 'content-top-show' : 'content-top-hide'">
 
   <div class="page-content" [ngClass]="{'expanded':expanded}">
     <loading-spinner [loading]="loading.projects"></loading-spinner>
