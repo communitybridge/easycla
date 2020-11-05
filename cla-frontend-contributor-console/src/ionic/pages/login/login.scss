@@ -9,15 +9,6 @@ login {
   }
 
   .page-content {
-    min-height: calc(100vh - 416px);
-    margin-top: 25px;
-    transition: margin 0.3s;
-
-    &.expanded {
-      min-height: calc(100vh - 416px);
-      margin-top: 100px;
-    }
-
     .login-container {
       text-align: center;
       margin-top: 215px;

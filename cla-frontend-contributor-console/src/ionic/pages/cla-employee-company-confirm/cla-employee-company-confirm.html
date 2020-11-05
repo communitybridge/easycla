@@ -1,7 +1,7 @@
 <cla-header title="CLA - {{ company.company_name }} CCLA Company Confirm" hasShowBackBtn="true"
   (onToggle)="onClickToggle($event)"></cla-header>
 
-<ion-content>
+<ion-content [ngClass]="expanded ? 'content-top-show' : 'content-top-hide'">
   <div class="page-content" [ngClass]="{'expanded':expanded}">
     <ion-grid>
       <ion-row align-items-center>

@@ -3,27 +3,13 @@ cla-gerrit-individual {
     font-size: 18px;
     color: red;
     text-align: center;
-    margin-top: 115px;
+    padding-top: 15px;
   }
   .card-md p {
     margin-bottom: 1rem;
   }
-  .scroll-content {
-    margin-top: 96px !important;
-  }
 
-  .page-content {
-    min-height: calc(100vh - 356px);
-    margin-top: 25px;
-    transition: margin 0.3s;
-
-    &.expanded {
-      min-height: calc(100vh - 348px);
-      margin-top: 100px;
-    }
-
-    @media (min-width: 768px) and (max-width: 1200px) {
-      padding: 16px 50px 162px;
-    }
+  @media (min-width: 768px) and (max-width: 1200px) {
+    padding: 16px 50px 162px;
   }
 }

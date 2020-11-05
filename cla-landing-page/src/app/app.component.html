@@ -3,11 +3,10 @@
 
 <lfx-header product="LF CLA" id="lfx-header" [expanded]="hasExpanded" (toggled)="onToggled()">
 </lfx-header>
-
-<div [ngClass]="{'expanded':hasExpanded}" class="container landing-page-container">
-
-  <router-outlet></router-outlet>
-
+<div class="container ">
+  <div [ngClass]="{'expanded':hasExpanded}" class="landing-page-container row align-items-center">
+    <router-outlet></router-outlet>
+  </div>
 </div>
 
 <!-- Footer view -->
