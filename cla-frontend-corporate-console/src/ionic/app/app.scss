@@ -131,14 +131,14 @@ body ion-app.wp {
   }
 }
 // set footer + header height to keep footer at bottom;
-// $headerAndFooterCollapseHeight: 219px;
-// $headerAndFooterExpandHeight: 295px;
+// $headerAndFooterCollapseHeight: 200px;
+// $headerAndFooterExpandHeight: 280px;
 
 .page-content {
   transition: margin 0.3s;
-  min-height: calc(100vh - 219px);
+  min-height: calc(100vh - 200px);
 
   &.expanded {
-    min-height: calc(100vh - 219px);
+    min-height: calc(100vh - 280px);
   }
 }
