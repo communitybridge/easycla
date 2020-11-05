@@ -60,29 +60,8 @@ project-cla {
     top: 30%;
   }
 
-  .page-content {
-    min-height: calc(100vh - 258px);
-    margin-top: 25px;
-    transition: margin 0.3s;
-
-    &.expanded {
-      min-height: calc(100vh - 410px);
-    }
-
-    @media (min-width: 768px) and (max-width: 1200px) {
-      padding: 16px 50px 162px;
-    }
-  }
-
-  .content-top-show {
-    .scroll-content {
-      margin-top: 182px;
-    }
-  }
-  .content-top-hide {
-    .scroll-content {
-      margin-top: 102px;
-    }
+  @media (min-width: 768px) and (max-width: 1200px) {
+    padding: 16px 50px 162px;
   }
 
   .toolbar .toolbar-title {
