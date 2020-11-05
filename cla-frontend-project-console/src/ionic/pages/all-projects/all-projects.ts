@@ -8,7 +8,6 @@ import { FilterService } from '../../services/filter.service';
 import { Restricted } from '../../decorators/restricted';
 import { generalConstants } from '../../constants/general';
 import { AuthService } from '../../services/auth.service';
-import { LfxHeaderService } from '../../services/lfx-header.service';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -31,8 +30,7 @@ export class AllProjectsPage {
     public navCtrl: NavController,
     private claService: ClaService,
     private filterService: FilterService,
-    public auth: AuthService,
-    private LfxHeaderService: LfxHeaderService
+    public auth: AuthService
   ) {
     this.getDefaults();
   }
