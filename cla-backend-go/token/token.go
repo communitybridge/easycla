@@ -95,14 +95,13 @@ func retrieveToken() error {
 
 	expiry = time.Now()
 	tokenExpiry := time.Now().Add(time.Second * time.Duration(tr.ExpiresIn))
-	log.Debugf("token: %s expires: %s", token, tokenExpiry.UTC().String())
+	log.Debugf("retrieved token: %s... expires: %s", token[0:8], tokenExpiry.UTC().String())
 
 	return nil
 }
 
 // GetToken returns the Auth0 Token - in necessary, refreshes the token when expired
 func GetToken() (string, error) {
-	log.Debugf("access token: %s", token)
 	// set 2.75 hrs duration for new token
 	if (time.Now().Unix()-expiry.Unix()) > 9900 || token == "" {
 		err := retrieveToken()

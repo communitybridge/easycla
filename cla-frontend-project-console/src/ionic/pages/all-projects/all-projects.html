@@ -5,12 +5,6 @@
   <div class="page-content" [ngClass]="{'expanded':expanded}">
     <loading-spinner [loading]="loading.projects"></loading-spinner>
 
-    <h3 class="error-message" *ngIf="errorMessage && errorStatus === 401">
-      {{ errorMessage }}
-      <br>
-      <a (click)="redirectToLogin()" style="cursor: pointer;">Go back to login</a>
-    </h3>
-
     <h3 class="get-access-label text-align-center" *ngIf="errorMessage && errorStatus !== 401">
       Don't see your projects here?
       <br>
