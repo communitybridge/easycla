@@ -1479,7 +1479,7 @@ def append_email_help_sign_off_content(body: str, project_version: str) -> str:
     :param project_version:
     :return:
     """
-    return "\n".join([
+    return "".join([
         body,
         get_email_help_content(project_version == "v2"),
         get_email_sign_off_content(),
