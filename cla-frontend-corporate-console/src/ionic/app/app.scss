@@ -119,3 +119,26 @@ body ion-app.wp {
   font-size: 2em;
   vertical-align: middle;
 }
+
+.content-top-show {
+  .scroll-content {
+    margin-top: 182px;
+  }
+}
+.content-top-hide {
+  .scroll-content {
+    margin-top: 102px;
+  }
+}
+// set footer + header height to keep footer at bottom;
+// $headerAndFooterCollapseHeight: 200px;
+// $headerAndFooterExpandHeight: 280px;
+
+.page-content {
+  transition: margin 0.3s;
+  min-height: calc(100vh - 200px);
+
+  &.expanded {
+    min-height: calc(100vh - 280px);
+  }
+}

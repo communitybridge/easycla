@@ -16,7 +16,8 @@ import { AUTH_ROUTE } from '../../services/auth.utils';
 })
 export class LoginPage {
   canAccess: boolean;
-  
+  expanded: boolean = true;
+
   constructor(
     public authService: AuthService
   ) { }
@@ -25,7 +26,7 @@ export class LoginPage {
     this.authService.login(AUTH_ROUTE);
   }
 
-  onClickToggle(toggle) {
-
+  onClickToggle(hasExpanded) {
+    this.expanded = hasExpanded;
   }
 }

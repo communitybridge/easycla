@@ -16,10 +16,10 @@
 
 //@import url('https://fonts.googleapis.com/css?family=Lato');
 
-@import '../assets/_bootstrap.scss';
-@import '../assets/_marterial.scss';
+@import "../assets/_bootstrap.scss";
+@import "../assets/_marterial.scss";
 
-@import 'ionic.globals';
+@import "ionic.globals";
 
 @font-face {
   font-family: "Lato";
@@ -34,17 +34,17 @@
 }
 
 body ion-app.ios {
-  font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;
+  font-family: "Gill Sans", "Gill Sans MT", "Lato", sans-serif !important;
   // font-family: -apple-system, "Helvetica Neue", "Roboto", sans-serif;
 }
 
 body ion-app.md {
-  font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;
+  font-family: "Gill Sans", "Gill Sans MT", "Lato", sans-serif !important;
   // font-family: "Roboto", "Helvetica Neue", sans-serif;
 }
 
 body ion-app.wp {
-  font-family: 'Gill Sans', 'Gill Sans MT', 'Lato', sans-serif !important;
+  font-family: "Gill Sans", "Gill Sans MT", "Lato", sans-serif !important;
   // font-family: "Segoe UI", "Noto Sans", sans-serif;
 }
 
@@ -57,7 +57,7 @@ ion-icon {
   color: color($colors, gray);
 }
 
-ion-icon[name='menu'] {
+ion-icon[name="menu"] {
   color: color($colors, white);
 }
 
@@ -124,7 +124,7 @@ ion-content .scroll-content > header {
   position: relative;
   background-color: #fff;
   &:after {
-    content: '';
+    content: "";
     @extend .header-md::after;
   }
 }
@@ -142,7 +142,7 @@ ion-content .scroll-content > header {
 }
 
 .vertical-rule-right::after {
-  content: '';
+  content: "";
   display: block;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   height: 80%;
@@ -192,11 +192,34 @@ ion-content .scroll-content > header {
   }
 }
 
-@import './styles/menu';
-@import './styles/grid';
-@import '../theme/breakpoints.scss';
-@import './styles/form';
-@import './styles/loading';
-@import './styles/table';
-@import './styles/modal';
-@import '../theme/footer';
+.content-top-show {
+  .scroll-content {
+    margin-top: 182px;
+  }
+}
+.content-top-hide {
+  .scroll-content {
+    margin-top: 102px;
+  }
+}
+// set footer + header height to keep footer at bottom;
+// $headerAndFooterCollapseHeight: 219px;
+// $headerAndFooterExpandHeight: 295px;
+
+.page-content {
+  transition: margin 0.3s;
+  min-height: calc(100vh - 219px);
+
+  &.expanded {
+    min-height: calc(100vh - 295px);
+  }
+}
+
+@import "./styles/menu";
+@import "./styles/grid";
+@import "../theme/breakpoints.scss";
+@import "./styles/form";
+@import "./styles/loading";
+@import "./styles/table";
+@import "./styles/modal";
+@import "../theme/footer";

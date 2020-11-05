@@ -1,7 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { IonicPage, ModalController, NavController } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { Restricted } from '../../decorators/restricted';
@@ -17,7 +17,7 @@ import { EnvConfig } from '../../services/cla.env.utils';
   selector: 'companies-page',
   templateUrl: 'companies-page.html'
 })
-export class CompaniesPage {
+export class CompaniesPage implements OnInit {
   loading: any;
   companies: any;
   userId: string;

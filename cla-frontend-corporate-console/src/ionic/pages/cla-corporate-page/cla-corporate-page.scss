@@ -1,25 +1,10 @@
 cla-corporate-page {
-  .page-content {
-    min-height: calc(100vh - 258px);
-    margin-top: 25px;
-    transition: margin 0.3s;
-
-    &.expanded {
-      min-height: calc(100vh - 333px);
-      margin-top: 100px;
-    }
-
-    @media (min-width: 768px) and (max-width: 1200px) {
-      padding: 16px 50px 162px;
-    }
+  @media (min-width: 768px) and (max-width: 1200px) {
+    padding: 16px 50px 162px;
   }
-  
+
   .pl-45 {
     padding-left: 45px;
-  }
-
-  .scroll-content {
-    margin-top: 96px !important;
   }
 
   a {
