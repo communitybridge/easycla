@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/v2/dynamo_events"
-	"github.com/communitybridge/easycla/cla-backend-go/v2/github_activity"
+	v2GithubActivity "github.com/communitybridge/easycla/cla-backend-go/v2/github_activity"
 
 	"github.com/gofrs/uuid"
 
@@ -239,7 +239,7 @@ func server(localMode bool) http.Handler {
 	usersService := users.NewService(usersRepo, eventsService)
 	healthService := health.New(Version, Commit, Branch, BuildDate)
 	templateService := template.NewService(stage, templateRepo, docraptorClient, awsSession)
-	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo, projectClaGroupRepo)
+	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo, projectClaGroupRepo, usersRepo)
 	v2ProjectService := v2Project.NewService(projectService, projectRepo, projectClaGroupRepo)
 	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo, usersService)
 	v2CompanyService := v2Company.NewService(companyService, signaturesRepo, projectRepo, usersRepo, companyRepo, projectClaGroupRepo, eventsService)
@@ -255,8 +255,8 @@ func server(localMode bool) http.Handler {
 	v2MetricsService := metrics.NewService(metricsRepo, projectClaGroupRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo, projectClaGroupRepo)
 	v2GithubOrganizationsService := v2GithubOrganizations.NewService(githubOrganizationsRepo, repositoriesRepo)
-	autoEnableService := dynamo_events.NewAutoEnableService(repositoriesService, repositoriesRepo, githubOrganizationsRepo, projectClaGroupRepo)
-	v2GithubActivityService := github_activity.NewService(repositoriesRepo, eventsService, autoEnableService)
+	autoEnableService := dynamo_events.NewAutoEnableService(repositoriesService, repositoriesRepo, githubOrganizationsRepo, projectClaGroupRepo, projectService)
+	v2GithubActivityService := v2GithubActivity.NewService(repositoriesRepo, eventsService, autoEnableService)
 	gerritService := gerrits.NewService(gerritRepo, &gerrits.LFGroup{
 		LfBaseURL:    configFile.LFGroup.ClientURL,
 		ClientID:     configFile.LFGroup.ClientID,
@@ -307,7 +307,7 @@ func server(localMode bool) http.Handler {
 	v2ClaManager.Configure(v2API, v2ClaManagerService, configFile.LFXPortalURL, projectClaGroupRepo, userRepo)
 	sign.Configure(v2API, v2SignService)
 	cla_groups.Configure(v2API, v2ClaGroupService, projectService, projectClaGroupRepo, eventsService)
-	github_activity.Configure(v2API, v2GithubActivityService)
+	v2GithubActivity.Configure(v2API, v2GithubActivityService)
 
 	userCreaterMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

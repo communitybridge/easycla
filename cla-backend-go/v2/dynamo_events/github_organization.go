@@ -37,7 +37,7 @@ func (s *service) GitHubOrgAddedEvent(event events.DynamoDBEventRecord) error {
 
 	if newGitHubOrg.AutoEnabled {
 		log.WithFields(f).Debug("autoEnabled - processing...")
-		return s.autoEnableService.AutoEnabledForGithubOrg(f, newGitHubOrg)
+		return s.autoEnableService.AutoEnabledForGithubOrg(f, newGitHubOrg, true)
 	}
 
 	log.WithFields(f).Debug("no transition of branchProtectionEnabled - ignoring...")
@@ -71,7 +71,7 @@ func (s *service) GitHubOrgUpdatedEvent(event events.DynamoDBEventRecord) error 
 
 	if !oldGitHubOrg.AutoEnabled && newGitHubOrg.AutoEnabled {
 		log.WithFields(f).Debug("transition of autoEnabled false => true - processing...")
-		return s.autoEnableService.AutoEnabledForGithubOrg(f, newGitHubOrg)
+		return s.autoEnableService.AutoEnabledForGithubOrg(f, newGitHubOrg, true)
 	}
 	log.WithFields(f).Debug("no transition of branchProtectionEnabled false => true - ignoring...")
 	return nil

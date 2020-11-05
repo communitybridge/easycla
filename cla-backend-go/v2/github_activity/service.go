@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
+
 	"github.com/communitybridge/easycla/cla-backend-go/v2/dynamo_events"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
@@ -48,9 +50,9 @@ func (s *eventHandlerService) ProcessRepositoryEvent(event *github.RepositoryEve
 		return fmt.Errorf("no action found in event payload")
 	}
 	switch *event.Action {
-	case "added":
+	case "created":
 		return s.handleRepositoryAddedAction(event.Sender, event.Repo)
-	case "removed":
+	case "deleted":
 		return s.handleRepositoryRemovedAction(event.Sender, event.Repo)
 	default:
 		log.Warnf("ProcessRepositoryEvent no handler for action : %s", *event.Action)
@@ -74,7 +76,15 @@ func (s *eventHandlerService) handleRepositoryAddedAction(sender *github.User, r
 	}
 	repoModel, err := s.autoEnableService.CreateAutoEnabledRepository(repo)
 	if err != nil {
+		if errors.Is(err, dynamo_events.ErrAutoEnabledOff) {
+			log.Warnf("autoEnable is off for this repo : %s can't continue", *repo.FullName)
+			return nil
+		}
 		return err
+	}
+
+	if err := s.autoEnableService.NotifyCLAManagerForRepos(repoModel.RepositoryProjectID, []*models.GithubRepository{repoModel}); err != nil {
+		log.Warnf("notifyCLAManager for autoEnabled repo : %s for claGroup : %s failed : %v", repoModel.RepositoryName, repoModel.RepositoryProjectID, err)
 	}
 
 	if sender == nil || sender.Login == nil || *sender.Login == "" {
@@ -82,12 +92,8 @@ func (s *eventHandlerService) handleRepositoryAddedAction(sender *github.User, r
 		return nil
 	}
 
-	//msg := fmt.Sprintf(`Adding repository %s
-	//		from GitHub organization : %s
-	//		with URL: https://github.com/%s
-	//		to the CLA configuration. GitHub organization was set to auto-enable.`, repositoryFullName, organizationName, repositoryFullName)
-
 	// sending the log event for the added repository
+	log.Debugf("handleRepositoryAddedAction sending RepositoryAdded Event for repo %s", *repo.FullName)
 	s.eventService.LogEvent(&events.LogEventArgs{
 		EventType: events.RepositoryAdded,
 		ProjectID: repoModel.RepositoryProjectID,

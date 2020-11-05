@@ -168,6 +168,12 @@ test:
 	@echo "Running unit tests..."
 	@ $(TEST_ENV) go test -v $(shell go list ./... | grep -v /vendor/ | grep -v /node_modules/) -coverprofile=cover.out
 
+mock:
+	@echo "Re-Generating mocks"
+	@cd $(MAKEFILE_DIR) && mkdir -p repositories/mock
+	@cd $(MAKEFILE_DIR) && mockgen -copyright_file=copyright-header.txt -source=repositories/service.go -package=mock -destination=repositories/mock/mock_service.go
+	@cd $(MAKEFILE_DIR) && mockgen -copyright_file=copyright-header.txt -source=repositories/repository.go -package=mock -destination=repositories/mock/mock_repository.go
+
 run:
 	go run main.go
 
