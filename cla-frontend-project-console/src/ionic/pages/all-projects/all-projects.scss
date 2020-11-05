@@ -33,12 +33,10 @@ all-projects {
 
   .page-content {
     min-height: calc(100vh - 335px);
-    margin-top: 25px;
     transition: margin 0.3s;
-    
+
     &.expanded {
       min-height: calc(100vh - 410px);
-      margin-top: 100px;
     }
 
     @media (min-width: 768px) and (max-width: 1200px) {
@@ -46,8 +44,15 @@ all-projects {
     }
   }
 
-  .scroll-content {
-    margin-top: 96px !important;
+  .content-top-show {
+    .scroll-content {
+      margin-top: 182px;
+    }
+  }
+  .content-top-hide {
+    .scroll-content {
+      margin-top: 102px;
+    }
   }
 
   .content {
