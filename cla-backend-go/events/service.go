@@ -178,10 +178,14 @@ func (s *service) loadUser(args *LogEventArgs) error {
 			return err
 		}
 	}
-	args.UserModel = userModel
-	args.userName = userModel.Username
-	args.UserID = userModel.UserID
-	args.LfUsername = userModel.LfUsername
+
+	if userModel != nil {
+		args.UserModel = userModel
+		args.userName = userModel.Username
+		args.UserID = userModel.UserID
+		args.LfUsername = userModel.LfUsername
+	}
+
 	return nil
 }
 

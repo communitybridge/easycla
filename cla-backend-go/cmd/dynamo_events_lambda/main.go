@@ -96,7 +96,7 @@ func init() {
 	repositoriesService := repositories.NewService(repositoriesRepo, githubOrganizationsRepo, projectClaGroupRepo)
 
 	// Services
-	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo, projectClaGroupRepo)
+	projectService := project.NewService(projectRepo, repositoriesRepo, gerritRepo, projectClaGroupRepo, usersRepo)
 
 	type combinedRepo struct {
 		users.UserRepository

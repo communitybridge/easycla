@@ -10,6 +10,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
+	"github.com/communitybridge/easycla/cla-backend-go/project"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -30,19 +34,23 @@ var (
 // AutoEnableService holds logic about handling autoEnabled field for github Org and Repos
 type AutoEnableService interface {
 	CreateAutoEnabledRepository(repo *github.Repository) (*models.GithubRepository, error)
-	AutoEnabledForGithubOrg(f logrus.Fields, gitHubOrg github_organizations.GithubOrganization) error
+	AutoEnabledForGithubOrg(f logrus.Fields, gitHubOrg github_organizations.GithubOrganization, notify bool) error
+	NotifyCLAManagerForRepos(claGroupID string, repos []*models.GithubRepository) error
 }
 
 // NewAutoEnableService creates a new AutoEnableService
 func NewAutoEnableService(repositoryService repositories.Service,
 	githubRepo repositories.Repository,
 	githubOrgRepo github_organizations.Repository,
-	claRepository projects_cla_groups.Repository) AutoEnableService {
+	claRepository projects_cla_groups.Repository,
+	claService project.Service,
+) AutoEnableService {
 	return &autoEnableServiceProvider{
 		repositoryService: repositoryService,
 		githubRepo:        githubRepo,
 		githubOrgRepo:     githubOrgRepo,
 		claRepository:     claRepository,
+		claService:        claService,
 	}
 }
 
@@ -53,6 +61,7 @@ type autoEnableServiceProvider struct {
 	githubRepo        repositories.Repository
 	githubOrgRepo     github_organizations.Repository
 	claRepository     projects_cla_groups.Repository
+	claService        project.Service
 }
 
 func (a *autoEnableServiceProvider) CreateAutoEnabledRepository(repo *github.Repository) (*models.GithubRepository, error) {
@@ -102,7 +111,14 @@ func (a *autoEnableServiceProvider) CreateAutoEnabledRepository(repo *github.Rep
 		return nil, err
 	}
 
-	repoModel, err := a.githubRepo.AddGithubRepository(ctx, "", claGroupModel.ProjectSFID, &models.GithubRepositoryInput{
+	projectSFID := claGroupModel.ProjectSFID
+	if projectSFID == "" {
+		projectSFID = orgModel.ProjectSFID
+	}
+
+	externalProjectID := claGroupModel.ProjectExternalID
+
+	repoModel, err := a.githubRepo.AddGithubRepository(ctx, externalProjectID, projectSFID, &models.GithubRepositoryInput{
 		RepositoryProjectID:        swag.String(claGroupID),
 		RepositoryName:             swag.String(repositoryFullName),
 		RepositoryType:             swag.String("github"),
@@ -118,7 +134,7 @@ func (a *autoEnableServiceProvider) CreateAutoEnabledRepository(repo *github.Rep
 	return repoModel, nil
 }
 
-func (a *autoEnableServiceProvider) AutoEnabledForGithubOrg(f logrus.Fields, gitHubOrg github_organizations.GithubOrganization) error {
+func (a *autoEnableServiceProvider) AutoEnabledForGithubOrg(f logrus.Fields, gitHubOrg github_organizations.GithubOrganization, notify bool) error {
 	orgName := gitHubOrg.OrganizationName
 	log.WithFields(f).Debugf("running AutoEnable for github org : %s", orgName)
 	if gitHubOrg.OrganizationInstallationID == 0 {
@@ -154,7 +170,108 @@ func (a *autoEnableServiceProvider) AutoEnabledForGithubOrg(f logrus.Fields, git
 		}
 	}
 
+	if notify {
+		if err := a.NotifyCLAManagerForRepos(claGroupID, repos.List); err != nil {
+			log.Warnf("notifying Cla Managers for Cla Group : %s failed : %v", claGroupID, err)
+		}
+	}
+
 	return nil
+}
+
+func (a *autoEnableServiceProvider) NotifyCLAManagerForRepos(claGroupID string, repos []*models.GithubRepository) error {
+	if len(repos) == 0 {
+		log.Warnf("NotifyCLAManagerForRepos no repos to notify for, can't continue")
+		return nil
+	}
+
+	claManagers, err := a.claService.GetCLAManagers(context.Background(), claGroupID)
+	if err != nil {
+		log.Warnf("NotifyCLAManagerForRepos fetching cla managers failed : %v", err)
+		return err
+	}
+
+	if len(claManagers) == 0 {
+		log.Warnf("no cla managers registered for the claGroup : %s, none to notify", claGroupID)
+		return nil
+	}
+
+	claGroupModel, err := a.claService.GetCLAGroupByID(context.Background(), claGroupID)
+	if err != nil {
+		log.Warnf("loading claGroupModel : %s failed : %v", claGroupID, err)
+		return err
+	}
+
+	// get the emails and send the emails at this stage ...
+	subject, body, recipients := autoEnabledRepositoryEmailContent(claGroupModel, repos[0].RepositoryOrganizationName, claManagers, repos)
+	if len(recipients) == 0 {
+		log.Warnf("no cla manager emails for claGroup : %s registered, can't notify the cla managers ", claGroupModel.ProjectName)
+		return nil
+	}
+
+	log.Debugf("sending email with subject : %s for claGroup : %s for recipients : %+v", subject, claGroupModel.ProjectName, recipients)
+	if err := utils.SendEmail(subject, body, recipients); err != nil {
+		log.Warnf("sending email for subject : %s and claGroup : %s failed : %v", subject, claGroupModel.ProjectName, err)
+		return err
+	}
+
+	return nil
+}
+
+// autoEnabledRepositoryEmailContent prepares the email for autoEnabled repositories
+func autoEnabledRepositoryEmailContent(claGroupModel *models.ClaGroup, orgName string, managers []*models.ClaManagerUser, repos []*models.GithubRepository) (string, string, []string) {
+	claGroupName := claGroupModel.ProjectName
+	subject := fmt.Sprintf("EasyCLA: Auto-Enable Repository for CLA Group: %s", claGroupName)
+	repoPronounUpper := "Repository"
+	repoPronoun := "repository"
+	pronoun := "this " + repoPronoun
+	repoWasHere := repoPronoun + " was"
+	if len(repos) > 1 {
+		repoPronounUpper = "Repositories"
+		repoPronoun = "repositories"
+		pronoun = "these " + repoPronoun
+		repoWasHere = repoPronoun + " were"
+	}
+
+	repoContent := "<ul>"
+	for _, repo := range repos {
+		repoContent += "<li>" + repo.RepositoryName + "</li>"
+	}
+	repoContent += "</ul>"
+
+	body := `
+	<p>Hello Project Manager,</p>
+	<p>This is a notification email from EasyCLA regarding the CLA Group %s.</p>
+	<p>EasyCLA was notified that the following %s added to the %s GitHub Organization.
+	Since auto-enable was configured within EasyCLA for GitHub Organization, the %s will now start enforcing
+	CLA checks.</p>
+	<p>Please verify the repository settings to ensure EasyCLA is a required check for merging Pull Requests.
+See: GitHub Repository -> Settings -> Branches -> Branch Protection Rules -> Add/Edit the default branch,
+	and confirm that 'Require status checks to pass before merging' is enabled and that EasyCLA is a required check.
+	Additionally, consider selecting the 'Include administrators' option to enforce all configured restrictions for 
+	contributors, maintainers, and administrators.</p>
+	<p>For more information on how to setup GitHub required checks, please consult the About required status checks
+	<a href="https://docs.github.com/en/github/administering-a-repository/about-required-status-checks"> 
+	in the GitHub Online Help Pages</a>.</p>
+	<p>%s:</p>
+	%s
+	%s
+	%s
+	`
+
+	body = fmt.Sprintf(
+		body, claGroupName, repoWasHere,
+		orgName, pronoun, repoPronounUpper, repoContent,
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
+	var recipients []string
+	for _, m := range managers {
+		if m.UserEmail == "" {
+			continue
+		}
+		recipients = append(recipients, m.UserEmail)
+	}
+
+	return subject, body, recipients
 }
 
 // DetermineClaGroupID checks if AutoEnabledClaGroupID is set then returns it (high precedence) otherwise tries to determine

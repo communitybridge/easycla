@@ -5,6 +5,7 @@ package projects_cla_groups
 
 // ProjectClaGroup is database model for projects_cla_group table
 type ProjectClaGroup struct {
+	ProjectExternalID string `dynamodbav:"project_external_id" json:"project_external_id"`
 	ProjectSFID       string `dynamodbav:"project_sfid" json:"project_sfid"`
 	ProjectName       string `dynamodbav:"project_name" son:"project_name"`
 	ClaGroupID        string `dynamodbav:"cla_group_id" json:"cla_group_id"`

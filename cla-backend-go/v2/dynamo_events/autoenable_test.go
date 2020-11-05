@@ -213,10 +213,12 @@ func TestAutoEnableServiceProvider_AutoEnabledForGithubOrg(t *testing.T) {
 				tc.repositoryService(m)
 			}
 
-			a := &autoEnableServiceProvider{repositoryService: m}
+			a := &autoEnableServiceProvider{
+				repositoryService: m,
+			}
 			err := a.AutoEnabledForGithubOrg(logrus.Fields{
 				"functionName": "TestAutoEnable",
-			}, tc.githubOrg)
+			}, tc.githubOrg, false)
 
 			if tc.errStr == "" {
 				assert.NoError(tt, err)
