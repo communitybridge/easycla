@@ -75,10 +75,14 @@ func (pmm *Client) GetProject(projectSFID string) (*models.ProjectOutputDetailed
 
 // GetProjectByName returns project details for the associated project name
 func (pmm *Client) GetProjectByName(projectName string) (*models.ProjectList, error) {
-	// Can't see to provide auth - as a result, it is failing
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
 	result, err := pmm.cl.Project.SearchProjects(&project.SearchProjectsParams{
 		Name: []string{projectName},
-	})
+	}, clientAuth)
 	if err != nil {
 		return nil, err
 	}
