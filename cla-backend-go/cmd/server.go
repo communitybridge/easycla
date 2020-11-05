@@ -512,9 +512,10 @@ func setRequestIDHandler(next http.Handler) http.Handler {
 // responseLoggingMiddleware logs the responses from API endpoints
 func responseLoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Debugf("%s %s", r.Method, r.URL.String())
 		next.ServeHTTP(NewLoggingResponseWriter(w), r)
 		if r.Response != nil {
-			log.Debugf("%s %s, response code: %d response status: %s",
+			log.Debugf("%s %s - response code: %d response status: %s",
 				r.Method, r.URL.String(), r.Response.StatusCode, r.Response.Status)
 		} else {
 			log.Debugf("%s %s", r.Method, r.URL.String())
