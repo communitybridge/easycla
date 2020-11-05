@@ -49,14 +49,10 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 		}
 
 		// Check permissions
-		if true {
-			log.WithFields(f).Debug("permission by-pass")
-		} else {
-			if !isUserHaveAccessToCLAProject(ctx, authUser, aws.StringValue(params.ClaGroupInput.FoundationSfid), projectClaGroupsRepo) {
-				msg := fmt.Sprintf("user %s does not have access to create a CLA Group with project scope of: %s", authUser.UserName, aws.StringValue(params.ClaGroupInput.FoundationSfid))
-				log.WithFields(f).Warn(msg)
-				return cla_group.NewCreateClaGroupForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
-			}
+		if !isUserHaveAccessToCLAProject(ctx, authUser, aws.StringValue(params.ClaGroupInput.FoundationSfid), projectClaGroupsRepo) {
+			msg := fmt.Sprintf("user %s does not have access to create a CLA Group with project scope of: %s", authUser.UserName, aws.StringValue(params.ClaGroupInput.FoundationSfid))
+			log.WithFields(f).Warn(msg)
+			return cla_group.NewCreateClaGroupForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
 		}
 
 		claGroup, err := service.CreateCLAGroup(ctx, params.ClaGroupInput, utils.StringValue(params.XUSERNAME))
