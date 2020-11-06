@@ -126,7 +126,7 @@ func (s service) GetProjectCompanySignatures(ctx context.Context, params signatu
 	approved := true
 
 	projectSignatures, err := s.repo.GetProjectCompanySignatures(
-		ctx, params.CompanyID, params.ProjectID, &signed, &approved, params.NextKey, &pageSize)
+		ctx, params.CompanyID, params.ProjectID, &signed, &approved, params.NextKey, params.SortOrder, &pageSize)
 	if err != nil {
 		return nil, err
 	}
