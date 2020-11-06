@@ -289,7 +289,7 @@ func (s *service) validateUnenrollProjectsInput(ctx context.Context, foundationS
 	}
 
 	log.WithFields(f).Debug("checking to see if foundation is in project list...")
-	if !isFoundationIDInList(foundationSFID, projectSFIDList) {
+	if isFoundationIDInList(foundationSFID, projectSFIDList) {
 		log.WithFields(f).Warn("validation failure - unable to unenroll Project Group from CLA Group")
 		return fmt.Errorf("bad request: unable to unenroll Project Group from CLA Group")
 	}
