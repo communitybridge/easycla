@@ -10,7 +10,7 @@
   "dependencies": {
     "@auth0/auth0-spa-js": "^1.12.1",
     "graceful-fs": "^4.2.2",
-    "serverless": "^2.9.0"
+    "serverless": "^2.11.0"
   },
   "devDependencies": {
     "husky": "^3.1.0",
