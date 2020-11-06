@@ -100,8 +100,9 @@ func (s service) AddCclaWhitelistRequest(ctx context.Context, companyID string, 
 	}
 
 	signed, approved := true, true
+	sortOrder := utils.SortOrderAscending
 	pageSize := int64(5)
-	sig, sigErr := s.signatureRepo.GetProjectCompanySignatures(ctx, companyID, claGroupID, &signed, &approved, nil, &pageSize)
+	sig, sigErr := s.signatureRepo.GetProjectCompanySignatures(ctx, companyID, claGroupID, &signed, &approved, nil, &sortOrder, &pageSize)
 	if sigErr != nil || sig == nil || sig.Signatures == nil {
 		log.Warnf("AddCclaWhitelistRequest - unable to lookup signature by company id: %s project id: %s - (or no managers), sig: %+v, error: %+v",
 			companyID, claGroupID, sig, err)
@@ -185,8 +186,9 @@ func (s service) RejectCclaWhitelistRequest(ctx context.Context, companyID, claG
 	}
 
 	signed, approved := true, true
+	sortOrder := utils.SortOrderAscending
 	pageSize := int64(5)
-	sig, sigErr := s.signatureRepo.GetProjectCompanySignatures(ctx, companyID, claGroupID, &signed, &approved, nil, &pageSize)
+	sig, sigErr := s.signatureRepo.GetProjectCompanySignatures(ctx, companyID, claGroupID, &signed, &approved, nil, &sortOrder, &pageSize)
 	if sigErr != nil || sig == nil || sig.Signatures == nil {
 		log.Warnf("RejectCclaWhitelistRequest - unable to lookup signature by company id: %s project id: %s - (or no managers), sig: %+v, error: %+v",
 			companyID, claGroupID, sig, err)
