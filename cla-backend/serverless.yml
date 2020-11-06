@@ -43,15 +43,26 @@ custom:
     number: 3
   userEventsSNSTopicARN: arn:aws:sns:us-east-2:#{AWS::AccountId}:userservice-triggers-${self:provider.stage}-user-sns-topic
   certificate:
-    # From env Certificate Manager -
-    # currently, PROD is managed externally, DEV and STAGING are still managed by serverless
-    dev: arn:aws:acm:us-east-1:395594542180:certificate/b3bb6710-c11c-4bd1-a370-ec7c09f5ce52
-    staging: arn:aws:acm:us-east-1:844390194980:certificate/f8ed594d-b1b5-47de-bf94-32eade2a2e4c
-    prod: arn:aws:acm:us-east-1:716487311010:certificate/4a3c3018-df9e-4c3a-84a6-231317f8bcec
-  domain:
-    dev: dev.lfcla.com
-    staging: staging.lfcla.com
-    prod: easycla.lfx.linuxfoundation.org
+    arn:
+      # From env Certificate Manager -
+      # currently, PROD is managed externally, DEV and STAGING are still managed by serverless
+      dev: arn:aws:acm:us-east-1:395594542180:certificate/b3bb6710-c11c-4bd1-a370-ec7c09f5ce52
+      staging: arn:aws:acm:us-east-1:844390194980:certificate/f8ed594d-b1b5-47de-bf94-32eade2a2e4c
+      prod: arn:aws:acm:us-east-1:716487311010:certificate/4a3c3018-df9e-4c3a-84a6-231317f8bcec
+  product:
+    #ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+    #PRODUCT_DOMAIN: dev.lfcla.com
+    domain:
+      name:
+        dev: 'api.lfcla.dev.platform.linuxfoundation.org'
+        staging: 'api.lfcla.staging.platform.linuxfoundation.org'
+        prod: 'api.easycla.lfx.linuxfoundation.org'
+        other: 'api.dev.lfcla.com'
+      alt:
+        dev: 'api.dev.lfcla.com'
+        staging: 'api.staging.lfcla.com'
+        prod: 'api.easycla.lfx.linuxfoundation.org'
+        other: 'api.dev.lfcla.com'
   ses_from_email:
     dev: admin@dev.lfcla.com
     staging: admin@staging.lfcla.com
@@ -544,15 +555,18 @@ resources:
     Cert:
       Type: AWS::CertificateManager::Certificate
       Properties:
-        DomainName: api.${self:custom.domain.${opt:stage}}
+        DomainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
         SubjectAlternativeNames:
-          - api.${self:custom.domain.${opt:stage}}
+          - ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
         ValidationMethod: DNS
+
+    # old: ROOT_DOMAIN
     CustomRootDomain:
       Type: AWS::ApiGateway::DomainName
       Properties:
-        CertificateArn: ${self:custom.certificate.${opt:stage}}
-        DomainName: api.${self:custom.domain.${opt:stage}}
+        CertificateArn: ${self:custom.certificate.arn.${opt:stage}}
+        DomainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
+
     RootDomainMapping:
       Type: AWS::ApiGateway::BasePathMapping
       Properties:
@@ -561,11 +575,13 @@ resources:
         RestApiId:
           Ref: ApiGatewayRestApi
         Stage: ${self:provider.stage}
+
+    # old: PRODUCT_DOMAIN
     CustomProductDomain:
       Type: AWS::ApiGateway::DomainName
       Properties:
-        CertificateArn: ${self:custom.certificate.${opt:stage}}
-        DomainName: ${self:custom.domain.${opt:stage}}
+        CertificateArn: ${self:custom.certificate.arn.${opt:stage}}
+        DomainName: ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
     ProductDomainMapping:
       Type: AWS::ApiGateway::BasePathMapping
       Properties:

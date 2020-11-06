@@ -54,15 +54,25 @@ custom:
     items: # one or more paths required
       - '/*'
   certificate:
-    # From env Certificate Manager -
-    # currently, PROD is managed externally, DEV and STAGING are still managed by serverless
-    dev: arn:aws:acm:us-east-1:395594542180:certificate/77be78a8-8d3d-4324-8c13-aba4847dabb9
-    staging: arn:aws:acm:us-east-1:844390194980:certificate/173935ec-ceb1-4878-959d-65fd5ca02165
-    prod: arn:aws:acm:us-east-1:716487311010:certificate/0fad9da1-45c3-46ba-95bb-36e62a20a572
-  domain:
-    dev: dev.lfcla.com
-    staging: staging.lfcla.com
-    prod: easycla.lfx.linuxfoundation.org
+    arn:
+      # From env Certificate Manager -
+      # currently, PROD is managed externally, DEV and STAGING are still managed by serverless
+      dev: arn:aws:acm:us-east-1:395594542180:certificate/77be78a8-8d3d-4324-8c13-aba4847dabb9
+      staging: arn:aws:acm:us-east-1:844390194980:certificate/173935ec-ceb1-4878-959d-65fd5ca02165
+      prod: arn:aws:acm:us-east-1:716487311010:certificate/0fad9da1-45c3-46ba-95bb-36e62a20a572
+      other: arn:aws:acm:us-east-1:395594542180:certificate/77be78a8-8d3d-4324-8c13-aba4847dabb9
+  product:
+    domain:
+      name:
+        dev: 'project.lfcla.dev.platform.linuxfoundation.org'
+        staging: 'project.lfcla.staging.platform.linuxfoundation.org'
+        prod: 'project.v1.easycla.lfx.linuxfoundation.org'
+        other: 'project.dev.lfcla.com'
+      alt:
+        dev: 'project.dev.lfcla.com'
+        staging: 'project.staging.lfcla.com'
+        prod: 'project.v1.easycla.lfx.linuxfoundation.org'
+        other: 'project.dev.lfcla.com'
   ses_from_email:
     dev: admin@dev.lfcla.com
     staging: admin@staging.lfcla.com
@@ -82,6 +92,10 @@ resources:
       Fn::Equals:
         - ${env:STAGE}
         - prod
+    # true when a TSL certificate should be created by serverless (false created externally)
+    ShouldGenerateCertificate:
+      Fn::Not: [Fn::Equals: ["${env:STAGE}", "prod"]]
+
   Resources:
     # The bucket the website is uploaded to. We make sure to turn on AES256 encryption, which
     # is best practice.
@@ -94,6 +108,7 @@ resources:
               - ServerSideEncryptionByDefault:
                   SSEAlgorithm: AES256
         BucketName: ${self:custom.project}-${opt:stage}-${self:service}
+
     # Policy that only exposes bucket to cloudfront with proper
     # Origin Access Identity
     WebsiteDeploymentBucketPolicy:
@@ -118,11 +133,13 @@ resources:
                     - " "
                     - - "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity"
                       - Ref: WebsiteOriginAccessIdentity
+
     WebsiteOriginAccessIdentity:
       Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
       Properties:
         CloudFrontOriginAccessIdentityConfig:
           Comment: "CloudFrontOriginAccessIdentity for ${self:service}-${self:provider.stage}"
+
     # The cloudfront distribution wraps around our static website S3 bucket. Using a CDN to host our SPA is good
     # practice, and also lets us set custom headers using lambda@edge.
     CloudfrontDistribution:
@@ -133,11 +150,31 @@ resources:
         DistributionConfig:
           Enabled: true
           Aliases:
-            - project.v1.${self:custom.domain.${opt:stage}}
+            Fn::If:
+              - isProd
+              - - ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
+              - - ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
+                - ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
           ViewerCertificate:
-            AcmCertificateArn: ${self:custom.certificate.${opt:stage}}
-            SslSupportMethod: sni-only
-            MinimumProtocolVersion: TLSv1.2_2018
+            Fn::If:
+              - ShouldGenerateCertificate
+              - AcmCertificateArn:
+                  Ref: Cert
+                # The distribution accepts HTTPS connections from only viewers that support server name indication
+                # Recommended, most browsers and clients released after 2010 support SNI.
+                SslSupportMethod: sni-only
+                # Specify the security policy that you want CloudFront to use for HTTPS connections
+                # Recommend that you specify TLSv1.2_2018 unless your viewers are using browsers or devices that don’t support TLSv1.2
+                # Allowed Values: SSLv3 | TLSv1 | TLSv1.1_2016 | TLSv1.2_2018 | TLSv1_2016
+                MinimumProtocolVersion: TLSv1.2_2018
+              - AcmCertificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
+                # The distribution accepts HTTPS connections from only viewers that support server name indication
+                # Recommended, most browsers and clients released after 2010 support SNI.
+                SslSupportMethod: sni-only
+                # Specify the security policy that you want CloudFront to use for HTTPS connections
+                # Recommend that you specify TLSv1.2_2018 unless your viewers are using browsers or devices that don’t support TLSv1.2
+                # Allowed Values: SSLv3 | TLSv1 | TLSv1.1_2016 | TLSv1.2_2018 | TLSv1_2016
+                MinimumProtocolVersion: TLSv1.2_2018
           Origins:
             - DomainName: { "Fn::GetAtt": [ WebsiteDeploymentBucket, DomainName ] }
               Id:
@@ -184,6 +221,7 @@ resources:
                 Forward: none
             ViewerProtocolPolicy: redirect-to-https
           PriceClass: PriceClass_100 # Cheapest class, only hosts content at North American cloudfront locations.
+
     # Severless usually generates our roles out of the box, but lambda@edge support is lacking, so we have to create
     # our own. This role can assume the edgelambda.amazonaws.com role, (the lambda won't run without it).
     EdgeRole:
@@ -225,13 +263,15 @@ resources:
                         - "*"
         ManagedPolicyArns:
           - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
     Cert:
       Type: AWS::CertificateManager::Certificate
       Properties:
-        DomainName: project.${env:ROOT_DOMAIN}
+        DomainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
         SubjectAlternativeNames:
-          - project.${env:PRODUCT_DOMAIN}
+          - ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
         ValidationMethod: DNS
+
   Outputs:
     CloudfrontDistributionId:
       Value:
