@@ -237,15 +237,17 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 				}
 
 				// Not an error that we are expecting - return an error and give up...
-				return events.NewGetProjectEventsInternalServerError().WithPayload(utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+				return events.NewGetProjectEventsBadRequest().WithPayload(utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
 			}
 
 			// Lookup any events for this CLA Group....
 			result, err := service.GetClaGroupEvents(pm.ClaGroupID, params.NextKey, params.PageSize, aws.BoolValue(params.ReturnAllEvents), params.SearchTerm)
 			if err != nil {
-				msg := fmt.Sprintf("problem loading events for CLA Group: %s with ID: %s", pm.ClaGroupName, pm.ClaGroupID)
+				msg := fmt.Sprintf("problem loading events for CLA Group: %s with ID: %s error: %v", pm.ClaGroupName, pm.ClaGroupID, err.Error())
 				log.WithFields(f).Warn(msg)
-				return events.NewGetProjectEventsBadRequest().WithPayload(utils.ErrorResponseBadRequestWithError(reqID, msg, err))
+				return events.NewGetProjectEventsOK().WithPayload(&models.EventList{
+					Events: []*models.Event{},
+				})
 			}
 
 			// Return an empty list
