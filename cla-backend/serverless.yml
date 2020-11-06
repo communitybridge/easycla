@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 service: cla-backend
-frameworkVersion: '>2.5.0'
+frameworkVersion: '^2.11.0'
 
 package:
   # Exclude all first - selectively add in lambda functions
@@ -42,6 +42,7 @@ custom:
     automatic: true
     number: 3
   userEventsSNSTopicARN: arn:aws:sns:us-east-2:#{AWS::AccountId}:userservice-triggers-${self:provider.stage}-user-sns-topic
+
   certificate:
     arn:
       # From env Certificate Manager -
@@ -50,19 +51,27 @@ custom:
       staging: arn:aws:acm:us-east-1:844390194980:certificate/f8ed594d-b1b5-47de-bf94-32eade2a2e4c
       prod: arn:aws:acm:us-east-1:716487311010:certificate/4a3c3018-df9e-4c3a-84a6-231317f8bcec
   product:
-    #ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
-    #PRODUCT_DOMAIN: dev.lfcla.com
     domain:
       name:
+        # env.ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
         dev: 'api.lfcla.dev.platform.linuxfoundation.org'
         staging: 'api.lfcla.staging.platform.linuxfoundation.org'
         prod: 'api.easycla.lfx.linuxfoundation.org'
         other: 'api.dev.lfcla.com'
       alt:
+        # env.PRODUCT_DOMAIN: dev.lfcla.com
         dev: 'api.dev.lfcla.com'
         staging: 'api.staging.lfcla.com'
         prod: 'api.easycla.lfx.linuxfoundation.org'
         other: 'api.dev.lfcla.com'
+
+  customDomain:
+    # https://github.com/amplify-education/serverless-domain-manager
+    domainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
+    stage: ${opt:stage}
+    basePath: ''  # a value of '/' will not work
+    certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
+
   ses_from_email:
     dev: admin@dev.lfcla.com
     staging: admin@staging.lfcla.com
@@ -328,6 +337,7 @@ plugins:
   # This plugin allows us to remove/prune the old versions either manually or automatically
   - serverless-prune-plugin
   - serverless-offline
+  - serverless-domain-manager
 
 functions:
   authorizer:
@@ -542,6 +552,7 @@ resources:
       Properties:
         Name: ${self:service}-${self:provider.stage}
         Description: EasyCLA API Gateway
+
     GatewayResponse:
       Type: 'AWS::ApiGateway::GatewayResponse'
       Properties:
@@ -552,41 +563,47 @@ resources:
         RestApiId:
           Ref: 'ApiGatewayRestApi'
 
+    #Cert:
+    #  Type: AWS::CertificateManager::Certificate
+    #  Properties:
+    #    DomainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
+    #    SubjectAlternativeNames:
+    #      - ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
+    #    ValidationMethod: DNS
+
     Cert:
       Type: AWS::CertificateManager::Certificate
       Properties:
-        DomainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
+        DomainName: api.${env:ROOT_DOMAIN}
         SubjectAlternativeNames:
-          - ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
+          - api.${env:PRODUCT_DOMAIN}
         ValidationMethod: DNS
 
-    # old: ROOT_DOMAIN
-    CustomRootDomain:
-      Type: AWS::ApiGateway::DomainName
-      Properties:
-        CertificateArn: ${self:custom.certificate.arn.${opt:stage}}
-        DomainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
-
-    RootDomainMapping:
-      Type: AWS::ApiGateway::BasePathMapping
-      Properties:
-        DomainName:
-          Ref: CustomRootDomain
-        RestApiId:
-          Ref: ApiGatewayRestApi
-        Stage: ${self:provider.stage}
-
-    # old: PRODUCT_DOMAIN
-    CustomProductDomain:
-      Type: AWS::ApiGateway::DomainName
-      Properties:
-        CertificateArn: ${self:custom.certificate.arn.${opt:stage}}
-        DomainName: ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
-    ProductDomainMapping:
-      Type: AWS::ApiGateway::BasePathMapping
-      Properties:
-        DomainName:
-          Ref: CustomProductDomain
-        RestApiId:
-          Ref: ApiGatewayRestApi
-        Stage: ${self:provider.stage}
+#    CustomRootDomain:
+#      Type: AWS::ApiGateway::DomainName
+#      Properties:
+#        CertificateArn:
+#          Ref: Cert
+#        DomainName: api.${env:ROOT_DOMAIN}
+#    RootDomainMapping:
+#      Type: AWS::ApiGateway::BasePathMapping
+#      Properties:
+#        DomainName:
+#          Ref: CustomRootDomain
+#        RestApiId:
+#          Ref: ApiGatewayRestApi
+#        Stage: ${self:provider.stage}
+#    CustomProductDomain:
+#      Type: AWS::ApiGateway::DomainName
+#      Properties:
+#        CertificateArn:
+#          Ref: Cert
+#        DomainName: api.${env:PRODUCT_DOMAIN}
+#    ProductDomainMapping:
+#      Type: AWS::ApiGateway::BasePathMapping
+#      Properties:
+#        DomainName:
+#          Ref: CustomProductDomain
+#        RestApiId:
+#          Ref: ApiGatewayRestApi
+#        Stage: ${self:provider.stage}
