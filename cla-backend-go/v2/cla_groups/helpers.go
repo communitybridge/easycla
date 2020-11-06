@@ -289,7 +289,7 @@ func (s *service) validateUnenrollProjectsInput(ctx context.Context, foundationS
 	}
 
 	log.WithFields(f).Debug("checking to see if foundation is in project list...")
-	if isFoundationIDInList(foundationSFID, projectSFIDList) {
+	if !isFoundationIDInList(foundationSFID, projectSFIDList) {
 		log.WithFields(f).Warn("validation failure - unable to unenroll Project Group from CLA Group")
 		return fmt.Errorf("bad request: unable to unenroll Project Group from CLA Group")
 	}
@@ -316,10 +316,11 @@ func (s *service) validateUnenrollProjectsInput(ctx context.Context, foundationS
 			foundationSFID, utils.TheLinuxFoundation, foundationProjectDetails.Parent)
 	}
 
-	if len(foundationProjectDetails.Projects) == 0 {
+	// Comment out the below as we want to support stand-alone projects
+	/* if len(foundationProjectDetails.Projects) == 0 {
 		log.WithFields(f).Warn("validation failure - project does not have any subprojects")
 		return fmt.Errorf("bad request: invalid input to enroll projects. project does not have any subprojects")
-	}
+	} */
 
 	// Check to see if all the provided enrolled projects are part of this foundation
 	foundationProjectIDList := utils.NewStringSet()
