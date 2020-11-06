@@ -440,6 +440,8 @@ jobs:
       AWS_PROFILE: lf-cla
       AWS_REGION: us-east-1
       STAGE: dev
+      ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: dev.lfcla.com
 
   deployBackendStaging:
     <<: *deployBackendAnchor
@@ -449,6 +451,8 @@ jobs:
       AWS_PROFILE: lf-cla
       AWS_REGION: us-east-1
       STAGE: staging
+      ROOT_DOMAIN: lfcla.staging.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: staging.lfcla.com
 
   deployBackendProd:
     <<: *deployBackendAnchor
@@ -458,6 +462,8 @@ jobs:
       AWS_PROFILE: lf-cla
       AWS_REGION: us-east-1
       STAGE: prod
+      ROOT_DOMAIN: lfcla.platform.linuxfoundation.org
+      PRODUCT_DOMAIN: lfcla.com
 
   buildFrontend: &buildFrontendAnchor
     docker:
