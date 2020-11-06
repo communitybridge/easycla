@@ -53,6 +53,20 @@ custom:
     distributionIdKey: 'CloudfrontDistributionId'
     items: # one or more paths required
       - '/*'
+  certificate:
+    # From env Certificate Manager -
+    # currently, PROD is managed externally, DEV and STAGING are still managed by serverless
+    dev: arn:aws:acm:us-east-1:395594542180:certificate/77be78a8-8d3d-4324-8c13-aba4847dabb9
+    staging: arn:aws:acm:us-east-1:844390194980:certificate/173935ec-ceb1-4878-959d-65fd5ca02165
+    prod: arn:aws:acm:us-east-1:716487311010:certificate/0fad9da1-45c3-46ba-95bb-36e62a20a572
+  domain:
+    dev: dev.lfcla.com
+    staging: staging.lfcla.com
+    prod: easycla.lfx.linuxfoundation.org
+  ses_from_email:
+    dev: admin@dev.lfcla.com
+    staging: admin@staging.lfcla.com
+    prod: admin@lfx.linuxfoundation.org
 
 functions:
   # Configure a lambda@edge handler. Lambda@edge is a function that adds http headers to
@@ -63,6 +77,11 @@ functions:
     timeout: 1 # This is the maximum execution time for lambda@edge functions
 
 resources:
+  Conditions:
+    isProd:
+      Fn::Equals:
+        - ${env:STAGE}
+        - prod
   Resources:
     # The bucket the website is uploaded to. We make sure to turn on AES256 encryption, which
     # is best practice.
@@ -114,12 +133,11 @@ resources:
         DistributionConfig:
           Enabled: true
           Aliases:
-            - project.${env:PRODUCT_DOMAIN}
-            - project.${env:ROOT_DOMAIN}
+            - project.v1.${self:custom.domain.${opt:stage}}
           ViewerCertificate:
-            AcmCertificateArn:
-              Ref: Cert
+            AcmCertificateArn: ${self:custom.certificate.${opt:stage}}
             SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2018
           Origins:
             - DomainName: { "Fn::GetAtt": [ WebsiteDeploymentBucket, DomainName ] }
               Id:
