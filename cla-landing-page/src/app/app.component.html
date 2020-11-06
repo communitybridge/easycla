@@ -1,7 +1,7 @@
 <!-- Copyright The Linux Foundation and each contributor to CommunityBridge.
  SPDX-License-Identifier: MIT -->
 
-<lfx-header product="LF CLA" id="lfx-header" [expanded]="hasExpanded" (toggled)="onToggled()">
+<lfx-header product="LF CLA" id="lfx-header" userefreshtoken="true" [expanded]="hasExpanded" (toggled)="onToggled()">
 </lfx-header>
 <div class="container ">
   <div [ngClass]="{'expanded':hasExpanded}" class="landing-page-container row align-items-center">

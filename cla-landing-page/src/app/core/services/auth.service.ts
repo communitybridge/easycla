@@ -25,7 +25,8 @@ import { StorageService } from './storage.service';
 export class AuthService {
   auth0Options = {
     domain: EnvConfig.default['auth0-domain'], // e.g linuxfoundation-dev.auth0.com
-    clientId: EnvConfig.default['auth0-clientId']
+    clientId: EnvConfig.default['auth0-clientId'],
+    useRefreshTokens: true
   };
 
   currentHref = window.location.href;
@@ -36,6 +37,7 @@ export class AuthService {
     createAuth0Client({
       domain: this.auth0Options.domain,
       client_id: this.auth0Options.clientId,
+      useRefreshTokens: this.auth0Options.useRefreshTokens
     })
   ) as Observable<Auth0Client>).pipe(
     shareReplay(1), // Every subscription receives the same shared value
@@ -62,7 +64,7 @@ export class AuthService {
     )
   );
   // Create subject and public observable of user profile data
-  private userProfileSubject$ = new BehaviorSubject<any>(null);
+  private userProfileSubject$ = new BehaviorSubject<any>(undefined);
   userProfile$ = this.userProfileSubject$.asObservable();
   // Create a local property for login status
   loggedIn = false;
@@ -80,7 +82,7 @@ export class AuthService {
     } else {
       this.localAuthSetup();
     }
-    this.handlerReturnToAferlogout();
+    // this.handlerReturnToAferlogout();
   }
 
   handlerReturnToAferlogout() {
@@ -114,8 +116,10 @@ export class AuthService {
           return this.getUser$();
         }
         this.auth0Client$
-          .pipe(concatMap((client: Auth0Client) => from(client.checkSession())))
+          .pipe(concatMap((client: Auth0Client) => from(client.getTokenSilently())))
           .subscribe((data) => { });
+          console.log('User not logged in');
+          this.userProfileSubject$.next(null);
         // If not authenticated, return stream that emits 'false'
         return of(loggedIn);
       })
@@ -132,7 +136,6 @@ export class AuthService {
       const type = JSON.parse(this.storageService.getItem('type'));
       const redirectConsole = (type === 'Projects') ? AppSettings.PROJECT_CONSOLE_LINK : AppSettings.CORPORATE_CONSOLE_LINK;
       client.loginWithRedirect({
-        // redirect_uri: `${window.location.origin}${window.location.search}`,
         redirect_uri: EnvConfig.default[redirectConsole],
         appState: { target: redirectPath },
       });
