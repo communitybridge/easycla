@@ -35,6 +35,10 @@ custom:
     automatic: true
     number: 3
   #userEventsSNSTopicARN: arn:aws:sns:${self:provider.region}:#{AWS::AccountId}:userservice-triggers-${self:provider.stage}-user-sns-topic
+  ses_from_email:
+    dev: admin@dev.lfcla.com
+    staging: admin@staging.lfcla.com
+    prod: admin@lfx.linuxfoundation.org
 
 provider:
   name: aws
@@ -93,7 +97,7 @@ provider:
         - "*"
       Condition:
         StringEquals:
-          ses:FromAddress: "admin@${env:PRODUCT_DOMAIN}"
+          ses:FromAddress: ${self:custom.ses_from_email.${opt:stage}}
     - Effect: Allow
       Action:
         - sns:Publish
@@ -143,6 +147,7 @@ provider:
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/lf-email-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-gerrit-instances/index/gerrit-name-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/project-signature-index"
+        - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/project-signature-date-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/reference-signature-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-project-reference-index"
         - "arn:aws:dynamodb:${self:custom.dynamodb.region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-user-ccla-company-index"

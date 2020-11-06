@@ -42,6 +42,20 @@ custom:
     automatic: true
     number: 3
   userEventsSNSTopicARN: arn:aws:sns:us-east-2:#{AWS::AccountId}:userservice-triggers-${self:provider.stage}-user-sns-topic
+  certificate:
+    # From env Certificate Manager -
+    # currently, PROD is managed externally, DEV and STAGING are still managed by serverless
+    dev: arn:aws:acm:us-east-1:395594542180:certificate/b3bb6710-c11c-4bd1-a370-ec7c09f5ce52
+    staging: arn:aws:acm:us-east-1:844390194980:certificate/f8ed594d-b1b5-47de-bf94-32eade2a2e4c
+    prod: arn:aws:acm:us-east-1:716487311010:certificate/4a3c3018-df9e-4c3a-84a6-231317f8bcec
+  domain:
+    dev: dev.lfcla.com
+    staging: staging.lfcla.com
+    prod: easycla.lfx.linuxfoundation.org
+  ses_from_email:
+    dev: admin@dev.lfcla.com
+    staging: admin@staging.lfcla.com
+    prod: admin@lfx.linuxfoundation.org
 
 provider:
   name: aws
@@ -120,7 +134,7 @@ provider:
         - "*"
       Condition:
         StringEquals:
-          ses:FromAddress: "admin@${env:PRODUCT_DOMAIN}"
+          ses:FromAddress: ${self:custom.ses_from_email.${opt:stage}}
     - Effect: Allow
       Action:
         - sns:Publish
@@ -170,6 +184,7 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/lf-email-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-gerrit-instances/index/gerrit-name-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/project-signature-index"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/project-signature-date-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/reference-signature-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-project-reference-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/signature-user-ccla-company-index"
@@ -501,6 +516,11 @@ functions:
           arn: ${self:custom.userEventsSNSTopicARN}
 
 resources:
+  Conditions:
+    isProd:
+      Fn::Equals:
+        - ${env:STAGE}
+        - prod
   Resources:
     # ApiGatewayRestApi, and GatewayResponse are used to enable Cors on custom authorizer responses.
     # This let's the client read the HTTP status on error.
@@ -524,16 +544,15 @@ resources:
     Cert:
       Type: AWS::CertificateManager::Certificate
       Properties:
-        DomainName: api.${env:ROOT_DOMAIN}
+        DomainName: api.${self:custom.domain.${opt:stage}}
         SubjectAlternativeNames:
-          - api.${env:PRODUCT_DOMAIN}
+          - api.${self:custom.domain.${opt:stage}}
         ValidationMethod: DNS
     CustomRootDomain:
       Type: AWS::ApiGateway::DomainName
       Properties:
-        CertificateArn:
-          Ref: Cert
-        DomainName: api.${env:ROOT_DOMAIN}
+        CertificateArn: ${self:custom.certificate.${opt:stage}}
+        DomainName: api.${self:custom.domain.${opt:stage}}
     RootDomainMapping:
       Type: AWS::ApiGateway::BasePathMapping
       Properties:
@@ -545,9 +564,8 @@ resources:
     CustomProductDomain:
       Type: AWS::ApiGateway::DomainName
       Properties:
-        CertificateArn:
-          Ref: Cert
-        DomainName: api.${env:PRODUCT_DOMAIN}
+        CertificateArn: ${self:custom.certificate.${opt:stage}}
+        DomainName: ${self:custom.domain.${opt:stage}}
     ProductDomainMapping:
       Type: AWS::ApiGateway::BasePathMapping
       Properties:
