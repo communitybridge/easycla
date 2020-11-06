@@ -722,6 +722,9 @@ function buildStoreTable(importResources: boolean): aws.dynamodb.Table {
       hashKey: 'key',
       readCapacity: defaultReadCapacity,
       writeCapacity: defaultWriteCapacity,
+      billingMode: 'PAY_PER_REQUEST',
+      streamEnabled: true,
+      streamViewType: "NEW_AND_OLD_IMAGES",
       ttl: {
         attributeName: 'expire',
         enabled: true,
