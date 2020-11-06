@@ -39,10 +39,12 @@ const (
 	LoadACLDetails                                 = true
 	DontLoadACLDetails                             = false
 	SignatureProjectIDIndex                        = "project-signature-index"
+	SignatureProjectDateIDIndex                    = "project-signature-date-index"
 	SignatureProjectReferenceIndex                 = "signature-project-reference-index"
 	SignatureProjectIDSigTypeSignedApprovedIDIndex = "signature-project-id-sigtype-signed-approved-id-index"
 	SignatureProjectIDTypeIndex                    = "signature-project-id-type-index"
 	SignatureReferenceIndex                        = "reference-signature-index"
+	SignatureReferenceSearchIndex                  = "reference-signature-search-index"
 
 	HugePageSize = 10000
 )
@@ -60,7 +62,7 @@ type SignatureRepository interface {
 	GetSignatureACL(ctx context.Context, signatureID string) ([]string, error)
 	GetProjectSignatures(ctx context.Context, params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetProjectCompanySignature(ctx context.Context, companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signature, error)
-	GetProjectCompanySignatures(ctx context.Context, companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signatures, error)
+	GetProjectCompanySignatures(ctx context.Context, companyID, projectID string, signed, approved *bool, nextKey *string, sortOrder *string, pageSize *int64) (*models.Signatures, error)
 	GetProjectCompanyEmployeeSignatures(ctx context.Context, params signatures.GetProjectCompanyEmployeeSignaturesParams, pageSize int64) (*models.Signatures, error)
 	GetCompanySignatures(ctx context.Context, params signatures.GetCompanySignaturesParams, pageSize int64, loadACL bool) (*models.Signatures, error)
 	GetCompanyIDsWithSignedCorporateSignatures(ctx context.Context, claGroupID string) ([]SignatureCompanyID, error)
@@ -279,7 +281,7 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(ctx context.Context
 
 	if len(newList) == 0 {
 		// Since we don't have any items in our list, we can't simply update dynamoDB with an empty list,
-		// nooooo, that would be too easy. Instead:
+		// Instead:
 		// We need to set the value to NULL to clear it out (otherwise we'll get a validation error like:)
 		// ValidationException: ExpressionAttributeValues contains invalid value: Supplied AttributeValue
 		// is empty, must contain exactly one of the supported data types for the key)
@@ -664,10 +666,27 @@ func addConditionToFilter(filter expression.ConditionBuilder, cond expression.Co
 func (repo repository) GetProjectSignatures(ctx context.Context, params signatures.GetProjectSignaturesParams, pageSize int64) (*models.Signatures, error) {
 	f := logrus.Fields{
 		"functionName":   "GetProjectSignatures",
+		"tableName":      repo.signatureTableName,
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"claGroupID":     params.ProjectID,
+		"signatureType":  aws.StringValue(params.SignatureType),
+		"searchField":    aws.StringValue(params.SearchField),
+		"searchTerm":     aws.StringValue(params.SearchTerm),
+		"fullMatch":      aws.BoolValue(params.FullMatch),
+		"pageSize":       aws.Int64Value(params.PageSize),
+		"nextKey":        aws.StringValue(params.NextKey),
+		"sortOrder":      aws.StringValue(params.SortOrder),
 	}
 
 	indexName := SignatureProjectIDIndex
+	if params.SortOrder != nil && *params.SortOrder != "" {
+		indexName = SignatureProjectDateIDIndex
+	}
+
+	realPageSize := int64(100)
+	if params.PageSize != nil && *params.PageSize > 0 {
+		realPageSize = *params.PageSize
+	}
 
 	// This is the key we want to match
 	condition := expression.Key("signature_project_id").Equal(expression.Value(params.ProjectID))
@@ -722,7 +741,7 @@ func (repo repository) GetProjectSignatures(ctx context.Context, params signatur
 
 		if params.SearchTerm != nil {
 			if *params.FullMatch {
-				indexName = "reference-signature-search-index"
+				indexName = SignatureReferenceSearchIndex
 				condition = condition.And(expression.Key("signature_reference_name_lower").Equal(expression.Value(strings.ToLower(*params.SearchTerm))))
 			} else {
 				searchTermExpression := expression.Name("signature_reference_name_lower").Contains(strings.ToLower(*params.SearchTerm))
@@ -759,9 +778,10 @@ func (repo repository) GetProjectSignatures(ctx context.Context, params signatur
 		ProjectionExpression:      expr.Projection(),
 		FilterExpression:          expr.Filter(),
 		TableName:                 aws.String(repo.signatureTableName),
-		Limit:                     aws.Int64(pageSize),   // The maximum number of items to evaluate (not necessarily the number of matching items)
-		IndexName:                 aws.String(indexName), // Name of a secondary index to scan
+		Limit:                     aws.Int64(realPageSize), // The maximum number of items to evaluate (not necessarily the number of matching items)
+		IndexName:                 aws.String(indexName),   // Name of a secondary index to scan
 	}
+	f["indexName"] = indexName
 
 	// If we have the next key, set the exclusive start key value
 	if params.NextKey != nil {
@@ -789,7 +809,7 @@ func (repo repository) GetProjectSignatures(ctx context.Context, params signatur
 	// Loop until we have all the records
 	for ok := true; ok; ok = lastEvaluatedKey != "" {
 		// Make the DynamoDB Query API call
-		// log.WithFields(f).Debugf("Running signature project query using queryInput: %+v", queryInput)
+		log.WithFields(f).Debugf("Running signature project query using queryInput: %+v", queryInput)
 		results, errQuery := repo.dynamoDBClient.Query(queryInput)
 		if errQuery != nil {
 			log.WithFields(f).Warnf("error retrieving project signature ID for project: %s, error: %v",
@@ -816,7 +836,7 @@ func (repo repository) GetProjectSignatures(ctx context.Context, params signatur
 			lastEvaluatedKey = ""
 		}
 
-		if int64(len(sigs)) >= pageSize {
+		if int64(len(sigs)) >= realPageSize {
 			break
 		}
 	}
@@ -833,9 +853,9 @@ func (repo repository) GetProjectSignatures(ctx context.Context, params signatur
 
 	// Meta-data for the response
 	totalCount := *describeTableResult.Table.ItemCount
-	if int64(len(sigs)) > pageSize {
-		sigs = sigs[0:pageSize]
-		lastEvaluatedKey = sigs[pageSize-1].SignatureID.String()
+	if int64(len(sigs)) > realPageSize {
+		sigs = sigs[0:realPageSize]
+		lastEvaluatedKey = sigs[realPageSize-1].SignatureID.String()
 	}
 
 	return &models.Signatures{
@@ -854,8 +874,13 @@ func (repo repository) GetProjectCompanySignature(ctx context.Context, companyID
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companyID":      companyID,
 		"projectID":      projectID,
+		"approved":       aws.BoolValue(approved),
+		"signed":         aws.BoolValue(signed),
+		"pageSize":       aws.Int64Value(pageSize),
+		"nextKey":        aws.StringValue(nextKey),
 	}
-	sigs, getErr := repo.GetProjectCompanySignatures(ctx, companyID, projectID, signed, approved, nextKey, pageSize)
+	sortOrder := utils.SortOrderAscending
+	sigs, getErr := repo.GetProjectCompanySignatures(ctx, companyID, projectID, signed, approved, nextKey, &sortOrder, pageSize)
 	if getErr != nil {
 		return nil, getErr
 	}
@@ -873,12 +898,17 @@ func (repo repository) GetProjectCompanySignature(ctx context.Context, companyID
 }
 
 // GetProjectCompanySignatures returns a list of signatures for the specified project and specified company
-func (repo repository) GetProjectCompanySignatures(ctx context.Context, companyID, projectID string, signed, approved *bool, nextKey *string, pageSize *int64) (*models.Signatures, error) {
+func (repo repository) GetProjectCompanySignatures(ctx context.Context, companyID, projectID string, signed, approved *bool, nextKey *string, sortOrder *string, pageSize *int64) (*models.Signatures, error) {
 	f := logrus.Fields{
 		"functionName":   "GetProjectCompanySignatures",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companyID":      companyID,
 		"projectID":      projectID,
+		"signed":         aws.BoolValue(signed),
+		"approved":       aws.BoolValue(approved),
+		"nextKey":        aws.StringValue(nextKey),
+		"sortOrder":      aws.StringValue(sortOrder),
+		"pageSize":       aws.Int64Value(pageSize),
 	}
 
 	// These are the keys we want to match
@@ -1125,6 +1155,11 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(ctx context.Context, 
 	f := logrus.Fields{
 		"functionName":   "GetProjectCompanyEmployeeSignatures",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectID":      params.ProjectID,
+		"companyID":      params.CompanyID,
+		"nextKey":        aws.StringValue(params.NextKey),
+		"sortOrder":      aws.StringValue(params.SortOrder),
+		"pageSize":       aws.Int64Value(params.PageSize),
 	}
 
 	// This is the keys we want to match
@@ -1564,7 +1599,7 @@ func (repo repository) AddCLAManager(ctx context.Context, signatureID, claManage
 	}
 
 	aclEntries = append(aclEntries, claManagerID)
-	log.WithFields(f).Debugf("To be updated acllist : %+v", aclEntries)
+	log.WithFields(f).Debugf("To be updated ACL List : %+v", aclEntries)
 
 	_, now := utils.CurrentTime()
 
@@ -1694,7 +1729,8 @@ func (repo repository) UpdateApprovalList(ctx context.Context, projectID, compan
 	pageSize := int64(10)
 	log.WithFields(f).Debugf("querying database for approval list details using company ID: %s project ID: %s, type: ccla, signed: true, approved: true",
 		companyID, projectID)
-	sigs, sigErr := repo.GetProjectCompanySignatures(ctx, companyID, projectID, &signed, &approved, nil, &pageSize)
+	sortOrder := utils.SortOrderAscending
+	sigs, sigErr := repo.GetProjectCompanySignatures(ctx, companyID, projectID, &signed, &approved, nil, &sortOrder, &pageSize)
 	if sigErr != nil {
 		return nil, sigErr
 	}
@@ -1839,7 +1875,7 @@ func (repo repository) UpdateApprovalList(ctx context.Context, projectID, compan
 	log.WithFields(f).Debugf("querying database for approval list details after update using company ID: %s project ID: %s, type: ccla, signed: %t, approved: %t",
 		companyID, projectID, signed, approved)
 
-	updatedSig, sigErr := repo.GetProjectCompanySignatures(ctx, companyID, projectID, &signed, &approved, nil, &pageSize)
+	updatedSig, sigErr := repo.GetProjectCompanySignatures(ctx, companyID, projectID, &signed, &approved, nil, &sortOrder, &pageSize)
 	if sigErr != nil {
 		return nil, sigErr
 	}

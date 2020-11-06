@@ -344,6 +344,7 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
         { name: 'signature_reference_name_lower', type: 'S' },
         { name: 'signature_company_initial_manager_id', type: 'S' },
         { name: 'sigtype_signed_approved_id', type: 'S' },
+        { name: 'date_modified', type: 'S' },
       ],
       hashKey: 'signature_id',
       billingMode: 'PAY_PER_REQUEST',
@@ -353,6 +354,12 @@ function buildSignaturesTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'project-signature-index',
           hashKey: 'signature_project_id',
+          projectionType: 'ALL',
+        },
+        {
+          name: 'project-signature-date-index',
+          hashKey: 'signature_project_id',
+          rangeKey: 'date_modified',
           projectionType: 'ALL',
         },
         {

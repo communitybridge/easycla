@@ -349,6 +349,7 @@ paths:
         - $ref: '#/parameters/fullMatch'
         - $ref: '#/parameters/signatureType'
         - $ref: '#/parameters/claType'
+        - $ref: '#/parameters/sortOrder'
       responses:
         '200':
           description: 'Success'
@@ -379,6 +380,7 @@ paths:
         - $ref: "#/parameters/path-companyID"
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/sortOrder'
       responses:
         '200':
           description: 'Success'
@@ -411,6 +413,7 @@ paths:
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
         - $ref: '#/parameters/companyName'
+        - $ref: '#/parameters/sortOrder'
       responses:
         '200':
           description: 'Success'
@@ -473,6 +476,7 @@ paths:
         - $ref: "#/parameters/path-companyID"
         - $ref: '#/parameters/pageSize'
         - $ref: '#/parameters/nextKey'
+        - $ref: '#/parameters/sortOrder'
       responses:
         '200':
           description: 'Success'
@@ -2384,9 +2388,10 @@ parameters:
     # pattern: '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}'
   sortOrder:
     name: sortOrder
+    description: The sort order - either asc or desc
     in: query
-    description: Sort order
     type: string
+    required: false
     enum: [ asc, desc ]
   eventType:
     name: eventType
