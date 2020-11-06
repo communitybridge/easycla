@@ -61,11 +61,13 @@ custom:
     items: # one or more paths required
       - '/*'
   certificate:
-    # From env Certificate Manager -
-    # currently, PROD is managed externally, DEV and STAGING are still managed by serverless
-    dev: arn:aws:acm:us-east-1:395594542180:certificate/07930a75-884a-4a51-af6b-b245952e0636
-    staging: arn:aws:acm:us-east-1:844390194980:certificate/03a48c9c-bebc-4d29-ad3b-02f93690a9e5
-    prod: arn:aws:acm:us-east-1:716487311010:certificate/4a3c3018-df9e-4c3a-84a6-231317f8bcec
+    arn:
+      # From env Certificate Manager -
+      # currently, PROD is managed externally, DEV and STAGING are still managed by serverless
+      dev: arn:aws:acm:us-east-1:395594542180:certificate/07930a75-884a-4a51-af6b-b245952e0636
+      staging: arn:aws:acm:us-east-1:844390194980:certificate/03a48c9c-bebc-4d29-ad3b-02f93690a9e5
+      prod: arn:aws:acm:us-east-1:716487311010:certificate/4a3c3018-df9e-4c3a-84a6-231317f8bcec
+      other: arn:aws:acm:us-east-1:395594542180:certificate/07930a75-884a-4a51-af6b-b245952e0636
   domain:
     dev: dev.lfcla.com
     staging: staging.lfcla.com
@@ -84,6 +86,15 @@ functions:
     timeout: 1 # This is the maximum execution time for lambda@edge functions
 
 resources:
+  Conditions:
+    isProd:
+      Fn::Equals:
+        - ${env:STAGE}
+        - prod
+    # true when a TSL certificate should be created by serverless (false created externally)
+    ShouldGenerateCertificate:
+      Fn::Not: [Fn::Equals: ["${env:STAGE}", "prod"]]
+
   Resources:
     # The bucket the website is uploaded to. We make sure to turn on AES256 encryption, which
     # is best practice.
@@ -139,7 +150,7 @@ resources:
           Aliases:
             - ${env:PRODUCT_DOMAIN}
           ViewerCertificate:
-            AcmCertificateArn: ${self:custom.certificate.${opt:stage}}
+            AcmCertificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
             SslSupportMethod: sni-only
             MinimumProtocolVersion: TLSv1.2_2018
           Origins:

@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "deploy": "../scripts/deploy-frontend.sh",
+    "deploy:dev": "yarn sls deploy --stage=dev --cloudfront=true && yarn sls client deploy --stage=dev --cloudfront=true --no-confirm --no-policy-change --no-config-change && yarn sls cloudfrontInvalidate --stage=dev --region=us-east-1 --cloudfront=true",
+    "deploy:staging": "yarn sls deploy --stage=staging --cloudfront=true && yarn sls client deploy --stage=staging --cloudfront=true --no-confirm --no-policy-change --no-config-change && yarn sls cloudfrontInvalidate --stage=staging --region=us-east-1 --cloudfront=true",
+    "deploy:prod": "yarn sls deploy --stage=prod --cloudfront=true && yarn sls client deploy --stage=prod --cloudfront=true --no-confirm --no-policy-change --no-config-change && yarn sls cloudfrontInvalidate --stage=prod --region=us-east-1 --cloudfront=true",
     "sls": "../node_modules/serverless/bin/serverless.js",
     "install-frontend": "../scripts/install-frontend.sh"
   },
