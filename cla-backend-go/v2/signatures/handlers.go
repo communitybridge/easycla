@@ -356,6 +356,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			"functionName":   "SignaturesGetProjectSignaturesHandler",
 			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 			"claGroupID":     params.ClaGroupID,
+			"signatureType":  params.SignatureType,
 		}
 
 		log.WithFields(f).Debug("looking up CLA Group by ID...")
@@ -385,13 +386,15 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			//	utils.ErrorResponseBadRequest(reqID, iclaNotSupportedForCLAGroup))
 		}
 
-		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
-			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
-			log.Warn(msg)
-			return signatures.NewGetProjectSignaturesForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
+		if false {
+			log.WithFields(f).Debug("checking access control permissions for user...")
+			if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+				msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
+				log.Warn(msg)
+				return signatures.NewGetProjectSignaturesForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
+			}
+			log.WithFields(f).Debug("user has access for this query")
 		}
-		log.WithFields(f).Debug("user has access for this query")
 
 		log.WithFields(f).Debug("loading project signatures...")
 		projectSignatures, err := v1SignatureService.GetProjectSignatures(ctx, v1Signatures.GetProjectSignaturesParams{
@@ -404,6 +407,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			SearchTerm:    params.SearchTerm,
 			SignatureType: params.SignatureType,
 			ClaType:       params.ClaType,
+			SortOrder:     params.SortOrder,
 		})
 		if err != nil {
 			msg := fmt.Sprintf("error retrieving project signatures for projectID: %s, error: %+v",

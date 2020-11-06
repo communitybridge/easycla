@@ -89,3 +89,9 @@ const ProjectTypeProjectGroup = "Project Group"
 
 // GitHubType is the repository type identifier for github
 const GitHubType = "github"
+
+// SortOrderAscending ascending sort order constant
+const SortOrderAscending = "asc"
+
+// SortOrderDescending descending sort order constant
+const SortOrderDescending = "desc"
