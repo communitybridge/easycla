@@ -18,6 +18,7 @@ export class LfxHeaderService {
         return;
       }
       this.auth.userProfile$.subscribe((data) => {
+        console.log(data);
         if (data) {
           lfHeaderEl.authuser = data;
         }
