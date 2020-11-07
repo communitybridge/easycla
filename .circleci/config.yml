@@ -874,7 +874,7 @@ jobs:
       AUTH0_USER5_USERNAME_ENV_VAR: AUTH0_USER5_USERNAME_DEV
       AUTH0_USER5_PASSWORD_ENV_VAR: AUTH0_USER5_PASSWORD_DEV
       AUTH0_USER5_CLIENT_ID_ENV_VAR: AUTH0_USER5_CLIENT_ID_DEV
-      API_URL: 'https://api.dev.lfcla.com'
+      API_URL: 'https://api.lfcla.dev.platform.linuxfoundation.org'
       V2_API_URL: 'https://api-gw.dev.platform.linuxfoundation.org/cla-service'
       STAGE: dev
 
@@ -910,7 +910,7 @@ jobs:
       AUTH0_USER5_USERNAME_ENV_VAR: AUTH0_USER5_USERNAME_DEV
       AUTH0_USER5_PASSWORD_ENV_VAR: AUTH0_USER5_PASSWORD_DEV
       AUTH0_USER5_CLIENT_ID_ENV_VAR: AUTH0_USER5_CLIENT_ID_DEV
-      API_URL: 'https://api.dev.lfcla.com'
+      API_URL: 'https://api.lfcla.dev.platform.linuxfoundation.org'
       V2_API_URL: 'https://api-gw.dev.platform.linuxfoundation.org/cla-service'
       STAGE: dev
 
