@@ -2614,10 +2614,10 @@ serverless-cloudfront-invalidate@^1.2.1:
     chalk "^2.3.1"
     randomstring "^1.1.5"
 
-serverless-finch@^2.3.2:
-  version "2.4.2"
-  resolved "https://registry.yarnpkg.com/serverless-finch/-/serverless-finch-2.4.2.tgz#0c3ab10a95f713318743b24e9bca2250b3130b85"
-  integrity sha512-CgCB9u9NuWv/wosjo4nCvPifrZ3mHKh4Aco/ALs2Nv1FYW/Ak9AqX4kVvzKUmXsPG2B3bj6EVoUJZp6JTzkaaw==
+serverless-finch@^2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/serverless-finch/-/serverless-finch-2.6.0.tgz#c74e7492dbfae52aa6383d4a21bac9138bcd9383"
+  integrity sha512-G5umIBoNyo3MKCtdtbbkkb/7Z84qNstbQnkdscG/VhukYUib+7BiWidAMI+WAFq+JEUf3PW7c3bvt/uFEiMnnA==
   dependencies:
     is_js "^0.9.0"
     mime "^1.2.11"
