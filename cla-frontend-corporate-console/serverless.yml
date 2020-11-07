@@ -44,6 +44,7 @@ custom:
     # Because our application is a Single Page Application, we always want our index
     # documents to handle 404/403 urls.
     errorDocument: index.html
+    manageResources: false
 
   # CloudFront invalidation plugin configuration
   cloudfrontInvalidate:
