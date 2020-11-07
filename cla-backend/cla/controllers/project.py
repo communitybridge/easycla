@@ -27,19 +27,24 @@ from datetime import datetime
 
 
 def check_user_authorization(auth_user: AuthUser, sfid):
+    cla.log.debug(f'checking user permissions for user: {auth_user.username} for sfid: {sfid}')
     # Check if user has permissions on this project
     user_permissions = UserPermissions()
     try:
         user_permissions.load(auth_user.username)
     except DoesNotExist as err:
+        cla.log.warning(f'unable to load user record by: {auth_user.username} for sfid: {sfid}')
         return {'valid': False, 'errors': {'errors': {'user does not exist': str(err)}}}
 
     user_permissions_json = user_permissions.to_dict()
 
+    cla.log.debug(f'checking user permissions for user: {auth_user.username} for authorized projects...')
     authorized_projects = user_permissions_json.get('projects')
     if sfid not in authorized_projects:
+        cla.log.warning(f'user: {auth_user.username} is not authorized for sfid: {sfid}')
         return {'valid': False, 'errors': {'errors': {'user is not authorized for this Salesforce ID.': str(sfid)}}}
 
+    cla.log.warning(f'user: {auth_user.username} is authorized for sfid: {sfid}')
     return {'valid': True}
 
 
@@ -771,10 +776,10 @@ def get_github_repositories_by_org(project):
 
     organization_dicts = []
     # Get all organizations connected to this project
-    cla.log.info("Retrieving GH organization details using ID: {}".format(project.get_project_external_id))
+    cla.log.info(f'Retrieving GH organization details using ID: {project.get_project_external_id()}')
     github_organizations = GitHubOrg().get_organization_by_sfid(project.get_project_external_id())
-    cla.log.info("Retrieved {} GH organizations using ID: {}".format(
-        len(github_organizations), project.get_project_external_id))
+    cla.log.info(f'Retrieved {len(github_organizations)} '
+                 f'GH organizations using ID: {project.get_project_external_id()}')
     repository_instance = cla.utils.get_repository_instance()
 
     # Iterate over each organization
@@ -790,8 +795,7 @@ def get_github_repositories_by_org(project):
                 # Get repositories from Github API
                 github_repos = installation.repos
 
-                cla.log.info("Retrieved {} repositories using GH installation id: {}".format(
-                    github_repos, installation_id))
+                cla.log.info(f'Retrieved {github_repos} repositories using GH installation id: {installation_id}')
                 if github_repos is not None:
                     for repo in github_repos:
                         # enabled flag checks whether repo has been added or removed from org
