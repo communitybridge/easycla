@@ -64,14 +64,10 @@ custom:
     arn:
       # From env Certificate Manager -
       # currently, PROD is managed externally, DEV and STAGING are still managed by serverless
-      dev: arn:aws:acm:us-east-1:395594542180:certificate/07930a75-884a-4a51-af6b-b245952e0636
+      dev: arn:aws:acm:us-east-1:395594542180:certificate/bb2d12f1-9a56-4d30-8633-b3ca2a92497d
       staging: arn:aws:acm:us-east-1:844390194980:certificate/03a48c9c-bebc-4d29-ad3b-02f93690a9e5
       prod: arn:aws:acm:us-east-1:716487311010:certificate/4a3c3018-df9e-4c3a-84a6-231317f8bcec
       other: arn:aws:acm:us-east-1:395594542180:certificate/07930a75-884a-4a51-af6b-b245952e0636
-  domain:
-    dev: dev.lfcla.com
-    staging: staging.lfcla.com
-    prod: easycla.lfx.linuxfoundation.org
   product:
     domain:
       name:
@@ -99,10 +95,10 @@ functions:
 
 resources:
   Conditions:
-    isProd:
-      Fn::Equals:
-        - ${env:STAGE}
-        - prod
+    # https://gist.github.com/DavidWells/be078deef45f8cb2e280ccc7af947392
+    isProd: { "Fn::Equals": [ "${env:STAGE}", "prod" ] }
+    isStaging: { "Fn::Equals": [ "${env:STAGE}", "staging" ] }
+    isDev: { "Fn::Equals": [ "${env:STAGE}", "dev" ] }
     # true when a TSL certificate should be created by serverless (false created externally)
     ShouldGenerateCertificate:
       Fn::Not: [Fn::Equals: ["${env:STAGE}", "prod"]]
@@ -167,9 +163,25 @@ resources:
               - - ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
                 - ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
           ViewerCertificate:
-            AcmCertificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
-            SslSupportMethod: sni-only
-            MinimumProtocolVersion: TLSv1.2_2018
+            Fn::If:
+              - ShouldGenerateCertificate
+              - AcmCertificateArn:
+                  Ref: Cert
+                # The distribution accepts HTTPS connections from only viewers that support server name indication
+                # Recommended, most browsers and clients released after 2010 support SNI.
+                SslSupportMethod: sni-only
+                # Specify the security policy that you want CloudFront to use for HTTPS connections
+                # Recommend that you specify TLSv1.2_2018 unless your viewers are using browsers or devices that don’t support TLSv1.2
+                # Allowed Values: SSLv3 | TLSv1 | TLSv1.1_2016 | TLSv1.2_2018 | TLSv1_2016
+                MinimumProtocolVersion: TLSv1.2_2018
+              - AcmCertificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
+                # The distribution accepts HTTPS connections from only viewers that support server name indication
+                # Recommended, most browsers and clients released after 2010 support SNI.
+                SslSupportMethod: sni-only
+                # Specify the security policy that you want CloudFront to use for HTTPS connections
+                # Recommend that you specify TLSv1.2_2018 unless your viewers are using browsers or devices that don’t support TLSv1.2
+                # Allowed Values: SSLv3 | TLSv1 | TLSv1.1_2016 | TLSv1.2_2018 | TLSv1_2016
+                MinimumProtocolVersion: TLSv1.2_2018
           Origins:
             - DomainName: { "Fn::GetAtt": [ WebsiteDeploymentBucket, DomainName ] }
               Id:
@@ -257,6 +269,15 @@ resources:
                         - "*"
         ManagedPolicyArns:
           - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+    Cert:
+      Type: AWS::CertificateManager::Certificate
+      Condition: ShouldGenerateCertificate
+      Properties:
+        DomainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
+        SubjectAlternativeNames:
+          - ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
+        ValidationMethod: DNS
 
   Outputs:
     CloudfrontDistributionId:
