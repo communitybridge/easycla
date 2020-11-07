@@ -86,6 +86,7 @@ function generateCSP(env, isDevServer) {
     'base-uri': [SELF],
     // frame-src restricts what iframe's you can put on your website
     'frame-src': [SELF, 'data:',
+      'https://sso.linuxfoundation.org/',
       'https://cla-signature-files-dev.s3.amazonaws.com/',
       'https://s3.amazonaws.com/cla-project-logo-dev/',
       'https://cla-signature-files-staging.s3.amazonaws.com/',
