@@ -72,6 +72,18 @@ custom:
     dev: dev.lfcla.com
     staging: staging.lfcla.com
     prod: easycla.lfx.linuxfoundation.org
+  product:
+    domain:
+      name:
+        dev: 'lfcla.dev.platform.linuxfoundation.org'
+        staging: 'lfcla.staging.platform.linuxfoundation.org'
+        prod: 'easycla.lfx.linuxfoundation.org'
+        other: 'dev.lfcla.com'
+      alt:
+        dev: 'dev.lfcla.com'
+        staging: 'staging.lfcla.com'
+        prod: 'easycla.lfx.linuxfoundation.org'
+        other: 'dev.lfcla.com'
   ses_from_email:
     dev: admin@dev.lfcla.com
     staging: admin@staging.lfcla.com
@@ -138,6 +150,7 @@ resources:
       Properties:
         CloudFrontOriginAccessIdentityConfig:
           Comment: "CloudFrontOriginAccessIdentity for ${self:service}-${self:provider.stage}"
+
     # The cloudfront distribution wraps around our static website S3 bucket. Using a CDN to host our SPA is good
     # practice, and also lets us set custom headers using lambda@edge.
     CloudfrontDistribution:
@@ -148,7 +161,11 @@ resources:
         DistributionConfig:
           Enabled: true
           Aliases:
-            - ${env:PRODUCT_DOMAIN}
+            Fn::If:
+              - isProd
+              - - ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
+              - - ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
+                - ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
           ViewerCertificate:
             AcmCertificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
             SslSupportMethod: sni-only
@@ -198,12 +215,13 @@ resources:
                 Forward: none
             ViewerProtocolPolicy: redirect-to-https
           PriceClass: PriceClass_100 # Cheapest class, only hosts content at North American cloudfront locations.
+
     # Severless usually generates our roles out of the box, but lambda@edge support is lacking, so we have to create
     # our own. This role can assume the edgelambda.amazonaws.com role, (the lambda won't run without it).
     EdgeRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:custom.project}-${opt:stage}-cla-next-edge-role
+        RoleName: ${self:custom.project}-${opt:stage}-cla-landing-page-edge-role
         Path: /
         AssumeRolePolicyDocument:
           Version: '2012-10-17'

@@ -1,4 +1,4 @@
-service: cla-frontend-pmc
+service: cla-frontend-pmc-2
 
 # Only package lambda@edge function.
 package:
@@ -88,10 +88,10 @@ functions:
 
 resources:
   Conditions:
-    isProd:
-      Fn::Equals:
-        - ${env:STAGE}
-        - prod
+    # https://gist.github.com/DavidWells/be078deef45f8cb2e280ccc7af947392
+    isProd: { "Fn::Equals": [ "${env:STAGE}", "prod" ] }
+    isStaging: { "Fn::Equals": [ "${env:STAGE}", "staging" ] }
+    isDev: { "Fn::Equals": [ "${env:STAGE}", "dev" ] }
     # true when a TSL certificate should be created by serverless (false created externally)
     ShouldGenerateCertificate:
       Fn::Not: [Fn::Equals: ["${env:STAGE}", "prod"]]
@@ -227,7 +227,7 @@ resources:
     EdgeRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:custom.project}-${opt:stage}-pmc-edge-role
+        RoleName: ${self:custom.project}-${opt:stage}-${self:service}-edge-role
         Path: /
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
@@ -266,6 +266,7 @@ resources:
 
     Cert:
       Type: AWS::CertificateManager::Certificate
+      Condition: ShouldGenerateCertificate
       Properties:
         DomainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
         SubjectAlternativeNames:

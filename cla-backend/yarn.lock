@@ -5227,7 +5227,7 @@ serverless-wsgi@^1.5.2:
     hasbin "^1.2.3"
     lodash "^4.17.15"
 
-serverless@^2.11.0:
+serverless@^2.6.0:
   version "2.11.0"
   resolved "https://registry.yarnpkg.com/serverless/-/serverless-2.11.0.tgz#ebea502c1aafb4c0c310e3b8312340882848187d"
   integrity sha512-xR6ntWPdLA2gMauiuXAXUImUEFEVe8vmPbIZ4pbc34VwbztyeAnhUf4JyOL9wfDHStdJC2vqZ/zDngTJbM0DxQ==

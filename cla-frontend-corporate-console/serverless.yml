@@ -1,4 +1,4 @@
-service: cla-frontend-cc
+service: cla-frontend-cc-2
 
 # Only package lambda@edge function.
 package:
@@ -52,13 +52,12 @@ custom:
     items: # one or more paths required
       - '/*'
   certificate:
-    arn:
-      # From env Certificate Manager -
-      # currently, PROD is managed externally, DEV and STAGING are still managed by serverless
-      dev: arn:aws:acm:us-east-1:395594542180:certificate/6533b890-c06b-4c40-9743-6fb58b44ecbb
-      staging: arn:aws:acm:us-east-1:844390194980:certificate/f9f44aec-b088-436b-95ab-001f13eaad2c
-      prod: arn:aws:acm:us-east-1:716487311010:certificate/0fad9da1-45c3-46ba-95bb-36e62a20a572
-      other: arn:aws:acm:us-east-1:395594542180:certificate/6533b890-c06b-4c40-9743-6fb58b44ecbb
+    # From env Certificate Manager -
+    # currently, PROD is managed externally, DEV and STAGING are still managed by serverless
+    dev: arn:aws:acm:us-east-1:395594542180:certificate/6533b890-c06b-4c40-9743-6fb58b44ecbb
+    staging: arn:aws:acm:us-east-1:844390194980:certificate/f9f44aec-b088-436b-95ab-001f13eaad2c
+    prod: arn:aws:acm:us-east-1:716487311010:certificate/0fad9da1-45c3-46ba-95bb-36e62a20a572
+    other: arn:aws:acm:us-east-1:395594542180:certificate/77be78a8-8d3d-4324-8c13-aba4847dabb9
   product:
     domain:
       name:
@@ -86,13 +85,13 @@ functions:
 
 resources:
   Conditions:
-    isProd:
-      Fn::Equals:
-        - ${env:STAGE}
-        - prod
+    # https://gist.github.com/DavidWells/be078deef45f8cb2e280ccc7af947392
+    isProd: { "Fn::Equals": [ "${env:STAGE}", "prod" ] }
+    isStaging: { "Fn::Equals": [ "${env:STAGE}", "staging" ] }
+    isDev: { "Fn::Equals": [ "${env:STAGE}", "dev" ] }
     # true when a TSL certificate should be created by serverless (false created externally)
     ShouldGenerateCertificate:
-      Fn::Not: [Fn::Equals: ["${env:STAGE}", "prod"]]
+      Fn::Not: [ Fn::Equals: [ "${env:STAGE}", "prod" ] ]
 
   Resources:
     # The bucket the website is uploaded to. We make sure to turn on AES256 encryption, which
@@ -224,7 +223,7 @@ resources:
     EdgeRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:custom.project}-${opt:stage}-cc-edge-role
+        RoleName: ${self:custom.project}-${opt:stage}-${self:service}-edge-role
         Path: /
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
@@ -263,6 +262,7 @@ resources:
 
     Cert:
       Type: AWS::CertificateManager::Certificate
+      Condition: ShouldGenerateCertificate
       Properties:
         DomainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
         SubjectAlternativeNames:
