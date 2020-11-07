@@ -65,7 +65,9 @@ function generateCSP(env, isDevServer) {
 
   const sources = {
     'default-src': [NONE],
-    'img-src': [SELF, 'data:',
+    'img-src': [
+      SELF,
+      'data:',
       'https://s3.amazonaws.com/cla-project-logo-dev/',
       'https://s3.amazonaws.com/cla-project-logo-staging/',
       'https://s3.amazonaws.com/cla-project-logo-prod/',
@@ -75,6 +77,7 @@ function generateCSP(env, isDevServer) {
       'https://lh3.googleusercontent.com/',
       'https://platform-logos-myprofile-api-dev.s3.us-east-2.amazonaws.com/',
       'https://cdn.platform.linuxfoundation.org/', // cdn favicon: https://cdn.platform.linuxfoundation.org/assets/lf-favicon.png
+      'https://platform-logos-myprofile-api-prod.s3.us-east-2.amazonaws.com/',
     ],
     'script-src': scriptSources,
     'style-src': styleSources, // Unfortunately using Angular basically requires inline styles.
