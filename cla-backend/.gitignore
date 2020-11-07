@@ -13,3 +13,16 @@ _env.json
 .mypy_cache
 .venv
 .vscode/
+
+# Golang binaries that may have been copied over for local deployment
+backend-aws-lambda
+deploy-dev.sh
+deploy-prod.sh
+deploy-staging.sh
+dynamo-events-lambda
+functional-tests
+metrics-aws-lambda
+user-subscribe-lambda
+zipbuilder-lambda
+zipbuilder-scheduler-lambda
+
