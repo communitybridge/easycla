@@ -1,4 +1,4 @@
-service: cla-frontend-ic-3
+service: cla-frontend-ic-4
 
 # Only package lambda@edge function.
 package:
