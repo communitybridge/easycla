@@ -7,6 +7,9 @@
     "deploy:staging": "yarn sls deploy --stage=staging --cloudfront=true && yarn sls client deploy --stage=staging --cloudfront=true --no-confirm --no-policy-change --no-config-change && yarn sls cloudfrontInvalidate --stage=staging --region=us-east-1 --cloudfront=true",
     "deploy:prod": "yarn sls deploy --stage=prod --cloudfront=true && yarn sls client deploy --stage=prod --cloudfront=true --no-confirm --no-policy-change --no-config-change && yarn sls cloudfrontInvalidate --stage=prod --region=us-east-1 --cloudfront=true",
     "sls": "../node_modules/serverless/bin/serverless.js",
+    "info:dev": "../node_modules/serverless/bin/serverless.js info --stage=dev --region=us-east-1",
+    "info:stating": "../node_modules/serverless/bin/serverless.js info --stage=stating --region=us-east-1",
+    "info:prod": "../node_modules/serverless/bin/serverless.js info --stage=prod --region=us-east-1",
     "install-frontend": "../scripts/install-frontend.sh"
   },
   "dependencies": {
