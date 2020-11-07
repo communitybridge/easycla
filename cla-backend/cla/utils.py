@@ -755,7 +755,7 @@ def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=Fal
 
     if all_signed:
         badge_url = '{}/cla-signed.png'.format(CLA_LOGO_URL)
-        badge_hyperlink = 'https://lfcla.com'
+        badge_hyperlink = 'https://easycla.lfx.linuxfoundation.org'
     else:
         if missing_user_id:
             badge_url = "{}/cla-missing-id.png".format(CLA_LOGO_URL)

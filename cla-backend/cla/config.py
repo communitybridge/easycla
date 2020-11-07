@@ -51,8 +51,6 @@ CONTRIBUTOR_V2_BASE_URL = os.environ.get('CLA_CONTRIBUTOR_V2_BASE', '')
 
 # Corporate Console base URL
 CORPORATE_BASE_URL = os.environ.get('CLA_CORPORATE_BASE', '')
-if CORPORATE_BASE_URL == 'corporate.prod.lfcla.com':
-    CORPORATE_BASE_URL = 'corporate.lfcla.com'
 
 # Landing Page
 CLA_LANDING_PAGE = os.environ.get('CLA_LANDING_PAGE', '')
