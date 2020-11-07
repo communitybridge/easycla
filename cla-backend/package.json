@@ -26,13 +26,14 @@
     "start:s3": "sh dev.sh start:s3",
     "create_domain:dev": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless.js create_domain -s dev -r us-east-1 --verbose",
     "create_domain:staging": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless.js create_domain -s staging -r us-east-1 --verbose",
-    "create_domain:prod": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless.js create_domain -s prod -r us-east-1 --verbose"
+    "create_domain:prod": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless.js create_domain -s prod -r us-east-1 --verbose",
+    "delete_domain:prod": "SLS_DEBUG=* ./node_modules/serverless/bin/serverless.js delete_domain -s prod -r us-east-1 --verbose"
   },
   "dependencies": {
     "install": "^0.13.0",
     "node.extend": "^2.0.2",
     "request": "^2.88.0",
-    "serverless": "^2.11.0",
+    "serverless": "^2.6.0",
     "serverless-domain-manager": "^5.1.0",
     "serverless-finch": "^2.3.2",
     "serverless-layers": "^1.4.3",

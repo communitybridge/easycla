@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 service: cla-backend
-frameworkVersion: '^2.11.0'
+frameworkVersion: '^2.6.0'
 
 package:
   # Exclude all first - selectively add in lambda functions
@@ -538,10 +538,16 @@ functions:
 
 resources:
   Conditions:
-    isProd:
-      Fn::Equals:
-        - ${env:STAGE}
-        - prod
+    # Helper functions since we conditionally create some resources
+    # https://gist.github.com/DavidWells/be078deef45f8cb2e280ccc7af947392
+    isProd: { "Fn::Equals": [ "${env:STAGE}", "prod" ] }
+    isStaging: { "Fn::Equals": [ "${env:STAGE}", "staging" ] }
+    isDev: { "Fn::Equals": [ "${env:STAGE}", "dev" ] }
+    isNotProd: {"Fn::Or": [{"Condition": "isDev"}, {"Condition": "isStaging" }]}
+    # true when a TSL certificate should be created by serverless (false created externally)
+    ShouldGenerateCertificate:
+      Fn::Not: [ Fn::Equals: [ "${env:STAGE}", "prod" ] ]
+
   Resources:
     # ApiGatewayRestApi, and GatewayResponse are used to enable Cors on custom authorizer responses.
     # This let's the client read the HTTP status on error.
@@ -563,16 +569,9 @@ resources:
         RestApiId:
           Ref: 'ApiGatewayRestApi'
 
-    #Cert:
-    #  Type: AWS::CertificateManager::Certificate
-    #  Properties:
-    #    DomainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
-    #    SubjectAlternativeNames:
-    #      - ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
-    #    ValidationMethod: DNS
-
     Cert:
       Type: AWS::CertificateManager::Certificate
+      Condition: ShouldGenerateCertificate
       Properties:
         DomainName: api.${env:ROOT_DOMAIN}
         SubjectAlternativeNames:
