@@ -379,12 +379,12 @@ jobs:
             v3_url=''
             v4_url=''
             if [[ "${STAGE}" == "prod" ]]; then
-              v2_url=https://api.lfcla.com/v2/health
-              v3_url=https://api.lfcla.com/v3/ops/health
+              v2_url=https://api.easycla.lfx.linuxfoundation.org/v2/health
+              v3_url=https://api.easycla.lfx.linuxfoundation.org/v3/ops/health
               v4_url=https://api-gw.platform.linuxfoundation.org/cla-service/v4/ops/health
             else
-              v2_url=https://api.${STAGE}.lfcla.com/v2/health
-              v3_url=https://api.${STAGE}.lfcla.com/v3/ops/health
+              v2_url=https://api.lfcla.${STAGE}.platform.linuxfoundation.org/v2/health
+              v3_url=https://api.lfcla.${STAGE}.platform.linuxfoundation.org/v3/ops/health
               v4_url=https://api-gw.${STAGE}.platform.linuxfoundation.org/cla-service/v4/ops/health
             fi
 
