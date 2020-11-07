@@ -91,6 +91,7 @@ function generateCSP(env, isDevServer) {
     'frame-src': [
       SELF,
       'data:',
+      'https://sso.linuxfoundation.org/',
       'https://cla-signature-files-dev.s3.amazonaws.com/',
       'https://s3.amazonaws.com/cla-project-logo-dev/',
       'https://cla-signature-files-staging.s3.amazonaws.com/',
