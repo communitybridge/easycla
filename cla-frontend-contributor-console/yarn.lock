@@ -2687,7 +2687,7 @@ serverless-cloudfront-invalidate@^1.2.1:
     proxy-agent "^3.0.3"
     randomstring "^1.1.5"
 
-serverless-finch@^2.3.2:
+serverless-finch@^2.6.0:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/serverless-finch/-/serverless-finch-2.6.0.tgz#c74e7492dbfae52aa6383d4a21bac9138bcd9383"
   integrity sha512-G5umIBoNyo3MKCtdtbbkkb/7Z84qNstbQnkdscG/VhukYUib+7BiWidAMI+WAFq+JEUf3PW7c3bvt/uFEiMnnA==
