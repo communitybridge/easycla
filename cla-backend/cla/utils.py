@@ -753,18 +753,26 @@ def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=Fal
     :type is_approved_by_manager: bool
     """
 
+    alt = 'CLA'
     if all_signed:
-        badge_url = '{}/cla-signed.png'.format(CLA_LOGO_URL)
+        badge_url = f'{CLA_LOGO_URL}/cla-signed.svg'
         badge_hyperlink = 'https://easycla.lfx.linuxfoundation.org'
+        alt = "CLA Signed"
     else:
         if missing_user_id:
-            badge_url = "{}/cla-missing-id.png".format(CLA_LOGO_URL)
+            badge_url = f'{CLA_LOGO_URL}/cla-missing-id.svg'
+            alt = 'CLA Missing ID'
         elif is_approved_by_manager:
-            badge_url = "{}/cla-confirmation-needed.png".format(CLA_LOGO_URL)
+            badge_url = f'{CLA_LOGO_URL}/cla-confirmation-needed.svg'
+            alt = 'CLA Confirmation Needed'
         else:
-            badge_url = "{}/cla-notsigned.png".format(CLA_LOGO_URL)
+            badge_url = f'{CLA_LOGO_URL}/cla-notsigned.svg'
+            alt = "CLA Not Signed"
         badge_hyperlink = sign_url
-    return '[![CLA Check](' + badge_url + ')](' + badge_hyperlink + ')'
+    # return '[![CLA Check](' + badge_url + ')](' + badge_hyperlink + ')'
+    return (f'<a href="{badge_hyperlink}">'
+            f'<img src="{badge_url}" alt="{alt}" align="left" height="28" width="328" >'
+            '</a>')
 
 
 def assemble_cla_status(author_name, signed=False):
