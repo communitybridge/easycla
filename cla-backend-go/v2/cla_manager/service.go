@@ -1407,7 +1407,7 @@ func sendDesigneeEmailToUserWithNoLFID(userWithNoLFIDName, userWithNoLFIDEmail, 
 	<p> This email will guide you to completing the CLA Manager role assignment.
 	<p>1. Accept Invite link below will take you SSO login page where you can login with your LF Login or create a LF Login and then login.</p>
 	<p>2. After logging in SSO screen should direct you to CLA Corporate Console page where you will see the project you a re associated with.</p>
-	<p>3. Click on workflow steps to complete the signup process. Please follow this documentation to help you guide through the process - https://docs.linuxfoundation.org/docs/v/v2/communitybridge/easycla/cla-manager-designee-or-initial-cla-manager</p>
+	<p>3. Click on workflow steps to complete the signup process. Please follow this documentation to help you guide through the process - https://docs.linuxfoundation.org/lfx/easycla/ccla-managers-and-ccla-signatories</p>
 	<p>4. Once you have completed CLA Manager workflow you will be able to manage the approved list of contributors </p>
 	<p> <a href="USERACCEPTLINK">Accept Invite</a> </p>
 	%s
