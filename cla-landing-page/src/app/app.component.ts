@@ -30,7 +30,7 @@ export class AppComponent implements OnInit {
       },
       {
         title: 'Developer',
-        url: AppSettings.LEARN_MORE
+        url: AppSettings.CONTRIBUTORS_LEARN_MORE
       }
     ];
     this.mountHeader();
