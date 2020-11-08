@@ -596,10 +596,10 @@ jobs:
       - run:
           name: Publish Console to S3
           command: |
-            BUCKET_NAME=''
             pushd ${PROJECT_DIR}/src
             aws s3 rm s3://${BUCKET_NAME} --recursive
             aws s3 sync www/ s3://${BUCKET_NAME}/ --acl public-read
+            popd
 #      - run:
 #          name: Deploy Cloudfront and LambdaEdge
 #          command: |
