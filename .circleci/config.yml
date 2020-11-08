@@ -50,6 +50,13 @@ setup_aws: &setup_aws
         echo "Skipped adding ${AWS_PROFILE} to ${BASH_ENV} - already there"
       fi
 
+install_aws_cli: &install_aws_cli
+  run:
+    name: Install AWS CLI Tools
+    command: |
+      sudo apt-get update
+      sudo apt-get install -y awscli
+
 set_functional_test_environment: &set_functional_test_environment
   run:
     name: set deployment environment
@@ -137,11 +144,7 @@ jobs:
             echo "Node version is: $(node --version)"
             echo "Running top level install..."
             yarn install
-      - run:
-          name: Install awscli
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y awscli
+      - *install_aws_cli
       - run:
           name: Setup Backend
           command: |
@@ -589,6 +592,7 @@ jobs:
             yarn build
             popd
       - *install-node-12
+      - *install_aws_cli
       - run:
           name: Publish Console to S3
           command: |
