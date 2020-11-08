@@ -590,19 +590,26 @@ jobs:
             popd
       - *install-node-12
       - run:
-          name: Deploy Cloudfront and LambdaEdge
+          name: Publish Console to S3
           command: |
-            pushd $PROJECT_DIR
-            echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true"
-            yarn sls deploy --stage="${STAGE}" --cloudfront="true"
-            popd
-      - run:
-          name: Deploy Frontend Bucket
-          command: |
-            pushd $PROJECT_DIR
-            echo "Running: yarn sls client deploy --stage=\"${STAGE}\" --cloudfront=true --no-confirm --no-policy-change --no-config-change"
-            yarn sls client deploy --stage="${STAGE}" --cloudfront="true" --no-confirm --no-policy-change --no-config-change
-            popd
+            BUCKET_NAME=''
+            pushd ${PROJECT_DIR}/src
+            aws s3 rm s3://${BUCKET_NAME} --recursive
+            aws s3 sync www/ s3://${BUCKET_NAME}/ --acl public-read
+#      - run:
+#          name: Deploy Cloudfront and LambdaEdge
+#          command: |
+#            pushd $PROJECT_DIR
+#            echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true"
+#            yarn sls deploy --stage="${STAGE}" --cloudfront="true"
+#            popd
+#      - run:
+#          name: Deploy Frontend Bucket
+#          command: |
+#            pushd $PROJECT_DIR
+#            echo "Running: yarn sls client deploy --stage=\"${STAGE}\" --cloudfront=true --no-confirm --no-policy-change --no-config-change"
+#            yarn sls client deploy --stage="${STAGE}" --cloudfront="true" --no-confirm --no-policy-change --no-config-change
+#            popd
       - run:
           name: Invalidate Cache
           command: |
@@ -623,6 +630,7 @@ jobs:
       PROJECT_DIR: cla-frontend-project-console
       ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
       PRODUCT_DOMAIN: dev.lfcla.com
+      BUCKET_NAME: lf-cla-dev-cla-frontend-pmc-4
 
   deployProjectManagementConsoleStaging:
     <<: *deployFrontendAnchor
@@ -635,6 +643,7 @@ jobs:
       PROJECT_DIR: cla-frontend-project-console
       ROOT_DOMAIN: lfcla.staging.platform.linuxfoundation.org
       PRODUCT_DOMAIN: staging.lfcla.com
+      BUCKET_NAME: lf-cla-staging-cla-frontend-pmc-3
 
   deployProjectManagementConsoleProd:
     <<: *deployFrontendAnchor
@@ -647,6 +656,7 @@ jobs:
       PROJECT_DIR: cla-frontend-project-console
       ROOT_DOMAIN: lfcla.platform.linuxfoundation.org
       PRODUCT_DOMAIN: lfcla.com
+      BUCKET_NAME: lf-cla-prod-cla-frontend-pmc-3
 
   # Corporate Console
   deployCorporateConsoleDev:
@@ -660,6 +670,7 @@ jobs:
       PROJECT_DIR: cla-frontend-corporate-console
       ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
       PRODUCT_DOMAIN: dev.lfcla.com
+      BUCKET_NAME: lf-cla-dev-cla-frontend-cc-4
 
   deployCorporateConsoleStaging:
     <<: *deployFrontendAnchor
@@ -672,6 +683,7 @@ jobs:
       PROJECT_DIR: cla-frontend-corporate-console
       ROOT_DOMAIN: lfcla.staging.platform.linuxfoundation.org
       PRODUCT_DOMAIN: staging.lfcla.com
+      BUCKET_NAME: lf-cla-staging-cla-frontend-cc-3
 
   deployCorporateConsoleProd:
     <<: *deployFrontendAnchor
@@ -684,6 +696,7 @@ jobs:
       PROJECT_DIR: cla-frontend-corporate-console
       ROOT_DOMAIN: lfcla.platform.linuxfoundation.org
       PRODUCT_DOMAIN: lfcla.com
+      BUCKET_NAME: lf-cla-prod-cla-frontend-cc-3
 
   # Contributor Console
   deployContributorConsoleDev:
@@ -697,6 +710,7 @@ jobs:
       PROJECT_DIR: cla-frontend-contributor-console
       ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
       PRODUCT_DOMAIN: dev.lfcla.com
+      BUCKET_NAME: lf-cla-dev-cla-frontend-ic-4
 
   deployContributorConsoleStaging:
     <<: *deployFrontendAnchor
@@ -709,6 +723,7 @@ jobs:
       PROJECT_DIR: cla-frontend-contributor-console
       ROOT_DOMAIN: lfcla.staging.platform.linuxfoundation.org
       PRODUCT_DOMAIN: staging.lfcla.com
+      BUCKET_NAME: lf-cla-staging-cla-frontend-ic-3
 
   deployContributorConsoleProd:
     <<: *deployFrontendAnchor
@@ -721,6 +736,7 @@ jobs:
       PROJECT_DIR: cla-frontend-contributor-console
       ROOT_DOMAIN: lfcla.platform.linuxfoundation.org
       PRODUCT_DOMAIN: lfcla.com
+      BUCKET_NAME: lf-cla-prod-cla-frontend-ic-3
 
   deployLandingFrontend: &deployLandingFrontendAnchor
     docker:
