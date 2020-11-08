@@ -31,6 +31,6 @@ export class ClaConsoleSectionComponent {
   }
 
   onClickLearnMore() {
-    window.open(AppSettings.LEARN_MORE, '_blank');
+    window.open(AppSettings.CONTRIBUTORS_LEARN_MORE, '_blank');
   }
 }
