@@ -39,6 +39,7 @@ func signatureCheckMiddleware(next http.Handler) http.Handler {
 func Configure(api *operations.EasyclaAPI, service Service) {
 	api.GithubActivityGithubActivityHandler = github_activity.GithubActivityHandlerFunc(
 		func(params github_activity.GithubActivityParams) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
 			githubEvent := utils.GetGithubEvent(params.XGITHUBEVENT)
 			if githubEvent == "" {
 				return github_activity.NewGithubActivityBadRequest().WithPayload(&models.ErrorResponse{
@@ -71,18 +72,16 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 			case *github.RepositoryEvent:
 				processError = service.ProcessRepositoryEvent(event)
 			default:
+				msg := fmt.Sprintf("unsupported event : %s", githubEvent)
 				// TODO: this will be removed when switched to real github activity
-				return github_activity.NewGithubActivityBadRequest().WithPayload(&models.ErrorResponse{
-					Code:    "500",
-					Message: fmt.Sprintf("unsupported event : %s", githubEvent),
-				})
+				return github_activity.NewGithubActivityBadRequest().WithPayload(
+					utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 			}
 
 			if processError != nil {
-				return github_activity.NewGithubActivityBadRequest().WithPayload(&models.ErrorResponse{
-					Code:    "500",
-					Message: processError.Error(),
-				})
+				return github_activity.NewGithubActivityBadRequest().WithPayload(
+					utils.ErrorResponseBadRequestWithError(reqID, "", processError))
+
 			}
 
 			return github_activity.NewGithubActivityOK()
