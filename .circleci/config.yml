@@ -600,20 +600,28 @@ jobs:
             aws s3 rm s3://${BUCKET_NAME} --recursive
             aws s3 sync www/ s3://${BUCKET_NAME}/ --acl public-read
             popd
-#      - run:
-#          name: Deploy Cloudfront and LambdaEdge
-#          command: |
-#            pushd $PROJECT_DIR
-#            echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true"
-#            yarn sls deploy --stage="${STAGE}" --cloudfront="true"
-#            popd
-#      - run:
-#          name: Deploy Frontend Bucket
-#          command: |
-#            pushd $PROJECT_DIR
-#            echo "Running: yarn sls client deploy --stage=\"${STAGE}\" --cloudfront=true --no-confirm --no-policy-change --no-config-change"
-#            yarn sls client deploy --stage="${STAGE}" --cloudfront="true" --no-confirm --no-policy-change --no-config-change
-#            popd
+      - run:
+          name: Deploy Cloudfront and LambdaEdge
+          command: |
+            pushd $PROJECT_DIR
+            if [[ "${STAGE}" == "dev" ]]; then
+              echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true"
+              yarn sls deploy --stage="${STAGE}" --cloudfront="true"
+            else
+              echo "Skipping for stage: ${STAGE}"
+            fi
+            popd
+      - run:
+          name: Deploy Frontend Bucket
+          command: |
+            pushd $PROJECT_DIR
+            if [[ "${STAGE}" == "dev" ]]; then
+              echo "Running: yarn sls client deploy --stage=\"${STAGE}\" --cloudfront=true --no-confirm --no-policy-change --no-config-change"
+              yarn sls client deploy --stage="${STAGE}" --cloudfront="true" --no-confirm --no-policy-change --no-config-change
+            else
+              echo "Skipping for stage: ${STAGE}"
+            fi
+            popd
       - run:
           name: Invalidate Cache
           command: |
