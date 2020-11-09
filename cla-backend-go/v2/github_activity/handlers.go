@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
+
 	"github.com/google/go-github/v32/github"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
@@ -71,18 +73,11 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 			case *github.RepositoryEvent:
 				processError = service.ProcessRepositoryEvent(event)
 			default:
-				// TODO: this will be removed when switched to real github activity
-				return github_activity.NewGithubActivityInternalServerError().WithPayload(&models.ErrorResponse{
-					Code:    "500",
-					Message: fmt.Sprintf("unsupported event : %s", githubEvent),
-				})
+				log.Warnf("unsupported event sent : %s", githubEvent)
 			}
 
 			if processError != nil {
-				return github_activity.NewGithubActivityInternalServerError().WithPayload(&models.ErrorResponse{
-					Code:    "500",
-					Message: processError.Error(),
-				})
+				log.Warnf("processing event : %s failed with : %v", githubEvent, processError)
 			}
 
 			return github_activity.NewGithubActivityOK()
