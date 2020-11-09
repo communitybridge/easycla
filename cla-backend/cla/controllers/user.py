@@ -165,16 +165,16 @@ def request_company_whitelist(user_id: str, company_id: str, user_name: str, use
     body = f'''
 <p>Hello {recipient_name},</p> \
 <p>This is a notification email from EasyCLA regarding the project {project_name}.</p> \
-<p>{user_name} ({user_email}) has requested to be added to the Allow List as an authorized contributor from \
+<p>{user_name} ({user_email}) has requested to be added to the Approved List as an authorized contributor from \
 {company_name} to the project {project_name}. You are receiving this message as a CLA Manager from {company} for \
 {project_name}.</p> \
 {msg} \
-<p>If you want to add them to the Allow List, please \
+<p>If you want to add them to the Approved List, please \
 <a href="https://{cla.conf['CORPORATE_BASE_URL']}#/company/{company_id}" target="_blank">log into the EasyCLA Corporate \
 Console</a>, where you can approve this user's request by selecting the 'Manage Approved List' and adding the \
 contributor's email, the contributor's entire email domain, their GitHub ID or the entire GitHub Organization for the \
 repository. This will permit them to begin contributing to {project_name} on behalf of {company}.</p> \
-<p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p> 
+<p>If you are not certain whether to add them to the Approved List, please reach out to them directly to discuss.</p> 
 '''
     body = append_email_help_sign_off_content(body, project.get_version())
 
