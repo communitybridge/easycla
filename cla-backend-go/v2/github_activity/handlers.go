@@ -72,14 +72,14 @@ func Configure(api *operations.EasyclaAPI, service Service) {
 				processError = service.ProcessRepositoryEvent(event)
 			default:
 				// TODO: this will be removed when switched to real github activity
-				return github_activity.NewGithubActivityInternalServerError().WithPayload(&models.ErrorResponse{
+				return github_activity.NewGithubActivityBadRequest().WithPayload(&models.ErrorResponse{
 					Code:    "500",
 					Message: fmt.Sprintf("unsupported event : %s", githubEvent),
 				})
 			}
 
 			if processError != nil {
-				return github_activity.NewGithubActivityInternalServerError().WithPayload(&models.ErrorResponse{
+				return github_activity.NewGithubActivityBadRequest().WithPayload(&models.ErrorResponse{
 					Code:    "500",
 					Message: processError.Error(),
 				})
