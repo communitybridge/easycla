@@ -18,6 +18,7 @@ type ItemSignature struct {
 // ItemRepository represent item of repositories table
 type ItemRepository struct {
 	RepositoryProjectID string `json:"repository_project_id"`
+	Enabled             bool   `json:"enabled"`
 }
 
 // ItemCompany represent item of companies table
@@ -36,6 +37,7 @@ type ItemProject struct {
 	ProjectID         string `json:"project_id"`
 	ProjectExternalID string `json:"project_external_id"`
 	ProjectName       string `json:"project_name"`
+	ProjectLive       bool   `json:"project_live"`
 }
 
 // ItemUser represent item of users table
@@ -60,14 +62,18 @@ type TotalCountMetrics struct {
 	ClaManagersCount                  int64  `json:"cla_managers_count"`
 	ContributorsCount                 int64  `json:"contributors_count"`
 	ProjectsCount                     int64  `json:"projects_count"`
+	ProjectsLiveCount                 int64  `json:"projects_live_count"`
 	GithubRepositoriesCount           int64  `json:"github_repositories_count"`
+	GithubRepositoriesEnabledCount    int64  `json:"github_repositories_enabled_count"`
 	GerritRepositoriesCount           int64  `json:"gerrit_repositories_count"`
+	GerritRepositoriesEnabledCount    int64  `json:"gerrit_repositories_enabled_count"`
 	RepositoriesCount                 int64  `json:"repositories_count"`
 	CompaniesCount                    int64  `json:"companies_count"`
 	CompaniesProjectContributionCount int64  `json:"companies_project_contribution_count"`
 	LfMembersCLACount                 int64  `json:"lf_members_cla_count"`
 	NonLfMembersCLACount              int64  `json:"non_lf_members_cla_count"`
 	CreatedAt                         string `json:"created_at"`
+	CLAsSignedCount                   int64  `json:"clas_signed_count"`
 
 	corporateContributors        map[string]interface{}
 	individualContributors       map[string]interface{}
