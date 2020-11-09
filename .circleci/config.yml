@@ -604,23 +604,15 @@ jobs:
           name: Deploy Cloudfront and LambdaEdge
           command: |
             pushd $PROJECT_DIR
-            if [[ "${STAGE}" == "dev" ]]; then
-              echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true"
-              yarn sls deploy --stage="${STAGE}" --cloudfront="true"
-            else
-              echo "Skipping for stage: ${STAGE}"
-            fi
+            echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true"
+            yarn sls deploy --stage="${STAGE}" --cloudfront="true"
             popd
       - run:
           name: Deploy Frontend Bucket
           command: |
             pushd $PROJECT_DIR
-            if [[ "${STAGE}" == "dev" ]]; then
-              echo "Running: yarn sls client deploy --stage=\"${STAGE}\" --cloudfront=true --no-confirm --no-policy-change --no-config-change"
-              yarn sls client deploy --stage="${STAGE}" --cloudfront="true" --no-confirm --no-policy-change --no-config-change
-            else
-              echo "Skipping for stage: ${STAGE}"
-            fi
+            echo "Running: yarn sls client deploy --stage=\"${STAGE}\" --cloudfront=true --no-confirm --no-policy-change --no-config-change"
+            yarn sls client deploy --stage="${STAGE}" --cloudfront="true" --no-confirm --no-policy-change --no-config-change
             popd
       - run:
           name: Invalidate Cache
