@@ -10,6 +10,19 @@ cla-contract-version-modal {
     color: #7b7b7b;
   }
 
+  td {
+    button {
+      img {
+        height: 24px;
+        width: auto;
+      }
+    }
+  }
+
+  ion-img {
+    contain: initial;
+  }
+
   .btn-wrapper {
     display: flex;
     width: 100%;
