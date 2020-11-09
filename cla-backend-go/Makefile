@@ -4,6 +4,7 @@ SERVICE = cla
 SHELL = bash
 LAMBDA_BIN = backend-aws-lambda
 METRICS_BIN = metrics-aws-lambda
+METRICS_REPORT_BIN = metrics-report-lambda
 DYNAMO_EVENTS_BIN = dynamo-events-lambda
 ZIPBUILDER_SCHEDULER_BIN = zipbuilder-scheduler-lambda
 ZIPBUILDER_BIN = zipbuilder-lambda
@@ -29,8 +30,8 @@ TEST_ENV=AWS_REGION=us-east-1 DYNAMODB_AWS_REGION=us-east-1 AWS_PROFILE=bar AWS_
 all: all-mac
 all-mac: clean swagger deps fmt build-mac build-aws-lambda-mac build-user-subscribe-lambda-mac build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-scheduler-lambda-mac build-zipbuilder-lambda-mac test lint
 all-linux: clean swagger deps fmt build-linux build-aws-lambda-linux build-user-subscribe-lambda-linux build-metrics-lambda-linux build-dynamo-events-lambda-linux build-zipbuilder-scheduler-lambda-linux build-zipbuilder-lambda-linux test lint
-build-lambdas-mac: build-aws-lambda-mac build-user-subscribe-lambda-mac build-metrics-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-scheduler-lambda-mac build-zipbuilder-lambda-mac
-build-lambdas-linux: build-aws-lambda-linux build-user-subscribe-lambda-linux build-metrics-lambda-linux build-dynamo-events-lambda-linux build-zipbuilder-scheduler-lambda-linux build-zipbuilder-lambda-linux
+build-lambdas-mac: build-aws-lambda-mac build-user-subscribe-lambda-mac build-metrics-lambda-mac build-metrics-report-lambda-mac build-dynamo-events-lambda-mac build-zipbuilder-scheduler-lambda-mac build-zipbuilder-lambda-mac
+build-lambdas-linux: build-aws-lambda-linux build-user-subscribe-lambda-linux build-metrics-lambda-linux build-metrics-report-lambda-linux build-dynamo-events-lambda-linux build-zipbuilder-scheduler-lambda-linux build-zipbuilder-lambda-linux
 
 generate: swagger
 
@@ -227,6 +228,18 @@ build-metrics-lambda-mac: deps
 	@echo "Building a statically linked Mac OSX amd64 binary..."
 	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(METRICS_BIN)-mac cmd/metrics_lambda/main.go
 	@chmod +x $(METRICS_BIN)-mac
+
+build-metrics-report-lambda: build-metrics-lambda-report-linux
+build-metrics-report-lambda-linux: deps
+	@echo "Building a statically linked Linux amd64 binary..."
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(METRICS_REPORT_BIN) cmd/metrics_report_lambda/main.go
+	@chmod +x $(METRICS_REPORT_BIN)
+
+build-metrics-report-lambda-mac: deps
+	@echo "Building a statically linked Mac OSX amd64 binary..."
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(METRICS_REPORT_BIN)-mac cmd/metrics_report_lambda/main.go
+	@chmod +x $(METRICS_REPORT_BIN)-mac
+
 
 build-dynamo-events-lambda: build-dynamo-events-lambda-linux
 build-dynamo-events-lambda-linux: deps

@@ -79,6 +79,8 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
 		fmt.Sprintf("cla-v1-api-url-%s", stage),
 		fmt.Sprintf("cla-acs-api-key-%s", stage),
 		fmt.Sprintf("cla-lfx-portal-url-%s", stage),
+		fmt.Sprintf("cla-lfx-metrics-report-sqs-region-%s", stage),
+		fmt.Sprintf("cla-lfx-metrics-report-sqs-url-%s", stage),
 	}
 
 	// For each key to lookup
@@ -169,6 +171,10 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
 			config.AcsAPIKey = resp.value
 		case fmt.Sprintf("cla-lfx-portal-url-%s", stage):
 			config.LFXPortalURL = resp.value
+		case fmt.Sprintf("cla-lfx-metrics-report-sqs-region-%s", stage):
+			config.MetricsReport.AwsSQSRegion = resp.value
+		case fmt.Sprintf("cla-lfx-metrics-report-sqs-url-%s", stage):
+			config.MetricsReport.AwsSQSQueueURL = resp.value
 		}
 	}
 

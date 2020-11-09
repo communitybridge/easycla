@@ -19,8 +19,8 @@ github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2 h1:ZLAgTj9+H3RTmjbRpUam
 github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2/go.mod h1:LQj48zwkRwdjVmDCqtPlviW/7IFaSKzz2gDhxRwVrA4=
 github.com/LF-Engineering/lfx-kit v0.1.18 h1:nRUrk+iwSmjdKD2gN3wdTApHNhXdBahWw062E+knX0M=
 github.com/LF-Engineering/lfx-kit v0.1.18/go.mod h1:B+pko2SqvGNSG9hWDC35JNZ38nTPt+r5KB6k75xM5vY=
-github.com/LF-Engineering/lfx-models v0.6.9 h1:Jf1kmKc3EaQ/tU5zD2RldZH6q/x9aKOm/L/CaEpoomE=
-github.com/LF-Engineering/lfx-models v0.6.9/go.mod h1:AaV7psgE2IPXhaLXYXoFviobYoh09XJ2P/ALOU11OuE=
+github.com/LF-Engineering/lfx-models v0.6.25 h1:3ItvB6BKXlqpFi0/X8gONI0p1ipOwNWu3OhuEUOdc6U=
+github.com/LF-Engineering/lfx-models v0.6.25/go.mod h1:AaV7psgE2IPXhaLXYXoFviobYoh09XJ2P/ALOU11OuE=
 github.com/Masterminds/semver v1.5.0/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Masterminds/vcs v1.13.1/go.mod h1:N09YCmOQr6RLxC6UNHzuVwAdodYbbnycGHSmwVJjcKA=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
@@ -66,7 +66,6 @@ github.com/bradleyfalzon/ghinstallation v1.1.1/go.mod h1:vyCmHTciHx/uuyN82Zc3rXN
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
-github.com/communitybridge/easycla v1.0.53 h1:cixSnEI58zdrXhTr4ZjVQNSt7E+kymXj99M1xxsJZ9o=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/etcd v3.3.13+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
