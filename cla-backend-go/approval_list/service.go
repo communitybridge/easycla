@@ -324,12 +324,12 @@ func (s service) sendRequestRejectedEmailToRecipient(companyModel *models.Compan
 	claManagerText += "</ul>"
 
 	// subject string, body string, recipients []string
-	subject := fmt.Sprintf("EasyCLA: CLA Manager Access Denied for Project %s", projectName)
+	subject := fmt.Sprintf("EasyCLA: Approval List Request Denied for Project %s", projectName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
-<p>Your request to become a CLA Manager from %s for %s was denied by one of the existing CLA Managers.
+<p>Your request to get added to the approval list from %s for %s was denied by one of the existing CLA Managers.
 If you have further questions about this denial, please contact one of the existing CLA Managers from
 %s for %s:</p>
 %s
@@ -352,16 +352,13 @@ func requestApprovedEmailToRecipientContent(companyModel *models.Company, claGro
 	companyName := companyModel.CompanyName
 
 	// subject string, body string, recipients []string
-	subject := fmt.Sprintf("EasyCLA: Company Manager Access Approved for %s", companyName)
+	subject := fmt.Sprintf("EasyCLA: Approved List Request Accepted for %s", companyName)
 	recipients := []string{recipientAddress}
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the company %s.</p>
-<p>You have now been approved as a Company Manager for %s. 
-This means that you can now view and apply for CLA Manager status on projects associated with your company.</p>
-<p> To get started, please log into the EasyCLA Corporate Console at %s, and select your company. 
-From there you will be able to view the list of projects which have EasyCLA configured and apply for CLA Manager status.
-</p>
+<p>You have now been added to the approval list for %s. </p>
+<p> To get started, please log into the EasyCLA Corporate Console at %s, and select your company. </p>
 %s
 %s`,
 		recipientName, companyName,
