@@ -1476,7 +1476,7 @@ def get_email_help_content(show_v2_help_link: bool) -> str:
 def get_email_sign_off_content() -> str:
     return """
         <p>Thanks,</p>
-        <p>EasyCLA support team</p>
+        <p>The LF Engineering Team</p>
     """
 
 
