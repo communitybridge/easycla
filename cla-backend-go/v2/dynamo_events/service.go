@@ -21,6 +21,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 
 	"github.com/communitybridge/easycla/cla-backend-go/company"
+	v2Company "github.com/communitybridge/easycla/cla-backend-go/v2/company"
 
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
 
@@ -48,6 +49,7 @@ type service struct {
 	functions                map[string][]EventHandlerFunc
 	signatureRepo            signatures.SignatureRepository
 	companyRepo              company.IRepository
+	companyService           v2Company.Service
 	projectsClaGroupRepo     projects_cla_groups.Repository
 	eventsRepo               claevent.Repository
 	projectRepo              project.ProjectRepository
@@ -68,6 +70,7 @@ type Service interface {
 func NewService(stage string,
 	signatureRepo signatures.SignatureRepository,
 	companyRepo company.IRepository,
+	companyService v2Company.Service,
 	pcgRepo projects_cla_groups.Repository,
 	eventsRepo claevent.Repository,
 	projectRepo project.ProjectRepository,
@@ -88,6 +91,7 @@ func NewService(stage string,
 		functions:                make(map[string][]EventHandlerFunc),
 		signatureRepo:            signatureRepo,
 		companyRepo:              companyRepo,
+		companyService:           companyService,
 		projectsClaGroupRepo:     pcgRepo,
 		eventsRepo:               eventsRepo,
 		projectRepo:              projectRepo,
@@ -100,6 +104,7 @@ func NewService(stage string,
 	}
 
 	s.registerCallback(signaturesTable, Modify, s.SignatureSignedEvent)
+	s.registerCallback(signaturesTable, Modify, s.SignatureAssignContributorEvent)
 	s.registerCallback(signaturesTable, Modify, s.SignatureAddSigTypeSignedApprovedID)
 	s.registerCallback(signaturesTable, Insert, s.SignatureAddSigTypeSignedApprovedID)
 	s.registerCallback(signaturesTable, Insert, s.SignatureAddUsersDetails)

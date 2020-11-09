@@ -32,8 +32,10 @@ import (
 
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/github"
+	v2Company "github.com/communitybridge/easycla/cla-backend-go/v2/company"
 
 	claevents "github.com/communitybridge/easycla/cla-backend-go/events"
+	"github.com/communitybridge/easycla/cla-backend-go/user"
 	"github.com/communitybridge/easycla/cla-backend-go/users"
 
 	"github.com/communitybridge/easycla/cla-backend-go/signatures"
@@ -76,6 +78,7 @@ func init() {
 		log.Panicf("Unable to load config - Error: %v", err)
 	}
 	usersRepo := users.NewRepository(awsSession, stage)
+	userRepo := user.NewDynamoRepository(awsSession, stage)
 	companyRepo := company.NewRepository(awsSession, stage)
 	signaturesRepo := signatures.NewRepository(awsSession, stage, companyRepo, usersRepo)
 	projectClaGroupRepo := projects_cla_groups.NewRepository(awsSession, stage)
@@ -108,12 +111,16 @@ func init() {
 		companyRepo,
 		projectRepo,
 	})
+	usersService := users.NewService(usersRepo, eventsService)
+	companyService := company.NewService(companyRepo, configFile.CorporateConsoleURL, userRepo, usersService)
+	v2CompanyService := v2Company.NewService(companyService, signaturesRepo, projectRepo, usersRepo, companyRepo, projectClaGroupRepo, eventsService)
 	organization_service.InitClient(configFile.APIGatewayURL, eventsService)
 	acs_service.InitClient(configFile.APIGatewayURL, configFile.AcsAPIKey)
 	dynamoEventsService = dynamo_events.NewService(
 		stage,
 		signaturesRepo,
 		companyRepo,
+		v2CompanyService,
 		projectClaGroupRepo,
 		eventsRepo,
 		projectRepo,

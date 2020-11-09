@@ -450,56 +450,6 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			return company.NewGetCompanyAdminsOK().WithXRequestID(reqID).WithPayload(adminList)
 		})
 
-	api.CompanyContributorRoleScopAssociationHandler = company.ContributorRoleScopAssociationHandlerFunc(
-		func(params company.ContributorRoleScopAssociationParams) middleware.Responder {
-			reqID := utils.GetRequestID(params.XREQUESTID)
-			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			f := logrus.Fields{
-				"functionName":   "CompanyContributorRoleScopAssociationHandler",
-				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-				"CompanySFID":    params.CompanySFID,
-				"ClaGroupID":     params.ClaGroupID,
-				"Email":          params.Body.UserEmail.String(),
-			}
-			log.WithFields(f).Debugf("processing CLA Manager Desginee by group request")
-
-			log.WithFields(f).Debugf("getting project IDs for CLA group")
-			projectCLAGroups, getErr := projectClaGroupRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
-			if getErr != nil {
-				msg := fmt.Sprintf("Error getting SF projects for claGroup: %s ", params.ClaGroupID)
-				log.WithFields(f).Warn(msg)
-				return company.NewContributorRoleScopAssociationBadRequest().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseBadRequestWithError(reqID, msg, getErr))
-			}
-			log.WithFields(f).Debugf("found %d project IDs for CLA group", len(projectCLAGroups))
-			if len(projectCLAGroups) == 0 {
-				msg := fmt.Sprintf("no projects associated with CLA Group: %s", params.ClaGroupID)
-				log.WithFields(f).Warn(msg)
-				return company.NewContributorRoleScopAssociationNotFound().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseNotFound(reqID, msg))
-			}
-
-			log.WithFields(f).Debug("associating contributor by CLA Group")
-			contributor, msg, err := service.AssociateContributorByGroup(ctx, params.CompanySFID, params.Body.UserEmail.String(), projectCLAGroups, params.ClaGroupID)
-			if err != nil {
-				if err == ErrContributorConflict {
-					return company.NewContributorRoleScopAssociationConflict().WithXRequestID(reqID).WithPayload(
-						&models.ErrorResponse{
-							Message:    msg,
-							Code:       utils.String409,
-							XRequestID: reqID,
-						})
-				}
-				log.WithFields(f).Warn(msg)
-				return company.NewContributorRoleScopAssociationBadRequest().WithXRequestID(reqID).WithPayload(
-					utils.ErrorResponseBadRequestWithError(reqID, msg, err))
-			}
-
-			return company.NewContributorRoleScopAssociationOK().WithXRequestID(reqID).WithPayload(&models.Contributors{
-				List: contributor,
-			})
-		})
-
 	api.CompanyAssignCompanyOwnerHandler = company.AssignCompanyOwnerHandlerFunc(
 		func(params company.AssignCompanyOwnerParams) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
