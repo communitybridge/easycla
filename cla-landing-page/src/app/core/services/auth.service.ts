@@ -116,7 +116,7 @@ export class AuthService {
           return this.getUser$();
         }
         this.auth0Client$
-          .pipe(concatMap((client: Auth0Client) => from(client.getTokenSilently())))
+          .pipe(concatMap((client: Auth0Client) => from(client.checkSession())))
           .subscribe((data) => { });
           console.log('User not logged in');
           this.userProfileSubject$.next(null);
