@@ -1517,12 +1517,12 @@ def github_app_activity(body, request, response):
             response.status = HTTP_OK
             return {"status": "OK"}
         except requests.exceptions.HTTPError as ex:
-            response.status = str(ex.response.status_code)
             cla.log.error(f"v4 golang api failed with : {ex.response.status_code} : {ex.response.json()}")
-            return ex.response.json()
+            response.status = HTTP_OK
+            return {"status": "OK"}
         except Exception as ex:
-            response.status = HTTP_500
             cla.log.error("v4 golang api failed with : 500 : {}".format(str(ex)))
+            response.status = HTTP_500
             return {"status": "v4_easycla_github_activity failed {}".format(str(ex))}
 
     # if not any of the events above we handle it via python
