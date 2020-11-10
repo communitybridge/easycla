@@ -21,7 +21,7 @@
           <h2>Searching for companies that you are associated with...</h2>
         </ion-row>
 
-        <ion-card-content *ngIf="!loading.companies && rows && rows.length > 0">
+        <ion-card-content *ngIf="!loading.companies && companies && companies.length > 0">
           <ion-card-header>
             <ion-card-title class="text-black">
               Companies you are Associated with in EasyCLA
@@ -35,15 +35,11 @@
 
             <ion-row justify-content-center>
               <ion-list>
-                <ion-item *ngFor="let company of rows">
-                  <ion-label *ngIf="company.Status !== 'pending' && company.Status !== 'rejected'"
-                    (click)="viewCompany(company.CompanyID, company.Status)">
-                    <a href="javascript:void(0);" [ngClass]="{'default-pointer':company.Status === 'pending'}"
-                      [title]="company.CompanyName">{{ company.CompanyName | trimCharacters:25  }}</a>
-                  </ion-label>
-                  <ion-label *ngIf="company.Status === 'pending'">
-                    <h3>{{ company.CompanyName | trimCharacters:25  }}</h3>
-                    <span class="alert" *ngIf="company.Status === 'pending'">Awaiting Approval</span>
+                <ion-item *ngFor="let company of companies">
+                  <!-- User is in the ACL ignore company.Status - should be approved if they are in the ACL already -->
+                  <ion-label (click)="viewCompany(company.id, company.status)">
+                    <a href="javascript:void(0);" [ngClass]="{'default-pointer':company.status === 'pending'}"
+                      [title]="company.name">{{ company.name | trimCharacters:25  }}</a>
                   </ion-label>
                 </ion-item>
               </ion-list>
@@ -51,7 +47,37 @@
           </ion-card-content>
         </ion-card-content>
 
-        <ion-card-content *ngIf="!loading.companies && rows && rows.length <= 0">
+        <ion-card-content *ngIf="!loading.companies && companies && companies.length > 0">
+          <ion-card-header>
+            <ion-card-title class="text-black">
+              Companies With Pending or Rejected Invites
+            </ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            <ion-row justify-content-center>
+              <ion-list>
+                <!-- Iterate over the list of companies where the user has a pending or rejected status -->
+                <ion-item *ngFor="let company of pendingRejectedCompanies">
+                  <!-- User is NOT in the ACL and STATUS == pending -->
+                  <ion-label *ngIf="!userInCompanyACL(company) && company.status === 'pending'">
+                    <h3>{{ company.name | trimCharacters:25  }}</h3>
+                    <span class="alert" *ngIf="company.status === 'pending'">Awaiting Approval</span>
+                  </ion-label>
+
+                  <!-- User is NOT in the ACL and STATUS == rejected -->
+                  <ion-label *ngIf="!userInCompanyACL(company) && company.status === 'rejected'">
+                    <h3>{{ company.name | trimCharacters:25  }}</h3>
+                    <span class="alert" *ngIf="company.status === 'rejected'">Request Rejected</span>
+                  </ion-label>
+
+                </ion-item>
+              </ion-list>
+            </ion-row>
+          </ion-card-content>
+        </ion-card-content>
+
+        <ion-card-content *ngIf="!loading.companies && companies && companies.length <= 0">
           <ion-row justify-content-center>
             <h2>You are not associated with any companies. Click Get Started to join your company.</h2>
           </ion-row>
