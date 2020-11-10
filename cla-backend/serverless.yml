@@ -573,36 +573,16 @@ resources:
       Type: AWS::CertificateManager::Certificate
       Condition: ShouldGenerateCertificate
       Properties:
-        DomainName: api.${env:ROOT_DOMAIN}
+        DomainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
         SubjectAlternativeNames:
-          - api.${env:PRODUCT_DOMAIN}
+          - ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
         ValidationMethod: DNS
 
-#    CustomRootDomain:
-#      Type: AWS::ApiGateway::DomainName
-#      Properties:
-#        CertificateArn:
-#          Ref: Cert
-#        DomainName: api.${env:ROOT_DOMAIN}
-#    RootDomainMapping:
-#      Type: AWS::ApiGateway::BasePathMapping
-#      Properties:
-#        DomainName:
-#          Ref: CustomRootDomain
-#        RestApiId:
-#          Ref: ApiGatewayRestApi
-#        Stage: ${self:provider.stage}
-#    CustomProductDomain:
-#      Type: AWS::ApiGateway::DomainName
-#      Properties:
-#        CertificateArn:
-#          Ref: Cert
-#        DomainName: api.${env:PRODUCT_DOMAIN}
-#    ProductDomainMapping:
-#      Type: AWS::ApiGateway::BasePathMapping
-#      Properties:
-#        DomainName:
-#          Ref: CustomProductDomain
-#        RestApiId:
-#          Ref: ApiGatewayRestApi
-#        Stage: ${self:provider.stage}
+  Outputs:
+    APIGatewayRootResourceID:
+      Value:
+        Fn::GetAtt:
+          - ApiGatewayRestApi
+          - RootResourceId
+      Export:
+        Name: APIGatewayRootResourceID
