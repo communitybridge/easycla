@@ -53,21 +53,29 @@ custom:
   product:
     domain:
       name:
-        # env.ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
         dev: 'api.lfcla.dev.platform.linuxfoundation.org'
         staging: 'api.lfcla.staging.platform.linuxfoundation.org'
         prod: 'api.easycla.lfx.linuxfoundation.org'
         other: 'api.dev.lfcla.com'
+        enabled:
+          dev: true
+          staging: true
+          prod: true
+          other: true
       alt:
-        # env.PRODUCT_DOMAIN: dev.lfcla.com
         dev: 'api.dev.lfcla.com'
         staging: 'api.staging.lfcla.com'
         prod: 'api.easycla.lfx.linuxfoundation.org'
         other: 'api.dev.lfcla.com'
+        enabled:
+          dev: true
+          staging: true
+          prod: false
+          other: true
 
   customDomains:
     # https://github.com/amplify-education/serverless-domain-manager
-    - rest:
+    - primaryDomain:
       domainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
       stage: ${opt:stage}
       basePath: ''  # a value of '/' will not work
@@ -75,8 +83,11 @@ custom:
       securityPolicy: tls_1_2
       apiType: rest
       certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
+      protocols:
+        - https
       enabled: true
-    - rest:
+
+    - alternateDomain:
       domainName: ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
       stage: ${opt:stage}
       basePath: ''  # a value of '/' will not work
@@ -84,7 +95,9 @@ custom:
       securityPolicy: tls_1_2
       apiType: rest
       certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
-      enabled: isNotProd
+      protocols:
+        - https
+      enabled: ${self:custom.product.domain.alt.enabled.${opt:stage}, self:custom.product.domain.alt.enabled.other}
 
   ses_from_email:
     dev: admin@dev.lfcla.com
@@ -98,8 +111,10 @@ provider:
   region: us-east-1
   timeout: 60 # optional, in seconds, default is 6
   logRetentionInDays: 14
-  # Configuring API Gateway to return binary media can be done via the binaryMediaTypes config:
   apiGateway:
+    # https://www.serverless.com/framework/docs/deprecations/#AWS_API_GATEWAY_NAME_STARTING_WITH_SERVICE
+    shouldStartNameWithService: true
+    # Configuring API Gateway to return binary media can be done via the binaryMediaTypes config:
     binaryMediaTypes:
       #- '*/*'
       - 'image/*'
@@ -358,7 +373,6 @@ functions:
     handler: auth/bin/authorizer
     description: "EasyCLA API authorizer"
     runtime: go1.x
-    cors: true
     package:
       individually: true
       include:
