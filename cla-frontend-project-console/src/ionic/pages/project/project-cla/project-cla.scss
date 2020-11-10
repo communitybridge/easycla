@@ -143,6 +143,9 @@ project-cla {
   }
 
   .contract-title-buttons {
+    button {
+      background-color: transparent;
+    }
     button img {
       height: 24px;
       width: auto;
