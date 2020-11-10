@@ -99,9 +99,9 @@ ion-icon[name="menu"] {
 
 .page-content {
   transition: margin 0.3s;
-  min-height: calc(100vh - 200px);
+  min-height: calc(100vh - 244px);
 
   &.expanded {
-    min-height: calc(100vh - 280px);
+    min-height: calc(100vh - 324px);
   }
 }

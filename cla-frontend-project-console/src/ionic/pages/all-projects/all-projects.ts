@@ -25,6 +25,7 @@ export class AllProjectsPage {
   allProjects: any;
   allFilteredProjects: any;
   expanded: boolean = true;
+  errorMessage: string = null;
 
   constructor(
     public navCtrl: NavController,
@@ -61,9 +62,12 @@ export class AllProjectsPage {
   }
 
   handleErrors(error) {
+    this.loading.projects = false;
     switch (error.status) {
       case 401:
         this.auth.logout();
+      default:
+        this.errorMessage = 'You do not have access to projects, please contact to your administrator';
     }
   }
 
