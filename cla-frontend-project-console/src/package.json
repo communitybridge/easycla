@@ -12,7 +12,7 @@
     "build": "./node_modules/.bin/ionic-app-scripts build",
     "prebuild:dev": "STAGE_ENV=dev node ./config/scripts/prefetch-ssm.js",
     "build:dev": "STAGE_ENV=dev ./node_modules/.bin/ionic-app-scripts build",
-    "serve:dev": "STAGE_ENV=dev ./node_modules/.bin/ionic-app-scripts serve",
+    "serve:dev": "USE_LOCAL_SERVICES=false STAGE_ENV=dev ./node_modules/.bin/ionic-app-scripts serve",
     "serve:dev:local": "USE_LOCAL_SERVICES=true STAGE_ENV=dev ./node_modules/.bin/ionic-app-scripts serve",
     "prebuild:staging": "STAGE_ENV=staging node ./config/scripts/prefetch-ssm.js",
     "build:staging": "STAGE_ENV=staging ./node_modules/.bin/ionic-app-scripts build",
