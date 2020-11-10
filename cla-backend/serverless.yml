@@ -67,13 +67,13 @@ custom:
 
   customDomains:
     # https://github.com/amplify-education/serverless-domain-manager
-    - http:
+    - rest:
       domainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
       stage: ${opt:stage}
       basePath: ''  # a value of '/' will not work
       certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
       enabled: true
-    - http:
+    - rest:
       domainName: ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
       stage: ${opt:stage}
       basePath: ''  # a value of '/' will not work
