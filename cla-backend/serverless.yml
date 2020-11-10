@@ -71,12 +71,18 @@ custom:
       domainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
       stage: ${opt:stage}
       basePath: ''  # a value of '/' will not work
+      endpointType: 'regional'
+      securityPolicy: tls_1_2
+      apiType: rest
       certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
       enabled: true
     - rest:
       domainName: ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
       stage: ${opt:stage}
       basePath: ''  # a value of '/' will not work
+      endpointType: 'regional'
+      securityPolicy: tls_1_2
+      apiType: rest
       certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
       enabled: isNotProd
 
