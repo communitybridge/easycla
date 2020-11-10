@@ -208,10 +208,10 @@ ion-content .scroll-content > header {
 
 .page-content {
   transition: margin 0.3s;
-  min-height: calc(100vh - 219px);
+  min-height: calc(100vh - 260px);
 
   &.expanded {
-    min-height: calc(100vh - 295px);
+    min-height: calc(100vh - 340px);
   }
 }
 
