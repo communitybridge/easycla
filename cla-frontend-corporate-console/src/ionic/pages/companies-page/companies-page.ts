@@ -1,11 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, OnInit } from '@angular/core';
-import { IonicPage, ModalController, NavController } from 'ionic-angular';
-import { ClaService } from '../../services/cla.service';
-import { Restricted } from '../../decorators/restricted';
-import { EnvConfig } from '../../services/cla.env.utils';
+import {Component, OnInit} from '@angular/core';
+import {IonicPage, ModalController, NavController} from 'ionic-angular';
+import {ClaService} from '../../services/cla.service';
+import {Restricted} from '../../decorators/restricted';
+import {ClaCompanyWithInvitesModel} from "../../models/cla-company-with-invites";
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -19,12 +19,12 @@ import { EnvConfig } from '../../services/cla.env.utils';
 })
 export class CompaniesPage implements OnInit {
   loading: any;
-  companies: any;
+  companies: ClaCompanyWithInvitesModel[] = [];
+  pendingRejectedCompanies: ClaCompanyWithInvitesModel[] = [];
   userId: string;
   userEmail: string;
   userName: string;
   companyId: string;
-  rows: any[];
   submitAttempt: boolean = false;
   currentlySubmitting: boolean = false;
   expanded: boolean = true;
@@ -64,9 +64,8 @@ export class CompaniesPage implements OnInit {
       (exception) => {
         // Typically get this if the user is not found in our database
         this.loading.companies = false;
-        this.rows = [];
         if (exception.status === 404) {
-          // Create the user if it does't exist
+          // Create the user if it does not exist
           const user = {
             lfUsername: this.userId,
             username: this.userName,
@@ -92,12 +91,20 @@ export class CompaniesPage implements OnInit {
    */
   getCompaniesByUserManagerWithInvites(userId) {
     this.claService.getCompaniesByUserManagerWithInvites(userId).subscribe(
-      (companies) => {
+      (response) => {
         this.loading.companies = false;
-        if (companies['companies-with-invites']) {
-          this.rows = this.mapCompanies(companies['companies-with-invites']);
+        if (response['companies-with-invites']) {
+          let companyModels: ClaCompanyWithInvitesModel[] = this.mapCompanies(response['companies-with-invites']);
+          for (let companyModel of companyModels) {
+            if (this.userInCompanyACL(companyModel)) {
+              this.companies.push(companyModel);
+            } else {
+              this.pendingRejectedCompanies.push(companyModel);
+            }
+          }
         } else {
-          this.rows = [];
+          this.companies = [];
+          this.pendingRejectedCompanies = [];
         }
       },
       (exception) => {
@@ -114,38 +121,49 @@ export class CompaniesPage implements OnInit {
     }
   }
 
-  mapCompanies(companies) {
-    let rows = [];
-    companies = this.sortData(companies);
-    companies = this.removeDuplicates(companies);
-    for (let company of companies) {
-      rows.push({
-        CompanyID: company.companyID,
-        CompanyName: company.companyName,
-        Status: company.status,
-        ProjectName: ''
-      });
+  mapCompanies(companyResponseModels: any): ClaCompanyWithInvitesModel[] {
+    let companyModels: ClaCompanyWithInvitesModel[] = [];
+    for (let companyResponseModel of companyResponseModels) {
+      let companyModel = new ClaCompanyWithInvitesModel(
+        companyResponseModel.companyID,
+        companyResponseModel.companyName,
+        companyResponseModel.companyACL,
+        companyResponseModel.status,
+        companyResponseModel.created,
+        companyResponseModel.updated,
+      );
+      companyModels.push(companyModel);
     }
-    return rows;
+
+    // Sort and remove duplicates
+    companyModels = this.sortData(companyModels);
+    companyModels = this.removeDuplicates(companyModels);
+
+    return companyModels;
   }
 
-  sortData(companies: any[]) {
+  sortData(companies: ClaCompanyWithInvitesModel[]) {
     let joinedCompanies = companies.filter(company => (company.status !== 'pending' && company.status !== 'rejected'))
     let requestCompanies = companies.filter(company => company.status === 'pending')
     joinedCompanies = joinedCompanies.sort((a, b) => {
-      return a.companyName.toLowerCase().localeCompare(b.companyName.toLowerCase());
+      return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
     });
     requestCompanies = requestCompanies.sort((a, b) => {
-      return a.companyName.toLowerCase().localeCompare(b.companyName.toLowerCase());
+      return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
     });
+
     return joinedCompanies.concat(requestCompanies);
   }
 
-  removeDuplicates(companies: any[]) {
-    let seenCompanies = {};
+  removeDuplicates(companies: ClaCompanyWithInvitesModel[]) {
+    interface SeenMapType {
+      [key: string]: boolean;
+    }
+
+    let seenCompanies: SeenMapType = {};
     return companies.filter(company => {
-      if (seenCompanies[company.companyID] == null) {
-        seenCompanies[company.companyID] = true;
+      if (seenCompanies[company.id] == null) {
+        seenCompanies[company.id] = true;
         return true; // unique, pass filter
       }
       return false; // duplicate, fail filter
@@ -154,19 +172,22 @@ export class CompaniesPage implements OnInit {
 
   openSelectCompany() {
     if (!this.loading.companies) {
-      //console.log(this.rows);
       let modal = this.modalCtrl.create('AddCompanyModal', {
         // For this modal, we share the list of companies where the user is either pending acceptance, approved/joined.
         // From this, the modal dialog will filter the list so that these companies are not shown. We allow the user
         // to request to join companies where they have been previously rejected.
-        associatedCompanies: this.rows.filter(row => row.Status === 'pending' || row.Status === 'Joined' || row.Status === 'approved')
-        //associatedCompanies: this.rows
+        associatedCompanies: this.companies.filter(company => company.status === 'pending' || company.status === 'Joined' || company.status === 'approved')
       });
+
       modal.present();
     }
   }
 
   onClickToggle(hasExpanded) {
     this.expanded = hasExpanded;
+  }
+
+  userInCompanyACL(company: ClaCompanyWithInvitesModel) {
+    return company.acl.indexOf(this.userId) > -1;
   }
 }
