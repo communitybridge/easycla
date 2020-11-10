@@ -65,12 +65,20 @@ custom:
         prod: 'api.easycla.lfx.linuxfoundation.org'
         other: 'api.dev.lfcla.com'
 
-  customDomain:
+  customDomains:
     # https://github.com/amplify-education/serverless-domain-manager
-    domainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
-    stage: ${opt:stage}
-    basePath: ''  # a value of '/' will not work
-    certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
+    - http:
+      domainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
+      stage: ${opt:stage}
+      basePath: ''  # a value of '/' will not work
+      certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
+      enabled: true
+    - http:
+      domainName: ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
+      stage: ${opt:stage}
+      basePath: ''  # a value of '/' will not work
+      certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
+      enabled: isNotProd
 
   ses_from_email:
     dev: admin@dev.lfcla.com
