@@ -122,7 +122,7 @@ body ion-app.wp {
 
 .content-top-show {
   .scroll-content {
-    margin-top: 182px;
+    margin-top: 162px;
   }
 }
 .content-top-hide {
@@ -139,6 +139,6 @@ body ion-app.wp {
   min-height: calc(100vh - 244px);
 
   &.expanded {
-    min-height: calc(100vh - 324px);
+    min-height: calc(100vh - 304px);
   }
 }
