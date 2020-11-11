@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
+
 # The golang lambda file list
 declare -a golang_files=( "backend-aws-lambda"
    "user-subscribe-lambda"

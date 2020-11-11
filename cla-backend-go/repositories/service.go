@@ -28,6 +28,7 @@ type Service interface {
 	UpdateClaGroupID(ctx context.Context, repositoryID, claGroupID string) error
 	ListProjectRepositories(ctx context.Context, externalProjectID string) (*models.ListGithubRepositories, error)
 	GetRepository(ctx context.Context, repositoryID string) (*models.GithubRepository, error)
+	GetRepositoryByName(ctx context.Context, repositoryName string) (*models.GithubRepository, error)
 	DisableRepositoriesByProjectID(ctx context.Context, projectID string) (int, error)
 	GetRepositoriesByCLAGroup(ctx context.Context, claGroupID string) ([]*models.GithubRepository, error)
 	GetRepositoriesByOrganizationName(ctx context.Context, gitHubOrgName string) ([]*models.GithubRepository, error)
@@ -61,10 +62,15 @@ func (s *service) UpdateClaGroupID(ctx context.Context, repositoryID, claGroupID
 
 func (s *service) AddGithubRepository(ctx context.Context, externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
 	f := logrus.Fields{
-		"functionName":   "AddGithubRepository",
-		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-		"projectSFID":    externalProjectID,
-		"claGroupID":     input.RepositoryProjectID,
+		"functionName":               "AddGithubRepository",
+		utils.XREQUESTID:             ctx.Value(utils.XREQUESTID),
+		"projectSFID":                externalProjectID,
+		"claGroupID":                 utils.StringValue(input.RepositoryProjectID),
+		"repositoryName":             input.RepositoryName,
+		"repositoryOrganizationName": input.RepositoryOrganizationName,
+		"repositoryType":             input.RepositoryType,
+		"repositoryProjectID":        input.RepositoryProjectID,
+		"repositoryURL":              input.RepositoryURL,
 	}
 	if input.RepositoryName != nil && *input.RepositoryName == "" {
 		return nil, errors.New("github repository name required")
@@ -81,23 +87,52 @@ func (s *service) AddGithubRepository(ctx context.Context, externalProjectID str
 
 	org, err := s.ghOrgRepo.GetGithubOrganizationByName(ctx, utils.StringValue(input.RepositoryOrganizationName))
 	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading github organization by name: %s", utils.StringValue(input.RepositoryOrganizationName))
 		return nil, err
 	}
 	if len(org.List) == 0 {
+		log.WithFields(f).Warnf("github app not installed on github organization: %s", utils.StringValue(input.RepositoryOrganizationName))
 		return nil, errors.New("github app not installed on github organization")
 	}
 	repoGithubID, err := strconv.ParseInt(utils.StringValue(input.RepositoryExternalID), 10, 64)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem converting repository external ID - should be an integer value: %s", utils.StringValue(input.RepositoryExternalID))
 		return nil, err
 	}
-	ghRepo, err := github.GetRepositoryByExternalID(org.List[0].OrganizationInstallationID, repoGithubID)
+	ghRepo, err := github.GetRepositoryByExternalID(ctx, org.List[0].OrganizationInstallationID, repoGithubID)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading repository by organization installation ID: %d and repo github id: %d", org.List[0].OrganizationInstallationID, repoGithubID)
 		return nil, err
 	}
+
 	log.Debugf("ghRepo.HTMLURL %s, input.RepositoryURL  %s", *ghRepo.HTMLURL, *input.RepositoryURL)
 	if !strings.EqualFold(*ghRepo.HTMLURL, *input.RepositoryURL) {
 		return nil, errors.New("github repository not found")
 	}
+
+	// Check to see if the repository already exists...
+	existingModel, err := s.GetRepositoryByName(ctx, utils.StringValue(input.RepositoryName))
+	if err != nil {
+		// If not found - ok, otherwise we have a bigger problem
+		if errors.Is(err, ErrGithubRepositoryNotFound) {
+			log.WithFields(f).Debug("existing repository not found - will create")
+		} else {
+			return nil, err
+		}
+	}
+
+	if existingModel != nil {
+		log.WithFields(f).Debug("existing repository found - enabling it...")
+		err := s.EnableRepository(ctx, existingModel.RepositoryID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warn("problem enabling repository")
+			return nil, err
+		}
+
+		return s.repo.GetRepository(ctx, existingModel.RepositoryID)
+	}
+
+	// Doesn't exist - create it
 	return s.repo.AddGithubRepository(ctx, externalProjectID, projectSFID, input)
 }
 
@@ -112,8 +147,14 @@ func (s *service) DisableRepository(ctx context.Context, repositoryID string) er
 func (s *service) ListProjectRepositories(ctx context.Context, externalProjectID string) (*models.ListGithubRepositories, error) {
 	return s.repo.ListProjectRepositories(ctx, externalProjectID, "", true)
 }
+
 func (s *service) GetRepository(ctx context.Context, repositoryID string) (*models.GithubRepository, error) {
 	return s.repo.GetRepository(ctx, repositoryID)
+}
+
+// GetRepositoryByName returns the repository by name: project-level/cla-project
+func (s *service) GetRepositoryByName(ctx context.Context, repositoryName string) (*models.GithubRepository, error) {
+	return s.repo.GetRepositoryByName(ctx, repositoryName)
 }
 
 // DisableRepositoriesByProjectID disables the repositories by project ID
