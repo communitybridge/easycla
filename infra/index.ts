@@ -436,6 +436,7 @@ function buildRepositoriesTable(importResources: boolean): aws.dynamodb.Table {
       name: 'cla-' + stage + '-repositories',
       attributes: [
         { name: 'repository_id', type: 'S' },
+        { name: 'repository_name', type: 'S' },
         { name: 'repository_external_id', type: 'S' },
         { name: 'repository_project_id', type: 'S' },
         { name: 'repository_sfdc_id', type: 'S' },
@@ -452,6 +453,13 @@ function buildRepositoriesTable(importResources: boolean): aws.dynamodb.Table {
         {
           name: 'sfdc-repository-index',
           hashKey: 'repository_sfdc_id',
+          projectionType: 'ALL',
+          readCapacity: defaultReadCapacity,
+          writeCapacity: defaultWriteCapacity,
+        },
+        {
+          name: 'repository-name-index',
+          hashKey: 'repository_name',
           projectionType: 'ALL',
           readCapacity: defaultReadCapacity,
           writeCapacity: defaultWriteCapacity,
