@@ -1211,10 +1211,25 @@ aws-sdk@^2.624.0:
     uuid "3.3.2"
     xml2js "0.4.19"
 
-aws-sdk@^2.756.0, aws-sdk@^2.786.0:
+aws-sdk@^2.756.0:
   version "2.787.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.787.0.tgz#4d8966d11c7dbe770de26632e552c97b2d91e340"
   integrity sha512-3WlUdWqUB8Vhdvj/7TENr/7SEmQzxmnHxOJ8l2WjZbcMRSuI0/9Ym4p1TC3hf21VDVDhkdGlw60QqpZQ1qb+Mg==
+  dependencies:
+    buffer "4.9.2"
+    events "1.1.1"
+    ieee754 "1.1.13"
+    jmespath "0.15.0"
+    querystring "0.2.0"
+    sax "1.2.1"
+    url "0.10.3"
+    uuid "3.3.2"
+    xml2js "0.4.19"
+
+aws-sdk@^2.787.0:
+  version "2.789.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.789.0.tgz#a1b0a8b8b4227a7947c04e8d75239ba27d2deb93"
+  integrity sha512-Jqq+M4N0EgkyS4OPf05UHa7IWUcpuBdnpwMRgBnu4Ju6PxpOTh1UQcmYepVmIN3m6YVpLwFctEYzAMJFM3LT1A==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"
@@ -5227,10 +5242,10 @@ serverless-wsgi@^1.5.2:
     hasbin "^1.2.3"
     lodash "^4.17.15"
 
-serverless@^2.6.0:
-  version "2.11.0"
-  resolved "https://registry.yarnpkg.com/serverless/-/serverless-2.11.0.tgz#ebea502c1aafb4c0c310e3b8312340882848187d"
-  integrity sha512-xR6ntWPdLA2gMauiuXAXUImUEFEVe8vmPbIZ4pbc34VwbztyeAnhUf4JyOL9wfDHStdJC2vqZ/zDngTJbM0DxQ==
+serverless@^2.11.1:
+  version "2.11.1"
+  resolved "https://registry.yarnpkg.com/serverless/-/serverless-2.11.1.tgz#0a6344d67bdde4a33f00ac67a9e009852c619bd9"
+  integrity sha512-BQN53zkm/HWh+QtzaR/uXHRAxAcabHkstyRMo4+9JJc+DM7cQM9cyRBm15BW9PKMO9c3aCKYNTJSb5cegn7qmw==
   dependencies:
     "@serverless/cli" "^1.5.2"
     "@serverless/components" "^3.3.0"
@@ -5239,7 +5254,7 @@ serverless@^2.6.0:
     ajv "^6.12.6"
     ajv-keywords "^3.5.2"
     archiver "^5.0.2"
-    aws-sdk "^2.786.0"
+    aws-sdk "^2.787.0"
     bluebird "^3.7.2"
     boxen "^4.2.0"
     cachedir "^2.3.0"
@@ -5281,7 +5296,7 @@ serverless@^2.6.0:
     untildify "^4.0.0"
     uuid "^8.3.1"
     yaml-ast-parser "0.0.43"
-    yargs-parser "^20.2.3"
+    yargs-parser "^20.2.4"
 
 set-blocking@^2.0.0, set-blocking@~2.0.0:
   version "2.0.0"
@@ -6230,10 +6245,10 @@ yargs-parser@^18.1.2:
     camelcase "^5.0.0"
     decamelize "^1.2.0"
 
-yargs-parser@^20.2.3:
-  version "20.2.3"
-  resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-20.2.3.tgz#92419ba867b858c868acf8bae9bf74af0dd0ce26"
-  integrity sha512-emOFRT9WVHw03QSvN5qor9QQT9+sw5vwxfYweivSMHTcAXPefwVae2FjO7JJjj8hCE4CzPOPeFM83VwT29HCww==
+yargs-parser@^20.2.4:
+  version "20.2.4"
+  resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-20.2.4.tgz#b42890f14566796f85ae8e3a25290d205f154a54"
+  integrity sha512-WOkpgNhPTlE73h4VFAFsOnomJVaovO8VqLDzy5saChRBFQFBoMYirowyW+Q9HB4HFF4Z7VZTiG3iSzJJA29yRA==
 
 yargs@^15.3.1:
   version "15.4.1"
