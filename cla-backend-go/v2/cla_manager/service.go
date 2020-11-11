@@ -1002,8 +1002,12 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		log.Debug(msg)
 	}
 
-	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, projectCLAGroups[0].FoundationSFID)
+	if len(projectCLAGroups) == 0 {
+		msg := fmt.Sprintf("Error getting SF projects for claGroup: %s ", projectID)
+		return nil, errors.New(msg)
+	}
 
+	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, projectCLAGroups[0].FoundationSFID)
 	if signedErr != nil {
 		msg := fmt.Sprintf("Problem checking project: %s , error: %+v", projectID, signedErr)
 		log.WithFields(f).Warn(msg)
