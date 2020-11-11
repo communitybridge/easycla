@@ -54,6 +54,15 @@ func (mr *MockServiceMockRecorder) AddGithubRepository(ctx, externalProjectID, i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddGithubRepository", reflect.TypeOf((*MockService)(nil).AddGithubRepository), ctx, externalProjectID, input)
 }
 
+// GetRepositoryByName mocks base method
+func (m *MockService) GetRepositoryByName(ctx context.Context, repositoryName string) (*models.GithubRepository, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRepositoryByName", ctx, repositoryName)
+	ret0, _ := ret[0].(*models.GithubRepository)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
 // EnableRepository mocks base method
 func (m *MockService) EnableRepository(ctx context.Context, repositoryID string) error {
 	m.ctrl.T.Helper()

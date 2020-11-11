@@ -40,13 +40,13 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 		func(params github_repositories.AddProjectGithubRepositoryParams, claUser *user.CLAUser) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			if !claUser.IsAuthorizedForProject(params.ProjectSFID) {
-				return github_repositories.NewAddProjectGithubRepositoryForbidden().WithPayload(&models.ErrorResponse{
-					Code: "403",
-					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Add GitHub Repository with Project scope of %s",
-						claUser.LFUsername, params.ProjectSFID),
-				})
-			}
+			//if !claUser.IsAuthorizedForProject(params.ProjectSFID) {
+			//	return github_repositories.NewAddProjectGithubRepositoryForbidden().WithPayload(&models.ErrorResponse{
+			//		Code: "403",
+			//		Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Add GitHub Repository with Project scope of %s",
+			//			claUser.LFUsername, params.ProjectSFID),
+			//	})
+			//}
 			result, err := service.AddGithubRepository(ctx, params.ProjectSFID, params.GithubRepositoryInput)
 			if err != nil {
 				return github_repositories.NewAddProjectGithubRepositoryBadRequest().WithPayload(errorResponse(err))
