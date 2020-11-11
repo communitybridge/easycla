@@ -11,6 +11,7 @@ package:
     - ./backend-aws-lambda
     - ./user-subscribe-lambda
     - ./metrics-aws-lambda
+    - ./metrics-report-lambda
     - ./dynamo-events-lambda
     - ./zipbuilder-scheduler-lambda
     - ./zipbuilder-lambda
@@ -465,6 +466,22 @@ functions:
       individually: true
       include:
         - ./metrics-aws-lambda
+
+  reportMetrics:
+    description: "EasyCLA Report Metrics API handler"
+    runtime: go1.x
+    handler: metrics-report-lambda
+    timeout: 900 # maximum time allowed
+    events:
+      - schedule:
+          description: 'A function that reports metrics on a given schedule'
+          rate: rate(24 hour)
+          enabled: true
+    package:
+      individually: true
+      include:
+        - ./metrics-report-lambda
+
 
   zipbuilder-scheduler-lambda:
     handler: zipbuilder-scheduler-lambda
