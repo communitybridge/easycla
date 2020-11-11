@@ -103,7 +103,7 @@ func (s *service) AddGithubRepository(ctx context.Context, projectSFID string, i
 	if err != nil {
 		return nil, err
 	}
-	ghRepo, err := github.GetRepositoryByExternalID(org.List[0].OrganizationInstallationID, repoGithubID)
+	ghRepo, err := github.GetRepositoryByExternalID(ctx, org.List[0].OrganizationInstallationID, repoGithubID)
 	if err != nil {
 		return nil, err
 	}
