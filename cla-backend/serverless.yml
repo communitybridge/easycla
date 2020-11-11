@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 service: cla-backend
-frameworkVersion: '^2.6.0'
+frameworkVersion: '^2.11.0'
 
 package:
   # Exclude all first - selectively add in lambda functions
@@ -79,7 +79,6 @@ custom:
       domainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
       stage: ${opt:stage}
       basePath: ''  # a value of '/' will not work
-      endpointType: 'regional'
       securityPolicy: tls_1_2
       apiType: rest
       certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
@@ -91,7 +90,6 @@ custom:
       domainName: ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
       stage: ${opt:stage}
       basePath: ''  # a value of '/' will not work
-      endpointType: 'regional'
       securityPolicy: tls_1_2
       apiType: rest
       certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
