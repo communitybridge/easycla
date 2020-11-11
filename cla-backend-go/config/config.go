@@ -70,6 +70,9 @@ type Config struct {
 
 	// LFXPortalURL is url of the LFX UI for the particular environment
 	LFXPortalURL string `json:"lfx_portal_url"`
+
+	// MetricsReport has the transport config to send the metrics data
+	MetricsReport MetricsReport `json:"metrics_report"`
 }
 
 // Auth0 model
@@ -114,6 +117,12 @@ type Github struct {
 	AccessToken   string `json:"accessToken"`
 	AppID         int    `json:"app_id"`
 	AppPrivateKey string `json:"app_private_key"`
+}
+
+// MetricsReport keeps the config needed to send the metrics data report
+type MetricsReport struct {
+	AwsSQSRegion   string `json:"aws_sqs_region"`
+	AwsSQSQueueURL string `json:"aws_sqs_queue_url"`
 }
 
 // GetConfig returns the current EasyCLA configuration

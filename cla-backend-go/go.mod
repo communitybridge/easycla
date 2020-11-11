@@ -9,13 +9,14 @@ replace github.com/awslabs/aws-lambda-go-api-proxy => github.com/LF-Engineering/
 require (
 	github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
 	github.com/LF-Engineering/lfx-kit v0.1.18
-	github.com/LF-Engineering/lfx-models v0.6.9
+	github.com/LF-Engineering/lfx-models v0.6.25
 	github.com/aws/aws-lambda-go v1.17.0
 	github.com/aws/aws-sdk-go v1.30.14
 	github.com/aymerick/raymond v2.0.2+incompatible
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/bradleyfalzon/ghinstallation v1.1.1
+	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fnproject/fdk-go v0.0.2
 	github.com/fsnotify/fsnotify v1.4.9 // indirect

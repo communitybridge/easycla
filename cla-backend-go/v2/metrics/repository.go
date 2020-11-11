@@ -338,6 +338,7 @@ func (tcm *TotalCountMetrics) processSignature(sig *ItemSignature, sigType int, 
 		} else {
 			tcm.NonLfMembersCLACount++
 		}
+		tcm.CLAsSignedCount++
 	case EmployeeSignature:
 		userID := sig.SignatureReferenceID
 		increaseCountIfNotPresent(tcm.corporateContributors, &tcm.CorporateContributorsCount, userID)
@@ -346,6 +347,7 @@ func (tcm *TotalCountMetrics) processSignature(sig *ItemSignature, sigType int, 
 		userID := sig.SignatureReferenceID
 		increaseCountIfNotPresent(tcm.individualContributors, &tcm.IndividualContributorsCount, userID)
 		increaseCountIfNotPresent(tcm.contributors, &tcm.ContributorsCount, userID)
+		tcm.CLAsSignedCount++
 	}
 }
 
@@ -578,6 +580,7 @@ func (repo *repo) processRepositoriesTable(metrics *Metrics) error {
 	log.Println("processing repositories table")
 	projection := expression.NamesList(
 		expression.Name("repository_project_id"),
+		expression.Name("enabled"),
 	)
 	repositoriesTableName := fmt.Sprintf("cla-%s-repositories", repo.stage)
 	var repos []*ItemRepository
@@ -586,6 +589,9 @@ func (repo *repo) processRepositoriesTable(metrics *Metrics) error {
 		return err
 	}
 	for _, r := range repos {
+		if r.Enabled {
+			metrics.TotalCountMetrics.GithubRepositoriesEnabledCount++
+		}
 		metrics.TotalCountMetrics.GithubRepositoriesCount++
 		metrics.ProjectMetrics.processRepositories(r)
 	}
@@ -605,6 +611,8 @@ func (repo *repo) processGerritInstancesTable(metrics *Metrics) error {
 	}
 	for _, gi := range gerritInstances {
 		metrics.TotalCountMetrics.GerritRepositoriesCount++
+		// TODO: how do we check if they're enabled
+		metrics.TotalCountMetrics.GerritRepositoriesEnabledCount++
 		metrics.ProjectMetrics.processGerritInstance(gi)
 	}
 	return nil
@@ -637,6 +645,7 @@ func (repo *repo) processProjectsTable(metrics *Metrics) error {
 		expression.Name("project_id"),
 		expression.Name("project_external_id"),
 		expression.Name("project_name"),
+		expression.Name("project_live"),
 	)
 	var projects []*ItemProject
 	err := repo.scanTable(projectTableName, projection, nil, &projects)
@@ -645,6 +654,9 @@ func (repo *repo) processProjectsTable(metrics *Metrics) error {
 	}
 	for _, project := range projects {
 		metrics.TotalCountMetrics.ProjectsCount++
+		if project.ProjectLive {
+			metrics.TotalCountMetrics.ProjectsLiveCount++
+		}
 		metrics.ProjectMetrics.processProjectItem(project, repo.apiGatewayURL)
 	}
 	return nil
@@ -771,7 +783,7 @@ func (repo *repo) calculateMetrics() (*Metrics, error) {
 
 func (repo *repo) saveMetrics(metrics *Metrics) error {
 	t := time.Now()
-	err := repo.saveTotalMetris(metrics.TotalCountMetrics)
+	err := repo.saveTotalMetrics(metrics.TotalCountMetrics)
 	if err != nil {
 		return err
 	}
@@ -866,7 +878,7 @@ func addIDTypeTime(item map[string]*dynamodb.AttributeValue, id string, metricTy
 	utils.AddStringAttribute(item, "created_at", ctime)
 }
 
-func (repo *repo) saveTotalMetris(tm *TotalCountMetrics) error {
+func (repo *repo) saveTotalMetrics(tm *TotalCountMetrics) error {
 	log.Println("saving total count metrics")
 	tm.RepositoriesCount = tm.GithubRepositoriesCount + tm.GerritRepositoriesCount
 	av, err := dynamodbattribute.MarshalMap(tm)
