@@ -951,6 +951,32 @@ func (s *service) CreateCLAManagerRequest(ctx context.Context, contactAdmin bool
 	return claManagerDesignee, nil
 }
 
+func (s *service) ValidateInviteCompanyAdminCheck(ctx context.Context, f logrus.Fields, projectID string, contactAdmin bool, userEmail string, name string, contributor *v1User.User) error {
+	validateError := validateInviteCompanyAdmin(contactAdmin, userEmail, name, contributor)
+	if validateError != nil {
+		return validateError
+	}
+
+	claGroupModel, projectErr := s.projectService.GetCLAGroupByID(ctx, projectID)
+	if projectErr != nil || claGroupModel == nil {
+		log.WithFields(f).WithError(projectErr).Warn("problem loading CLA group by ID")
+
+		var e *utils.CLAGroupNotFound
+		if errors.As(projectErr, &e) {
+			log.WithFields(f).WithError(projectErr).Warn("problem loading CLA group by ID - cla group not found")
+			return ErrClaGroupNotFound
+
+		}
+		if errors.Is(projectErr, project.ErrProjectDoesNotExist) {
+			log.WithFields(f).WithError(projectErr).Warn("problem cla group not found")
+			return ErrClaGroupNotFound
+		}
+		return ErrClaGroupBadRequest
+
+	}
+	return nil
+}
+
 func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, companyID string, projectID string, userEmail string, name string, contributor *v1User.User, LfxPortalURL string) ([]*models.ClaManagerDesignee, error) {
 	orgService := v2OrgService.GetClient()
 	projectService := v2ProjectService.GetClient()
@@ -963,27 +989,9 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		"userEmail":      userEmail,
 		"name":           name}
 
-	validateError := validateInviteCompanyAdmin(contactAdmin, userEmail, name, contributor)
+	validateError := s.ValidateInviteCompanyAdminCheck(ctx, f, projectID, contactAdmin, userEmail, name, contributor)
 	if validateError != nil {
 		return nil, validateError
-	}
-
-	claGroupModel, projectErr := s.projectService.GetCLAGroupByID(ctx, projectID)
-	if projectErr != nil || claGroupModel == nil {
-		log.WithFields(f).WithError(projectErr).Warn("problem loading CLA group by ID")
-
-		var e *utils.CLAGroupNotFound
-		if errors.As(projectErr, &e) {
-			log.WithFields(f).WithError(projectErr).Warn("problem loading CLA group by ID - cla group not found")
-			return nil, ErrClaGroupNotFound
-
-		}
-		if errors.Is(projectErr, project.ErrProjectDoesNotExist) {
-			log.WithFields(f).WithError(projectErr).Warn("problem cla group not found")
-			return nil, ErrClaGroupNotFound
-		}
-		return nil, ErrClaGroupBadRequest
-
 	}
 
 	// Get project cla Group records
@@ -1070,6 +1078,11 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		return designeeScopes, nil
 	}
 
+	signedError := s.ProjectComapnySignnedOrNot(ctx, f, signedAtFoundation, projectCLAGroups, companyModel)
+	if signedError != nil {
+		return nil, signedError
+	}
+
 	// Get suggested CLA Manager user details
 	user, userErr := userService.SearchUserByEmail(userEmail)
 	if userErr != nil || (user != nil && user.Username == "") {
@@ -1131,6 +1144,40 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 
 	return designeeScopes, nil
 
+}
+func (s *service) ProjectComapnySignnedOrNot(ctx context.Context, f logrus.Fields, signedAtFoundation bool, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, companyModel *v1Models.Company) error {
+	if signedAtFoundation {
+		foundationSFID := projectCLAGroups[0].FoundationSFID
+
+		log.WithFields(f).Debugf("checking if company/project is signed with CLA managers...")
+		isSigned, signedErr := s.isSigned(ctx, companyModel, foundationSFID)
+		if signedErr != nil {
+			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - %s", signedErr)
+			log.WithFields(f).Warn(msg)
+			return signedErr
+		}
+		if isSigned {
+			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project: %s is already signed", foundationSFID)
+			log.WithFields(f).Warn(msg)
+			return ErrProjectSigned
+		}
+	} else {
+		for _, pcg := range projectCLAGroups {
+			log.WithFields(f).Debugf("checking if company/project is signed with CLA managers...")
+			isSigned, signedErr := s.isSigned(ctx, companyModel, pcg.ProjectSFID)
+			if signedErr != nil {
+				msg := fmt.Sprintf("EasyCLA - 400 Bad Request - %s", signedErr)
+				log.WithFields(f).Warn(msg)
+				return signedErr
+			}
+			if isSigned {
+				msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project: %s is already signed", pcg.ProjectSFID)
+				log.WithFields(f).Warn(msg)
+				return ErrProjectSigned
+			}
+		}
+	}
+	return nil
 }
 
 func validateInviteCompanyAdmin(contactAdmin bool, userEmail string, name string, contributor *v1User.User) error {

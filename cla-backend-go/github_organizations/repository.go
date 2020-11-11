@@ -221,7 +221,7 @@ func (repo repository) GetGithubOrganizationByName(ctx context.Context, githubOr
 	f := logrus.Fields{
 		"functionName":           "GetGithubOrganizationByName",
 		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
-		"githubOrganizationName": "githubOrganizationName",
+		"githubOrganizationName": githubOrganizationName,
 	}
 
 	condition := expression.Key("organization_name_lower").Equal(expression.Value(strings.ToLower(githubOrganizationName)))
@@ -242,10 +242,10 @@ func (repo repository) GetGithubOrganizationByName(ctx context.Context, githubOr
 		IndexName:                 aws.String(GithubOrgLowerNameIndex),
 	}
 
-	log.WithFields(f).Debug("querying for github organization by name...")
+	log.WithFields(f).Debugf("querying for github organization by name using organization_name_lower=%s...", strings.ToLower(githubOrganizationName))
 	results, err := repo.dynamoDBClient.Query(queryInput)
 	if err != nil {
-		log.WithFields(f).Warnf("error retrieving github_organizations using githubOrganizationName = %s. error = %s", githubOrganizationName, err.Error())
+		log.WithFields(f).WithError(err).Warnf("error retrieving github_organizations using githubOrganizationName = %s", githubOrganizationName)
 		return nil, err
 	}
 	if len(results.Items) == 0 {
@@ -269,7 +269,7 @@ func (repo repository) GetGithubOrganization(ctx context.Context, githubOrganiza
 	f := logrus.Fields{
 		"functionName":           "GetGithubOrganization",
 		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
-		"githubOrganizationName": "githubOrganizationName",
+		"githubOrganizationName": githubOrganizationName,
 	}
 
 	log.WithFields(f).Debug("Querying for github organization by name...")

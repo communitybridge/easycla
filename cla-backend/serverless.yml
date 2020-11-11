@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 service: cla-backend
-frameworkVersion: '^2.6.0'
+frameworkVersion: '^2.11.0'
 
 package:
   # Exclude all first - selectively add in lambda functions
@@ -53,24 +53,49 @@ custom:
   product:
     domain:
       name:
-        # env.ROOT_DOMAIN: lfcla.dev.platform.linuxfoundation.org
         dev: 'api.lfcla.dev.platform.linuxfoundation.org'
         staging: 'api.lfcla.staging.platform.linuxfoundation.org'
         prod: 'api.easycla.lfx.linuxfoundation.org'
         other: 'api.dev.lfcla.com'
+        enabled:
+          dev: true
+          staging: true
+          prod: true
+          other: true
       alt:
-        # env.PRODUCT_DOMAIN: dev.lfcla.com
         dev: 'api.dev.lfcla.com'
         staging: 'api.staging.lfcla.com'
         prod: 'api.easycla.lfx.linuxfoundation.org'
         other: 'api.dev.lfcla.com'
+        enabled:
+          dev: true
+          staging: true
+          prod: false
+          other: true
 
-  customDomain:
+  customDomains:
     # https://github.com/amplify-education/serverless-domain-manager
-    domainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
-    stage: ${opt:stage}
-    basePath: ''  # a value of '/' will not work
-    certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
+    - primaryDomain:
+      domainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
+      stage: ${opt:stage}
+      basePath: ''  # a value of '/' will not work
+      securityPolicy: tls_1_2
+      apiType: rest
+      certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
+      protocols:
+        - https
+      enabled: true
+
+    - alternateDomain:
+      domainName: ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
+      stage: ${opt:stage}
+      basePath: ''  # a value of '/' will not work
+      securityPolicy: tls_1_2
+      apiType: rest
+      certificateArn: ${self:custom.certificate.arn.${opt:stage}, self:custom.certificate.arn.other}
+      protocols:
+        - https
+      enabled: ${self:custom.product.domain.alt.enabled.${opt:stage}, self:custom.product.domain.alt.enabled.other}
 
   ses_from_email:
     dev: admin@dev.lfcla.com
@@ -84,8 +109,10 @@ provider:
   region: us-east-1
   timeout: 60 # optional, in seconds, default is 6
   logRetentionInDays: 14
-  # Configuring API Gateway to return binary media can be done via the binaryMediaTypes config:
   apiGateway:
+    # https://www.serverless.com/framework/docs/deprecations/#AWS_API_GATEWAY_NAME_STARTING_WITH_SERVICE
+    shouldStartNameWithService: true
+    # Configuring API Gateway to return binary media can be done via the binaryMediaTypes config:
     binaryMediaTypes:
       #- '*/*'
       - 'image/*'
@@ -221,10 +248,11 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/project-name-lower-search-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-projects/index/foundation-sfid-project-name-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/project-repository-index"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/repository-name-index"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/repository-organization-name-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/external-repository-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/sfdc-repository-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/project-sfid-repository-organization-name-index"
-        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-repositories/index/repository-organization-name-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-github-orgs/index/github-org-sfid-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-github-orgs/index/project-sfid-organization-name-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-github-orgs/index/organization-name-lower-search-index"
@@ -344,7 +372,6 @@ functions:
     handler: auth/bin/authorizer
     description: "EasyCLA API authorizer"
     runtime: go1.x
-    cors: true
     package:
       individually: true
       include:
@@ -573,36 +600,16 @@ resources:
       Type: AWS::CertificateManager::Certificate
       Condition: ShouldGenerateCertificate
       Properties:
-        DomainName: api.${env:ROOT_DOMAIN}
+        DomainName: ${self:custom.product.domain.name.${opt:stage}, self:custom.product.domain.name.other}
         SubjectAlternativeNames:
-          - api.${env:PRODUCT_DOMAIN}
+          - ${self:custom.product.domain.alt.${opt:stage}, self:custom.product.domain.alt.other}
         ValidationMethod: DNS
 
-#    CustomRootDomain:
-#      Type: AWS::ApiGateway::DomainName
-#      Properties:
-#        CertificateArn:
-#          Ref: Cert
-#        DomainName: api.${env:ROOT_DOMAIN}
-#    RootDomainMapping:
-#      Type: AWS::ApiGateway::BasePathMapping
-#      Properties:
-#        DomainName:
-#          Ref: CustomRootDomain
-#        RestApiId:
-#          Ref: ApiGatewayRestApi
-#        Stage: ${self:provider.stage}
-#    CustomProductDomain:
-#      Type: AWS::ApiGateway::DomainName
-#      Properties:
-#        CertificateArn:
-#          Ref: Cert
-#        DomainName: api.${env:PRODUCT_DOMAIN}
-#    ProductDomainMapping:
-#      Type: AWS::ApiGateway::BasePathMapping
-#      Properties:
-#        DomainName:
-#          Ref: CustomProductDomain
-#        RestApiId:
-#          Ref: ApiGatewayRestApi
-#        Stage: ${self:provider.stage}
+  Outputs:
+    APIGatewayRootResourceID:
+      Value:
+        Fn::GetAtt:
+          - ApiGatewayRestApi
+          - RootResourceId
+      Export:
+        Name: APIGatewayRootResourceID
