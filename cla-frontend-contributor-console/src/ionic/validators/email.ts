@@ -5,7 +5,7 @@ import { FormControl } from '@angular/forms';
 
 export class EmailValidator {
   static isValid(control: FormControl): any {
-    const EMAIL_PATTERN = new RegExp(['[a-z|A-Z|0-9]+[@]+[a-z|A-Z|0-9]+[.]+([a-z|A-Z|0-9]){2}'].join(''));
+    const EMAIL_PATTERN = new RegExp(/^([a-zA-Z0-9_\-\.\+]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$/);
     let email = control.value;
     let isValid = EMAIL_PATTERN.test(email);
     if (!isValid) {
