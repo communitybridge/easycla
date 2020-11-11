@@ -311,6 +311,22 @@ class ProjectFoundationIDIndex(GlobalSecondaryIndex):
     foundation_sfid = UnicodeAttribute(hash_key=True)
     project_name = UnicodeAttribute(range_key=True)
 
+class CompanyNameIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying companies by name.
+    """
+
+    class Meta:
+        """Meta class for company name index."""
+
+        index_name = "company-name-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        # All attributes are projected - not sure if this is necessary.
+        projection = AllProjection()
+
+    # This attribute is the hash key for the index.
+    company_name = UnicodeAttribute(hash_key=True)
 
 class ExternalCompanyIndex(GlobalSecondaryIndex):
     """
@@ -2982,6 +2998,7 @@ class CompanyModel(BaseModel):
     company_external_id = UnicodeAttribute(null=True)
     company_manager_id = UnicodeAttribute(null=True)
     company_name = UnicodeAttribute()
+    company_name_index = CompanyNameIndex()
     company_external_id_index = ExternalCompanyIndex()
     company_acl = UnicodeSetAttribute(default=set())
 
@@ -3028,6 +3045,17 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         except CompanyModel.DoesNotExist:
             raise cla.models.DoesNotExist("Company not found")
         self.model = company
+    
+    def load_company_by_name(self, company_name):
+        try:
+            company_generator = self.model.company_name_index.query(company_name)
+            for company_model in company_generator:
+                self.model = company_model
+                return
+            # Didn't find a result - throw an error
+            raise cla.models.DoesNotExist(f'Company with name {company_name} not found')
+        except CompanyModel.DoesNotExist:
+            raise cla.models.DoesNotExist(f'Company with name {company_name} not found')
 
     def delete(self):
         self.model.delete()
@@ -3630,6 +3658,12 @@ class CompanyInvite(model_interfaces.CompanyInvite):
         except CompanyInviteModel.DoesNotExist:
             raise cla.models.DoesNotExist("Company Invite not found")
         self.model = company_invite
+    
+    def set_company_invite_id(self, company_invite_id):
+        self.model.company_invite_id = company_invite_id
+    
+    def get_company_invite_id():
+        return self.model.company_invite_id
 
     def get_user_id(self):
         return self.model.user_id

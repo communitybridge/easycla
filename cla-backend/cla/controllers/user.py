@@ -9,7 +9,7 @@ import uuid
 
 import cla
 from cla.models import DoesNotExist
-from cla.models.dynamo_models import User, Company, Project, Event, CCLAWhitelistRequest
+from cla.models.dynamo_models import User, Company, Project, Event, CCLAWhitelistRequest, CompanyInvite
 from cla.models.event_types import EventType
 from cla.utils import get_user_instance, get_email_service, get_email_sign_off_content, get_email_help_content, \
     append_email_help_sign_off_content
@@ -231,6 +231,32 @@ def invite_cla_manager(contributor_id, contributor_name, contributor_email, cla_
         msg = f'unable to load project by name: {project_name} for inviting company admin - error: {err}'
         cla.log.warning(msg)
         return {'errors': {'project_name': project_name, 'message': msg, 'error': str(err)}}
+    company = Company()
+    try:
+        company.load_company_by_name(company_name)
+    except DoesNotExist as err :
+        msg = f'unable to load company by name: {company_name} - error: {err}'
+        cla.log.warning(msg)
+        company.set_company_id(str(uuid.uuid4()))
+        company.set_company_name(company_name)
+        company.save()
+    
+    # Add user lfusername if exists
+    username = None
+    if user.get_lf_username():
+        username = user.get_lf_username()
+    elif user.get_user_name():
+        username = user.get_user_name()
+    if username:
+        company.add_company_acl(username)
+        company.save()
+
+    # create company invite
+    company_invite = CompanyInvite()
+    company_invite.set_company_invite_id(str(uuid.uuid4()))
+    company_invite.set_requested_company_id(company.get_company_id())
+    company_invite.set_user_id(user.get_user_id())
+    company_invite.save()
 
     # We'll use the user's provided contributor name - if not provided use what we have in the DB
     if contributor_name is None:

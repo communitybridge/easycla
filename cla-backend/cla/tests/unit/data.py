@@ -29,6 +29,14 @@ COMPANY_TABLE_DATA = {
     "Table": {
         "AttributeDefinitions": [{"AttributeName": "company_id", "AttributeType": "S"}],
         "KeySchema": [{"AttributeName": "company_id", "KeyType": "HASH"}],
+        "GlobalSecondaryIndexes": [
+            {
+                "IndexName": "company-name-index",
+                "KeySchema": [{"AttributeName": "company_name", "KeyType": "HASH"}],
+                "Projection": {"ProjectionType": "ALL"},
+                "ProvisionedThroughput": {"ReadCapacityUnits": 1, "WriteCapacityUnits": 1},
+            }
+        ],
     }
 }
 
