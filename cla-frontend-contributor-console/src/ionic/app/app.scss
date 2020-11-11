@@ -84,7 +84,7 @@ ion-icon[name="menu"] {
 .content-top-show {
   .scroll-content {
     overflow-y: auto;
-    margin-top: 182px;
+    margin-top: 162px;
   }
 }
 .content-top-hide {
@@ -99,9 +99,9 @@ ion-icon[name="menu"] {
 
 .page-content {
   transition: margin 0.3s;
-  min-height: calc(100vh - 244px);
+  min-height: calc(100vh - 247px);
 
   &.expanded {
-    min-height: calc(100vh - 324px);
+    min-height: calc(100vh - 306px);
   }
 }

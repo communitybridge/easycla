@@ -6,7 +6,6 @@ import { AlertController, IonicPage, NavParams, ViewController } from 'ionic-ang
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClaService } from '../../services/cla.service';
 import { ClaCompanyModel } from '../../models/cla-company';
-import { AuthService } from '../../services/auth.service';
 
 @IonicPage({
   segment: 'add-company-modal'
@@ -42,7 +41,6 @@ export class AddCompanyModal {
     private viewCtrl: ViewController,
     private formBuilder: FormBuilder,
     private claService: ClaService,
-    private authService: AuthService,
     private alertCtrl: AlertController
   ) {
     this.associatedCompanies = this.navParams.get('associatedCompanies');
@@ -54,6 +52,7 @@ export class AddCompanyModal {
     this.userName = localStorage.getItem('user_name');
     this.userId = localStorage.getItem('userid');
     this.company = this.navParams.get('company');
+    this.userEmail = localStorage.getItem('user_email');
     this.mode = this.navParams.get('mode') || 'add';
     this.companies = [];
     this.filteredCompanies = [];
@@ -73,10 +72,6 @@ export class AddCompanyModal {
 
   ngOnInit() {
     this.getAllCompanies();
-  }
-
-  ionViewDidEnter() {
-    this.updateUserInfoBasedLFID();
   }
 
   submit() {
@@ -229,28 +224,5 @@ export class AddCompanyModal {
     this.companySet = true;
     this.companyName = company.companyName;
     this.existingCompanyId = company.companyID;
-  }
-
-  private updateUserInfoBasedLFID() {
-    // if (this.authService.isAuthenticated()) {
-    //   this.authService
-    //     .getIdToken()
-    //     .then((token) => {
-    //       return this.authService.parseIdToken(token);
-    //     })
-    //     .then((tokenParsed) => {
-    //       if (tokenParsed && tokenParsed['email']) {
-    //         this.userEmail = tokenParsed['email'];
-    //       }
-    //       if (tokenParsed && tokenParsed['name']) {
-    //         this.userName = tokenParsed['name'];
-    //       }
-    //     })
-    //     .catch((error) => {
-    //       console.warn(JSON.stringify(error));
-    //       return;
-    //     });
-    // }
-    return;
   }
 }
