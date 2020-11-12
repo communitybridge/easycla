@@ -74,6 +74,8 @@ const (
 	Lead = "lead"
 	//NoAccount
 	NoAccount = "Individual - No Account"
+	//OrgAssociated stating whether user has user association with another org
+	OrgAssociated = "are already associated with other organization"
 )
 
 // Service functions for company
@@ -329,7 +331,6 @@ func (s *service) CreateCompany(ctx context.Context, companyName string, company
 		log.Warn(msg)
 	}
 	if lfUser != nil {
-
 		log.WithFields(f).Debugf("User :%s has been assigned the company-owner role to organization: %s ", userEmail, org.Name)
 		// Assign company-admin to user
 		roleID, adminErr := acsClient.GetRoleID(utils.CompanyAdminRole)
@@ -343,7 +344,9 @@ func (s *service) CreateCompany(ctx context.Context, companyName string, company
 		if scopeErr != nil {
 			msg := fmt.Sprintf("Problem creating Org scope for email: %s , companyID: %s", userEmail, org.ID)
 			log.Warn(msg)
-			return nil, scopeErr
+			if !strings.Contains(scopeErr.Error(), OrgAssociated) {
+				return nil, scopeErr
+			}
 		}
 		// Associate User (Not associated) with Newly created org
 		if lfUser.Account.ID == NoAccount {
