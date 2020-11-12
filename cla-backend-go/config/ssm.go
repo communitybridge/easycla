@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -38,6 +40,10 @@ func getSSMString(ssmClient *ssm.SSM, key string) (string, error) {
 
 // loadSSMConfig fetches all the configuration values and populates the response Config model
 func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
+	f := logrus.Fields{
+		"functionName": "loadSSMConfig",
+		"stage":        stage,
+	}
 	config := Config{}
 
 	ssmClient := ssm.New(awsSession)
@@ -81,6 +87,7 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
 		fmt.Sprintf("cla-lfx-portal-url-%s", stage),
 		fmt.Sprintf("cla-lfx-metrics-report-sqs-region-%s", stage),
 		fmt.Sprintf("cla-lfx-metrics-report-sqs-url-%s", stage),
+		fmt.Sprintf("cla-lfx-metrics-report-enabled-%s", stage),
 	}
 
 	// For each key to lookup
@@ -89,7 +96,7 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
 		go func(theKey string) {
 			theValue, err := getSSMString(ssmClient, theKey)
 			if err != nil {
-				log.Fatalf("error looking up key: %s", theKey)
+				log.WithFields(f).WithError(err).Fatalf("error looking up key: %s", theKey)
 			}
 			// Send the response back through the channel
 			responseChannel <- configLookupResponse{
@@ -120,7 +127,7 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
 			githubAppID, err := strconv.Atoi(resp.value)
 			if err != nil {
 				errMsg := fmt.Sprintf("invalid value of key: %s", fmt.Sprintf("cla-gh-app-id-%s", stage))
-				log.Fatal(errMsg)
+				log.WithFields(f).WithError(err).Fatal(errMsg)
 			}
 			config.Github.AppID = githubAppID
 		case fmt.Sprintf("cla-gh-app-private-key-%s", stage):
@@ -175,6 +182,15 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
 			config.MetricsReport.AwsSQSRegion = resp.value
 		case fmt.Sprintf("cla-lfx-metrics-report-sqs-url-%s", stage):
 			config.MetricsReport.AwsSQSQueueURL = resp.value
+		case fmt.Sprintf("cla-lfx-metrics-report-enabled-%s", stage):
+			boolVal, err := strconv.ParseBool(resp.value)
+			if err != nil {
+				log.WithFields(f).WithError(err).Warnf("unable to convert %s value to a boolean - setting value to false in the configuration",
+					fmt.Sprintf("cla-lfx-metrics-report-enabled-%s", stage))
+				config.MetricsReport.Enabled = false
+			} else {
+				config.MetricsReport.Enabled = boolVal
+			}
 		}
 	}
 

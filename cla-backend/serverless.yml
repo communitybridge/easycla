@@ -475,7 +475,7 @@ functions:
     events:
       - schedule:
           description: 'A function that reports metrics on a given schedule'
-          rate: rate(24 hour)
+          rate: rate(1 day)
           enabled: true
     package:
       individually: true

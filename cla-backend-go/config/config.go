@@ -123,6 +123,7 @@ type Github struct {
 type MetricsReport struct {
 	AwsSQSRegion   string `json:"aws_sqs_region"`
 	AwsSQSQueueURL string `json:"aws_sqs_queue_url"`
+	Enabled        bool   `json:"metrics_reporting_enabled"`
 }
 
 // GetConfig returns the current EasyCLA configuration
