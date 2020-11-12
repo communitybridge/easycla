@@ -18,7 +18,7 @@ import { LfxHeaderService } from '../../services/lfx-header.service';
   templateUrl: 'auth.html'
 })
 export class AuthPage implements AfterViewInit {
-  gerritId: string;
+  projectId: string;
   claType: string;
   message: string;
 
@@ -27,7 +27,7 @@ export class AuthPage implements AfterViewInit {
     public authService: AuthService,
     private lfxHeaderService: LfxHeaderService
   ) {
-    this.gerritId = localStorage.getItem('gerritId');
+    this.projectId = localStorage.getItem('projectId');
     this.claType = localStorage.getItem('gerritClaType');
   }
 
@@ -42,10 +42,10 @@ export class AuthPage implements AfterViewInit {
           this.lfxHeaderService.setUserInLFxHeader();
           if (this.claType == 'ICLA') {
             window.history.replaceState(null, null, window.location.pathname);
-            this.navCtrl.setRoot('ClaGerritIndividualPage', { gerritId: this.gerritId });
+            this.navCtrl.setRoot('ClaGerritIndividualPage', { projectId: this.projectId });
           } else if (this.claType == 'CCLA') {
             window.history.replaceState(null, null, window.location.pathname);
-            this.navCtrl.setRoot('ClaGerritCorporatePage', { gerritId: this.gerritId });
+            this.navCtrl.setRoot('ClaGerritCorporatePage', { projectId: this.projectId });
           } else {
             setTimeout(() => {
               this.message = 'Invalid URL. Please verify you follow the right steps.';
@@ -62,10 +62,10 @@ export class AuthPage implements AfterViewInit {
     this.lfxHeaderService.setUserInLFxHeader();
     if (this.claType == 'ICLA') {
       window.history.replaceState(null, null, window.location.pathname);
-      this.navCtrl.setRoot('ClaGerritIndividualPage', { gerritId: this.gerritId });
+      this.navCtrl.setRoot('ClaGerritIndividualPage', { projectId: this.projectId });
     } else if (this.claType == 'CCLA') {
       window.history.replaceState(null, null, window.location.pathname);
-      this.navCtrl.setRoot('ClaGerritCorporatePage', { gerritId: this.gerritId });
+      this.navCtrl.setRoot('ClaGerritCorporatePage', { projectId: this.projectId });
     } else {
       window.open(`${window.location.origin}` + '#' + target, '_self');
     }
