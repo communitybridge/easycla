@@ -416,8 +416,7 @@ By approving this request the user could view and apply for CLA Manager
 status on projects associated with your company. </p>
 %s
 <p>To get started, please log into the <a href="%s" target="_blank">EasyCLA Corporate Console</a>, and select your
-company. From there you will be able to view the list of projects which have EasyCLA configured and apply for CLA
-Manager status.
+company.You can choose to accept or deny the request.
 </p>
 %s
 %s`,
