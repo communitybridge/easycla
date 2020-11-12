@@ -7,13 +7,12 @@ import { ClaService } from '../../services/cla.service';
 import { AuthService } from '../../services/auth.service';
 import { Restricted } from '../../decorators/restricted';
 import { generalConstants } from '../../constants/general';
-import { EnvConfig } from '../../services/cla.env.utils';
 
 @Restricted({
   roles: ['isAuthenticated']
 })
 @IonicPage({
-  segment: 'cla/gerrit/project/:gerritId/corporate'
+  segment: 'cla/gerrit/project/:projectId/corporate'
 })
 @Component({
   selector: 'cla-gerrit-corporate',
@@ -23,7 +22,6 @@ import { EnvConfig } from '../../services/cla.env.utils';
 export class ClaGerritCorporatePage {
   loading: any;
   projectId: string;
-  gerritId: string;
   userId: string;
   signature: string;
   companies: any;
@@ -38,9 +36,9 @@ export class ClaGerritCorporatePage {
     private claService: ClaService,
     private authService: AuthService,
   ) {
-    this.gerritId = navParams.get('gerritId');
+    this.projectId = navParams.get('projectId');
     this.getDefaults();
-    localStorage.setItem('gerritId', this.gerritId);
+    localStorage.setItem('projectId', this.projectId);
     localStorage.setItem('gerritClaType', 'CCLA');
   }
 
@@ -55,8 +53,6 @@ export class ClaGerritCorporatePage {
     this.authService.userProfile$.subscribe(user => {
       if (user !== undefined) {
         if (user) {
-          this.getCompanies();
-          this.getUserInfo();
           this.getProject();
         } else {
           this.redirectToLogin();
@@ -70,13 +66,11 @@ export class ClaGerritCorporatePage {
   }
 
   getCompanies() {
-    this.claService.getGerrit(this.gerritId).subscribe((gerrit) => {
-      this.claService.getAllCompanies().subscribe((response) => {
-        if (response) {
-          this.companies = response;
-        }
-        this.loading.companies = false;
-      });
+    this.claService.getAllCompanies().subscribe((response) => {
+      if (response) {
+        this.companies = response;
+      }
+      this.loading.companies = false;
     });
   }
 
@@ -85,9 +79,10 @@ export class ClaGerritCorporatePage {
     this.claService.postOrGetUserForGerrit().subscribe((user) => {
       localStorage.setItem(generalConstants.USER_MODEL, JSON.stringify(user));
       this.userId = user.user_id;
+      this.getCompanies();
     }, (error) => {
       // Got an auth error, redirect to the login
-      console.log('Got an auth error, redirect to the login...');
+      this.loading = false;
       setTimeout(() => this.redirectToLogin());
     });
   }
@@ -161,17 +156,17 @@ export class ClaGerritCorporatePage {
   }
 
   getProject() {
-    this.claService.getGerrit(this.gerritId).subscribe((response) => {
-      if (response.errors) {
-        this.errorMessage = 'A gerrit instance does not exist in database';
-      } else {
+    this.claService.getProjectWithAuthToken(this.projectId).subscribe(
+      (project) => {
         this.errorMessage = '';
-        this.projectId = response.project_id;
-        this.claService.getProjectWithAuthToken(response.project_id).subscribe((project) => {
-          localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(project));
-        });
+        localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(project));
+        this.getUserInfo();
+      },
+      () => {
+        this.loading = false;
+        this.errorMessage = 'Invalid project id.';
       }
-    });
+    );
   }
 
   onClickToggle(hasExpanded) {
