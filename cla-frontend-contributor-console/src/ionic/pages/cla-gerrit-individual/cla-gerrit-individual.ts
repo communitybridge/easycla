@@ -7,21 +7,18 @@ import { ClaService } from '../../services/cla.service';
 import { AuthService } from '../../services/auth.service';
 import { Restricted } from '../../decorators/restricted';
 import { generalConstants } from '../../constants/general';
-import { EnvConfig } from '../../services/cla.env.utils';
-import { bool } from 'aws-sdk/clients/signer';
 
 @Restricted({
   roles: ['isAuthenticated']
 })
 @IonicPage({
-  segment: 'cla/gerrit/project/:gerritId/individual'
+  segment: 'cla/gerrit/project/:projectId/individual'
 })
 @Component({
   selector: 'cla-gerrit-individual',
   templateUrl: 'cla-gerrit-individual.html'
 })
 export class ClaGerritIndividualPage {
-  gerritId: string;
   projectId: string;
   project: any;
   gerrit: any;
@@ -32,6 +29,7 @@ export class ClaGerritIndividualPage {
   signature: any;
   expanded: boolean = true;
   errorMessage: string;
+  loading: boolean;
 
   constructor(
     public navCtrl: NavController,
@@ -40,8 +38,8 @@ export class ClaGerritIndividualPage {
     private authService: AuthService,
   ) {
     this.getDefaults();
-    this.gerritId = navParams.get('gerritId');
-    localStorage.setItem('gerritId', this.gerritId);
+    this.projectId = navParams.get('projectId');
+    localStorage.setItem('projectId', this.projectId);
     localStorage.setItem('gerritClaType', 'ICLA');
   }
 
@@ -55,10 +53,11 @@ export class ClaGerritIndividualPage {
   }
 
   ngOnInit() {
+    this.loading = true;
     this.authService.userProfile$.subscribe(user => {
       if (user !== undefined) {
         if (user) {
-          this.getProject(this.gerritId);
+          this.getProject();
         } else {
           this.redirectToLogin();
         }
@@ -70,41 +69,53 @@ export class ClaGerritIndividualPage {
     this.navCtrl.setRoot('LoginPage');
   }
 
-  getProject(gerritId) {
-    //retrieve projectId from this Gerrit
-    this.claService.getGerrit(gerritId).subscribe((response) => {
-      if (response.errors) {
-        this.errorMessage = 'A gerrit instance does not exist in database';
-      } else {
-        this.gerrit = response;
-        this.projectId = response.project_id;
-        //retrieve project info with project Id
-        this.claService.getProjectWithAuthToken(response.project_id).subscribe((project) => {
-          this.project = project;
-          localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(project));
-          // retrieve userInfo from auth0 service
-          this.claService.postOrGetUserForGerrit().subscribe((user) => {
-            this.userId = user.user_id;
-            localStorage.setItem(generalConstants.USER_MODEL, JSON.stringify(user));
-            // get signatureIntent object, similar to the Github flow.
-            this.postSignatureRequest();
-          });
-        });
+  getProject() {
+    this.claService.getProjectWithAuthToken(this.projectId).subscribe(
+      (project) => {
+        this.project = project;
+        localStorage.setItem(generalConstants.PROJECT_MODEL, JSON.stringify(project));
+        // retrieve userInfo from auth0 service
+        this.getUserDetails();
+      },
+      () => {
+        this.loading = false;
+        this.errorMessage = 'Invalid project id.';
       }
-    });
+    );
   }
 
+  getUserDetails() {
+    this.claService.postOrGetUserForGerrit().subscribe(
+      (user) => {
+        this.userId = user.user_id;
+        localStorage.setItem(generalConstants.USER_MODEL, JSON.stringify(user));
+        // get signatureIntent object, similar to the Github flow.
+        this.postSignatureRequest();
+      },
+      (exception) => {
+        this.loading = false;
+        this.errorMessage = 'Invalid user details, please login again.';
+      }
+    );
+  }
   postSignatureRequest() {
     let signatureRequest = {
       project_id: this.projectId,
       user_id: this.userId,
       return_url_type: 'Gerrit'
     };
-    this.claService.postIndividualSignatureRequest(signatureRequest).subscribe((response) => {
-      this.signature = response;
-    });
+    this.claService.postIndividualSignatureRequest(signatureRequest).subscribe(
+      (response) => {
+        this.loading = false;
+        this.signature = response;
+      },
+      () => {
+        this.loading = false;
+        this.errorMessage = 'Invalid signature.';
+      }
+    );
   }
-
+ 
   openClaAgreement() {
     if (!this.signature.sign_url) {
       return;

@@ -5,11 +5,13 @@
 
     <div class="error">{{errorMessage}}</div>
 
+    <loading-spinner [loading]="loading"></loading-spinner>
+
     <header>
       <ion-grid>
         <ion-row>
-          <ion-col col-12 col-md-10>
-            <h1>{{ project.project_name }}</h1>
+          <ion-col col-12>
+            <h1 style="margin-left: 10px;">{{ project.project_name }}</h1>
           </ion-col>
         </ion-row>
       </ion-grid>
