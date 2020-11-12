@@ -7,6 +7,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/go-openapi/swag"
 
 	"github.com/davecgh/go-spew/spew"
@@ -27,7 +29,7 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
-	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
+	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 )
 
 var (
@@ -61,13 +63,19 @@ func init() {
 	pcgRepo := projects_cla_groups.NewRepository(awsSession, stage)
 	metricsRepo = metrics.NewRepository(awsSession, stage, configFile.APIGatewayURL, pcgRepo)
 	token.Init(configFile.Auth0Platform.ClientID, configFile.Auth0Platform.ClientSecret, configFile.Auth0Platform.URL, configFile.Auth0Platform.Audience)
-	project_service.InitClient(configFile.APIGatewayURL)
+	v2ProjectService.InitClient(configFile.APIGatewayURL)
 }
 
 func handler(ctx context.Context, event events.CloudWatchEvent) {
+	f := logrus.Fields{
+		"functionName": "handler",
+		"eventID":      event.ID,
+		"eventVersion": event.Version,
+	}
+
 	totalCountMetrics, err := metricsRepo.GetTotalCountMetrics()
 	if err != nil {
-		log.Fatalf("Unable to get totalCount metrics from dynamodb. error = %s", err)
+		log.WithFields(f).WithError(err).Fatal("unable to get totalCount metrics from dynamodb.")
 	}
 
 	req := stats.Request{
@@ -91,6 +99,7 @@ func handler(ctx context.Context, event events.CloudWatchEvent) {
 					Type:      swag.String(stats.StatTypeNumber),
 					Value:     float64(totalCountMetrics.ProjectsLiveCount),
 				},
+				// repositories = GitHub repositories + Gerrit Instances (not repos) <--- under-counting gerrit repos
 				"repositories_covered": stats.Stat{
 					Action:    swag.String(stats.StatActionReplace),
 					Frequency: swag.String(stats.StatFrequencyAllTime),
@@ -104,20 +113,20 @@ func handler(ctx context.Context, event events.CloudWatchEvent) {
 
 	dataInBytes, err := req.MarshalBinary()
 	if err != nil {
-		log.Fatalf("marshall the sqs event failed : %v", err)
+		log.WithFields(f).WithError(err).Fatal("marshall the sqs event failed")
 	}
 
-	log.Debugf("going to send total count metrics to sqs queue %s", spew.Sdump(req))
+	log.WithFields(f).Debugf("going to send total count metrics to sqs queue %s", spew.Sdump(req))
 	conf := config.GetConfig()
 
 	var region, queueURL string
 	if conf.MetricsReport.AwsSQSRegion == "" {
-		log.Fatalf("aws sqs region config is missing")
+		log.WithFields(f).Fatal("aws sqs region config is missing")
 	}
 	region = conf.MetricsReport.AwsSQSRegion
 
 	if conf.MetricsReport.AwsSQSQueueURL == "" {
-		log.Fatalf("aws sqs queue url config is missing")
+		log.WithFields(f).Fatal("aws sqs queue url config is missing")
 	}
 	queueURL = conf.MetricsReport.AwsSQSQueueURL
 
@@ -130,12 +139,16 @@ func handler(ctx context.Context, event events.CloudWatchEvent) {
 		QueueUrl:    aws.String(queueURL),
 	}
 
-	_, err = sqsSession.SendMessage(input)
-	if err != nil {
-		log.Fatalf("sending the message to sqs failed : %v", err)
+	if conf.MetricsReport.Enabled {
+		_, err = sqsSession.SendMessage(input)
+		if err != nil {
+			log.WithFields(f).WithError(err).Fatal("sending the message to sqs failed")
+			return
+		}
+		log.WithFields(f).Infof("metrics report sent successfully to queue %s", queueURL)
+	} else {
+		log.WithFields(f).Info("metrics report not sent - disabled in the configuration")
 	}
-
-	log.Infof("metrics report sent successfully to queue %s", queueURL)
 }
 
 func printBuildInfo() {
