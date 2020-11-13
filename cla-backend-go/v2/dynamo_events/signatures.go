@@ -4,6 +4,7 @@
 package dynamo_events
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -84,63 +85,9 @@ func (s *service) SignatureAssignContributorEvent(event events.DynamoDBEventReco
 	f["signed"] = newSignature.SignatureSigned
 
 	if !oldSignature.SignatureSigned && newSignature.SignatureSigned {
-		var companyID string
-		// Assign company ID based on signature type (CCLA, CCLA|ICLA)
-		if newSignature.SignatureType == utils.SignatureTypeCLA && newSignature.SignatureUserCompanyID != "" {
-			companyID = newSignature.SignatureUserCompanyID
-		} else if newSignature.SignatureType == utils.SignatureTypeCCLA && newSignature.SignatureReferenceID != "" {
-			companyID = newSignature.SignatureReferenceID
-		}
-		if (newSignature.SignatureType == utils.SignatureTypeCLA) || (newSignature.SignatureType == utils.SignatureTypeCCLA) {
-			log.WithFields(f).Debugf("processing signature type: %s with %d CLA Managers...",
-				newSignature.SignatureType, len(newSignature.SignatureACL))
-			companyModel, err := s.companyRepo.GetCompany(ctx, companyID)
-			if err != nil {
-				log.WithFields(f).Warnf("failed to lookup company from signature by companyID: %s, error: %+v",
-					companyID, err)
-				return err
-			}
-			if companyModel == nil {
-				msg := fmt.Sprintf("failed to lookup company from signature by companyID: %s, not found",
-					companyID)
-				log.WithFields(f).Warn(msg)
-				return errors.New(msg)
-			}
-			log.WithFields(f).Debugf("loaded company '%s' from signature by companyID: %s with companySFID: %s...",
-				companyModel.CompanyName, companyModel.CompanyID, companyModel.CompanyExternalID)
-			log.WithFields(f).Debugf("loaded company '%s' from signature by companyID: %s with companySFID: %s...",
-				companyModel.CompanyName, companyModel.CompanyID, companyModel.CompanyExternalID)
-
-			// We should have the company SFID...
-			if companyModel.CompanyExternalID == "" {
-				msg := fmt.Sprintf("company %s (%s) does not have a SF Organization ID - unable to update permissions",
-					companyModel.CompanyName, companyModel.CompanyID)
-				log.WithFields(f).Warn(msg)
-				return errors.New(msg)
-			}
-			// Load the list of SF projects associated with this CLA Group
-			log.WithFields(f).Debugf("querying SF projects for CLA Group: %s", newSignature.SignatureProjectID)
-			projectCLAGroups, err := s.projectsClaGroupRepo.GetProjectsIdsForClaGroup(newSignature.SignatureProjectID)
-			log.WithFields(f).Debugf("found %d SF projects for CLA Group: %s", len(projectCLAGroups), newSignature.SignatureProjectID)
-
-			if err != nil {
-				log.WithFields(f).Errorf("Unable to query projectCLA groups by claGroupID : %s, error: %+v ", newSignature.SignatureProjectID, err)
-				return err
-			}
-
-			// Only proceed if we have one or more SF projects - otherwise, we can't assign and cleanup/adjust roles
-			if len(projectCLAGroups) == 0 {
-				log.WithFields(f).Warnf("no SF projects assigned to CLA group: %s ",
-					newSignature.SignatureProjectID)
-				return nil
-			}
-			_, _, err = s.companyService.AssociateContributorByGroup(ctx, companyModel.CompanyExternalID, newSignature.UserEmail, projectCLAGroups, newSignature.SignatureProjectID)
-
-			if err != nil {
-				log.WithFields(f).Errorf("unable to create contributor association for user: %s and company: %s ", newSignature.UserEmail, companyModel.CompanyExternalID)
-				return err
-			}
-			return nil
+		err := s.assignContributor(ctx, newSignature, f)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -319,6 +266,11 @@ func (s *service) SignatureAddSigTypeSignedApprovedID(event events.DynamoDBEvent
 	case newSig.SignatureType == CLASignatureType && newSig.SignatureUserCompanyID != "":
 		sigType = ECLASignatureType
 		id = newSig.SignatureUserCompanyID
+		log.WithFields(f).Debugf("assigning contributor role for signature: %s ", newSig.SignatureID)
+		err = s.assignContributor(ctx, newSig, f)
+		if err != nil {
+			return err
+		}
 	default:
 		log.WithFields(f).Warnf("setting sigtype_signed_approved_id for signature: %s failed", newSig.SignatureID)
 		return errors.New("invalid signature in SignatureAddSigTypeSignedApprovedID")
@@ -352,6 +304,67 @@ func (s *service) SignatureAddUsersDetails(event events.DynamoDBEventRecord) err
 		if err != nil {
 			log.WithFields(f).Debugf("adding users details in signature: %s failed. error = %s", newSig.SignatureID, err.Error())
 		}
+	}
+	return nil
+}
+
+func (s *service) assignContributor(ctx context.Context, newSignature Signature, f logrus.Fields) error {
+	var companyID string
+	// Assign company ID based on signature type (CCLA, CCLA|ICLA)
+	if newSignature.SignatureType == utils.SignatureTypeCLA && newSignature.SignatureUserCompanyID != "" {
+		companyID = newSignature.SignatureUserCompanyID
+	} else if newSignature.SignatureType == utils.SignatureTypeCCLA && newSignature.SignatureReferenceID != "" {
+		companyID = newSignature.SignatureReferenceID
+	}
+	if (newSignature.SignatureType == utils.SignatureTypeCLA) || (newSignature.SignatureType == utils.SignatureTypeCCLA) {
+		log.WithFields(f).Debugf("processing signature type: %s with %d CLA Managers...",
+			newSignature.SignatureType, len(newSignature.SignatureACL))
+		companyModel, err := s.companyRepo.GetCompany(ctx, companyID)
+		if err != nil {
+			log.WithFields(f).Warnf("failed to lookup company from signature by companyID: %s, error: %+v",
+				companyID, err)
+			return err
+		}
+		if companyModel == nil {
+			msg := fmt.Sprintf("failed to lookup company from signature by companyID: %s, not found",
+				companyID)
+			log.WithFields(f).Warn(msg)
+			return errors.New(msg)
+		}
+		log.WithFields(f).Debugf("loaded company '%s' from signature by companyID: %s with companySFID: %s...",
+			companyModel.CompanyName, companyModel.CompanyID, companyModel.CompanyExternalID)
+		log.WithFields(f).Debugf("loaded company '%s' from signature by companyID: %s with companySFID: %s...",
+			companyModel.CompanyName, companyModel.CompanyID, companyModel.CompanyExternalID)
+
+		// We should have the company SFID...
+		if companyModel.CompanyExternalID == "" {
+			msg := fmt.Sprintf("company %s (%s) does not have a SF Organization ID - unable to update permissions",
+				companyModel.CompanyName, companyModel.CompanyID)
+			log.WithFields(f).Warn(msg)
+			return errors.New(msg)
+		}
+		// Load the list of SF projects associated with this CLA Group
+		log.WithFields(f).Debugf("querying SF projects for CLA Group: %s", newSignature.SignatureProjectID)
+		projectCLAGroups, err := s.projectsClaGroupRepo.GetProjectsIdsForClaGroup(newSignature.SignatureProjectID)
+		log.WithFields(f).Debugf("found %d SF projects for CLA Group: %s", len(projectCLAGroups), newSignature.SignatureProjectID)
+
+		if err != nil {
+			log.WithFields(f).Errorf("Unable to query projectCLA groups by claGroupID : %s, error: %+v ", newSignature.SignatureProjectID, err)
+			return err
+		}
+
+		// Only proceed if we have one or more SF projects - otherwise, we can't assign and cleanup/adjust roles
+		if len(projectCLAGroups) == 0 {
+			log.WithFields(f).Warnf("no SF projects assigned to CLA group: %s ",
+				newSignature.SignatureProjectID)
+			return nil
+		}
+		_, _, err = s.companyService.AssociateContributorByGroup(ctx, companyModel.CompanyExternalID, newSignature.UserEmail, projectCLAGroups, newSignature.SignatureProjectID)
+
+		if err != nil {
+			log.WithFields(f).Errorf("unable to create contributor association for user: %s and company: %s ", newSignature.UserEmail, companyModel.CompanyExternalID)
+		}
+		return nil
 	}
 	return nil
 }
