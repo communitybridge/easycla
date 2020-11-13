@@ -71,6 +71,7 @@ const parameters = [
   `cla-lfx-portal-url-${program.stage}`,
   `cla-lfx-metrics-report-sqs-region-${program.stage}`,
   `cla-lfx-metrics-report-sqs-url-${program.stage}`,
+  `cla-lfx-metrics-report-enabled-${program.stage}`,
   `cla-lfx-portal-url-${program.stage}`,
 ];
 

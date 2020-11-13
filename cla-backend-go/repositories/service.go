@@ -38,6 +38,7 @@ type Service interface {
 type GithubOrgRepo interface {
 	GetGithubOrganizationByName(ctx context.Context, githubOrganizationName string) (*models.GithubOrganizations, error)
 	GetGithubOrganization(ctx context.Context, githubOrganizationName string) (*models.GithubOrganization, error)
+	GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.GithubOrganizations, error)
 }
 
 type service struct {
