@@ -50,6 +50,7 @@ func GetRepositories(ctx context.Context, organizationName string) ([]*github.Re
 	client := NewGithubOauthClient()
 
 	// API https://docs.github.com/en/free-pro-team@latest/rest/reference/repos
+	// TODO: - only can pull 100 repos at a time - need to do pagination
 	repoList, resp, err := client.Repositories.ListByOrg(ctx, organizationName, &github.RepositoryListByOrgOptions{
 		Type:      "public",
 		Sort:      "full_name",
