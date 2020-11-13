@@ -27,11 +27,12 @@ func GetOrganization(ctx context.Context, organizationName string) (*github.Orga
 		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
 		"organizationName": organizationName,
 	}
+
 	client := NewGithubOauthClient()
 	org, resp, err := client.Organizations.Get(ctx, organizationName)
 	if err != nil {
 		log.WithFields(f).Warnf("GetOrganization %s failed. error = %s", organizationName, err.Error())
-		if resp.StatusCode == 404 {
+		if resp != nil && resp.StatusCode == 404 {
 			return nil, ErrGithubOrganizationNotFound
 		}
 		return nil, err
