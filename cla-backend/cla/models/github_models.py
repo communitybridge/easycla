@@ -865,11 +865,11 @@ def has_check_previously_failed(pull_request: PullRequest) -> bool:
     for comment in comments:
         # Our bot comments include the following text
         # A previously failed check has 'not authorized' somewhere in the body
-        if '[![CLA Check](' in comment.body and 'not authorized' in comment.body:
+        if 'CLA Not Signed' in comment.body and 'not authorized' in comment.body:
             return True
-        if '[![CLA Check](' in comment.body and 'must confirm their affiliation' in comment.body:
+        if 'CLA Confirmation Needed' in comment.body and 'must confirm their affiliation' in comment.body:
             return True
-        if '[![CLA Check](' in comment.body and 'is missing the User' in comment.body:
+        if 'CLA Missing ID' in comment.body and 'is missing the User' in comment.body:
             return True
     return False
 
