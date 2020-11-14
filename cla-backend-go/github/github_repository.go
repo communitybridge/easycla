@@ -49,30 +49,44 @@ func GetRepositories(ctx context.Context, organizationName string) ([]*github.Re
 	// Get the client with token
 	client := NewGithubOauthClient()
 
-	// API https://docs.github.com/en/free-pro-team@latest/rest/reference/repos
-	// TODO: - only can pull 100 repos at a time - need to do pagination
-	repoList, resp, err := client.Repositories.ListByOrg(ctx, organizationName, &github.RepositoryListByOrgOptions{
-		Type:      "public",
-		Sort:      "full_name",
-		Direction: "asc",
-		ListOptions: github.ListOptions{
-			Page:    0,
-			PerPage: 100,
-		},
-	})
-	if err != nil {
-		log.WithFields(f).WithError(err).Warn("unable to list repositories for organization")
-		if resp != nil && resp.StatusCode == 404 {
-			return nil, ErrGithubOrganizationNotFound
+	var responseRepoList []*github.Repository
+	var nextPage = 1
+	for {
+		// API https://docs.github.com/en/free-pro-team@latest/rest/reference/repos
+		// API Pagination: https://docs.github.com/en/free-pro-team@latest/rest/guides/traversing-with-pagination
+		repoList, resp, err := client.Repositories.ListByOrg(ctx, organizationName, &github.RepositoryListByOrgOptions{
+			Type:      "public",
+			Sort:      "full_name",
+			Direction: "asc",
+			ListOptions: github.ListOptions{
+				Page:    nextPage,
+				PerPage: 100,
+			},
+		})
+		if err != nil {
+			log.WithFields(f).WithError(err).Warn("unable to list repositories for organization")
+			if resp != nil && resp.StatusCode == 404 {
+				return nil, ErrGithubOrganizationNotFound
+			}
+			return nil, err
 		}
-		return nil, err
+
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			msg := fmt.Sprintf("GetRepositories %s failed with no success response code %d. error = %s", organizationName, resp.StatusCode, err.Error())
+			log.WithFields(f).Warnf(msg)
+			return nil, errors.New(msg)
+		}
+
+		// Append our results to the response...
+		responseRepoList = append(responseRepoList, repoList...)
+		// if no more pages...
+		if resp.NextPage == 0 {
+			break
+		}
+
+		// update our next page value
+		nextPage = resp.NextPage
 	}
 
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		msg := fmt.Sprintf("GetRepositories %s failed with no success response code %d. error = %s", organizationName, resp.StatusCode, err.Error())
-		log.WithFields(f).Warnf(msg)
-		return nil, errors.New(msg)
-	}
-
-	return repoList, nil
+	return responseRepoList, nil
 }

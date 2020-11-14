@@ -85,9 +85,9 @@ import (
 	v2Template "github.com/communitybridge/easycla/cla-backend-go/v2/template"
 
 	"github.com/go-openapi/loads"
-	"github.com/lytics/logrus"
 	"github.com/rs/cors"
 	"github.com/savaki/dynastore"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -126,10 +126,14 @@ type combinedRepo struct {
 
 // server function called by environment specific server functions
 func server(localMode bool) http.Handler {
+	f := logrus.Fields{
+		"functionName": "server",
+		"localMode":    localMode,
+	}
 
 	host, err := os.Hostname()
 	if err != nil {
-		log.Fatalf("unable to get hostname. Error: %v", err)
+		log.WithFields(f).WithError(err).Fatalf("unable to get hostname. Error: %v", err)
 	}
 
 	var githubOrgValidation = true // default is true/enabled
@@ -137,7 +141,7 @@ func server(localMode bool) http.Handler {
 	if githubOrgValidationString != "" {
 		githubOrgValidation, err = strconv.ParseBool(githubOrgValidationString)
 		if err != nil {
-			log.Fatalf("GH_ORG_VALIDATION value must be a boolean string. Error: %v", err)
+			log.WithFields(f).WithError(err).Fatal("GH_ORG_VALIDATION value must be a boolean string")
 		}
 	}
 
@@ -146,45 +150,61 @@ func server(localMode bool) http.Handler {
 	if companyUserValidationString != "" {
 		companyUserValidation, err = strconv.ParseBool(companyUserValidationString)
 		if err != nil {
-			log.Fatalf("COMPANY_USER_VALIDATION value must be a boolean string. Error: %v", err)
+			log.WithFields(f).WithError(err).Fatal("COMPANY_USER_VALIDATION value must be a boolean string")
 		}
 	}
 
 	stage := viper.GetString("STAGE")
 	dynamodbRegion := ini.GetProperty("DYNAMODB_AWS_REGION")
 
-	log.Infof("Service %s starting...", ini.ServiceName)
+	log.WithFields(f).Infof("Service %s starting...", ini.ServiceName)
 
-	// Show the version and build info
-	log.Infof("Name                    : %s", ini.ServiceName)
-	log.Infof("Version                 : %s", Version)
-	log.Infof("Git commit hash         : %s", Commit)
-	log.Infof("Branch                  : %s", Branch)
-	log.Infof("Build date              : %s", BuildDate)
-	log.Infof("Golang OS               : %s", runtime.GOOS)
-	log.Infof("Golang Arch             : %s", runtime.GOARCH)
-	log.Infof("DYANAMODB_AWS_REGION    : %s", dynamodbRegion)
-	log.Infof("GH_ORG_VALIDATION       : %t", githubOrgValidation)
-	log.Infof("COMPANY_USER_VALIDATION : %t", companyUserValidation)
-	log.Infof("STAGE                   : %s", stage)
-	log.Infof("Service Host            : %s", host)
-	log.Infof("Service Port            : %d", *portFlag)
+	if log.IsTextLogFormat() {
+		// Show the version and build info
+		log.Infof("Name                    : %s", ini.ServiceName)
+		log.Infof("Version                 : %s", Version)
+		log.Infof("Git commit hash         : %s", Commit)
+		log.Infof("Branch                  : %s", Branch)
+		log.Infof("Build date              : %s", BuildDate)
+		log.Infof("Golang OS               : %s", runtime.GOOS)
+		log.Infof("Golang Arch             : %s", runtime.GOARCH)
+		log.Infof("DYANAMODB_AWS_REGION    : %s", dynamodbRegion)
+		log.Infof("GH_ORG_VALIDATION       : %t", githubOrgValidation)
+		log.Infof("COMPANY_USER_VALIDATION : %t", companyUserValidation)
+		log.Infof("STAGE                   : %s", stage)
+		log.Infof("Service Host            : %s", host)
+		log.Infof("Service Port            : %d", *portFlag)
+	} else {
+		f["serviceName"] = ini.ServiceName
+		f["version"] = Version
+		f["commit"] = Commit
+		f["branch"] = Branch
+		f["buildDate"] = BuildDate
+		f["os"] = runtime.GOOS
+		f["arch"] = runtime.GOARCH
+		f["dynamoDBRegion"] = dynamodbRegion
+		f["githubOrgValidation"] = githubOrgValidation
+		f["companyUserValidation"] = companyUserValidation
+		f["stage"] = stage
+		f["serviceHost"] = host
+		log.WithFields(f).Info("config")
+	}
 
 	awsSession, err := ini.GetAWSSession()
 	if err != nil {
-		log.Panicf("Unable to load AWS session - Error: %v", err)
+		log.WithFields(f).WithError(err).Panic("Unable to load AWS session")
 	}
 
 	configFile := ini.GetConfig()
 
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
 	if err != nil {
-		logrus.Panicf("Invalid swagger file for initializing EasyCLA v1 - Error: %v", err)
+		log.WithFields(f).WithError(err).Panic("Invalid swagger file for initializing EasyCLA v1")
 	}
 
 	v2SwaggerSpec, err := loads.Analyzed(v2RestAPI.SwaggerJSON, "")
 	if err != nil {
-		logrus.Panicf("Invalid swagger file for initializing EasyCLA v2 - Error: %v", err)
+		log.WithFields(f).WithError(err).Panic("Invalid swagger file for initializing EasyCLA v2")
 	}
 
 	api := operations.NewClaAPI(swaggerSpec)
@@ -192,7 +212,7 @@ func server(localMode bool) http.Handler {
 
 	docraptorClient, err := docraptor.NewDocraptorClient(configFile.Docraptor.APIKey, configFile.Docraptor.TestMode)
 	if err != nil {
-		logrus.Panicf("Unable to setup docraptor client - Error: %v", err)
+		log.WithFields(f).WithError(err).Panic("unable to setup docraptor client")
 	}
 
 	authValidator, err := auth.NewAuthValidator(
@@ -267,7 +287,7 @@ func server(localMode bool) http.Handler {
 
 	sessionStore, err := dynastore.New(dynastore.Path("/"), dynastore.HTTPOnly(), dynastore.TableName(configFile.SessionStoreTableName), dynastore.DynamoDB(dynamodb.New(awsSession)))
 	if err != nil {
-		log.Fatalf("Unable to create new Dynastore session - Error: %v", err)
+		log.WithFields(f).WithError(err).Panic("unable to create new Dynastore session")
 	}
 	utils.SetSnsEmailSender(awsSession, configFile.SNSEventTopicARN, configFile.SenderEmailAddress)
 	utils.SetS3Storage(awsSession, configFile.SignatureFilesBucket)
@@ -390,8 +410,12 @@ func server(localMode bool) http.Handler {
 
 // setupCORSHandler sets up the CORS logic and creates the middleware HTTP handler
 func setupCORSHandler(handler http.Handler, allowedOrigins []string) http.Handler {
+	f := logrus.Fields{
+		"functionName":   "setupCORSHandler",
+		"allowedOrigins": strings.Join(allowedOrigins, ","),
+	}
 
-	log.Debugf("Allowed origins: %v", allowedOrigins)
+	log.WithFields(f).Debug("configuring allowed origins")
 	c := cors.New(cors.Options{
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
@@ -399,7 +423,7 @@ func setupCORSHandler(handler http.Handler, allowedOrigins []string) http.Handle
 		AllowOriginFunc: func(origin string) bool {
 			u, err := url.Parse(origin)
 			if err != nil {
-				log.Warnf("cors parse origin issue: %v", err)
+				log.WithFields(f).WithError(err).Warn("cors parse origin issue")
 				return false
 			}
 
@@ -408,21 +432,21 @@ func setupCORSHandler(handler http.Handler, allowedOrigins []string) http.Handle
 			if allowedOrigin {
 				// localhost with HTTP is allowed
 				if strings.HasPrefix(u.Hostname(), "localhost") && u.Scheme == "http" {
-					log.Debugf("origin %s with protocol %s is allowed", u.Hostname(), u.Scheme)
+					log.WithFields(f).Debugf("origin %s with protocol %s is allowed", u.Hostname(), u.Scheme)
 					return true
 				}
 
 				// non-localhost with HTTPS is allowed
 				if !strings.HasPrefix(u.Hostname(), "localhost") && u.Scheme == "https" {
-					log.Debugf("origin %s with protocol %s is allowed", u.Hostname(), u.Scheme)
+					log.WithFields(f).Debugf("origin %s with protocol %s is allowed", u.Hostname(), u.Scheme)
 					return true
 				}
 
-				log.Debugf("origin %s with protocol %s is NOT allowed", u.Hostname(), u.Scheme)
+				log.WithFields(f).Debugf("origin %s with protocol %s is NOT allowed", u.Hostname(), u.Scheme)
 				return false
 			}
 
-			log.Warnf("origin %s is NOT allowed - not in allowed list: %v", u.Hostname(), allowedOrigins)
+			log.WithFields(f).Warnf("origin %s is NOT allowed - not in allowed list: %v", u.Hostname(), allowedOrigins)
 			return false
 		},
 		// Enable Debugging for testing, consider disabling in production
@@ -449,8 +473,11 @@ func wrapHandlers(v1 http.Handler, v1BasePath string, v2 http.Handler, v2BasePat
 
 // setupCORSHandlerLocal allows all origins and sets up the handler
 func setupCORSHandlerLocal(handler http.Handler) http.Handler {
+	f := logrus.Fields{
+		"functionName": "setupCORSHandlerLocal",
+	}
 
-	log.Debug("Allowing all origins")
+	log.WithFields(f).Debug("Allowing all origins")
 	c := cors.New(cors.Options{
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
@@ -495,14 +522,18 @@ func (lrw *LoggingResponseWriter) WriteHeader(statusCode int) {
 
 // setRequestIDHandler adds the x-request-id header, if missing
 func setRequestIDHandler(next http.Handler) http.Handler {
+	f := logrus.Fields{
+		"functionName": "setRequestIDHandler",
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Set the x-request-id header value if it doesn't exist...
-		if r.Header.Get("x-request-id") == "" {
+		if r.Header.Get(utils.XREQUESTID) == "" {
 			requestID, err := uuid.NewV4()
 			if err != nil {
-				log.Warnf("unable to generate a UUID for x-request-id header, error: %v", err)
+				log.WithFields(f).WithError(err).Warn("unable to generate a UUID for x-request-id header")
 			} else {
-				r.Header.Set("x-request-id", requestID.String())
+				r.Header.Set(utils.XREQUESTID, requestID.String())
 			}
 		}
 		next.ServeHTTP(w, r)
@@ -512,13 +543,27 @@ func setRequestIDHandler(next http.Handler) http.Handler {
 // responseLoggingMiddleware logs the responses from API endpoints
 func responseLoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestStart(r.Header.Get(utils.XREQUESTID), r.Method)
 		log.Debugf("BEGIN - %s %s", r.Method, r.URL.String())
 		next.ServeHTTP(NewLoggingResponseWriter(w), r)
 		if r.Response != nil {
-			log.Debugf("END - %s %s - response code: %d response status: %s",
-				r.Method, r.URL.String(), r.Response.StatusCode, r.Response.Status)
+			reqMetrics := getRequestMetrics(r.Header.Get(utils.XREQUESTID))
+			if reqMetrics != nil {
+				log.Debugf("END - %s %s - response code: %d response status: %s, elapsed: %v",
+					r.Method, r.URL.String(), r.Response.StatusCode, r.Response.Status, reqMetrics.elapsed)
+			} else {
+				log.Debugf("END - %s %s - response code: %d response status: %s",
+					r.Method, r.URL.String(), r.Response.StatusCode, r.Response.Status)
+			}
+			clearRequestMetrics(r.Header.Get(utils.XREQUESTID))
 		} else {
-			log.Debugf("END - %s %s", r.Method, r.URL.String())
+			reqMetrics := getRequestMetrics(r.Header.Get(utils.XREQUESTID))
+			if reqMetrics != nil {
+				log.Debugf("END - %s %s, elapsed: %v", r.Method, r.URL.String(), reqMetrics.elapsed)
+			} else {
+				log.Debugf("END - %s %s", r.Method, r.URL.String())
+			}
+			clearRequestMetrics(r.Header.Get(utils.XREQUESTID))
 		}
 	})
 }
