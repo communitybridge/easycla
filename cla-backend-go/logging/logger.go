@@ -15,27 +15,46 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	logFormatText    = "text"
-	logFormatJSON    = "json"
-	logFormatDefault = logFormatText
-)
+// LogFormatText the text logging format
+const LogFormatText = "text"
+
+// LogFormatJSON the json logging format
+const LogFormatJSON = "json"
+
+// LogFormatDefault is the default logging format
+const LogFormatDefault = LogFormatText
 
 var logger = logrus.New()
+var logFormat = ""
+
+// GetLogFormat returns the configured logging format
+func GetLogFormat() string {
+	return logFormat
+}
+
+// IsJSONLogFormat returns true if the logging format is JSON
+func IsJSONLogFormat() bool {
+	return logFormat == LogFormatJSON
+}
+
+// IsTextLogFormat returns true if the logging format is text
+func IsTextLogFormat() bool {
+	return logFormat == LogFormatText
+}
 
 // init initializes the logger
 func init() {
-	logFormat := os.Getenv("LOG_FORMAT")
+	logFormat = os.Getenv("LOG_FORMAT")
 	// default log format is text
 	if logFormat == "" {
-		logFormat = logFormatDefault
+		logFormat = LogFormatDefault
 	}
-	if logFormat != logFormatJSON && logFormat != logFormatText {
-		fmt.Printf("Unsupported logging format format: '%s' - setting value to default: '%s'\n", logFormat, logFormatDefault)
-		logFormat = logFormatDefault
+	if logFormat != LogFormatJSON && logFormat != LogFormatText {
+		fmt.Printf("Unsupported logging format format: '%s' - setting value to default: '%s'\n", logFormat, LogFormatDefault)
+		logFormat = LogFormatDefault
 	}
 
-	if logFormat == logFormatJSON {
+	if logFormat == LogFormatJSON {
 		// Log as JSON instead of the default ASCII formatter.
 		logger.SetFormatter(UTCFormatter{
 			Formatter: &logrus.JSONFormatter{
