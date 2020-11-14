@@ -20,10 +20,14 @@ func buildGithubOrganizationListModels(ctx context.Context, githubOrganizations 
 		"functionName":   "buildGithubOrganizationListModels",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
+
+	// Convert the database model to a response model
 	ghOrgList := toModels(githubOrganizations)
+
 	if len(ghOrgList) > 0 {
 		var wg sync.WaitGroup
 		wg.Add(len(ghOrgList))
+
 		for _, ghorganization := range ghOrgList {
 			go func(ghorg *models.GithubOrganization) {
 				defer wg.Done()
@@ -40,9 +44,11 @@ func buildGithubOrganizationListModels(ctx context.Context, githubOrganizations 
 						ID:      user.ID,
 					}
 				}
+
 				ghorg.Repositories = &models.GithubOrganizationRepositories{
 					List: make([]*models.GithubRepositoryInfo, 0),
 				}
+
 				if ghorg.OrganizationInstallationID != 0 {
 					log.WithFields(f).Debugf("Loading GitHub repository list based on installation id: %d...", ghorg.OrganizationInstallationID)
 					list, err := github.GetInstallationRepositories(ghorg.OrganizationInstallationID)

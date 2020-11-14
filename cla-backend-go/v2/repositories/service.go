@@ -147,89 +147,96 @@ func (s *service) ListProjectRepositories(ctx context.Context, projectSFID strin
 		log.WithFields(f).Warn("unable to lookup project by id in the project service - no record found")
 		return nil, err
 	}
-
-	// Lookup orgs via projectSFID
-	log.WithFields(f).Debug("querying for organizations by project id...")
-	var githubOrgList *v1Models.GithubOrganizations
-	githubOrgList, err = s.ghOrgRepo.GetGithubOrganizations(ctx, projectSFID)
-	if err != nil {
-		log.WithFields(f).WithError(err).Warn("unable to lookup project by id in the github organization table")
-		if projectModel.Parent != "" {
-			log.WithFields(f).Debugf("querying for organizations by parent project id: %s...", projectModel.Parent)
-			var ghOrgErr error
-			githubOrgList, ghOrgErr = s.ghOrgRepo.GetGithubOrganizations(ctx, projectModel.Parent)
-			if ghOrgErr != nil {
-				log.WithFields(f).WithError(ghOrgErr).Warn("unable to lookup project by parent id in the github organization table")
-				return nil, ghOrgErr
-			}
-		}
+	f["projectName"] = projectModel.Name
+	if projectModel.Parent != "" {
+		f["projectParentSFID"] = projectModel.Parent
 	}
+	log.WithFields(f).Debug("loaded project from the project service")
+	return s.repo.ListProjectRepositories(ctx, "", projectSFID, true)
 
-	// Our response - empty to start with
-	response := &v1Models.ListGithubRepositories{
-		List: []*v1Models.GithubRepository{},
-	}
-
-	if githubOrgList == nil {
-		log.WithFields(f).Warn("unable to lookup project by id - no records found")
-		return response, err
-	}
-
-	// For each of the organizations we have in our database for this project...
-	for _, gitHubOrg := range githubOrgList.List {
-		// Query GitHub for the list of public repositories...
-		log.WithFields(f).Debugf("querying github by organization: %s", gitHubOrg.OrganizationName)
-		ghRepoList, getRepoErr := github.GetRepositories(ctx, gitHubOrg.OrganizationName)
-		if getRepoErr != nil {
-			log.WithFields(f).WithError(getRepoErr).Warn("unable to lookup github organization details")
-			return response, getRepoErr
-		}
-
-		// Add to our response model...use default values (enabled = false)
-		log.WithFields(f).Debugf("found %d github repositories for organization: %s", len(ghRepoList), gitHubOrg.OrganizationName)
-		for _, ghRepo := range ghRepoList {
-			response.List = append(response.List, &v1Models.GithubRepository{
-				Enabled:                    false,
-				ProjectSFID:                projectSFID,
-				RepositoryExternalID:       projectSFID,
-				RepositoryName:             utils.StringValue(ghRepo.Name),
-				RepositoryOrganizationName: gitHubOrg.OrganizationName,
-				RepositoryType:             "github",
-				RepositoryURL:              utils.StringValue(ghRepo.URL),
-				Version:                    "v1",
-			})
-		}
-	}
-
-	// Now, query our DB....
-	listOurGitHubRepos, err := s.repo.ListProjectRepositories(ctx, "", projectSFID, true)
-	if err != nil {
-		log.WithFields(f).WithError(err).Warn("unable to lookup repository records by id in our repositories table ")
-		return response, err
-	}
-	if listOurGitHubRepos == nil || len(listOurGitHubRepos.List) == 0 {
-		log.WithFields(f).Warn("unable to lookup repository records by id in our repositories table ")
-		return response, err
-	}
-
-	// For each repo that we have...
-	for _, ourGitHubRepo := range listOurGitHubRepos.List {
-		// Inefficient, but ok if the number of repos is relatively small
-		for _, r := range response.List {
-			// Copy over the additional details
-			if ourGitHubRepo.RepositoryName == r.RepositoryName {
-				r.RepositoryID = ourGitHubRepo.RepositoryID
-				r.Enabled = ourGitHubRepo.Enabled
-				r.DateCreated = ourGitHubRepo.DateCreated
-				r.DateModified = ourGitHubRepo.DateModified
-				r.Note = ourGitHubRepo.Note
-				r.Version = ourGitHubRepo.Version
-				break
-			}
-		}
-	}
-
-	return response, nil
+	//// Lookup orgs via projectSFID
+	//log.WithFields(f).Debug("querying EasyCLA for organizations by project id...")
+	//var githubOrgList *v1Models.GithubOrganizations
+	//githubOrgList, err = s.ghOrgRepo.GetGithubOrganizations(ctx, projectSFID)
+	//if err != nil {
+	//	log.WithFields(f).WithError(err).Warn("unable to lookup project by id in the github organization table")
+	//	if projectModel.Parent != "" {
+	//		log.WithFields(f).Debugf("querying for organizations by parent project id: %s...", projectModel.Parent)
+	//		var ghOrgErr error
+	//		githubOrgList, ghOrgErr = s.ghOrgRepo.GetGithubOrganizations(ctx, projectModel.Parent)
+	//		if ghOrgErr != nil {
+	//			log.WithFields(f).WithError(ghOrgErr).Warn("unable to lookup project by parent id in the github organization table")
+	//			return nil, ghOrgErr
+	//		}
+	//	}
+	//}
+	//
+	//// Our response - empty to start with
+	//response := &v1Models.ListGithubRepositories{
+	//	List: []*v1Models.GithubRepository{},
+	//}
+	//
+	//if githubOrgList == nil {
+	//	log.WithFields(f).Warn("unable to lookup project by id - no records found")
+	//	return response, err
+	//}
+	//log.WithFields(f).Debugf("loaded %d EasyCLA GitHub organizations for project", len(githubOrgList.List))
+	//
+	//// For each of the organizations we have in our database for this project...
+	//for _, gitHubOrg := range githubOrgList.List {
+	//	// Query GitHub for the list of public repositories...
+	//	log.WithFields(f).Debugf("querying github by organization: %s", gitHubOrg.OrganizationName)
+	//	ghRepoList, getRepoErr := github.GetRepositories(ctx, gitHubOrg.OrganizationName)
+	//	if getRepoErr != nil {
+	//		log.WithFields(f).WithError(getRepoErr).Warn("unable to lookup github organization details")
+	//		return response, getRepoErr
+	//	}
+	//
+	//	// Add to our response model...use default values (enabled = false)
+	//	log.WithFields(f).Debugf("found %d github repositories for organization: %s", len(ghRepoList), gitHubOrg.OrganizationName)
+	//	for _, ghRepo := range ghRepoList {
+	//		response.List = append(response.List, &v1Models.GithubRepository{
+	//			Enabled:                    false,
+	//			ProjectSFID:                projectSFID,
+	//			RepositoryExternalID:       projectSFID,
+	//			RepositoryName:             utils.StringValue(ghRepo.Name),
+	//			RepositoryOrganizationName: gitHubOrg.OrganizationName,
+	//			RepositoryType:             "github",
+	//			RepositoryURL:              utils.StringValue(ghRepo.URL),
+	//			Version:                    "v1",
+	//		})
+	//	}
+	//}
+	//
+	//// Now, query our DB....
+	//listOurGitHubRepos, err := s.repo.ListProjectRepositories(ctx, "", projectSFID, true)
+	//if err != nil {
+	//	log.WithFields(f).WithError(err).Warn("unable to lookup repository records by id in our repositories table ")
+	//	return response, err
+	//}
+	//if listOurGitHubRepos == nil || len(listOurGitHubRepos.List) == 0 {
+	//	log.WithFields(f).Warn("unable to lookup repository records by id in our repositories table ")
+	//	return response, err
+	//}
+	//
+	//// For each repo that we have...
+	//for _, ourGitHubRepo := range listOurGitHubRepos.List {
+	//	// Inefficient, but ok if the number of repos is relatively small
+	//	for _, r := range response.List {
+	//		// Copy over the additional details
+	//		if ourGitHubRepo.RepositoryName == r.RepositoryName {
+	//			r.RepositoryID = ourGitHubRepo.RepositoryID
+	//			r.Enabled = ourGitHubRepo.Enabled
+	//			r.DateCreated = ourGitHubRepo.DateCreated
+	//			r.DateModified = ourGitHubRepo.DateModified
+	//			r.Note = ourGitHubRepo.Note
+	//			r.Version = ourGitHubRepo.Version
+	//			break
+	//		}
+	//	}
+	//}
+	//
+	//return response, nil
 }
 
 func (s *service) GetRepository(ctx context.Context, repositoryID string) (*v1Models.GithubRepository, error) {
