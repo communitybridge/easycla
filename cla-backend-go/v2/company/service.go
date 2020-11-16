@@ -328,22 +328,26 @@ func (s *service) CreateCompany(ctx context.Context, companyName string, company
 	lfUser, lfErr := userClient.SearchUserByEmail(userEmail)
 	if lfErr != nil {
 		msg := fmt.Sprintf("User : %s has no LFID", userEmail)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 	}
-	if lfUser != nil {
+	if lfUser != nil && lfUser.Username == "" {
+		msg := fmt.Sprintf("User: %s has no LF username", userEmail)
+		log.WithFields(f).Warn(msg)
+	}
+	if lfUser != nil && lfUser.Username != "" {
 		log.WithFields(f).Debugf("User :%s has been assigned the company-owner role to organization: %s ", userEmail, org.Name)
 		// Assign company-admin to user
 		roleID, adminErr := acsClient.GetRoleID(utils.CompanyAdminRole)
 		if adminErr != nil {
 			msg := "Problem getting companyAdmin role ID for contributor"
-			log.Warn(msg)
+			log.WithFields(f).Warn(msg)
 			return nil, adminErr
 		}
 
 		scopeErr := orgClient.CreateOrgUserRoleOrgScope(userEmail, org.ID, roleID)
 		if scopeErr != nil {
 			msg := fmt.Sprintf("Problem creating Org scope for email: %s , companyID: %s", userEmail, org.ID)
-			log.Warn(msg)
+			log.WithFields(f).Warn(msg)
 			if !strings.Contains(scopeErr.Error(), OrgAssociated) {
 				return nil, scopeErr
 			}
