@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch, MagicMock
 from github import Github
 
 import cla
-from cla.models.github_models import get_pull_request_commit_authors, handle_commit_from_user
+from cla.models.github_models import get_pull_request_commit_authors, handle_commit_from_user, MockGitHub
 from cla.models.dynamo_models import Signature, Project
 
 
@@ -92,10 +92,54 @@ class TestGitHubModels(unittest.TestCase):
         signed = []
         project = Project()
         project.set_project_id('fake_project_id')
-        handle_commit_from_user(project, 'fake_sha', (123,'foo','foo@gmail.com'), signed, missing)
+        handle_commit_from_user(project, 'fake_sha', (123, 'foo', 'foo@gmail.com'), signed, missing)
         # We commented out this functionality for now - re-enable if we add it back
         # self.assertListEqual(missing, [('fake_sha', [123, 'foo', 'foo@gmail.com', True])])
         self.assertEqual(signed, [])
+
+
+class TestGithubModelsPrComment(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.github = MockGitHub()
+        self.github.update_change_request = MagicMock()
+
+    def tearDown(self) -> None:
+        pass
+
+    def test_process_easycla_command_comment(self):
+        with self.assertRaisesRegex(ValueError, "missing comment body"):
+            self.github.process_easycla_command_comment({})
+
+        with self.assertRaisesRegex(ValueError, "unsupported comment supplied"):
+            self.github.process_easycla_command_comment({
+                "comment": {"body": "/otherbot"}
+            })
+
+        with self.assertRaisesRegex(ValueError, "missing github repository id"):
+            self.github.process_easycla_command_comment({
+                "comment": {"body": "/easycla"},
+            })
+
+        with self.assertRaisesRegex(ValueError, "missing pull request id"):
+            self.github.process_easycla_command_comment({
+                "comment": {"body": "/easycla"},
+                "repository": {"id": 123},
+            })
+
+        with self.assertRaisesRegex(ValueError, "missing installation id"):
+            self.github.process_easycla_command_comment({
+                "comment": {"body": "/easycla"},
+                "repository": {"id": 123},
+                "issue": {"number": 1},
+            })
+
+        self.github.process_easycla_command_comment({
+            "comment": {"body": "/easycla"},
+            "repository": {"id": 123},
+            "issue": {"number": 1},
+            "installation": {"id": 1},
+        })
 
 
 if __name__ == '__main__':

@@ -278,6 +278,10 @@ def activity(event_type, body):
     elif event_type == 'pull_request':
         handle_pull_request_event(action, body)
 
+    elif event_type == "issue_comment":
+        cla.log.debug(f'github.activity - received issue_comment action: {action}...')
+        handle_pull_request_comment_event(action, body)
+
     else:
         cla.log.debug(f'github.activity - ignoring github activity event, action: {action}...')
 
@@ -351,6 +355,24 @@ def handle_pull_request_event(action: str, body: dict):
         return result
     else:
         cla.log.debug(f'{func_name} - ignoring github pull_request activity for action: {action}')
+
+
+def handle_pull_request_comment_event(action: str, body: dict):
+    func_name = 'github.activity.handle_pull_request_comment_event'
+    cla.log.debug(f'{func_name} - processing github pull_request comment activity callback...')
+
+    # New comment created or edited
+    if action == 'created' or action == 'edited':
+        cla.log.debug(f'{func_name} - processing github pull_request comment activity for action: {action}')
+        service = cla.utils.get_repository_service('github')
+        try:
+            result = service.process_easycla_command_comment(body)
+            return result
+        except ValueError as ex:
+            cla.log.warning(f"process_easycla_command_comment failed with : {str(ex)}")
+            return None
+    else:
+        cla.log.debug(f'{func_name} - ignoring github pull_request comment activity for action: {action}')
 
 
 def handle_installation_repositories_event(action: str, body: dict):

@@ -86,7 +86,7 @@ class GitHub(repository_service_interface.RepositoryService):
         This method gets called when the OAuth2 app (NOT the GitHub App) needs to get info on the
         user trying to sign. In this case we begin an OAuth2 exchange with the 'user:email' scope.
         """
-        fn = 'sign_request' # function name
+        fn = 'sign_request'  # function name
         cla.log.debug(f'{fn} - Initiating GitHub sign request for installation_id: {installation_id}, '
                       f'for repository {github_repository_id}, '
                       f'for PR: {change_request_id}')
@@ -297,6 +297,38 @@ class GitHub(repository_service_interface.RepositoryService):
         pull_request_id = data['pull_request']['number']
         github_repository_id = data['repository']['id']
         installation_id = data['installation']['id']
+        self.update_change_request(installation_id, github_repository_id, pull_request_id)
+
+    def process_easycla_command_comment(self, data):
+        """
+        Processes easycla command comment if present
+        :param data: github issue comment webhook event payload : https://docs.github.com/en/free-pro-team@latest/developers/webhooks-and-events/webhook-events-and-payloads#issue_comment
+        :return:
+        """
+        comment_str = data.get("comment", {}).get("body", "")
+        if not comment_str:
+            raise ValueError("missing comment body, ignoring the message")
+
+        if "/easycla" not in comment_str.split():
+            raise ValueError("unsupported comment supplied, currently only /easycla command is supported")
+
+        github_repository_id = data.get('repository', {}).get('id', None)
+        if not github_repository_id:
+            raise ValueError("missing github repository id in pull request comment")
+        cla.log.debug(f"comment trigger for github_repo : {github_repository_id}")
+
+        # turns out pull request id and issue is the same thing
+        pull_request_id = data.get("issue", {}).get("number", None)
+        if not pull_request_id:
+            raise ValueError("missing pull request id ")
+        cla.log.debug(f"comment trigger for pull_request_id : {pull_request_id}")
+
+        cla.log.debug("installation object : ", data.get('installation', {}))
+        installation_id = data.get('installation', {}).get('id', None)
+        if not installation_id:
+            raise ValueError("missing installation id in pull request comment")
+        cla.log.debug(f"comment trigger for installation_id : {installation_id}")
+
         self.update_change_request(installation_id, github_repository_id, pull_request_id)
 
     def get_return_url(self, github_repository_id, change_request_id, installation_id):
@@ -560,7 +592,7 @@ class GitHub(repository_service_interface.RepositoryService):
         :param client_id:
         :return:
         """
-        fn = 'github_models._fetch_github_emails' # function name
+        fn = 'github_models._fetch_github_emails'  # function name
         # Use the user's token to fetch their public email(s) - don't use the system token as this endpoint won't work
         # as expected
         token = session.get('github_oauth2_token')
