@@ -100,7 +100,7 @@ class GitHub(repository_service_interface.RepositoryService):
 
         cla.log.debug(f'{fn} - Determining return URL from the inbound request...')
         origin_url = self.get_return_url(github_repository_id, change_request_id, installation_id)
-        cla.log.debug(f'{fn} = Return URL from the inbound request is {origin_url}...')
+        cla.log.debug(f'{fn} - Return URL from the inbound request is {origin_url}...')
         session['github_origin_url'] = origin_url
         if 'github_oauth2_token' in session:
             cla.log.debug(f'{fn} - Using existing session GitHub OAuth2 token')

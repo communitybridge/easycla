@@ -28,6 +28,14 @@ import (
 
 // index
 const (
+	repositoryEnabledColumn = "enabled"
+
+	// RepositoryEnabled flag
+	RepositoryEnabled = "enabled"
+
+	// RepositoryDisabled flag
+	RepositoryDisabled = "disabled"
+
 	ProjectRepositoryIndex                     = "project-repository-index"
 	SFDCRepositoryIndex                        = "sfdc-repository-index"
 	ExternalRepositoryIndex                    = "external-repository-index"
@@ -46,6 +54,7 @@ type Repository interface {
 	AddGithubRepository(ctx context.Context, externalProjectID string, projectSFID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
 	UpdateClaGroupID(ctx context.Context, repositoryID, claGroupID string) error
 	EnableRepository(ctx context.Context, repositoryID string) error
+	EnableRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string) error
 	DisableRepository(ctx context.Context, repositoryID string) error
 	DisableRepositoriesByProjectID(ctx context.Context, projectID string) error
 	DisableRepositoriesOfGithubOrganization(ctx context.Context, externalProjectID, githubOrgName string) error
@@ -146,6 +155,11 @@ func (r *repo) UpdateClaGroupID(ctx context.Context, repositoryID, claGroupID st
 // EnableRepository enables the repository entry
 func (r *repo) EnableRepository(ctx context.Context, repositoryID string) error {
 	return r.enableGithubRepository(ctx, repositoryID)
+}
+
+// EnableRepositoryWithCLAGroupID enables the repository entry with the specified CLA Group ID
+func (r *repo) EnableRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string) error {
+	return r.enableGithubRepositoryWithCLAGroupID(ctx, repositoryID, claGroupID)
 }
 
 // DisableRepository disables the repository entry (we don't delete)
@@ -283,7 +297,7 @@ func (r *repo) GetRepositoriesByCLAGroup(ctx context.Context, claGroupID string,
 	}
 	builder := expression.NewBuilder()
 	condition := expression.Key("repository_project_id").Equal(expression.Value(claGroupID))
-	filter := expression.Name("enabled").Equal(expression.Value(enabled))
+	filter := expression.Name(repositoryEnabledColumn).Equal(expression.Value(enabled))
 	builder = builder.WithKeyCondition(condition).WithFilter(filter)
 
 	expr, err := builder.Build()
@@ -417,7 +431,7 @@ func (r repo) ListProjectRepositories(ctx context.Context, externalProjectID str
 	}
 
 	// Add the enabled filter
-	filter := expression.Name("enabled").Equal(expression.Value(enabled))
+	filter := expression.Name(repositoryEnabledColumn).Equal(expression.Value(enabled))
 
 	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithFilter(filter).Build()
 	if err != nil {
@@ -463,7 +477,7 @@ func (r repo) getProjectRepositories(ctx context.Context, projectID string, enab
 	var out []*models.GithubRepository
 
 	condition := expression.Key("repository_project_id").Equal(expression.Value(projectID))
-	filter := expression.Name("enabled").Equal(expression.Value(enabled))
+	filter := expression.Name(repositoryEnabledColumn).Equal(expression.Value(enabled))
 	builder := expression.NewBuilder().WithKeyCondition(condition).WithFilter(filter)
 	// Use the nice builder to create the expression
 	expr, err := builder.Build()
@@ -557,7 +571,7 @@ func (r repo) GetRepositoryByGithubID(ctx context.Context, externalID string, en
 	var condition expression.KeyConditionBuilder
 	builder := expression.NewBuilder()
 	condition = expression.Key("repository_external_id").Equal(expression.Value(externalID))
-	filter := expression.Name("enabled").Equal(expression.Value(enabled))
+	filter := expression.Name(repositoryEnabledColumn).Equal(expression.Value(enabled))
 
 	builder = builder.WithKeyCondition(condition).WithFilter(filter)
 	// Use the nice builder to create the expression
@@ -597,6 +611,10 @@ func (r repo) enableGithubRepository(ctx context.Context, repositoryID string) e
 	return r.setEnabledGithubRepository(ctx, repositoryID, true)
 }
 
+func (r repo) enableGithubRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string) error {
+	return r.setEnabledGithubRepositoryWithCLAGroupID(ctx, repositoryID, claGroupID, true)
+}
+
 func (r repo) disableGithubRepository(ctx context.Context, repositoryID string) error {
 	return r.setEnabledGithubRepository(ctx, repositoryID, false)
 }
@@ -621,9 +639,9 @@ func (r repo) setEnabledGithubRepository(ctx context.Context, repositoryID strin
 	}
 
 	// Enabled string for the note...
-	var enabledString = "disabled"
+	var enabledString = RepositoryDisabled
 	if enabled {
-		enabledString = "enabled"
+		enabledString = RepositoryEnabled
 	}
 
 	// If we have an old note - grab it/save it
@@ -639,7 +657,7 @@ func (r repo) setEnabledGithubRepository(ctx context.Context, repositoryID strin
 			"repository_id": {S: aws.String(repositoryID)},
 		},
 		ExpressionAttributeNames: map[string]*string{
-			"#enabled":      aws.String("enabled"),
+			"#enabled":      aws.String(repositoryEnabledColumn),
 			"#note":         aws.String("note"),
 			"#dateModified": aws.String("date_modified"),
 		},
@@ -655,6 +673,81 @@ func (r repo) setEnabledGithubRepository(ctx context.Context, repositoryID strin
 			},
 		},
 		UpdateExpression: aws.String("SET #enabled = :enabledValue, #note = :noteValue, #dateModified = :dateModifiedValue"),
+		TableName:        aws.String(r.repositoryTableName),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case dynamodb.ErrCodeConditionalCheckFailedException:
+				return errors.New("github repository entry does not exist or repository_sfdc_id does not match with specified project id")
+			}
+		}
+		log.WithFields(f).WithError(err).Warn("error disabling github repository")
+		return err
+	}
+
+	return nil
+}
+
+// setEnabledGithubRepositoryWithCLAGroupID updates the existing repository record by setting the enabled flag to false
+func (r repo) setEnabledGithubRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string, enabled bool) error {
+	f := logrus.Fields{
+		"functionName":   "setEnabledGithubRepositoryWithCLAGroupID",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"repositoryID":   repositoryID,
+		"claGroupID":     claGroupID,
+		"enabled":        enabled,
+	}
+
+	// Load the existing model - need to fetch the old note value, if available
+	existingModel, getErr := r.GetRepository(ctx, repositoryID)
+	if getErr != nil {
+		log.WithFields(f).WithError(getErr).Warn("unable to load repository by repository id")
+		return getErr
+	}
+	if existingModel == nil {
+		return fmt.Errorf("unable to locate existing repository entry by ID: %s", repositoryID)
+	}
+
+	// Enabled string for the note...
+	var enabledString = RepositoryDisabled
+	if enabled {
+		enabledString = RepositoryEnabled
+	}
+
+	// If we have an old note - grab it/save it
+	var existingNote = ""
+	if existingModel.Note != "" {
+		existingNote = existingModel.Note + ". "
+	}
+
+	_, now := utils.CurrentTime()
+	log.WithFields(f).Debug("updating repository record")
+	_, err := r.dynamoDBClient.UpdateItem(&dynamodb.UpdateItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"repository_id": {S: aws.String(repositoryID)},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#claGroupID":   aws.String("repository_project_id"),
+			"#enabled":      aws.String(repositoryEnabledColumn),
+			"#note":         aws.String("note"),
+			"#dateModified": aws.String("date_modified"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":claGroupID": {
+				S: aws.String(claGroupID),
+			},
+			":enabledValue": {
+				BOOL: aws.Bool(enabled),
+			},
+			":noteValue": {
+				S: aws.String(fmt.Sprintf("%s, %s for cla group %s on %s", existingNote, enabledString, claGroupID, now)), // Add to existing note, if set
+			},
+			":dateModifiedValue": {
+				S: aws.String(now),
+			},
+		},
+		UpdateExpression: aws.String("SET #claGroupID = :claGroupID, #enabled = :enabledValue, #note = :noteValue, #dateModified = :dateModifiedValue"),
 		TableName:        aws.String(r.repositoryTableName),
 	})
 	if err != nil {

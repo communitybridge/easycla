@@ -24,6 +24,7 @@ import (
 type Service interface {
 	AddGithubRepository(ctx context.Context, externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
 	EnableRepository(ctx context.Context, repositoryID string) error
+	EnableRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string) error
 	DisableRepository(ctx context.Context, repositoryID string) error
 	UpdateClaGroupID(ctx context.Context, repositoryID, claGroupID string) error
 	ListProjectRepositories(ctx context.Context, externalProjectID string) (*models.ListGithubRepositories, error)
@@ -67,11 +68,11 @@ func (s *service) AddGithubRepository(ctx context.Context, externalProjectID str
 		utils.XREQUESTID:             ctx.Value(utils.XREQUESTID),
 		"projectSFID":                externalProjectID,
 		"claGroupID":                 utils.StringValue(input.RepositoryProjectID),
-		"repositoryName":             input.RepositoryName,
-		"repositoryOrganizationName": input.RepositoryOrganizationName,
-		"repositoryType":             input.RepositoryType,
-		"repositoryProjectID":        input.RepositoryProjectID,
-		"repositoryURL":              input.RepositoryURL,
+		"repositoryName":             utils.StringValue(input.RepositoryName),
+		"repositoryOrganizationName": utils.StringValue(input.RepositoryOrganizationName),
+		"repositoryType":             utils.StringValue(input.RepositoryType),
+		"repositoryProjectID":        utils.StringValue(input.RepositoryProjectID),
+		"repositoryURL":              utils.StringValue(input.RepositoryURL),
 	}
 	if input.RepositoryName != nil && *input.RepositoryName == "" {
 		return nil, errors.New("github repository name required")
@@ -124,7 +125,7 @@ func (s *service) AddGithubRepository(ctx context.Context, externalProjectID str
 
 	if existingModel != nil {
 		log.WithFields(f).Debug("existing repository found - enabling it...")
-		err := s.EnableRepository(ctx, existingModel.RepositoryID)
+		err := s.EnableRepositoryWithCLAGroupID(ctx, existingModel.RepositoryID, utils.StringValue(input.RepositoryProjectID))
 		if err != nil {
 			log.WithFields(f).WithError(err).Warn("problem enabling repository")
 			return nil, err
@@ -139,6 +140,10 @@ func (s *service) AddGithubRepository(ctx context.Context, externalProjectID str
 
 func (s *service) EnableRepository(ctx context.Context, repositoryID string) error {
 	return s.repo.EnableRepository(ctx, repositoryID)
+}
+
+func (s *service) EnableRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string) error {
+	return s.repo.EnableRepositoryWithCLAGroupID(ctx, repositoryID, claGroupID)
 }
 
 func (s *service) DisableRepository(ctx context.Context, repositoryID string) error {
