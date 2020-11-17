@@ -102,11 +102,13 @@ export class ClaConfigureGithubRepositoriesModal {
 
   isTaken(repository) {
     return this.assignedRepositories.some((assignedRepository) => {
-      if (String(assignedRepository.repository_external_id) === String(repository.repository_github_id)) {
+      // In order to be taken - the CLA Groups must match up and the enabled flag must be true
+      if (String(assignedRepository.repository_external_id) === String(repository.repository_github_id) && repository.enabled) {
         repository.repository_project_id = assignedRepository.repository_project_id;
         repository.repository_id = assignedRepository.repository_id;
         return true;
       }
+      // Otherwise, CLA Groups do not match or it is not enabled/take by someone else
       return false;
     });
   }

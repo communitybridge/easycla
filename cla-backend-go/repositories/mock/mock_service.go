@@ -71,6 +71,14 @@ func (m *MockService) EnableRepository(ctx context.Context, repositoryID string)
 	return ret0
 }
 
+// EnableRepositoryWithCLAGroupID mocks base method
+func (m *MockService) EnableRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnableRepositoryWithCLAGroupID", ctx, repositoryID, claGroupID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
 // EnableRepository indicates an expected call of EnableRepository
 func (mr *MockServiceMockRecorder) EnableRepository(ctx, repositoryID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
