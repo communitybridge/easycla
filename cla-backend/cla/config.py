@@ -14,7 +14,7 @@ import logging
 import os
 
 from boto3 import client
-from botocore.exceptions import ClientError, ProfileNotFound
+from botocore.exceptions import ClientError, ProfileNotFound, NoCredentialsError
 
 
 def get_ssm_key(region, key):
@@ -120,4 +120,9 @@ PDF_SERVICE = 'DocRaptor'
 # Moved to GitHub application class GitHubInstallation as loading this property is taking ~1 sec on startup which is
 # killing our response performance - in most API calls this key/attribute is not used, so, we will lazy load this
 # property on class construction
-GITHUB_PRIVATE_KEY = get_ssm_key('us-east-1', f'cla-gh-app-private-key-{stage}')
+GITHUB_PRIVATE_KEY = ""
+try:
+    GITHUB_PRIVATE_KEY = get_ssm_key('us-east-1', f'cla-gh-app-private-key-{stage}')
+except NoCredentialsError as ex:
+    # we don't want things to fail during unit testing
+    pass
