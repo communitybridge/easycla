@@ -1493,6 +1493,14 @@ def append_email_help_sign_off_content(body: str, project_version: str) -> str:
         get_email_sign_off_content(),
     ])
 
+def append_email_help_sign_off_content_plain(body: str, project_version: str) -> str:
+    """
+    Wrapper method that appends the help and sign off content to the email body with no HTML formating
+    :param body:
+    :param project_version:
+    :return:
+    """
+    return append_email_help_sign_off_content(body, project_version).replace("<p>", "").replace("</p>","\n")
 
 def get_current_time() -> str:
     """
