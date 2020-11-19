@@ -60,10 +60,13 @@ setup-deploy:
 	@yarn add serverless && yarn install
 
 clean:
-	@rm -rf bin/ cla cla-mac cla-linux \
+	@rm -rf cla cla-mac cla-linux \
 		./v2/project-service/client ./v2/project-service/models \
 		./v2/organization-service/client ./v2/organization-service/models \
-		./v2/user-service/client ./v2/user-service/models
+		./v2/user-service/client ./v2/user-service/models \
+		backend-aws-lambda* dynamo-events-lambda* \
+		functional-tests* metrics-aws-lambda* metrics-report-lambda* \
+		user-subscribe-lambda* zipbuild-lambda* zipbuilder-scheduler-lambda*
 
 clean-swagger:
 	@rm -rf gen/
