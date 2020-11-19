@@ -366,6 +366,7 @@ export class ProjectPage {
 
   listPendingCLAManagerRequests() {
     this.claService.getCLAManagerRequests(this.companyId, this.projectId).subscribe((response) => {
+      this.noPendingCLAManagerRequests = false;
       if (response.requests == null || response.requests.length == 0) {
         this.noPendingCLAManagerRequests = true;
       } else {
@@ -373,7 +374,9 @@ export class ProjectPage {
         this.pendingCLAManagerRequests = response.requests.filter((req) => req.status === 'pending');
         this.approvedCLAManagerRequests = response.requests.filter((req) => req.status === 'approved');
         this.deniedCLAManagerRequests = response.requests.filter((req) => req.status === 'denied');
-        this.noPendingCLAManagerRequests = false;
+        if (this.pendingCLAManagerRequests.length <= 0) {
+          this.noPendingCLAManagerRequests = true;
+        }
       }
       this.loading.claManagerRequests = false;
     }, (error) => {
