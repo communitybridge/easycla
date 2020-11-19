@@ -42,7 +42,7 @@ type Repository interface {
 	GetGithubOrganizationsByParent(ctx context.Context, parentProjectSFID string) (*models.GithubOrganizations, error)
 	GetGithubOrganization(ctx context.Context, githubOrganizationName string) (*models.GithubOrganization, error)
 	GetGithubOrganizationByName(ctx context.Context, githubOrganizationName string) (*models.GithubOrganizations, error)
-	UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, branchProtectionEnabled bool) error
+	UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, autoEnabledClaGroupID string, branchProtectionEnabled bool) error
 	DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error
 	DeleteGithubOrganizationByParent(ctx context.Context, parentProjectSFID string, githubOrgName string) error
 }
@@ -299,13 +299,14 @@ func (repo repository) GetGithubOrganization(ctx context.Context, githubOrganiza
 }
 
 // UpdateGithubOrganization updates the specified GitHub organization based on the update model provided
-func (repo repository) UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, branchProtectionEnabled bool) error {
+func (repo repository) UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, autoEnabledClaGroupID string, branchProtectionEnabled bool) error {
 	f := logrus.Fields{
 		"functionName":            "UpdateGithubOrganization",
 		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
 		"projectSFID":             projectSFID,
 		"organizationName":        organizationName,
 		"autoEnabled":             autoEnabled,
+		"autoEnabledClaGroupID":   autoEnabledClaGroupID,
 		"branchProtectionEnabled": branchProtectionEnabled,
 		"tableName":               repo.githubOrgTableName,
 	}
@@ -330,12 +331,16 @@ func (repo repository) UpdateGithubOrganization(ctx context.Context, projectSFID
 		},
 		ExpressionAttributeNames: map[string]*string{
 			"#A": aws.String("auto_enabled"),
+			"#C": aws.String("auto_enabled_cla_group_id"),
 			"#B": aws.String("branch_protection_enabled"),
 			"#M": aws.String("date_modified"),
 		},
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":a": {
 				BOOL: aws.Bool(autoEnabled),
+			},
+			":c": {
+				S: aws.String(autoEnabledClaGroupID),
 			},
 			":b": {
 				BOOL: aws.Bool(branchProtectionEnabled),
@@ -344,7 +349,7 @@ func (repo repository) UpdateGithubOrganization(ctx context.Context, projectSFID
 				S: aws.String(currentTime),
 			},
 		},
-		UpdateExpression: aws.String("SET #A = :a, #B = :b, #M = :m"),
+		UpdateExpression: aws.String("SET #A = :a, #C = :c, #B = :b, #M = :m"),
 		TableName:        aws.String(repo.githubOrgTableName),
 	}
 
