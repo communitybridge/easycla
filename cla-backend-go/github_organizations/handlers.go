@@ -53,7 +53,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 				})
 			}
 
-			if !validateAutoEnabledClaGroupID(params.Body.AutoEnabled, params.Body.AutoEnabledClaGroupID) {
+			if !utils.ValidateAutoEnabledClaGroupID(params.Body.AutoEnabled, params.Body.AutoEnabledClaGroupID) {
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(&models.ErrorResponse{
 					Code:    "400",
 					Message: "EasyCLA - 400 Bad Request - AutoEnabledClaGroupID can't be empty when AutoEnabled",
@@ -75,7 +75,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 				}
 
 				if errors.Is(err, projects_cla_groups.ErrCLAGroupDoesNotExist) {
-					return github_organizations.NewUpdateProjectGithubOrganizationConfigNotFound().WithPayload(errorResponse(err))
+					return github_organizations.NewAddProjectGithubOrganizationNotFound().WithPayload(errorResponse(err))
 				}
 
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(err))
@@ -148,7 +148,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 				})
 			}
 
-			if !validateAutoEnabledClaGroupID(params.Body.AutoEnabled, params.Body.AutoEnabledClaGroupID) {
+			if !utils.ValidateAutoEnabledClaGroupID(params.Body.AutoEnabled, params.Body.AutoEnabledClaGroupID) {
 				return github_organizations.NewUpdateProjectGithubOrganizationConfigBadRequest().WithPayload(&models.ErrorResponse{
 					Code:    "400",
 					Message: "EasyCLA - 400 Bad Request - AutoEnabledClaGroupID can't be empty when AutoEnabled",
@@ -194,13 +194,4 @@ func errorResponse(err error) *models.ErrorResponse {
 	}
 
 	return &e
-}
-
-// validateAutoEnabledClaGroupID checks for validation if autoEnabled flag is on autoEnabledClaGroupID is enabled as well
-func validateAutoEnabledClaGroupID(autoEnabled *bool, autoEnabledClaGroupID string) bool {
-	if autoEnabled == nil || !*autoEnabled {
-		return true
-	}
-
-	return autoEnabledClaGroupID != ""
 }
