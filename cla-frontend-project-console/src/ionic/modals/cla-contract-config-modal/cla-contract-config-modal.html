@@ -44,12 +44,6 @@
 
           <ion-item
             *ngIf="form.controls.description.errors  && (form.controls.description.dirty || form.controls.description.touched)">
-            <ion-label [hidden]="!form.controls.description.errors.required" class="error">
-              CLA Group Description is required
-            </ion-label>
-            <ion-label [hidden]="!form.controls.description.errors.minlength" class="error">
-              CLA Group Description should be at least 2 characters
-            </ion-label>
             <ion-label [hidden]="!form.controls.description.errors.maxlength" class="error">
               CLA Group Description should not exceed 255 characters
             </ion-label>
