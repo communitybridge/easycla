@@ -23,16 +23,7 @@ import (
 	"github.com/jinzhu/copier"
 )
 
-func v2GithubOrgnizationsModel(in *v1Models.GithubOrganizations) (*models.GithubOrganizations, error) {
-	var response models.GithubOrganizations
-	err := copier.Copy(&response, in)
-	if err != nil {
-		return nil, err
-	}
-	return &response, nil
-}
-
-func v2GithubOrgnizationModel(in *v1Models.GithubOrganization) (*models.GithubOrganization, error) {
+func v2GithubOrganizationModel(in *v1Models.GithubOrganization) (*models.GithubOrganization, error) {
 	var response models.GithubOrganization
 	err := copier.Copy(&response, in)
 	if err != nil {
@@ -46,7 +37,7 @@ type Service interface {
 	GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.ProjectGithubOrganizations, error)
 	AddGithubOrganization(ctx context.Context, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error)
 	DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error
-	UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, branchProtectionEnabled bool) error
+	UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, autoEnabledClaGroupID string, branchProtectionEnabled bool) error
 }
 
 type service struct {
@@ -236,7 +227,11 @@ func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, 
 		return nil, err
 	}
 
-	return v2GithubOrgnizationModel(resp)
+	return v2GithubOrganizationModel(resp)
+}
+
+func (s service) UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, autoEnabledClaGroupID string, branchProtectionEnabled bool) error {
+	return s.repo.UpdateGithubOrganization(ctx, projectSFID, organizationName, autoEnabled, autoEnabledClaGroupID, branchProtectionEnabled)
 }
 
 func (s service) DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error {
@@ -264,8 +259,4 @@ func (s service) DeleteGithubOrganization(ctx context.Context, projectSFID strin
 
 	log.WithFields(f).Debug("deleting github github organization...")
 	return s.repo.DeleteGithubOrganization(ctx, projectSFID, githubOrgName)
-}
-
-func (s service) UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, branchProtectionEnabled bool) error {
-	return s.repo.UpdateGithubOrganization(ctx, projectSFID, organizationName, autoEnabled, branchProtectionEnabled)
 }
