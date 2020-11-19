@@ -28,7 +28,7 @@ from cla.models.dynamo_models import Signature, User, \
     Document, Event
 from cla.models.event_types import EventType
 from cla.models.s3_storage import S3Storage
-from cla.utils import get_email_help_content, get_email_sign_off_content, append_email_help_sign_off_content
+from cla.utils import get_email_help_content, get_email_sign_off_content, append_email_help_sign_off_content, append_email_help_sign_off_content_plain
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
@@ -1014,21 +1014,21 @@ class DocuSign(signing_service_interface.SigningService):
 
             email_subject = f'EasyCLA: CLA Signature Request for {project_name}'
             email_body = f'''
-            <p>Hello {signatory_name},</p>
-            <p>This is a notification email from EasyCLA regarding the project {project_name}.</p>
-            <p>{cla_manager_name} has designated you as being an authorized signatory for {company_name}.
-               In order for employees of your company to contribute to the open source project {project_name}, 
-               they must do so under a Contributor License Agreement signed by someone with authority to sign on
-               behalf of your company.<p>
-            <p>After you sign, {cla_manager_name} (as the initial CLA Manager for your company) will be able to
-               maintain the list of specific employees authorized to contribute to the project under this signed
-               CLA.</p>
-            <p>If you are authorized to sign on your company’s behalf, and if you approve {cla_manager_name} as
-               your initial CLA Manager for {project_name}, please click the link below to review and sign the CLA.</p>
-            <p>If you have questions, or if you are not an authorized signatory of this company, please contact
-               the requester at {cla_manager_email}.</p>
+            Hello {signatory_name},\
+            This is a notification email from EasyCLA regarding the project {project_name}.\
+            {cla_manager_name} has designated you as being an authorized signatory for {company_name}. \
+            In order for employees of your company to contribute to the open source project {project_name}, \
+            they must do so under a Contributor License Agreement signed by someone with authority to sign on \
+            behalf of your company.\
+            After you sign, {cla_manager_name} (as the initial CLA Manager for your company) will be able to \
+            maintain the list of specific employees authorized to contribute to the project under this signed \
+            CLA.\
+            If you are authorized to sign on your company’s behalf, and if you approve {cla_manager_name} as \
+            your initial CLA Manager for {project_name}, please click the link below to review and sign the CLA.\
+            If you have questions, or if you are not an authorized signatory of this company, please contact \
+            the requester at {cla_manager_email}.
             '''
-            email_body = append_email_help_sign_off_content(email_body, project.get_version())
+            email_body = append_email_help_sign_off_content_plain(email_body, project.get_version())
             cla.log.debug(f'populate_sign_url - {sig_type} - generating a docusign signer object form email with'
                           f'name: {signatory_name}, email: {signatory_email}, subject: {email_subject}')
             signer = pydocusign.Signer(email=signatory_email,
