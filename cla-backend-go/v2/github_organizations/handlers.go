@@ -73,9 +73,24 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
+			if params.Body.AutoEnabled == nil {
+				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(&models.ErrorResponse{
+					Code:       "400",
+					Message:    fmt.Sprintf("EasyCLA - 400 Bad Request - missing autoEnabled in body: %+v", params.Body),
+					XRequestID: reqID,
+				})
+			}
+
 			_, err := github.GetOrganization(ctx, *params.Body.OrganizationName)
 			if err != nil {
 				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(errorResponse(reqID, err))
+			}
+
+			if !utils.ValidateAutoEnabledClaGroupID(params.Body.AutoEnabled, params.Body.AutoEnabledClaGroupID) {
+				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA - 400 Bad Request - AutoEnabledClaGroupID can't be empty when AutoEnabled",
+				})
 			}
 
 			result, err := service.AddGithubOrganization(ctx, params.ProjectSFID, params.Body)
@@ -157,7 +172,14 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				})
 			}
 
-			err := service.UpdateGithubOrganization(ctx, params.ProjectSFID, params.OrgName, *params.Body.AutoEnabled, params.Body.BranchProtectionEnabled)
+			if !utils.ValidateAutoEnabledClaGroupID(params.Body.AutoEnabled, params.Body.AutoEnabledClaGroupID) {
+				return github_organizations.NewAddProjectGithubOrganizationBadRequest().WithPayload(&models.ErrorResponse{
+					Code:    "400",
+					Message: "EasyCLA - 400 Bad Request - AutoEnabledClaGroupID can't be empty when AutoEnabled",
+				})
+			}
+
+			err := service.UpdateGithubOrganization(ctx, params.ProjectSFID, params.OrgName, *params.Body.AutoEnabled, params.Body.AutoEnabledClaGroupID, params.Body.BranchProtectionEnabled)
 			if err != nil {
 				return github_organizations.NewUpdateProjectGithubOrganizationConfigBadRequest().WithPayload(errorResponse(reqID, err))
 			}
