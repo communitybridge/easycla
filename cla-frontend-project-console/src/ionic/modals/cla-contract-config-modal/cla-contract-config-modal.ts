@@ -51,8 +51,6 @@ export class ClaContractConfigModal {
         ])],
       description: [this.claProject.projectDescription, Validators.compose(
         [
-          Validators.required,
-          Validators.minLength(2),
           Validators.maxLength(255),
           Validators.pattern(new RegExp(generalConstants.CLA_GROUP_DESCRIPTION_REGEX))
         ])],
