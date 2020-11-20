@@ -883,14 +883,14 @@ def get_pull_request_commit_authors(pull_request):
     return commit_authors
 
 
-def has_check_previously_failed(pull_request: PullRequest) -> bool:
+def has_check_previously_failed(pull_request: PullRequest):
     """
     Review the status updates in the PR. Identify 1 or more previous failed
-    updates from the EasyCLA bot. If we fine one, return True, otherwise
-    return False
+    updates from the EasyCLA bot. If we fine one, return True with the comment, otherwise
+    return False, None
 
     :param pull_request: the GitHub pull request object
-    :return: True if the EasyCLA bot check previously failed, otherwise return False
+    :return: True with the comment if the EasyCLA bot check previously failed, otherwise return False, None
     """
     comments = pull_request.get_issue_comments()
     # Look through all the comments
@@ -898,12 +898,12 @@ def has_check_previously_failed(pull_request: PullRequest) -> bool:
         # Our bot comments include the following text
         # A previously failed check has 'not authorized' somewhere in the body
         if 'is not authorized under a signed CLA' in comment.body:
-            return True
+            return True, comment
         if 'they must confirm their affiliation' in comment.body:
-            return True
+            return True, comment
         if 'CLA Missing ID' in comment.body and 'is missing the User' in comment.body:
-            return True
-    return False
+            return True, comment
+    return False, None
 
 
 def update_pull_request(installation_id, github_repository_id, pull_request, repository_name, signed,
@@ -975,16 +975,23 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
     if both or notification == 'comment':
         body = cla.utils.assemble_cla_comment('github', str(installation_id), github_repository_id, pull_request.number,
                                               signed, missing)
+        previously_failed, comment = has_check_previously_failed(pull_request)
         if not missing:
             # After Issue #167 wsa in place, they decided via Issue #289 that we
             # DO want to update the comment, but only after we've previously failed
-            if has_check_previously_failed(pull_request):
+            if previously_failed:
                 cla.log.debug('Found previously failed checks - updating CLA comment in PR.')
-                update_cla_comment(pull_request, body)
+                comment.edit(body)
             cla.log.debug('EasyCLA App checks pass for PR: {} with authors: {}'.format(pull_request.number, signed))
         else:
             # Per Issue #167, only add a comment if check fails
-            update_cla_comment(pull_request, body)
+            # update_cla_comment(pull_request, body)
+            if previously_failed:
+                cla.log.debug('Found previously failed checks - updating CLA comment in PR.')
+                comment.edit(body)
+            else:
+                pull_request.create_issue_comment(body)
+
             cla.log.debug('EasyCLA App checks fail for PR: {}. CLA signatures with signed authors: {} and '
                           'with missing authors: {}'.format(pull_request.number, signed, missing))
 
@@ -1063,36 +1070,36 @@ def create_commit_status(pull_request, commit_hash, state, sign_url, body, conte
                       f'Message: {exc.data}')
 
 
-def update_cla_comment(pull_request, body):
-    """
-    Helper function to create/edit a comment on the GitHub PR.
+# def update_cla_comment(pull_request, body):
+#     """
+#     Helper function to create/edit a comment on the GitHub PR.
+#
+#     :param pull_request: The PR object in question.
+#     :type pull_request: GitHub.PullRequest
+#     :param body: The contents of the comment.
+#     :type body: string
+#     """
+#     comment = get_existing_cla_comment(pull_request)
+#     if comment is not None:
+#         cla.log.debug(f'Updating existing CLA comment for PR: {pull_request.number} with body: {body}')
+#         comment.edit(body)
+#     else:
+#         cla.log.debug(f'Creating a new CLA comment for PR: {pull_request.number} with body: {body}')
+#         pull_request.create_issue_comment(body)
 
-    :param pull_request: The PR object in question.
-    :type pull_request: GitHub.PullRequest
-    :param body: The contents of the comment.
-    :type body: string
-    """
-    comment = get_existing_cla_comment(pull_request)
-    if comment is not None:
-        cla.log.debug(f'Updating existing CLA comment for PR: {pull_request.number} with body: {body}')
-        comment.edit(body)
-    else:
-        cla.log.debug(f'Creating a new CLA comment for PR: {pull_request.number} with body: {body}')
-        pull_request.create_issue_comment(body)
 
-
-def get_existing_cla_comment(pull_request):
-    """
-    Helper function to get an existing comment from the CLA system in a GitHub PR.
-
-    :param pull_request: The PR object in question.
-    :type pull_request: GitHub.PullRequest
-    """
-    comments = pull_request.get_issue_comments()
-    for comment in comments:
-        if '[![CLA Check](' in comment.body:
-            cla.log.debug('Found matching CLA comment for PR: %s', pull_request.number)
-            return comment
+# def get_existing_cla_comment(pull_request):
+#     """
+#     Helper function to get an existing comment from the CLA system in a GitHub PR.
+#
+#     :param pull_request: The PR object in question.
+#     :type pull_request: GitHub.PullRequest
+#     """
+#     comments = pull_request.get_issue_comments()
+#     for comment in comments:
+#         if '[![CLA Check](' in comment.body:
+#             cla.log.debug('Found matching CLA comment for PR: %s', pull_request.number)
+#             return comment
 
 
 def get_github_integration_client(installation_id):
