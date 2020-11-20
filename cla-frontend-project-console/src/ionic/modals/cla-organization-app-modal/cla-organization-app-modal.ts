@@ -45,10 +45,6 @@ export class ClaOrganizationAppModal {
 
   getDefaults() { }
 
-  // TODO: Do we want a call to cla that polls for the installation status?
-  // UH YEA?
-
-
   openMessageDialog() {
     this.alert = this.alertCtrl.create({
       title: 'You are exiting EasyCLA and going to GitHub site. Please make sure you are already logged into GitHub so that you can install EasyCLA app',

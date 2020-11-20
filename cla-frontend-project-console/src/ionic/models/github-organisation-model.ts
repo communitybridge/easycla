@@ -1,4 +1,4 @@
-export interface GithubOrganisationModel {
+export interface GithubOrganizationModel {
     date_created: string;
     date_modified: string;
     organization_company_id: string;
