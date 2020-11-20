@@ -77,7 +77,7 @@
                         <p>{{ organization.providerInfo?.bio }}</p>
 
                         <div *ngIf="organization.githubInfo" class="organization-actions">
-                          <button ion-button (click)="deleteConfirmation('Github Organization', organization)"
+                          <button ion-button (click)="deleteConfirmation('GitHub Organization', organization, '')"
                             color="light">
                             Delete
                           </button>

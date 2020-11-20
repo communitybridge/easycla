@@ -1,13 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, ViewChild } from '@angular/core';
-import { AlertController, Events, IonicPage, ModalController, Nav, NavController, NavParams } from 'ionic-angular';
-import { ClaService } from '../../../services/cla.service';
-import { Restricted } from '../../../decorators/restricted';
-import { GithubOrganisationModel } from '../../../models/github-organisation-model';
-import { PlatformLocation } from '@angular/common';
-import { EnvConfig } from '../../../services/cla.env.utils';
+import {Component, ViewChild} from '@angular/core';
+import {AlertController, Events, IonicPage, ModalController, Nav, NavController, NavParams} from 'ionic-angular';
+import {ClaService} from '../../../services/cla.service';
+import {Restricted} from '../../../decorators/restricted';
+import {GithubOrganizationModel} from '../../../models/github-organisation-model';
+import {PlatformLocation} from '@angular/common';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -22,7 +21,7 @@ import { EnvConfig } from '../../../services/cla.env.utils';
 export class ProjectClaPage {
   loading: any;
   sfdcProjectId: string;
-  githubOrganizations: GithubOrganisationModel[];
+  githubOrganizations: GithubOrganizationModel[];
   claProjects: any = [];
   projectsByExternalId: any;
   alert;
@@ -292,7 +291,7 @@ export class ProjectClaPage {
     return found;
   }
 
-  deleteConfirmation(type, payload, projectId) {
+  deleteConfirmation(type: string, payload: GithubOrganizationModel, projectId: string) {
     this.alert = this.alertCtrl.create({
       subTitle: `Delete ${type}`,
       message: `Are you sure you want to delete this ${type}?`,
@@ -308,7 +307,7 @@ export class ProjectClaPage {
           text: 'Delete',
           handler: () => {
             switch (type) {
-              case 'Github Organization':
+              case 'GitHub Organization':
                 this.deleteClaGithubOrganization(payload);
                 break;
 
@@ -409,15 +408,15 @@ export class ProjectClaPage {
   }
 
 
-  deleteClaGithubOrganization(organization) {
-    this.claService.deleteGithubOrganization(this.sfdcProjectId, this.getOrganisationName(organization.organizationName)).subscribe((response) => {
+  deleteClaGithubOrganization(organization: GithubOrganizationModel) {
+    this.claService.deleteGithubOrganization(this.sfdcProjectId, organization.organizationName).subscribe((response) => {
       if (response.status === 200) {
         this.getGithubOrganisation();
       }
     });
   }
 
-  deleteGerritInstance(gerrit, projectId) {
+  deleteGerritInstance(gerrit, projectId: string) {
     this.claService.deleteGerritInstance(projectId, gerrit.gerrit_id).subscribe((response) => {
       this.getClaProjects();
     });
