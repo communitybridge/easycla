@@ -408,7 +408,7 @@ export class ProjectClaPage {
   }
 
 
-  deleteClaGithubOrganization(organization: GithubOrganizationModel) {
+  deleteClaGithubOrganization(organization) {
     this.claService.deleteGithubOrganization(this.sfdcProjectId, organization.organizationName).subscribe((response) => {
       if (response.status === 200) {
         this.getGithubOrganisation();
