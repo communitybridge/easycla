@@ -22,4 +22,7 @@ metrics-aws-lambda
 user-subscribe-lambda
 zipbuilder-lambda
 zipbuilder-scheduler-lambda
+zipbuilder-lambda-mac
+zipbuilder-scheduler-lambda-mac
+
 

@@ -13,6 +13,7 @@ build-user-subscribe-lambda-linux
 build-user-subscribe-lambda-mac
 metrics-aws-lambda
 metrics-aws-lambda-mac
+metrics-report-lambda-mac
 functional-tests
 functional-tests-linux
 functional-tests-mac

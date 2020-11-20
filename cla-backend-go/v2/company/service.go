@@ -94,7 +94,6 @@ type Service interface {
 	AssociateContributor(ctx context.Context, companySFID, userEmail string) (*models.Contributor, error)
 	AssociateContributorByGroup(ctx context.Context, companySFID, userEmail string, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, ClaGroupID string) ([]*models.Contributor, string, error)
 	GetCompanyAdmins(ctx context.Context, companyID string) (*models.CompanyAdminList, error)
-	AssignCompanyOwner(ctx context.Context, companySFID string, userEmail string, LFXPortalURL string) (*models.CompanyOwner, error)
 }
 
 // ProjectRepo contains project repo methods
@@ -335,7 +334,8 @@ func (s *service) CreateCompany(ctx context.Context, companyName string, company
 		log.WithFields(f).Warn(msg)
 	}
 	if lfUser != nil && lfUser.Username != "" {
-		log.WithFields(f).Debugf("User :%s has been assigned the company-owner role to organization: %s ", userEmail, org.Name)
+		log.WithFields(f).Debugf("User :%s has been assigned the %s role to organization: %s ",
+			userEmail, utils.CompanyAdminRole, org.Name)
 		// Assign company-admin to user
 		roleID, adminErr := acsClient.GetRoleID(utils.CompanyAdminRole)
 		if adminErr != nil {
@@ -829,106 +829,6 @@ func (s *service) GetCompanyCLAGroupManagers(ctx context.Context, companyID, cla
 	return &models.CompanyClaManagers{List: claManagers}, nil
 }
 
-func (s *service) AssignCompanyOwner(ctx context.Context, companySFID string, userEmail string, LFXPortalURL string) (*models.CompanyOwner, error) {
-	f := logrus.Fields{
-		"functionName":   "AssignCompanyOwner",
-		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-		"companySFID":    companySFID,
-		"userEmail":      userEmail,
-		"LFXPortalURL":   LFXPortalURL,
-	}
-	orgClient := orgService.GetClient()
-	acsClient := acs_service.GetClient()
-	userClient := v2UserService.GetClient()
-
-	//Orgs to check whether user is company-owner
-	orgs := []string{companySFID}
-
-	assignOrg, orgErr := orgClient.GetOrganization(companySFID)
-	if orgErr != nil {
-		msg := fmt.Sprintf("Getting org by ID: %s with error : %+v", companySFID, orgErr)
-		log.WithFields(f).Debug(msg)
-		return nil, orgErr
-	}
-
-	user, err := userClient.SearchUserByEmail(userEmail)
-	if err != nil || (user != nil && user.Username == "") {
-		msg := fmt.Sprintf("Failed searching user by email :%s ", userEmail)
-		log.Warn(msg)
-		// Send user invite for company owner
-		emailErr := sendOwnerEmailToUserWithNoLFID(userEmail, assignOrg.ID, "company-owner")
-		if emailErr != nil {
-			msg := fmt.Sprintf("error %+v", emailErr)
-			log.WithFields(f).Debug(msg)
-		}
-		return nil, err
-	}
-
-	log.Info(fmt.Sprintf("Check if user : %s is a company owner ", userEmail))
-	var hasOwnerScope bool
-	if user.Account.Name == NoAccount {
-		// flag company owner scope if user is not associated with an org
-		hasOwnerScope = false
-	} else {
-		// Check if user is in organization
-		var userOrg string
-		if user.Account.ID != companySFID {
-			orgs = append(orgs, user.Account.ID)
-		}
-		log.Info(fmt.Sprintf("Checking company-owner against company: %s ", userOrg))
-		hasOwnerScope, err = orgClient.IsCompanyOwner(user.ID, orgs)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	log.Info(fmt.Sprintf("User :%s isCompanyOwner: %t", userEmail, hasOwnerScope))
-
-	if !hasOwnerScope {
-		companyOwner := "company-owner"
-		// Check if company has company owner
-		_, scopeErr := orgClient.ListOrgUserAdminScopes(companySFID, &companyOwner)
-		if scopeErr != nil {
-			// Only assign if company owner doesnt exist
-			if _, ok := scopeErr.(*organizations.ListOrgUsrAdminScopesNotFound); ok {
-				//Get Role ID
-				roleID, designeeErr := acsClient.GetRoleID("company-owner")
-				if designeeErr != nil {
-					msg := "Problem getting role ID for company-owner"
-					log.Warn(msg)
-					return nil, designeeErr
-				}
-
-				err := orgClient.CreateOrgUserRoleOrgScope(userEmail, companySFID, roleID)
-				if err != nil {
-					log.WithFields(f).Warnf("Organization Service - Failed to assign company-owner role to user: %s, error: %+v ", userEmail, err)
-					return nil, nil
-				}
-				org, orgErr := orgClient.GetOrganization(companySFID)
-				if orgErr != nil {
-					log.WithFields(f).Warnf("Failed to get company by SFID: %s, error: %+v", companySFID, orgErr)
-					return nil, orgErr
-				}
-				//Send Email to User with instructions to complete Company profile
-				log.WithFields(f).Debugf("Sending Email to user :%s to complete setup for newly created Org: %s ", userEmail, org.Name)
-				sendEmailToUserCompanyProfile(org.Name, userEmail, user.Username, LFXPortalURL)
-				return &models.CompanyOwner{
-					LfUsername:  user.Username,
-					Name:        user.Name,
-					UserSfid:    user.ID,
-					AssignedOn:  time.Now().String(),
-					Email:       strfmt.Email(userEmail),
-					CompanySfid: companySFID,
-				}, nil
-			}
-			return nil, scopeErr
-		}
-	}
-
-	return nil, nil
-
-}
-
 func v2ProjectToMap(projectDetails *v2ProjectServiceModels.ProjectOutputDetailed) (map[string]*v2ProjectServiceModels.ProjectOutput, error) {
 	epmap := make(map[string]*v2ProjectServiceModels.ProjectOutput) // key project_sfid
 	var pr v2ProjectServiceModels.ProjectOutput
@@ -1362,50 +1262,4 @@ func (s service) autoCreateCompany(ctx context.Context, companySFID string) (*v1
 
 	log.WithFields(f).Debugf("successfully created EasyCLA company record: %+v", companyModel)
 	return companyModel, nil
-}
-
-func sendEmailToUserCompanyProfile(orgName string, userEmail string, username string, LFXPortalURL string) {
-	subject := "EasyCLA: Company Profile "
-	recipients := []string{userEmail}
-	body := fmt.Sprintf(`
-<p>Hello %s,</p>
-<p>This is a notification email from EasyCLA regarding the newly created Salesforce Organization %s.</p>
-<p> You have been assigned as the company owner for this new organization </p>
-<p>The organization profile can be completed via <a href="%s/company/manage/" target="_blank">clicking this link</a>
-%s
-%s`,
-		username, orgName, LFXPortalURL,
-		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
-	err := utils.SendEmail(subject, body, recipients)
-	if err != nil {
-		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
-	} else {
-		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
-	}
-}
-
-func sendOwnerEmailToUserWithNoLFID(userWithNoLFIDEmail, organizationID, role string) error {
-	subject := "EasyCLA: Invitation to create LF Login and complete process of becoming Company Owner"
-	body := fmt.Sprintf(`
-	<p>Hello %s, </p>
-	<p> This email will guide you to completing the Company Owner role assignment.
-	<p>1. Accept Invite link below will take you SSO login page where you can login with your LF Login or create a LF Login and then login.</p>
-	<p>2. After logging in SSO screen should direct you to Organization Profile page where you will see your company.</p>
-	<p>3. Please complete the company profile, you can follow this documentation to help you guide through the process - https://docs.linuxfoundation.org/lfx/easycla/ccla-managers-and-ccla-signatories</p>
-	<p> <a href="USERACCEPTLINK">Accept Invite</a> </p>
-	%s
-	%s
-	`, userWithNoLFIDEmail,
-		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
-	acsClient := acs_service.GetClient()
-	automate := false
-
-	acsErr := acsClient.SendUserInvite(&userWithNoLFIDEmail, role, "organization", nil, organizationID, "userinvite", &subject, &body, automate)
-	if acsErr != nil {
-		msg := fmt.Sprintf("Error sending email to user: %s, error : %+v", userWithNoLFIDEmail, acsErr)
-		log.Debug(msg)
-		return acsErr
-	}
-	return nil
-
 }
