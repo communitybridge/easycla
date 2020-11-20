@@ -1525,3 +1525,6 @@ def get_public_email(user):
     """
     if len(user.get_all_user_emails()) > 0:
         return next((email for email in user.get_all_user_emails() if "noreply.github.com" not in email), None)
+    
+
+    

@@ -31,6 +31,7 @@ from pynamodb.models import Model
 import cla
 from cla.models import model_interfaces, key_value_store_interface, DoesNotExist
 from cla.models.model_interfaces import User, Signature
+from cla.project_service import ProjectService
 
 stage = os.environ.get("STAGE", "")
 cla_logo_url = os.environ.get("CLA_BUCKET_LOGO_URL", "")
@@ -2892,7 +2893,10 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
             for mapping in self.get_by_foundation_sfid(self.model.foundation_sfid):
                 # Foundation level CLA means that we have an entry where the FoundationSFID == ProjectSFID
                 if mapping.get_foundation_sfid() == mapping.get_project_sfid():
-                    foundation_level_cla = True
+                    # First check if project is a standalone project
+                    ps = ProjectService()
+                    if not ps.is_standalone(mapping.get_project_sfid()):
+                        foundation_level_cla = True
                     break
 
         return foundation_level_cla
