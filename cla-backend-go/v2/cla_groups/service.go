@@ -451,6 +451,16 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 		return nil, errors.New(msg)
 	}
 
+	if len(v1ClaGroups.Projects) == 0 {
+		v1CLAGroupsData, v1ClaGroupErr := s.v1ProjectService.GetClaGroupsByFoundationSFID(ctx, projectOrFoundationSFID, false)
+		if v1ClaGroupErr != nil {
+			log.WithFields(f).Warnf("problem locating CLA group by project id, error: %+v", v1ClaGroupErr)
+			return nil, &utils.CLAGroupNotFound{CLAGroupID: projectOrFoundationSFID, Err: v1ClaGroupErr}
+		}
+
+		v1ClaGroups = v1CLAGroupsData
+	}
+
 	log.WithFields(f).Debugf("Building response model for %d CLA Groups", len(v1ClaGroups.Projects))
 
 	claGroupIDList := utils.NewStringSet()
