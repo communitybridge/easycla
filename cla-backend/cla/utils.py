@@ -772,7 +772,7 @@ def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=Fal
     # return '[![CLA Check](' + badge_url + ')](' + badge_hyperlink + ')'
     return (f'<a href="{badge_hyperlink}">'
             f'<img src="{badge_url}" alt="{alt}" align="left" height="28" width="328" >'
-            '</a>')
+            '</a><br/>')
 
 
 def assemble_cla_status(author_name, signed=False):
@@ -887,26 +887,17 @@ def get_comment_body(repository_type, sign_url, signed, missing):
         for author, commit_hashes in committers.items():
             if author == "Unknown":
                 committers_comment += (
-                        f"<li>"
-                        + failed
-                        + "The commit ("
-                        + " ,".join(commit_hashes)
-                        + ") is missing the User's ID, preventing the EasyCLA check. [Consult GitHub Help]("
-                        + github_help_url
-                        + ") to resolve. For further assistance with EasyCLA, "
+                        f"<li> {failed} The commit ({' ,'.join(commit_hashes)}) "
+                        + "is missing the User's ID, preventing the EasyCLA check. [Consult GitHub Help]("
+                        + github_help_url + ") to resolve. For further assistance with EasyCLA, "
                         + f"[please submit a support request ticket]({support_url})."
                         + "</li>"
                 )
             else:
                 if True in commit_hashes:
                     committers_comment += (
-                            f"<li>"
-                            + author
-                            + "("
-                            + " ,".join(commit_hashes[:-1])
-                            + ") "
-                            + "is authorized, but they must confirm "
-                            + "their affiliation with their company. "
+                            f"<li>{author} ({' ,'.join(commit_hashes[:-1])}) "
+                            + "is authorized, but they must confirm their affiliation with their company. "
                             + f"[Start the authorization process by clicking here]({sign_url}), click \"Corporate\","
                             + "select the appropriate company from the list, then confirm "
                             + "your affiliation on the page that appears. For further assistance with EasyCLA, "
@@ -915,15 +906,8 @@ def get_comment_body(repository_type, sign_url, signed, missing):
                     )
                 else:
                     committers_comment += (
-                            "<li>["
-                            + failed
-                            + "]("
-                            + sign_url
-                            + ")  "
-                            + author
-                            + " The commit ("
-                            + " ,".join(commit_hashes)
-                            + ") is not authorized under a signed CLA. "
+                            f"<li>[{failed}]({sign_url}) {author} The commit ({' ,'.join(commit_hashes)}) "
+                            + "is not authorized under a signed CLA. "
                             + f"[Please click here to be authorized]({sign_url}). For further assistance with "
                             + f"EasyCLA, [please submit a support request ticket]({support_url})."
                             + "</li>"
