@@ -232,7 +232,7 @@ build-metrics-lambda-mac: deps
 	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(METRICS_BIN)-mac cmd/metrics_lambda/main.go
 	@chmod +x $(METRICS_BIN)-mac
 
-build-metrics-report-lambda: build-metrics-lambda-report-linux
+build-metrics-report-lambda: build-metrics-report-lambda-linux
 build-metrics-report-lambda-linux: deps
 	@echo "Building a statically linked Linux amd64 binary..."
 	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(METRICS_REPORT_BIN) cmd/metrics_report_lambda/main.go
