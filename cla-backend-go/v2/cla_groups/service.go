@@ -29,6 +29,7 @@ import (
 	"github.com/jinzhu/copier"
 
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/signatures"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	v1Project "github.com/communitybridge/easycla/cla-backend-go/project"
@@ -521,7 +522,10 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 	// One more pass to update the metrics - bulk lookup the metrics and update the response model
 	claGroupMetrics := s.getMetrics(ctx, claGroupIDList.List())
 	log.WithFields(f).Debugf("Loading metrics for %d CLA Groups - updating response", len(claGroupIDList.List()))
+	var iclaSignatureCount, eclaSignatureCount int
+	var cclaSignatureCount int64
 	for _, responseEntry := range responseModel.List {
+		log.Debugf("cla group entry logs %s", responseEntry.ClaGroupID)
 		metricForCLAGroup, ok := claGroupMetrics[responseEntry.ClaGroupID]
 		if !ok {
 			log.WithFields(f).Warnf("unable to load metrics for CLA Group ID: %s", responseEntry.ClaGroupID)
@@ -529,7 +533,26 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 		}
 
 		responseEntry.RepositoriesCount = metricForCLAGroup.RepositoriesCount
-		responseEntry.TotalSignatures = metricForCLAGroup.CorporateContributorsCount + metricForCLAGroup.IndividualContributorsCount
+
+		iclaSignatureDetails, err := s.signatureService.GetClaGroupICLASignatures(ctx, responseEntry.ClaGroupID, nil)
+		if err != nil {
+			log.Warnf("error while getting ICLA Signature using clagroupID %s Error: %v", responseEntry.ClaGroupID, err)
+		}
+		iclaSignatureCount = len(iclaSignatureDetails.List)
+
+		cclaSignatureDetails, err := s.signatureService.GetProjectSignatures(ctx, signatures.GetProjectSignaturesParams{ProjectID: responseEntry.ClaGroupID, ClaType: aws.String("ccla"), SignatureType: aws.String("ccla")})
+		if err != nil {
+			log.Warnf("error while getting ICLA Signature using clagroupID %s Error: %v", responseEntry.ClaGroupID, err)
+		}
+		cclaSignatureCount = cclaSignatureDetails.ResultCount
+
+		eclaSignatureDetails, err := s.signatureService.GetClaGroupCorporateContributors(ctx, responseEntry.ClaGroupID, nil, nil)
+		if err != nil {
+			log.Warnf("error while getting ICLA Signature using clagroupID %s Error: %v", responseEntry.ClaGroupID, err)
+		}
+		eclaSignatureCount = len(eclaSignatureDetails.List)
+
+		responseEntry.TotalSignatures = cclaSignatureCount + int64(iclaSignatureCount) + int64(eclaSignatureCount)
 	}
 
 	// Sort the response based on the Foundation and CLA group name
