@@ -6,6 +6,8 @@ package dynamo_events
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -143,8 +145,8 @@ func (s *service) registerCallback(tableName, eventName string, callbackFunction
 	s.functions[key] = funcArr
 }
 
-func (s *service) ProcessEvents(events events.DynamoDBEvent) {
-	for _, event := range events.Records {
+func (s *service) ProcessEvents(dynamoDBEvents events.DynamoDBEvent) {
+	for _, event := range dynamoDBEvents.Records {
 		tableName := strings.Split(event.EventSourceArn, "/")[1]
 		fields := logrus.Fields{
 			"functionName": "ProcessEvents",
@@ -170,17 +172,30 @@ func (s *service) ProcessEvents(events events.DynamoDBEvent) {
 
 			// For each function handler...
 			for _, eventHandlerFunction := range s.functions[key] {
-				fields["key"] = key
-				fields["functionType"] = fmt.Sprintf("%T", eventHandlerFunction)
-				log.WithFields(fields).Debug("invoking handler")
-
-				go func(f EventHandlerFunc) {
+				go func(f EventHandlerFunc, e events.DynamoDBEventRecord) {
 					defer wg.Done()
+
+					fnType := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+					log.WithFields(fields).
+						WithField("key", key).
+						WithField("functionType", fnType).
+						Debug("invoking handler")
+
 					err := f(event)
 					if err != nil {
-						log.WithFields(fields).WithError(err).WithField("event", event).Error("unable to process event", err)
+						log.WithFields(fields).
+							WithField("key", key).
+							WithField("functionType", fnType).
+							WithError(err).
+							WithField("event", e).
+							Error("unable to process event")
 					}
-				}(eventHandlerFunction)
+
+					log.WithFields(fields).
+						WithField("key", key).
+						WithField("functionType", fnType).
+						Debug("done with handler")
+				}(eventHandlerFunction, event)
 			}
 
 			// Wait until the registered handlers/functions have completed for this event type...
