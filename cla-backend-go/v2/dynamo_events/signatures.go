@@ -61,6 +61,9 @@ func (s *service) SignatureAssignContributorEvent(event events.DynamoDBEventReco
 		"functionName":   "SignatureAssignContributorEvent",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
+
+	log.WithFields(f).Debug("processing signature event to assign contributor...")
+
 	// Decode the pre-update and post-update signature record details
 	var newSignature, oldSignature Signature
 	err := unmarshalStreamImage(event.Change.OldImage, &oldSignature)
@@ -85,6 +88,7 @@ func (s *service) SignatureAssignContributorEvent(event events.DynamoDBEventReco
 	f["signed"] = newSignature.SignatureSigned
 
 	if !oldSignature.SignatureSigned && newSignature.SignatureSigned {
+		log.WithFields(f).Debug("signature is now signed - assigning contributor...")
 		err := s.assignContributor(ctx, newSignature, f)
 		if err != nil {
 			return err
@@ -101,6 +105,7 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 		"functionName":   "SignatureSignedEvent",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
+	log.WithFields(f).Debug("Processing signature signed event to modify the ACL...")
 
 	// Decode the pre-update and post-update signature record details
 	var newSignature, oldSignature Signature
@@ -130,6 +135,7 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 		log.WithFields(f).Debugf("processing signature signed event for signature type: %s...", newSignature.SignatureType)
 
 		// Update the signed on date
+		log.WithFields(f).Debug("updating signed on date...")
 		err = s.signatureRepo.AddSignedOn(ctx, newSignature.SignatureID)
 		if err != nil {
 			log.WithFields(f).Warnf("failed to add signed_on date/time to signature, error: %+v", err)
@@ -242,13 +248,15 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 	return nil
 }
 
-// SignatureAdded function should be called when new icla, ecla signature added
+// SignatureAddSigTypeSignedApprovedID function should be called when new icla, ecla signature added
 func (s *service) SignatureAddSigTypeSignedApprovedID(event events.DynamoDBEventRecord) error {
 	ctx := utils.NewContext()
 	f := logrus.Fields{
 		"functionName":   "SignatureAddSigTypeSignedApprovedID",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
+
+	log.WithFields(f).Debug("processing signature event - adding signature type signed approved id...")
 	var newSig Signature
 	var sigType string
 	var id string

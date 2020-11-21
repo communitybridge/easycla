@@ -201,7 +201,7 @@ func (s *service) ProcessEvents(dynamoDBEvents events.DynamoDBEvent) {
 			// Wait until the registered handlers/functions have completed for this event type...
 			log.WithFields(fields).Debugf("waiting for %d event handler functions to complete...", len(s.functions[key]))
 			wg.Wait()
-			log.WithFields(fields).Debugf("%d event handler functions to completed", len(s.functions[key]))
+			log.WithFields(fields).Debugf("%d event handler functions completed", len(s.functions[key]))
 		}
 	}
 }
