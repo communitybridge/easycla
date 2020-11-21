@@ -190,6 +190,11 @@ provider:
         - "*"
     - Effect: Allow
       Action:
+        - sqs:SendMessage
+      Resource:
+        - "*"
+    - Effect: Allow
+      Action:
         - dynamodb:Query
         - dynamodb:DeleteItem
         - dynamodb:UpdateItem
