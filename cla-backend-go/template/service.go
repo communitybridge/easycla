@@ -58,6 +58,7 @@ func NewService(stage string, templateRepo Repository, docraptorClient docraptor
 
 // GetTemplates API call
 func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
+	log.Debugf("called GetTemplates")
 	f := logrus.Fields{
 		"functionName":   "GetTemplates",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -87,22 +88,18 @@ func (s service) CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemp
 	}
 	var template models.Template
 	var err error
+
+	templateID := ApacheStyleTemplateID
 	if claGroupFields.TemplateID != "" {
-		// Get Template
-		template, err = s.templateRepo.GetTemplate(claGroupFields.TemplateID)
-		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("unable to fetch template fields: %s",
-				claGroupFields.TemplateID)
-			return nil, err
-		}
-	} else {
-		// use default Apache template if template_id is not provided
-		template, err = s.templateRepo.GetTemplate(ApacheStyleTemplateID)
-		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("Unable to fetch default template fields: %s",
-				claGroupFields.TemplateID)
-			return nil, err
-		}
+		templateID = claGroupFields.TemplateID
+	}
+
+	// Get Template
+	template, err = s.templateRepo.GetTemplate(templateID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("unable to fetch template fields : %s",
+			claGroupFields.TemplateID)
+		return nil, err
 	}
 
 	// Apply template fields
