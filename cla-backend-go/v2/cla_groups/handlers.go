@@ -261,6 +261,30 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			return cla_group.NewEnrollProjectsForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
 		}
 
+		if !cg.FoundationLevelCLA {
+			log.WithFields(f).Debug("locating project by sfid...")
+			psc := v2ProjectService.GetClient()
+			for _, projectSFID := range params.ProjectSFIDList {
+				project, projectErr := psc.GetProject(projectSFID)
+				if projectErr != nil || project == nil {
+					msg := fmt.Sprintf("Failed to get salesforce project: %s", projectSFID)
+					log.WithFields(f).Warn(msg)
+					if _, ok := projectErr.(*v2ProjectServiceClient.GetProjectNotFound); ok {
+						return cla_group.NewEnrollProjectsNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+							Code:    "404",
+							Message: fmt.Sprintf("project not found with given ID. [%s]", projectSFID),
+						})
+					}
+					return cla_group.NewEnrollProjectsBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseNotFoundWithError(reqID, msg, projectErr))
+				}
+				if project.ProjectType == utils.ProjectTypeProjectGroup {
+					msg := fmt.Sprintf("Unable to enroll salesforce foundation project: %s in project level cla-group.", projectSFID)
+					return cla_group.NewEnrollProjectsBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequest(reqID, msg))
+				}
+			}
+
+		}
+
 		err = service.EnrollProjectsInClaGroup(ctx, params.ClaGroupID, cg.FoundationSFID, params.ProjectSFIDList)
 		if err != nil {
 			if strings.Contains(err.Error(), "bad request") {
