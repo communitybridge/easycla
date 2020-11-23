@@ -110,6 +110,8 @@ func NewService(stage string,
 	s.registerCallback(signaturesTable, Modify, s.SignatureAddSigTypeSignedApprovedID)
 	s.registerCallback(signaturesTable, Insert, s.SignatureAddSigTypeSignedApprovedID)
 	s.registerCallback(signaturesTable, Insert, s.SignatureAddUsersDetails)
+	// Add or Remove any CLA Permissions
+	s.registerCallback(signaturesTable, Modify, s.UpdateCLAPermissions)
 
 	s.registerCallback(eventsTable, Insert, s.EventAddedEvent)
 
