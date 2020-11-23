@@ -9,6 +9,9 @@ import (
 	"fmt"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
+	organization_service "github.com/communitybridge/easycla/cla-backend-go/v2/organization-service"
+	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
@@ -23,7 +26,12 @@ const (
 
 	ICLASignatureType = "icla"
 	ECLASignatureType = "ecla"
+	AddCLAManager     = "add"
+	DeleteCLAManager  = "delete"
 )
+
+//ErrNoExternalID when company does not have externalID
+var ErrNoExternalID = errors.New("company External ID does not exist")
 
 // Signature database model
 type Signature struct {
@@ -141,7 +149,7 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 			log.WithFields(f).Warnf("failed to add signed_on date/time to signature, error: %+v", err)
 		}
 
-		// If a CCLA signature...
+		// If oldSigACL CCLA signature...
 		if newSignature.SignatureType == CCLASignatureType {
 			log.WithFields(f).Debugf("processing signature type: %s with %d CLA Managers...",
 				newSignature.SignatureType, len(newSignature.SignatureACL))
@@ -169,7 +177,7 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 
 			// We should have the company SFID...
 			if companyModel.CompanyExternalID == "" {
-				msg := fmt.Sprintf("company %s (%s) does not have a SF Organization ID - unable to update permissions",
+				msg := fmt.Sprintf("company %s (%s) does not have oldSigACL SF Organization ID - unable to update permissions",
 					companyModel.CompanyName, companyModel.CompanyID)
 				log.WithFields(f).Warn(msg)
 				return errors.New(msg)
@@ -187,9 +195,9 @@ func (s *service) SignatureSignedEvent(event events.DynamoDBEventRecord) error {
 				return nil
 			}
 
-			// We have a separate routine to help assign the CLA Manager Role - it's a bit wasteful as it
+			// We have oldSigACL separate routine to help assign the CLA Manager Role - it's oldSigACL bit wasteful as it
 			// loads the signature and other details again.
-			// Kick off a go routine to set the cla manager role
+			// Kick off oldSigACL go routine to set the cla manager role
 			// Set the CLA manager permissions
 			log.WithFields(f).Debug("assigning the initial CLA manager")
 			err = s.SetInitialCLAManagerACSPermissions(ctx, newSignature.SignatureID)
@@ -316,6 +324,74 @@ func (s *service) SignatureAddUsersDetails(event events.DynamoDBEventRecord) err
 	return nil
 }
 
+// signature function should be invoked when signature ACL is updated
+func (s *service) UpdateCLAPermissions(event events.DynamoDBEventRecord) error {
+	ctx := utils.NewContext()
+	f := logrus.Fields{
+		"functionName":   "UpdateCLAPermissions",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
+
+	// Decode the pre-update and post-update signature record details
+	var newSignature, oldSignature Signature
+	err := unmarshalStreamImage(event.Change.OldImage, &oldSignature)
+	if err != nil {
+		log.WithFields(f).Warnf("problem decoding pre-update signature, error: %+v", err)
+		return err
+	}
+	err = unmarshalStreamImage(event.Change.NewImage, &newSignature)
+	if err != nil {
+		log.WithFields(f).Warnf("problem decoding post-update signature, error: %+v", err)
+		return err
+	}
+
+	f["id"] = newSignature.SignatureID
+	f["type"] = newSignature.SignatureType
+	f["referenceID"] = newSignature.SignatureReferenceID
+	f["referenceName"] = newSignature.SignatureReferenceName
+	f["referenceType"] = newSignature.SignatureReferenceType
+	f["projectID"] = newSignature.SignatureProjectID
+
+	managers := difference(oldSignature.SignatureACL, newSignature.SignatureACL)
+
+	if len(managers) > 0 {
+		if len(oldSignature.SignatureACL) < len(newSignature.SignatureACL) {
+			// Assign CLA Manager role
+			log.WithFields(f).Debugf("Assigning CLA Manager role to managers : %#v ", managers)
+			updateErr := s.updateCLAManagerPermissions(newSignature, managers, AddCLAManager)
+			if updateErr != nil {
+				log.WithFields(f).WithError(updateErr).Warn("problem assigning CLA Manager role")
+				return updateErr
+			}
+
+		} else if len(oldSignature.SignatureACL) > len(newSignature.SignatureACL) {
+			// Remove CLA Manager role
+			log.WithFields(f).Debugf("Unassigning CLA Manager role to managers : %#v ", managers)
+			updateErr := s.updateCLAManagerPermissions(newSignature, managers, DeleteCLAManager)
+			if updateErr != nil {
+				log.WithFields(f).WithError(updateErr).Warn("problem removing CLA Manager role")
+				return updateErr
+			}
+		}
+	}
+	return nil
+}
+
+// Helper function that checks for differences in signature acls
+func difference(oldSigACL, newSignACL []string) []string {
+	mb := make(map[string]struct{}, len(newSignACL))
+	for _, x := range newSignACL {
+		mb[x] = struct{}{}
+	}
+	var diff []string
+	for _, x := range oldSigACL {
+		if _, found := mb[x]; !found {
+			diff = append(diff, x)
+		}
+	}
+	return diff
+}
+
 func (s *service) assignContributor(ctx context.Context, newSignature Signature, f logrus.Fields) error {
 	var companyID string
 	// Assign company ID based on signature type (CCLA, CCLA|ICLA)
@@ -346,7 +422,7 @@ func (s *service) assignContributor(ctx context.Context, newSignature Signature,
 
 		// We should have the company SFID...
 		if companyModel.CompanyExternalID == "" {
-			msg := fmt.Sprintf("company %s (%s) does not have a SF Organization ID - unable to update permissions",
+			msg := fmt.Sprintf("company %s (%s) does not have oldSigACL SF Organization ID - unable to update permissions",
 				companyModel.CompanyName, companyModel.CompanyID)
 			log.WithFields(f).Warn(msg)
 			return errors.New(msg)
@@ -375,4 +451,170 @@ func (s *service) assignContributor(ctx context.Context, newSignature Signature,
 		return nil
 	}
 	return nil
+}
+
+// helper function that assigns acl permissions(v2 specific)
+func (s *service) updateCLAManagerPermissions(signature Signature, managers []string, action string) error {
+	ctx := utils.NewContext()
+	f := logrus.Fields{
+		"functionName":  "addCLAManagerPermissions",
+		"signatureID":   signature.SignatureID,
+		"AddedManagers": managers,
+	}
+
+	userClient := user_service.GetClient()
+	orgClient := organization_service.GetClient()
+
+	var companyID string
+	// Get Salesforce company
+	log.WithFields(f).Debug("Getting Salesforce Company ...")
+	if signature.SignatureType == utils.ClaTypeCCLA {
+		companyID = signature.SignatureReferenceID
+	} else if signature.SignatureType == utils.ClaTypeCCLA && signature.SignatureUserCompanyID != "" {
+		companyID = signature.SignatureUserCompanyID
+	}
+	companyModel, compErr := s.companyService.GetCompanyByID(ctx, companyID)
+
+	if compErr != nil {
+		log.WithFields(f).WithError(compErr).Warnf("unable to fetch company %s", companyID)
+		return compErr
+	}
+
+	if companyModel.CompanyExternalID == "" {
+		log.WithFields(f).WithError(ErrNoExternalID).Warnf("ExternalCompany ID does not exist for company: %s", companyID)
+		return ErrNoExternalID
+	}
+
+	org, orgErr := orgClient.GetOrganization(companyModel.CompanyExternalID)
+	if orgErr != nil {
+		log.WithFields(f).WithError(orgErr).Warnf("failed to get organisation for ID: %s ", companyModel.CompanyExternalID)
+		return orgErr
+	}
+
+	projectCLAGroups, pcgErr := s.projectsClaGroupRepo.GetProjectsIdsForClaGroup(signature.SignatureProjectID)
+	if pcgErr != nil {
+		log.WithFields(f).WithError(pcgErr).Warnf("unable to get project mappings for claGroupID: %s ", signature.SignatureProjectID)
+		return pcgErr
+	}
+
+	// Get Role ID
+	acsClient := acs_service.GetClient()
+
+	roleID, roleErr := acsClient.GetRoleID(utils.CLAManagerRole)
+	if roleErr != nil {
+		log.WithFields(f).WithError(roleErr).Warnf("failed to get roleID for : %s ", utils.CLAManagerRole)
+		return roleErr
+	}
+
+	log.WithFields(f).Debugf("Role ID for cla-manager-role : %s", roleID)
+
+	log.WithFields(f).Debugf("Assigning CLA Manager permissions...")
+	foundationSFID := projectCLAGroups[0].FoundationSFID
+	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, foundationSFID)
+
+	// Create ProjectListing that handles CLA Manager permissions
+	projectSFIDList := utils.NewStringSet()
+	for _, p := range projectCLAGroups {
+		projectSFIDList.Add(p.ProjectSFID)
+	}
+
+	if signedErr != nil {
+		log.WithFields(f).WithError(signedErr).Warnf("failed to check signed status for foundationID: %s ", foundationSFID)
+		return signedErr
+	}
+	for i := range managers {
+		// Get User
+		mgr := managers[i]
+		lfUser, userErr := userClient.GetUserByUsername(mgr)
+		if userErr != nil {
+			log.WithFields(f).WithError(userErr).Warnf("Failed to get salesforce user for user: %s", mgr)
+			continue
+		}
+		// Get User email
+		email := lfUser.Emails[0].EmailAddress
+		if signedAtFoundation {
+			scopeID, scopeErr := orgClient.GetScopeID(org.ID, foundationSFID, utils.CLAManagerRole, utils.ProjectOrgScope, mgr)
+			if scopeErr != nil {
+				log.WithFields(f).WithError(scopeErr).Warnf("failed to get scopeID for foundation: %s , organization: %s, manager: %s and role: %s ", foundationSFID, org.Name, mgr, utils.CLAManagerRole)
+				continue
+			}
+			if action == AddCLAManager {
+
+				hasScope, scopeErr := orgClient.IsUserHaveRoleScope(utils.CLAManagerRole, lfUser.ID, org.ID, foundationSFID)
+				if scopeErr != nil {
+					log.WithFields(f).WithError(scopeErr).Warnf("Failed to get scope for role: %s , user:%s , foundation: %s and org: %s ", utils.CLAManagerRole, lfUser.ID, foundationSFID, org.ID)
+					continue
+				}
+				if hasScope {
+					log.WithFields(f).Warnf("User: %s already has scope ", mgr)
+					continue
+				}
+				createErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(*email, foundationSFID, org.ID, roleID)
+				if createErr != nil {
+					log.WithFields(f).WithError(createErr).Warnf("failed to create CLA Manager role for user: %s ", *email)
+					return scopeErr
+				}
+
+			} else if action == DeleteCLAManager {
+				deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(org.ID, roleID, scopeID, &mgr, email)
+				if deleteErr != nil {
+					log.WithFields(f).WithError(deleteErr).Warn("Failed to remove CLA Manager from user: &s ", mgr)
+					return deleteErr
+				}
+			}
+		} else {
+			if action == AddCLAManager {
+				var eg errgroup.Group
+				// add user as cla-manager for all projects of cla-group
+				for _, projectSfid := range projectSFIDList.List() {
+					// ensure that following goroutine gets a copy of projectSFID
+					projectSFID := projectSfid
+					eg.Go(func() error {
+						err := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(*email, projectSFID, org.ID, roleID)
+						if err != nil {
+							msg := fmt.Sprintf("unable to add %s scope for project: %s, company: %s using roleID: %s for user email: %s error = %s",
+								utils.CLAManagerRole, projectSFID, org.ID, roleID, *email, err)
+							log.WithFields(f).Warn(msg)
+							return err
+						}
+						return nil
+					})
+				}
+				// Wait for the go routines to finish
+				log.WithFields(f).Debugf("waiting for create role assignment to complete for %d projects...", len(projectSFIDList.List()))
+				if loadErr := eg.Wait(); loadErr != nil {
+					log.WithFields(f).Warn(loadErr)
+					continue
+				}
+			} else if action == DeleteCLAManager {
+				var eg errgroup.Group
+				// remove user as cla-manager for all projects of cla-group
+				for _, projectSfid := range projectSFIDList.List() {
+					// ensure that following goroutine gets a copy of projectSFID
+					projectSFID := projectSfid
+					eg.Go(func() error {
+						scopeID, scopeErr := orgClient.GetScopeID(org.ID, projectSFID, utils.CLAManagerRole, utils.ProjectOrgScope, mgr)
+						if scopeErr != nil {
+							log.WithFields(f).Warn(scopeErr)
+							return scopeErr
+						}
+						deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(org.ID, roleID, scopeID, &mgr, email)
+						if deleteErr != nil {
+							log.WithFields(f).Warn(deleteErr)
+							return deleteErr
+						}
+						return nil
+					})
+				}
+				// Wait for the go routines to finish
+				log.WithFields(f).Debugf("waiting for delete role assignment to complete for %d projects...", len(projectSFIDList.List()))
+				if loadErr := eg.Wait(); loadErr != nil {
+					log.WithFields(f).Warn(loadErr)
+					continue
+				}
+			}
+		}
+	}
+	return nil
+
 }
