@@ -1,11 +1,11 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, OnInit } from '@angular/core';
-import { IonicPage, ModalController, NavController } from 'ionic-angular';
-import { ClaService } from '../../services/cla.service';
-import { Restricted } from '../../decorators/restricted';
-import { ClaCompanyWithInvitesModel } from "../../models/cla-company-with-invites";
+import {Component, OnInit} from '@angular/core';
+import {IonicPage, ModalController, NavController} from 'ionic-angular';
+import {ClaService} from '../../services/cla.service';
+import {Restricted} from '../../decorators/restricted';
+import {ClaCompanyWithInvitesModel} from "../../models/cla-company-with-invites";
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -41,7 +41,10 @@ export class CompaniesPage implements OnInit {
     this.loading = {
       companies: true
     };
-    this.userId = localStorage.getItem('userid').trim();
+    this.userId = localStorage.getItem('userid');
+    if (this.userId != null) {
+      this.userId = this.userId.trim();
+    }
     this.userEmail = localStorage.getItem('user_email');
     this.userName = localStorage.getItem('user_name');
     this.companies = [];
