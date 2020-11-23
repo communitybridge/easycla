@@ -25,8 +25,10 @@ export class ClaGerritCorporatePage {
   userId: string;
   signature: string;
   companies: any;
+  filteredCompanies: any;
   expanded: boolean = true;
   errorMessage: string = null;
+  searchTimer = null;
 
   constructor(
     public navCtrl: NavController,
@@ -47,6 +49,7 @@ export class ClaGerritCorporatePage {
       companies: true
     };
     this.companies = [];
+    this.filteredCompanies = [];
   }
 
   ngOnInit() {
@@ -69,6 +72,7 @@ export class ClaGerritCorporatePage {
     this.claService.getAllCompanies().subscribe((response) => {
       if (response) {
         this.companies = response;
+        this.filteredCompanies = this.companies;
       }
       this.loading.companies = false;
     });
@@ -167,6 +171,22 @@ export class ClaGerritCorporatePage {
         this.errorMessage = 'Invalid project id.';
       }
     );
+  }
+
+  onSearch(event) {
+    const searchText = event._value;
+    if (this.searchTimer !== null) {
+      clearTimeout(this.searchTimer);
+    }
+    this.searchTimer = setTimeout(() => {
+      if (searchText === '') {
+        this.filteredCompanies = this.companies;
+      } else {
+        this.filteredCompanies = this.companies.filter((a) => {
+          return a.company_name.toLowerCase().includes(searchText.toLowerCase());
+        });
+      }
+    }, 250);
   }
 
   onClickToggle(hasExpanded) {
