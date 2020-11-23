@@ -1630,6 +1630,7 @@ def delete_gerrit_instance(gerrit_id: hug.types.uuid):
 def get_agreement_html(gerrit_id: hug.types.uuid, contract_type: hug.types.text):
     """
     GET: /gerrit/{gerrit_id}/{contract_type}/agreementUrl.html
+    Example: https://api.easycla.lfx.linuxfoundation.org/v2/gerrit/00022789-00fe-4658-a24b-9d05d3ee57e8/individual/agreementUrl.html
 
     Generates an appropriate HTML file for display in the Gerrit console.
     """
