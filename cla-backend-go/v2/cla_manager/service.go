@@ -26,7 +26,6 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 	"github.com/communitybridge/easycla/cla-backend-go/v2/organization-service/client/organizations"
-	"golang.org/x/sync/errgroup"
 
 	v1ClaManager "github.com/communitybridge/easycla/cla-backend-go/cla_manager"
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
@@ -159,9 +158,6 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 		msg := fmt.Sprintf("Failed to get Lfx User with username : %s ", authUsername)
 		log.WithFields(f).Warn(msg)
 	}
-	// GetSF Org
-	orgClient := v2OrgService.GetClient()
-	acsClient := v2AcsService.GetClient()
 	user, userErr := userServiceClient.SearchUserByEmail(params.Body.UserEmail.String())
 
 	// Check for potential user with no username
@@ -252,124 +248,6 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 		}
 	}
 
-	log.WithFields(f).Debug("Getting role")
-	// Get RoleID for cla-manager
-
-	roleID, roleErr := acsClient.GetRoleID(utils.CLAManagerRole)
-	if roleErr != nil {
-		msg := buildErrorMessageCreate(params, roleErr)
-		log.WithFields(f).Warn(msg)
-		return nil, &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
-	log.WithFields(f).Debugf("Role ID for %s: %s", utils.CLAManagerRole, roleID)
-	log.WithFields(f).Debugf("Creating user role Scope for user: %s ", *params.Body.UserEmail)
-
-	hasScope, err := orgClient.IsUserHaveRoleScope(utils.CLAManagerRole, user.ID, params.CompanySFID, params.ProjectSFID)
-	if err != nil {
-		msg := buildErrorMessageCreate(params, err)
-		log.WithFields(f).Warn(msg)
-		return nil, &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
-	if hasScope {
-		msg := fmt.Sprintf("User %s is already %s for Company: %s and Project: %s",
-			user.Username, utils.CLAManagerRole, params.CompanySFID, params.ProjectSFID)
-		log.WithFields(f).Warn(msg)
-		return nil, &models.ErrorResponse{
-			Message: msg,
-			Code:    "409",
-		}
-	}
-
-	projectCLAGroups, getErr := s.projectCGRepo.GetProjectsIdsForClaGroup(claGroupID)
-	log.WithFields(f).Debugf("Getting associated SF projects for claGroup: %s ", claGroupID)
-
-	if getErr != nil {
-		msg := buildErrorMessageCreate(params, getErr)
-		log.WithFields(f).Warn(msg)
-		return nil, &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
-
-	// Check if Project is signed at Foundation or Project Level
-	foundationSFID := projectCLAGroups[0].FoundationSFID
-	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, foundationSFID)
-
-	if signedErr != nil {
-		msg := buildErrorMessageCreate(params, signedErr)
-		log.WithFields(f).Warn(msg)
-		return nil, &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
-
-	if signedAtFoundation {
-		scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(params.Body.UserEmail.String(), foundationSFID, params.CompanySFID, roleID)
-		if scopeErr != nil {
-			msg := buildErrorMessageCreate(params, scopeErr)
-			log.WithFields(f).Warn(msg)
-			return nil, &models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			}
-		}
-
-	} else {
-		projectSFIDList := utils.NewStringSet()
-		for _, p := range projectCLAGroups {
-			projectSFIDList.Add(p.ProjectSFID)
-		}
-		var eg errgroup.Group
-		// add user as cla-manager for all projects of cla-group
-		for _, projectSfid := range projectSFIDList.List() {
-			// ensure that following goroutine gets a copy of projectSFID
-			projectSFID := projectSfid
-			eg.Go(func() error {
-				err := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(params.Body.UserEmail.String(), projectSFID, params.CompanySFID, roleID)
-				if err != nil {
-					msg := fmt.Sprintf("unable to add %s scope for project: %s, company: %s using roleID: %s for user email: %s error = %s",
-						utils.CLAManagerRole, projectSFID, params.CompanySFID, roleID, params.Body.UserEmail.String(), err)
-					log.WithFields(f).Warn(msg)
-					return nil
-				}
-				return nil
-			})
-		}
-
-		// Wait for the go routines to finish
-		log.WithFields(f).Debugf("waiting for create role assignment to complete for %d projects...", len(projectSFIDList.List()))
-		if loadErr := eg.Wait(); loadErr != nil {
-			msg := buildErrorMessageCreate(params, loadErr)
-			log.WithFields(f).Warn(msg)
-			return nil, &models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			}
-		}
-	}
-
-	if user.Type == utils.Lead {
-		// convert user to contact
-		log.WithFields(f).Debug("converting lead to contact")
-		err := userServiceClient.ConvertToContact(user.ID)
-		if err != nil {
-			msg := fmt.Sprintf("converting lead to contact failed: %v", err)
-			log.WithFields(f).Warn(msg)
-			return nil, &models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			}
-		}
-	}
-
 	claCompanyManager := &models.CompanyClaManager{
 		LfUsername:       user.Username,
 		Email:            *params.Body.UserEmail,
@@ -395,18 +273,6 @@ func (s *service) DeleteCLAManager(ctx context.Context, claGroupID string, param
 		"xUserName":      params.XUSERNAME,
 		"xEmail":         params.XEMAIL,
 	}
-	// Get user by firstname,lastname and email parameters
-	userServiceClient := v2UserService.GetClient()
-	user, userErr := userServiceClient.GetUserByUsername(params.UserLFID)
-
-	if userErr != nil {
-		msg := fmt.Sprintf("Failed to get user when searching by username: %s , error: %v ", params.UserLFID, userErr)
-		log.WithFields(f).Warn(msg)
-		return &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
 
 	// Search for salesForce Company aka external Company
 	companyModel, companyErr := s.companyService.GetCompanyByExternalID(ctx, params.CompanySFID)
@@ -416,118 +282,6 @@ func (s *service) DeleteCLAManager(ctx context.Context, claGroupID string, param
 		return &models.ErrorResponse{
 			Message: msg,
 			Code:    "400",
-		}
-	}
-
-	acsClient := v2AcsService.GetClient()
-
-	roleID, roleErr := acsClient.GetRoleID(utils.CLAManagerRole)
-	if roleErr != nil {
-		msg := buildErrorMessageDelete(params, roleErr)
-		log.WithFields(f).Warn(msg)
-		return &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
-	log.WithFields(f).Debugf("Role ID for cla-manager-role : %s", roleID)
-
-	projectCLAGroups, getErr := s.projectCGRepo.GetProjectsIdsForClaGroup(claGroupID)
-
-	if getErr != nil {
-		msg := buildErrorMessageDelete(params, getErr)
-		log.WithFields(f).Warn(msg)
-		return &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
-
-	orgClient := v2OrgService.GetClient()
-
-	// Check if Project is signed at Foundation or Project Level
-	foundationSFID := projectCLAGroups[0].FoundationSFID
-	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, foundationSFID)
-
-	if signedErr != nil {
-		msg := buildErrorMessageDelete(params, signedErr)
-		log.WithFields(f).Warn(msg)
-		return &models.ErrorResponse{
-			Message: msg,
-			Code:    "400",
-		}
-	}
-
-	if signedAtFoundation {
-		scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, foundationSFID, utils.CLAManagerRole, utils.ProjectOrgScope, params.UserLFID)
-		if scopeErr != nil {
-			msg := buildErrorMessageDelete(params, scopeErr)
-			log.WithFields(f).Warn(msg)
-			return &models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			}
-		}
-		if scopeID == "" {
-			msg := buildErrorMessageDelete(params, ErrScopeNotFound)
-			log.WithFields(f).Warn(msg)
-			return &models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			}
-		}
-		email := *user.Emails[0].EmailAddress
-		deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(params.CompanySFID, roleID, scopeID, &user.Username, &email)
-		if deleteErr != nil {
-			msg := buildErrorMessageDelete(params, deleteErr)
-			log.WithFields(f).Warn(msg)
-			return &models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			}
-		}
-	} else {
-		projectSFIDList := utils.NewStringSet()
-		for _, p := range projectCLAGroups {
-			projectSFIDList.Add(p.ProjectSFID)
-		}
-		var eg errgroup.Group
-		// remove user as cla-manager for all projects of cla-group
-		for _, projectSfid := range projectSFIDList.List() {
-			// ensure that following goroutine gets a copy of projectSFID
-			projectSFID := projectSfid
-			eg.Go(func() error {
-				scopeID, scopeErr := orgClient.GetScopeID(params.CompanySFID, projectSFID, utils.CLAManagerRole, utils.ProjectOrgScope, params.UserLFID)
-				if scopeErr != nil {
-					msg := buildErrorMessageDelete(params, scopeErr)
-					log.WithFields(f).Warn(msg)
-					return scopeErr
-				}
-				if scopeID == "" {
-					msg := buildErrorMessageDelete(params, ErrScopeNotFound)
-					log.WithFields(f).Warn(msg)
-					return ErrScopeNotFound
-				}
-				email := *user.Emails[0].EmailAddress
-				deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(params.CompanySFID, roleID, scopeID, &user.Username, &email)
-				if deleteErr != nil {
-					msg := buildErrorMessageDelete(params, deleteErr)
-					log.WithFields(f).Warn(msg)
-					return deleteErr
-				}
-				return nil
-			})
-		}
-
-		// Wait for the go routines to finish
-		log.WithFields(f).Debugf("waiting for delete role assignment to complete for %d projects...", len(projectSFIDList.List()))
-		if loadErr := eg.Wait(); loadErr != nil {
-			msg := buildErrorMessageDelete(params, loadErr)
-			log.WithFields(f).Warn(msg)
-			return &models.ErrorResponse{
-				Message: msg,
-				Code:    "400",
-			}
 		}
 	}
 
