@@ -139,6 +139,8 @@ def get_agreement_html(gerrit_id, contract_type):
 
     try:
         gerrit = get_gerrit_instance()
+        cla.log.debug(f'get_agreement_html - {contract_type} - '
+                      f'Loading gerrit record by gerrit id: {str(gerrit_id)}')
         gerrit.load(str(gerrit_id))
         cla.log.debug(f'get_agreement_html - {contract_type} - Loaded gerrit record: {str(gerrit)}')
     except DoesNotExist as err:
@@ -146,6 +148,8 @@ def get_agreement_html(gerrit_id, contract_type):
 
     try:
         project = get_project_instance()
+        cla.log.debug(f'get_agreement_html - {contract_type} - '
+                      f'Loading project record by cla group id: {str(gerrit.get_project_id())}')
         project.load(str(gerrit.get_project_id()))
         cla.log.debug(f'get_agreement_html - {contract_type} - Loaded project record: {str(project)}')
     except DoesNotExist as err:
@@ -162,7 +166,7 @@ def get_agreement_html(gerrit_id, contract_type):
         # Generate url for the v1 contributor console
         # Note: we pass the Gerrit ID in the v1 API call, not the CLA Group (project_id) value
         console_url = (f'https://{console_v1_endpoint}/'
-                       f'#/cla/gerrit/project/{gerrit.get_gerrit_id()}/'
+                       f'#/cla/gerrit/project/{gerrit.get_project_id()}/'
                        f'{contract_type}?redirect={gerrit.get_gerrit_url()}')
 
     cla.log.debug(f'redirecting user to: {console_url}')
