@@ -249,6 +249,7 @@ func (s *service) addCLAPermissions(claGroupID, projectSFID string) error {
 	for _, sig := range sigModels.Signatures {
 
 		// Make sure we can load the company and grab the SFID
+		sig := sig
 		companyInternalID := sig.SignatureReferenceID.String()
 		log.WithFields(f).Debugf("locating company by internal ID: %s", companyInternalID)
 		companyModel, err := s.companyRepo.GetCompany(ctx, companyInternalID)
@@ -276,7 +277,8 @@ func (s *service) addCLAPermissions(claGroupID, projectSFID string) error {
 		// For each CLA manager for this company...
 		log.WithFields(f).Debugf("processing %d CLA managers for company ID: %s/%s with name: %s", len(existingCLAManagers), companyInternalID, companySFID, companyModel.CompanyName)
 		for _, signatureUserModel := range existingCLAManagers {
-
+			// handle unpredictability with addresses o0f different signatureUserModel
+			signatureUserModel := signatureUserModel
 			go func(signatureUserModel models.User) {
 				defer wg.Done()
 
