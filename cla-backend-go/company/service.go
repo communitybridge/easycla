@@ -530,6 +530,25 @@ func (s service) getPreferredNameAndEmail(ctx context.Context, lfid string) (str
 		return "", "", userErr
 	}
 
+	var updatedUserModel models.User
+
+	if userModel == nil {
+		userModels, userErr := s.userService.SearchUsers("user_name", lfid, true)
+		if userErr != nil {
+			log.Warnf("SearchUsers - unable to locate user model by ID: %s, error: %+v",
+				lfid, userErr)
+			return "", "", userErr
+		}
+		if len(userModels.Users) > 0 {
+			for _, user := range userModels.Users {
+				if user.Username == lfid {
+					updatedUserModel = user
+				}
+			}
+		}
+	}
+	userModel = &updatedUserModel
+
 	userName := userModel.Username
 	// If no user name specified - then use the user's LF user name I guess
 	if userName == "" {
