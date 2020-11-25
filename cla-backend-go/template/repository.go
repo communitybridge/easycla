@@ -745,8 +745,8 @@ var templateMap = map[string]models.Template{
 	},
 	ASWFStyleTemplateID: {
 		ID:          ASWFStyleTemplateID,
-		Name:        "ASWF 2020 v2.1 Style",
-		Description: "For use of projects under the ASWF 2020 v2.1 style of CLA.",
+		Name:        "ASWF 2020 v2.1",
+		Description: "For use of projects under the ASWF 2020 v2.1 of CLA.",
 		MetaFields: []*models.MetaField{
 			{
 				Name:             "Project Name",
@@ -774,8 +774,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        340,
 				Height:       20,
-				OffsetX:      131,
-				OffsetY:      100,
+				OffsetX:      65,
+				OffsetY:      -8,
 			},
 			{
 				ID:           "mailing_address1",
@@ -786,8 +786,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        300,
 				Height:       20,
-				OffsetX:      180,
-				OffsetY:      132,
+				OffsetX:      105,
+				OffsetY:      -7,
 			},
 			{
 				ID:           "mailing_address2",
@@ -798,8 +798,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        340,
 				Height:       20,
-				OffsetX:      180,
-				OffsetY:      164,
+				OffsetX:      0,
+				OffsetY:      25,
 			},
 			{
 				ID:           "mailing_address3",
@@ -810,8 +810,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        340,
 				Height:       20,
-				OffsetX:      180, // should be aligned with the above
-				OffsetY:      195, // 47 should move down some
+				OffsetX:      0,  // should be aligned with the above
+				OffsetY:      60, // 47 should move down some
 			},
 			{
 				ID:           "country",
@@ -822,8 +822,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        300,
 				Height:       20,
-				OffsetX:      119,
-				OffsetY:      226,
+				OffsetX:      60,
+				OffsetY:      -7,
 			},
 			{
 				ID:           "email",
@@ -834,8 +834,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        300, // 320 same length as above
 				Height:       20,
-				OffsetX:      113, // 40 move over a bit
-				OffsetY:      258,
+				OffsetX:      50, // 40 move over a bit
+				OffsetY:      -8,
 			},
 			{
 				ID:           "sign",
@@ -846,8 +846,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        0,
 				Height:       0,
-				OffsetX:      206, // 70 move to the right some
-				OffsetY:      54,
+				OffsetX:      80, // 70 move to the right some
+				OffsetY:      -5,
 			},
 			{
 				ID:           "date",
@@ -858,8 +858,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        0,
 				Height:       0,
-				OffsetX:      400,
-				OffsetY:      69,
+				OffsetX:      40,
+				OffsetY:      -7,
 			},
 		},
 		CclaFields: []*models.Field{
@@ -872,8 +872,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        0,
 				Height:       0,
-				OffsetX:      196,
-				OffsetY:      55,
+				OffsetX:      100,
+				OffsetY:      -6,
 			},
 			{
 				ID:           "date",
@@ -884,8 +884,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        0,
 				Height:       0,
-				OffsetX:      383,
-				OffsetY:      55,
+				OffsetX:      40,
+				OffsetY:      -7,
 			},
 			{
 				ID:           "signatory_name",
@@ -896,8 +896,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        355,
 				Height:       20,
-				OffsetX:      164,
-				OffsetY:      101,
+				OffsetX:      120,
+				OffsetY:      -5,
 			},
 			{
 				ID:           "signatory_email",
@@ -908,8 +908,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        355,
 				Height:       20,
-				OffsetX:      164,
-				OffsetY:      131,
+				OffsetX:      120,
+				OffsetY:      -5,
 			},
 			{
 				ID:           "signatory_title",
@@ -920,8 +920,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   true,
 				Width:        355,
 				Height:       20,
-				OffsetX:      164,
-				OffsetY:      164,
+				OffsetX:      120,
+				OffsetY:      -6,
 			},
 			{
 				ID:           "corporation_name",
@@ -932,8 +932,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        355,
 				Height:       20,
-				OffsetX:      180,
-				OffsetY:      211,
+				OffsetX:      130,
+				OffsetY:      -5,
 			},
 			{
 				ID:           "corporation_address1",
@@ -944,8 +944,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   true,
 				Width:        230,
 				Height:       20,
-				OffsetX:      180,
-				OffsetY:      238,
+				OffsetX:      135,
+				OffsetY:      -8,
 			},
 			{
 				ID:           "corporation_address2",
@@ -956,8 +956,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   true,
 				Width:        350,
 				Height:       20,
-				OffsetX:      180,
-				OffsetY:      269,
+				OffsetX:      0,
+				OffsetY:      25,
 			},
 			{
 				ID:           "corporation_address3",
@@ -968,8 +968,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   true,
 				Width:        350,
 				Height:       20,
-				OffsetX:      180,
-				OffsetY:      303,
+				OffsetX:      0,
+				OffsetY:      55,
 			},
 			{
 				ID:           "cla_manager_name",
@@ -980,8 +980,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        385,
 				Height:       20,
-				OffsetX:      216,
-				OffsetY:      339,
+				OffsetX:      190,
+				OffsetY:      -7,
 			},
 			{
 				ID:           "cla_manager_email",
@@ -992,8 +992,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        385,
 				Height:       20,
-				OffsetX:      216,
-				OffsetY:      368,
+				OffsetX:      190,
+				OffsetY:      -7,
 			},
 		},
 		IclaHTMLBody: `
