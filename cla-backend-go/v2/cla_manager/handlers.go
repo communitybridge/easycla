@@ -343,7 +343,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		func(params cla_manager.NotifyCLAManagersParams) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			err := service.NotifyCLAManagers(ctx, params.Body)
+			err := service.NotifyCLAManagers(ctx, params.Body, LfxPortalURL)
 			if err != nil {
 				if err == ErrCLAUserNotFound {
 					return cla_manager.NewNotifyCLAManagersNotFound().WithXRequestID(reqID).WithPayload(
