@@ -41,7 +41,6 @@ require (
 	github.com/juju/mempool v0.0.0-20160205104927-24974d6c264f // indirect
 	github.com/juju/zip v0.0.0-20160205105221-f6b1e93fa2e2
 	github.com/kr/pretty v0.2.0 // indirect
-	github.com/lytics/logrus v0.0.0-20170528191427-4389a17ed024
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/mozillazg/request v0.8.0 // indirect
 	github.com/pdfcpu/pdfcpu v0.3.5-0.20200802160406-be1e0eb55afc

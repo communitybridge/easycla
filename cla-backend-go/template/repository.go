@@ -30,6 +30,8 @@ var (
 var (
 	// ApacheStyleTemplateID is template ID of the Apache Style
 	ApacheStyleTemplateID = "fb4cc144-a76c-4c17-8a52-c648f158fded"
+	// ASWFStyleTemplateID is template id for ASWF
+	ASWFStyleTemplateID = "18b8ad08-d7d4-4d75-ad25-30bbfffd59cf"
 )
 
 // Repository interface functions
@@ -727,6 +729,329 @@ var templateMap = map[string]models.Template{
 		<p>6. You are not expected to provide support for Your Contributions, except to the extent You desire to provide support. You may provide support for free, for a fee, or not at all. Unless required by applicable law or agreed to in writing, You provide Your Contributions on an “AS IS” BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE.</p>
 		<p>7. Should You wish to submit work that is not Your original creation, You may submit it to the Project separately from any Contribution, identifying the complete details of its source and of any license or other restriction (including, but not limited to, related patents, trademarks, and license agreements) of which you are personally aware, and conspicuously marking the work as “Submitted on behalf of a third-party: [named here]”.</p>
 		<p>8. It is your responsibility to use the CLA Tool when any change is required to the list of designated employees authorized to submit Contributions on behalf of the Corporation, or to the list of the CLA Managers.</p>
+		<p style="page-break-after: always; text-align: center">[Please complete and sign on the next page.]</p>
+
+		<p>Please sign: __________________________________ Date: _______________ </p>
+		<p>Signatory Name: ______________________________________________________</p>
+		<p>Signatory E-mail: ____________________________________________________</p>
+		<p>Signatory Title: _____________________________________________________</p>
+		<p>Corporation Name: ____________________________________________________</p>
+		<p>Corporation Address: _________________________________________________</p>
+		<p>______________________________________________________________________</p>
+		<p>______________________________________________________________________</p>						
+		<p>Initial CLA Manager Name: ____________________________________________</p>
+		<p>Initial CLA Manager E-Mail: __________________________________________</p>
+		</body></html>`,
+	},
+	ASWFStyleTemplateID: {
+		ID:          ASWFStyleTemplateID,
+		Name:        "ASWF 2020 v2.1 Style",
+		Description: "For use of projects under the ASWF 2020 v2.1 style of CLA.",
+		MetaFields: []*models.MetaField{
+			{
+				Name:             "Project Name",
+				Description:      "Project's Full Name.",
+				TemplateVariable: "PROJECT_NAME",
+			},
+			{
+				Name:             "Project Entity Name",
+				Description:      "The Full Entity Name of the Project.",
+				TemplateVariable: "PROJECT_ENTITY_NAME",
+			},
+			{
+				Name:             "Contact Email Address",
+				Description:      "The E-Mail Address of the Person managing the CLA.",
+				TemplateVariable: "CONTACT_EMAIL",
+			},
+		},
+		IclaFields: []*models.Field{
+			{
+				ID:           "full_name",
+				Name:         "Full Name",
+				AnchorString: "Full name:",
+				FieldType:    "text_unlocked",
+				IsOptional:   false,
+				IsEditable:   false,
+				Width:        340,
+				Height:       20,
+				OffsetX:      131,
+				OffsetY:      100,
+			},
+			{
+				ID:           "mailing_address1",
+				Name:         "Mailing Address",
+				AnchorString: "Mailing Address:",
+				FieldType:    "text_unlocked",
+				IsOptional:   false,
+				IsEditable:   false,
+				Width:        300,
+				Height:       20,
+				OffsetX:      180,
+				OffsetY:      132,
+			},
+			{
+				ID:           "mailing_address2",
+				Name:         "Mailing Address",
+				AnchorString: "Mailing Address:",
+				FieldType:    "text_unlocked",
+				IsOptional:   false,
+				IsEditable:   false,
+				Width:        340,
+				Height:       20,
+				OffsetX:      180,
+				OffsetY:      164,
+			},
+			{
+				ID:           "mailing_address3",
+				Name:         "Mailing Address",
+				AnchorString: "Mailing Address:",
+				FieldType:    "text_unlocked",
+				IsOptional:   true,
+				IsEditable:   false,
+				Width:        340,
+				Height:       20,
+				OffsetX:      180, // should be aligned with the above
+				OffsetY:      195, // 47 should move down some
+			},
+			{
+				ID:           "country",
+				Name:         "Country",
+				AnchorString: "Country:",
+				FieldType:    "text_unlocked",
+				IsOptional:   true,
+				IsEditable:   false,
+				Width:        300,
+				Height:       20,
+				OffsetX:      119,
+				OffsetY:      226,
+			},
+			{
+				ID:           "email",
+				Name:         "Email",
+				AnchorString: "E-Mail:",
+				FieldType:    "text_unlocked",
+				IsOptional:   false,
+				IsEditable:   false,
+				Width:        300, // 320 same length as above
+				Height:       20,
+				OffsetX:      113, // 40 move over a bit
+				OffsetY:      258,
+			},
+			{
+				ID:           "sign",
+				Name:         "Please Sign",
+				AnchorString: "Please Sign:",
+				FieldType:    "sign",
+				IsOptional:   false,
+				IsEditable:   false,
+				Width:        0,
+				Height:       0,
+				OffsetX:      206, // 70 move to the right some
+				OffsetY:      54,
+			},
+			{
+				ID:           "date",
+				Name:         "Date",
+				AnchorString: "Date:",
+				FieldType:    "date",
+				IsOptional:   false,
+				IsEditable:   false,
+				Width:        0,
+				Height:       0,
+				OffsetX:      400,
+				OffsetY:      69,
+			},
+		},
+		CclaFields: []*models.Field{
+			{
+				ID:           "sign",
+				Name:         "Please Sign",
+				AnchorString: "Please sign:",
+				FieldType:    "sign",
+				IsOptional:   false,
+				IsEditable:   false,
+				Width:        0,
+				Height:       0,
+				OffsetX:      196,
+				OffsetY:      55,
+			},
+			{
+				ID:           "date",
+				Name:         "Date",
+				AnchorString: "Date:",
+				FieldType:    "date",
+				IsOptional:   false,
+				IsEditable:   false,
+				Width:        0,
+				Height:       0,
+				OffsetX:      383,
+				OffsetY:      55,
+			},
+			{
+				ID:           "signatory_name",
+				Name:         "Signatory Name",
+				AnchorString: "Signatory Name:",
+				FieldType:    "text",
+				IsOptional:   false,
+				IsEditable:   false,
+				Width:        355,
+				Height:       20,
+				OffsetX:      164,
+				OffsetY:      101,
+			},
+			{
+				ID:           "signatory_email",
+				Name:         "Signatory E-mail",
+				AnchorString: "Signatory E-mail:",
+				FieldType:    "text",
+				IsOptional:   false,
+				IsEditable:   false,
+				Width:        355,
+				Height:       20,
+				OffsetX:      164,
+				OffsetY:      131,
+			},
+			{
+				ID:           "signatory_title",
+				Name:         "Signatory Title",
+				AnchorString: "Signatory Title:",
+				FieldType:    "text",
+				IsOptional:   true,
+				IsEditable:   true,
+				Width:        355,
+				Height:       20,
+				OffsetX:      164,
+				OffsetY:      164,
+			},
+			{
+				ID:           "corporation_name",
+				Name:         "Corporation Name",
+				AnchorString: "Corporation Name:",
+				FieldType:    "text",
+				IsOptional:   false,
+				IsEditable:   false,
+				Width:        355,
+				Height:       20,
+				OffsetX:      180,
+				OffsetY:      211,
+			},
+			{
+				ID:           "corporation_address1",
+				Name:         "Corporation Address1",
+				AnchorString: "Corporation Address:",
+				FieldType:    "text",
+				IsOptional:   false,
+				IsEditable:   true,
+				Width:        230,
+				Height:       20,
+				OffsetX:      180,
+				OffsetY:      238,
+			},
+			{
+				ID:           "corporation_address2",
+				Name:         "Corporation Address2",
+				AnchorString: "Corporation Address:",
+				FieldType:    "text_unlocked",
+				IsOptional:   false,
+				IsEditable:   true,
+				Width:        350,
+				Height:       20,
+				OffsetX:      180,
+				OffsetY:      269,
+			},
+			{
+				ID:           "corporation_address3",
+				Name:         "Corporation Address3",
+				AnchorString: "Corporation Address:",
+				FieldType:    "text_unlocked",
+				IsOptional:   true,
+				IsEditable:   true,
+				Width:        350,
+				Height:       20,
+				OffsetX:      180,
+				OffsetY:      303,
+			},
+			{
+				ID:           "cla_manager_name",
+				Name:         "Initial CLA Manager Name",
+				AnchorString: "Initial CLA Manager Name:",
+				FieldType:    "text",
+				IsOptional:   false,
+				IsEditable:   false,
+				Width:        385,
+				Height:       20,
+				OffsetX:      216,
+				OffsetY:      339,
+			},
+			{
+				ID:           "cla_manager_email",
+				Name:         "Initial CLA Manager Email",
+				AnchorString: "Initial CLA Manager E-Mail:",
+				FieldType:    "text",
+				IsOptional:   false,
+				IsEditable:   false,
+				Width:        385,
+				Height:       20,
+				OffsetX:      216,
+				OffsetY:      368,
+			},
+		},
+		IclaHTMLBody: `
+		<html><body>
+		<p>
+			Project Name: {{ PROJECT_NAME }}</br>
+			Project Entity:	{{ PROJECT_ENTITY_NAME }}</br>
+		    If emailing signed PDF, send to: manager@lfprojects.org with a copy to: {{ CONTACT_EMAIL }}
+		</p>
+
+		<h3 style="text-align: center">Individual Contributor License Agreement (“Agreement”) v2.1</h3>
+		<p>Thank you for your interest in the project specified above (the “Project”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Project must have a Contributor License Agreement (CLA) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of the Project and its users; it does not change your rights to use your own Contributions for any other purpose. </p>
+		<p>If you have not already done so, please complete and sign this Agreement using the electronic signature portal made available to you by the Project or its third-party service providers, or email a PDF of the signed agreement to the email address specified above. Please read this document carefully before signing and keep a copy for your records.</p>
+		<p>You accept and agree to the following terms and conditions for Your present and future Contributions submitted to the Project. In return, the Project shall not use Your Contributions in a way that is contrary to the public benefit or inconsistent with its charter at the time of the Contribution. Except for the license granted herein to the Project and recipients of software distributed by the Project, You reserve all right, title, and interest in and to Your Contributions.</p>
+		<p>1. Definitions.</p>
+		<p>“You” (or “Your”) shall mean the copyright owner or legal entity authorized by the copyright owner that is making this Agreement with the Project. For legal entities, the entity making a Contribution and all other entities that control, are controlled by, or are under common control with that entity are considered to be a single Contributor. For the purposes of this definition, “control” means (i) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (ii) ownership of fifty percent (50%) or more of the outstanding shares, or (iii) beneficial ownership of such entity.</p>
+		<p>“Contribution” shall mean the code, documentation or other original works of authorship, including any modifications or additions to an existing work, that is intentionally submitted by You to the Project for inclusion in, or documentation of, any of the products owned or managed by the Project (the “Work”). For the purposes of this definition, “submitted” means any form of electronic, verbal, or written communication sent to the Project or its representatives, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, the Project for the purpose of discussing and improving the Work, but excluding communication that is conspicuously marked or otherwise designated in writing by You as “Not a Contribution.”</p>
+		<p>2. Grant of Copyright License. Subject to the terms and conditions of this Agreement, You hereby grant to the Project and to recipients of software distributed by the Project a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare derivative works of, publicly display, publicly perform, sublicense, and distribute Your Contributions and such derivative works.</p>
+		<p>3. Grant of Patent License. Subject to the terms and conditions of this Agreement, You hereby grant to the Project and to recipients of software distributed by the Project a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by You that are necessarily infringed by Your Contribution(s) alone or by combination of Your Contribution(s) with the Work to which such Contribution(s) were submitted. If any entity institutes patent litigation against You or any other entity (including a cross-claim or counterclaim in a lawsuit) alleging that your Contribution, or the Work to which you have contributed, constitutes direct or contributory patent infringement, then any patent licenses granted to that entity under this Agreement for that Contribution or Work shall terminate as of the date such litigation is filed.</p>
+		<p>4. You represent that you are legally entitled to grant the above license. If your employer(s) has rights to intellectual property that you create that includes your Contributions, you represent that you have received permission to make Contributions on behalf of that employer, that your employer has waived such rights for your Contributions to the Project, or that your employer has executed a separate Corporate CLA with the Project.</p>
+		<p>5. You represent that each of Your Contributions is Your original creation (see section 7 for submissions on behalf of others). You represent that Your Contribution submissions include complete details of any third-party license or other restriction (including, but not limited to, related patents and trademarks) of which you are personally aware and which are associated with any part of Your Contributions.</p>
+		<p>6. You are not expected to provide support for Your Contributions, except to the extent You desire to provide support. You may provide support for free, for a fee, or not at all. Unless required by applicable law or agreed to in writing, You provide Your Contributions on an “AS IS” BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, NON- INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE.</p>
+		<p>7. Should You wish to submit work that is not Your original creation, You may submit it to the Project separately from any Contribution, identifying the complete details of its source and of any license or other restriction (including, but not limited to, related patents, trademarks, and license agreements) of which you are personally aware, and conspicuously marking the work as “Submitted on behalf of a third-party: [named here]”.</p>
+		<p>8. You agree to notify the Project of any facts or circumstances of which you become aware that would make these representations inaccurate in any respect.</p>
+		<p style="page-break-after: always; text-align: center">[Please complete and sign on the next page.]</p>
+
+		<p>Please sign: __________________________________ Date: _______________ </p>
+		<p>Full name: __________________________________________________________ </p>
+		<p>Mailing Address:	____________________________________________________ </p>
+		<p>_____________________________________________________________________ </p>
+		<p>_____________________________________________________________________ </p>		
+		<p>Country: ________________________________________</p>
+		<p>E-Mail: _________________________________________</p>
+		</body></html>
+		`,
+		CclaHTMLBody: `
+		<html><body>
+		<p>
+			Project Name: {{ PROJECT_NAME }}</br>
+			Project Entity:	{{ PROJECT_ENTITY_NAME }}</br>
+		    If emailing signed PDF, send to: manager@lfprojects.org with a copy to: {{ CONTACT_EMAIL }}
+		</p>
+
+		<h3 style="text-align: center"> Software Grant and Corporate Contributor License Agreement (“Agreement”) v2.1 </h3>
+		<p>Thank you for your interest in the project specified above (the “Project”). In order to clarify the intellectual property license granted with Contributions from any person or entity, the Project must have a Contributor License Agreement (CLA) on file that has been signed by each Contributor, indicating agreement to the license terms below. This license is for your protection as a Contributor as well as the protection of the Project and its users; it does not change your rights to use your own Contributions for any other purpose. </p>
+		<p>This version of the Agreement allows an entity (the “Corporation”) to submit Contributions to the Project, to authorize Contributions submitted by its designated employees to the Project, and to grant copyright and patent licenses thereto. </p> 
+		<p>If you have not already done so, please complete and sign this Agreement using the electronic signature portal made available to you by the Project or its third-party service providers, or email a PDF of the signed agreement to the email address specified above. Please read this document carefully before signing and keep a copy for your records.</p>
+		<p>You accept and agree to the following terms and conditions for Your present and future Contributions submitted to the Project. In return, the Project shall not use Your Contributions in a way that is contrary to the public benefit or inconsistent with its charter at the time of the Contribution. Except for the license granted herein to the Project and recipients of software distributed by the Project, You reserve all right, title, and interest in and to Your Contributions.</p>
+		<p>1. Definitions. </p>
+		<p>“You” (or “Your”) shall mean the copyright owner or legal entity authorized by the copyright owner that is making this Agreement with the Project. For legal entities, the entity making a Contribution and all other entities that control, are controlled by, or are under common control with that entity are considered to be a single Contributor. For the purposes of this definition, “control” means (i) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (ii) ownership of fifty percent (50%) or more of the outstanding shares, or (iii) beneficial ownership of such entity.</p>
+		<p>“Contribution” shall mean the code, documentation or other original works of authorship, including any modifications or additions to an existing work, that is intentionally submitted by You to the Project for inclusion in, or documentation of, any of the products owned or managed by the Project (the “Work”). For the purposes of this definition, “submitted” means any form of electronic, verbal, or written communication sent to the Project or its representatives, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, the Project for the purpose of discussing and improving the Work, but excluding communication that is conspicuously marked or otherwise designated in writing by You as “Not a Contribution.”</p>
+		<p>2. Grant of Copyright License. Subject to the terms and conditions of this Agreement, You hereby grant to the Project and to recipients of software distributed by the Project a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare derivative works of, publicly display, publicly perform, sublicense, and distribute Your Contributions and such derivative works.</p>
+		<p>3. Grant of Patent License. Subject to the terms and conditions of this Agreement, You hereby grant to the Project and to recipients of software distributed by the Project a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by You that are necessarily infringed by Your Contribution(s) alone or by combination of Your Contribution(s) with the Work to which such Contribution(s) were submitted. If any entity institutes patent litigation against You or any other entity (including a cross-claim or counterclaim in a lawsuit) alleging that your Contribution, or the Work to which you have contributed, constitutes direct or contributory patent infringement, then any patent licenses granted to that entity under this Agreement for that Contribution or Work shall terminate as of the date such litigation is filed. </p>
+		<p>4. You represent that You are legally entitled to grant the above license. You represent further that the employee of the Corporation designated as the Initial CLA Manager below (and each who is designated in a subsequent written modification to the list of CLA Managers) (each, a “CLA Manager”) is authorized to maintain with the Project (1) the list of employees of the Corporation who are authorized to submit Contributions on behalf of the Corporation, and (2) the list of CLA Managers.</p>
+		<p>5. You represent that each of Your Contributions is Your original creation (see section 7 for submissions on behalf of others).</p>
+		<p>6. You are not expected to provide support for Your Contributions, except to the extent You desire to provide support. You may provide support for free, for a fee, or not at all. Unless required by applicable law or agreed to in writing, You provide Your Contributions on an “AS IS” BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, NON- INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE.</p>
+		<p>7. Should You wish to submit work that is not Your original creation, You may submit it to the Project separately from any Contribution, identifying the complete details of its source and of any license or other restriction (including, but not limited to, related patents, trademarks, and license agreements) of which you are personally aware, and conspicuously marking the work as “Submitted on behalf of a third-party: [named here]”.</p>
+		<p>8. It is your responsibility to notify the Project when any change is required to the list of designated employees authorized to submit Contributions on behalf of the Corporation, or to the list of the CLA Managers.</p>
 		<p style="page-break-after: always; text-align: center">[Please complete and sign on the next page.]</p>
 
 		<p>Please sign: __________________________________ Date: _______________ </p>
