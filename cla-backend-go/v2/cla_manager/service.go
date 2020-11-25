@@ -96,7 +96,7 @@ type Service interface {
 	InviteCompanyAdmin(ctx context.Context, contactAdmin bool, companyID string, projectID string, userEmail string, name string, contributor *v1User.User, lFxPortalURL string) ([]*models.ClaManagerDesignee, error)
 	CreateCLAManagerDesignee(ctx context.Context, companyID string, projectID string, userEmail string) (*models.ClaManagerDesignee, error)
 	CreateCLAManagerRequest(ctx context.Context, contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error)
-	NotifyCLAManagers(ctx context.Context, otifyCLAManagers *models.NotifyClaManagerList) error
+	NotifyCLAManagers(ctx context.Context, notifyCLAManagers *models.NotifyClaManagerList, LfxPortalURL string) error
 	CreateCLAManagerDesigneeByGroup(ctx context.Context, params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error)
 }
 
@@ -953,7 +953,7 @@ func validateInviteCompanyAdmin(contactAdmin bool, userEmail string, name string
 	return nil
 }
 
-func (s *service) NotifyCLAManagers(ctx context.Context, notifyCLAManagers *models.NotifyClaManagerList) error {
+func (s *service) NotifyCLAManagers(ctx context.Context, notifyCLAManagers *models.NotifyClaManagerList, LfxPortalURL string) error {
 	// Search for Easy CLA User
 	log.Debugf("Getting user by ID: %s", notifyCLAManagers.UserID)
 	userModel, userErr := s.easyCLAUserService.GetUser(notifyCLAManagers.UserID)
@@ -965,13 +965,13 @@ func (s *service) NotifyCLAManagers(ctx context.Context, notifyCLAManagers *mode
 
 	log.Debugf("Sending notification emails to claManagers: %+v", notifyCLAManagers.List)
 	for _, claManager := range notifyCLAManagers.List {
-		sendEmailToCLAManager(claManager.Name, claManager.Email.String(), userModel, notifyCLAManagers.CompanyName, notifyCLAManagers.ClaGroupName)
+		sendEmailToCLAManager(claManager.Name, claManager.Email.String(), userModel, notifyCLAManagers.CompanyName, notifyCLAManagers.ClaGroupName, LfxPortalURL)
 	}
 
 	return nil
 }
 
-func sendEmailToCLAManager(manager string, managerEmail string, userModel *v1Models.User, company string, claGroupName string) {
+func sendEmailToCLAManager(manager string, managerEmail string, userModel *v1Models.User, company string, claGroupName string, lfxPortalURL string) {
 	subject := fmt.Sprintf("EasyCLA: Approval Request for contributor: %s", getBestUserName(userModel))
 	recipients := []string{managerEmail}
 	body := fmt.Sprintf(`
@@ -980,10 +980,11 @@ func sendEmailToCLAManager(manager string, managerEmail string, userModel *v1Mod
 	<p>The following contributor would like to submit a contribution to the %s CLA Group
 	   and is requesting to be approved as a contributor for your organization: </p>
 	<p>%s</p>
+	<p> Approval can be done at %s </p>
 	<p>Please notify the contributor once they are added so that they may complete the contribution process.</p>
 	%s
     %s`,
-		manager, company, claGroupName, getFormattedUserDetails(userModel),
+		manager, company, claGroupName, getFormattedUserDetails(userModel), lfxPortalURL,
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
