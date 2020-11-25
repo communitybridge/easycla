@@ -751,7 +751,7 @@ func (ed *GithubOrganizationDeletedEventData) GetEventSummaryString(args *LogEve
 
 // GetEventSummaryString . . .
 func (ed *GithubOrganizationUpdatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("user %s deleted github organization %s with auto-enabled: %t",
+	data := fmt.Sprintf("user %s updated github organization %s with auto-enabled: %t",
 		args.userName, ed.GithubOrganizationName, ed.AutoEnabled)
 	return data, true
 }
