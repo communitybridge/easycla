@@ -2268,6 +2268,74 @@ paths:
       tags:
         - cla-manager
 
+  /user/{userID}/request-company-admin:
+    post:
+      summary: Request Manager
+      description: Request Company Admin based on user request to sign CLA
+      security: []
+      operationId: requestCompanyAdmin
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/path-userID"
+        - name: body
+          in: body
+          schema:
+            type: object
+            required:
+              - claManagerEmail
+            x-nullable: false
+            properties:
+              contributorName:
+                type: string
+                description: Proposed Contributor name
+                example: "Harold Wanyama"
+                pattern: "^[a-zA-Z0-9]+(([',. -][0-9a-zA-Z ])?[0-9a-zA-Z]*)*$"
+                minLength: 1
+                maxLength: 60
+              contributorEmail:
+                $ref: './common/properties/email.yaml'
+                description: Proposed Contributor email
+              claManagerName:
+                type: string
+                description: Proposed Cla Manager name
+                example: "Rinkesh Bhutwala"
+                pattern: "^[a-zA-Z0-9]+(([',. -][0-9a-zA-Z ])?[0-9a-zA-Z]*)*$"
+                minLength: 1
+                maxLength: 60
+              claManagerEmail:
+                $ref: './common/properties/email.yaml'
+                description: Proposed Cla Manager email
+              projectName:
+                $ref: './common/properties/cla-group-name.yaml'
+              companyName:
+                $ref: './common/properties/company-name.yaml'
+      responses:
+        '200':
+          description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
+        '202':
+          $ref: '#/responses/accepted-request'
+        '204':
+          description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway
+                based on the session
+        '400':
+          $ref: '#/responses/invalid-request'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '409':
+          $ref: '#/responses/conflict'
+      tags:
+        - company
+
   /company/{companySFID}/project/{projectSFID}/cla-manager/requests:
     post:
       summary: Adds a CLA Manager Designee to the specified Company and Project
