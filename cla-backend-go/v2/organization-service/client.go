@@ -496,3 +496,22 @@ func (osc *Client) CreateOrg(companyName string, companyWebsite string) (*models
 
 	return result.Payload, err
 }
+
+// ListOrg returns organization
+func (osc *Client) ListOrg(orgName string) (*models.OrganizationList, error) {
+	tok, err := token.GetToken()
+	if err != nil {
+		return nil, err
+	}
+	clientAuth := runtimeClient.BearerToken(tok)
+	params := &organizations.ListOrgParams{
+		Name:    &orgName,
+		Context: context.Background(),
+	}
+
+	result, err := osc.cl.Organizations.ListOrg(params, clientAuth)
+	if err != nil {
+		return nil, err
+	}
+	return result.Payload, nil
+}
