@@ -1,8 +1,8 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Injectable} from '@angular/core';
-import {Http} from '@angular/http';
+import { Injectable } from '@angular/core';
+import { Http } from '@angular/http';
 
 import 'rxjs/Rx';
 
@@ -10,10 +10,12 @@ import 'rxjs/Rx';
 export class ClaService {
   http: any;
   claApiUrl: string = '';
+  v4ApiUrl: string = '';
   localTesting = false;
   v1ClaAPIURLLocal = 'http://localhost:5000';
   v2ClaAPIURLLocal = 'http://localhost:5000';
   v3ClaAPIURLLocal = 'http://localhost:8080';
+  v4ClaAPIURLLocal = 'http://localhost:8080';
 
   constructor(http: Http) {
     this.http = http;
@@ -51,6 +53,17 @@ export class ClaService {
     return url;
   }
 
+
+  private getV4Endpoint(path: string) {
+    let url: URL;
+    if (this.localTesting) {
+      url = new URL(this.v2ClaAPIURLLocal + path);
+    } else {
+      url = new URL(this.v4ApiUrl + path);
+    }
+    return url;
+  }
+
   /**
    * Constructs a URL based on the path and endpoint host:port.
    * @param path the URL path
@@ -78,6 +91,10 @@ export class ClaService {
 
   public setApiUrl(claApiUrl: string) {
     this.claApiUrl = claApiUrl;
+  }
+
+  public setV4ApiUrl(v4ApiUrl: string) {
+    this.v4ApiUrl = v4ApiUrl + '/cla-service';
   }
 
   public setHttp(http: any) {
@@ -118,8 +135,8 @@ export class ClaService {
    * /user/{user_id}/invite-company-admin
    */
   postEmailToCompanyAdmin(userId, data) {
-    const url: URL = this.getV2Endpoint('/v2/user/' + userId + '/invite-company-admin');
-    return this.http.post(url, data).map((res) => res.json());
+    const url: URL = this.getV4Endpoint('/v4/user/' + userId + '/request-company-admin');
+    return this.http.post(url, data).map((res) => res);
   }
 
   /**
