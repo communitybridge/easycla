@@ -45,7 +45,7 @@ const parameters = [
   `cla-corporate-base-${program.stage}`,
   `cla-landing-page-${program.stage}`,
   `cla-signature-files-bucket-${program.stage}`,
-  `cla-cla-logo-s3-url-${program.stage}`,
+  `cla-logo-url-${program.stage}`,
   `cla-ses-sender-email-address-${program.stage}`,
   `cla-lf-group-client-id-${program.stage}`,
   `cla-lf-group-client-secret-${program.stage}`,
