@@ -68,7 +68,7 @@ export class ClaCompanyAdminSendEmailModal {
       console.warn('Unable to retrieve user.');
     }
   }
-  
+
   dismiss() {
     this.viewCtrl.dismiss();
   }
@@ -86,7 +86,7 @@ export class ClaCompanyAdminSendEmailModal {
     this.isSendClicked = true;
     if (this.form.valid) {
       this.claService.getProject(this.projectId).subscribe((response) => {
-       // Instead of creating a company we need to send email to CLA Manager.
+        // Instead of creating a company we need to send email to CLA Manager.
         this.sendRequest(response);
       });
     }
@@ -95,13 +95,14 @@ export class ClaCompanyAdminSendEmailModal {
   sendRequest(project) {
     this.serverError = '';
     let data = {
-      contributor_name: this.form.value.contributor_name,
-      contributor_email: this.form.value.contributor_email,
-      cla_manager_name: this.form.value.cla_manager_name,
-      cla_manager_email: this.form.value.cla_manager_email,
-      project_name: project.project_name,
-      company_name: this.form.value.company_name,
+      contributorName: this.form.value.contributor_name,
+      contributorEmail: this.form.value.contributor_email,
+      claManagerName: this.form.value.cla_manager_name,
+      claManagerEmail: this.form.value.cla_manager_email,
+      projectName: project.project_name,
+      companyName: this.form.value.company_name,
     };
+
     this.claService.postEmailToCompanyAdmin(this.userId, data).subscribe(
       (response) => {
         this.isSendClicked = false;
@@ -112,7 +113,7 @@ export class ClaCompanyAdminSendEmailModal {
         this.isSendClicked = false;
         const errorObj = JSON.parse(exception._body);
         if (errorObj) {
-          this.serverError = errorObj.errors.contributor_email;
+          this.serverError = errorObj.Message;
           this.pageTop.scrollToTop();
         }
       }
