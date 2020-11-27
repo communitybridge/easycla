@@ -17,6 +17,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
+	"github.com/communitybridge/easycla/cla-backend-go/project"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 
 	"github.com/jinzhu/copier"
@@ -60,6 +61,10 @@ var (
 	ErrContributorConflict = errors.New("user already assigned contributor")
 	//ErrRoleScopeConflict thrown if user already has role scope
 	ErrRoleScopeConflict = errors.New("user is already contributor")
+	//ErrClaGroupNotFound returns error if cla group not found
+	ErrClaGroupNotFound = errors.New("cla group not found")
+	//ErrClaGroupBadRequest returns error if cla group bad request
+	ErrClaGroupBadRequest = errors.New("cla group bad request")
 )
 
 // constants
@@ -94,12 +99,14 @@ type Service interface {
 	AssociateContributor(ctx context.Context, companySFID, userEmail string) (*models.Contributor, error)
 	AssociateContributorByGroup(ctx context.Context, companySFID, userEmail string, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, ClaGroupID string) ([]*models.Contributor, string, error)
 	GetCompanyAdmins(ctx context.Context, companyID string) (*models.CompanyAdminList, error)
+	RequestCompanyAdmin(ctx context.Context, userID string, claManagerEmail string, claManagerName string, contributorName string, contributorEmail string, projectName string, companyName string, lFxPortalURL string) error
 }
 
 // ProjectRepo contains project repo methods
 type ProjectRepo interface {
 	GetCLAGroupByID(ctx context.Context, projectID string, loadRepoDetails bool) (*v1Models.ClaGroup, error)
 	GetCLAGroupsByExternalID(ctx context.Context, params *v1ProjectParams.GetProjectsByExternalIDParams, loadRepoDetails bool) (*v1Models.ClaGroups, error)
+	GetCLAGroupByName(ctx context.Context, projectName string) (*v1Models.ClaGroup, error)
 }
 
 // NewService returns instance of company service
@@ -1262,4 +1269,108 @@ func (s service) autoCreateCompany(ctx context.Context, companySFID string) (*v1
 
 	log.WithFields(f).Debugf("successfully created EasyCLA company record: %+v", companyModel)
 	return companyModel, nil
+}
+
+func (s *service) RequestCompanyAdmin(ctx context.Context, userID string, claManagerEmail string, claManagerName string, contributorName string, contributorEmail string, projectName string, companyName string, lFxPortalURL string) error {
+	orgServices := orgService.GetClient()
+	f := logrus.Fields{
+		"functionName":     "RequestCompanyAdmin",
+		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
+		"companyName":      companyName,
+		"claGroupName":     projectName,
+		"claManagerEmail":  claManagerEmail,
+		"claManagerName":   claManagerName,
+		"contributorEmail": contributorEmail,
+		"contributorName":  contributorName,
+	}
+
+	validateError := s.ValidateRequestCompanyAdminCheck(ctx, f, userID, claManagerEmail, claManagerName, contributorName, contributorEmail, projectName, companyName)
+	if validateError != nil {
+		return validateError
+	}
+
+	organizations, orgErr := orgServices.ListOrg(companyName)
+	if orgErr != nil {
+		msg := fmt.Sprintf("Problem getting company by ID: %s ", companyName)
+		log.Warn(msg)
+		return orgErr
+	}
+	if len(organizations.Data) > 0 {
+		msg := fmt.Sprintf("Comapny already exist with the name: %s ", companyName)
+		log.Warn(msg)
+		return errors.New(msg)
+	}
+
+	subject := fmt.Sprintf("EasyCLA: Request to start CLA signature process for : %s", projectName)
+	recipients := []string{claManagerEmail}
+	body := fmt.Sprintf(`
+	<p>Hello %s,</p>
+	<p>This is a notification email from EasyCLA regarding the project %s.</p>
+	<p> %s uses EasyCLA to ensure that before a contribution is accepted, the contributor is covered under a signed CLA. </p>
+	<p> %s (%s) has designated you as the proposed initial CLA Manager for contributions 
+	from %s to %s. This would mean that, after the CLA is signed, you would be able to maintain 
+	the list of employees allowed to contribute to %s on behalf of your company,
+	as well as the list of your company’s CLA Managers for %s. </p>
+	<p> If you can be the initial CLA Manager from your company for %s , please log into the EasyCLA
+	Corporate Console at %s to begin the CLA signature process. You might not be authorized to 
+	sign the CLA yourself on behalf of your company; if not, the signature process will prompt you 
+	to designate somebody else who is authorized to sign the CLA. </p>
+	%s
+    %s`,
+		claManagerName, projectName, projectName, contributorName,
+		contributorEmail, companyName, projectName, projectName,
+		projectName, projectName, lFxPortalURL,
+		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
+	err := utils.SendEmail(subject, body, recipients)
+	if err != nil {
+		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+	} else {
+		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+	}
+
+	return nil
+}
+
+func (s *service) ValidateRequestCompanyAdminCheck(ctx context.Context, f logrus.Fields, userID string, claManagerEmail string, claManagerName string, contributorName string, contributorEmail string, projectName string, companyName string) error {
+	validateError := validateRequestCompanyAdmin(userID, claManagerName, contributorName, contributorEmail)
+	if validateError != nil {
+		return validateError
+	}
+
+	claGroupModel, projectErr := s.projectRepo.GetCLAGroupByName(ctx, strings.ToLower(projectName))
+	if projectErr != nil || claGroupModel == nil {
+		log.WithFields(f).WithError(projectErr).Warn("problem loading CLA group by ID")
+
+		var e *utils.CLAGroupNotFound
+		if errors.As(projectErr, &e) {
+			log.WithFields(f).WithError(projectErr).Warn("problem loading CLA group by ID - cla group not found")
+			return ErrClaGroupNotFound
+
+		}
+		if errors.Is(projectErr, project.ErrProjectDoesNotExist) {
+			log.WithFields(f).WithError(projectErr).Warn("problem cla group not found")
+			return ErrClaGroupNotFound
+		}
+		return ErrClaGroupBadRequest
+
+	}
+	return nil
+}
+
+func validateRequestCompanyAdmin(userID string, claManagerName string, contributorName string, contributorEmail string) error {
+	if userID == "" {
+		return ErrCLAUserNotFound
+	}
+	if claManagerName == "" {
+		return errors.New("cla manager name is required")
+	}
+
+	if contributorName == "" {
+		return errors.New("contributor name is required")
+	}
+	if contributorEmail == "" {
+		return errors.New("contributor is required")
+	}
+
+	return nil
 }
