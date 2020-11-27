@@ -87,7 +87,10 @@ class DocuSign(signing_service_interface.SigningService):
             'account_status': '{http://www.docusign.net/API/3.0}AccountStatus',
             'recipient_id': '{http://www.docusign.net/API/3.0}RecipientId',
             'recipient_statuses': '{http://www.docusign.net/API/3.0}RecipientStatuses',
-            'recipient_status': '{http://www.docusign.net/API/3.0}RecipientStatus'}
+            'recipient_status': '{http://www.docusign.net/API/3.0}RecipientStatus',
+            'full_name': '{http://www.docusign.net/API/3.0}Full Name',
+            },
+            
 
     def __init__(self):
         self.client = None
@@ -1156,6 +1159,10 @@ class DocuSign(signing_service_interface.SigningService):
             # Send user their signed document.
             user = User()
             user.load(signature.get_signature_reference_id())
+            #Update user name in case is empty.
+            if not user.get_user_name():
+                user.set_user_name(elem.find(self.TAGS['full_name']).text)
+                user.save()
             # Remove the active signature metadata.
             cla.utils.delete_active_signature_metadata(user.get_user_id())
             # Get signed document
@@ -1228,6 +1235,7 @@ class DocuSign(signing_service_interface.SigningService):
             # Save signature before adding user to LDAP Groups.
             signature.set_signature_signed(True)
             signature.save()
+
 
             # Load the Project by ID and send audit event
             project = Project()
