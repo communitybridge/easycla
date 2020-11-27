@@ -449,6 +449,34 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 
 			return company.NewGetCompanyAdminsOK().WithXRequestID(reqID).WithPayload(adminList)
 		})
+
+	api.CompanyRequestCompanyAdminHandler = company.RequestCompanyAdminHandlerFunc(
+		func(params company.RequestCompanyAdminParams) middleware.Responder {
+			reqID := utils.GetRequestID(params.XREQUESTID)
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
+			err := service.RequestCompanyAdmin(ctx, params.UserID, params.Body.ClaManagerEmail.String(), params.Body.ClaManagerName, params.Body.ContributorName, params.Body.ContributorEmail.String(), params.Body.ProjectName, params.Body.CompanyName, LFXPortalURL)
+			if err != nil {
+
+				if err == ErrClaGroupNotFound {
+					return company.NewRequestCompanyAdminNotFound().WithXRequestID(reqID).WithPayload(
+						&models.ErrorResponse{
+							Message:    err.Error(),
+							Code:       "404",
+							XRequestID: reqID,
+						})
+				}
+				return company.NewRequestCompanyAdminBadRequest().WithXRequestID(reqID).WithPayload(
+					&models.ErrorResponse{
+						Message:    err.Error(),
+						Code:       "400",
+						XRequestID: reqID,
+					})
+			}
+
+			// successfully sent invite
+			return company.NewRequestCompanyAdminOK().WithXRequestID(reqID)
+		})
 }
 
 type codedResponse interface {
