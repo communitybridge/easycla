@@ -86,6 +86,7 @@ export class ClaCompanyAdminSendEmailModal {
     this.isSendClicked = true;
     if (this.form.valid) {
       this.claService.getProject(this.projectId).subscribe((response) => {
+       // Instead of creating a company we need to send email to CLA Manager.
         this.sendRequest(response);
       });
     }
