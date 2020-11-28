@@ -41,6 +41,7 @@ export class MyApp {
     // Set true for local debugging using localhost (local ports set in claService)
     this.claService.isLocalTesting(localServicesMode);
     this.claService.setApiUrl(EnvConfig['cla-api-url']);
+    this.claService.setV4ApiUrl(EnvConfig['auth0-platform-api-gw']);
     this.claService.setHttp(httpClient);
   }
 

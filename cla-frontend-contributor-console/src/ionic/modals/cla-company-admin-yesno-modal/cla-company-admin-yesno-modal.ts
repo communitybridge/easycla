@@ -32,10 +32,6 @@ export class ClaCompanyAdminYesnoModal {
     this.companyName = navParams.get('companyName') || '';
     this.userId = navParams.get('userId');
     this.authenticated = navParams.get('authenticated');
-    this.getDefaults();
-  }
-
-  getDefaults() {
     this.consoleLink = EnvConfig['corp-console-link'];
   }
 
