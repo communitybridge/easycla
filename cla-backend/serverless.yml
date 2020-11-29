@@ -310,7 +310,7 @@ provider:
     CLA_CORPORATE_BASE: ${file(./env.json):cla-corporate-base, ssm:/cla-corporate-base-${opt:stage}}
     CLA_LANDING_PAGE: ${file(./env.json):cla-landing-page, ssm:/cla-landing-page-${opt:stage}}
     CLA_SIGNATURE_FILES_BUCKET: ${file(./env.json):cla-signature-files-bucket, ssm:/cla-signature-files-bucket-${opt:stage}~true}
-    CLA_BUCKET_LOGO_URL: ${file(./env.json):cla-logo-s3-url, ssm:/cla-cla-logo-s3-url-${opt:stage}~true}
+    CLA_BUCKET_LOGO_URL: ${file(./env.json):cla-logo-url, ssm:/cla-logo-url-${opt:stage}~true}
     SES_SENDER_EMAIL_ADDRESS: ${file(./env.json):cla-ses-sender-email-address, ssm:/cla-ses-sender-email-address-${opt:stage}}
     SMTP_SENDER_EMAIL_ADDRESS: ${file(./env.json):cla-smtp-sender-email-address, ssm:/cla-smtp-sender-email-address-${opt:stage}}
     LF_GROUP_CLIENT_ID: ${file(./env.json):lf-group-client-id, ssm:/cla-lf-group-client-id-${opt:stage}}

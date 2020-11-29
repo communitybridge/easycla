@@ -103,7 +103,7 @@ fi
 # CLA AWS Configurations
 if [ -n "$CLA_BUCKET_LOGO_URL" ]; then
     echo "updating cla logo url: $CLA_BUCKET_LOGO_URL"
-    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-cla-logo-s3-url-$ENV" --description "CLA Logo S3 URL" --value "$CLA_BUCKET_LOGO_URL" --type "String" --overwrite
+    aws ssm put-parameter --profile $PROFILE --region us-east-1 --name "cla-logo-url-$ENV" --description "CLA Logo S3 URL" --value "$CLA_BUCKET_LOGO_URL" --type "String" --overwrite
 fi
 
 if [ -n "$CLA_SIGNATURE_FILES_BUCKET" ]; then
