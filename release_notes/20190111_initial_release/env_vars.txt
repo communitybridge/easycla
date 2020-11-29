@@ -4,7 +4,7 @@ cla-auth0-domain-staging
 cla-auth0-username-claim-staging
 cla-auth0-algorithm-staging
 cla-cla-api-url-staging
-cla-cla-logo-s3-url-staging
+cla-logo-url-staging
 cla-contributor-base-staging
 cla-corp-console-link-staging
 cla-corporate-base-staging
