@@ -1,13 +1,14 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NavController, IonicPage } from 'ionic-angular';
 import { ClaService } from '../../services/cla.service';
 import { FilterService } from '../../services/filter.service';
 import { Restricted } from '../../decorators/restricted';
 import { generalConstants } from '../../constants/general';
 import { AuthService } from '../../services/auth.service';
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @Restricted({
   roles: ['isAuthenticated', 'isPmcUser']
@@ -20,7 +21,7 @@ import { AuthService } from '../../services/auth.service';
   selector: 'all-projects',
   templateUrl: 'all-projects.html'
 })
-export class AllProjectsPage {
+export class AllProjectsPage implements OnInit {
   loading: any;
   allProjects: any;
   allFilteredProjects: any;
@@ -36,7 +37,17 @@ export class AllProjectsPage {
     this.getDefaults();
   }
 
-  async ngOnInit() {
+  ngOnInit() {
+    // Added only to support browser back for firefox.
+    let name = this.navCtrl.getActive().component.name;
+    window.onhashchange = function () {
+      if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1 && name === 'AuthPage') {
+        setTimeout(() => {
+          window.open(EnvConfig['landing-page'], '_self');
+        }, 50);
+      }
+    }
+
     this.getAllProjectFromSFDC();
   }
 
