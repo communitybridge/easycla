@@ -1,11 +1,12 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import {Component, OnInit} from '@angular/core';
-import {IonicPage, ModalController, NavController} from 'ionic-angular';
-import {ClaService} from '../../services/cla.service';
-import {Restricted} from '../../decorators/restricted';
-import {ClaCompanyWithInvitesModel} from "../../models/cla-company-with-invites";
+import { Component, OnInit } from '@angular/core';
+import { IonicPage, ModalController, NavController } from 'ionic-angular';
+import { ClaService } from '../../services/cla.service';
+import { Restricted } from '../../decorators/restricted';
+import { ClaCompanyWithInvitesModel } from "../../models/cla-company-with-invites";
+import { EnvConfig } from '../../services/cla.env.utils';
 
 @Restricted({
   roles: ['isAuthenticated']
@@ -51,6 +52,16 @@ export class CompaniesPage implements OnInit {
   }
 
   ngOnInit() {
+    // Added only to support browser back for firefox.
+    let name = this.navCtrl.getActive().component.name;
+    window.onhashchange = function () {
+      if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1 && name === 'AuthPage') {
+        setTimeout(() => {
+          window.open(EnvConfig['landing-page'], '_self');
+        }, 50);
+      }
+    }
+
     this.getCompanies();
   }
 
