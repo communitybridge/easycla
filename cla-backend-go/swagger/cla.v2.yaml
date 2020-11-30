@@ -1106,8 +1106,8 @@ paths:
 
   /clagroup/{claGroupID}/template:
     post:
-      summary: Create contract template for CLA Group
-      description: Endpoint to create the template for the CLA Group
+      summary: Create new templates for a CLA Group
+      description: Endpoint to create the new templates for the specified CLA Group
       operationId: createCLAGroupTemplate
       parameters:
         - $ref: "#/parameters/path-claGroupID"
@@ -1143,8 +1143,8 @@ paths:
 
   /template/preview:
     post:
-      summary: Create contract template for CLA Group
-      description: Endpoint to create the template preview for the CLA Group
+      summary: Preview new templates for CLA Group
+      description: Endpoint to preview the templates for the specified CLA Group
       operationId: templatePreview
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -1154,6 +1154,7 @@ paths:
         - in: query
           type: string
           name: template_for
+          description: the template type to generate for the preview, either the Individual CLA template or the corporate CLA template
           required: true
           enum:
             - icla
@@ -1185,7 +1186,7 @@ paths:
 
   /template/{claGroupID}/preview:
     get:
-      summary: Preview Template PDF
+      summary: Preview CLA Group Template PDF
       description: Get Template PDF for given CLA Group identifier with specified CLA type
       operationId: getCLATemplatePreview
       security: []
@@ -1196,6 +1197,7 @@ paths:
         - in: query
           type: boolean
           name: watermark
+          description: flag to indicate if the API should include a watermark in the generated PDF
           required: false
           default: false
       produces:
