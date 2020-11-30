@@ -7,7 +7,9 @@ x-nullable: false
 properties:
   TemplateID:
     type: string
+    description: the CLA Group template ID to use, typically the Apache Style Template ID
   MetaFields:
     type: array
+    description: the array of meta-data fields used to populate the template - typically the Project Name, Project Legal Entity Name, and the Project Manager's Email address
     items:
       $ref: '#/definitions/meta-field'

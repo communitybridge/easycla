@@ -6,9 +6,13 @@ type: object
 properties:
   name:
     type: string
+    description: a meta-data field name attribute
   value:
     type: string
+    description: a meta-data field value attribute - contains the value used to inject into the template
   description:
     type: string
+    description: a brief description of the meta-data field, such as the project name, the project legal name, or the contact email address
   templateVariable:
     type: string
+    description: the meta-field variable, which is a placeholder key name which is replaced in the template with the appropriate value prior to generating the PDF document
