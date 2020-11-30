@@ -89,7 +89,7 @@ class DocuSign(signing_service_interface.SigningService):
             'recipient_statuses': '{http://www.docusign.net/API/3.0}RecipientStatuses',
             'recipient_status': '{http://www.docusign.net/API/3.0}RecipientStatus',
             'full_name': '{http://www.docusign.net/API/3.0}Full Name',
-            },
+            }
             
 
     def __init__(self):
