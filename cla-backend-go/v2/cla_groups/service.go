@@ -402,6 +402,17 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 
 		v1ClaGroups.Projects = append(v1ClaGroups.Projects, *v1ClaGroupsByProject)
 
+		v1CLAGroupData, v1ClaGroupErr := s.v1ProjectService.GetClaGroupByProjectSFID(ctx, projectOrFoundationSFID, false)
+		if v1ClaGroupErr != nil {
+			log.WithFields(f).Warnf("problem locating CLA group by project id, error: %+v", v1ClaGroupErr)
+			return nil, &utils.CLAGroupNotFound{CLAGroupID: projectOrFoundationSFID, Err: v1ClaGroupErr}
+		}
+
+		_, found := Find(v1ClaGroups.Projects, v1CLAGroupData.ProjectID)
+		if !found {
+			v1ClaGroups.Projects = append(v1ClaGroups.Projects, *v1CLAGroupData)
+		}
+
 	} else if sfProjectModelDetails.ProjectType == utils.ProjectTypeProjectGroup {
 		log.WithFields(f).Debug("found 'project group' in platform project service. Locating CLA Groups for foundation...")
 		projectCLAGroups, lookupErr := s.projectsClaGroupsRepo.GetProjectsIdsForFoundation(projectOrFoundationSFID)
@@ -445,19 +456,19 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 			return nil, loadErr
 		}
 
+		v1CLAGroupsData, v1ClaGroupErr := s.v1ProjectService.GetClaGroupsByFoundationSFID(ctx, projectOrFoundationSFID, false)
+		if v1ClaGroupErr != nil {
+			log.WithFields(f).Warnf("problem locating CLA group by project id, error: %+v", v1ClaGroupErr)
+			return nil, &utils.CLAGroupNotFound{CLAGroupID: projectOrFoundationSFID, Err: v1ClaGroupErr}
+		}
+
+		v1ClaGroups = v1CLAGroupsData
+
 	} else {
 		msg := fmt.Sprintf("unsupported foundation/project SFID type: %s", sfProjectModelDetails.ProjectType)
 		log.WithFields(f).Warn(msg)
 		return nil, errors.New(msg)
 	}
-
-	v1CLAGroupsData, v1ClaGroupErr := s.v1ProjectService.GetClaGroupsByFoundationSFID(ctx, projectOrFoundationSFID, false)
-	if v1ClaGroupErr != nil {
-		log.WithFields(f).Warnf("problem locating CLA group by project id, error: %+v", v1ClaGroupErr)
-		return nil, &utils.CLAGroupNotFound{CLAGroupID: projectOrFoundationSFID, Err: v1ClaGroupErr}
-	}
-
-	v1ClaGroups = v1CLAGroupsData
 
 	log.WithFields(f).Debugf("Building response model for %d CLA Groups", len(v1ClaGroups.Projects))
 
@@ -986,4 +997,14 @@ func (s *service) ValidateCLAGroup(ctx context.Context, input *models.ClaGroupVa
 	// Optional - we can expand this API logic to validate other fields if needed.
 
 	return valid, validationErrors
+}
+
+// Find . . .
+func Find(slice []v1Models.ClaGroup, val string) (int, bool) {
+	for i, item := range slice {
+		if item.ProjectID == val {
+			return i, true
+		}
+	}
+	return -1, false
 }
