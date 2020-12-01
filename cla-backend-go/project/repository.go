@@ -761,25 +761,36 @@ func (repo *repo) UpdateRootCLAGroupRepositoriesCount(ctx context.Context, claGr
 	}
 
 	val := strconv.FormatInt(diff, 10)
-	var updateExp string
+	expressionAttributeNames := map[string]*string{}
+	expressionAttributeValues := map[string]*dynamodb.AttributeValue{}
+	var updateExpression string
+
 	// update root_project_reposoitories_count based on reset flag
 	if reset {
-		updateExp = "SET root_project_repositories_count :val"
+		expressionAttributeNames["#R"] = aws.String("root_project_repositories_count")
+		expressionAttributeValues[":r"] = &dynamodb.AttributeValue{N: aws.String(val)}
+		updateExpression = "SET #R = :r,"
 	} else {
-		updateExp = "ADD root_project_repositories_count :val"
+		expressionAttributeValues[":val"] = &dynamodb.AttributeValue{N: aws.String(val)}
+		updateExpression = "ADD root_project_repositories_count :val"
 	}
 	input := &dynamodb.UpdateItemInput{
-		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{":val": {N: aws.String(val)}},
-		UpdateExpression:          aws.String(updateExp),
+		UpdateExpression:          aws.String(updateExpression),
+		ExpressionAttributeNames:  expressionAttributeNames,
+		ExpressionAttributeValues: expressionAttributeValues,
+
 		Key: map[string]*dynamodb.AttributeValue{
 			"project_id": {S: aws.String(claGroupID)},
 		},
+
 		TableName: aws.String(repo.claGroupTable),
 	}
+
 	_, err := repo.dynamoDBClient.UpdateItem(input)
 	if err != nil {
-		log.WithFields(f).Error("unable to update repositories count", err)
+		log.WithFields(f).WithError(err).Warn("unable to update repositories count")
 	}
+
 	return err
 }
 
