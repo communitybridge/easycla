@@ -769,7 +769,7 @@ func (repo *repo) UpdateRootCLAGroupRepositoriesCount(ctx context.Context, claGr
 	if reset {
 		expressionAttributeNames["#R"] = aws.String("root_project_repositories_count")
 		expressionAttributeValues[":r"] = &dynamodb.AttributeValue{N: aws.String(val)}
-		updateExpression = "SET #R = :r,"
+		updateExpression = "SET #R = :r"
 	} else {
 		expressionAttributeValues[":val"] = &dynamodb.AttributeValue{N: aws.String(val)}
 		updateExpression = "ADD root_project_repositories_count :val"
