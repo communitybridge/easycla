@@ -143,7 +143,13 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
 			config.CorporateConsoleV2URL = resp.value
 		case fmt.Sprintf("cla-doc-raptor-api-key-%s", stage):
 			config.Docraptor.APIKey = resp.value
-			config.Docraptor.TestMode = stage != "prod" && stage != "staging"
+			// Docraptor adds a watermark for generated PDFs that have the test mode flag set to true
+			// We don't want a bunch of test documents generated in DEV to count against our quota, so we generally
+			// set this flag to true for DEV, false for STAGING and PROD
+			// Commenting this out for now as we are evaluating various templates and QA is unable to verify with the
+			// watermark.  Restore this to just staging and prod after the testing phase is done.
+			//config.Docraptor.TestMode = stage == "dev"
+			config.Docraptor.TestMode = false // disable test mode while we evaluate various templates
 		case fmt.Sprintf("cla-session-store-table-%s", stage):
 			config.SessionStoreTableName = resp.value
 		case fmt.Sprintf("cla-ses-sender-email-address-%s", stage):
