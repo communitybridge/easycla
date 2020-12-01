@@ -53,7 +53,7 @@ type Repository interface {
 
 	IsExistingFoundationLevelCLAGroup(foundationSFID string) (bool, error)
 	IsAssociated(projectSFID string, claGroupID string) (bool, error)
-	UpdateRepositoriesCount(projectSFID string, diff int64) error
+	UpdateRepositoriesCount(projectSFID string, diff int64, reset bool) error
 }
 
 type repo struct {
@@ -389,9 +389,15 @@ func (repo *repo) GetCLAGroup(claGroupID string) (*ProjectClaGroup, error) {
 	return &claGroupModel, nil
 }
 
-func (repo *repo) UpdateRepositoriesCount(projectSFID string, diff int64) error {
+func (repo *repo) UpdateRepositoriesCount(projectSFID string, diff int64, reset bool) error {
 	val := strconv.FormatInt(diff, 10)
-	updateExp := "ADD repositories_count :val"
+
+	var updateExp string
+	if reset {
+		updateExp = "SET repositories_count :val"
+	} else {
+		updateExp = "ADD repositories_count :val"
+	}
 	_, err := repo.dynamoDBClient.UpdateItem(&dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{":val": {N: aws.String(val)}},
 		UpdateExpression:          aws.String(updateExp),
