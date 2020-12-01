@@ -39,6 +39,10 @@ function generateCSP(env, isDevServer) {
     'https://api.lfcla.com/',
     'https://api.easycla.lfx.linuxfoundation.org/',
     'https://communitybridge.org/',
+    'https://cla-signature-files-dev.s3.amazonaws.com/',
+    'https://cla-signature-files-staging.s3.amazonaws.com/',
+    'https://cla-signature-files.s3.amazonaws.com/',
+
   ];
 
   let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE,
