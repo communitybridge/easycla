@@ -13,76 +13,50 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
-	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 )
 
-// GithubRepoAddedEvent github repository added event
-func (s *service) GithubRepoAddedEvent(event events.DynamoDBEventRecord) error {
+// GithubRepoModifyEvent github repository modify event
+func (s *service) GithubRepoModifyAddEvent(event events.DynamoDBEventRecord) error {
+	ctx := utils.NewContext()
 	f := logrus.Fields{
-		"functionName": "GithubRepoAddedEvent",
+		"functionName":   "GithubRepoModifyEvent",
+		"Event":          event.EventName,
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 
-	log.WithFields(f).Debug("GithubRepoAddedEvent called")
+	var claGroupID string
+	var projectSFID string
+	var err error
 	var newRepoModel repositories.RepositoryDBModel
-	err := unmarshalStreamImage(event.Change.NewImage, &newRepoModel)
-	if err != nil {
-		log.WithFields(f).Warnf("problem unmarshalling the new repository model event, error: %+v", err)
-		return err
-	}
-
-	psc := v2ProjectService.GetClient()
-	project, err := psc.GetProject(newRepoModel.ProjectSFID)
-	if err != nil {
-		return err
-	}
-
-	var uerr error
-	if project.Parent == "" || project.Parent == utils.TheLinuxFoundation {
-		log.Debugf("incrementing root_project_repositories_count of cla_group_id %s", newRepoModel.RepositoryProjectID)
-		uerr = s.projectRepo.UpdateRootCLAGroupRepositoriesCount(context.Background(), newRepoModel.RepositoryProjectID, 1)
-	} else {
-		log.Debugf("incrementing repositories_count for project %s", newRepoModel.ProjectSFID)
-		uerr = s.projectsClaGroupRepo.UpdateRepositoriesCount(newRepoModel.ProjectSFID, 1)
-	}
-	if uerr != nil {
-		return err
-	}
-
-	return nil
-}
-
-// GithubRepoDeletedEvent github repository removed event
-func (s *service) GithubRepoDeletedEvent(event events.DynamoDBEventRecord) error {
-	f := logrus.Fields{
-		"functionName": "GithubRepoDeletedEvent",
-	}
-
-	log.WithFields(f).Debug("GithubRepoDeletedEvent called...")
 	var oldRepoModel repositories.RepositoryDBModel
-	err := unmarshalStreamImage(event.Change.OldImage, &oldRepoModel)
-	if err != nil {
-		log.WithFields(f).Warnf("problem unmarshalling the old repository model event, error: %+v", err)
-		return err
-	}
-
-	psc := v2ProjectService.GetClient()
-	project, err := psc.GetProject(oldRepoModel.ProjectSFID)
-	if err != nil {
-		return err
-	}
-
-	var uerr error
-	if project.Parent == "" || project.Parent == utils.TheLinuxFoundation {
-		log.Debugf("decrementing root_project_repositories_count of cla_group_id %s", oldRepoModel.RepositoryProjectID)
-		uerr = s.projectRepo.UpdateRootCLAGroupRepositoriesCount(context.Background(), oldRepoModel.RepositoryProjectID, -1)
+	// Check if record deleted
+	if event.EventName == utils.RecordDeleted {
+		err = unmarshalStreamImage(event.Change.OldImage, &oldRepoModel)
+		if err != nil {
+			log.WithFields(f).Warnf("problem unmarshalling old repository model event, error: %+v", err)
+			return err
+		}
+		claGroupID = oldRepoModel.RepositoryProjectID
+		projectSFID = oldRepoModel.ProjectSFID
 	} else {
-		log.Debugf("decrementing repositories_count for project %s", oldRepoModel.ProjectSFID)
-		uerr = s.projectsClaGroupRepo.UpdateRepositoriesCount(oldRepoModel.ProjectSFID, -1)
-	}
-	if uerr != nil {
-		return err
+		err := unmarshalStreamImage(event.Change.NewImage, &newRepoModel)
+		if err != nil {
+			log.WithFields(f).Warnf("problem unmarshalling the new repository model event, error: %+v", err)
+			return err
+		}
+		claGroupID = newRepoModel.RepositoryProjectID
+		projectSFID = newRepoModel.ProjectSFID
 	}
 
+	f["claGroupID"] = claGroupID
+	f["projectSFID"] = projectSFID
+
+	// Set repository count
+	updateErr := s.setRepositoryCount(ctx, claGroupID, projectSFID)
+	if updateErr != nil {
+		log.WithFields(f).WithError(updateErr).Warn("problem updating project-cla-group and project tables")
+		return updateErr
+	}
 	return nil
 }
 
@@ -189,6 +163,41 @@ func (s *service) DisableBranchProtectionServiceHandler(event events.DynamoDBEve
 			return nil
 		}
 		log.Debug("github organization branch protection is not enabled - no action required")
+	}
+
+	return nil
+}
+
+// setRepositoryCount helper function that sets repository count
+func (s *service) setRepositoryCount(ctx context.Context, claGroupID string, projectSFID string) error {
+	f := logrus.Fields{
+		"functionName":   "setRepositoryCount",
+		utils.XREQUESTID: ctx,
+	}
+
+	log.WithFields(f).Debugf("Getting repositories for claGroup: %s ", claGroupID)
+	repositories, repoErr := s.repositoryService.GetRepositoriesByCLAGroup(ctx, claGroupID)
+	if repoErr != nil {
+		log.WithFields(f).WithError(repoErr).Debugf("failed to get repositories for claGroup: %s ", claGroupID)
+		return repoErr
+	}
+
+	log.WithFields(f).Debugf("Found %d repositories for claGroup: %s ", len(repositories), claGroupID)
+
+	//Update projects table
+	log.WithFields(f).Debugf("Updating the root_projects_repository_count for claGroup : %s ", claGroupID)
+	updateErr := s.projectRepo.UpdateRootCLAGroupRepositoriesCount(ctx, claGroupID, int64(len(repositories)), true)
+	if updateErr != nil {
+		log.WithFields(f).WithError(updateErr).Debugf("Failed to set repositories_count for claGroup: %s ", claGroupID)
+		return updateErr
+	}
+
+	// Update projects-cla-group table
+	log.WithFields(f).Debugf("Updating the projects-cla-groups-table for projectSFID: %s ", projectSFID)
+	pcgErr := s.projectsClaGroupRepo.UpdateRepositoriesCount(projectSFID, int64(len(repositories)), true)
+	if pcgErr != nil {
+		log.WithFields(f).WithError(updateErr).Debugf("Failed to set repositories_count for project: %s ", projectSFID)
+		return pcgErr
 	}
 
 	return nil
