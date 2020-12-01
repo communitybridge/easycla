@@ -20,7 +20,9 @@ func (s *service) GithubRepoModifyAddEvent(event events.DynamoDBEventRecord) err
 	ctx := utils.NewContext()
 	f := logrus.Fields{
 		"functionName":   "GithubRepoModifyEvent",
-		"Event":          event.EventName,
+		"eventID":        event.EventID,
+		"eventName":      event.EventName,
+		"eventSource":    event.EventSource,
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 
@@ -31,6 +33,7 @@ func (s *service) GithubRepoModifyAddEvent(event events.DynamoDBEventRecord) err
 	var oldRepoModel repositories.RepositoryDBModel
 	// Check if record deleted
 	if event.EventName == utils.RecordDeleted {
+		log.WithFields(f).Debugf("processing record %s event...", event.EventName)
 		err = unmarshalStreamImage(event.Change.OldImage, &oldRepoModel)
 		if err != nil {
 			log.WithFields(f).Warnf("problem unmarshalling old repository model event, error: %+v", err)
@@ -39,6 +42,7 @@ func (s *service) GithubRepoModifyAddEvent(event events.DynamoDBEventRecord) err
 		claGroupID = oldRepoModel.RepositoryProjectID
 		projectSFID = oldRepoModel.ProjectSFID
 	} else {
+		log.WithFields(f).Debugf("processing record %s event...", event.EventName)
 		err := unmarshalStreamImage(event.Change.NewImage, &newRepoModel)
 		if err != nil {
 			log.WithFields(f).Warnf("problem unmarshalling the new repository model event, error: %+v", err)
@@ -52,6 +56,7 @@ func (s *service) GithubRepoModifyAddEvent(event events.DynamoDBEventRecord) err
 	f["projectSFID"] = projectSFID
 
 	// Set repository count
+	log.WithFields(f).Debugf("updating repository count for CLA Group: %s projectSFID: %s", claGroupID, projectSFID)
 	updateErr := s.setRepositoryCount(ctx, claGroupID, projectSFID)
 	if updateErr != nil {
 		log.WithFields(f).WithError(updateErr).Warn("problem updating project-cla-group and project tables")
@@ -172,6 +177,8 @@ func (s *service) DisableBranchProtectionServiceHandler(event events.DynamoDBEve
 func (s *service) setRepositoryCount(ctx context.Context, claGroupID string, projectSFID string) error {
 	f := logrus.Fields{
 		"functionName":   "setRepositoryCount",
+		"claGroupID":     claGroupID,
+		"projectSFID":    projectSFID,
 		utils.XREQUESTID: ctx,
 	}
 
@@ -181,7 +188,6 @@ func (s *service) setRepositoryCount(ctx context.Context, claGroupID string, pro
 		log.WithFields(f).WithError(repoErr).Debugf("failed to get repositories for claGroup: %s ", claGroupID)
 		return repoErr
 	}
-
 	log.WithFields(f).Debugf("Found %d repositories for claGroup: %s ", len(repositories), claGroupID)
 
 	//Update projects table
