@@ -67,7 +67,6 @@ const parameters = [
   `cla-lfx-header-${program.stage}`,
   `cla-lfx-footer-${program.stage}`,
   `cla-lfx-header-enabled-${program.stage}`,
-  `docraptor-test-mode-${program.stage}`,
   `cla-lfx-portal-url-${program.stage}`,
   `cla-lfx-metrics-report-sqs-region-${program.stage}`,
   `cla-lfx-metrics-report-sqs-url-${program.stage}`,
