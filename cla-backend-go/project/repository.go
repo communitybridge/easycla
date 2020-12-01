@@ -56,7 +56,7 @@ type ProjectRepository interface { //nolint
 
 	GetClaGroupsByFoundationSFID(ctx context.Context, foundationSFID string, loadRepoDetails bool) (*models.ClaGroups, error)
 	GetClaGroupByProjectSFID(ctx context.Context, projectSFID string, loadRepoDetails bool) (*models.ClaGroup, error)
-	UpdateRootCLAGroupRepositoriesCount(ctx context.Context, claGroupID string, diff int64) error
+	UpdateRootCLAGroupRepositoriesCount(ctx context.Context, claGroupID string, diff int64, reset bool) error
 }
 
 // NewRepository creates instance of project repository
@@ -751,16 +751,23 @@ func (repo *repo) UpdateCLAGroup(ctx context.Context, claGroupModel *models.ClaG
 	return repo.GetCLAGroupByID(ctx, claGroupModel.ProjectID, LoadRepoDetails)
 }
 
-func (repo *repo) UpdateRootCLAGroupRepositoriesCount(ctx context.Context, claGroupID string, diff int64) error {
+func (repo *repo) UpdateRootCLAGroupRepositoriesCount(ctx context.Context, claGroupID string, diff int64, reset bool) error {
 	f := logrus.Fields{
 		"functionName":   "UpdateRootCLAGroupRepositoriesCount",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"claGroupID":     claGroupID,
 		"diff":           diff,
+		"reset":          reset,
 	}
 
 	val := strconv.FormatInt(diff, 10)
-	updateExp := "ADD root_project_repositories_count :val"
+	var updateExp string
+	// update root_project_reposoitories_count based on reset flag
+	if reset {
+		updateExp = "SET root_project_repositories_count :val"
+	} else {
+		updateExp = "ADD root_project_repositories_count :val"
+	}
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{":val": {N: aws.String(val)}},
 		UpdateExpression:          aws.String(updateExp),

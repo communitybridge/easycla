@@ -128,8 +128,9 @@ func NewService(stage string,
 	s.registerCallback(githubOrgTableName, Modify, s.GitHubOrgUpdatedEvent)
 	s.registerCallback(githubOrgTableName, Remove, s.GitHubOrgDeletedEvent)
 
-	s.registerCallback(repositoryTableName, Insert, s.GithubRepoAddedEvent)
-	s.registerCallback(repositoryTableName, Remove, s.GithubRepoDeletedEvent)
+	s.registerCallback(repositoryTableName, Insert, s.GithubRepoModifyAddEvent)
+	s.registerCallback(repositoryTableName, Modify, s.GithubRepoModifyAddEvent)
+	s.registerCallback(repositoryTableName, Remove, s.GithubRepoModifyAddEvent)
 
 	// Check and enable/disable the branch protection when a project
 	s.registerCallback(repositoryTableName, Insert, s.EnableBranchProtectionServiceHandler)

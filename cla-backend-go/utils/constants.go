@@ -95,3 +95,12 @@ const SortOrderAscending = "asc"
 
 // SortOrderDescending descending sort order constant
 const SortOrderDescending = "desc"
+
+// RecordDeleted dynamo event for deleting a record
+const RecordDeleted = "REMOVE"
+
+//RecordModified dynamo event on modifying a record
+const RecordModified = "MODIFY"
+
+//RecordAdded dynami event on adding a record
+const RecordAdded = "INSERT"
