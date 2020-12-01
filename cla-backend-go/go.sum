@@ -68,6 +68,7 @@ github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghf
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/communitybridge/easycla v1.0.62 h1:s2Udj18W8veVXyCr1QW5rnzUoFDOFpCDibTSw9RtYp8=
 github.com/communitybridge/easycla v1.0.64 h1:+1o2jbjNehnd4YwiiaZoq25jHZ330ckjJMLnbfIYt3k=
+github.com/communitybridge/easycla v1.0.65 h1:/v+Ecghg3LaeKkKqzqk9BiukBZtlK4wXcU9MUaz1P1c=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/etcd v3.3.13+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
