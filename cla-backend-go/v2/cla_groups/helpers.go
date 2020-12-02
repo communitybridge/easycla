@@ -14,7 +14,6 @@ import (
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
-	"github.com/communitybridge/easycla/cla-backend-go/v2/metrics"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 	psproject "github.com/communitybridge/easycla/cla-backend-go/v2/project-service/client/project"
 
@@ -594,46 +593,4 @@ func isFoundationIDInList(foundationSFID string, projectsSFIDs []string) bool {
 		}
 	}
 	return false
-}
-
-func (s *service) getMetrics(ctx context.Context, claGroupIDList []string) map[string]*metrics.ProjectMetric {
-	f := logrus.Fields{
-		"functionName":   "getMetrics",
-		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-		"claGroupIDList": strings.Join(claGroupIDList, ","),
-	}
-	m := make(map[string]*metrics.ProjectMetric)
-	type result struct {
-		claGroupID string
-		metric     *metrics.ProjectMetric
-		err        error
-	}
-	rchan := make(chan *result)
-	var wg sync.WaitGroup
-	wg.Add(len(claGroupIDList))
-	go func() {
-		wg.Wait()
-		close(rchan)
-	}()
-	for _, cgid := range claGroupIDList {
-		go func(swg *sync.WaitGroup, claGroupID string, resultChan chan *result) {
-			defer swg.Done()
-			metric, err := s.metricsRepo.GetProjectMetric(claGroupID)
-			resultChan <- &result{
-				claGroupID: claGroupID,
-				metric:     metric,
-				err:        err,
-			}
-		}(&wg, cgid, rchan)
-	}
-	for r := range rchan {
-		if r.err != nil {
-			f["cla_group_id"] = r.claGroupID
-			log.WithFields(f).Error("unable to get cla_group metrics")
-			delete(f, "cla_group_id")
-			continue
-		}
-		m[r.claGroupID] = r.metric
-	}
-	return m
 }

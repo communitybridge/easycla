@@ -370,7 +370,7 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 	var foundationName = sfProjectModelDetails.Name
 
 	// If it's a project...
-	if sfProjectModelDetails.ProjectType == "Project" {
+	if sfProjectModelDetails.ProjectType == utils.ProjectTypeProject {
 		// Since this is a project and not a foundation, we'll want to set he parent foundation ID and name (which is
 		// our parent in this case)
 		log.WithFields(f).Debug("found 'project' in platform project service.")
@@ -539,39 +539,23 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 	}
 
 	// One more pass to update the metrics - bulk lookup the metrics and update the response model
-	claGroupMetrics := s.getMetrics(ctx, claGroupIDList.List())
 	log.WithFields(f).Debugf("Loading metrics for %d CLA Groups - updating response", len(claGroupIDList.List()))
-	var iclaSignatureCount, eclaSignatureCount int
-	var cclaSignatureCount int64
+	var iclaSignatureCount, cclaSignatureCount int64
 	for _, responseEntry := range responseModel.List {
 		log.Debugf("cla group entry logs %s", responseEntry.ClaGroupID)
-		metricForCLAGroup, ok := claGroupMetrics[responseEntry.ClaGroupID]
-		if !ok {
-			log.WithFields(f).Warnf("unable to load metrics for CLA Group ID: %s", responseEntry.ClaGroupID)
-			continue
-		}
-
-		responseEntry.RepositoriesCount = metricForCLAGroup.RepositoriesCount
-
-		iclaSignatureDetails, err := s.signatureService.GetClaGroupICLASignatures(ctx, responseEntry.ClaGroupID, nil)
+		iclaSignatureDetails, err := s.signatureService.GetProjectSignatures(ctx, signatures.GetProjectSignaturesParams{ProjectID: responseEntry.ClaGroupID, ClaType: aws.String(utils.ClaTypeICLA), SignatureType: aws.String(utils.SignatureTypeCLA)})
 		if err != nil {
 			log.Warnf("error while getting ICLA Signature using clagroupID %s Error: %v", responseEntry.ClaGroupID, err)
 		}
-		iclaSignatureCount = len(iclaSignatureDetails.List)
+		iclaSignatureCount = iclaSignatureDetails.ResultCount
 
-		cclaSignatureDetails, err := s.signatureService.GetProjectSignatures(ctx, signatures.GetProjectSignaturesParams{ProjectID: responseEntry.ClaGroupID, ClaType: aws.String("ccla"), SignatureType: aws.String("ccla")})
+		cclaSignatureDetails, err := s.signatureService.GetProjectSignatures(ctx, signatures.GetProjectSignaturesParams{ProjectID: responseEntry.ClaGroupID, ClaType: aws.String(utils.ClaTypeCCLA), SignatureType: aws.String(utils.SignatureTypeCCLA)})
 		if err != nil {
 			log.Warnf("error while getting ICLA Signature using clagroupID %s Error: %v", responseEntry.ClaGroupID, err)
 		}
 		cclaSignatureCount = cclaSignatureDetails.ResultCount
 
-		eclaSignatureDetails, err := s.signatureService.GetClaGroupCorporateContributors(ctx, responseEntry.ClaGroupID, nil, nil)
-		if err != nil {
-			log.Warnf("error while getting ICLA Signature using clagroupID %s Error: %v", responseEntry.ClaGroupID, err)
-		}
-		eclaSignatureCount = len(eclaSignatureDetails.List)
-
-		responseEntry.TotalSignatures = cclaSignatureCount + int64(iclaSignatureCount) + int64(eclaSignatureCount)
+		responseEntry.TotalSignatures = cclaSignatureCount + iclaSignatureCount
 	}
 
 	// Sort the response based on the Foundation and CLA group name
