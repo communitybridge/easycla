@@ -2295,6 +2295,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         return dict(self.model)
 
     def save(self):
+        self.model.date_modified = datetime.datetime.utcnow()
         self.model.save()
 
     def load(self, signature_id):
