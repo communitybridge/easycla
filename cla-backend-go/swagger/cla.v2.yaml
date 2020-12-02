@@ -16,7 +16,7 @@ securityDefinitions:
     in: header
     description: Requires X-ACL headers and bearer token
 security:
-  - lf-auth: []
+  - lf-auth: [ ]
 
 schemes:
   - http
@@ -30,7 +30,7 @@ paths:
     get:
       summary: API Version Information
       description: Returns the API version of the product
-      security: []
+      security: [ ]
       operationId: getVersion
       responses:
         '200':
@@ -44,7 +44,7 @@ paths:
     get:
       summary: API Health Check
       description: Returns the API health status
-      security: []
+      security: [ ]
       operationId: healthCheck
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -72,7 +72,7 @@ paths:
 
   /api-docs:
     get:
-      security: []
+      security: [ ]
       summary: API documentation
       description: Endpoint to render the API documentation
       operationId: getDoc
@@ -86,7 +86,7 @@ paths:
 
   /swagger.json:
     get:
-      security: []
+      security: [ ]
       summary: Swagger API as JSON
       description: Returns the Swagger specification as a JSON document
       operationId: getSwagger
@@ -1189,7 +1189,7 @@ paths:
       summary: Preview CLA Group Template PDF
       description: Get Template PDF for given CLA Group identifier with specified CLA type
       operationId: getCLATemplatePreview
-      security: []
+      security: [ ]
       parameters:
         - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/path-claGroupID"
@@ -2181,7 +2181,7 @@ paths:
     post:
       summary: Send Notification to CLA Managaers
       description: Send Notification to selected list of CLA Managers
-      security: []
+      security: [ ]
       operationId: notifyCLAManagers
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -2208,7 +2208,7 @@ paths:
     post:
       summary: Invite Manager
       description: Invite Company Admin based on user request to sign CLA
-      security: []
+      security: [ ]
       operationId: inviteCompanyAdmin
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -2274,7 +2274,7 @@ paths:
     post:
       summary: Request Manager
       description: Request Company Admin based on user request to sign CLA
-      security: []
+      security: [ ]
       operationId: requestCompanyAdmin
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -2443,7 +2443,7 @@ paths:
     post:
       summary: Associates a contributor with a company
       description: Associates a contributor with a company
-      security: []
+      security: [ ]
       operationId: contributorAssociation
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -2976,7 +2976,7 @@ paths:
       summary: Get list of CLA managers based on the CLA Group and v1 Company ID
       description: Returns a list of current CLA managers based on the CLA Group ID and the v1 Company ID
       operationId: getCompanyCLAGroupManagers
-      security: []
+      security: [ ]
       parameters:
         - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/path-companyID"
@@ -3069,7 +3069,7 @@ paths:
     get:
       summary: Returns a list of Company Admins (salesforce)
       operationId: getCompanyAdmins
-      security: []
+      security: [ ]
       parameters:
         - $ref: "#/parameters/x-request-id"
         - $ref: "#/parameters/path-companySFID"
@@ -3122,7 +3122,7 @@ paths:
     post:
       summary: API that creates a salesforce company
       description: Creates a Company for an individual contributor that fails to get a company during the signing getProjectSignatures
-      security: []
+      security: [ ]
       operationId: createCompany
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -3195,7 +3195,7 @@ paths:
     post:
       summary: Github Activity Callback Handler
       description: Github Activity Callback Handler reacts to github events emmited.
-      security: []
+      security: [ ]
       operationId: githubActivity
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -3334,7 +3334,7 @@ parameters:
     in: query
     type: string
     required: false
-    enum: [asc, desc]
+    enum: [ asc, desc ]
   companyName:
     name: companyName
     description: The optional company name filter
@@ -3539,7 +3539,7 @@ definitions:
       - action
     properties:
       action:
-          type: string
+        type: string
     additionalProperties: true
 
   github-repository-input:
@@ -4103,6 +4103,9 @@ definitions:
         $ref: './common/properties/email.yaml'
         x-omitempty: false
       approved_on:
+        type: string
+        x-omitempty: false
+      added_on:
         type: string
         x-omitempty: false
       project_id:

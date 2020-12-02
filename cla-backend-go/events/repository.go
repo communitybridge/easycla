@@ -41,6 +41,7 @@ var (
 const (
 	CompanySFIDFoundationSFIDEpochIndex = "company-sfid-foundation-sfid-event-time-epoch-index"
 	CompanySFIDProjectIDEpochIndex      = "company-sfid-project-id-event-time-epoch-index"
+	CompanyIDEventTypeIndex             = "company-id-event-type-index"
 	EventFoundationSFIDEpochIndex       = "event-foundation-sfid-event-time-epoch-index"
 	EventProjectIDEpochIndex            = "event-project-id-event-time-epoch-index"
 )
@@ -60,6 +61,7 @@ type Repository interface {
 
 	GetCompanyFoundationEvents(companySFID, foundationSFID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error)
 	GetCompanyClaGroupEvents(companySFID, claGroupID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error)
+	GetCompanyEvents(companyID, eventType string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error)
 	GetFoundationEvents(foundationSFID string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error)
 	GetClaGroupEvents(claGroupID string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error)
 }
@@ -453,6 +455,9 @@ func buildNextKey(indexName string, event *models.Event) (string, error) {
 	case EventProjectIDEpochIndex:
 		nextKey["event_project_id"] = &dynamodb.AttributeValue{S: aws.String(event.EventProjectID)}
 		nextKey["event_time_epoch"] = &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(event.EventTimeEpoch, 10))}
+	case CompanyIDEventTypeIndex:
+		nextKey["company_id"] = &dynamodb.AttributeValue{S: aws.String(event.EventCompanyID)}
+		nextKey["event_type"] = &dynamodb.AttributeValue{S: aws.String(event.EventType)}
 	}
 	return toString(nextKey)
 }
@@ -468,6 +473,14 @@ func (repo *repository) GetCompanyFoundationEvents(companySFID, foundationSFID s
 func (repo *repository) GetCompanyClaGroupEvents(companySFID, claGroupID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error) {
 	key := fmt.Sprintf("%s#%s", companySFID, claGroupID)
 	keyCondition := expression.Key("company_sfid_project_id").Equal(expression.Value(key))
+	return repo.queryEventsTable(CompanySFIDProjectIDEpochIndex, keyCondition, nextKey, paramPageSize, all, nil)
+}
+
+// GetCompanyEvents returns the list of events for given company id and event types
+func (repo *repository) GetCompanyEvents(companyID, eventType string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error) {
+	keyCondition := expression.Key("company_id").Equal(expression.Value(companyID)).And(
+		expression.Key("event_type").Equal(expression.Value(eventType)))
+
 	return repo.queryEventsTable(CompanySFIDProjectIDEpochIndex, keyCondition, nextKey, paramPageSize, all, nil)
 }
 

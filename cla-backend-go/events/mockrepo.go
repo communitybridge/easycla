@@ -27,6 +27,10 @@ func (repo *mockRepository) GetCompanyClaGroupEvents(companySFID, claGroupID str
 	panic("implement me")
 }
 
+func (repo *mockRepository) GetCompanyEvents(companyID, eventType string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error) {
+	panic("implement me")
+}
+
 func (repo *mockRepository) GetFoundationEvents(foundationSFID string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error) {
 	panic("implement me")
 }
