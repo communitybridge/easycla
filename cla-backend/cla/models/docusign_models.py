@@ -1155,14 +1155,16 @@ class DocuSign(signing_service_interface.SigningService):
             # Update the repository provider with this change - this will update the comment (if necessary)
             # and the status - do this early in the flow as the user will be immediately redirected back
             update_repository_provider(installation_id, github_repository_id, change_request_id)
-
             # Send user their signed document.
             user = User()
             user.load(signature.get_signature_reference_id())
             #Update user name in case is empty.
             if not user.get_user_name():
-                user.set_user_name(elem.find(self.TAGS['full_name']).text)
-                user.save()
+                full_name = tree.find('.//' + self.TAGS['full_name']).text
+                if full_name:
+                    cla.log.info(f'Updating user: {user.get_user_github_id()} with name : {full_name}')
+                    user.set_user_name(full_name)
+                    user.save()
             # Remove the active signature metadata.
             cla.utils.delete_active_signature_metadata(user.get_user_id())
             # Get signed document
