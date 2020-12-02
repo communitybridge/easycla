@@ -676,7 +676,7 @@ func (repo *repo) UpdateCLAGroup(ctx context.Context, claGroupModel *models.ClaG
 		updateExpression = updateExpression + " #LOW = :low, "
 	}
 
-	if claGroupModel.ProjectDescription != "" && existingCLAGroup.ProjectDescription != claGroupModel.ProjectDescription {
+	if existingCLAGroup.ProjectDescription != claGroupModel.ProjectDescription {
 		log.WithFields(f).Debugf("adding project_description: %s", claGroupModel.ProjectDescription)
 		expressionAttributeNames["#DESC"] = aws.String("project_description")
 		expressionAttributeValues[":desc"] = &dynamodb.AttributeValue{S: aws.String(claGroupModel.ProjectDescription)}
