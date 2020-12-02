@@ -3667,7 +3667,7 @@ class CompanyInvite(model_interfaces.CompanyInvite):
     def set_company_invite_id(self, company_invite_id):
         self.model.company_invite_id = company_invite_id
     
-    def get_company_invite_id():
+    def get_company_invite_id(self):
         return self.model.company_invite_id
 
     def get_user_id(self):
