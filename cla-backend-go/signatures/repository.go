@@ -744,7 +744,7 @@ func (repo repository) GetProjectSignatures(ctx context.Context, params signatur
 				indexName = SignatureReferenceSearchIndex
 				condition = condition.And(expression.Key("signature_reference_name_lower").Equal(expression.Value(strings.ToLower(*params.SearchTerm))))
 			} else {
-				searchTermExpression := expression.Name("signature_reference_name_lower").Contains(strings.ToLower(*params.SearchTerm))
+				searchTermExpression := expression.Name("signature_reference_name_lower").Contains(strings.ToLower(*params.SearchTerm)).Or(expression.Name("user_email").Contains(strings.ToLower(*params.SearchTerm)))
 				filter = addConditionToFilter(filter, searchTermExpression, &filterAdded)
 			}
 		}
