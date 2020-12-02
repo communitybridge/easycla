@@ -46,7 +46,7 @@ const (
 
 // errors
 var (
-	ErrGithubRepositoryNotFound = errors.New("github repository not found")
+	ErrGithubRepositoryNotFound = errors.New(utils.GithubRepoNotFound)
 )
 
 // Repository defines functions of Repositories
