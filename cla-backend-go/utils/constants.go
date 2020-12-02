@@ -87,6 +87,9 @@ const SignatureReferenceTypeCompany = "company"
 // ProjectTypeProjectGroup is the string that represents the Project Group type in a Project Service record
 const ProjectTypeProjectGroup = "Project Group"
 
+// ProjectTypeProject is a salesforce Project that is of Project type
+const ProjectTypeProject = "Project"
+
 // GitHubType is the repository type identifier for github
 const GitHubType = "github"
 
