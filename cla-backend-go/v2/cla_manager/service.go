@@ -1080,7 +1080,7 @@ func (s *service) isSigned(ctx context.Context, companyModel *v1Models.Company, 
 	f["companyID"] = companyModel.CompanyID
 	f["companyName"] = companyModel.CompanyName
 	log.WithFields(f).Debug("loading CLA Managers for company/project")
-	claManagers, err := s.v2CompanyService.GetCompanyProjectCLAManagers(ctx, companyModel.CompanyID, projectID)
+	claManagers, err := s.v2CompanyService.GetCompanyProjectCLAManagers(ctx, companyModel.CompanyID, companyModel.CompanyExternalID, projectID)
 	if err != nil {
 		msg := fmt.Sprintf("EasyCLA - 400 Bad Request : %v", err)
 		log.WithFields(f).Warn(msg)

@@ -67,7 +67,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					utils.ErrorResponseNotFound(reqID, msgUnableToLoadCompany))
 			}
 
-			result, err := service.GetCompanyProjectCLAManagers(ctx, comp.CompanyID, params.ProjectSFID)
+			result, err := service.GetCompanyProjectCLAManagers(ctx, comp.CompanyID, params.CompanySFID, params.ProjectSFID)
 			if err != nil {
 				msg := "unable to load company project CLA managers"
 				log.WithFields(f).WithError(err).Warn(msg)
@@ -98,6 +98,8 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 					return company.NewGetCompanyCLAGroupManagersNotFound().WithXRequestID(reqID).WithPayload(
 						utils.ErrorResponseNotFoundWithError(reqID, msg, err))
 				}
+				return company.NewGetCompanyCLAGroupManagersBadRequest().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 			}
 
 			return company.NewGetCompanyCLAGroupManagersOK().WithXRequestID(reqID).WithPayload(result)
