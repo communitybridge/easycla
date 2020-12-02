@@ -389,26 +389,49 @@ func (repo *repo) GetCLAGroup(claGroupID string) (*ProjectClaGroup, error) {
 	return &claGroupModel, nil
 }
 
+// UpdateRepositoriesCount updates the repositories count
 func (repo *repo) UpdateRepositoriesCount(projectSFID string, diff int64, reset bool) error {
-	val := strconv.FormatInt(diff, 10)
-
-	var updateExp string
-	if reset {
-		updateExp = "SET repositories_count :val"
-	} else {
-		updateExp = "ADD repositories_count :val"
+	f := logrus.Fields{
+		"functionName": "UpdateRepositoriesCount",
+		"projectSFID":  projectSFID,
+		"diff":         diff,
+		"reset":        reset,
 	}
+
+	val := strconv.FormatInt(diff, 10)
+	expressionAttributeNames := map[string]*string{}
+	expressionAttributeValues := map[string]*dynamodb.AttributeValue{}
+	var updateExpression string
+
+	// update repositories_count based on reset flag
+	if reset {
+		expressionAttributeNames["#R"] = aws.String("repositories_count")
+		expressionAttributeValues[":r"] = &dynamodb.AttributeValue{N: aws.String(val)}
+		updateExpression = "SET #R = :r"
+
+		_, now := utils.CurrentTime()
+		expressionAttributeNames["#M"] = aws.String("date_modified")
+		expressionAttributeValues[":m"] = &dynamodb.AttributeValue{S: aws.String(now)}
+		updateExpression = updateExpression + ", #M = :m"
+	} else {
+		expressionAttributeValues[":val"] = &dynamodb.AttributeValue{N: aws.String(val)}
+		updateExpression = "ADD repositories_count :val"
+	}
+
 	_, err := repo.dynamoDBClient.UpdateItem(&dynamodb.UpdateItemInput{
-		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{":val": {N: aws.String(val)}},
-		UpdateExpression:          aws.String(updateExp),
+		UpdateExpression:          aws.String(updateExpression),
+		ExpressionAttributeNames:  expressionAttributeNames,
+		ExpressionAttributeValues: expressionAttributeValues,
 		Key: map[string]*dynamodb.AttributeValue{
 			"project_sfid": {S: aws.String(projectSFID)},
 		},
 		TableName: aws.String(repo.tableName),
 	})
+
 	if err != nil {
-		log.WithField("project_sfid", projectSFID).Error("update repositories count failed", err)
+		log.WithFields(f).WithError(err).Warn("update repositories count failed")
 	}
+
 	return err
 }
 

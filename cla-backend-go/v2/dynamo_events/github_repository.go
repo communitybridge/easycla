@@ -179,7 +179,7 @@ func (s *service) setRepositoryCount(ctx context.Context, claGroupID string, pro
 		"functionName":   "setRepositoryCount",
 		"claGroupID":     claGroupID,
 		"projectSFID":    projectSFID,
-		utils.XREQUESTID: ctx,
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 
 	log.WithFields(f).Debugf("Getting repositories for claGroup: %s ", claGroupID)
@@ -197,6 +197,7 @@ func (s *service) setRepositoryCount(ctx context.Context, claGroupID string, pro
 		log.WithFields(f).WithError(updateErr).Debugf("Failed to set repositories_count for claGroup: %s ", claGroupID)
 		return updateErr
 	}
+	log.WithFields(f).Debugf("Updated the root_projects_repository_count for claGroup : %s ", claGroupID)
 
 	// Update projects-cla-group table
 	log.WithFields(f).Debugf("Updating the projects-cla-groups-table for projectSFID: %s ", projectSFID)
