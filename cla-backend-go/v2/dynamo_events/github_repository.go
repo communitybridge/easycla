@@ -197,7 +197,7 @@ func (s *service) setRepositoryCount(ctx context.Context, claGroupID string, pro
 		log.WithFields(f).WithError(updateErr).Debugf("Failed to set repositories_count for claGroup: %s ", claGroupID)
 		return updateErr
 	}
-	log.WithFields(f).Debugf("Updated the root_projects_repository_count for claGroup : %s ", claGroupID)
+	log.WithFields(f).Debugf("Updated the root_projects_repository_count in the cla-group table for claGroup : %s ", claGroupID)
 
 	// Update projects-cla-group table
 	log.WithFields(f).Debugf("Updating the projects-cla-groups-table for projectSFID: %s ", projectSFID)
@@ -206,6 +206,7 @@ func (s *service) setRepositoryCount(ctx context.Context, claGroupID string, pro
 		log.WithFields(f).WithError(updateErr).Debugf("Failed to set repositories_count for project: %s ", projectSFID)
 		return pcgErr
 	}
+	log.WithFields(f).Debugf("Updated the repository_count in the projects-cla-groups-table for projectSFID : %s ", projectSFID)
 
 	return nil
 }
