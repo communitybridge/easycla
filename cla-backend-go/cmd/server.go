@@ -127,7 +127,7 @@ type combinedRepo struct {
 // server function called by environment specific server functions
 func server(localMode bool) http.Handler {
 	f := logrus.Fields{
-		"functionName": "server",
+		"functionName": "cmd.server",
 		"localMode":    localMode,
 	}
 
@@ -411,7 +411,7 @@ func server(localMode bool) http.Handler {
 // setupCORSHandler sets up the CORS logic and creates the middleware HTTP handler
 func setupCORSHandler(handler http.Handler, allowedOrigins []string) http.Handler {
 	f := logrus.Fields{
-		"functionName":   "setupCORSHandler",
+		"functionName":   "cmd.setupCORSHandler",
 		"allowedOrigins": strings.Join(allowedOrigins, ","),
 	}
 
@@ -571,41 +571,61 @@ func responseLoggingMiddleware(next http.Handler) http.Handler {
 // create user form http authorization token
 // this function creates user if user does not exist and token is valid
 func createUserFromRequest(authorizer auth.Authorizer, usersService users.Service, eventsService events.Service, r *http.Request) {
-	btoken := r.Header.Get("Authorization")
-	if btoken == "" {
+	f := logrus.Fields{
+		"functionName": "cmd.createUserFromRequest",
+	}
+
+	bToken := r.Header.Get("Authorization")
+	if bToken == "" {
 		return
 	}
-	t := strings.Split(btoken, " ")
+	t := strings.Split(bToken, " ")
 	if len(t) != 2 {
+		log.WithFields(f).Warn("parsing of authorization header failed - expected two values separated by a space")
 		return
 	}
-	token := t[1]
-	// parse user from authtoken
-	claUser, err := authorizer.SecurityAuth(token, []string{})
+
+	// parse user from the auth token
+	claUser, err := authorizer.SecurityAuth(t[1], []string{})
 	if err != nil {
-		log.Error("createUserFromRequest: parsing failed", err)
+		log.WithFields(f).WithError(err).Warn("parsing failed")
 		return
 	}
-	// search if user exist in database
+
+	// search if user exist in database by username
 	userModel, err := usersService.GetUserByLFUserName(claUser.LFUsername)
 	if err != nil {
-		log.Error("createUserFromRequest: searching user by lf-username failed", err)
+		log.WithFields(f).WithError(err).Warn("searching user by lf-username failed")
 		return
 	}
 	if userModel != nil {
 		return
 	}
+
+	// search if user exist in database by username
+	userModel, err = usersService.GetUserByEmail(claUser.LFEmail)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warn("searching user by lf-email failed")
+		return
+	}
+	if userModel != nil {
+		return
+	}
+
+	// Attempt to create the user
 	newUser := &models.User{
 		LfEmail:    claUser.LFEmail,
 		LfUsername: claUser.LFUsername,
 		Username:   claUser.Name,
 	}
-	log.WithField("user", newUser).Debug("creating new user")
+	log.WithFields(f).WithField("user", newUser).Debug("creating new user")
 	userModel, err = usersService.CreateUser(newUser, nil)
 	if err != nil {
-		log.WithField("user", newUser).Error("creating new user failed")
+		log.WithFields(f).WithField("user", newUser).WithError(err).Warn("creating new user failed")
 		return
 	}
+
+	// Log the event
 	eventsService.LogEvent(&events.LogEventArgs{
 		EventType: events.UserCreated,
 		UserID:    userModel.UserID,

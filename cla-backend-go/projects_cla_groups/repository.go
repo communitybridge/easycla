@@ -125,9 +125,9 @@ func (repo *repo) queryClaGroupsProjects(keyCondition expression.KeyConditionBui
 // GetClaGroupIDForProject retrieves the CLA Group ID for the project
 func (repo *repo) GetClaGroupIDForProject(projectSFID string) (*ProjectClaGroup, error) {
 	f := logrus.Fields{
-		"function":    "GetClaGroupIDForProject",
-		"tableName":   repo.tableName,
-		"projectSFID": projectSFID,
+		"functionName": "GetClaGroupIDForProject",
+		"tableName":    repo.tableName,
+		"projectSFID":  projectSFID,
 	}
 
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
@@ -182,7 +182,7 @@ func (repo *repo) GetProjectsIdsForFoundation(foundationSFID string) ([]*Project
 }
 
 func (repo *repo) GetProjectsIdsForAllFoundation() ([]*ProjectClaGroup, error) {
-	f := logrus.Fields{"function": "GetProjectsIdsForAllFoundation", "tableName": repo.tableName}
+	f := logrus.Fields{"functionName": "GetProjectsIdsForAllFoundation", "tableName": repo.tableName}
 	scanInput := &dynamodb.ScanInput{
 		TableName: aws.String(repo.tableName),
 	}

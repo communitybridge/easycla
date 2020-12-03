@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/imroc/req"
 )
@@ -41,22 +43,30 @@ type tokenReturn struct {
 
 // Init is the token initialization logic
 func Init(paramClientID, paramClientSecret, paramAuth0URL, paramAudience string) {
+	f := logrus.Fields{
+		"functionName": "token.Init",
+		"auth0URL":     paramAuth0URL,
+		"audience":     paramAudience,
+	}
+	log.WithFields(f).Debug("token init running...")
+
 	clientID = paramClientID
-
 	clientSecret = paramClientSecret
-
 	audience = paramAudience
-
 	oauthTokenURL = paramAuth0URL
 
 	if expiry.Year() == 1 {
 		expiry = time.Now()
 	}
+
 	go retrieveToken() //nolint
 }
 
 func retrieveToken() error {
-	log.Debugf("Refreshing auth0 token...")
+	f := logrus.Fields{
+		"functionName": "retrieveToken",
+	}
+	log.WithFields(f).Debugf("Refreshing auth0 token...")
 
 	tg := tokenGen{
 		GrantType:    "client_credentials",
@@ -67,21 +77,21 @@ func retrieveToken() error {
 
 	resp, err := req.Post(oauthTokenURL, req.BodyJSON(&tg))
 	if err != nil {
-		log.Warnf("refresh token request failed")
+		log.WithFields(f).WithError(err).Warn("refresh token request failed")
 		return err
 	}
 
 	if resp.Response().StatusCode < 200 || resp.Response().StatusCode > 299 {
 		err = fmt.Errorf("invalid response from auth0 service %s - received error code: %d, response: %s",
 			oauthTokenURL, resp.Response().StatusCode, resp.String())
-		log.WithError(err).Warn("invalid response from auth0 service")
+		log.WithFields(f).WithError(err)
 		return err
 	}
 
 	var tr tokenReturn
 	err = resp.ToJSON(&tr)
 	if err != nil {
-		log.Warnf("refresh token::json unmarshal failed of response: %s, error: %+v", resp.String(), err)
+		log.WithFields(f).WithError(err).Warnf("refresh token::json unmarshal failed of response: %s, error: %+v", resp.String(), err)
 		return err
 	}
 
@@ -89,25 +99,32 @@ func retrieveToken() error {
 	token = tr.AccessToken
 	if tr.AccessToken == "" || tr.TokenType == "" {
 		err = errors.New("error fetching authentication token - response value is empty")
-		log.WithError(err).Warn("empty response from auth server")
+		log.WithFields(f).WithError(err).Warn("empty response from auth server")
 		return err
 	}
 
 	expiry = time.Now()
 	tokenExpiry := time.Now().Add(time.Second * time.Duration(tr.ExpiresIn))
-	log.Debugf("retrieved token: %s... expires: %s", token[0:8], tokenExpiry.UTC().String())
+	log.WithFields(f).Debugf("retrieved token: %s... expires: %s", token[0:8], tokenExpiry.UTC().String())
 
 	return nil
 }
 
 // GetToken returns the Auth0 Token - in necessary, refreshes the token when expired
 func GetToken() (string, error) {
+	f := logrus.Fields{
+		"functionName": "token.GetToken",
+	}
+
 	// set 2.75 hrs duration for new token
 	if (time.Now().Unix()-expiry.Unix()) > 9900 || token == "" {
+		log.WithFields(f).Debug("token is either empty or expired, retrieving new token")
 		err := retrieveToken()
 		if err != nil {
+			log.WithFields(f).WithError(err).Warn("unable to retrieve a new token")
 			return "", err
 		}
 	}
+
 	return token, nil
 }
