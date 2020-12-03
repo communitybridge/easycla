@@ -59,11 +59,12 @@
     "typescript": "3.0.1"
   },
   "resolutions": {
-    "node-sass": "4.13.1",
-    "mem": "^4.0.0",
-    "tunnel-agent": "^0.6.0",
     "cryptiles": "^4.1.2",
     "hoek": "^4.2.1",
+    "kind-of": "^6.0.3",
+    "mem": "^4.0.0",
+    "node-sass": "4.13.1",
+    "tunnel-agent": "^0.6.0",
     "yargs-parser": "13.1.2"
   },
   "cordovaPlugins": [
