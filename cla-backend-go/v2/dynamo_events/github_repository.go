@@ -183,16 +183,22 @@ func (s *service) setRepositoryCount(ctx context.Context, claGroupID string, pro
 	}
 
 	log.WithFields(f).Debugf("Getting repositories for claGroup: %s ", claGroupID)
-	repositories, repoErr := s.repositoryService.GetRepositoriesByCLAGroup(ctx, claGroupID)
-	if repoErr != nil {
+	var repoCount int
+	repos, repoErr := s.repositoryService.GetRepositoriesByCLAGroup(ctx, claGroupID)
+	if repoErr != nil && repoErr.Error() != utils.GithubRepoNotFound {
 		log.WithFields(f).WithError(repoErr).Debugf("failed to get repositories for claGroup: %s ", claGroupID)
 		return repoErr
 	}
-	log.WithFields(f).Debugf("Found %d repositories for claGroup: %s ", len(repositories), claGroupID)
+	if repoErr.Error() == utils.GithubRepoNotFound {
+		repoCount = 0
+	} else {
+		repoCount = len(repos)
+	}
+	log.WithFields(f).Debugf("Found %d repositories for claGroup: %s ", repoCount, claGroupID)
 
 	//Update projects table
 	log.WithFields(f).Debugf("Updating the root_projects_repository_count for claGroup : %s ", claGroupID)
-	updateErr := s.projectRepo.UpdateRootCLAGroupRepositoriesCount(ctx, claGroupID, int64(len(repositories)), true)
+	updateErr := s.projectRepo.UpdateRootCLAGroupRepositoriesCount(ctx, claGroupID, int64(repoCount), true)
 	if updateErr != nil {
 		log.WithFields(f).WithError(updateErr).Debugf("Failed to set repositories_count for claGroup: %s ", claGroupID)
 		return updateErr
@@ -201,7 +207,7 @@ func (s *service) setRepositoryCount(ctx context.Context, claGroupID string, pro
 
 	// Update projects-cla-group table
 	log.WithFields(f).Debugf("Updating the projects-cla-groups-table for projectSFID: %s ", projectSFID)
-	pcgErr := s.projectsClaGroupRepo.UpdateRepositoriesCount(projectSFID, int64(len(repositories)), true)
+	pcgErr := s.projectsClaGroupRepo.UpdateRepositoriesCount(projectSFID, int64(repoCount), true)
 	if pcgErr != nil {
 		log.WithFields(f).WithError(updateErr).Debugf("Failed to set repositories_count for project: %s ", projectSFID)
 		return pcgErr
