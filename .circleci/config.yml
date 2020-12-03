@@ -108,9 +108,10 @@ step-library:
         set +e
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
         [ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"
-        echo "Installing node v8.17.0..."
-        nvm install v8.17.0
-        nvm alias default v8.17.0
+        node_version="v8.17.0"
+        echo "Installing node ${node_version}..."
+        nvm install ${node_version}
+        nvm alias default ${node_version}
         echo "[ -s \"${NVM_DIR}/nvm.sh\" ] && . \"${NVM_DIR}/nvm.sh\"" >> $BASH_ENV
 
   - &install-node-12
@@ -120,9 +121,10 @@ step-library:
         set +e
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
         [ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"
-        echo "Installing node v12.14.1..."
-        nvm install v12.14.1
-        nvm alias default v12.14.1
+        node_version="v12.20.0"
+        echo "Installing node ${node_version}..."
+        nvm install ${node_version}
+        nvm alias default ${node_version}
         echo "[ -s \"${NVM_DIR}/nvm.sh\" ] && . \"${NVM_DIR}/nvm.sh\"" >> $BASH_ENV
 
 jobs:
