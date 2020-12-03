@@ -29,14 +29,14 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 	// Retrieve a list of available templates
 	api.TemplateGetTemplatesHandler = template.GetTemplatesHandlerFunc(func(params template.GetTemplatesParams, user *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
 		f := logrus.Fields{
 			"functionName":   "TemplateGetTemplatesHandler",
 			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		}
 
-		templates, err := service.GetTemplates(params.HTTPRequest.Context())
+		templates, err := service.GetTemplates(ctx)
 		if err != nil {
 			log.WithFields(f).WithError(err).Warn("problem loading templates")
 			return template.NewGetTemplatesBadRequest().WithPayload(errorResponse(reqID, err))
@@ -52,7 +52,7 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 
 	api.TemplateCreateCLAGroupTemplateHandler = template.CreateCLAGroupTemplateHandlerFunc(func(params template.CreateCLAGroupTemplateParams, user *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
 		f := logrus.Fields{
 			"functionName":   "TemplateCreateCLAGroupTemplateHandler",
@@ -91,7 +91,7 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 
 	api.TemplateTemplatePreviewHandler = template.TemplatePreviewHandlerFunc(func(params template.TemplatePreviewParams, user *auth.User) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
 		f := logrus.Fields{
 			"functionName":   "TemplateTemplatePreviewHandler",
@@ -105,7 +105,7 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 			log.WithFields(f).WithError(err).Warn("problem converting templates")
 			return writeResponse(http.StatusInternalServerError, runtime.JSONMime, runtime.JSONProducer(), reqID, errorResponse(reqID, err))
 		}
-		pdf, err := service.CreateTemplatePreview(&param, params.TemplateFor)
+		pdf, err := service.CreateTemplatePreview(ctx, &param, params.TemplateFor)
 		if err != nil {
 			log.WithFields(f).WithError(err).Warnf("Error generating PDFs from provided templates, error: %v", err)
 			return writeResponse(http.StatusBadRequest, runtime.JSONMime, runtime.JSONProducer(), reqID, errorResponse(reqID, err))
@@ -121,7 +121,7 @@ func Configure(api *operations.EasyclaAPI, service v1Template.Service, eventsSer
 
 	api.TemplateGetCLATemplatePreviewHandler = template.GetCLATemplatePreviewHandlerFunc(func(params template.GetCLATemplatePreviewParams) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
-		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 		f := logrus.Fields{
 			"functionName":   "TemplateGetCLATemplatePreviewHandler",
 			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
