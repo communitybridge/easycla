@@ -515,7 +515,7 @@ func buildApprovalListSummary(approvalListChanges *models.ApprovalList) string {
 // sendRequestAccessEmailToCLAManagers sends the request access email to the specified CLA Managers
 func (s service) sendApprovalListUpdateEmailToCLAManagers(companyModel *models.Company, claGroupModel *models.ClaGroup, recipientName, recipientAddress string, approvalListChanges *models.ApprovalList) {
 	f := logrus.Fields{
-		"function":          "sendApprovalListUpdateEmailToCLAManagers",
+		"functionName":      "sendApprovalListUpdateEmailToCLAManagers",
 		"projectName":       claGroupModel.ProjectName,
 		"projectExternalID": claGroupModel.ProjectExternalID,
 		"foundationSFID":    claGroupModel.FoundationSFID,

@@ -83,12 +83,13 @@ type repo struct {
 // CreateCLAGroup creates a new CLA Group
 func (repo *repo) CreateCLAGroup(ctx context.Context, claGroupModel *models.ClaGroup) (*models.ClaGroup, error) {
 	f := logrus.Fields{
-		"function":          "CreateCLAGroup",
+		"functionName":      "CreateCLAGroup",
 		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
 		"projectName":       claGroupModel.ProjectName,
 		"projectExternalID": claGroupModel.ProjectExternalID,
 		"foundationSFID":    claGroupModel.FoundationSFID,
-		"tableName":         repo.claGroupTable}
+		"tableName":         repo.claGroupTable,
+	}
 	// Generate a new CLA Group ID
 	claGroupID, err := uuid.NewV4()
 	if err != nil {
@@ -146,7 +147,7 @@ func (repo *repo) CreateCLAGroup(ctx context.Context, claGroupModel *models.ClaG
 
 func (repo *repo) getCLAGroupByID(ctx context.Context, claGroupID string, loadCLAGroupDetails bool) (*models.ClaGroup, error) {
 	f := logrus.Fields{
-		"function":           "getCLAGroupByID",
+		"functionName":       "getCLAGroupByID",
 		utils.XREQUESTID:     ctx.Value(utils.XREQUESTID),
 		"claGroupID":         claGroupID,
 		"loadProjectDetails": loadCLAGroupDetails,

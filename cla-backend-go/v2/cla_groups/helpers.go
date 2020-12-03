@@ -34,7 +34,7 @@ func (s *service) validateClaGroupInput(ctx context.Context, input *models.Creat
 	claGroupName := *input.ClaGroupName
 
 	f := logrus.Fields{
-		"function":            "validateClaGroupInput",
+		"functionName":        "validateClaGroupInput",
 		utils.XREQUESTID:      ctx.Value(utils.XREQUESTID),
 		"ClaGroupName":        claGroupName,
 		"ClaGroupDescription": input.ClaGroupDescription,

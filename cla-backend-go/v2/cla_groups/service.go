@@ -94,7 +94,7 @@ func (s *service) CreateCLAGroup(ctx context.Context, input *models.CreateClaGro
 	}
 
 	f := logrus.Fields{
-		"function":            "CreateCLAGroup",
+		"functionName":        "CreateCLAGroup",
 		utils.XREQUESTID:      ctx.Value(utils.XREQUESTID),
 		"ClaGroupName":        aws.StringValue(input.ClaGroupName),
 		"ClaGroupDescription": input.ClaGroupDescription,
@@ -224,7 +224,7 @@ func (s *service) CreateCLAGroup(ctx context.Context, input *models.CreateClaGro
 func (s *service) UpdateCLAGroup(ctx context.Context, claGroupModel *v1Models.ClaGroup, input *models.UpdateClaGroupInput, projectManagerLFID string) (*models.ClaGroupSummary, error) {
 	// Validate the input
 	f := logrus.Fields{
-		"function":            "UpdateCLAGroup",
+		"functionName":        "UpdateCLAGroup",
 		utils.XREQUESTID:      ctx.Value(utils.XREQUESTID),
 		"claGroupID":          claGroupModel.ProjectID,
 		"ClaGroupName":        input.ClaGroupName,
