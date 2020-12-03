@@ -163,3 +163,20 @@ func (e *CompanyDoesNotExist) Error() string {
 func (e *CompanyDoesNotExist) Unwrap() error {
 	return e.Err
 }
+
+// GitHubOrgNotFound is an error model for GitHub Organization not found errors
+type GitHubOrgNotFound struct {
+	ProjectSFID      string
+	OrganizationName string
+	Err              error
+}
+
+// Error is an error string function for project CLA Group not found errors
+func (e *GitHubOrgNotFound) Error() string {
+	return fmt.Sprintf("github organization with name: %s and projectSFID: %s not found: %+v", e.OrganizationName, e.ProjectSFID, e.Err)
+}
+
+// Unwrap method returns its contained error
+func (e *GitHubOrgNotFound) Unwrap() error {
+	return e.Err
+}

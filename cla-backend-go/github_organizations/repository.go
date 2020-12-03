@@ -61,17 +61,75 @@ func NewRepository(awsSession *session.Session, stage string) repository {
 		githubOrgTableName: fmt.Sprintf("cla-%s-github-orgs", stage),
 	}
 }
+
+// AddGithubOrganization add github organization logic
 func (repo repository) AddGithubOrganization(ctx context.Context, parentProjectSFID string, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
 	f := logrus.Fields{
 		"functionName":            "AddGithubOrganization",
 		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
 		"parentProjectSFID":       parentProjectSFID,
 		"projectSFID":             projectSFID,
-		"organizationName":        aws.StringValue(input.OrganizationName),
-		"autoEnabled":             aws.BoolValue(input.AutoEnabled),
-		"branchProtectionEnabled": aws.BoolValue(input.BranchProtectionEnabled),
+		"organizationName":        utils.StringValue(input.OrganizationName),
+		"autoEnabled":             utils.BoolValue(input.AutoEnabled),
+		"branchProtectionEnabled": utils.BoolValue(input.BranchProtectionEnabled),
 	}
 
+	// First, let's check to see if we have an existing github organization with the same name
+	existingRecord, getErr := repo.GetGithubOrganizationByName(ctx, utils.StringValue(input.OrganizationName))
+	if getErr != nil {
+		log.WithFields(f).WithError(getErr).Debug("unable to locate existing github organization by name")
+	}
+
+	if existingRecord != nil && len(existingRecord.List) > 1 {
+		log.WithFields(f).Warning("more than one github organization with the same name in the database")
+	}
+
+	// Existing record - update it - should only have one
+	if existingRecord != nil && len(existingRecord.List) == 1 {
+
+		// These are our rules for updating
+		autoEnabled := existingRecord.List[0].AutoEnabled || utils.BoolValue(input.AutoEnabled)
+		branchProtectionEnabled := existingRecord.List[0].BranchProtectionEnabled || utils.BoolValue(input.BranchProtectionEnabled)
+
+		// Only update if previous value was unset
+		autoEnabledCLAGroupID := existingRecord.List[0].AutoEnabledClaGroupID
+		if autoEnabledCLAGroupID == "" && input.AutoEnabledClaGroupID != "" {
+			autoEnabledCLAGroupID = input.AutoEnabledClaGroupID
+		}
+
+		// Attempt to simply update the existing record - we should only have one
+		updateErr := repo.UpdateGithubOrganization(ctx,
+			projectSFID,
+			utils.StringValue(input.OrganizationName),
+			autoEnabled,
+			autoEnabledCLAGroupID,
+			branchProtectionEnabled,
+		)
+		if updateErr != nil {
+			log.WithFields(f).WithError(updateErr).Warn("unable to update existing github organization record")
+			return nil, updateErr
+		}
+
+		// we could simply update the record we initially loaded or simply query the updated record again...
+		// we're using a key lookup, so it should be fast...
+		existingUpdatedRecord, getUpdatedRecordErr := repo.GetGithubOrganizationByName(ctx, utils.StringValue(input.OrganizationName))
+		if getUpdatedRecordErr != nil {
+			log.WithFields(f).WithError(getUpdatedRecordErr).Warn("unable to locate existing github organization by name")
+			return nil, getUpdatedRecordErr
+		}
+		// this would be odd...
+		if len(existingRecord.List) == 0 {
+			log.WithFields(f).Warn("unable to locate existing github organization by name")
+			return nil, &utils.GitHubOrgNotFound{
+				ProjectSFID:      projectSFID,
+				OrganizationName: utils.StringValue(input.OrganizationName),
+				Err:              fmt.Errorf("organization name not found: %s", utils.StringValue(input.OrganizationName)),
+			}
+		}
+		return existingUpdatedRecord.List[0], nil
+	}
+
+	// No existing records - create one
 	_, currentTime := utils.CurrentTime()
 	githubOrg := &GithubOrganization{
 		DateCreated:                currentTime,
@@ -90,6 +148,7 @@ func (repo repository) AddGithubOrganization(ctx context.Context, parentProjectS
 	log.WithFields(f).Debug("Encoding github organization record for adding to the database...")
 	av, err := dynamodbattribute.MarshalMap(githubOrg)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to marshall request for query")
 		return nil, err
 	}
 
@@ -103,17 +162,18 @@ func (repo repository) AddGithubOrganization(ctx context.Context, parentProjectS
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeConditionalCheckFailedException:
-				log.WithFields(f).Debug("github organization already exists")
+				log.WithFields(f).WithError(err).Warn("github organization already exists")
 				return nil, errors.New("github organization already exists")
 			}
 		}
-		log.WithFields(f).Error("cannot put github organization in dynamodb", err)
+		log.WithFields(f).WithError(err).Warn("cannot put github organization in dynamodb")
 		return nil, err
 	}
 
 	return ToModel(githubOrg), nil
 }
 
+// GetGithubOrganizations get github organizations based on the project SFID
 func (repo repository) GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.GithubOrganizations, error) {
 	f := logrus.Fields{
 		"functionName":   "GetGithubOrganizations",
