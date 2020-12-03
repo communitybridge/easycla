@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -36,7 +37,7 @@ var (
 
 // Repository interface functions
 type Repository interface {
-	GetTemplates() ([]models.Template, error)
+	GetTemplates(ctx context.Context) ([]models.Template, error)
 	GetTemplate(templateID string) (models.Template, error)
 	GetCLAGroup(claGroupID string) (*models.ClaGroup, error)
 	GetCLADocuments(claGroupID string, claType string) ([]models.ClaGroupDocument, error)
@@ -105,17 +106,23 @@ func NewRepository(awsSession *session.Session, stage string) repository {
 }
 
 // GetTemplates returns a list containing all the template models
-func (r repository) GetTemplates() ([]models.Template, error) {
+func (r repository) GetTemplates(ctx context.Context) ([]models.Template, error) {
+	f := logrus.Fields{
+		"functionName":   "GetTemplates",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
+
+	log.WithFields(f).Debug("Loading templates...")
 	var templates []models.Template
 	for _, template := range templateMap {
-		// DEBUG
-		// Only show the LF style template in dev for now
-		if template.Name == "LF Style Template" && strings.ToLower(r.stage) != "dev" {
-			log.Debugf("Skipping '%s' template since we are in stage: %s - only shown in 'dev'", template.Name, r.stage)
-		} else {
-			templates = append(templates, template)
-		}
+		templates = append(templates, template)
 	}
+
+	// Sort the template list based on the name
+	log.WithFields(f).Debug("Sorting templates...")
+	sort.Slice(templates, func(i, j int) bool {
+		return strings.ToLower(templates[i].Name) < strings.ToLower(templates[j].Name)
+	})
 
 	return templates, nil
 }

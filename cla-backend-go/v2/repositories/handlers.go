@@ -33,7 +33,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 		func(params github_repositories.GetProjectGithubRepositoriesParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 			f := logrus.Fields{
 				"functionName":   "GithubRepositoriesGetProjectGithubRepositoriesHandler",
 				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -81,7 +81,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 		func(params github_repositories.AddProjectGithubRepositoryParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 			f := logrus.Fields{
 				"functionName":   "GithubRepositoriesAddProjectGithubRepositoryHandler",
 				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -137,7 +137,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 		func(params github_repositories.DeleteProjectGithubRepositoryParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 			f := logrus.Fields{
 				"functionName":   "GithubRepositoriesDeleteProjectGithubRepositoryHandler",
 				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -195,7 +195,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 		func(params github_repositories.GetProjectGithubRepositoryBranchProtectionParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 			f := logrus.Fields{
 				"functionName":   "GithubRepositoriesGetProjectGithubRepositoryBranchProtectionHandler",
 				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -249,7 +249,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 		func(params github_repositories.UpdateProjectGithubRepositoryBranchProtectionParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 			f := logrus.Fields{
 				"functionName":   "GithubRepositoriesUpdateProjectGithubRepositoryBranchProtectionHandler",
 				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
