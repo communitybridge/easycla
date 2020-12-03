@@ -1439,29 +1439,17 @@ def fmt_users(users: List[User]):
 
 
 def get_email_help_content(show_v2_help_link: bool) -> str:
+    # v1 help link
+    help_link = 'https://docs.linuxfoundation.org/lfx/easycla'
     if show_v2_help_link:
-        return """
-            <p>If you need help or have questions about EasyCLA, you can
-            <a href="https://docs.linuxfoundation.org/lfx/v/v2/communitybridge/easycla" target="_blank">read the
-            documentation</a> or
-            <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach
-            out to us for support</a>.</p>
-        """
+        # v2 help link
+        help_link = 'https://docs.linuxfoundation.org/lfx/v/v2/communitybridge/easycla'
 
-    return """
-        <p>If you need help or have questions about EasyCLA, you can
-        <a href="https://docs.linuxfoundation.org/lfx/easycla" target="_blank">read the
-        documentation</a> or
-        <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out
-        to us for support</a>.</p>
-    """
+    return f'<p>If you need help or have questions about EasyCLA, you can <a href="{help_link}" target="_blank">read the documentation</a> or <a href="https://jira.linuxfoundation.org/servicedesk/customer/portal/4/create/143" target="_blank">reach out; to us for support</a>.</p>'
 
 
 def get_email_sign_off_content() -> str:
-    return """
-        <p>Thanks,</p>
-        <p>The LF Engineering Team</p>
-    """
+    return '<p>Thanks,</p><p>The LF Engineering Team</p>'
 
 
 def append_email_help_sign_off_content(body: str, project_version: str) -> str:
@@ -1477,6 +1465,7 @@ def append_email_help_sign_off_content(body: str, project_version: str) -> str:
         get_email_sign_off_content(),
     ])
 
+
 def append_email_help_sign_off_content_plain(body: str, project_version: str) -> str:
     """
     Wrapper method that appends the help and sign off content to the email body with no HTML formating
@@ -1484,7 +1473,8 @@ def append_email_help_sign_off_content_plain(body: str, project_version: str) ->
     :param project_version:
     :return:
     """
-    return append_email_help_sign_off_content(body, project_version).replace("<p>", "").replace("</p>","\n")
+    return append_email_help_sign_off_content(body, project_version).replace("<p>", "").replace("</p>", "\n")
+
 
 def get_current_time() -> str:
     """
@@ -1509,6 +1499,3 @@ def get_public_email(user):
     """
     if len(user.get_all_user_emails()) > 0:
         return next((email for email in user.get_all_user_emails() if "noreply.github.com" not in email), None)
-    
-
-    
