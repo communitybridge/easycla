@@ -84,8 +84,11 @@ func (repo repository) AddGithubOrganization(ctx context.Context, parentProjectS
 		log.WithFields(f).Warning("more than one github organization with the same name in the database")
 	}
 
-	// Existing record - update it - should only have one
-	if existingRecord != nil && len(existingRecord.List) == 1 {
+	// Existing record with the same GH organization name and the same ProjectSFID...update it
+	if existingRecord != nil &&
+		len(existingRecord.List) == 1 &&
+		projectSFID == existingRecord.List[0].ProjectSFID &&
+		parentProjectSFID == existingRecord.List[0].OrganizationSfid {
 
 		// These are our rules for updating
 		autoEnabled := existingRecord.List[0].AutoEnabled || utils.BoolValue(input.AutoEnabled)
