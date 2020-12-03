@@ -35,7 +35,7 @@ const (
 type Service interface {
 	GetTemplates(ctx context.Context) ([]models.Template, error)
 	CreateCLAGroupTemplate(ctx context.Context, claGroupID string, claGroupFields *models.CreateClaGroupTemplate) (models.TemplatePdfs, error)
-	CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemplate, templateFor string) ([]byte, error)
+	CreateTemplatePreview(ctx context.Context, claGroupFields *models.CreateClaGroupTemplate, templateFor string) ([]byte, error)
 	GetCLATemplatePreview(ctx context.Context, claGroupID, claType string, watermark bool) ([]byte, error)
 }
 
@@ -58,13 +58,12 @@ func NewService(stage string, templateRepo Repository, docraptorClient docraptor
 
 // GetTemplates API call
 func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
-	log.Debugf("called GetTemplates")
 	f := logrus.Fields{
 		"functionName":   "GetTemplates",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
-	log.WithFields(f).Debug("loading templates...")
-	templates, err := s.templateRepo.GetTemplates()
+	log.WithFields(f).Debug("Loading templates...")
+	templates, err := s.templateRepo.GetTemplates(ctx)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("problem loading templates...")
 		return nil, err
@@ -80,11 +79,12 @@ func (s service) GetTemplates(ctx context.Context) ([]models.Template, error) {
 	return templates, nil
 }
 
-func (s service) CreateTemplatePreview(claGroupFields *models.CreateClaGroupTemplate, templateFor string) ([]byte, error) {
+func (s service) CreateTemplatePreview(ctx context.Context, claGroupFields *models.CreateClaGroupTemplate, templateFor string) ([]byte, error) {
 	f := logrus.Fields{
-		"functionName": "CreateTemplatePreview",
-		"templateID":   claGroupFields.TemplateID,
-		"templateFor":  templateFor,
+		"functionName":   "CreateTemplatePreview",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"templateID":     claGroupFields.TemplateID,
+		"templateFor":    templateFor,
 	}
 	var template models.Template
 	var err error
