@@ -974,35 +974,35 @@ workflows:
               ignore: /.*/
             branches:
               only:
-                - master
+                - main
       - deployProjectManagementConsoleDev:
           filters:
             tags:
               ignore: /.*/
             branches:
               only:
-                - master
+                - main
       - deployCorporateConsoleDev:
           filters:
             tags:
               ignore: /.*/
             branches:
               only:
-                - master
+                - main
       - deployContributorConsoleDev:
           filters:
             tags:
               ignore: /.*/
             branches:
               only:
-                - master
+                - main
       - deployLandingFrontendDev:
           filters:
             tags:
               ignore: /.*/
             branches:
               only:
-                - master
+                - main
       - functionalTestsGoDev:
           requires:
             - deployBackendDev
@@ -1011,7 +1011,7 @@ workflows:
               ignore: /.*/
             branches:
               only:
-                - master
+                - main
       - functionalTestsTavernDev:
           requires:
             - deployBackendDev
@@ -1020,7 +1020,7 @@ workflows:
               ignore: /.*/
             branches:
               only:
-                - master
+                - main
 
       # Deploy Staging
       - buildBackendStaging:
