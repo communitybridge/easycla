@@ -239,7 +239,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				msg := fmt.Sprintf("problem loading branch protection for projectSFID: %s, repository: %s, error: %+v", params.ProjectSFID, params.RepositoryID, err)
 				log.WithFields(f).WithError(err).Warn(msg)
 				return github_repositories.NewGetProjectGithubRepositoryBranchProtectionBadRequest().WithPayload(
-					utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+					utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 			}
 
 			return github_repositories.NewGetProjectGithubRepositoryBranchProtectionOK().WithPayload(protectedBranch)

@@ -18,3 +18,11 @@ func Int64Value(input *int64) int64 {
 	}
 	return *input
 }
+
+// BoolValue function convert boolean pointer to boolean
+func BoolValue(input *bool) bool {
+	if input == nil {
+		return false
+	}
+	return *input
+}

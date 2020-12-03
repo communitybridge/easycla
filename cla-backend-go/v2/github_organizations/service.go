@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/sirupsen/logrus"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -77,14 +76,14 @@ func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string)
 	log.WithFields(f).Debug("loading project details from the project service...")
 	_, err := psc.GetProject(projectSFID)
 	if err != nil {
-		log.WithFields(f).Warnf("problem loading project details from the project service, error: %+v", err)
+		log.WithFields(f).WithError(err).Warn("problem loading project details from the project service")
 		return nil, err
 	}
 
 	log.WithFields(f).Debug("loading github organization details...")
 	orgs, err := s.repo.GetGithubOrganizations(ctx, projectSFID)
 	if err != nil {
-		log.WithFields(f).Warnf("problem loading github organizations from the project service, error: %+v", err)
+		log.WithFields(f).WithError(err).Warn("problem loading github organizations from the project service")
 		return nil, err
 	}
 
@@ -131,7 +130,7 @@ func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string)
 	log.WithFields(f).Debug("listing github repositories...")
 	repos, err := s.ghRepository.ListProjectRepositories(ctx, "", projectSFID, true)
 	if err != nil {
-		log.WithFields(f).Warnf("problem loading github repositories, error: %+v", err)
+		log.WithFields(f).WithError(err).Warn("problem loading github repositories")
 		return nil, err
 	}
 
@@ -146,7 +145,7 @@ func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string)
 		if _, ok := connectedRepo[key]; ok {
 			repoGithubID, err := strconv.ParseInt(repo.RepositoryExternalID, 10, 64)
 			if err != nil {
-				log.WithFields(f).Warnf("repository github id is not integer. error = %s", err)
+				log.WithFields(f).WithError(err).Warn("repository github id is not integer")
 			}
 			rorg.Repositories = append(rorg.Repositories, &models.ProjectGithubRepository{
 				ConnectionStatus:   Connected,
@@ -195,22 +194,22 @@ func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, 
 		"functionName":            "AddGithubOrganization",
 		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
 		"projectSFID":             projectSFID,
-		"autoEnabled":             aws.BoolValue(input.AutoEnabled),
-		"branchProtectionEnabled": aws.BoolValue(input.BranchProtectionEnabled),
-		"organizationName":        aws.StringValue(input.OrganizationName),
+		"autoEnabled":             utils.BoolValue(input.AutoEnabled),
+		"branchProtectionEnabled": utils.BoolValue(input.BranchProtectionEnabled),
+		"organizationName":        utils.StringValue(input.OrganizationName),
 	}
 
 	var in v1Models.CreateGithubOrganization
 	err := copier.Copy(&in, input)
 	if err != nil {
-		log.WithFields(f).Warnf("problem converting the github organization details, error: %+v", err)
+		log.WithFields(f).WithError(err).Warn("problem converting the github organization details")
 		return nil, err
 	}
 
 	psc := v2ProjectService.GetClient()
 	project, err := psc.GetProject(projectSFID)
 	if err != nil {
-		log.WithFields(f).Warnf("problem loading project details from the project service, error: %+v", err)
+		log.WithFields(f).WithError(err).Warn("problem loading project details from the project service")
 		return nil, err
 	}
 
@@ -224,6 +223,7 @@ func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, 
 	log.WithFields(f).Debug("adding github organization...")
 	resp, err := s.repo.AddGithubOrganization(ctx, externalProjectID, projectSFID, &in)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem adding github organization for project")
 		return nil, err
 	}
 
@@ -246,14 +246,14 @@ func (s service) DeleteGithubOrganization(ctx context.Context, projectSFID strin
 	log.WithFields(f).Debug("loading project details from the project service...")
 	_, projectErr := psc.GetProject(projectSFID)
 	if projectErr != nil {
-		log.WithFields(f).Warnf("problem loading project details from the project service, error: %+v", projectErr)
+		log.WithFields(f).WithError(projectErr).Warn("problem loading project details from the project service")
 		return projectErr
 	}
 
 	log.WithFields(f).Debug("disabling repositories for github organization...")
 	err := s.ghRepository.DisableRepositoriesOfGithubOrganization(ctx, projectSFID, githubOrgName)
 	if err != nil {
-		log.WithFields(f).Warnf("problem disabling repositories for github organization, error: %+v", err)
+		log.WithFields(f).WithError(err).Warn("problem disabling repositories for github organization")
 		return err
 	}
 
