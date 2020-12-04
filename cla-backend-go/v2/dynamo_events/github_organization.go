@@ -18,7 +18,10 @@ import (
 // GitHubOrgAddedEvent github repository added event
 func (s *service) GitHubOrgAddedEvent(event events.DynamoDBEventRecord) error {
 	f := logrus.Fields{
-		"functionName": "GitHubOrgAddedEvent",
+		"functionName": "dynamodb_events.GitHubOrgAddedEvent",
+		"eventName":    event.EventName,
+		"eventSource":  event.EventSource,
+		"eventID":      event.EventID,
 	}
 
 	log.WithFields(f).Debug("processing event")
@@ -47,7 +50,10 @@ func (s *service) GitHubOrgAddedEvent(event events.DynamoDBEventRecord) error {
 // GitHubOrgUpdatedEvent github repository updated event
 func (s *service) GitHubOrgUpdatedEvent(event events.DynamoDBEventRecord) error {
 	f := logrus.Fields{
-		"functionName": "GitHubOrgUpdatedEvent",
+		"functionName": "dynamodb_events.GitHubOrgUpdatedEvent",
+		"eventName":    event.EventName,
+		"eventSource":  event.EventSource,
+		"eventID":      event.EventID,
 	}
 
 	log.WithFields(f).Debug("processing event")
@@ -81,7 +87,10 @@ func (s *service) GitHubOrgUpdatedEvent(event events.DynamoDBEventRecord) error 
 func (s *service) GitHubOrgDeletedEvent(event events.DynamoDBEventRecord) error {
 	ctx := utils.NewContext()
 	f := logrus.Fields{
-		"functionName":   "GitHubOrgDeletedEvent",
+		"functionName":   "dynamodb_events.GitHubOrgDeletedEvent",
+		"eventName":      event.EventName,
+		"eventSource":    event.EventSource,
+		"eventID":        event.EventID,
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 
