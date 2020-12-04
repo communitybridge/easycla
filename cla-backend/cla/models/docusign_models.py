@@ -88,7 +88,7 @@ class DocuSign(signing_service_interface.SigningService):
             'recipient_id': '{http://www.docusign.net/API/3.0}RecipientId',
             'recipient_statuses': '{http://www.docusign.net/API/3.0}RecipientStatuses',
             'recipient_status': '{http://www.docusign.net/API/3.0}RecipientStatus',
-            'full_name': '{http://www.docusign.net/API/3.0}Full Name',
+            'field_value': '{http://www.docusign.net/API/3.0}value'
             }
             
 
@@ -1149,10 +1149,11 @@ class DocuSign(signing_service_interface.SigningService):
             user.load(signature.get_signature_reference_id())
             #Update user name in case is empty.
             if not user.get_user_name():
-                full_name = tree.find('.//' + self.TAGS['full_name']).text
+                full_name_field = tree.find(".//*[@name='full_name']")
+                full_name = full_name_field.find(self.TAGS['field_value'])
                 if full_name:
-                    cla.log.info(f'Updating user: {user.get_user_github_id()} with name : {full_name}')
-                    user.set_user_name(full_name)
+                    cla.log.info(f'Updating user: {user.get_user_github_id()} with name : {full_name.text}')
+                    user.set_user_name(full_name.text)
                     user.save()
             # Remove the active signature metadata.
             cla.utils.delete_active_signature_metadata(user.get_user_id())
