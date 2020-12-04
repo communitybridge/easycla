@@ -4,12 +4,12 @@
 # SPDX-License-Identifier: MIT
 
 # The golang lambda file list
-declare -a lambdas=( "backend-aws-lambda"
-   "user-subscribe-lambda"
-   "metrics-aws-lambda"
-   "dynamo-events-lambda"
-   "zipbuilder-scheduler-lambda"
-   "zipbuilder-lambda" )
+declare -a lambdas=("backend-aws-lambda"
+  "user-subscribe-lambda"
+  "metrics-aws-lambda"
+  "dynamo-events-lambda"
+  "zipbuilder-scheduler-lambda"
+  "zipbuilder-lambda")
 
 echo "Installing dependencies..."
 yarn install
@@ -27,15 +27,15 @@ for i in "${lambdas[@]}"; do
 done
 
 if [[ ${missing_lambda} -ne 0 ]]; then
-    echo "Missing one or more lambda files - building golang binaries in 5 seconds..."
-    sleep 5
-    pushd "../cla-backend-go" || exit
-    make all-linux
-    popd || exit
-    echo "Copying over files..."
-    cp ${lambdas} .
+  echo "Missing one or more lambda files - building golang binaries in 5 seconds..."
+  sleep 5
+  pushd "../cla-backend-go" || exit
+  make all-linux
+  popd || exit
+  echo "Copying over files..."
+  cp "${lambdas[@]}" .
 else
-    echo "All golang lambda files present."
+  echo "All golang lambda files present."
 fi
 
 for i in "${lambdas[@]}"; do
@@ -46,4 +46,4 @@ for i in "${lambdas[@]}"; do
   fi
 done
 
-yarn deploy:staging
+time yarn deploy:staging
