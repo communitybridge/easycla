@@ -22,6 +22,8 @@
   },
   "resolutions": {
     "bl": "^1.2.3",
-    "http-proxy": "^1.18.1"
+    "http-proxy": "^1.18.1",
+    "kind-of": "^6.0.3",
+    "minimist": "^1.2.3"
   }
 }
