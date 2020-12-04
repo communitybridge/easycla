@@ -6,6 +6,9 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"strings"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/communitybridge/easycla/cla-backend-go/config"
 
@@ -57,12 +60,17 @@ func SetSnsEmailSender(awsSession *session.Session, snsEventTopicARN string, sen
 
 // SendEmail sends an email to the specified recipients
 func (s *snsEmail) SendEmail(subject string, body string, recipients []string) error {
+	f := logrus.Fields{
+		"functionName": "utils.SendEmail",
+		"subject":      subject,
+		"recipients":   strings.Join(recipients, ","),
+	}
 	event := CreateEventWrapper("cla-email-event")
 	event.Data = ToEmailTemplateEvent(&s.senderEmailAddress, recipients, &subject, &body, "EasyCLA System Email Template")
 
 	b, err := event.MarshalBinary()
 	if err != nil {
-		log.Warnf("Unable to marshal event model")
+		log.WithFields(f).WithError(err).Warn("Unable to marshal event model")
 		return err
 	}
 
@@ -74,11 +82,11 @@ func (s *snsEmail) SendEmail(subject string, body string, recipients []string) e
 
 	sendResp, err := s.snsClient.Publish(input)
 	if err != nil {
-		log.Warnf("Error publishing message to topic: %s, Error: %v", s.snsEventTopicARN, err)
+		log.WithFields(f).WithError(err).Warnf("Error publishing message to topic: %s", s.snsEventTopicARN)
 		return err
 	}
 
-	log.Debugf("Successfully sent SNS message. Response: %v", sendResp)
+	log.WithFields(f).Debugf("Successfully sent SNS message. Response: %v", sendResp)
 	return nil
 }
 

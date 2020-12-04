@@ -206,6 +206,7 @@ func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, 
 		return nil, err
 	}
 
+	log.WithFields(f).Debug("looking up project in project service...")
 	psc := v2ProjectService.GetClient()
 	project, err := psc.GetProject(projectSFID)
 	if err != nil {
@@ -213,15 +214,17 @@ func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, 
 		return nil, err
 	}
 
-	var externalProjectID string
+	var parentProjectSFID string
 	if project.Parent == "" || project.Parent == utils.TheLinuxFoundation {
-		externalProjectID = projectSFID
+		parentProjectSFID = projectSFID
 	} else {
-		externalProjectID = project.Parent
+		parentProjectSFID = project.Parent
 	}
+	f["parentProjectSFID"] = parentProjectSFID
+	log.WithFields(f).Debug("located parentProjectID...")
 
 	log.WithFields(f).Debug("adding github organization...")
-	resp, err := s.repo.AddGithubOrganization(ctx, externalProjectID, projectSFID, &in)
+	resp, err := s.repo.AddGithubOrganization(ctx, parentProjectSFID, projectSFID, &in)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("problem adding github organization for project")
 		return nil, err

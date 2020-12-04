@@ -80,14 +80,21 @@ func (repo repository) AddGithubOrganization(ctx context.Context, parentProjectS
 		log.WithFields(f).WithError(getErr).Debug("unable to locate existing github organization by name")
 	}
 
-	if existingRecord != nil && len(existingRecord.List) > 1 {
-		log.WithFields(f).Warning("more than one github organization with the same name in the database")
+	if existingRecord != nil && len(existingRecord.List) > 0 {
+		log.WithFields(f).Debugf("Existing github organization exists in our database, count: %d", len(existingRecord.List))
+		if len(existingRecord.List) > 1 {
+			log.WithFields(f).Warning("more than one github organization with the same name in the database")
+		}
+		if parentProjectSFID == existingRecord.List[0].OrganizationSfid {
+			log.WithFields(f).Debug("Existing github organization with same parent SFID - should be able to update it")
+		} else {
+			log.WithFields(f).Debug("Existing github organization with different parent SFID - won't be able to update it - will return conflict")
+		}
 	}
 
-	// Existing record with the same GH organization name and the same ProjectSFID...update it
+	// Existing record with the same GH organization name and the same parent...update it
 	if existingRecord != nil &&
 		len(existingRecord.List) == 1 &&
-		projectSFID == existingRecord.List[0].ProjectSFID &&
 		parentProjectSFID == existingRecord.List[0].OrganizationSfid {
 
 		// These are our rules for updating

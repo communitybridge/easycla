@@ -308,11 +308,12 @@ func (repo *repository) SearchEvents(params *eventOps.SearchEventsParams, pageSi
 // queryEventsTable queries events table on index
 func (repo *repository) queryEventsTable(indexName string, condition expression.KeyConditionBuilder, nextKey *string, pageSize *int64, all bool, searchTerm *string) (*models.EventList, error) {
 	f := logrus.Fields{
-		"indexName":  indexName,
-		"nextKey":    aws.StringValue(nextKey),
-		"pageSize":   aws.Int64Value(pageSize),
-		"all":        all,
-		"searchTerm": aws.StringValue(searchTerm),
+		"functionName": "events.queryEventsTable",
+		"indexName":    indexName,
+		"nextKey":      aws.StringValue(nextKey),
+		"pageSize":     aws.Int64Value(pageSize),
+		"all":          all,
+		"searchTerm":   aws.StringValue(searchTerm),
 	}
 
 	log.WithFields(f).Debug("querying events table")
@@ -413,7 +414,7 @@ func (repo *repository) queryEventsTable(indexName string, condition expression.
 			events = events[0:*pageSize]
 			lastEvaluatedKey, err = buildNextKey(indexName, events[*pageSize-1])
 			if err != nil {
-				log.Warnf("unable to build nextKey. index = %s, event = %#v error = %s", indexName, events[*pageSize-1], err.Error())
+				log.WithFields(f).WithError(err).Warnf("unable to build nextKey. index = %s, event = %#v error = %s", indexName, events[*pageSize-1], err.Error())
 			}
 		} else {
 			events = events[0:int64(len(events))]
