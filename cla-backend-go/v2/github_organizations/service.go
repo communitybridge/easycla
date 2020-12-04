@@ -70,18 +70,27 @@ func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string)
 		"projectSFID":    projectSFID,
 	}
 
-	log.WithFields(f).Debug("loading github organizations based on projectSFID...")
-
 	psc := v2ProjectService.GetClient()
 	log.WithFields(f).Debug("loading project details from the project service...")
-	_, err := psc.GetProject(projectSFID)
+	projectServiceRecord, err := psc.GetProject(projectSFID)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("problem loading project details from the project service")
 		return nil, err
 	}
 
-	log.WithFields(f).Debug("loading github organization details...")
-	orgs, err := s.repo.GetGithubOrganizations(ctx, projectSFID)
+	var parentProjectSFID string
+	if projectServiceRecord.Parent == "" || projectServiceRecord.Parent == utils.TheLinuxFoundation {
+		parentProjectSFID = projectSFID
+	} else {
+		parentProjectSFID = projectServiceRecord.Parent
+	}
+	f["parentProjectSFID"] = parentProjectSFID
+	log.WithFields(f).Debug("located parentProjectID...")
+
+	log.WithFields(f).Debug("loading github organization details by parentProjectSFID...")
+	orgs, err := s.repo.GetGithubOrganizationsByParent(ctx, parentProjectSFID)
+	// log.WithFields(f).Debug("loading github organization details by projectSFID...")
+	//orgs, err := s.repo.GetGithubOrganizations(ctx, projectSFID)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("problem loading github organizations from the project service")
 		return nil, err
