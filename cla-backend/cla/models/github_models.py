@@ -146,16 +146,20 @@ class GitHub(repository_service_interface.RepositoryService):
         # Get the PR's html_url property.
         # origin = self.get_return_url(github_repository_id, pull_request_number, installation_id)
         # Add origin to user's session here?
-        fn = 'get_authorization_url_and_state'
+        fn = 'github_models.get_authorization_url_and_state'
         api_base_url = os.environ.get('CLA_API_BASE', '')
-        cla.log.debug(f'{fn} - Directing user to authorization: {os.path.join(api_base_url, "v2/github/installation")}')
-        return self._get_authorization_url_and_state(os.environ['GH_OAUTH_CLIENT_ID'],
-                                                     os.path.join(api_base_url, 'v2/github/installation'),
-                                                     scope,
-                                                     cla.conf['GITHUB_OAUTH_AUTHORIZE_URL'])
+        redirect_uri = os.path.join(api_base_url, "v2/github/installation")
+        github_oauth_url = cla.conf['GITHUB_OAUTH_AUTHORIZE_URL']
+        github_oauth_client_id = os.environ['GH_OAUTH_CLIENT_ID']
+        cla.log.debug(f'{fn} - Directing user to redirect_uri: {redirect_uri} '
+                      f'with github oauth authorization url: {github_oauth_url} '
+                      f'using github oauth client id: {github_oauth_client_id[0:5]}...')
+        return self._get_authorization_url_and_state(client_id=github_oauth_client_id,
+                                                     redirect_uri=redirect_uri,
+                                                     scope=scope,
+                                                     authorize_url=github_oauth_url)
 
-    def _get_authorization_url_and_state(self, client_id, redirect_uri, scope,
-                                         authorize_url):  # pylint: disable=no-self-use
+    def _get_authorization_url_and_state(self, client_id, redirect_uri, scope, authorize_url):
         """
         Mockable helper method to do the fetching of the authorization URL and state from GitHub.
         """
@@ -195,11 +199,12 @@ class GitHub(repository_service_interface.RepositoryService):
         token_url = cla.conf['GITHUB_OAUTH_TOKEN_URL']
         client_id = os.environ['GH_OAUTH_CLIENT_ID']
         client_secret = os.environ['GH_OAUTH_SECRET']
-        cla.log.debug('fetching token...')
+        cla.log.debug(f'fetching token using {client_id[0:5]}... with state={state}, token_url={token_url}, '
+                      f'client_secret={client_secret}, with code={code}')
         token = self._fetch_token(client_id, state, token_url, client_secret, code)
         cla.log.debug(f'OAuth2 token received for state {state}: {token} - storing token in session')
         session['github_oauth2_token'] = token
-        cla.log.debug(f'Redirecting the user back to the console...')
+        cla.log.debug(f'Redirecting the user back to the console: {origin_url}')
         return self.redirect_to_console(installation_id, github_repository_id, change_request_id, origin_url, request)
 
     def redirect_to_console(self, installation_id, repository_id, pull_request_id, redirect, request):
