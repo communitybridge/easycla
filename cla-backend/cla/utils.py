@@ -844,7 +844,8 @@ def get_comment_body(repository_type, sign_url, signed, missing):
     :param missing: List of tuples containing the commit and author name of not-signed users.
     :type missing: [(string, list)]
     """
-    cla.log.info("Getting comment body for repository type: %s", repository_type)
+    fn = "utils.get_comment_body"
+    cla.log.info(f"{fn} - Getting comment body for repository type: %s", repository_type)
     failed = ":x:"
     success = ":white_check_mark:"
     committers_comment = ""
@@ -888,28 +889,33 @@ def get_comment_body(repository_type, sign_url, signed, missing):
             if author == "Unknown":
                 committers_comment += (
                         f"<li> {failed} The commit ({' ,'.join(commit_hashes)}) "
-                        + "is missing the User's ID, preventing the EasyCLA check. [Consult GitHub Help]("
-                        + github_help_url + ") to resolve. For further assistance with EasyCLA, "
-                        + f"[please submit a support request ticket]({support_url})."
+                        + f"is missing the User's ID, preventing the EasyCLA check. "
+                        + f"<a href='{github_help_url}' target='_blank'>Consult GitHub Help</a> to resolve."
+                        + f"For further assistance with EasyCLA, "
+                        + f"<a href='{support_url}' target='_blank'>please submit a support request ticket</a>."
                         + "</li>"
                 )
             else:
                 if True in commit_hashes:
                     committers_comment += (
                             f"<li>{author} ({' ,'.join(commit_hashes[:-1])}) "
-                            + "is authorized, but they must confirm their affiliation with their company. "
-                            + f"[Start the authorization process by clicking here]({sign_url}), click \"Corporate\","
-                            + "select the appropriate company from the list, then confirm "
-                            + "your affiliation on the page that appears. For further assistance with EasyCLA, "
-                            + f"[please submit a support request ticket]({support_url})."
+                            + f"is authorized, but they must confirm their affiliation with their company. "
+                            + f"Start the authorization process "
+                            + f"<a href='{sign_url}' target='_blank'> by clicking here</a>, click \"Corporate\","
+                            + f"select the appropriate company from the list, then confirm "
+                            + f"your affiliation on the page that appears. "
+                            + f"For further assistance with EasyCLA, "
+                            + f"<a href='{support_url}' target='_blank'>please submit a support request ticket</a>."
                             + "</li>"
                     )
                 else:
                     committers_comment += (
-                            f"<li>[{failed}]({sign_url}) {author} The commit ({' ,'.join(commit_hashes)}) "
-                            + "is not authorized under a signed CLA. "
-                            + f"[Please click here to be authorized]({sign_url}). For further assistance with "
-                            + f"EasyCLA, [please submit a support request ticket]({support_url})."
+                            f"<li>"
+                            + f"<a href='{sign_url}' target='_blank'>{failed}</a> - "
+                            + f"{author} The commit ({' ,'.join(commit_hashes)}) is not authorized under a signed CLA. "
+                            + f"<a href='{sign_url}' target='_blank'>Please click here to be authorized</a>. "
+                            + f"For further assistance with EasyCLA, "
+                            + f"<a href='{support_url}' target='_blank'>please submit a support request ticket</a>."
                             + "</li>"
                     )
         committers_comment += "</ul>"
@@ -935,9 +941,12 @@ def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_ur
     fn = 'utils.get_authorization_url_and_state'
     oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
     authorization_url, state = oauth.authorization_url(authorize_url)
-    cla.log.debug(f'{fn} - get_authorization_url_and_state - '
-                  f'authorization_url: {authorization_url}, '
-                  f'state: {state}')
+    cla.log.debug(f'{fn} - initialized a new oauth session '
+                  f'using the github oauth client id: {client_id[0:5]}... '
+                  f'with the redirect_uri: {redirect_uri} '
+                  f'using scope of: {scope}. Obtained the '
+                  f'state: {state} and the '
+                  f'generated authorization_url: {authorize_url}')
     return authorization_url, state
 
 
