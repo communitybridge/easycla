@@ -148,8 +148,8 @@ func loadSSMConfig(awsSession *session.Session, stage string) Config { //nolint
 			// set this flag to true for DEV, false for STAGING and PROD
 			// Commenting this out for now as we are evaluating various templates and QA is unable to verify with the
 			// watermark.  Restore this to just staging and prod after the testing phase is done.
-			//config.Docraptor.TestMode = stage == "dev"
-			config.Docraptor.TestMode = false // disable test mode while we evaluate various templates
+			config.Docraptor.TestMode = stage == "dev"
+			//config.Docraptor.TestMode = false // disable test mode while we evaluate various templates
 		case fmt.Sprintf("cla-session-store-table-%s", stage):
 			config.SessionStoreTableName = resp.value
 		case fmt.Sprintf("cla-ses-sender-email-address-%s", stage):
