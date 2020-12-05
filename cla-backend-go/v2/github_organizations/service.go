@@ -6,7 +6,9 @@ package github_organizations
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -162,6 +164,9 @@ func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string)
 				RepositoryID:       repo.RepositoryID,
 				RepositoryName:     repo.RepositoryName,
 				RepositoryGithubID: repoGithubID,
+				ClaGroupID:         repo.RepositoryProjectID,
+				ProjectID:          repo.ProjectSFID,
+				ParentProjectID:    repo.RepositorySfdcID,
 			})
 			// delete it from connectedRepo array since we have processed it
 			// connectedArray after this loop will contain repo for which github app have permission but
@@ -173,6 +178,9 @@ func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string)
 				Enabled:          true,
 				RepositoryID:     repo.RepositoryID,
 				RepositoryName:   repo.RepositoryName,
+				ClaGroupID:       repo.RepositoryProjectID,
+				ProjectID:        repo.ProjectSFID,
+				ParentProjectID:  repo.RepositorySfdcID,
 			})
 			if rorg.ConnectionStatus == Connected {
 				rorg.ConnectionStatus = PartialConnection
@@ -192,6 +200,16 @@ func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string)
 			RepositoryID:       "",
 			RepositoryName:     notEnabledRepo.repoInfo.RepositoryName,
 			RepositoryGithubID: notEnabledRepo.repoInfo.RepositoryGithubID,
+		})
+	}
+
+	// Sort everything nicely
+	sort.Slice(out.List, func(i, j int) bool {
+		return strings.ToLower(out.List[i].GithubOrganizationName) < strings.ToLower(out.List[j].GithubOrganizationName)
+	})
+	for _, orgList := range out.List {
+		sort.Slice(orgList.Repositories, func(i, j int) bool {
+			return strings.ToLower(orgList.Repositories[i].RepositoryName) < strings.ToLower(orgList.Repositories[j].RepositoryName)
 		})
 	}
 
