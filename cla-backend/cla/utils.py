@@ -941,9 +941,12 @@ def get_authorization_url_and_state(client_id, redirect_uri, scope, authorize_ur
     fn = 'utils.get_authorization_url_and_state'
     oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
     authorization_url, state = oauth.authorization_url(authorize_url)
-    cla.log.debug(f'{fn} - get_authorization_url_and_state - '
-                  f'authorization_url: {authorization_url}, '
-                  f'state: {state}')
+    cla.log.debug(f'{fn} - initialized a new oauth session '
+                  f'using the github oauth client id: {client_id[0:5]}... '
+                  f'with the redirect_uri: {redirect_uri} '
+                  f'using scope of: {scope}. Obtained the '
+                  f'state: {state} and the '
+                  f'generated authorization_url: {authorize_url}')
     return authorization_url, state
 
 

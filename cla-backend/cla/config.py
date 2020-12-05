@@ -21,15 +21,16 @@ def get_ssm_key(region, key):
     """
     Fetches the specified SSM key value from the SSM key store
     """
+    fn = "config.get_ssm_key"
     ssm_client = client('ssm', region_name=region)
     try:
-        print(f'Loading config with key: {key}')
+        logging.debug(f'{fn} - Loading config with key: {key}')
         response = ssm_client.get_parameter(Name=key, WithDecryption=True)
         if response and 'Parameter' in response and 'Value' in response['Parameter']:
-            print(f'Loaded config value with key: {key}')
+            logging.debug(f'{fn} - Loaded config value with key: {key}')
         return response['Parameter']['Value']
     except (ClientError, ProfileNotFound) as e:
-        print(f'Unable to load SSM config with key: {key} due to {e}')
+        logging.warning(f'{fn} - Unable to load SSM config with key: {key} due to {e}')
 
 
 # from utils import get_ssm_key
