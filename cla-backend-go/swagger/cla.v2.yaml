@@ -4681,6 +4681,15 @@ definitions:
       repository_name:
         type: string
         x-omitempty: false
+      cla_group_id:
+        type: string
+        x-omitempty: false
+      project_id:
+        type: string
+        x-omitempty: false
+      parent_project_id:
+        type: string
+        x-omitempty: false
       enabled:
         type: boolean
         x-omitempty: false
