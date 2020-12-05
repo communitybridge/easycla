@@ -86,10 +86,11 @@ class GitHub(repository_service_interface.RepositoryService):
         This method gets called when the OAuth2 app (NOT the GitHub App) needs to get info on the
         user trying to sign. In this case we begin an OAuth2 exchange with the 'user:email' scope.
         """
-        fn = 'sign_request'  # function name
+        fn = 'github_models.sign_request'  # function name
         cla.log.debug(f'{fn} - Initiating GitHub sign request for installation_id: {installation_id}, '
                       f'for repository {github_repository_id}, '
                       f'for PR: {change_request_id}')
+
         # Not sure if we need a different token for each installation ID...
         cla.log.debug(f'{fn} - Loading session from request: {request}...')
         session = self._get_request_session(request)
@@ -100,8 +101,10 @@ class GitHub(repository_service_interface.RepositoryService):
 
         cla.log.debug(f'{fn} - Determining return URL from the inbound request...')
         origin_url = self.get_return_url(github_repository_id, change_request_id, installation_id)
-        cla.log.debug(f'{fn} - Return URL from the inbound request is {origin_url}...')
+        cla.log.debug(f'{fn} - Return URL from the inbound request is {origin_url}')
         session['github_origin_url'] = origin_url
+        cla.log.debug(f'{fn} - Stored origin url in session as session["github_origin_url"] = {origin_url}')
+
         if 'github_oauth2_token' in session:
             cla.log.debug(f'{fn} - Using existing session GitHub OAuth2 token')
             return self.redirect_to_console(
@@ -113,7 +116,7 @@ class GitHub(repository_service_interface.RepositoryService):
                                                                             github_repository_id,
                                                                             int(change_request_id),
                                                                             ['user:email'])
-            cla.log.debug(f'{fn} - Obtained GitHub OAuth2 state from authorization')
+            cla.log.debug(f'{fn} - Obtained GitHub OAuth2 state from authorization - storing state in the session...')
             session['github_oauth2_state'] = state
             cla.log.debug(f'{fn} - GitHub OAuth2 request with state {state} - sending user to {authorization_url}')
             raise falcon.HTTPFound(authorization_url)
@@ -146,16 +149,22 @@ class GitHub(repository_service_interface.RepositoryService):
         # Get the PR's html_url property.
         # origin = self.get_return_url(github_repository_id, pull_request_number, installation_id)
         # Add origin to user's session here?
-        fn = 'get_authorization_url_and_state'
-        api_base_url = os.environ.get('CLA_API_BASE', '')
-        cla.log.debug(f'{fn} - Directing user to authorization: {os.path.join(api_base_url, "v2/github/installation")}')
-        return self._get_authorization_url_and_state(os.environ['GH_OAUTH_CLIENT_ID'],
-                                                     os.path.join(api_base_url, 'v2/github/installation'),
-                                                     scope,
-                                                     cla.conf['GITHUB_OAUTH_AUTHORIZE_URL'])
+        fn = 'github_models.get_authorization_url_and_state'
+        redirect_uri = os.environ.get('CLA_API_BASE', '').strip() + "/v2/github/installation"
+        github_oauth_url = cla.conf['GITHUB_OAUTH_AUTHORIZE_URL']
+        github_oauth_client_id = os.environ['GH_OAUTH_CLIENT_ID']
 
-    def _get_authorization_url_and_state(self, client_id, redirect_uri, scope,
-                                         authorize_url):  # pylint: disable=no-self-use
+        cla.log.debug(f'{fn} - Directing user to the github authorization url: {github_oauth_url} via '
+                      f'our github installation flow: {redirect_uri}'
+                      f'using the github oauth client id: {github_oauth_client_id[0:5]} '
+                      f'with scope: {scope}')
+
+        return self._get_authorization_url_and_state(client_id=github_oauth_client_id,
+                                                     redirect_uri=redirect_uri,
+                                                     scope=scope,
+                                                     authorize_url=github_oauth_url)
+
+    def _get_authorization_url_and_state(self, client_id, redirect_uri, scope, authorize_url):
         """
         Mockable helper method to do the fetching of the authorization URL and state from GitHub.
         """
@@ -169,24 +178,23 @@ class GitHub(repository_service_interface.RepositoryService):
         It will handle storing the OAuth2 session information for this user for
         further requests and initiate the signing workflow.
         """
-        cla.log.debug(f'Handling GitHub OAuth2 redirect with request: {dir(request)}')
-        # TODO: should we load the session from the DynamoDB session table based on the 'state' value?
+        fn = 'github_models.oauth2_redirect'
+        cla.log.debug(f'{fn} - handling GitHub OAuth2 redirect with request: {dir(request)}')
         session = self._get_request_session(request)  # request.context['session']
-        cla.log.debug(f'State: {state}, Code: {code}, Session: {session}')
+        cla.log.debug(f'{fn} - state: {state}, code: {code}, session: {session}')
 
         if 'github_oauth2_state' in session:
             session_state = session['github_oauth2_state']
         else:
             session_state = None
-            cla.log.warning('github_oauth2_state not set in session')
+            cla.log.warning(f'{fn} - github_oauth2_state not set in current session')
 
         if state != session_state:
-            cla.log.warning('Invalid GitHub OAuth2 state %s expecting %s',
-                            session_state, state)
+            cla.log.warning(f'{fn} - invalid GitHub OAuth2 state {session_state} expecting {state}')
             raise falcon.HTTPBadRequest('Invalid OAuth2 state', state)
 
         # Get session information for this request.
-        cla.log.debug('Attempting to fetch OAuth2 token for state %s', state)
+        cla.log.debug(f'{fn} - attempting to fetch OAuth2 token for state {state}')
         installation_id = session.get('github_installation_id', None)
         github_repository_id = session.get('github_repository_id', None)
         change_request_id = session.get('github_change_request_id', None)
@@ -195,15 +203,16 @@ class GitHub(repository_service_interface.RepositoryService):
         token_url = cla.conf['GITHUB_OAUTH_TOKEN_URL']
         client_id = os.environ['GH_OAUTH_CLIENT_ID']
         client_secret = os.environ['GH_OAUTH_SECRET']
-        cla.log.debug('fetching token...')
+        cla.log.debug(f'{fn} - fetching token using {client_id[0:5]}... with state={state}, token_url={token_url}, '
+                      f'client_secret={client_secret[0:5]}, with code={code}')
         token = self._fetch_token(client_id, state, token_url, client_secret, code)
-        cla.log.debug(f'OAuth2 token received for state {state}: {token} - storing token in session')
+        cla.log.debug(f'{fn} - oauth2 token received for state {state}: {token} - storing token in session')
         session['github_oauth2_token'] = token
-        cla.log.debug(f'Redirecting the user back to the console...')
+        cla.log.debug(f'{fn} - redirecting the user back to the console: {origin_url}')
         return self.redirect_to_console(installation_id, github_repository_id, change_request_id, origin_url, request)
 
-    def redirect_to_console(self, installation_id, repository_id, pull_request_id, redirect, request):
-        fn = 'redirect_to_console'
+    def redirect_to_console(self, installation_id, repository_id, pull_request_id, origin_url, request):
+        fn = 'github_models.redirect_to_console'
         console_endpoint = cla.conf['CONTRIBUTOR_BASE_URL']
         console_v2_endpoint = cla.conf['CONTRIBUTOR_V2_BASE_URL']
         # Get repository using github's repository ID.
@@ -248,14 +257,14 @@ class GitHub(repository_service_interface.RepositoryService):
             console_url = 'https://' + console_v2_endpoint + \
                           '/#/cla/project/' + project_id + \
                           '/user/' + user.get_user_id() + \
-                          '?redirect=' + redirect
+                          '?redirect=' + origin_url
             cla.log.debug(f'{fn} - redirecting to v2 console: {console_url}...')
         else:
             # Generate url for the v1 contributor console
             console_url = 'https://' + console_endpoint + \
                           '/#/cla/project/' + project_id + \
                           '/user/' + user.get_user_id() + \
-                          '?redirect=' + redirect
+                          '?redirect=' + origin_url
             cla.log.debug(f'{fn} - redirecting to v1 console: {console_url}...')
 
         raise falcon.HTTPFound(console_url)
