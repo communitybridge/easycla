@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/projects_cla_groups"
+
 	"github.com/sirupsen/logrus"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -42,15 +44,17 @@ type Service interface {
 }
 
 type service struct {
-	repo         v1GithubOrg.Repository
-	ghRepository v1Repositories.Repository
+	repo                    v1GithubOrg.Repository
+	ghRepository            v1Repositories.Repository
+	projectsCLAGroupService projects_cla_groups.Repository
 }
 
 // NewService creates a new githubOrganizations service
-func NewService(repo v1GithubOrg.Repository, ghRepository v1Repositories.Repository) Service {
+func NewService(repo v1GithubOrg.Repository, ghRepository v1Repositories.Repository, projectsCLAGroupService projects_cla_groups.Repository) Service {
 	return service{
-		repo:         repo,
-		ghRepository: ghRepository,
+		repo:                    repo,
+		ghRepository:            ghRepository,
+		projectsCLAGroupService: projectsCLAGroupService,
 	}
 }
 
@@ -117,10 +121,22 @@ func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string)
 			}
 		}
 
+		autoEnabledCLAGroupName := ""
+		if org.AutoEnabledClaGroupID != "" {
+			log.WithFields(f).Debugf("Loading CLA Group by ID: %s to obtain the name for GitHub auth enabled CLA Group response", org.AutoEnabledClaGroupID)
+			claGroupMode, claGroupLookupErr := s.projectsCLAGroupService.GetCLAGroup(org.AutoEnabledClaGroupID)
+			if claGroupLookupErr != nil {
+				log.WithFields(f).WithError(claGroupLookupErr).Warnf("Unable to lookup CLA Group by ID: %s", org.AutoEnabledClaGroupID)
+			}
+			autoEnabledCLAGroupName = claGroupMode.ProjectName
+		}
+
 		rorg := &models.ProjectGithubOrganization{
 			AutoEnabled:             org.AutoEnabled,
+			AutoEnableCLAGroupID:    org.AutoEnabledClaGroupID,
+			AutoEnabledCLAGroupName: autoEnabledCLAGroupName,
 			BranchProtectionEnabled: org.BranchProtectionEnabled,
-			ConnectionStatus:        "",
+			ConnectionStatus:        "", // updated below
 			GithubOrganizationName:  org.OrganizationName,
 			Repositories:            make([]*models.ProjectGithubRepository, 0),
 		}
