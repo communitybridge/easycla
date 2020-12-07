@@ -123,9 +123,9 @@ export class ClaContractConfigModal {
       this.loading = false;
       this.dismiss(true);
     }, (error) => {
-      this.loading = false;
-      if (!error.ok) {
-        this.errorMessage = JSON.parse(error._body).Message;
+      if (error) {
+        this.loading = false;
+        this.errorMessage = JSON.parse(error._body).message;
       }
     });
   }
