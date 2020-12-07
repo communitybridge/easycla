@@ -274,7 +274,7 @@ func server(localMode bool) http.Handler {
 	authorizer := auth.NewAuthorizer(authValidator, userRepo)
 	v2MetricsService := metrics.NewService(metricsRepo, projectClaGroupRepo)
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, repositoriesRepo, projectClaGroupRepo)
-	v2GithubOrganizationsService := v2GithubOrganizations.NewService(githubOrganizationsRepo, repositoriesRepo)
+	v2GithubOrganizationsService := v2GithubOrganizations.NewService(githubOrganizationsRepo, repositoriesRepo, projectClaGroupRepo)
 	autoEnableService := dynamo_events.NewAutoEnableService(repositoriesService, repositoriesRepo, githubOrganizationsRepo, projectClaGroupRepo, projectService)
 	v2GithubActivityService := v2GithubActivity.NewService(repositoriesRepo, eventsService, autoEnableService)
 	gerritService := gerrits.NewService(gerritRepo, &gerrits.LFGroup{
