@@ -32,6 +32,7 @@ type Service interface {
 	GetClaGroupEvents(claGroupID string, nextKey *string, paramPageSize *int64, all bool, searchTerm *string) (*models.EventList, error)
 	GetCompanyFoundationEvents(companySFID, foundationSFID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error)
 	GetCompanyClaGroupEvents(companySFID, claGroupID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error)
+	GetCompanyEvents(companyID, eventType string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error)
 }
 
 // CombinedRepo contains the various methods of other repositories
@@ -97,6 +98,10 @@ func (s *service) GetCompanyFoundationEvents(companySFID, foundationSFID string,
 // GetCompanyClaGroupEvents returns list of events for company and cla group
 func (s *service) GetCompanyClaGroupEvents(companySFID, claGroupID string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error) {
 	return s.repo.GetCompanyClaGroupEvents(companySFID, claGroupID, nextKey, paramPageSize, all)
+}
+
+func (s *service) GetCompanyEvents(companyID, eventType string, nextKey *string, paramPageSize *int64, all bool) (*models.EventList, error) {
+	return s.repo.GetCompanyEvents(companyID, eventType, nextKey, paramPageSize, all)
 }
 
 // LogEventArgs is argument to LogEvent function
