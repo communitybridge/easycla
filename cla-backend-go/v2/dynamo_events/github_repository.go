@@ -188,14 +188,10 @@ func (s *service) setRepositoryCount(ctx context.Context, claGroupID string, par
 	}
 
 	log.WithFields(f).Debugf("Getting repositories for claGroup: %s ", claGroupID)
-	var repoCount int
+	repoCount := 0
 	repos, repoErr := s.repositoryService.GetRepositoriesByCLAGroup(ctx, claGroupID)
-	if repoErr != nil && repoErr.Error() != utils.GithubRepoNotFound {
+	if repoErr != nil {
 		log.WithFields(f).WithError(repoErr).Debugf("failed to get repositories for claGroup: %s ", claGroupID)
-		return repoErr
-	}
-	if repoErr != nil && repoErr.Error() == utils.GithubRepoNotFound {
-		repoCount = 0
 	} else {
 		repoCount = len(repos)
 	}
