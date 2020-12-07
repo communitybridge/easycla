@@ -28,7 +28,9 @@ from cla.models.dynamo_models import Signature, User, \
     Document, Event
 from cla.models.event_types import EventType
 from cla.models.s3_storage import S3Storage
-from cla.utils import get_email_help_content, get_email_sign_off_content, append_email_help_sign_off_content, append_email_help_sign_off_content_plain
+from cla.utils import get_email_help_content, append_email_help_sign_off_content
+from cla.user_service import UserService
+
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
@@ -785,9 +787,42 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.debug(f'Loading user {auth_user.username}')
         users_list = User().get_user_by_username(auth_user.username)
         if users_list is None:
-            cla.log.warning(f'Unable to load auth_user by username: {auth_user.username}. '
-                            'Returning an error response')
-            return {'errors': {'user_error': 'user does not exist'}}
+            cla.log.debug(f'Unable to load auth_user by username: {auth_user.username} from the EasyCLA database.')
+            # Lookup user in the platform user service...
+            us = UserService()
+            # If found, create user record in our EasyCLA database
+            cla.log.debug(f'Loading user by username: {auth_user.username} from the platform user service...')
+            platform_user = us.get_user_by_id(auth_user.username)
+            if platform_user is None:
+                cla.log.warning(f'Unable to load auth_user by username: {auth_user.username}. '
+                                'Returning an error response')
+                return {'errors': {'user_error': 'user does not exist'}}
+
+            cla.log.info(f'Found user {auth_user.username} in the platform user service: {platform_user}')
+            cla.log.info(f'Creating user {auth_user.username} in the EasyCLA database...')
+            user = cla.utils.get_user_instance()
+            user.set_user_id(str(uuid.uuid4()))  # new internal record id
+            user.set_user_external_id(platform_user['ID'])
+            user.set_user_name(platform_user['Name'])
+            # Add the emails
+            platform_user_emails = platform_user['Emails']
+            if len(platform_user_emails) > 0:
+                email_list = []
+                for platform_email in platform_user_emails:
+                    email_list.append(platform_email['EmailAddress'])
+                    if platform_email['IsPrimary']:
+                        user.set_lf_email(platform_email['EmailAddress'])
+                user.set_user_emails(email_list)
+            # Add github ID, if available
+            if platform_user['GithubID'] is not None:
+                # Expecting: https://github.com/<github_userid>
+                github_url = urlparse(platform_user['GithubID'])
+                user.set_user_github_username(github_url.path.strip('/'))
+            # TODO - DD - we could lookup their company via platform_user['Account']['ID'] in the org service
+            user.save()
+            cla.log.info(f'Created user {auth_user.username} in the EasyCLA database...')
+            users_list = [user]
+
         if len(users_list) > 1:
             cla.log.warning(f'More than one user record was returned ({len(users_list)}) from user '
                             f'username: {auth_user.username} query')
