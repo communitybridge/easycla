@@ -85,7 +85,7 @@ const (
 
 // Service functions for company
 type Service interface {
-	GetCompanyProjectCLAManagers(ctx context.Context, companyID string, projectSFID string) (*models.CompanyClaManagers, error)
+	GetCompanyProjectCLAManagers(ctx context.Context, companyID, companySFID, projectSFID string) (*models.CompanyClaManagers, error)
 	GetCompanyProjectActiveCLAs(ctx context.Context, companyID string, projectSFID string) (*models.ActiveClaList, error)
 	GetCompanyProjectContributors(ctx context.Context, projectSFID string, companySFID string, searchTerm string) (*models.CorporateContributorList, error)
 	GetCompanyProjectCLA(ctx context.Context, authUser *auth.User, companySFID, projectSFID string) (*models.CompanyProjectClaList, error)
@@ -122,7 +122,7 @@ func NewService(v1CompanyService v1Company.IService, sigRepo signatures.Signatur
 	}
 }
 
-func (s *service) GetCompanyProjectCLAManagers(ctx context.Context, companyID string, projectSFID string) (*models.CompanyClaManagers, error) {
+func (s *service) GetCompanyProjectCLAManagers(ctx context.Context, companyID, companySFID, projectSFID string) (*models.CompanyClaManagers, error) {
 	f := logrus.Fields{
 		"functionName":   "GetCompanyProjectCLAManagers",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -135,6 +135,13 @@ func (s *service) GetCompanyProjectCLAManagers(ctx context.Context, companyID st
 	if err != nil {
 		log.WithFields(f).Warnf("problem fetching CLA Groups under project or foundation, error: %+v", err)
 		return nil, err
+	}
+
+	// get the org client for org info filling
+	orgClient := orgService.GetClient()
+	orgModel, err := orgClient.GetOrganization(companySFID)
+	if err != nil {
+		return nil, fmt.Errorf("fetching org model failed for companySFID : %s : %w", companySFID, err)
 	}
 
 	signed, approved := true, true
@@ -155,6 +162,7 @@ func (s *service) GetCompanyProjectCLAManagers(ctx context.Context, companyID st
 
 	claManagers := make([]*models.CompanyClaManager, 0)
 	lfUsernames := utils.NewStringSet()
+
 	// Get CLA managers
 	for _, sig := range sigs {
 		if _, ok := claGroups[sig.ProjectID]; !ok {
@@ -163,13 +171,20 @@ func (s *service) GetCompanyProjectCLAManagers(ctx context.Context, companyID st
 		for _, user := range sig.SignatureACL {
 			claManagers = append(claManagers, &models.CompanyClaManager{
 				// DB doesn't have approved_on value
-				ApprovedOn: sig.SignatureCreated,
-				LfUsername: user.LfUsername,
-				ProjectID:  sig.ProjectID,
+				ApprovedOn:       sig.SignatureCreated,
+				LfUsername:       user.LfUsername,
+				ProjectID:        sig.ProjectID,
+				OrganizationSfid: companySFID,
+				OrganizationName: orgModel.Name,
 			})
 			lfUsernames.Add(user.LfUsername)
 		}
 	}
+
+	if len(claManagers) == 0 {
+		return &models.CompanyClaManagers{List: claManagers}, nil
+	}
+
 	// get userinfo and project info
 	var usermap map[string]*v2UserServiceModels.User
 	usermap, err = getUsersInfo(lfUsernames.List())
@@ -182,6 +197,14 @@ func (s *service) GetCompanyProjectCLAManagers(ctx context.Context, companyID st
 	fillUsersInfo(claManagers, usermap)
 	// fill project info
 	fillProjectInfo(claManagers, claGroups)
+	// fetch the cla_manager.added events so can fill the addedOn field
+	claManagerAddedEvents, err := s.eventService.GetCompanyEvents(companyID, events.ClaManagerCreated, nil, aws.Int64(100), true)
+	if err != nil {
+		log.WithFields(f).Warnf("fetching events for companyID failed : %s : %v", companyID, err)
+		return nil, err
+	}
+	// fill events info
+	fillEventsInfo(claManagers, claManagerAddedEvents)
 
 	log.WithFields(f).Debug("sorting response for client")
 	// sort result by cla manager name
@@ -190,6 +213,24 @@ func (s *service) GetCompanyProjectCLAManagers(ctx context.Context, companyID st
 	})
 
 	return &models.CompanyClaManagers{List: claManagers}, nil
+}
+
+func fillEventsInfo(claManagers []*v2Models.CompanyClaManager, addedEvents *v1Models.EventList) {
+	eventMap := map[string]*v1Models.Event{}
+	if addedEvents == nil || len(addedEvents.Events) == 0 {
+		return
+	}
+	for _, e := range addedEvents.Events {
+		lfUserName := e.LfUsername
+		eventMap[lfUserName] = e
+	}
+
+	for _, claManager := range claManagers {
+		if eventMap[claManager.LfUsername] == nil {
+			continue
+		}
+		claManager.AddedOn = eventMap[claManager.LfUsername].EventTime
+	}
 }
 
 func (s *service) GetCompanyAdmins(ctx context.Context, companySFID string) (*models.CompanyAdminList, error) {
