@@ -819,20 +819,27 @@ def webhook_secret_failed_email_content(event_type: str, req_body: dict, maintai
     user_login = req_body.get('sender', {}).get('login', None)
     repository_id = req_body.get('repository', {}).get('id', None)
     repository_name = req_body.get('repository', {}).get('full_name', None)
+    repository_owner = req_body.get('repository', {}).get('owner', {}).get('login', None)
+    repository_url = req_body.get('repository', {}).get('html_url', None)
+    parent_org = req_body.get('repository', {}).get('organization', {}).get('login', None)
     installation_id = req_body.get('installation', {}).get('id', None)
-    msg = f"""webhook secret validation failed :
-    stage: {cla.config.stage},
-    event type: {event_type},
-    user login: {user_login},
-    repository_id: {repository_id}, repository_name : {repository_name},
-    installation_id: {installation_id}"""
+    msg = f"""<li>stage: {cla.config.stage}</li>
+    <li>event type: {event_type}</li>
+    <li>user login: {user_login}</li>
+    <li>repository id: {repository_id}</li>
+    <li>repository name: {repository_name}</li>
+    <li>repository owner: {repository_owner}</li>
+    <li>repository url: {repository_url}</li>
+    <li>parent organization: {parent_org}</li>
+    <li>installation_id: {installation_id}</li>"""
 
     body = f"""
     <p>Hello EasyCLA Maintainer,</p>
     <p>This is a notification email from EasyCLA regarding failure of webhook secret validation.</p>
-    <p>{msg}</p>
+    <p>Validation Failed:</p>
+    <ul>{msg}</ul>
     <p>Please verify the EasyCLA settings to ensure EasyCLA webhook secret is set correctly. \
-    See: <a href="https://github.com/organizations/LF-Engineering/settings/apps"> EasyCLA app setting</a> \
+    See: <a href="https://github.com/organizations/LF-Engineering/settings/apps"> EasyCLA app settings</a>. \
     <p>For more information on how to setup GitHub webhook secret, please consult About Securing Your Webhooks\
     <a href="https://docs.github.com/en/free-pro-team@latest/developers/webhooks-and-events/securing-your-webhooks"> \
     in the GitHub Online Help Pages</a>.</p>
