@@ -806,10 +806,10 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.info(f'Creating user {auth_user.username} in the EasyCLA database...')
             user = cla.utils.get_user_instance()
             user.set_user_id(str(uuid.uuid4()))  # new internal record id
-            user.set_user_external_id(platform_user['ID'])
-            user.set_user_name(platform_user['Name'])
+            user.set_user_external_id(platform_user.get('ID', None))
+            user.set_user_name(platform_user.get('Name', None))
             # Add the emails
-            platform_user_emails = platform_user['Emails']
+            platform_user_emails = platform_user.get('Emails', None)
             if len(platform_user_emails) > 0:
                 email_list = []
                 for platform_email in platform_user_emails:
@@ -818,10 +818,14 @@ class DocuSign(signing_service_interface.SigningService):
                         user.set_lf_email(platform_email['EmailAddress'])
                 user.set_user_emails(email_list)
             # Add github ID, if available
-            if platform_user['GithubID'] is not None:
+            github_id = platform_user.get('GithubID', None)
+            if github_id is not None:
                 # Expecting: https://github.com/<github_userid>
-                github_url = urlparse(platform_user['GithubID'])
+                github_url = urlparse(github_id)
                 user.set_user_github_username(github_url.path.strip('/'))
+                # TODO - DAD - lookup user information in GH and fetch the
+                # github ID (which is a numeric value that never changes)
+                # user.set_user_github_id(...)
             # TODO - DD - we could lookup their company via platform_user['Account']['ID'] in the org service
             user.save()
             cla.log.info(f'Created user {auth_user.username} in the EasyCLA database...')
