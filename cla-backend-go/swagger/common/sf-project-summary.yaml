@@ -1,0 +1,63 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
+
+type: object
+x-nullable: false
+title: SF Project Summary
+description: A salesforce project summary
+properties:
+  id:
+    description: the salesforce project ID
+    example: 'a09410000182dD2AAI'
+    type: string
+    x-omitempty: false
+  parentID:
+    description: the salesforce parent project ID
+    example: 'a08210000182dXYZ12'
+    type: string
+    x-omitempty: false
+  name:
+    description: the salesformce project name
+    example: 'Project Name'
+    type: string
+    x-omitempty: false
+  parentName:
+    description: the salesforce parent project Name
+    example: 'Parent Project Name'
+    type: string
+    x-omitempty: false
+  entityName:
+    description: the salesformce project entity name
+    example: 'Project Entity Name'
+    type: string
+    x-omitempty: false
+  entityType:
+    description: the salesformce project entity type
+    example: 'Incorporated Entity'
+    type: string
+    x-omitempty: false
+  status:
+    description: the salesformce project status
+    example: 'Active'
+    type: string
+    x-omitempty: false
+  type:
+    description: the salesformce project type
+    example: 'Membership'
+    type: string
+    x-omitempty: false
+  slug:
+    description: the salesformce project slug or short-name
+    example: 'short-name'
+    type: string
+    x-omitempty: false
+  funding:
+    description: the salesforce project funding value
+    example: 'Funded'
+    type: string
+    x-omitempty: false
+  lfSupported:
+    description: the salesforce project LF supported flag
+    example: true
+    type: boolean
+    x-omitempty: false
