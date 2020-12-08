@@ -36,6 +36,12 @@ const GitHubBotName = "EasyCLA"
 // TheLinuxFoundation is the name of the super parent for many Salesforce Foundations/Project Groups
 const TheLinuxFoundation = "The Linux Foundation"
 
+// ProjectUnfunded  is a constant that represents a SF project that is unfunded
+const ProjectUnfunded = "Unfunded"
+
+// ProjectFundedSupportedByParent is a constant that represents a SF project that is funded by the parent
+const ProjectFundedSupportedByParent = "Supported by Parent Project"
+
 // XREQUESTID is the client request id - used to trace a client request through the system/logs
 const XREQUESTID = "x-request-id"
 

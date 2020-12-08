@@ -858,6 +858,41 @@ paths:
       tags:
         - project
 
+  # Pass-thru endpoint to fetch minimal ProjectSFID information/details - required by contributor console to determine
+  # how to direct the user to the corporate console
+  /project-info/{projectSFID}:
+    get:
+      summary: Get SF Project Info by ID
+      description: Endpoint to fetch the SF Project information by ID
+      operationId: getSFProjectInfoById
+      parameters:
+        - $ref: "#/parameters/path-projectSFID"
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
+      responses:
+        '200':
+          description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
+          schema:
+            $ref: '#/definitions/sf-project-summary'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - project
+
   /events/recent:
     get:
       summary: List recent events - requires Admin-level access
@@ -3611,6 +3646,9 @@ definitions:
 
   cla-group:
     $ref: './common/cla-group.yaml'
+
+  sf-project-summary:
+    $ref: './common/sf-project-summary.yaml'
 
   template:
     $ref: './common/template.yaml'
