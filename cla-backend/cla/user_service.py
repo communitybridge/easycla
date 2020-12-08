@@ -37,7 +37,7 @@ class UserService:
         log.debug(f'Fetched Key: {key}, value: {response["Parameter"]["Value"]}')
         return response['Parameter']['Value']
 
-    def get_user_by_id(self, user_id: str):
+    def get_user_by_sf_id(self, sf_user_id: str):
         """
         Queries the platform user service for the specified user id. The
         result will return all the details for the user as a dictionary.
@@ -48,14 +48,14 @@ class UserService:
         }
 
         try:
-            url = f'{self.platform_gateway_url}/user-service/v1/users/{user_id}'
+            url = f'{self.platform_gateway_url}/user-service/v1/users/{sf_user_id}'
             log.debug(f'Sending GET request to {url}')
             r = requests.get(url, headers=headers)
             r.raise_for_status()
             response_model = json.loads(r.text)
             return response_model
         except requests.exceptions.HTTPError as err:
-            msg = f'Could not get user: {user_id}, error: {err}'
+            msg = f'Could not get user: {sf_user_id}, error: {err}'
             log.warning(msg)
             return None
 
@@ -97,7 +97,7 @@ class UserService:
         log.debug('total users : {}'.format(len(users)))
         return users
 
-    def get_users_by_name(self, user_name: str):
+    def get_users_by_username(self, user_name: str):
         return self._get_users_by_key_value("username", user_name)
 
     def get_users_by_firstname(self, first_name: str):

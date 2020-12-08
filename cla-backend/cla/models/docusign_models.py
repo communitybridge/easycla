@@ -792,7 +792,7 @@ class DocuSign(signing_service_interface.SigningService):
             us = UserService()
             # If found, create user record in our EasyCLA database
             cla.log.debug(f'Loading user by username: {auth_user.username} from the platform user service...')
-            platform_user = us.get_user_by_id(auth_user.username)
+            platform_user = us.get_users_by_username(auth_user.username)
             if platform_user is None:
                 cla.log.warning(f'Unable to load auth_user by username: {auth_user.username}. '
                                 'Returning an error response')
