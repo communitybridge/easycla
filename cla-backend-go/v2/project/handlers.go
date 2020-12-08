@@ -7,6 +7,9 @@ import (
 	"context"
 	"fmt"
 
+	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
+	v2ProjectServiceModels "github.com/communitybridge/easycla/cla-backend-go/v2/project-service/models"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/jinzhu/copier"
@@ -265,4 +268,56 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 
 		return project.NewGetCLAProjectsByIDOK().WithXRequestID(reqID).WithPayload(claProjects)
 	})
+
+	api.ProjectGetSFProjectInfoByIDHandler = project.GetSFProjectInfoByIDHandlerFunc(func(params project.GetSFProjectInfoByIDParams, user *auth.User) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		f := logrus.Fields{
+			"functionName":   "ProjectGetSFProjectInfoByIDHandler",
+			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+			"projectSFID":    params.ProjectSFID,
+			"userEmail":      user.Email,
+			"userName":       user.UserName,
+		}
+
+		// No auth checks - anyone including contributors can request
+		psc := project_service.GetClient()
+		sfProject, err := psc.GetProject(params.ProjectSFID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warn("unable to lookup SF project by ID")
+			return project.NewGetSFProjectInfoByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+		}
+
+		// Lookup the parent info, if it's available
+		var parentName string
+		if sfProject.Parent != "" {
+			sfParentProject, err := psc.GetProject(sfProject.Parent)
+			if err != nil {
+				log.WithFields(f).WithError(err).Warnf("unable to load parant project by ID: %s", sfProject.Parent)
+			}
+
+			if sfParentProject != nil {
+				parentName = sfParentProject.Name
+			}
+		}
+
+		summary := buildSFProjectSummary(sfProject, parentName)
+		return project.NewGetSFProjectInfoByIDOK().WithXRequestID(reqID).WithPayload(summary)
+	})
+}
+
+func buildSFProjectSummary(sfProject *v2ProjectServiceModels.ProjectOutputDetailed, parentName string) *models.SfProjectSummary {
+	return &models.SfProjectSummary{
+		EntityName:  sfProject.EntityName,
+		EntityType:  sfProject.EntityType,
+		Funding:     sfProject.Funding,
+		ID:          sfProject.ID,
+		LfSupported: (sfProject.Funding == utils.ProjectUnfunded || sfProject.Funding == utils.ProjectFundedSupportedByParent) && parentName == utils.TheLinuxFoundation,
+		Name:        sfProject.Name,
+		ParentID:    sfProject.Parent,
+		ParentName:  parentName,
+		Slug:        sfProject.Slug,
+		Status:      sfProject.Status,
+		Type:        sfProject.Type,
+	}
 }
