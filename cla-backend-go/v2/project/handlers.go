@@ -312,7 +312,7 @@ func buildSFProjectSummary(sfProject *v2ProjectServiceModels.ProjectOutputDetail
 		EntityType:  sfProject.EntityType,
 		Funding:     sfProject.Funding,
 		ID:          sfProject.ID,
-		LfSupported: (sfProject.Funding == utils.ProjectUnfunded || sfProject.Funding == utils.ProjectFundedSupportedByParent) && parentName == utils.TheLinuxFoundation,
+		LfSupported: sfProject.LFSponsored,
 		Name:        sfProject.Name,
 		ParentID:    sfProject.Parent,
 		ParentName:  parentName,
