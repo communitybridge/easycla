@@ -792,12 +792,16 @@ class DocuSign(signing_service_interface.SigningService):
             us = UserService()
             # If found, create user record in our EasyCLA database
             cla.log.debug(f'Loading user by username: {auth_user.username} from the platform user service...')
-            platform_user = us.get_users_by_username(auth_user.username)
-            if platform_user is None:
+            platform_users = us.get_users_by_username(auth_user.username)
+            if platform_users is None:
                 cla.log.warning(f'Unable to load auth_user by username: {auth_user.username}. '
                                 'Returning an error response')
                 return {'errors': {'user_error': 'user does not exist'}}
+            if len(platform_users) > 1:
+                cla.log.warning(f'More than one user with same username: {auth_user.username} - using first record.')
 
+            # Grab the first user from the list - should only be one that matches the search query parameters
+            platform_user = platform_users[0]
             cla.log.info(f'Found user {auth_user.username} in the platform user service: {platform_user}')
             cla.log.info(f'Creating user {auth_user.username} in the EasyCLA database...')
             user = cla.utils.get_user_instance()
