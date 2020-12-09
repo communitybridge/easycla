@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	acs_service "github.com/communitybridge/easycla/cla-backend-go/v2/acs-service"
@@ -351,23 +352,25 @@ func (s *service) UpdateCLAPermissions(event events.DynamoDBEventRecord) error {
 	f["referenceName"] = newSignature.SignatureReferenceName
 	f["referenceType"] = newSignature.SignatureReferenceType
 	f["projectID"] = newSignature.SignatureProjectID
+	f["acl"] = strings.Join(newSignature.SignatureACL, ",")
 
-	if len(oldSignature.SignatureACL) != len(newSignature.SignatureACL) {
-		log.WithFields(f).Debug("processing signature ACL to identify added/removed managers...")
-		managers := s.difference(oldSignature.SignatureACL, newSignature.SignatureACL)
-		if len(managers) > 0 {
-			log.WithFields(f).Debugf("managers to be added/deleted : %+v", managers)
-			if len(oldSignature.SignatureACL) < len(newSignature.SignatureACL) {
+	log.WithFields(f).Debug("processing signature ACL to identify added/removed managers...")
+	managers := utils.SliceDifference(oldSignature.SignatureACL, newSignature.SignatureACL)
+	if len(managers) > 0 {
+		log.WithFields(f).Debugf("managers to be added/deleted : %+v", managers)
+		for _, entry := range managers {
+			log.WithFields(f).Debugf("processing difference: %+s", entry)
+			if utils.StringInSlice(entry, newSignature.SignatureACL) {
 				// Assign CLA Manager role
-				log.WithFields(f).Debugf("Assigning CLA Manager role to managers : %#v ", managers)
+				log.WithFields(f).Debugf("Assigning user %s to the %s role", entry, utils.CLAManagerRole)
 				updateErr := s.updateCLAManagerPermissions(newSignature, managers, AddCLAManager)
 				if updateErr != nil {
 					log.WithFields(f).WithError(updateErr).Warn("problem assigning CLA Manager role")
 					return updateErr
 				}
-			} else if len(oldSignature.SignatureACL) > len(newSignature.SignatureACL) {
+			} else {
 				// Remove CLA Manager role
-				log.WithFields(f).Debugf("Unassigning CLA Manager role to managers : %#v ", managers)
+				log.WithFields(f).Debugf("Unassigning user %s from the %s role", entry, utils.CLAManagerRole)
 				updateErr := s.updateCLAManagerPermissions(newSignature, managers, DeleteCLAManager)
 				if updateErr != nil {
 					log.WithFields(f).WithError(updateErr).Warn("problem removing CLA Manager role")
@@ -376,24 +379,9 @@ func (s *service) UpdateCLAPermissions(event events.DynamoDBEventRecord) error {
 			}
 		}
 	} else {
-		log.WithFields(f).Debugf("No managers have been identified in ACL : %+v ", oldSignature.SignatureACL)
+		log.WithFields(f).Debugf("No changes in ACL : %+v versus %+v", oldSignature.SignatureACL, newSignature.SignatureACL)
 	}
 	return nil
-}
-
-// Helper function that checks for differences in signature acls
-func (s *service) difference(oldSigACL, newSignACL []string) []string {
-	mb := make(map[string]struct{}, len(newSignACL))
-	for _, x := range newSignACL {
-		mb[x] = struct{}{}
-	}
-	var diff []string
-	for _, x := range oldSigACL {
-		if _, found := mb[x]; !found {
-			diff = append(diff, x)
-		}
-	}
-	return diff
 }
 
 func (s *service) assignContributor(ctx context.Context, newSignature Signature, f logrus.Fields) error {
