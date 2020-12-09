@@ -29,6 +29,7 @@ import cla.hug_types
 import cla.salesforce
 from cla.controllers.github import get_github_activity_action
 from cla.controllers.github_activity import v4_easycla_github_activity
+from cla.project_service import ProjectService
 from cla.utils import (
     get_supported_repository_providers,
     get_supported_document_content_types,
@@ -764,26 +765,49 @@ def get_project(project_id: hug.types.uuid):
     Returns the CLA project requested by ID.
     """
     # returns value as a dict
+    fn = '/v2/project/{project_id} handler'
+    cla.log.debug(f'{fn} - loading cla group by cla group id: {project_id}')
     project = cla.controllers.project.get_project(project_id)
     if project.get("errors"):
+        cla.log.warning(f'{fn} - problem loading cla group by cla group id: {project_id}')
         return project
+
     # For public endpoint, don't show the project_external_id.
     if "project_external_id" in project:
         del project["project_external_id"]
 
     # Add the Project CLA Group Mappings to the response model
     sf_projects = []
+
+    # Need a reference to the platform project service
+    ps = ProjectService()
+
+    # Lookup the project to CLA Group mappings using the CLA Group ID (which is called the project_id in this case)
+    cla.log.debug(f'{fn} - loading project cla group mapping by cla group id: {project_id}')
     project_cla_group_list = get_project_cla_group(project["project_id"])
+    # Will have zero or more SF projects associated with this CLA Group
+    signed_at_foundation = False
     for project_cla_group in project_cla_group_list:
-        sf_projects.append(project_cla_group.to_dict())
+
+        project_sfid = project_cla_group.get_project_sfid()
+        foundation_sfid = project_cla_group.get_foundation_sfid()
+
+        # Determine if this is a standalone project and if we are signed at the foundation level
+        mapping_record = project_cla_group.to_dict()
+        cla.log.debug(f'{fn} - determining if project {project_id} is a standalone project')
+        mapping_record['standalone_project'] = ps.is_standalone(project_sfid)
+        if project_sfid is not None and foundation_sfid is not None and project_sfid == foundation_sfid:
+            cla.log.debug(f'{fn} - determined that the cla group is signed at the foundation')
+            signed_at_foundation = True
+
+        # Add this mapping record to list
+        sf_projects.append(mapping_record)
+
+    # Add the list of SF projects to our response model
     project["projects"] = sf_projects
 
-    # if we have at least one SF Project associated with this CLA Group
-    if len(project_cla_group_list) > 0:
-        project["signed_at_foundation_level"] = project_cla_group_list[0].signed_at_foundation
-    else:
-        # Default is false, common for v1 not to have any mappings
-        project["signed_at_foundation_level"] = False
+    # Set the signed at foundation flag - default is false, common for v1 not to have any mappings
+    project["signed_at_foundation_level"] = signed_at_foundation
 
     return project
 
