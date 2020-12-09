@@ -30,7 +30,7 @@ from pynamodb.models import Model
 
 import cla
 from cla.models import model_interfaces, key_value_store_interface, DoesNotExist
-from cla.models.model_interfaces import User, Signature
+from cla.models.model_interfaces import User, Signature, ProjectCLAGroup
 from cla.project_service import ProjectService
 
 stage = os.environ.get("STAGE", "")
@@ -2894,39 +2894,42 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
             for mapping in self.get_by_foundation_sfid(self.model.foundation_sfid):
                 # Foundation level CLA means that we have an entry where the FoundationSFID == ProjectSFID
                 if mapping.get_foundation_sfid() == mapping.get_project_sfid():
-                    # First check if project is a standalone project
-                    ps = ProjectService()
-                    if not ps.is_standalone(mapping.get_project_sfid()):
-                        foundation_level_cla = True
+                    foundation_level_cla = True
                     break
+                    # DD: The below logic is incorrect - does not matter if we have a standalone project or not
+                    # First check if project is a standalone project
+                    #ps = ProjectService()
+                    #if not ps.is_standalone(mapping.get_project_sfid()):
+                    #    foundation_level_cla = True
+                    #break
 
         return foundation_level_cla
 
-    def get_project_sfid(self):
+    def get_project_sfid(self) -> str:
         return self.model.project_sfid
 
-    def get_project_name(self):
+    def get_project_name(self) -> str:
         return self.model.project_name
 
-    def get_foundation_sfid(self):
+    def get_foundation_sfid(self) -> str:
         return self.model.foundation_sfid
 
-    def get_foundation_name(self):
+    def get_foundation_name(self) -> str:
         return self.model.foundation_name
 
-    def get_cla_group_id(self):
+    def get_cla_group_id(self) -> str:
         return self.model.cla_group_id
 
-    def get_cla_group_name(self):
+    def get_cla_group_name(self) -> str:
         return self.model.cla_group_name
 
-    def get_repositories_count(self):
+    def get_repositories_count(self) -> int:
         return self.model.repositories_count
 
-    def get_note(self):
+    def get_note(self) -> str:
         return self.model.note
 
-    def get_version(self):
+    def get_version(self) -> str:
         return self.model.version
 
     def set_project_sfid(self, project_sfid):
@@ -2956,7 +2959,7 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
     def set_date_modified(self, date_modified):
         self.model.date_modified = date_modified
 
-    def get_by_foundation_sfid(self, foundation_sfid):
+    def get_by_foundation_sfid(self, foundation_sfid) -> List[ProjectCLAGroup]:
         project_cla_groups = ProjectCLAGroupModel.foundation_sfid_index.query(foundation_sfid)
         ret = []
         for project_cla_group in project_cla_groups:
@@ -2965,7 +2968,7 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
             ret.append(proj_cla_group)
         return ret
 
-    def get_by_cla_group_id(self, cla_group_id):
+    def get_by_cla_group_id(self, cla_group_id) -> List[ProjectCLAGroup]:
         project_cla_groups = ProjectCLAGroupModel.cla_group_id_index.query(cla_group_id)
         ret = []
         for project_cla_group in project_cla_groups:
@@ -2974,7 +2977,7 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
             ret.append(proj_cla_group)
         return ret
 
-    def all(self, project_sfids=None):
+    def all(self, project_sfids=None) -> List[ProjectCLAGroup]:
         if project_sfids is None:
             project_cla_groups = self.model.scan()
         else:
