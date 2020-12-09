@@ -611,6 +611,9 @@ jobs:
           name: Deploy Cloudfront and LambdaEdge
           command: |
             pushd $PROJECT_DIR
+            echo "Running install 'yarn install'..."
+            yarn install
+            echo ""
             echo "Running: yarn sls deploy --stage=\"${STAGE}\" --cloudfront=true"
             yarn sls deploy --stage="${STAGE}" --cloudfront="true"
             popd
@@ -618,6 +621,9 @@ jobs:
           name: Deploy Frontend Bucket
           command: |
             pushd $PROJECT_DIR
+            echo "Running install 'yarn install'..."
+            yarn install
+            echo ""
             echo "Running: yarn sls client deploy --stage=\"${STAGE}\" --cloudfront=true --no-confirm --no-policy-change --no-config-change"
             yarn sls client deploy --stage="${STAGE}" --cloudfront="true" --no-confirm --no-policy-change --no-config-change
             popd
