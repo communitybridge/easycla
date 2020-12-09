@@ -347,3 +347,37 @@ func (usc *Client) GetUserEmail(username string) (string, error) {
 	}
 	return "", nil
 }
+
+// UpdateUserAccount updates users org
+func (usc *Client) UpdateUserAccount(userSFID string, orgID string) error {
+	f := logrus.Fields{
+		"functionName":   "UpdateUserAccount",
+		"organizationID": orgID,
+		"userSFID":       userSFID,
+	}
+
+	tok, err := token.GetToken()
+	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem obtaining token")
+		return err
+	}
+
+	clientAuth := runtimeClient.BearerToken(tok)
+
+	params := &user.UpdatePartialUserParams{
+		SalesforceID: userSFID,
+		UpdatePartialUser: &models.UpdatePartialUser{
+			AccountID: &orgID,
+		},
+		Context: context.Background(),
+	}
+
+	result, updateErr := usc.cl.User.UpdatePartialUser(params, clientAuth)
+	if updateErr != nil {
+		log.WithFields(f).WithError(updateErr).Warn("problem updating user")
+		return updateErr
+	}
+
+	log.WithFields(f).Debugf("successfully updated user: %s", result)
+	return nil
+}
