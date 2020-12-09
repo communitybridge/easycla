@@ -163,6 +163,22 @@ func HostInSlice(a string, list []string) bool {
 	return false
 }
 
+// SliceDifference returns the entries that are different between the two slices
+func SliceDifference(a, b []string) []string {
+	var diff []string
+	for _, x := range a {
+		if !StringInSlice(x, b) {
+			diff = append(diff, x)
+		}
+	}
+	for _, x := range b {
+		if !StringInSlice(x, a) {
+			diff = append(diff, x)
+		}
+	}
+	return diff
+}
+
 // ValidEmail tests the specified email string, returns true if email is valid, returns false otherwise
 func ValidEmail(email string) bool {
 	emailRegexp := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")

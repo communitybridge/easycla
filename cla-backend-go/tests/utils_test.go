@@ -159,6 +159,38 @@ func TestHostInSlice(t *testing.T) {
 	assert.True(t, utils.HostInSlice("localhost", []string{"foo", "localhost:8100", "localhost:8101"}))
 }
 
+func TestSliceDifferenceDiff1(t *testing.T) {
+	a := []string{"a", "b", "c"}
+	b := []string{"a", "d", "c"}
+	assert.Equal(t, []string{"b", "d"}, utils.SliceDifference(a, b), "SliceDifference")
+}
+func TestSliceDifferenceDiff2(t *testing.T) {
+	a := []string{"a", "c"}
+	b := []string{"a", "c"}
+	var c []string
+	assert.Equal(t, c, utils.SliceDifference(a, b), "No Differences")
+}
+func TestSliceDifferenceDiff3(t *testing.T) {
+	a := []string{"a", "b"}
+	b := []string{"a", "b", "c"}
+	assert.Equal(t, []string{"c"}, utils.SliceDifference(a, b), "B is Different")
+}
+func TestSliceDifferenceDiff4(t *testing.T) {
+	a := []string{"a", "b", "c"}
+	b := []string{"a", "b"}
+	assert.Equal(t, []string{"c"}, utils.SliceDifference(a, b), "A is Different")
+}
+func TestSliceDifferenceDiff5(t *testing.T) {
+	var a []string
+	b := []string{"a", "b"}
+	assert.Equal(t, []string{"a", "b"}, utils.SliceDifference(a, b), "A is empty")
+}
+func TestSliceDifferenceDiff6(t *testing.T) {
+	a := []string{"a", "b"}
+	var b []string
+	assert.Equal(t, []string{"a", "b"}, utils.SliceDifference(a, b), "A is empty")
+}
+
 func TestTrimRemoveTrailingSpace(t *testing.T) {
 	type KeyValue struct {
 		input    string
