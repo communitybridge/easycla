@@ -4,12 +4,15 @@
 """
 Controller related to project CLA Group mapping operations.
 """
+from typing import List, Optional
 
+import cla
 from cla.models import DoesNotExist
+from cla.models.dynamo_models import ProjectCLAGroup
 from cla.utils import (get_project_cla_group_instance)
 
 
-def get_project_cla_groups():
+def get_project_cla_groups() -> List[dict]:
     """
     Returns a list of projects CLA Group mappings in the CLA system.
 
@@ -19,7 +22,7 @@ def get_project_cla_groups():
     return [project.to_dict() for project in get_project_cla_group_instance().all()]
 
 
-def get_project_cla_group(cla_group_id):
+def get_project_cla_group(cla_group_id) -> Optional[List[ProjectCLAGroup]]:
     """
     Returns the Projects associated with the CLA Group
 
@@ -32,4 +35,5 @@ def get_project_cla_group(cla_group_id):
     try:
         return project.get_by_cla_group_id(cla_group_id=str(cla_group_id))
     except DoesNotExist as err:
-        return {'errors': {'cla_group_id': str(err)}}
+        cla.log.warning(f'unable to load project cla group mapping based on cla_group_id: {cla_group_id}')
+        return None
