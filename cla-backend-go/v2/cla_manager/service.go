@@ -529,20 +529,13 @@ func (s *service) CreateCLAManagerDesigneeByGroup(ctx context.Context, params cl
 		return nil, msg, ErrLFXUserNotFound
 	}
 
-	if lfxUser.Type == utils.Lead {
-		log.Debugf("Converting user: %s from lead to contact ", userEmail)
-		contactErr := userService.ConvertToContact(lfxUser.ID)
-		if contactErr != nil {
-			msg := fmt.Sprintf("failed to convert user: %s to contact ", userEmail)
-			return nil, msg, contactErr
-		}
-		// Log user conversion event
-		s.eventService.LogEvent(&events.LogEventArgs{
-			EventType:  events.ConvertUserToContactType,
-			LfUsername: lfxUser.Username,
-			EventData:  &events.UserConvertToContactData{},
-		})
+	log.Debugf("Updating user: %s with company : %s ", lfxUser.Name, params.CompanySFID)
+	updateErr := userService.UpdateUserAccount(lfxUser.ID, params.CompanySFID)
+	if updateErr != nil {
+		msg := fmt.Sprintf("Failed to update user: %s with company : %s ", lfxUser.ID, params.CompanySFID)
+		return nil, msg, updateErr
 	}
+	log.Debugf("Successfully updated user : %s with company: %s ", lfxUser.Name, params.CompanySFID)
 
 	return designeeScopes, "", nil
 }
