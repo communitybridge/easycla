@@ -61,3 +61,8 @@ properties:
     example: true
     type: boolean
     x-omitempty: false
+  isStandalone:
+    description: A boolean representing if project has no child or parent
+    example: true
+    type: boolean
+    x-omitempty: false

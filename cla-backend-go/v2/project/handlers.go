@@ -308,16 +308,17 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 
 func buildSFProjectSummary(sfProject *v2ProjectServiceModels.ProjectOutputDetailed, parentName string) *models.SfProjectSummary {
 	return &models.SfProjectSummary{
-		EntityName:  sfProject.EntityName,
-		EntityType:  sfProject.EntityType,
-		Funding:     sfProject.Funding,
-		ID:          sfProject.ID,
-		LfSupported: sfProject.LFSponsored,
-		Name:        sfProject.Name,
-		ParentID:    sfProject.Parent,
-		ParentName:  parentName,
-		Slug:        sfProject.Slug,
-		Status:      sfProject.Status,
-		Type:        sfProject.Type,
+		EntityName:   sfProject.EntityName,
+		EntityType:   sfProject.EntityType,
+		Funding:      sfProject.Funding,
+		ID:           sfProject.ID,
+		LfSupported:  sfProject.LFSponsored,
+		Name:         sfProject.Name,
+		ParentID:     sfProject.Parent,
+		ParentName:   parentName,
+		Slug:         sfProject.Slug,
+		Status:       sfProject.Status,
+		Type:         sfProject.Type,
+		IsStandalone: ((sfProject.Type != utils.ProjectTypeProjectGroup) && (sfProject.Parent == "" || sfProject.Parent == utils.TheLinuxFoundation)),
 	}
 }
