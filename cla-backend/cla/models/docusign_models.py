@@ -808,6 +808,8 @@ class DocuSign(signing_service_interface.SigningService):
             user.set_user_id(str(uuid.uuid4()))  # new internal record id
             user.set_user_external_id(platform_user.get('ID', None))
             user.set_user_name(platform_user.get('Name', None))
+            # update lf_username to prevent duplication of user records
+            user.set_lf_username(auth_user.username)
             # Add the emails
             platform_user_emails = platform_user.get('Emails', None)
             if len(platform_user_emails) > 0:
