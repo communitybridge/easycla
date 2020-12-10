@@ -21,22 +21,7 @@ class ProjectService:
     """
 
     def __init__(self):
-        self.platform_gateway_url = self.get_ssm_key(REGION, f'cla-auth0-platform-api-gw-{STAGE}')
-
-    def get_ssm_key(self, region, key):
-        """
-        Fetches the specified SSM key value from the SSM key store
-        :param region: aws region
-        :type region: string
-        :parm key: key
-        :type key: string
-        """
-        ssm_client = client('ssm', region_name=region)
-
-        log.debug(f'Fetching Key: {key}')
-        response = ssm_client.get_parameter(Name=key, WithDecryption=True)
-        log.debug(f'Fetched Key: {key}, value: {response["Parameter"]["Value"]}')
-        return response['Parameter']['Value']
+        self.platform_gateway_url = cla.config.AUTH0_PLATFORM_URL
 
     def is_standalone(self, project_sfid) -> bool:
         """
@@ -119,10 +104,10 @@ class ProjectService:
             return None
 
     def get_access_token(self):
-        auth0_url = self.get_ssm_key(REGION, f'cla-auth0-platform-url-{STAGE}')
-        platform_client_id = self.get_ssm_key(REGION, f'cla-auth0-platform-client-id-{STAGE}')
-        platform_client_secret = self.get_ssm_key(REGION, f'cla-auth0-platform-client-secret-{STAGE}')
-        platform_audience = self.get_ssm_key(REGION, f'cla-auth0-platform-audience-{STAGE}')
+        auth0_url = cla.config.AUTH0_PLATFORM_URL
+        platform_client_id = cla.config.AUTH0_PLATFORM_CLIENT_ID
+        platform_client_secret = cla.config.AUTH0_PLATFORM_CLIENT_SECRET
+        platform_audience = cla.config.AUTH0_PLATFORM_AUDIENCE
 
         auth0_payload = {
             'grant_type': 'client_credentials',

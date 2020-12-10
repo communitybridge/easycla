@@ -12,9 +12,14 @@ configuration, etc) in cla_config.py somewhere in your Python path.
 
 import logging
 import os
+import sys
+from multiprocessing.pool import ThreadPool
 
 from boto3 import client
 from botocore.exceptions import ClientError, ProfileNotFound, NoCredentialsError
+
+region = "us-east-1"
+ssm_client = client('ssm', region_name=region)
 
 
 def get_ssm_key(region, key):
@@ -22,7 +27,6 @@ def get_ssm_key(region, key):
     Fetches the specified SSM key value from the SSM key store
     """
     fn = "config.get_ssm_key"
-    ssm_client = client('ssm', region_name=region)
     try:
         logging.debug(f'{fn} - Loading config with key: {key}')
         response = ssm_client.get_parameter(Name=key, WithDecryption=True)
@@ -31,11 +35,13 @@ def get_ssm_key(region, key):
         return response['Parameter']['Value']
     except (ClientError, ProfileNotFound) as e:
         logging.warning(f'{fn} - Unable to load SSM config with key: {key} due to {e}')
+        return None
 
 
 # from utils import get_ssm_key
 
 stage = os.environ.get('STAGE', '')
+STAGE = stage
 
 LOG_LEVEL = logging.DEBUG  #: Logging level.
 #: Logging format.
@@ -120,13 +126,68 @@ LOCAL_STORAGE_FOLDER = '/tmp/cla'  #: Local folder when using the LocalStorage s
 # PDF Generation.
 PDF_SERVICE = 'DocRaptor'
 
+AUTH0_PLATFORM_URL = os.getenv("AUTH0_PLATFORM_URL", "")
+AUTH0_PLATFORM_CLIENT_ID = os.getenv("AUTH0_PLATFORM_CLIENT_ID", "")
+AUTH0_PLATFORM_CLIENT_SECRET = os.getenv("AUTH0_PLATFORM_CLIENT_SECRET", "")
+AUTH0_PLATFORM_AUDIENCE = os.getenv("AUTH0_PLATFORM_CLIENT_AUDIENCE", "")
+
 # GH Private Key
 # Moved to GitHub application class GitHubInstallation as loading this property is taking ~1 sec on startup which is
 # killing our response performance - in most API calls this key/attribute is not used, so, we will lazy load this
 # property on class construction
 GITHUB_PRIVATE_KEY = ""
-try:
-    GITHUB_PRIVATE_KEY = get_ssm_key('us-east-1', f'cla-gh-app-private-key-{stage}')
-except NoCredentialsError as ex:
-    # we don't want things to fail during unit testing
-    pass
+
+# reference to this module, cla.config
+this = sys.modules[__name__]
+
+
+def load_ssm_keys():
+    """
+    loads all the config variables that are stored is ssm
+    it uses Thread Pool so can fetch things in parallel as much as Python allows
+    :return:
+    """
+
+    def _load_single_key(key):
+        try:
+            return get_ssm_key('us-east-1', key)
+        # helps with unit testing so they don't fail because of ssm creds failure
+        except NoCredentialsError as ex:
+            # we don't want things to fail during unit testing
+            logging.warning(f"loading credentials for key : {key} failed : {str(ex)}")
+            return None
+
+    # the order is important
+    keys = [
+        f'cla-gh-app-private-key-{stage}',
+        f'cla-auth0-platform-api-gw-{stage}',
+        f'cla-auth0-platform-url-{stage}',
+        f'cla-auth0-platform-client-id-{stage}',
+        f'cla-auth0-platform-client-secret-{stage}',
+        f'cla-auth0-platform-audience-{stage}'
+    ]
+    config_keys = [
+        "GITHUB_PRIVATE_KEY",
+        "PLATFORM_GATEWAY_URL",
+        "AUTH0_PLATFORM_URL",
+        "AUTH0_PLATFORM_CLIENT_ID",
+        "AUTH0_PLATFORM_CLIENT_SECRET",
+        "AUTH0_PLATFORM_CLIENT_AUDIENCE"
+    ]
+
+    # thread pool of 5 to load fetch the keys
+    pool = ThreadPool(5)
+    results = pool.map(_load_single_key, keys)
+    pool.close()
+    pool.join()
+
+    # set the variable values at the module level so can be imported as cla.config.{VAR_NAME}
+    for config_key, result in zip(config_keys, results):
+        if result:
+            setattr(this, config_key, result)
+        else:
+            logging.warning(f"skipping {config_key} setting the ssm was empty")
+
+
+# when imported this will be called to load ssm keys
+load_ssm_keys()
