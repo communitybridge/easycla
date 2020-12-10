@@ -38,22 +38,37 @@ class ProjectService:
         log.debug(f'Fetched Key: {key}, value: {response["Parameter"]["Value"]}')
         return response['Parameter']['Value']
 
-    def is_standalone(self, project_id):
+    def is_standalone(self, project_sfid) -> bool:
         """
         Checks if salesforce project is a stand alone project (No subprojects and parent)
-        :param project_id: salesforce project_id
-        :type project_id: string
+        :param project_sfid: salesforce project_id
+        :type project_sfid: string
         :return: Check whether sf project is a stand alone
         :rtype: Boolean
         """
-        project = self.get_project_by_id(project_id)
+        project = self.get_project_by_id(project_sfid)
         if project:
             parent_sf_id = project.get('Parent', None)
             if not self.has_parent(project) and (parent_sf_id is None or parent_sf_id == THE_LINUX_FOUNDATION):
                 return True
         return False
 
-    def has_parent(self, project):
+    def is_lf_supported(self, project_sfid) -> bool:
+        """
+        Checks if salesforce project is a LF Supported project
+        :param project_sfid: salesforce project_id
+        :type project_sfid: string
+        :return: Check whether sf project is a stand alone
+        :rtype: Boolean
+        """
+        project = self.get_project_by_id(project_sfid)
+        if project:
+            return (project.get('Funding', None) == 'Unfunded' or
+                    project.get('Funding', None) == 'Supported By Parent') and \
+                   project.get('Parent', None) == THE_LINUX_FOUNDATION
+        return False
+
+    def has_parent(self, project) -> bool:
         """ checks if project has parent """
         try:
             log.info(f"Checking if {project['Name']} has parent project")
@@ -65,7 +80,7 @@ class ProjectService:
             return False
         return False
 
-    def is_parent(self, project):
+    def is_parent(self, project) -> bool:
         """ 
         checks whether salesforce project is a parent
         :param project: salesforce project

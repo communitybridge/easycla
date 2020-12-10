@@ -29,6 +29,7 @@ import cla.hug_types
 import cla.salesforce
 from cla.controllers.github import get_github_activity_action
 from cla.controllers.github_activity import v4_easycla_github_activity
+from cla.models.dynamo_models import Repository
 from cla.project_service import ProjectService
 from cla.utils import (
     get_supported_repository_providers,
@@ -796,9 +797,12 @@ def get_project(project_id: hug.types.uuid):
         mapping_record = project_cla_group.to_dict()
         cla.log.debug(f'{fn} - determining if project {project_id} is a standalone project')
         mapping_record['standalone_project'] = ps.is_standalone(project_sfid)
+        mapping_record['lf_supported'] = ps.is_lf_supported(project_sfid)
         if project_sfid is not None and foundation_sfid is not None and project_sfid == foundation_sfid:
             cla.log.debug(f'{fn} - determined that the cla group is signed at the foundation')
             signed_at_foundation = True
+        repos_service = Repository()
+        mapping_record['repos'] = repos_service.get_repository_by_project_sfid(project_sfid)
 
         # Add this mapping record to list
         sf_projects.append(mapping_record)

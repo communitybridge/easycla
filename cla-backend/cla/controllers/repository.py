@@ -12,6 +12,7 @@ from cla.models.dynamo_models import Project, Repository, UserPermissions, GitHu
 from cla.models import DoesNotExist
 from cla.auth import AuthUser
 
+
 def get_repositories():
     """
     Returns a list of repositories in the CLA system.
@@ -39,7 +40,7 @@ def get_repository(repository_id):
     return repository.to_dict()
 
 
-def create_repository(auth_user: AuthUser, # pylint: disable=too-many-arguments
+def create_repository(auth_user: AuthUser,  # pylint: disable=too-many-arguments
                       repository_project_id,
                       repository_name,
                       repository_organization_name, 
