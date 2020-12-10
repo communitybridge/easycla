@@ -21,7 +21,7 @@ class GitHubInstallation(object):
     @property
     def private_key(self):
         # return cla.config.GITHUB_PRIVATE_KEY
-        return cla.config.get_ssm_key('us-east-1', f'cla-gh-app-private-key-{cla.config.stage}')
+        return cla.config.GITHUB_PRIVATE_KEY
 
     @property
     def repos(self):
