@@ -358,14 +358,14 @@ func (repo *repository) queryEventsTable(indexName string, condition expression.
 	}
 
 	if nextKey != nil && !all {
-		log.Debugf("Received a nextKey, value: %s", *nextKey)
+		// log.Debugf("Received a nextKey, value: %s", *nextKey)
 		queryInput.ExclusiveStartKey, err = fromString(*nextKey)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	log.WithField("queryInput", *queryInput).Debug("query")
+	// log.WithField("queryInput", *queryInput).Debug("query")
 	var lastEvaluatedKey string
 	events := make([]*models.Event, 0)
 
@@ -376,7 +376,7 @@ func (repo *repository) queryEventsTable(indexName string, condition expression.
 	for ok := true; ok; ok = lastEvaluatedKey != "" {
 		results, errQuery := repo.dynamoDBClient.Query(queryInput)
 		if errQuery != nil {
-			log.Warnf("error retrieving events. error = %s", errQuery.Error())
+			log.WithFields(f).WithError(errQuery).Warnf("error retrieving events. error = %s", errQuery.Error())
 			return nil, errQuery
 		}
 

@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+
 	"github.com/LF-Engineering/lfx-kit/auth"
 	"github.com/communitybridge/easycla/cla-backend-go/events"
 	"github.com/sirupsen/logrus"
@@ -58,6 +60,13 @@ func GetClient() *Client {
 
 // CreateOrgUserRoleOrgScope attached role scope for particular org and user
 func (osc *Client) CreateOrgUserRoleOrgScope(emailID string, organizationID string, roleID string) error {
+	f := logrus.Fields{
+		"functionName":   "organization_service.CreateOrgUserRoleOrgScope",
+		"emailID":        emailID,
+		"organizationID": organizationID,
+		"roleID":         roleID,
+	}
+
 	params := &organizations.CreateOrgUsrRoleScopesParams{
 		CreateRoleScopes: &models.CreateRolescopes{
 			EmailAddress: &emailID,
@@ -68,25 +77,36 @@ func (osc *Client) CreateOrgUserRoleOrgScope(emailID string, organizationID stri
 		SalesforceID: organizationID,
 		Context:      context.Background(),
 	}
+
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to fetch token")
 		return err
 	}
+
 	clientAuth := runtimeClient.BearerToken(tok)
-	log.Debugf("CreateOrgUserRoleOrgScope: called with args emailID: %s, organizationID: %s, roleID: %s\n", emailID, organizationID, roleID)
+	log.WithFields(f).Debug("calling org service CreateOrgUsrRoleScopes")
 	result, err := osc.cl.Organizations.CreateOrgUsrRoleScopes(params, clientAuth)
 	if err != nil {
-		log.Error("CreateOrgUserRoleOrgScope failed", err)
+		log.WithFields(f).WithError(err).Warn("unable to assign user to organization")
 		return err
 	}
-	log.Debugf("CreateOrgUserRoleOrgScope: result: %#v\n", result)
+
+	log.WithFields(f).Debugf("Successfully assigned user to organization, result: %#v", result)
 	return nil
 }
 
 // IsCompanyOwner checks if User is company owner
 func (osc *Client) IsCompanyOwner(userSFID string, orgs []string) (bool, error) {
+	f := logrus.Fields{
+		"functionName": "organization_service.IsCompanyOwner",
+		"userSFID":     userSFID,
+		"orgs":         strings.Join(orgs, ","),
+	}
+
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to fetch token")
 		return false, err
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
@@ -98,7 +118,7 @@ func (osc *Client) IsCompanyOwner(userSFID string, orgs []string) (bool, error) 
 		result, scopeErr := osc.cl.Organizations.ListOrgUsrAdminScopes(params, clientAuth)
 		if scopeErr != nil {
 			msg := fmt.Sprintf("error : %+v ", scopeErr)
-			log.Warn(msg)
+			log.WithFields(f).WithError(scopeErr).Warn(msg)
 			//Ensure to check the 2 organizations in question
 			if index == 0 {
 				continue
@@ -125,11 +145,20 @@ func (osc *Client) IsCompanyOwner(userSFID string, orgs []string) (bool, error) 
 
 // IsUserHaveRoleScope checks if user have required role and scope
 func (osc *Client) IsUserHaveRoleScope(roleName string, userSFID string, organizationID string, projectSFID string) (bool, error) {
+	f := logrus.Fields{
+		"functionName":   "organization_service.IsUserHaveRoleScope",
+		"roleName":       roleName,
+		"userSFID":       userSFID,
+		"organizationID": organizationID,
+		"projectSFID":    projectSFID,
+	}
+
 	objectID := fmt.Sprintf("%s|%s", projectSFID, organizationID)
 	var offset int64
 	var pageSize int64 = 1000
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to fetch token")
 		return false, err
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
@@ -143,6 +172,7 @@ func (osc *Client) IsUserHaveRoleScope(roleName string, userSFID string, organiz
 		}
 		result, err := osc.cl.Organizations.ListOrgUsrServiceScopes(params, clientAuth)
 		if err != nil {
+			log.WithFields(f).WithError(err).Warn("unable get organization user service scopes")
 			return false, err
 		}
 		for _, userRole := range result.Payload.Userroles {
@@ -171,7 +201,7 @@ func (osc *Client) IsUserHaveRoleScope(roleName string, userSFID string, organiz
 // CreateOrgUserRoleOrgScopeProjectOrg assigns role scope to user
 func (osc *Client) CreateOrgUserRoleOrgScopeProjectOrg(emailID string, projectID string, organizationID string, roleID string) error {
 	f := logrus.Fields{
-		"functionName":   "CreateOrgUserRoleOrgScopeProjectOrg",
+		"functionName":   "organization_service.CreateOrgUserRoleOrgScopeProjectOrg",
 		"projectID":      projectID,
 		"organizationID": organizationID,
 		"roleID":         roleID,
@@ -190,7 +220,7 @@ func (osc *Client) CreateOrgUserRoleOrgScopeProjectOrg(emailID string, projectID
 	}
 	tok, err := token.GetToken()
 	if err != nil {
-		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
+		log.WithFields(f).WithError(err).Warn("unable to fetch token")
 		return err
 	}
 
@@ -198,7 +228,7 @@ func (osc *Client) CreateOrgUserRoleOrgScopeProjectOrg(emailID string, projectID
 	log.Debugf("CreateOrgUserRoleScope: called with args emailID: %s, projectID: %s, organizationID: %s, roleID: %s", emailID, projectID, organizationID, roleID)
 	result, err := osc.cl.Organizations.CreateOrgUsrRoleScopes(params, clientAuth)
 	if err != nil {
-		log.WithFields(f).Warnf("CreateOrgUserRoleScope failed, error: %+v", err)
+		log.WithFields(f).WithError(err).Warn("CreateOrgUserRoleScope failed")
 		return err
 	}
 
@@ -209,7 +239,7 @@ func (osc *Client) CreateOrgUserRoleOrgScopeProjectOrg(emailID string, projectID
 // DeleteRolePermissions removes the specified Org/Project user permissions for with the given role
 func (osc *Client) DeleteRolePermissions(organizationID, projectID, role string, authUser *auth.User) error {
 	f := logrus.Fields{
-		"functionName":   "DeleteRolePermissions",
+		"functionName":   "organization_service.DeleteRolePermissions",
 		"organizationID": organizationID,
 		"projectID":      projectID,
 		"role":           role,
@@ -218,7 +248,7 @@ func (osc *Client) DeleteRolePermissions(organizationID, projectID, role string,
 	// First, query the organization for the list of permissions (scopes)
 	scopeResponse, err := osc.ListOrgUserScopes(organizationID, []string{role})
 	if err != nil {
-		log.WithFields(f).Warnf("problem listing org user scopes, error: %+v", err)
+		log.WithFields(f).WithError(err).Warn("problem listing org user scopes")
 		return err
 	}
 
@@ -273,9 +303,8 @@ func (osc *Client) DeleteRolePermissions(organizationID, projectID, role string,
 
 // DeleteOrgUserRoleOrgScopeProjectOrg removes role scope for user
 func (osc *Client) DeleteOrgUserRoleOrgScopeProjectOrg(organizationID string, roleID string, scopeID string, userName *string, userEmail *string) error {
-
 	f := logrus.Fields{
-		"functionName":   "DeleteOrgUserRoleOrgScopeProjectOrg",
+		"functionName":   "organization_service.DeleteOrgUserRoleOrgScopeProjectOrg",
 		"organizationID": organizationID,
 		"roleID":         roleID,
 		"scopeID":        scopeID,
@@ -293,7 +322,7 @@ func (osc *Client) DeleteOrgUserRoleOrgScopeProjectOrg(organizationID string, ro
 	}
 	tok, err := token.GetToken()
 	if err != nil {
-		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
+		log.WithFields(f).WithError(err).Warn("unable to fetch token")
 		return err
 	}
 
@@ -312,8 +341,17 @@ func (osc *Client) DeleteOrgUserRoleOrgScopeProjectOrg(organizationID string, ro
 
 // GetScopeID will return scopeID for a give role
 func (osc *Client) GetScopeID(organizationID string, projectID string, roleName string, objectTypeName string, userLFID string) (string, error) {
+	f := logrus.Fields{
+		"functionName":   "organization_service.GetScopeID",
+		"organizationID": organizationID,
+		"projectID":      projectID,
+		"roleName":       roleName,
+		"objectTypeName": objectTypeName,
+		"userLFID":       userLFID,
+	}
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to fetch token")
 		return "", err
 	}
 	params := &organizations.ListOrgUsrServiceScopesParams{
@@ -351,8 +389,15 @@ func (osc *Client) GetScopeID(organizationID string, projectID string, roleName 
 // SearchOrganization search organization by name. It will return
 // array of organization matching with the orgName.
 func (osc *Client) SearchOrganization(orgName string, websiteName string, filter string) ([]*models.Organization, error) {
+	f := logrus.Fields{
+		"functionName": "organization_service.SearchOrganization",
+		"orgName":      orgName,
+		"websiteName":  websiteName,
+		"filter":       filter,
+	}
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to fetch token")
 		return nil, err
 	}
 	var offset int64
@@ -370,6 +415,7 @@ func (osc *Client) SearchOrganization(orgName string, websiteName string, filter
 		}
 		result, err := osc.cl.Organizations.SearchOrg(params, clientAuth)
 		if err != nil {
+			log.WithFields(f).WithError(err).Warnf("unable to search organization with params: %+v", params)
 			return nil, err
 		}
 		orgs = append(orgs, result.Payload.Data...)
@@ -384,8 +430,13 @@ func (osc *Client) SearchOrganization(orgName string, websiteName string, filter
 
 // GetOrganization gets organization from organization id
 func (osc *Client) GetOrganization(orgID string) (*models.Organization, error) {
+	f := logrus.Fields{
+		"functionName": "organization_service.GetOrganization",
+		"orgID":        orgID,
+	}
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to fetch token")
 		return nil, err
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
@@ -395,6 +446,7 @@ func (osc *Client) GetOrganization(orgID string) (*models.Organization, error) {
 	}
 	result, err := osc.cl.Organizations.GetOrg(params, clientAuth)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("unable to get organization with params: %+v", params)
 		return nil, err
 	}
 	return result.Payload, nil
@@ -402,8 +454,14 @@ func (osc *Client) GetOrganization(orgID string) (*models.Organization, error) {
 
 // ListOrgUserAdminScopes returns admin role scope of organization
 func (osc *Client) ListOrgUserAdminScopes(orgID string, role *string) (*models.UserrolescopesList, error) {
+	f := logrus.Fields{
+		"functionName": "organization_service.ListOrgUserAdminScopes",
+		"orgID":        orgID,
+		"role":         utils.StringValue(role),
+	}
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to fetch token")
 		return nil, err
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
@@ -416,6 +474,7 @@ func (osc *Client) ListOrgUserAdminScopes(orgID string, role *string) (*models.U
 	}
 	result, err := osc.cl.Organizations.ListOrgUsrAdminScopes(params, clientAuth)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("unable to list organization user admin scopes with params: %+v", params)
 		return nil, err
 	}
 	return result.Payload, nil
@@ -423,9 +482,15 @@ func (osc *Client) ListOrgUserAdminScopes(orgID string, role *string) (*models.U
 
 // ListOrgUserScopes returns role scope of organization
 // rolename is optional filter
-func (osc *Client) ListOrgUserScopes(orgID string, rolename []string) (*models.UserrolescopesList, error) {
+func (osc *Client) ListOrgUserScopes(orgID string, roleName []string) (*models.UserrolescopesList, error) {
+	f := logrus.Fields{
+		"functionName": "organization_service.ListOrgUserScopes",
+		"orgID":        orgID,
+		"roleName":     strings.Join(roleName, ","),
+	}
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to fetch token")
 		return nil, err
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
@@ -433,27 +498,39 @@ func (osc *Client) ListOrgUserScopes(orgID string, rolename []string) (*models.U
 		SalesforceID: orgID,
 		Context:      context.Background(),
 	}
-	if len(rolename) != 0 {
-		params.Rolename = rolename
+	if len(roleName) != 0 {
+		params.Rolename = roleName
 	}
+
 	result, err := osc.cl.Organizations.ListOrgUsrServiceScopes(params, clientAuth)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("unable to list organization user service scopes with params: %+v", params)
 		return nil, err
 	}
+
 	return result.Payload, nil
 }
 
 // CreateOrg creates company based on name and website with additional data for required fields
 func (osc *Client) CreateOrg(companyName string, companyWebsite string) (*models.Organization, error) {
+	f := logrus.Fields{
+		"functionName":   "organization_service.CreateOrg",
+		"companyName":    companyName,
+		"companyWebsite": companyWebsite,
+	}
+
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to fetch token")
 		return nil, err
 	}
 	// use linux foundation logo as default
 	linuxFoundation, err := osc.SearchOrganization("Linux Foundation", "", "")
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to search organization")
 		return nil, err
 	}
+
 	clientAuth := runtimeClient.BearerToken(tok)
 	description := "No Description"
 	companyType := "Customer"
@@ -461,15 +538,10 @@ func (osc *Client) CreateOrg(companyName string, companyWebsite string) (*models
 	industry := "No Industry"
 	logoURL := linuxFoundation[0].LogoURL
 
-	f := logrus.Fields{
-		"functionName": "CreateOrg",
-		"Name":         companyName,
-		"Website":      companyWebsite,
-		"companyType":  companyType,
-		"industry":     industry,
-		"logoURL":      logoURL,
-		"type":         companyType,
-	}
+	f["companyType"] = companyType
+	f["industry"] = industry
+	f["logoURL"] = logoURL
+	f["type"] = companyType
 
 	org := models.CreateOrg{
 		Description: &description,
@@ -487,9 +559,8 @@ func (osc *Client) CreateOrg(companyName string, companyWebsite string) (*models
 	}
 
 	result, err := osc.cl.Organizations.CreateOrg(params, clientAuth)
-
 	if err != nil {
-		log.WithFields(f).Warnf("Failed to create salesforce Company :%s , err: %+v ", companyName, err)
+		log.WithFields(f).WithError(err).Warnf("Failed to create salesforce Company :%s , err: %+v ", companyName, err)
 		return nil, err
 	}
 	log.WithFields(f).Infof("Company: %s  successfuly created ", companyName)
@@ -499,8 +570,14 @@ func (osc *Client) CreateOrg(companyName string, companyWebsite string) (*models
 
 // ListOrg returns organization
 func (osc *Client) ListOrg(orgName string) (*models.OrganizationList, error) {
+	f := logrus.Fields{
+		"functionName": "organization_service.ListOrg",
+		"orgName":      orgName,
+	}
+
 	tok, err := token.GetToken()
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to fetch token")
 		return nil, err
 	}
 	clientAuth := runtimeClient.BearerToken(tok)
@@ -511,6 +588,7 @@ func (osc *Client) ListOrg(orgName string) (*models.OrganizationList, error) {
 
 	result, err := osc.cl.Organizations.ListOrg(params, clientAuth)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("Failed to list organizations using params: %+v", params)
 		return nil, err
 	}
 	return result.Payload, nil
