@@ -172,7 +172,7 @@ def load_ssm_keys():
         "AUTH0_PLATFORM_URL",
         "AUTH0_PLATFORM_CLIENT_ID",
         "AUTH0_PLATFORM_CLIENT_SECRET",
-        "AUTH0_PLATFORM_CLIENT_AUDIENCE"
+        "AUTH0_PLATFORM_AUDIENCE"
     ]
 
     # thread pool of 5 to load fetch the keys
