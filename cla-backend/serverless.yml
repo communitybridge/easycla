@@ -236,6 +236,8 @@ provider:
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/lf-username-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-users/index/lf-email-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-gerrit-instances/index/gerrit-name-index"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-gerrit-instances/index/gerrit-project-id-index"
+        - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-gerrit-instances/index/gerrit-project-sfid-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/project-signature-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/project-signature-date-index"
         - "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/cla-${opt:stage}-signatures/index/reference-signature-index"

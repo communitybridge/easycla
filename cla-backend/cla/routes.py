@@ -816,13 +816,20 @@ def get_project(project_id: hug.types.uuid):
         cla.log.debug(f'{fn} - querying github repositories for cla group: {project.get("project_name", None)} '
                       f'with id: {project_id}...')
         mapping_record['github_repos'] = Repository().get_repository_by_project_sfid(project_sfid)
+        mapping_record['gerrit_repos'] = []
         try:
             cla.log.debug(f'{fn} - querying gerrit repositories for cla group: {project.get("project_name", None)} '
                           f'with id: {project_id}...')
-            mapping_record['gerrit_repos'] = Gerrit().get_gerrit_by_project_id(project_sfid)
+            gerrits = Gerrit().get_gerrit_by_project_sfid(project_sfid)
+            if gerrits:
+                # Convert the object to a generic dict to be marshalled
+                array_dicts = []
+                for gerrit in gerrits:
+                    array_dicts.append(gerrit.to_dict())
+                mapping_record['gerrit_repos'] = array_dicts
         except cla.models.DoesNotExist:
-            mapping_record['gerrit_repos'] = []
-            cla.log.debug(f'{fn} - no gerrit repos configured for cla group')
+            cla.log.debug(f'{fn} - no gerrit repos configured for cla group: {project.get("project_name", None)} '
+                          f'with id: {project_id}...')
 
         # Add this mapping record to list
         sf_projects.append(mapping_record)

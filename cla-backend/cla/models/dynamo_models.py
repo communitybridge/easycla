@@ -31,7 +31,6 @@ from pynamodb.models import Model
 import cla
 from cla.models import model_interfaces, key_value_store_interface, DoesNotExist
 from cla.models.model_interfaces import User, Signature, ProjectCLAGroup, Repository, Gerrit
-from cla.project_service import ProjectService
 
 stage = os.environ.get("STAGE", "")
 cla_logo_url = os.environ.get("CLA_BUCKET_LOGO_URL", "")
@@ -330,6 +329,7 @@ class ProjectFoundationIDIndex(GlobalSecondaryIndex):
     foundation_sfid = UnicodeAttribute(hash_key=True)
     project_name = UnicodeAttribute(range_key=True)
 
+
 class CompanyNameIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying companies by name.
@@ -346,6 +346,7 @@ class CompanyNameIndex(GlobalSecondaryIndex):
 
     # This attribute is the hash key for the index.
     company_name = UnicodeAttribute(hash_key=True)
+
 
 class ExternalCompanyIndex(GlobalSecondaryIndex):
     """
@@ -379,6 +380,38 @@ class GithubOrgSFIndex(GlobalSecondaryIndex):
         projection = AllProjection()
 
     organization_sfid = UnicodeAttribute(hash_key=True)
+
+
+class GerritProjectIDIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying gerrit's by the project ID
+    """
+
+    class Meta:
+        """Meta class for external ID github org index."""
+
+        index_name = "gerrit-project-id-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        projection = AllProjection()
+
+    project_id = UnicodeAttribute(hash_key=True)
+
+
+class GerritProjectSFIDIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying gerrit's by the project SFID
+    """
+
+    class Meta:
+        """Meta class for external ID github org index."""
+
+        index_name = "gerrit-project-sfid-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        projection = AllProjection()
+
+    project_sfid = UnicodeAttribute(hash_key=True)
 
 
 class ProjectSignatureIndex(GlobalSecondaryIndex):
@@ -2927,10 +2960,10 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
                     break
                     # DD: The below logic is incorrect - does not matter if we have a standalone project or not
                     # First check if project is a standalone project
-                    #ps = ProjectService
-                    #if not ps.is_standalone(mapping.get_project_sfid()):
+                    # ps = ProjectService
+                    # if not ps.is_standalone(mapping.get_project_sfid()):
                     #    foundation_level_cla = True
-                    #break
+                    # break
 
         return foundation_level_cla
 
@@ -3082,7 +3115,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         except CompanyModel.DoesNotExist:
             raise cla.models.DoesNotExist("Company not found")
         self.model = company
-    
+
     def load_company_by_name(self, company_name):
         try:
             company_generator = self.model.company_name_index.query(company_name)
@@ -3472,6 +3505,8 @@ class GerritModel(BaseModel):
     group_name_icla = UnicodeAttribute(null=True)
     group_name_ccla = UnicodeAttribute(null=True)
     project_sfid = UnicodeAttribute(null=True)
+    project_id_index = GerritProjectIDIndex()
+    project_sfid_index = GerritProjectSFIDIndex()
 
 
 class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-methods
@@ -3576,7 +3611,19 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
         self.model.delete()
 
     def get_gerrit_by_project_id(self, project_id) -> List[Gerrit]:
-        gerrit_generator = self.model.scan(project_id__eq=str(project_id))
+        gerrit_generator = self.model.project_id_index.query(project_id)
+        gerrits = []
+        for gerrit_model in gerrit_generator:
+            gerrit = Gerrit()
+            gerrit.model = gerrit_model
+            gerrits.append(gerrit)
+        if len(gerrits) >= 1:
+            return gerrits
+        else:
+            raise cla.models.DoesNotExist("Gerrit instance does not exist")
+
+    def get_gerrit_by_project_sfid(self, project_sfid) -> List[Gerrit]:
+        gerrit_generator = self.model.project_sfid_index.query(project_sfid)
         gerrits = []
         for gerrit_model in gerrit_generator:
             gerrit = Gerrit()
@@ -3695,10 +3742,10 @@ class CompanyInvite(model_interfaces.CompanyInvite):
         except CompanyInviteModel.DoesNotExist:
             raise cla.models.DoesNotExist("Company Invite not found")
         self.model = company_invite
-    
+
     def set_company_invite_id(self, company_invite_id):
         self.model.company_invite_id = company_invite_id
-    
+
     def get_company_invite_id(self):
         return self.model.company_invite_id
 
