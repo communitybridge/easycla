@@ -81,16 +81,22 @@ func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, 
 		log.WithFields(f).Warnf("invalid username: %+v", usernameClaim)
 		return nil, errors.New("invalid username")
 	}
+	f["username"] = username
+
 	nameClaim, ok := claims[a.authValidator.nameClaim]
 	if !ok {
 		log.WithFields(f).Warnf("name not found: %+v", a.authValidator.nameClaim)
 		return nil, errors.New("name not found")
 	}
+	f["nameClaim"] = nameClaim
+
 	name, ok := nameClaim.(string)
 	if !ok {
 		log.WithFields(f).Warn("invalid name - not a string")
 		return nil, errors.New("invalid name")
 	}
+	f["name"] = name
+
 	emailClaim, ok := claims[a.authValidator.emailClaim]
 	if !ok {
 		log.WithFields(f).Warnf("email not found: %+v", a.authValidator.emailClaim)
@@ -101,6 +107,8 @@ func (a Authorizer) SecurityAuth(token string, scopes []string) (*user.CLAUser, 
 		log.WithFields(f).Warn("SecurityAuth - invalid email - not a string")
 		return nil, errors.New("invalid email")
 	}
+	f["email"] = email
+
 	// Get User by LFID
 	log.WithFields(f).Debugf("loading user and profiles by LFID: %s", username)
 	lfuser, err := a.userPermissioner.GetUserAndProfilesByLFID(username)

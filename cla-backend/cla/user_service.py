@@ -38,8 +38,8 @@ class UserServiceInstance:
         }
 
         try:
-            url = f'{fn} - {self.platform_gateway_url}/user-service/v1/users/{sf_user_id}'
-            log.debug(f'{fn} - Sending GET request to {url}')
+            url = f'{self.platform_gateway_url}/user-service/v1/users/{sf_user_id}'
+            log.debug(f'{fn} - sending GET request to {url}')
             r = requests.get(url, headers=headers)
             r.raise_for_status()
             response_model = json.loads(r.text)
@@ -69,9 +69,9 @@ class UserServiceInstance:
         while True:
             try:
                 log.info(f'{fn} - Search User using key: {key} with value: {value}')
-                url = f'{fn} - {self.platform_gateway_url}/user-service/v1/users/search?' \
+                url = f'{self.platform_gateway_url}/user-service/v1/users/search?' \
                       f'{key}={quote(value)}&pageSize={pagesize}&offset={offset}'
-                log.debug(f'{fn} - Sending GET request to {url}')
+                log.debug(f'{fn} - sending GET request to {url}')
                 r = requests.get(url, headers=headers)
                 r.raise_for_status()
                 response_model = json.loads(r.text)
@@ -104,7 +104,7 @@ class UserServiceInstance:
         fn = 'user_service.get_access_token'
         # Use previously cached value, if not expired
         if self.access_token and datetime.datetime.now() < self.access_token_expires:
-            cla.log.debug(f'{fn} - using cached access token')
+            cla.log.debug(f'{fn} - using cached access token: {self.access_token[0:10]}...')
             return self.access_token
 
         auth0_url = cla.config.AUTH0_PLATFORM_URL

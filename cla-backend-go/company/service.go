@@ -372,10 +372,16 @@ func (s service) RejectCompanyAccessRequest(ctx context.Context, companyInviteID
 
 // AddUserToCompanyAccessList adds a user to the specified company
 func (s service) AddUserToCompanyAccessList(ctx context.Context, companyID, lfid string) error {
+	f := logrus.Fields{
+		"functionName":   "company.AddUserToCompanyAccessList",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companyID":      companyID,
+		"lfid":           lfid,
+	}
 	// call the get company function
 	company, err := s.repo.GetCompany(ctx, companyID)
 	if err != nil {
-		log.Warnf("Error retrieving company by company ID: %s, error: %v", companyID, err)
+		log.WithFields(f).WithError(err).Warnf("Error retrieving company by company ID: %s", companyID)
 		return err
 	}
 
@@ -383,7 +389,7 @@ func (s service) AddUserToCompanyAccessList(ctx context.Context, companyID, lfid
 	// check if user already exists in the company acl
 	for _, acl := range company.CompanyACL {
 		if acl == lfid {
-			log.Warnf(fmt.Sprintf("User %s has already been added to the company acl", lfid))
+			log.WithFields(f).Warnf(fmt.Sprintf("User %s has already been added to the company acl - will not update ACL", lfid))
 			return nil
 		}
 	}
@@ -392,7 +398,7 @@ func (s service) AddUserToCompanyAccessList(ctx context.Context, companyID, lfid
 
 	err = s.repo.UpdateCompanyAccessList(ctx, companyID, company.CompanyACL)
 	if err != nil {
-		log.Warnf("Error updating company access list with company ID: %s, company ACL: %v, error: %v", companyID, company.CompanyACL, err)
+		log.WithFields(f).WithError(err).Warnf("Error updating company access list with company ID: %s, company ACL: %v, error: %v", companyID, company.CompanyACL, err)
 		return err
 	}
 
@@ -401,6 +407,14 @@ func (s service) AddUserToCompanyAccessList(ctx context.Context, companyID, lfid
 
 // sendRequestAccessEmail sends the request access email
 func (s service) sendRequestAccessEmail(ctx context.Context, companyModel *models.Company, requesterName, requesterEmail, recipientName, recipientAddress string) {
+	f := logrus.Fields{
+		"functionName":     "company.sendRequestAccessEmail",
+		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
+		"requesterName":    requesterName,
+		"requesterEmail":   requesterEmail,
+		"recipientName":    recipientName,
+		"recipientAddress": recipientAddress,
+	}
 	companyName := companyModel.CompanyName
 
 	requestedUserInfo := fmt.Sprintf("<ul><li>%s (%s)</li></ul>", requesterName, requesterEmail)
@@ -425,14 +439,20 @@ company.You can choose to accept or deny the request.
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
-		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+		log.WithFields(f).WithError(err).Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
 	} else {
-		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+		log.WithFields(f).Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
 	}
 }
 
 // sendRequestApprovedEmailToRecipient generates and sends an email to the specified recipient
 func (s service) sendRequestApprovedEmailToRecipient(ctx context.Context, companyModel *models.Company, recipientName, recipientAddress string) {
+	f := logrus.Fields{
+		"functionName":     "company.sendRequestApprovedEmailToRecipient",
+		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
+		"recipientName":    recipientName,
+		"recipientAddress": recipientAddress,
+	}
 	companyName := companyModel.CompanyName
 
 	// subject string, body string, recipients []string
@@ -456,14 +476,21 @@ Manager status.
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
-		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+		log.WithFields(f).WithError(err).Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
 	} else {
-		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+		log.WithFields(f).Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
 	}
 }
 
 // sendRequestRejectedEmailToRecipient generates and sends an email to the specified recipient
 func (s service) sendRequestRejectedEmailToRecipient(ctx context.Context, companyModel *models.Company, recipientName, recipientAddress string) {
+	f := logrus.Fields{
+		"functionName":     "company.sendRequestRejectedEmailToRecipient",
+		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
+		"recipientName":    recipientName,
+		"recipientAddress": recipientAddress,
+	}
+
 	companyName := companyModel.CompanyName
 
 	var companyManagerText = ""
@@ -474,7 +501,7 @@ func (s service) sendRequestRejectedEmailToRecipient(ctx context.Context, compan
 
 		userModel, userErr := s.userDynamoRepo.GetUserAndProfilesByLFID(companyAdminLFID)
 		if userErr != nil {
-			log.Warnf("RejectCompanyAccessRequest - unable to locate user model by ID: %s, error: %+v",
+			log.WithFields(f).Warnf("unable to locate user model by ID: %s, error: %+v",
 				companyAdminLFID, userErr)
 		}
 
@@ -490,7 +517,7 @@ func (s service) sendRequestRejectedEmailToRecipient(ctx context.Context, compan
 		}
 
 		if whichEmail == "" {
-			log.Warnf("unable to send email to manager: %+v - no email on file...", userModel)
+			log.WithFields(f).Warnf("unable to send email to manager: %+v - no email on file...", userModel)
 		} else {
 			companyManagerText += fmt.Sprintf("<li>%s <%s></li>", userModel.Name, whichEmail)
 		}
@@ -515,17 +542,22 @@ If you have further questions about this denial, please contact one of the exist
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
-		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+		log.WithFields(f).WithError(err).Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
 	} else {
-		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+		log.WithFields(f).Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
 	}
 }
 
 // getPreferredNameAndEmail when given the user LFID, this routine returns the user's name and preferred email
 func (s service) getPreferredNameAndEmail(ctx context.Context, lfid string) (string, string, error) {
+	f := logrus.Fields{
+		"functionName":   "company.getPreferredNameAndEmail",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"lfid":           lfid,
+	}
 	userModel, userErr := s.userService.GetUserByLFUserName(lfid)
 	if userErr != nil {
-		log.Warnf("getPreferredNameAndEmail - unable to locate user model by ID: %s, error: %+v",
+		log.WithFields(f).WithError(userErr).Warnf("getPreferredNameAndEmail - unable to locate user model by ID: %s, error: %+v",
 			lfid, userErr)
 		return "", "", userErr
 	}
@@ -535,7 +567,7 @@ func (s service) getPreferredNameAndEmail(ctx context.Context, lfid string) (str
 	if userModel == nil {
 		userModels, userErr := s.userService.SearchUsers("user_name", lfid, true)
 		if userErr != nil {
-			log.Warnf("SearchUsers - unable to locate user model by ID: %s, error: %+v",
+			log.WithFields(f).WithError(userErr).Warnf("SearchUsers - unable to locate user model by ID: %s, error: %+v",
 				lfid, userErr)
 			return "", "", userErr
 		}
@@ -599,7 +631,7 @@ func (s service) SearchOrganizationByName(ctx context.Context, orgName string, w
 // CreateOrgFromExternalID creates a new EasyCLA company from the external SF Organization ID
 func (s service) CreateOrgFromExternalID(ctx context.Context, companySFID string) (*models.Company, error) {
 	f := logrus.Fields{
-		"functionName":   "CreateOrgFromExternalID",
+		"functionName":   "company.CreateOrgFromExternalID",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companySFID":    companySFID,
 	}

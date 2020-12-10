@@ -218,7 +218,7 @@ func (s service) AddClaManager(ctx context.Context, companyID string, claGroupID
 		return nil, aclErr
 	}
 
-	// Update the company ACL
+	// Update the company ACL record in EasyCLA
 	companyACLError := s.companyService.AddUserToCompanyAccessList(ctx, companyID, LFID)
 	if companyACLError != nil {
 		log.Warnf("AddCLAManager- Unable to add user to company ACL, companyID: %s, user: %s, error: %+v", companyID, LFID, companyACLError)
