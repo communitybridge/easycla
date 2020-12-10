@@ -842,14 +842,42 @@ class DocuSign(signing_service_interface.SigningService):
         cla_manager_user = users_list[0]
 
         # Add some defensive checks to ensure the Name and Email are set for the CLA Manager
+        us = UserService()
+        cla.log.debug(f'Loading user by username: {auth_user.username} from the platform user service...')
+        platform_users = us.get_users_by_username(auth_user.username)
+        if platform_users is None:
+            cla.log.warning(f'Unable to load auth_user by username: {auth_user.username}. '
+                            'Returning an error response')
+            return {'errors': {'user_error': 'user does not exist'}}
+        platform_user = platform_users[0]
+
         if cla_manager_user.get_user_name() is None:
+            # Lookup user in the platform user service...
             cla.log.warning(f'Loaded CLA Manager by username: {auth_user.username}, but '
                             'the user_name is missing from profile - required for DocuSign.')
-            return {'errors': {'user_error': 'user name missing'}}
+            user_name = platform_user.get('Name', None)
+            if user_name:
+                cla.log.debug(f'user_name: {user_name} update for cla_manager : {auth_user.username}...')
+                cla_manager_user.set_user_name(user_name)
+                cla_manager_user.save()
+            else:
+                return {'errors': {'user_error': 'user does not have user_name'}}
+
         if cla_manager_user.get_user_email() is None:
             cla.log.warning(f'Loaded CLA Manager by username: {auth_user.username}, but '
-                            'the user email is missing from profile - required for DocuSign.')
-            return {'errors': {'user_error': 'user email missing'}}
+                'the user email is missing from profile - required for DocuSign.')
+            # Add the emails
+            platform_user_emails = platform_user.get('Emails', None)
+            if len(platform_user_emails) > 0:
+                email_list = []
+                for platform_email in platform_user_emails:
+                    email_list.append(platform_email['EmailAddress'])
+                    if platform_email['IsPrimary']:
+                        cla_manager_user.set_lf_email(platform_email['EmailAddress'])
+                cla_manager_user.set_user_emails(email_list)
+                cla_manager_user.save()
+            else:
+                return {'errors': {'user_error': 'user does not have an email'}}
 
         cla.log.debug(f'Loaded user {cla_manager_user} - this is our CLA Manager')
         # Ensure the project exists
