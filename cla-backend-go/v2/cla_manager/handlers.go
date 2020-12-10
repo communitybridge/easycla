@@ -315,15 +315,6 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 						XRequestID: reqID,
 					})
 			}
-			if statusCode == Accepted {
-				msg := fmt.Sprintf("User %s has no LF Login account", params.Body.UserEmail)
-				return cla_manager.NewCreateCLAManagerRequestAccepted().WithXRequestID(reqID).WithPayload(
-					&models.SuccessResponse{
-						Message:    msg,
-						Code:       Accepted,
-						XRequestID: reqID,
-					})
-			}
 
 			// Return Bad Request
 			return cla_manager.NewCreateCLAManagerRequestBadRequest().WithXRequestID(reqID).WithPayload(
