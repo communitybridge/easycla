@@ -2927,7 +2927,7 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
                     break
                     # DD: The below logic is incorrect - does not matter if we have a standalone project or not
                     # First check if project is a standalone project
-                    #ps = ProjectService()
+                    #ps = ProjectService
                     #if not ps.is_standalone(mapping.get_project_sfid()):
                     #    foundation_level_cla = True
                     #break

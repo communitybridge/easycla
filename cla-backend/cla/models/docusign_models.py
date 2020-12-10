@@ -789,7 +789,7 @@ class DocuSign(signing_service_interface.SigningService):
         if users_list is None:
             cla.log.debug(f'Unable to load auth_user by username: {auth_user.username} from the EasyCLA database.')
             # Lookup user in the platform user service...
-            us = UserService()
+            us = UserService
             # If found, create user record in our EasyCLA database
             cla.log.debug(f'Loading user by username: {auth_user.username} from the platform user service...')
             platform_users = us.get_users_by_username(auth_user.username)
@@ -842,7 +842,7 @@ class DocuSign(signing_service_interface.SigningService):
         cla_manager_user = users_list[0]
 
         # Add some defensive checks to ensure the Name and Email are set for the CLA Manager
-        us = UserService()
+        us = UserService
         cla.log.debug(f'Loading user by username: {auth_user.username} from the platform user service...')
         platform_users = us.get_users_by_username(auth_user.username)
         if platform_users is None:

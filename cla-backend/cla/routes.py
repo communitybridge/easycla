@@ -777,11 +777,22 @@ def get_project(project_id: hug.types.uuid):
     if "project_external_id" in project:
         del project["project_external_id"]
 
+    # Remove all the document anchors, height, alignment details, not needed and it is a lot of JSON
+    if "project_corporate_documents" in project:
+        for doc in project['project_corporate_documents']:
+            del doc['document_tabs']
+    if "project_individual_documents" in project:
+        for doc in project['project_individual_documents']:
+            del doc['document_tabs']
+    if "project_member_documents" in project:
+        for doc in project['project_member_documents']:
+            del doc['document_tabs']
+
     # Add the Project CLA Group Mappings to the response model
     sf_projects = []
 
     # Need a reference to the platform project service
-    ps = ProjectService()
+    ps = ProjectService
 
     # Lookup the project to CLA Group mappings using the CLA Group ID (which is called the project_id in this case)
     cla.log.debug(f'{fn} - loading project cla group mapping by cla group id: {project_id}')
@@ -797,6 +808,8 @@ def get_project(project_id: hug.types.uuid):
         mapping_record = project_cla_group.to_dict()
         cla.log.debug(f'{fn} - determining if project {project_id} is a standalone project')
         mapping_record['standalone_project'] = ps.is_standalone(project_sfid)
+        cla.log.debug(f"{fn} - project {project_id} is a standalone project: {mapping_record['standalone_project']}")
+
         mapping_record['lf_supported'] = ps.is_lf_supported(project_sfid)
         if project_sfid is not None and foundation_sfid is not None and project_sfid == foundation_sfid:
             cla.log.debug(f'{fn} - determined that the cla group is signed at the foundation')
