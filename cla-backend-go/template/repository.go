@@ -900,7 +900,7 @@ var templateMap = map[string]models.Template{
 				AnchorString: "Signatory Name:",
 				FieldType:    "text",
 				IsOptional:   false,
-				IsEditable:   false,
+				IsEditable:   true,
 				Width:        355,
 				Height:       20,
 				OffsetX:      120,
