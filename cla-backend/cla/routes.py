@@ -5,12 +5,10 @@
 The entry point for the CLA service. Lays out all routes and controller functions.
 """
 
-import os
-
 import hug
+import requests
 from falcon import HTTP_401, HTTP_400, HTTP_OK, HTTP_500
 from hug.middleware import LogMiddleware
-import requests
 
 import cla
 import cla.auth
@@ -29,14 +27,14 @@ import cla.hug_types
 import cla.salesforce
 from cla.controllers.github import get_github_activity_action
 from cla.controllers.github_activity import v4_easycla_github_activity
-from cla.models.dynamo_models import Repository
+from cla.controllers.project_cla_group import get_project_cla_group
+from cla.models.dynamo_models import Repository, Gerrit
 from cla.project_service import ProjectService
 from cla.utils import (
     get_supported_repository_providers,
     get_supported_document_content_types,
     get_session_middleware,
 )
-from cla.controllers.project_cla_group import get_project_cla_group
 
 
 #
@@ -814,8 +812,17 @@ def get_project(project_id: hug.types.uuid):
         if project_sfid is not None and foundation_sfid is not None and project_sfid == foundation_sfid:
             cla.log.debug(f'{fn} - determined that the cla group is signed at the foundation')
             signed_at_foundation = True
-        repos_service = Repository()
-        mapping_record['repos'] = repos_service.get_repository_by_project_sfid(project_sfid)
+
+        cla.log.debug(f'{fn} - querying github repositories for cla group: {project.get("project_name", None)} '
+                      f'with id: {project_id}...')
+        mapping_record['github_repos'] = Repository().get_repository_by_project_sfid(project_sfid)
+        try:
+            cla.log.debug(f'{fn} - querying gerrit repositories for cla group: {project.get("project_name", None)} '
+                          f'with id: {project_id}...')
+            mapping_record['gerrit_repos'] = Gerrit().get_gerrit_by_project_id(project_sfid)
+        except cla.models.DoesNotExist:
+            mapping_record['gerrit_repos'] = []
+            cla.log.debug(f'{fn} - no gerrit repos configured for cla group')
 
         # Add this mapping record to list
         sf_projects.append(mapping_record)

@@ -30,7 +30,7 @@ from pynamodb.models import Model
 
 import cla
 from cla.models import model_interfaces, key_value_store_interface, DoesNotExist
-from cla.models.model_interfaces import User, Signature, ProjectCLAGroup, Repository
+from cla.models.model_interfaces import User, Signature, ProjectCLAGroup, Repository, Gerrit
 from cla.project_service import ProjectService
 
 stage = os.environ.get("STAGE", "")
@@ -3575,7 +3575,7 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
     def delete(self):
         self.model.delete()
 
-    def get_gerrit_by_project_id(self, project_id):
+    def get_gerrit_by_project_id(self, project_id) -> List[Gerrit]:
         gerrit_generator = self.model.scan(project_id__eq=str(project_id))
         gerrits = []
         for gerrit_model in gerrit_generator:
