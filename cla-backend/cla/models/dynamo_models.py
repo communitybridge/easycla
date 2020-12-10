@@ -30,7 +30,7 @@ from pynamodb.models import Model
 
 import cla
 from cla.models import model_interfaces, key_value_store_interface, DoesNotExist
-from cla.models.model_interfaces import User, Signature, ProjectCLAGroup
+from cla.models.model_interfaces import User, Signature, ProjectCLAGroup, Repository
 from cla.project_service import ProjectService
 
 stage = os.environ.get("STAGE", "")
@@ -202,6 +202,24 @@ class ProjectRepositoryIndex(GlobalSecondaryIndex):
 
     # This attribute is the hash key for the index.
     repository_project_id = UnicodeAttribute(hash_key=True)
+
+
+class ProjectSFIDRepositoryIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying repositories by project ID.
+    """
+
+    class Meta:
+        """Meta class for project repository index."""
+
+        index_name = "project-sfid-repository-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        # All attributes are projected - not sure if this is necessary.
+        projection = AllProjection()
+
+    # This attribute is the hash key for the index.
+    project_sfid = UnicodeAttribute(hash_key=True)
 
 
 class ExternalRepositoryIndex(GlobalSecondaryIndex):
@@ -1899,6 +1917,7 @@ class RepositoryModel(BaseModel):
     repository_organization_name = UnicodeAttribute()
     repository_external_id = UnicodeAttribute(null=True)
     repository_project_index = ProjectRepositoryIndex()
+    project_sfid_repository_index = ProjectSFIDRepositoryIndex()
     repository_sfdc_id = UnicodeAttribute(null=True)
     project_sfid = UnicodeAttribute(null=True)
     repository_external_index = ExternalRepositoryIndex()
@@ -1947,6 +1966,16 @@ class Repository(model_interfaces.Repository):
         except RepositoryModel.DoesNotExist:
             raise cla.models.DoesNotExist("Repository not found")
         self.model = repo
+
+    def get_repository_by_project_sfid(self, project_sfid):
+        repository_generator = self.model.project_sfid_repository_index.query(project_sfid)
+        repositories = []
+        for repository_model in repository_generator:
+            repository = Repository()
+            cla.log.debug(f'repo_model: {repository.to_dict()}')
+            repository.model = repository_model
+            repositories.append(repository.to_dict())
+        return repositories
 
     def delete(self):
         self.model.delete()

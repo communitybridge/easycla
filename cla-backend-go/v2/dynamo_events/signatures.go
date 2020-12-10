@@ -449,7 +449,7 @@ func (s *service) assignContributor(ctx context.Context, newSignature Signature,
 func (s *service) updateCLAManagerPermissions(signature Signature, managers []string, action string) error {
 	ctx := utils.NewContext()
 	f := logrus.Fields{
-		"functionName":  "addCLAManagerPermissions",
+		"functionName":  "updateCLAManagerPermissions",
 		"signatureID":   signature.SignatureID,
 		"AddedManagers": managers,
 	}
@@ -500,7 +500,6 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 
 	log.WithFields(f).Debugf("Role ID for cla-manager-role : %s", roleID)
 
-	log.WithFields(f).Debugf("Assigning CLA Manager permissions...")
 	foundationSFID := projectCLAGroups[0].FoundationSFID
 	signedAtFoundation, signedErr := s.projectService.SignedAtFoundationLevel(ctx, foundationSFID)
 
@@ -531,6 +530,7 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 				continue
 			}
 			if action == AddCLAManager {
+				log.WithFields(f).Debugf("Adding CLA Manager permissions...")
 
 				hasScope, scopeErr := orgClient.IsUserHaveRoleScope(utils.CLAManagerRole, lfUser.ID, org.ID, foundationSFID)
 				if scopeErr != nil {
@@ -548,6 +548,7 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 				}
 
 			} else if action == DeleteCLAManager {
+				log.WithFields(f).Debugf("Deleting CLA Manager permissions...")
 				deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(org.ID, roleID, scopeID, &mgr, email)
 				if deleteErr != nil {
 					log.WithFields(f).WithError(deleteErr).Warn("Failed to remove CLA Manager from user: &s ", mgr)
@@ -556,12 +557,14 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 			}
 		} else {
 			if action == AddCLAManager {
+				log.WithFields(f).Debugf("Adding CLA Manager permissions...")
 				var eg errgroup.Group
 				// add user as cla-manager for all projects of cla-group
 				for _, projectSfid := range projectSFIDList.List() {
 					// ensure that following goroutine gets a copy of projectSFID
 					projectSFID := projectSfid
 					eg.Go(func() error {
+						log.WithFields(f).Debugf("Adding CLA Manager role...")
 						err := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(*email, projectSFID, org.ID, roleID)
 						if err != nil {
 							msg := fmt.Sprintf("unable to add %s scope for project: %s, company: %s using roleID: %s for user email: %s error = %s",
@@ -579,6 +582,7 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 					continue
 				}
 			} else if action == DeleteCLAManager {
+				log.WithFields(f).Debugf("Deleting CLA Manager permissions...")
 				var eg errgroup.Group
 				// remove user as cla-manager for all projects of cla-group
 				for _, projectSfid := range projectSFIDList.List() {
@@ -590,6 +594,7 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 							log.WithFields(f).Warn(scopeErr)
 							return scopeErr
 						}
+						log.WithFields(f).Debugf("Removing CLA Manager role...")
 						deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(org.ID, roleID, scopeID, &mgr, email)
 						if deleteErr != nil {
 							log.WithFields(f).Warn(deleteErr)
