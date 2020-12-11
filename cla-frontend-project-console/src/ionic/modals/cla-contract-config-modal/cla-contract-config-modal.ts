@@ -47,12 +47,12 @@ export class ClaContractConfigModal {
           Validators.required,
           Validators.minLength(2),
           Validators.maxLength(100),
-          Validators.pattern(new RegExp(generalConstants.CLA_GROUP_NAME_REGEX))
+          Validators.pattern(new RegExp(generalConstants.ALLOW_ALL_LANGUAGES))
         ])],
       description: [this.claProject.projectDescription, Validators.compose(
         [
           Validators.maxLength(255),
-          Validators.pattern(new RegExp(generalConstants.CLA_GROUP_DESCRIPTION_REGEX))
+          Validators.pattern(new RegExp(generalConstants.ALLOW_ALL_LANGUAGES))
         ])],
       ccla: [this.claProject.projectCCLAEnabled],
       cclaAndIcla: [this.claProject.projectCCLARequiresICLA],
@@ -123,9 +123,9 @@ export class ClaContractConfigModal {
       this.loading = false;
       this.dismiss(true);
     }, (error) => {
-      this.loading = false;
-      if (!error.ok) {
-        this.errorMessage = JSON.parse(error._body).Message;
+      if (error) {
+        this.loading = false;
+        this.errorMessage = JSON.parse(error._body).message;
       }
     });
   }
