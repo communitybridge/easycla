@@ -24,6 +24,7 @@
   "resolutions": {
     "bl": "^1.2.3",
     "http-proxy": "^1.18.1",
+    "ini": "^1.3.7",
     "kind-of": "^6.0.3",
     "lodash": "^4.17.19",
     "minimist": "^1.2.3"
