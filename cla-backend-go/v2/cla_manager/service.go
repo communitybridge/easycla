@@ -446,7 +446,6 @@ func (s *service) CreateCLAManagerDesignee(ctx context.Context, companySFID stri
 func (s *service) CreateCLAManagerDesigneeByGroup(ctx context.Context, params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error) {
 	var designeeScopes []*models.ClaManagerDesignee
 	userEmail := params.Body.UserEmail.String()
-	userService := v2UserService.GetClient()
 
 	claGroupID := projectCLAGroups[0].ClaGroupID
 	signedAtFoundationLevel, signedErr := s.projectService.SignedAtFoundationLevel(ctx, claGroupID)
@@ -522,20 +521,6 @@ func (s *service) CreateCLAManagerDesigneeByGroup(ctx context.Context, params cl
 			designeeScopes = append(designeeScopes, resultCh.designee)
 		}
 	}
-
-	lfxUser, userErr := userService.SearchUsersByEmail(userEmail)
-	if userErr != nil {
-		msg := fmt.Sprintf("Failed to get user by email: %s, error: %+v", userEmail, userErr)
-		return nil, msg, ErrLFXUserNotFound
-	}
-
-	log.Debugf("Updating user: %s with company : %s ", lfxUser.Name, params.CompanySFID)
-	updateErr := userService.UpdateUserAccount(lfxUser.ID, params.CompanySFID)
-	if updateErr != nil {
-		msg := fmt.Sprintf("Failed to update user: %s with company : %s ", lfxUser.ID, params.CompanySFID)
-		return nil, msg, updateErr
-	}
-	log.Debugf("Successfully updated user : %s with company: %s ", lfxUser.Name, params.CompanySFID)
 
 	return designeeScopes, "", nil
 }

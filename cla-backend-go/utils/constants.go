@@ -63,6 +63,9 @@ const CLASignatoryRole = "cla-signatory"
 // Lead representing type of user
 const Lead = "lead"
 
+//ContactRole contact role for user
+const ContactRole = "contact"
+
 // ProjectScope is the ACS project scope
 const ProjectScope = "project"
 
