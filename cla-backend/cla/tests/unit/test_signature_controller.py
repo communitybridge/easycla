@@ -44,7 +44,7 @@ class TestSignatureController(unittest.TestCase):
         # check email to cla manager
         msg = snsClient.emails_sent[0]
         msg = json.loads(msg)
-        self.assertEqual(msg['data']['subject'], 'EasyCLA: Allow List Update for Project')
+        self.assertEqual(msg['data']['subject'], 'EasyCLA: Approval List Update for Project')
         self.assertEqual(msg['data']['recipients'], ['cla_manager1@gmail.com', 'cla_manager2@gmail.com'])
         body = msg['data']['body']
         self.assertIn('a.com', body)
@@ -56,7 +56,7 @@ class TestSignatureController(unittest.TestCase):
         # check email sent to contributor - removed email
         msg = snsClient.emails_sent[1]
         msg = json.loads(msg)
-        self.assertEqual(msg['data']['subject'], 'EasyCLA: Allow List Update for Project')
+        self.assertEqual(msg['data']['subject'], 'EasyCLA: Approval List Update for Project')
         self.assertEqual(msg['data']['recipients'], ['whitelist.email@gmail.com'])
         body = msg['data']['body']
         self.assertIn('deleted', body)
@@ -66,7 +66,7 @@ class TestSignatureController(unittest.TestCase):
         # check email sent to contributor - added github user
         msg = snsClient.emails_sent[2]
         msg = json.loads(msg)
-        self.assertEqual(msg['data']['subject'], 'EasyCLA: Allow List Update for Project')
+        self.assertEqual(msg['data']['subject'], 'EasyCLA: Approval List Update for Project')
         self.assertEqual(msg['data']['recipients'], ['user1@gmail.com'])
         body = msg['data']['body']
         self.assertIn('added', body)

@@ -13,12 +13,12 @@ import hug.types
 import requests
 
 import cla.hug_types
+from cla.auth import AuthUser
 from cla.controllers import company
 from cla.models import DoesNotExist
-from cla.models.event_types import EventType
 from cla.models.dynamo_models import User, Project, Signature, Company, Event
-from cla.utils import get_email_service, get_email_help_content, get_email_sign_off_content, \
-    append_email_help_sign_off_content
+from cla.models.event_types import EventType
+from cla.utils import get_email_service, append_email_help_sign_off_content
 
 
 def get_signatures():
@@ -188,6 +188,8 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
     :return: dict representation of the signature object.
     :rtype: dict
     """
+    fn = 'controllers.signature.update_signature'
+    cla.log.debug(f'{fn} - loading signature by id: {str(signature_id)}')
     signature = Signature()
     try:  # Try to load the signature to update.
         signature.load(str(signature_id))
@@ -198,7 +200,7 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
     if signature_project_id is not None:
         # make a note if the project id is set and doesn't match
         if signature.get_signature_project_id() != str(signature_project_id):
-            cla.log.warning('update_signature() - project IDs do not match => '
+            cla.log.warning(f'{fn} - project IDs do not match => '
                             f'record project id: {signature.get_signature_project_id()} != '
                             f'parameter project id: {str(signature_project_id)}')
         try:
@@ -209,7 +211,7 @@ def update_signature(signature_id,  # pylint: disable=too-many-arguments,too-man
     # TODO: Ensure signature_reference_id exists.
     if signature_reference_id is not None:
         if signature.get_signature_reference_id() != str(signature_reference_id):
-            cla.log.warning('update_signature() - signature reference IDs do not match => '
+            cla.log.warning(f'{fn} - signature reference IDs do not match => '
                             f'record signature ref id: {signature.get_signature_reference_id()} != '
                             f'parameter signature ref id: {str(signature_reference_id)}')
         signature.set_signature_reference_id(signature_reference_id)
@@ -331,32 +333,32 @@ def notify_whitelist_change(auth_user, old_signature: Signature, new_signature: 
     project_name = project.get_project_name()
 
     changes = []
-    domain_msg_added = '{} was added to the domain approval list'
-    domain_msg_deleted = '{} was deleted from the domain approval list'
+    domain_msg_added = 'The domain {} was added to the domain approval list.'
+    domain_msg_deleted = 'The domain {} was removed from the domain approval list.'
     domain_changes, _, _ = change_in_list(old_list=old_signature.get_domain_whitelist(),
                                           new_list=new_signature.get_domain_whitelist(),
                                           msg_added=domain_msg_added,
                                           msg_deleted=domain_msg_deleted)
     changes = changes + domain_changes
 
-    email_msg_added = '{} was added to the email approval list'
-    email_msg_deleted = '{} was deleted from the email approval list'
+    email_msg_added = 'The email address {} was added to the email approval list.'
+    email_msg_deleted = 'The email address {} was removed from the email approval list.'
     email_changes, email_added, email_deleted = change_in_list(old_list=old_signature.get_email_whitelist(),
                                                                new_list=new_signature.get_email_whitelist(),
                                                                msg_added=email_msg_added,
                                                                msg_deleted=email_msg_deleted)
     changes = changes + email_changes
 
-    github_msg_added = '{} was added to the github approval list'
-    github_msg_deleted = '{} was deleted from the github approval list'
+    github_msg_added = 'The GitHub user {} was added to the GitHub approval list.'
+    github_msg_deleted = 'The GitHub user {} was removed from the github approval list.'
     github_changes, github_added, github_deleted = change_in_list(old_list=old_signature.get_github_whitelist(),
                                                                   new_list=new_signature.get_github_whitelist(),
                                                                   msg_added=github_msg_added,
                                                                   msg_deleted=github_msg_deleted)
     changes = changes + github_changes
 
-    github_org_msg_added = '{} was added to the github organization approval list'
-    github_org_msg_deleted = '{} was deleted from the github organization approval list'
+    github_org_msg_added = 'The GitHub organization {} was added to the GitHub organization approval list.'
+    github_org_msg_deleted = 'The GitHub organization {} was removed from the GitHub organization approval list.'
     github_org_changes, _, _ = change_in_list(old_list=old_signature.get_github_org_whitelist(),
                                               new_list=new_signature.get_github_org_whitelist(),
                                               msg_added=github_org_msg_added,
@@ -427,14 +429,14 @@ def notify_whitelist_change_to_contributors(project, email_added, email_removed,
 
 
 def get_contributor_whitelist_update_email_content(project, action, company_name, project_name, cla_manager, email):
-    subject = f'EasyCLA: Allow List Update for {project_name}'
+    subject = f'EasyCLA: Approval List Update for {project_name}'
     preposition = 'to'
     if action == 'deleted':
         preposition = 'from'
     body = f"""
 <p>Hello,</p> \
 <p>This is a notification email from EasyCLA regarding the project {project_name}.</p> \
-<p>You have been {action} {preposition} the Allow List of {company_name} for {project_name} by \
+<p>You have been {action} {preposition} the Approval List of {company_name} for {project_name} by \
 CLA Manager {cla_manager}. This means that you are now authorized to contribute to {project_name} \
 on behalf of {company_name}.</p> \
 <p>If you had previously submitted one or more pull requests to {project_name} that had failed, you should \
@@ -448,7 +450,7 @@ close and re-open the pull request to force a recheck by the EasyCLA system.</p>
 
 def approval_list_change_email_content(project, company_name, project_name, cla_managers, changes):
     """Helper function to get whitelist change email subject, body, recipients"""
-    subject = f'EasyCLA: Allow List Update for {project_name}'
+    subject = f'EasyCLA: Approval List Update for {project_name}'
     # Append suffix / prefix to strings in list
     changes = ["<li>" + txt + "</li>" for txt in changes]
     change_string = "<ul>\n" + "\n".join(changes) + "\n</ul>\n"
@@ -471,13 +473,14 @@ and re-open the pull request to force a recheck by the EasyCLA system.</p>
 
 
 def handle_bots(bot_list: List[str], signature: Signature) -> None:
-    cla.log.debug(f'Bots: {bot_list}')
+    fn = 'controllers.signature.handle_bots'
+    cla.log.debug(f'{fn} - Bots: {bot_list}')
     for bot_name in bot_list:
         try:
             user = cla.utils.get_user_instance()
             users = user.get_user_by_github_username(bot_name)
             if users is None:
-                cla.log.debug(f'handle_bots - Bot: {bot_name} does not have a user record (None)')
+                cla.log.debug(f'{fn} - Bot: {bot_name} does not have a user record (None)')
                 bot_user: User = create_bot(bot_name, signature)
                 if bot_user is not None:
                     create_bot_signature(bot_user, signature)
@@ -488,31 +491,32 @@ def handle_bots(bot_list: List[str], signature: Signature) -> None:
                 for u in users:
                     if u.get_user_company_id() == signature.get_signature_reference_id():
                         found = True
-                        cla.log.debug('handle_bots - found bot user account - ensuring the signature exists...')
+                        cla.log.debug('{fn} - found bot user account - ensuring the signature exists...')
                         create_bot_signature(u, signature)
                         break
 
                 # We found matching users in our system, but didn't find one with a matching company
                 if not found:
-                    cla.log.debug(f'handle_bots - unable to find user {bot_name} '
+                    cla.log.debug(f'{fn} - unable to find user {bot_name} '
                                   f'for company: {signature.get_signature_reference_id()} - '
                                   'creating user record that matches this company...')
                     bot_user: User = create_bot(bot_name, signature)
                     if bot_user is not None:
                         create_bot_signature(bot_user, signature)
                     else:
-                        cla.log.warning(f'handle_bots - failed to create user record for: {bot_name}')
+                        cla.log.warning(f'{fn} - failed to create user record for: {bot_name}')
         except DoesNotExist as err:
-            cla.log.debug(f'handle_bots - bot: {bot_name} does not have a user record (DoesNotExist)')
+            cla.log.debug(f'{fn} - bot: {bot_name} does not have a user record (DoesNotExist)')
 
 
 def create_bot_signature(bot_user: User, signature: Signature) -> Optional[Signature]:
-    cla.log.debug(f'create_bot_signature - locating Bot Signature for: {bot_user.get_user_name()}...')
+    fn = 'controllers.signature.create_bot_signature'
+    cla.log.debug(f'{fn} - locating Bot Signature for: {bot_user.get_user_name()}...')
     project: Project = cla.utils.get_project_instance()
     try:
         project.load(signature.get_signature_project_id())
     except DoesNotExist as err:
-        cla.log.warning(f'create_bot_signature - unable to load project by id: {signature.get_signature_project_id()}'
+        cla.log.warning(f'{fn} - unable to load project by id: {signature.get_signature_project_id()}'
                         f' Unable to create bot: {bot_user}')
         return None
 
@@ -520,7 +524,7 @@ def create_bot_signature(bot_user: User, signature: Signature) -> Optional[Signa
     try:
         the_company.load(signature.get_signature_reference_id())
     except DoesNotExist as err:
-        cla.log.warning(f'create_bot_signature - unable to load company by id: {signature.get_signature_reference_id()}'
+        cla.log.warning(f'{fn} - unable to load company by id: {signature.get_signature_reference_id()}'
                         f' Unable to create bot: {bot_user}')
         return None
 
@@ -533,14 +537,14 @@ def create_bot_signature(bot_user: User, signature: Signature) -> Optional[Signa
     # Check to see if we have an existing signature for this user/company/project combo
     for sig in existing_sigs:
         if sig.get_signature_reference_id() == bot_user.get_user_id():
-            cla.log.debug('create_bot_signature - found existing bot signature '
+            cla.log.debug('{fn} - found existing bot signature '
                           f'for user: {bot_user} '
                           f'with company: {the_company} '
                           f'for project: {project}')
             return sig
 
     # Didn't find an existing signature, let's create a new one
-    cla.log.debug(f'create_bot_signature - creating Bot Signature: {bot_user.get_user_name()}...')
+    cla.log.debug(f'{fn} - creating Bot Signature: {bot_user.get_user_name()}...')
     bot_sig.set_signature_id(str(uuid.uuid4()))
     bot_sig.set_signature_project_id(signature.get_signature_project_id())
     bot_sig.set_signature_reference_id(bot_user.get_user_id())
@@ -555,19 +559,20 @@ def create_bot_signature(bot_user: User, signature: Signature) -> Optional[Signa
                      f'{project.get_project_name()}, approval list by '
                      f'{the_company.get_company_name()}')
     bot_sig.save()
-    cla.log.debug(f'create_bot_signature - created Bot Signature: {bot_sig}')
+    cla.log.debug(f'{fn} - created Bot Signature: {bot_sig}')
     return bot_sig
 
 
 def create_bot(bot_name: str, signature: Signature) -> Optional[User]:
-    cla.log.debug(f'create_bot - creating Bot: {bot_name}...')
+    fn = 'controllers.signature.create_bot'
+    cla.log.debug(f'{fn} - creating Bot: {bot_name}...')
     user_github_id = lookup_github_user(bot_name)
     if user_github_id != 0:
         project: Project = cla.utils.get_project_instance()
         try:
             project.load(signature.get_signature_project_id())
         except DoesNotExist as err:
-            cla.log.warning(f'create_bot - Unable to load project by id: {signature.get_signature_project_id()}'
+            cla.log.warning(f'{fn} - Unable to load project by id: {signature.get_signature_project_id()}'
                             f' Unable to create bot: {bot_name}')
             return None
 
@@ -575,7 +580,7 @@ def create_bot(bot_name: str, signature: Signature) -> Optional[User]:
         try:
             the_company.load(signature.get_signature_reference_id())
         except DoesNotExist as err:
-            cla.log.warning(f'create_bot - Unable to load company by id: {signature.get_signature_reference_id()}'
+            cla.log.warning(f'{fn} - Unable to load company by id: {signature.get_signature_reference_id()}'
                             f' Unable to create bot: {bot_name}')
             return None
 
@@ -589,10 +594,10 @@ def create_bot(bot_name: str, signature: Signature) -> Optional[User]:
                       f'{project.get_project_name()}, approval list by '
                       f'{the_company.get_company_name()}')
         user.save()
-        cla.log.debug(f'create_bot - created Bot: {user}')
+        cla.log.debug(f'{fn} - created bot user: {user}')
         return user
 
-    cla.log.warning(f'create_bot - unable to create bot: {bot_name} - unable to lookup name in GitHub.')
+    cla.log.warning(f'{fn} - unable to create bot user: {bot_name} - unable to lookup name in GitHub.')
     return None
 
 
@@ -603,22 +608,24 @@ def is_github_bot(username: str) -> bool:
     :param username: the user's github name
     :return: True if the user is a GitHub bot, False otherwise
     """
-    cla.log.debug('Looking up GH user: ' + username)
+    fn = 'controllers.signature.is_github_bot'
+    cla.log.debug(f'{fn} - looking up GH user: {username}')
     r = requests.get('https://api.github.com/users/' + username)
     if r.status_code == requests.codes.ok:
         # cla.log.info(f'Response content type: {r.headers["Content-Type"]}')
         # cla.log.info(f'Response body: {r.json()}')
         response = r.json()
-        cla.log.debug(f'Lookup succeeded for GH user: {username} with id: {response["id"]}')
+        cla.log.debug(f'{fn} - Lookup succeeded for GH user: {username} with id: {response["id"]}')
         if 'type' in response:
             return response['type'].lower() == 'bot'
         else:
             return False
     elif r.status_code == requests.codes.not_found:
-        cla.log.debug(f'Lookup failed for GH user: {username} - not found')
+        cla.log.debug(f'{fn} - Lookup failed for GH user: {username} - not found')
         return False
     else:
-        cla.log.warning(f'Error looking up GitHub user by username: {username}. Error: {r.status_code} - {r.text}')
+        cla.log.warning(f'{fn} - Error looking up GitHub user by username: {username}. '
+                        f'Error: {r.status_code} - {r.text}')
     return False
 
 
@@ -629,19 +636,21 @@ def lookup_github_user(username: str) -> int:
     :param username: the user's github name
     :return: the user's GitHub ID
     """
-    cla.log.debug('Looking up GH user: ' + username)
+    fn = 'controllers.signature.lookup_github_user'
+    cla.log.debug(f'{fn} - uooking up GH user: {username}')
     r = requests.get('https://api.github.com/users/' + username)
     if r.status_code == requests.codes.ok:
         # cla.log.info(f'Response content type: {r.headers["Content-Type"]}')
         # cla.log.info(f'Response body: {r.json()}')
         response = r.json()
-        cla.log.debug(f'Lookup succeeded for GH user: {username} with id: {response["id"]}')
+        cla.log.debug(f'{fn} - Lookup succeeded for GH user: {username} with id: {response["id"]}')
         return response['id']
     elif r.status_code == requests.codes.not_found:
-        cla.log.debug(f'Lookup failed for GH user: {username} - not found')
+        cla.log.debug(f'{fn} - Lookup failed for GH user: {username} - not found')
         return 0
     else:
-        cla.log.warning(f'Error looking up GitHub user by username: {username}. Error: {r.status_code} - {r.text}')
+        cla.log.warning(f'{fn} - Error looking up GitHub user by username: {username}. '
+                        f'Error: {r.status_code} - {r.text}')
     return 0
 
 
@@ -914,12 +923,12 @@ def get_user_emails(lfid):
     return [user.get_user_email() for user in users]
 
 
-def add_cla_manager(auth_user, signature_id, lfid):
+def add_cla_manager(auth_user: AuthUser, signature_id: str, lfid: str):
     """
     Adds the LFID to the signature ACL and returns a new list of CLA Managers.
 
-    :param username: username of the user
-    :type username: string
+    :param auth_user: username of the user
+    :type auth_user: string
     :param signature_id: The ID of the project
     :type signature_id: UUID
     :param lfid: the lfid (manager username) to be added to the project acl
@@ -929,7 +938,7 @@ def add_cla_manager(auth_user, signature_id, lfid):
     # Find project
     signature = Signature()
     try:
-        signature.load(str(signature_id))
+        signature.load(signature_id)
     except DoesNotExist as err:
         return {'errors': {'project_id': str(err)}}
 

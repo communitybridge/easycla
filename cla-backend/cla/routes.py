@@ -484,7 +484,7 @@ def add_cla_manager(auth_user: check_auth, signature_id: hug.types.uuid, lfid: h
 
     Adds CLA Manager to a CCLA's signature ACL and returns the new list of CLA managers.
     """
-    return cla.controllers.signature.add_cla_manager(auth_user, signature_id, lfid)
+    return cla.controllers.signature.add_cla_manager(auth_user, str(signature_id), str(lfid))
 
 
 @hug.delete("/signature/{signature_id}/manager/{lfid}", versions=1)
@@ -699,7 +699,7 @@ def put_company(
     """
 
     return cla.controllers.company.update_company(
-        company_id, company_name=company_name, company_manager_id=company_manager_id, username=auth_user.username,
+        str(company_id), company_name=company_name, company_manager_id=company_manager_id, username=auth_user.username,
     )
 
 
