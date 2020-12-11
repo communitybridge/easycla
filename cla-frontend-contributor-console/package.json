@@ -22,6 +22,7 @@
     "serverless-pseudo-parameters": "^2.5.0"
   },
   "resolutions": {
-    "bl": "^2.2.1"
+    "bl": "^2.2.1",
+    "ini": "^1.3.7"
   }
 }
