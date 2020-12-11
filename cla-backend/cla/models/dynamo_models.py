@@ -1086,6 +1086,7 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
         return project_dict
 
     def save(self):
+        self.model.date_modified = datetime.datetime.utcnow()
         self.model.save()
 
     def load(self, project_id):
@@ -1503,6 +1504,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         cla.log.warning("{} for user: {}".format(msg, self))
 
     def save(self):
+        self.model.date_modified = datetime.datetime.utcnow()
         self.model.save()
 
     def load(self, user_id):
@@ -1991,6 +1993,7 @@ class Repository(model_interfaces.Repository):
         return dict(self.model)
 
     def save(self):
+        self.model.date_modified = datetime.datetime.utcnow()
         self.model.save()
 
     def load(self, repository_id):
@@ -2936,6 +2939,7 @@ class ProjectCLAGroup(model_interfaces.ProjectCLAGroup):
         return dict(self.model)
 
     def save(self):
+        self.model.date_modified = datetime.datetime.utcnow()
         return self.model.save()
 
     def load(self, project_sfid):
@@ -3107,6 +3111,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         return dict(self.model)
 
     def save(self):
+        self.model.date_modified = datetime.datetime.utcnow()
         self.model.save()
 
     def load(self, company_id):
@@ -3605,6 +3610,7 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
         self.model.group_name_ccla = group_name_ccla
 
     def save(self):
+        self.model.date_modified = datetime.datetime.utcnow()
         self.model.save()
 
     def delete(self):
@@ -3685,6 +3691,7 @@ class UserPermissions(model_interfaces.UserPermissions):  # pylint: disable=too-
         return ret
 
     def save(self):
+        self.model.date_modified = datetime.datetime.utcnow()
         self.model.save()
 
     def load(self, username):
@@ -3771,6 +3778,7 @@ class CompanyInvite(model_interfaces.CompanyInvite):
         return invites
 
     def save(self):
+        self.model.date_modified = datetime.datetime.utcnow()
         self.model.save()
 
     def delete(self):
@@ -3876,6 +3884,7 @@ class Event(model_interfaces.Event):
         return dict(self.model)
 
     def save(self):
+        self.model.date_modified = datetime.datetime.utcnow()
         self.model.save()
 
     def load(self, event_id):
@@ -4193,6 +4202,7 @@ class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
         return dict(self.model)
 
     def save(self):
+        self.model.date_modified = datetime.datetime.utcnow()
         return self.model.save()
 
     def load(self, request_id):
