@@ -40,6 +40,9 @@ function generateCSP(env, isDevServer) {
     'https://api.lfcla.com/',
     'https://api.easycla.lfx.linuxfoundation.org/',
     'https://communitybridge.org/',
+    'https://api-gw.dev.platform.linuxfoundation.org/',
+    'https://api-gw.staging.platform.linuxfoundation.org/',
+    'https://api-gw.platform.linuxfoundation.org/'
   ];
 
   let scriptSources = [SELF, UNSAFE_EVAL, UNSAFE_INLINE,
