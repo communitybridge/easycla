@@ -128,7 +128,9 @@ func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string)
 			if claGroupLookupErr != nil {
 				log.WithFields(f).WithError(claGroupLookupErr).Warnf("Unable to lookup CLA Group by ID: %s", org.AutoEnabledClaGroupID)
 			}
-			autoEnabledCLAGroupName = claGroupMode.ProjectName
+			if claGroupMode != nil {
+				autoEnabledCLAGroupName = claGroupMode.ProjectName
+			}
 		}
 
 		rorg := &models.ProjectGithubOrganization{
