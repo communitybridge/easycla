@@ -8,22 +8,52 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/communitybridge/easycla/cla-backend-go/utils"
+	"github.com/sirupsen/logrus"
+
 	"github.com/google/go-github/v32/github"
 
-	"github.com/communitybridge/easycla/cla-backend-go/logging"
+	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 )
 
 // GetInstallationRepositories returns list of repositories for github app installation
-func GetInstallationRepositories(installationID int64) ([]*github.Repository, error) {
+func GetInstallationRepositories(ctx context.Context, installationID int64) ([]*github.Repository, error) {
+	f := logrus.Fields{
+		"functionName":   "GetInstallationRepositories",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"installationID": installationID,
+	}
+
 	client, err := NewGithubAppClient(installationID)
 	if err != nil {
-		return nil, errors.New("cannot create github client")
+		msg := fmt.Sprintf("unable to create a github client, error: %+v", err)
+		log.WithFields(f).WithError(err).Warn(msg)
+		return nil, errors.New(msg)
 	}
-	repos, _, err := client.Apps.ListRepos(context.TODO(), nil)
-	if err != nil {
-		logging.Error("error while getting installation repositories", err)
-		err = fmt.Errorf("unable to get repositories for installation id : %d", installationID)
-		return nil, err
+
+	// Our response with all the repos
+	var allRepos []*github.Repository
+
+	// See pagination examples: https://godoc.org/github.com/google/go-github/github
+	opts := &github.ListOptions{
+		PerPage: 50,
 	}
-	return repos, nil
+
+	for {
+		repos, resp, err := client.Apps.ListRepos(ctx, opts)
+		if err != nil {
+			msg := fmt.Sprintf("error while getting repositories associated for installation, error: %+v", err)
+			log.WithFields(f).WithError(err).Warn(msg)
+			return nil, errors.New(msg)
+		}
+
+		log.WithFields(f).Debugf("fetched %d records...", len(repos))
+		allRepos = append(allRepos, repos...)
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
+	}
+
+	return allRepos, nil
 }
