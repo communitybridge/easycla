@@ -286,12 +286,14 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, claG
 		currentTime := time.Now().Format(time.RFC3339)
 
 		// Map Template to Document
+		majorVersion := int(template.TemplateMajorVersion)
+		minorVersion := int(template.TemplateMinorVersion)
 		dynamoCorporateProjectDocument := DynamoProjectDocument{
 			DocumentName:            template.Name,
 			DocumentFileID:          template.ID,
 			DocumentContentType:     "storage+pdf",
-			DocumentMajorVersion:    2,
-			DocumentMinorVersion:    0,
+			DocumentMajorVersion:    majorVersion,
+			DocumentMinorVersion:    minorVersion,
 			DocumentCreationDate:    currentTime,
 			DocumentPreamble:        template.Name,
 			DocumentLegalEntityName: template.Name,
@@ -368,12 +370,14 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, claG
 		currentTime := time.Now().Format(time.RFC3339)
 
 		// Map Template to Document
+		majorVersion := int(template.TemplateMajorVersion)
+		minorVersion := int(template.TemplateMinorVersion)
 		dynamoIndividualDocument := DynamoProjectDocument{
 			DocumentName:            template.Name,
 			DocumentFileID:          template.ID,
 			DocumentContentType:     "storage+pdf",
-			DocumentMajorVersion:    2,
-			DocumentMinorVersion:    0,
+			DocumentMajorVersion:    majorVersion,
+			DocumentMinorVersion:    minorVersion,
 			DocumentCreationDate:    currentTime,
 			DocumentPreamble:        template.Name,
 			DocumentLegalEntityName: template.Name,
@@ -428,9 +432,11 @@ func (r repository) UpdateDynamoContractGroupTemplates(ctx context.Context, claG
 // templateMap contains a list of our template models
 var templateMap = map[string]models.Template{
 	ApacheStyleTemplateID: {
-		ID:          ApacheStyleTemplateID,
-		Name:        "Apache Style",
-		Description: "For use of projects under the Apache style of CLA.",
+		ID:                   ApacheStyleTemplateID,
+		Name:                 "Apache Style",
+		Description:          "For use of projects under the Apache style of CLA.",
+		TemplateMajorVersion: 2,
+		TemplateMinorVersion: 0,
 		MetaFields: []*models.MetaField{
 			{
 				Name:             "Project Name",
@@ -751,9 +757,11 @@ var templateMap = map[string]models.Template{
 		</body></html>`,
 	},
 	ASWFStyleTemplateID: {
-		ID:          ASWFStyleTemplateID,
-		Name:        "ASWF 2020 v2.1",
-		Description: "For use of projects under the ASWF 2020 v2.1 of CLA.",
+		ID:                   ASWFStyleTemplateID,
+		Name:                 "ASWF 2020 v2.1",
+		Description:          "For use of projects under the ASWF 2020 v2.1 of CLA.",
+		TemplateMajorVersion: 2,
+		TemplateMinorVersion: 1,
 		MetaFields: []*models.MetaField{
 			{
 				Name:             "Project Name",
@@ -806,7 +814,7 @@ var templateMap = map[string]models.Template{
 				Width:        340,
 				Height:       20,
 				OffsetX:      0,
-				OffsetY:      25,
+				OffsetY:      22,
 			},
 			{
 				ID:           "mailing_address3",
@@ -817,8 +825,8 @@ var templateMap = map[string]models.Template{
 				IsEditable:   false,
 				Width:        340,
 				Height:       20,
-				OffsetX:      0,  // should be aligned with the above
-				OffsetY:      60, // 47 should move down some
+				OffsetX:      0, // should be aligned with the above
+				OffsetY:      50,
 			},
 			{
 				ID:           "country",
