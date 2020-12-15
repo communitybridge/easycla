@@ -766,7 +766,7 @@ func (repo *repo) UpdateRootCLAGroupRepositoriesCount(ctx context.Context, claGr
 	expressionAttributeValues := map[string]*dynamodb.AttributeValue{}
 	var updateExpression string
 
-	// update root_project_reposoitories_count based on reset flag
+	// update root_project_repositories based on reset flag
 	if reset {
 		expressionAttributeNames["#R"] = aws.String("root_project_repositories_count")
 		expressionAttributeValues[":r"] = &dynamodb.AttributeValue{N: aws.String(val)}
@@ -859,7 +859,7 @@ func (repo *repo) buildCLAGroupModel(ctx context.Context, dbModel DBProjectModel
 				defer wg.Done()
 				var err error
 				var gerritsList *models.GerritList
-				gerritsList, err = repo.gerritRepo.GetClaGroupGerrits(dbModel.ProjectID, nil)
+				gerritsList, err = repo.gerritRepo.GetClaGroupGerrits(ctx, dbModel.ProjectID, nil)
 				if err != nil {
 					log.Warnf("buildCLAGroupModel - unable to load Gerrit repositories by project ID: %s, error: %+v",
 						dbModel.ProjectID, err)

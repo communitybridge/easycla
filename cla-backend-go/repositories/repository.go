@@ -64,7 +64,7 @@ type Repository interface {
 	GetRepositoriesByCLAGroup(ctx context.Context, claGroup string, enabled bool) ([]*models.GithubRepository, error)
 	GetRepositoriesByOrganizationName(ctx context.Context, gitHubOrgName string) ([]*models.GithubRepository, error)
 	GetCLAGroupRepositoriesGroupByOrgs(ctx context.Context, projectID string, enabled bool) ([]*models.GithubRepositoriesGroupByOrgs, error)
-	ListProjectRepositories(ctx context.Context, externalProjectID string, projectSFID string, enabled bool) (*models.ListGithubRepositories, error)
+	ListProjectRepositories(ctx context.Context, externalProjectID string, projectSFID string, enabled *bool) (*models.ListGithubRepositories, error)
 }
 
 // NewRepository create new Repository
@@ -407,33 +407,37 @@ func (r repo) GetCLAGroupRepositoriesGroupByOrgs(ctx context.Context, projectID 
 }
 
 // List github repositories of project by external/salesforce project id
-func (r repo) ListProjectRepositories(ctx context.Context, externalProjectID string, projectSFID string, enabled bool) (*models.ListGithubRepositories, error) {
+func (r repo) ListProjectRepositories(ctx context.Context, externalProjectID string, projectSFID string, enabled *bool) (*models.ListGithubRepositories, error) {
 	f := logrus.Fields{
 		"functionName":      "ListProjectRepositories",
 		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
 		"externalProjectID": externalProjectID,
 		"projectSFID":       projectSFID,
-		"enabled":           enabled,
+		"enabled":           utils.BoolValue(enabled),
 	}
 
 	var indexName string
 	out := &models.ListGithubRepositories{
 		List: make([]*models.GithubRepository, 0),
 	}
-	var condition expression.KeyConditionBuilder
+
+	// Create a new query builder
+	builder := expression.NewBuilder()
 
 	if externalProjectID != "" {
-		condition = expression.Key("repository_sfdc_id").Equal(expression.Value(externalProjectID))
+		builder.WithKeyCondition(expression.Key("repository_sfdc_id").Equal(expression.Value(externalProjectID)))
 		indexName = SFDCRepositoryIndex
 	} else {
-		condition = expression.Key("project_sfid").Equal(expression.Value(projectSFID))
+		builder.WithKeyCondition(expression.Key("project_sfid").Equal(expression.Value(projectSFID)))
 		indexName = ProjectSFIDRepositoryOrganizationNameIndex
 	}
 
-	// Add the enabled filter
-	filter := expression.Name(repositoryEnabledColumn).Equal(expression.Value(enabled))
+	// Add the enabled filter, if set
+	if enabled != nil {
+		builder.WithFilter(expression.Name(repositoryEnabledColumn).Equal(expression.Value(aws.BoolValue(enabled))))
+	}
 
-	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithFilter(filter).Build()
+	expr, err := builder.Build()
 	if err != nil {
 		return nil, err
 	}

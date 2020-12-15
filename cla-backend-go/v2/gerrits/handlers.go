@@ -31,10 +31,10 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 	api.GerritsDeleteGerritHandler = gerrits.DeleteGerritHandlerFunc(
 		func(params gerrits.DeleteGerritParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
-			//ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
-			gerrit, err := v1Service.GetGerrit(params.GerritID)
+			gerrit, err := v1Service.GetGerrit(ctx, params.GerritID)
 			if err != nil {
 				if err == v1Gerrits.ErrGerritNotFound {
 					return gerrits.NewDeleteGerritNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
@@ -59,7 +59,7 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 			}
 
 			// delete the gerrit
-			err = v1Service.DeleteGerrit(params.GerritID)
+			err = v1Service.DeleteGerrit(ctx, params.GerritID)
 			if err != nil {
 				return gerrits.NewDeleteGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
@@ -117,7 +117,7 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 				GroupIDIcla: params.AddGerritInput.GroupIDIcla,
 				Version:     "v2",
 			}
-			result, err := v1Service.AddGerrit(params.ClaGroupID, params.ProjectSFID, addGerritInput, projectModel)
+			result, err := v1Service.AddGerrit(ctx, params.ClaGroupID, params.ProjectSFID, addGerritInput, projectModel)
 			if err != nil {
 				if err.Error() == "gerrit_name already present in the system" {
 					return gerrits.NewAddGerritConflict().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
@@ -146,7 +146,7 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 	api.GerritsListGerritsHandler = gerrits.ListGerritsHandlerFunc(
 		func(params gerrits.ListGerritsParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
-			//ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
 			// verify user have access to the project
@@ -171,7 +171,7 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 				})
 			}
 
-			result, err := v1Service.GetClaGroupGerrits(params.ClaGroupID, &params.ProjectSFID)
+			result, err := v1Service.GetClaGroupGerrits(ctx, params.ClaGroupID, &params.ProjectSFID)
 			if err != nil {
 				return gerrits.NewListGerritsBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
@@ -187,7 +187,7 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 	api.GerritsGetGerritReposHandler = gerrits.GetGerritReposHandlerFunc(
 		func(params gerrits.GetGerritReposParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
-			//ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 
 			// No specific permissions required
@@ -209,7 +209,7 @@ func Configure(api *operations.EasyclaAPI, v1Service v1Gerrits.Service, projectS
 				})
 			}
 
-			result, err := v1Service.GetGerritRepos(params.GerritHost.String())
+			result, err := v1Service.GetGerritRepos(ctx, params.GerritHost.String())
 			if err != nil {
 				return gerrits.NewGetGerritReposBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}

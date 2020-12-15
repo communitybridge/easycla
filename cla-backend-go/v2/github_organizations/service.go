@@ -157,7 +157,8 @@ func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string)
 	}
 
 	log.WithFields(f).Debug("listing github repositories...")
-	repos, err := s.ghRepository.ListProjectRepositories(ctx, parentProjectSFID, projectSFID, true)
+	enabled := true
+	repos, err := s.ghRepository.ListProjectRepositories(ctx, parentProjectSFID, projectSFID, &enabled)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("problem loading github repositories")
 		return nil, err

@@ -21,6 +21,7 @@ func TestAutoEnableServiceProvider_AutoEnabledForGithubOrg(t *testing.T) {
 
 	externalProjectID := "sfd12343"
 	claGroupID := "da04291f-75d1-4e84-8275-9bc008205837"
+	enabled := true
 
 	testCases := []struct {
 		name              string
@@ -42,7 +43,7 @@ func TestAutoEnableServiceProvider_AutoEnabledForGithubOrg(t *testing.T) {
 			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
-					ListProjectRepositories(gomock.Any(), externalProjectID).
+					ListProjectRepositories(gomock.Any(), externalProjectID, &enabled).
 					Return(nil, fmt.Errorf("fetch error"))
 			},
 			errStr: "fetch error",
@@ -56,7 +57,7 @@ func TestAutoEnableServiceProvider_AutoEnabledForGithubOrg(t *testing.T) {
 			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
-					ListProjectRepositories(gomock.Any(), externalProjectID).
+					ListProjectRepositories(gomock.Any(), externalProjectID, &enabled).
 					Return(&models.ListGithubRepositories{}, nil)
 			},
 		},
@@ -69,7 +70,7 @@ func TestAutoEnableServiceProvider_AutoEnabledForGithubOrg(t *testing.T) {
 			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
-					ListProjectRepositories(gomock.Any(), externalProjectID).
+					ListProjectRepositories(gomock.Any(), externalProjectID, &enabled).
 					Return(&models.ListGithubRepositories{
 						List: []*models.GithubRepository{
 							{
@@ -94,7 +95,7 @@ func TestAutoEnableServiceProvider_AutoEnabledForGithubOrg(t *testing.T) {
 			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
-					ListProjectRepositories(gomock.Any(), externalProjectID).
+					ListProjectRepositories(gomock.Any(), externalProjectID, &enabled).
 					Return(&models.ListGithubRepositories{
 						List: []*models.GithubRepository{
 							{
@@ -122,7 +123,7 @@ func TestAutoEnableServiceProvider_AutoEnabledForGithubOrg(t *testing.T) {
 			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
-					ListProjectRepositories(gomock.Any(), externalProjectID).
+					ListProjectRepositories(gomock.Any(), externalProjectID, &enabled).
 					Return(&models.ListGithubRepositories{
 						List: []*models.GithubRepository{
 							{
@@ -154,7 +155,7 @@ func TestAutoEnableServiceProvider_AutoEnabledForGithubOrg(t *testing.T) {
 			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
-					ListProjectRepositories(gomock.Any(), externalProjectID).
+					ListProjectRepositories(gomock.Any(), externalProjectID, &enabled).
 					Return(&models.ListGithubRepositories{
 						List: []*models.GithubRepository{
 							{
@@ -180,7 +181,7 @@ func TestAutoEnableServiceProvider_AutoEnabledForGithubOrg(t *testing.T) {
 			repositoryService: func(m *repositoriesmock.MockService) {
 				m.
 					EXPECT().
-					ListProjectRepositories(gomock.Any(), externalProjectID).
+					ListProjectRepositories(gomock.Any(), externalProjectID, &enabled).
 					Return(&models.ListGithubRepositories{
 						List: []*models.GithubRepository{
 							{
