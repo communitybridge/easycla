@@ -170,11 +170,11 @@ func (s *service) CreateCLAManager(ctx context.Context, claGroupID string, param
 	}
 
 	if userErr != nil {
-		msg := fmt.Sprintf("User does not have an LF Login account %s.", *params.Body.UserEmail)
+		msg := fmt.Sprintf("User %s has no LF Login account. User can be added as CLA Manager after LF Login is created", params.Body.UserEmail.String())
 		log.WithFields(f).Warn(msg)
 		return nil, &models.ErrorResponse{
-			Message: ErrNoLFID.Error(),
-			Code:    "202",
+			Message: msg,
+			Code:    "400",
 		}
 	}
 
