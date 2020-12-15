@@ -373,8 +373,6 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 			})
 		}
 
-		// TODO: Project Service - remove CLA Enabled flag
-
 		eventsService.LogEvent(&events.LogEventArgs{
 			EventType:     events.CLAGroupUpdated,
 			ClaGroupModel: cg,

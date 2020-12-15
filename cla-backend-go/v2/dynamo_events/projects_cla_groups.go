@@ -146,6 +146,81 @@ func (s *service) ProjectServiceDisableCLAServiceHandler(event events.DynamoDBEv
 	return nil
 }
 
+func (s *service) ProjectUnenrolledDisableRepositoryHandler(event events.DynamoDBEventRecord) error {
+	ctx := utils.NewContext()
+	f := logrus.Fields{
+		"functionName":   "ProjectUnenrolledDisableRepositoryHandler",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"eventID":        event.EventID,
+		"eventName":      event.EventName,
+		"eventSource":    event.EventSource,
+	}
+
+	log.WithFields(f).Debug("processing request")
+	var oldProject ProjectClaGroup
+	err := unmarshalStreamImage(event.Change.OldImage, &oldProject)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem unmarshalling stream image")
+		return err
+	}
+
+	// Add more fields for the logger
+	f["ProjectSFID"] = oldProject.ProjectSFID
+	f["ClaGroupID"] = oldProject.ClaGroupID
+	f["FoundationSFID"] = oldProject.FoundationSFID
+
+	// Disable GitHub repos associated with this project
+	enabled := true // only care about enabled repos
+	gitHubRepos, githubRepoErr := s.repositoryService.GetRepositoryByProjectSFID(ctx, oldProject.ProjectSFID, &enabled)
+	if githubRepoErr != nil {
+		log.WithFields(f).WithError(githubRepoErr).Warn("problem listing github repositories by project sfid")
+		return githubRepoErr
+	}
+	if gitHubRepos != nil && len(gitHubRepos.List) > 0 {
+		log.WithFields(f).Debugf("discovered %d github repositories for project with sfid: %s - disabling repositories...",
+			len(gitHubRepos.List), oldProject.ProjectSFID)
+
+		// For each GitHub repository...
+		for _, gitHubRepo := range gitHubRepos.List {
+			log.WithFields(f).Debugf("disabling github repository: %s with id: %s for project with sfid: %s",
+				gitHubRepo.RepositoryName, gitHubRepo.RepositoryID, gitHubRepo.ProjectSFID)
+			disableErr := s.repositoryService.DisableRepository(ctx, gitHubRepo.RepositoryID)
+			if disableErr != nil {
+				log.WithFields(f).WithError(disableErr).Warnf("problem disabling github repository: %s with id: %s", gitHubRepo.RepositoryName, gitHubRepo.RepositoryID)
+				return disableErr
+			}
+		}
+	} else {
+		log.WithFields(f).Debugf("no github repositories for project with sfid: %s - nothing to disable",
+			oldProject.ProjectSFID)
+	}
+
+	gerrits, gerritRepoErr := s.gerritService.GetGerritsByProjectSFID(ctx, oldProject.ProjectSFID)
+	if gerritRepoErr != nil {
+		log.WithFields(f).WithError(gerritRepoErr).Warn("problem listing gerrit repositories by project sfid")
+		return gerritRepoErr
+	}
+	if gerrits != nil && len(gerrits.List) > 0 {
+		log.WithFields(f).Debugf("discovered %d gerrit repositories for project with sfid: %s - deleting gerrit instances...",
+			len(gerrits.List), oldProject.ProjectSFID)
+		for _, gerritRepo := range gerrits.List {
+			log.WithFields(f).Debugf("deleting gerrit instance: %s with id: %s for project with sfid: %s",
+				gerritRepo.GerritName, gerritRepo.GerritID.String(), gerritRepo.ProjectSFID)
+			gerritDeleteErr := s.gerritService.DeleteGerrit(ctx, gerritRepo.GerritID.String())
+			if gerritDeleteErr != nil {
+				log.WithFields(f).WithError(gerritDeleteErr).Warnf("problem deleting gerrit instance: %s with id: %s",
+					gerritRepo.GerritName, gerritRepo.GerritID.String())
+				return gerritDeleteErr
+			}
+		}
+	} else {
+		log.WithFields(f).Debugf("no gerrit instances for project with sfid: %s - nothing to delete",
+			oldProject.ProjectSFID)
+	}
+
+	return nil
+}
+
 // AddCLAPermissions handles adding CLA permissions
 func (s *service) AddCLAPermissions(event events.DynamoDBEventRecord) error {
 	f := logrus.Fields{

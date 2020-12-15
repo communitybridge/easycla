@@ -27,8 +27,9 @@ type Service interface {
 	EnableRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string) error
 	DisableRepository(ctx context.Context, repositoryID string) error
 	UpdateClaGroupID(ctx context.Context, repositoryID, claGroupID string) error
-	ListProjectRepositories(ctx context.Context, externalProjectID string) (*models.ListGithubRepositories, error)
+	ListProjectRepositories(ctx context.Context, externalProjectID string, enabled *bool) (*models.ListGithubRepositories, error)
 	GetRepository(ctx context.Context, repositoryID string) (*models.GithubRepository, error)
+	GetRepositoryByProjectSFID(ctx context.Context, projectSFID string, enabled *bool) (*models.ListGithubRepositories, error)
 	GetRepositoryByName(ctx context.Context, repositoryName string) (*models.GithubRepository, error)
 	DisableRepositoriesByProjectID(ctx context.Context, projectID string) (int, error)
 	GetRepositoriesByCLAGroup(ctx context.Context, claGroupID string) ([]*models.GithubRepository, error)
@@ -150,12 +151,16 @@ func (s *service) DisableRepository(ctx context.Context, repositoryID string) er
 	return s.repo.DisableRepository(ctx, repositoryID)
 }
 
-func (s *service) ListProjectRepositories(ctx context.Context, externalProjectID string) (*models.ListGithubRepositories, error) {
-	return s.repo.ListProjectRepositories(ctx, externalProjectID, "", true)
+func (s *service) ListProjectRepositories(ctx context.Context, externalProjectID string, enabled *bool) (*models.ListGithubRepositories, error) {
+	return s.repo.ListProjectRepositories(ctx, externalProjectID, "", enabled)
 }
 
 func (s *service) GetRepository(ctx context.Context, repositoryID string) (*models.GithubRepository, error) {
 	return s.repo.GetRepository(ctx, repositoryID)
+}
+
+func (s *service) GetRepositoryByProjectSFID(ctx context.Context, projectSFID string, enabled *bool) (*models.ListGithubRepositories, error) {
+	return s.repo.ListProjectRepositories(ctx, "", projectSFID, enabled)
 }
 
 // GetRepositoryByName returns the repository by name: project-level/cla-project

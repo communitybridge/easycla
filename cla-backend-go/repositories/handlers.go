@@ -29,7 +29,8 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 						claUser.LFUsername, params.ProjectSFID),
 				})
 			}
-			result, err := service.ListProjectRepositories(ctx, params.ProjectSFID)
+			enabled := true
+			result, err := service.ListProjectRepositories(ctx, params.ProjectSFID, &enabled)
 			if err != nil {
 				return github_repositories.NewGetProjectGithubRepositoriesBadRequest().WithPayload(errorResponse(err))
 			}

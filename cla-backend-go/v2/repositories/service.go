@@ -70,9 +70,18 @@ func NewService(repo v1Repositories.Repository, pcgRepo projects_cla_groups.Repo
 }
 
 func (s *service) AddGithubRepository(ctx context.Context, projectSFID string, input *models.GithubRepositoryInput) (*v1Models.GithubRepository, error) {
+	f := logrus.Fields{
+		"functionName":           "AddGithubRepository",
+		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
+		"projectSFID":            projectSFID,
+		"claGroupID":             utils.StringValue(input.ClaGroupID),
+		"githubOrganizationName": utils.StringValue(input.GithubOrganizationName),
+		"repositoryGithubID":     utils.StringValue(input.RepositoryGithubID),
+	}
 	psc := v2ProjectService.GetClient()
 	project, err := psc.GetProject(projectSFID)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to load projectSFID")
 		return nil, err
 	}
 	var externalProjectID string
@@ -83,6 +92,7 @@ func (s *service) AddGithubRepository(ctx context.Context, projectSFID string, i
 	}
 	allMappings, err := s.projectsClaGroupsRepo.GetProjectsIdsForClaGroup(aws.StringValue(input.ClaGroupID))
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to get project IDs for CLA Group")
 		return nil, err
 	}
 	var valid bool
@@ -97,6 +107,7 @@ func (s *service) AddGithubRepository(ctx context.Context, projectSFID string, i
 	}
 	org, err := s.ghOrgRepo.GetGithubOrganizationByName(ctx, utils.StringValue(input.GithubOrganizationName))
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to get organization by name")
 		return nil, err
 	}
 	if len(org.List) == 0 {
@@ -104,10 +115,12 @@ func (s *service) AddGithubRepository(ctx context.Context, projectSFID string, i
 	}
 	repoGithubID, err := strconv.ParseInt(utils.StringValue(input.RepositoryGithubID), 10, 64)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to convert repository github ID to an integer - invalid value")
 		return nil, err
 	}
 	ghRepo, err := github.GetRepositoryByExternalID(ctx, org.List[0].OrganizationInstallationID, repoGithubID)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to get repository by external ID")
 		return nil, err
 	}
 	in := &v1Models.GithubRepositoryInput{
@@ -152,7 +165,8 @@ func (s *service) ListProjectRepositories(ctx context.Context, projectSFID strin
 		f["projectParentSFID"] = projectModel.Parent
 	}
 	log.WithFields(f).Debug("loaded project from the project service")
-	return s.repo.ListProjectRepositories(ctx, "", projectSFID, true)
+	enabled := true
+	return s.repo.ListProjectRepositories(ctx, "", projectSFID, &enabled)
 
 	//// Lookup orgs via projectSFID
 	//log.WithFields(f).Debug("querying EasyCLA for organizations by project id...")
@@ -244,9 +258,16 @@ func (s *service) GetRepository(ctx context.Context, repositoryID string) (*v1Mo
 }
 
 func (s *service) GetProtectedBranch(ctx context.Context, projectSFID, repositoryID string) (*v2Models.GithubRepositoryBranchProtection, error) {
+	f := logrus.Fields{
+		"functionName":   "repositories.GetProtectedBranch",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectSFID":    projectSFID,
+		"repositoryID":   repositoryID,
+	}
+
 	githubRepository, err := s.getGithubRepo(ctx, projectSFID, repositoryID)
 	if err != nil {
-		log.Warnf("fetching repository %s, failed, error: %v", repositoryID, err)
+		log.WithFields(f).WithError(err).Warnf("fetching repository %s, failed, error: %v", repositoryID, err)
 		return nil, err
 	}
 
@@ -274,7 +295,7 @@ func (s *service) GetProtectedBranch(ctx context.Context, projectSFID, repositor
 		if errors.Is(err, github.ErrBranchNotProtected) {
 			return result, nil
 		}
-		log.Warnf("getting the github protected branch for owner : %s, repo : %s and branch : %s failed : %v", owner, githubRepoName, branchName, err)
+		log.WithFields(f).WithError(err).Warnf("getting the github protected branch for owner : %s, repo : %s and branch : %s failed : %v", owner, githubRepoName, branchName, err)
 		return nil, err
 	}
 
@@ -291,9 +312,17 @@ func (s *service) GetProtectedBranch(ctx context.Context, projectSFID, repositor
 }
 
 func (s *service) UpdateProtectedBranch(ctx context.Context, projectSFID, repositoryID string, input *v2Models.GithubRepositoryBranchProtectionInput) (*v2Models.GithubRepositoryBranchProtection, error) {
+	f := logrus.Fields{
+		"functionName":   "repositories.UpdateProtectedBranch",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectSFID":    projectSFID,
+		"repositoryID":   repositoryID,
+		"enforceAdmin":   aws.BoolValue(input.EnforceAdmin),
+	}
+
 	githubRepository, err := s.getGithubRepo(ctx, projectSFID, repositoryID)
 	if err != nil {
-		log.Warnf("fetching repository %s, failed, error: %v", repositoryID, err)
+		log.WithFields(f).WithError(err).Warnf("fetching repository %s, failed", repositoryID)
 		return nil, err
 	}
 
@@ -303,14 +332,18 @@ func (s *service) UpdateProtectedBranch(ctx context.Context, projectSFID, reposi
 
 	githubClient, err := s.getGithubClientForOrgName(ctx, githubOrgName)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem locating github client for organization name")
 		return nil, err
 	}
 
 	branchProtectionRepository := github.NewBranchProtectionRepository(githubClient.Repositories, github.EnableNonBlockingLimiter())
 	owner, branchName, err := s.getGithubOwnerBranchName(ctx, branchProtectionRepository, githubOrgName, githubRepoName)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem locating github owner branch name")
 		return nil, err
 	}
+	f["owner"] = owner
+	f["branchName"] = branchName
 
 	var requiredChecks []string
 	var disabledChecks []string
@@ -327,7 +360,7 @@ func (s *service) UpdateProtectedBranch(ctx context.Context, projectSFID, reposi
 
 			// just ignore that check if it's something not in our options
 			if !found {
-				log.Warnf("invalid branch protection option was found : %s", *inputCheck.Name)
+				log.WithFields(f).Warnf("invalid branch protection option was found : %s", *inputCheck.Name)
 				return nil, ErrInvalidBranchProtectionName
 			}
 
@@ -339,9 +372,10 @@ func (s *service) UpdateProtectedBranch(ctx context.Context, projectSFID, reposi
 		}
 	}
 
-	branchPtorectionRepository := github.NewBranchProtectionRepository(githubClient.Repositories, github.EnableNonBlockingLimiter())
-	err = branchPtorectionRepository.EnableBranchProtection(ctx, owner, githubRepoName, branchName, *input.EnforceAdmin, requiredChecks, disabledChecks)
+	log.WithFields(f).Debugf("enabling branch protection on repository...")
+	err = branchProtectionRepository.EnableBranchProtection(ctx, owner, githubRepoName, branchName, *input.EnforceAdmin, requiredChecks, disabledChecks)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem enabling github branch protection")
 		return nil, err
 	}
 
@@ -349,6 +383,13 @@ func (s *service) UpdateProtectedBranch(ctx context.Context, projectSFID, reposi
 }
 
 func (s *service) getGithubRepo(ctx context.Context, projectSFID, repositoryID string) (*v1Models.GithubRepository, error) {
+	f := logrus.Fields{
+		"functionName":   "repositories.getGithubRepo",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"projectSFID":    projectSFID,
+		"repositoryID":   repositoryID,
+	}
+
 	psc := v2ProjectService.GetClient()
 	_, err := psc.GetProject(projectSFID)
 	if err != nil {
@@ -356,14 +397,14 @@ func (s *service) getGithubRepo(ctx context.Context, projectSFID, repositoryID s
 	}
 	githubRepository, err := s.GetRepository(ctx, repositoryID)
 	if err != nil {
-		log.Warnf("fetching repository failed : %s : %v", repositoryID, err)
+		log.WithFields(f).Warnf("fetching repository failed : %s : %v", repositoryID, err)
 		return nil, err
 	}
 
 	// check if project and repo are actually associated
 	if githubRepository.ProjectSFID != projectSFID {
 		msg := fmt.Sprintf("github repository %s doesn't belong to project : %s", repositoryID, projectSFID)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, errors.New(msg)
 	}
 
@@ -371,15 +412,21 @@ func (s *service) getGithubRepo(ctx context.Context, projectSFID, repositoryID s
 }
 
 func (s *service) getGithubClientForOrgName(ctx context.Context, githubOrgName string) (*githubsdk.Client, error) {
+	f := logrus.Fields{
+		"functionName":   "repositories.getGithubClientForOrgName",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"githubOrgName":  githubOrgName,
+	}
+
 	githubOrg, err := s.ghOrgRepo.GetGithubOrganization(ctx, githubOrgName)
 	if err != nil {
-		log.Warnf("fetching githubOrg %s failed, error: %v", githubOrgName, err)
+		log.WithFields(f).Warnf("fetching githubOrg %s failed, error: %v", githubOrgName, err)
 		return nil, err
 	}
 
 	githubClient, err := github.NewGithubAppClient(githubOrg.OrganizationInstallationID)
 	if err != nil {
-		log.Warnf("creating the github client for installation id %d failed, error: %v", githubOrg.OrganizationInstallationID, err)
+		log.WithFields(f).Warnf("creating the github client for installation id %d failed, error: %v", githubOrg.OrganizationInstallationID, err)
 		return nil, err
 	}
 
@@ -410,6 +457,11 @@ func (s *service) getGithubOwnerBranchName(ctx context.Context, branchProtection
 
 // getRequiredProtectedBranchCheckStatus
 func (s *service) getRequiredProtectedBranchCheckStatus(protectedBranch *githubsdk.Protection, requiredChecks []string) []*v2Models.GithubRepositoryBranchProtectionStatusChecks {
+	f := logrus.Fields{
+		"functionName": "repositories.getRequiredProtectedBranchCheckStatus",
+	}
+
+	log.WithFields(f).Debug("querying github for status checks...")
 	var result []*v2Models.GithubRepositoryBranchProtectionStatusChecks
 	resultMap := map[string]bool{}
 	for _, rc := range requiredChecks {
@@ -440,18 +492,24 @@ func (s *service) getRequiredProtectedBranchCheckStatus(protectedBranch *githubs
 }
 
 func (s *service) DisableCLAGroupRepositories(ctx context.Context, claGroupID string) error {
+	f := logrus.Fields{
+		"functionName":   "DisableCLAGroupRepositories",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"claGroupID":     claGroupID,
+	}
+
 	var deleteErr error
 	ghOrgs, err := s.repo.GetCLAGroupRepositoriesGroupByOrgs(ctx, claGroupID, true)
 	if err != nil {
 		return err
 	}
 	if len(ghOrgs) > 0 {
-		log.Debugf("Deleting repositories for cla-group :%s", claGroupID)
+		log.WithFields(f).Debugf("Deleting repositories for cla-group :%s", claGroupID)
 		for _, ghOrg := range ghOrgs {
 			for _, item := range ghOrg.List {
 				deleteErr = s.repo.DisableRepository(ctx, item.RepositoryID)
 				if deleteErr != nil {
-					log.Warnf("Unable to remove repository: %s for project :%s error :%v", item.RepositoryID, claGroupID, deleteErr)
+					log.WithFields(f).Warnf("Unable to remove repository: %s for project :%s error :%v", item.RepositoryID, claGroupID, deleteErr)
 				}
 			}
 		}

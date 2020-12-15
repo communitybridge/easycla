@@ -35,7 +35,7 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 			if !claUser.IsAuthorizedForProject(claGroupModel.ProjectExternalID) {
 				return gerrits.NewDeleteGerritUnauthorized().WithXRequestID(reqID)
 			}
-			gerrit, err := service.GetGerrit(params.GerritID)
+			gerrit, err := service.GetGerrit(ctx, params.GerritID)
 			if err != nil {
 				return gerrits.NewDeleteGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
@@ -47,7 +47,7 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 				})
 			}
 			// delete the gerrit
-			err = service.DeleteGerrit(params.GerritID)
+			err = service.DeleteGerrit(ctx, params.GerritID)
 			if err != nil {
 				return gerrits.NewDeleteGerritBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
@@ -84,7 +84,7 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 			}
 			params.AddGerritInput.Version = "v1"
 			// add the gerrit
-			result, err := service.AddGerrit(params.ProjectID, claGroupModel.ProjectExternalID, params.AddGerritInput, claGroupModel)
+			result, err := service.AddGerrit(ctx, params.ProjectID, claGroupModel.ProjectExternalID, params.AddGerritInput, claGroupModel)
 			if err != nil {
 				if err.Error() == "gerrit_name already present in the system" {
 					return gerrits.NewAddGerritConflict().WithXRequestID(reqID).WithPayload(errorResponse(err))
@@ -105,9 +105,8 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 
 	api.GerritsGetGerritReposHandler = gerrits.GetGerritReposHandlerFunc(
 		func(params gerrits.GetGerritReposParams, authUser *user.CLAUser) middleware.Responder {
-
 			reqID := utils.GetRequestID(params.XREQUESTID)
-			//ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 
 			// No specific permissions required
 
@@ -119,7 +118,7 @@ func Configure(api *operations.ClaAPI, service Service, projectService ProjectSe
 				})
 			}
 
-			result, err := service.GetGerritRepos(params.GerritHost.String())
+			result, err := service.GetGerritRepos(ctx, params.GerritHost.String())
 			if err != nil {
 				return gerrits.NewGetGerritReposBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 			}
