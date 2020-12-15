@@ -11,6 +11,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/communitybridge/easycla/cla-backend-go/gerrits"
+
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
@@ -58,6 +60,7 @@ type service struct {
 	projectService           project.Service
 	githubOrgService         github_organizations.Service
 	repositoryService        repositories.Service
+	gerritService            gerrits.Service
 	autoEnableService        *autoEnableServiceProvider
 	claManagerRequestsRepo   cla_manager.IRepository
 	approvalListRequestsRepo approval_list.IRepository
@@ -79,6 +82,7 @@ func NewService(stage string,
 	projService project.Service,
 	githubOrgService github_organizations.Service,
 	repositoryService repositories.Service,
+	gerritService gerrits.Service,
 	claManagerRequestsRepo cla_manager.IRepository,
 	approvalListRequestsRepo approval_list.IRepository) Service {
 
@@ -87,6 +91,7 @@ func NewService(stage string,
 	projectsCLAGroupsTable := fmt.Sprintf("cla-%s-projects-cla-groups", stage)
 	githubOrgTableName := fmt.Sprintf("cla-%s-github-orgs", stage)
 	repositoryTableName := fmt.Sprintf("cla-%s-repositories", stage)
+	// gerritTableName := fmt.Sprintf("cla-%s-gerrit-instances", stage)
 	claGroupsTable := fmt.Sprintf("cla-%s-projects", stage)
 
 	s := &service{
@@ -100,6 +105,7 @@ func NewService(stage string,
 		projectService:           projService,
 		githubOrgService:         githubOrgService,
 		repositoryService:        repositoryService,
+		gerritService:            gerritService,
 		autoEnableService:        &autoEnableServiceProvider{repositoryService: repositoryService},
 		claManagerRequestsRepo:   claManagerRequestsRepo,
 		approvalListRequestsRepo: approvalListRequestsRepo,
@@ -118,6 +124,7 @@ func NewService(stage string,
 	// Enable or Disable the CLA Service Enabled/Disabled flag/attribute in the platform Project Service
 	s.registerCallback(projectsCLAGroupsTable, Insert, s.ProjectServiceEnableCLAServiceHandler)
 	s.registerCallback(projectsCLAGroupsTable, Remove, s.ProjectServiceDisableCLAServiceHandler)
+	s.registerCallback(projectsCLAGroupsTable, Remove, s.ProjectUnenrolledDisableRepositoryHandler)
 
 	// Add or Remove any CLA Permissions for the specified project
 	s.registerCallback(projectsCLAGroupsTable, Insert, s.AddCLAPermissions)

@@ -648,7 +648,7 @@ func (s *service) DeleteCLAGroup(ctx context.Context, claGroupModel *v1Models.Cl
 	go func(claGroup *v1Models.ClaGroup, authUser *auth.User) {
 		// Delete gerrit repositories
 		log.WithFields(f).Debug("deleting CLA Group gerrits...")
-		numDeleted, err := s.gerritService.DeleteClaGroupGerrits(claGroup.ProjectID)
+		numDeleted, err := s.gerritService.DeleteClaGroupGerrits(ctx, claGroup.ProjectID)
 		if err != nil {
 			log.WithFields(f).Warn(err)
 			errChan <- err

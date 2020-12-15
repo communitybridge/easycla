@@ -89,7 +89,8 @@ func (a *autoEnableServiceProvider) CreateAutoEnabledRepository(repo *github.Rep
 
 	claGroupID := orgModel.AutoEnabledClaGroupID
 	if claGroupID == "" {
-		repos, listErr := a.repositoryService.ListProjectRepositories(context.Background(), orgModel.ProjectSFID)
+		enabled := true
+		repos, listErr := a.repositoryService.ListProjectRepositories(context.Background(), orgModel.ProjectSFID, &enabled)
 		if listErr != nil {
 			log.WithFields(f).Warnf("problem fetching the repositories for orgName : %s for ProjectSFID : %s", orgName, orgModel.ProjectSFID)
 			return nil, listErr
@@ -142,7 +143,8 @@ func (a *autoEnableServiceProvider) AutoEnabledForGithubOrg(f logrus.Fields, git
 		return fmt.Errorf("missing installation id")
 	}
 
-	repos, err := a.repositoryService.ListProjectRepositories(context.Background(), gitHubOrg.ProjectSFID)
+	enabled := true
+	repos, err := a.repositoryService.ListProjectRepositories(context.Background(), gitHubOrg.ProjectSFID, &enabled)
 	if err != nil {
 		log.WithFields(f).Warnf("problem fetching the repositories for orgName : %s for ProjectSFID : %s", orgName, gitHubOrg.ProjectSFID)
 		return err

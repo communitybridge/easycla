@@ -192,7 +192,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 		// Delete gerrit repositories
 		log.WithFields(f).Debug("Processing gerrit delete")
-		howMany, err := gerritService.DeleteClaGroupGerrits(params.ProjectID)
+		howMany, err := gerritService.DeleteClaGroupGerrits(ctx, params.ProjectID)
 		if err != nil {
 			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
