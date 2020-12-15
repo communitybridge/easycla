@@ -6,9 +6,11 @@ Controller related to the signed callback.
 """
 
 import falcon
+from jinja2 import Template
 
 import cla
 from cla.models import DoesNotExist
+from cla.models.dynamo_models import Signature
 from cla.utils import get_signing_service, get_signature_instance, get_email_service, \
     get_supported_repository_providers, get_repository_service
 
@@ -200,9 +202,62 @@ def return_url(signature_id, event=None):  # pylint: disable=unused-argument
             get_signing_service().populate_sign_url(signature, callback_url)
             signature.save()
             raise falcon.HTTPFound(signature.get_signature_sign_url())
+        if event == 'cancel':
+            return canceled_signature_html(signature=signature)
     ret_url = signature.get_signature_return_url()
     if ret_url is not None:
         cla.log.info('Signature success - sending user to return_url: %s', ret_url)
         raise falcon.HTTPFound(ret_url)
     cla.log.info('No return_url set for signature - returning success message')
     return {'success': 'Thank you for signing'}
+
+
+def canceled_signature_html(signature: Signature) -> str:
+    """
+    generates html for the signature when user clicks Finish Later or operation is
+    canceled for some other reason.
+    :param signature:
+    :return:
+    """
+    msg = """
+<html lang="en">
+<head>
+<title>The Linux Foundation – EasyCLA Signature Failure</title>
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="shortcut icon" href="https://www.linuxfoundation.org/wp-content/uploads/2017/08/favicon.png">
+<link rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+      crossorigin="anonymous"/>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+</head>
+<body style='margin-top:20;margin-left:0;margin-right:0;'>
+    <div class="text-center">
+        <img width=300px"
+         src="https://cla-project-logo-prod.s3.amazonaws.com/lf-horizontal-color.svg"
+         alt="community bridge logo"/>
+    </div>
+    <h2 class="text-center">EasyCLA Account Authorization</h2>
+    <p class="text-center">
+    The authorization process was canceled and your account is not authorized under a signed CLA.  Click the button to authorize your account for
+    {% if signature.get_signature_type() is not none and signature.get_signature_type()|length %}{{signature.get_signature_type().title()}}{% endif %} CLA.
+    </p>
+    <p class="text-center">
+    <a href="{{signature.get_signature_sign_url()}}" class="btn btn-primary" role="button">
+        Retry Docusign Authorization</a>
+        {% if signature.get_signature_return_url() is not none and signature.get_signature_return_url()|length %}
+    <a href="{{signature.get_signature_return_url()}}" class="btn btn-primary" role="button">
+        Restart Authorization</a>
+        {% endif %}
+    </p>
+</body>
+</html>
+        """
+    t = Template(msg)
+    return t.render(
+        signature=signature,
+    )

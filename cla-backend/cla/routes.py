@@ -7,7 +7,7 @@ The entry point for the CLA service. Lays out all routes and controller function
 
 import hug
 import requests
-from falcon import HTTP_401, HTTP_400, HTTP_OK, HTTP_500
+from falcon import HTTP_401, HTTP_400, HTTP_OK, HTTP_500, Response
 from hug.middleware import LogMiddleware
 
 import cla
@@ -1357,7 +1357,7 @@ def post_corporate_signed(body, project_id: hug.types.uuid, company_id: hug.type
 
 
 @hug.get("/return-url/{signature_id}", versions=2)
-def get_return_url(signature_id: hug.types.uuid, event=None):
+def get_return_url(response: Response, signature_id: hug.types.uuid, event=None):
     """
     GET: /return-url/{signature_id}
 
@@ -1367,7 +1367,12 @@ def get_return_url(signature_id: hug.types.uuid, event=None):
     Will also capture the signing service provider's return GET parameters, such as DocuSign's
     'event' flag that describes the redirect reason.
     """
-    return cla.controllers.signing.return_url(signature_id, event)
+    result = cla.controllers.signing.return_url(signature_id, event)
+    # if it's html we need to set the headers properly for it
+    if result and isinstance(result, str):
+        response.status = HTTP_OK
+        response.content_type = 'text/html'
+    return result
 
 
 @hug.post("/send-authority-email", versions=2)

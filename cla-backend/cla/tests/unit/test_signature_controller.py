@@ -6,9 +6,35 @@ from unittest.mock import Mock
 
 import cla
 from cla.controllers.signature import notify_whitelist_change
+from cla.controllers.signing import canceled_signature_html
 from cla.models.dynamo_models import User, Signature, Project
 from cla.models.sns_email_models import MockSNS
 from cla.user import CLAUser
+
+
+def test_canceled_signature_html():
+    signature_type = "ccla"
+    signature_return_url = "https://github.com/communitybridge/easycla/pull/227"
+    signature_sign_url = "https://demo.docusign.net/Signing/MTRedeem/v1/4b594c99-d76b-46c4-bf8c-5912b177b0eb?slt=eyJ0eXAiOi"
+    signature = Signature(
+        signature_type=signature_type,
+        signature_return_url=signature_return_url,
+        signature_sign_url=signature_sign_url
+    )
+
+    result = canceled_signature_html(signature=signature)
+    assert "Ccla" in result
+    assert signature_return_url in result
+    assert signature_sign_url in result
+
+    signature = Signature(
+        signature_sign_url=signature_sign_url
+    )
+    result = canceled_signature_html(signature=signature)
+
+    assert "Ccla" not in result
+    assert signature_return_url not in result
+    assert signature_sign_url in result
 
 
 class TestSignatureController(unittest.TestCase):
