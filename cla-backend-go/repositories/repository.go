@@ -420,24 +420,23 @@ func (r repo) ListProjectRepositories(ctx context.Context, externalProjectID str
 	out := &models.ListGithubRepositories{
 		List: make([]*models.GithubRepository, 0),
 	}
-
-	// Create a new query builder
-	builder := expression.NewBuilder()
+	var condition expression.KeyConditionBuilder
+	var filter expression.ConditionBuilder
 
 	if externalProjectID != "" {
-		builder.WithKeyCondition(expression.Key("repository_sfdc_id").Equal(expression.Value(externalProjectID)))
+		condition = expression.Key("repository_sfdc_id").Equal(expression.Value(externalProjectID))
 		indexName = SFDCRepositoryIndex
 	} else {
-		builder.WithKeyCondition(expression.Key("project_sfid").Equal(expression.Value(projectSFID)))
+		condition = expression.Key("project_sfid").Equal(expression.Value(projectSFID))
 		indexName = ProjectSFIDRepositoryOrganizationNameIndex
 	}
 
 	// Add the enabled filter, if set
 	if enabled != nil {
-		builder.WithFilter(expression.Name(repositoryEnabledColumn).Equal(expression.Value(aws.BoolValue(enabled))))
+		filter = expression.Name(repositoryEnabledColumn).Equal(expression.Value(enabled))
 	}
 
-	expr, err := builder.Build()
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithFilter(filter).Build()
 	if err != nil {
 		return nil, err
 	}
