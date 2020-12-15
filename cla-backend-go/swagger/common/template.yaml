@@ -12,6 +12,10 @@ properties:
     type: string
   description:
     type: string
+  templateMajorVersion:
+    type: integer
+  templateMinorVersion:
+    type: integer
   iclaHtmlBody:
     type: string
   cclaHtmlBody:

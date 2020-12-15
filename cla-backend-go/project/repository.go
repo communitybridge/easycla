@@ -127,7 +127,7 @@ func (repo *repo) CreateCLAGroup(ctx context.Context, claGroupModel *models.ClaG
 	addStringAttribute(input.Item, "date_modified", currentTimeString)
 	// Set the version attribute if not already set
 	if claGroupModel.Version == "" {
-		claGroupModel.Version = "v1" // default value
+		claGroupModel.Version = utils.V1 // default value
 	}
 	addStringAttribute(input.Item, "version", claGroupModel.Version)
 
@@ -646,7 +646,7 @@ func (repo *repo) UpdateCLAGroup(ctx context.Context, claGroupModel *models.ClaG
 		"ProjectCCLARequiresICLA": claGroupModel.ProjectCCLARequiresICLA,
 		"ProjectLive":             claGroupModel.ProjectLive,
 		"tableName":               repo.claGroupTable}
-	log.WithFields(f).Debugf("updating CLA Group")
+	log.WithFields(f).Debugf("processing update CLA Group request")
 
 	if claGroupModel.ProjectID == "" {
 		return nil, ErrProjectIDMissing
