@@ -70,7 +70,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, signature.ProjectID, projectClaGroupsRepo) {
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, signature.ProjectID, projectClaGroupsRepo, projectRepo) {
 			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures", authUser.UserName)
 			log.Warn(msg)
 			return signatures.NewGetProjectCompanyEmployeeSignaturesForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
@@ -388,7 +388,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 
 		if false {
 			log.WithFields(f).Debug("checking access control permissions for user...")
-			if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+			if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo, projectRepo) {
 				msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
 				log.Warn(msg)
 				return signatures.NewGetProjectSignaturesForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
@@ -803,7 +803,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo, projectRepo) {
 			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
 			log.Warn(msg)
 			return signatures.NewGetProjectCompanyEmployeeSignaturesForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
@@ -966,7 +966,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo, projectRepo) {
 			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
 			log.Warn(msg)
 			return signatures.NewDownloadProjectSignatureICLAsForbidden().WithXRequestID(reqID).WithPayload(
@@ -1031,7 +1031,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		f["foundationSFID"] = claGroupModel.FoundationSFID
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo, projectRepo) {
 			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
 			log.Warn(msg)
 			return signatures.NewDownloadProjectSignatureICLAAsCSVForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
@@ -1087,7 +1087,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		f["foundationSFID"] = claGroupModel.FoundationSFID
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo, projectRepo) {
 			msg := fmt.Sprintf("user %s is not authorized to view project ICLA signatures any scope of project", authUser.UserName)
 			log.Warn(msg)
 			return signatures.NewDownloadProjectSignatureCCLAsForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
@@ -1151,7 +1151,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		f["foundationSFID"] = claGroupModel.FoundationSFID
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo) {
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo, projectRepo) {
 			msg := fmt.Sprintf("user %s is not authorized to view project CCLA signatures any scope of project", authUser.UserName)
 			log.Warn(msg)
 			return signatures.NewDownloadProjectSignatureCCLAAsCSVForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
@@ -1287,7 +1287,7 @@ func errorResponse(reqID string, err error) *models.ErrorResponse {
 }
 
 // isUserHaveAccessToCLAGroupProjects is a helper function to determine if the user has access to the specified CLA Group projects
-func isUserHaveAccessToCLAGroupProjects(ctx context.Context, authUser *auth.User, claGroupID string, projectClaGroupsRepo projects_cla_groups.Repository) bool {
+func isUserHaveAccessToCLAGroupProjects(ctx context.Context, authUser *auth.User, claGroupID string, projectClaGroupsRepo projects_cla_groups.Repository, projectRepo project.ProjectRepository) bool {
 	f := logrus.Fields{
 		"functionName":   "isUserHaveAccessToCLAGroupProjects",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -1295,6 +1295,8 @@ func isUserHaveAccessToCLAGroupProjects(ctx context.Context, authUser *auth.User
 		"userName":       authUser.UserName,
 		"userEmail":      authUser.Email,
 	}
+
+	var projectCLAGroup *v1Models.ClaGroup
 
 	// Lookup the project IDs for the CLA Group
 	log.WithFields(f).Debug("looking up projects associated with the CLA Group...")
@@ -1304,8 +1306,26 @@ func isUserHaveAccessToCLAGroupProjects(ctx context.Context, authUser *auth.User
 		return false
 	}
 	if len(projectCLAGroupModels) == 0 {
-		log.WithFields(f).Debug("no project cla group mappings by CLA Group ID - failed permission check")
-		return false
+		projectCLAGroup, err = projectRepo.GetCLAGroupByID(ctx, claGroupID, false)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID - failed permission check")
+			return false
+		}
+		if projectCLAGroup == nil {
+			log.WithFields(f).Debug("cla group is not found using given ID")
+			return false
+		}
+
+		claData := &projects_cla_groups.ProjectClaGroup{
+			ProjectExternalID: projectCLAGroup.ProjectExternalID,
+			ProjectSFID:       projectCLAGroup.ProjectExternalID,
+			ProjectName:       projectCLAGroup.ProjectName,
+			ClaGroupID:        projectCLAGroup.ProjectID,
+			ClaGroupName:      projectCLAGroup.ProjectName,
+			FoundationSFID:    projectCLAGroup.FoundationSFID,
+		}
+
+		projectCLAGroupModels = append(projectCLAGroupModels, claData)
 	}
 
 	foundationSFID := projectCLAGroupModels[0].FoundationSFID
