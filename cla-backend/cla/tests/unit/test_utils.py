@@ -126,8 +126,8 @@ class TestUtils(unittest.TestCase):
         """
         signature = Signature()
         signature.get_email_whitelist = Mock(return_value={"foo@gmail.com"})
-        self.assertTrue(utils.is_whitelisted(signature, email="foo@gmail.com"))
-        self.assertFalse(utils.is_whitelisted(signature, email="bar@gmail.com"))
+        self.assertTrue(utils.is_approved(signature, email="foo@gmail.com"))
+        self.assertFalse(utils.is_approved(signature, email="bar@gmail.com"))
 
     def test_is_whitelisted_for_domain(self) -> None:
         """
@@ -135,8 +135,8 @@ class TestUtils(unittest.TestCase):
         """
         signature = Signature()
         signature.get_domain_whitelist = Mock(return_value=[".gmail.com"])
-        self.assertTrue(utils.is_whitelisted(signature, email="random@gmail.com"))
-        self.assertFalse(utils.is_whitelisted(signature, email="foo@invalid.com"))
+        self.assertTrue(utils.is_approved(signature, email="random@gmail.com"))
+        self.assertFalse(utils.is_approved(signature, email="foo@invalid.com"))
 
     def test_is_whitelisted_for_github(self) -> None:
         """
@@ -144,8 +144,8 @@ class TestUtils(unittest.TestCase):
         """
         signature = Signature()
         signature.get_github_whitelist = Mock(return_value=['foo'])
-        self.assertTrue(utils.is_whitelisted(signature, github_username='foo'))
-        self.assertFalse(utils.is_whitelisted(signature, github_username='bar'))
+        self.assertTrue(utils.is_approved(signature, github_username='foo'))
+        self.assertFalse(utils.is_approved(signature, github_username='bar'))
 
     def test_is_whitelisted_for_github_org(self) -> None:
         """
@@ -159,7 +159,7 @@ class TestUtils(unittest.TestCase):
         self.mock_get.return_value.json.return_value = github_orgs
         signature = Signature()
         signature.get_github_org_whitelist = Mock(return_value=['foo-org'])
-        self.assertTrue(utils.is_whitelisted(signature, github_username='foo'))
+        self.assertTrue(utils.is_approved(signature, github_username='foo'))
 
 
 def test_append_email_help_sign_off_content():

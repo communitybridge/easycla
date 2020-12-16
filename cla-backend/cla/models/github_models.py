@@ -813,7 +813,7 @@ def handle_commit_from_user(project, commit_sha, author_info, signed, missing): 
             cla.log.warning(f'more than 1 CCLA signature record found in our database - signatures: {signatures}')
 
         for signature in signatures:
-            if cla.utils.is_whitelisted(
+            if cla.utils.is_approved(
                     signature,
                     email=author_email,
                     github_id=author_id,
