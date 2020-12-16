@@ -3,12 +3,15 @@
 import datetime
 import json
 import os
+from typing import List
 from urllib.parse import quote
+
 
 import requests
 
 import cla
 from cla import log
+from cla.models.dynamo_models import ProjectCLAGroup
 
 STAGE = os.environ.get('STAGE', '')
 REGION = 'us-east-1'
@@ -99,6 +102,96 @@ class UserServiceInstance:
 
     def get_users_by_email(self, email: str):
         return self._get_users_by_key_value("email", email)
+    
+    def has_role(self, username: str, role: str, organization_id: str, cla_group_id: str) -> bool:
+        """
+        Function that checks whether lf user has a role
+        :param username: The lf username
+        :type username: string
+        :param cla_group_id: cla_group_id associated with Project/Foundation SFIDs for role check
+        :type cla_group_id: string
+        :param role: given role check for user
+        :type role: string
+        :param organization_id: salesforce org ID
+        :type organization_id: string
+        :rtype: bool
+        """
+        scopes = {}
+        function = 'has_role'
+        scopes = self._list_org_user_scopes(organization_id, role)
+        if scopes:
+            log.info(f'{function} - Found scopes : {scopes} for organization: {organization_id}')
+            log.info(f'{function} - Getting projectCLAGroups for cla_group_id: {cla_group_id}')
+            pcg = ProjectCLAGroup()
+            pcgs = pcg.get_by_cla_group_id(cla_group_id)
+            if pcgs[0].signed_at_foundation():
+                log.info(f'{cla_group_id} signed at foundation level ')
+                log.info(f'{function} - Checking if {username} has role... ')
+                return self._has_project_org_scope(pcgs[0].get_project_sfid(), organization_id, username, scopes)
+            log.info(f'{cla_group_id} signed at project level and checking user roles for user: {username}')
+            has_role_project_org = []
+            for pcg in pcgs:
+                has_role_project_org.append(self._has_project_org_scope(pcg.get_project_sfid(), organization_id, username, scopes))
+            if False not in has_role_project_org:
+                return True
+        return False
+    
+    def _has_project_org_scope(self, project_sfid: str, organization_id: str, username: str, scopes: dict) -> bool:
+        """
+        Helper function that checks whether there exists project_org_scope for given role
+        :param project_sfid: salesforce project sfid
+        :type project_sfid: string
+        :param organization_id: organization ID
+        :type organization_id: string
+        :param username: lf username
+        :type username: string
+        :param scopes: service scopes for organization
+        :type scopes: dict
+        :rtype: bool
+        """
+        function = '_has_project_org_scope_role'
+        try:
+            user_roles = scopes['userroles']
+            log.info(f'{function} - User roles: {user_roles}')
+        except KeyError as err:
+            log.warning(f'{function} - error: {err} ')
+            return False
+        for user_role in user_roles:
+            if user_role['Contact']['Username'] == username:
+                #Since already filtered by role ...get first item
+                for scope in user_role['RoleScopes'][0]['Scopes']:
+                    log.info(f'{function}- Checking objectID for scope: {project_sfid}|{organization_id}')
+                    if scope['ObjectID'] == f'{project_sfid}|{organization_id}':
+                        return True
+        return False
+
+
+    def _list_org_user_scopes(self, organization_id: str, role: str) -> dict:
+        """
+        Helper function that lists the org_user_scopes for a given organization related to given role
+        :param organization_id : The salesforce id that is queried for user scopes
+        :type organization_id: string
+        :param role: role to filter the user org scopes
+        :type role: string
+        :param cla_group_id: cla_group_id thats mapped to salesforce projects
+        :type cla_group_id: string
+        :return: json dict representing org user role scopes
+        :rtype: dict
+        """
+        function = '_list_org_user_scopes'
+        headers = {
+            'Authorization': f'bearer {self.get_access_token()}',
+            'accept': 'application/json'
+        }
+        try:
+            url = f'{self.platform_gateway_url}/organization-service/v1/orgs/{organization_id}/servicescopes'
+            log.debug('%s - Sending GET url to %s ...', function, url)
+            params = {'rolename': role}
+            r = requests.get(url, headers=headers, params=params)
+            return r.json()
+        except requests.exceptions.HTTPError as err:
+            log.warning('%s - Could not get user org scopes for organization: %s with role: %s , error: %s ', function, organization_id, role, err)
+            return None
 
     def get_access_token(self):
         fn = 'user_service.get_access_token'

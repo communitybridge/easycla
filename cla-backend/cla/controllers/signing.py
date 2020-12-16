@@ -4,6 +4,7 @@
 """
 Controller related to the signed callback.
 """
+import time
 
 import falcon
 from jinja2 import Template
@@ -11,9 +12,12 @@ from jinja2 import Template
 import cla
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import Signature
+from cla.user_service import UserService
 from cla.utils import get_signing_service, get_signature_instance, get_email_service, \
-    get_supported_repository_providers, get_repository_service
+    get_supported_repository_providers, get_repository_service, get_project_instance, get_company_instance
 
+
+CLA_MANAGER_ROLE = 'cla-manager'
 
 def request_individual_signature(project_id, user_id, return_url_type, return_url=None, request=None):
     """
@@ -185,12 +189,13 @@ def return_url(signature_id, event=None):  # pylint: disable=unused-argument
     :param event: The event GET flag sent back from the signing service provider.
     :type event: string | None
     """
+    fn = 'return_url'
     try:  # Load the signature based on ID.
         signature = get_signature_instance()
         signature.load(str(signature_id))
     except DoesNotExist as err:
-        cla.log.error('Invalid signature_id provided when trying to send user back to their ' + \
-                      'return_url after signing: %s', signature_id)
+        cla.log.error('%s - Invalid signature_id provided when trying to send user back to their ' + \
+                      'return_url after signing: %s', fn, signature_id)
         return {'errors': {'signature_id': str(err)}}
     # Ensure everything went well on the signing service provider's side.
     if event is not None:
@@ -206,7 +211,39 @@ def return_url(signature_id, event=None):  # pylint: disable=unused-argument
             return canceled_signature_html(signature=signature)
     ret_url = signature.get_signature_return_url()
     if ret_url is not None:
-        cla.log.info('Signature success - sending user to return_url: %s', ret_url)
+        cla.log.info('%s- Signature success - sending user to return_url: %s', fn, ret_url)
+        try:
+            project = get_project_instance()
+            project.load(str(signature.get_signature_project_id()))
+        except DoesNotExist as err:
+            cla.log.error('%s - Invalid project_id provided when trying to send user back to'\
+                        'their return_url : %s', fn, signature.get_signature_project_id())
+
+        if project.get_version() == 'v2':
+            if signature.get_signature_reference_type() == 'company':
+                cla.log.info('%s - Getting company instance : %s ', fn, signature.get_signature_reference_id())
+                try:
+                    company = get_company_instance()
+                    company.load(str(signature.get_signature_reference_id()))
+                except DoesNotExist as err:
+                    cla.log.error('%s - Invalid company_id provided : err: %s', fn, signature.get_signature_reference_id)
+                user_service = UserService
+                cla.log.info('%s - Checking if cla managers have cla-manager role permission', fn)
+                num_tries = 10
+                i = 1
+                cla.log.info(f'{fn} - checking if managers:{signature.get_signature_acl()} have roles with {num_tries} tries')
+                while i <= num_tries:
+                    cla.log.info(f'{fn} - check try #: {i}')
+                    assigned = []
+                    for manager in signature.get_signature_acl():
+                        cla.log.info(f'{fn}- Checking {manager} for {CLA_MANAGER_ROLE} for company: {company.get_company_external_id()}, cla_group_id: {signature.get_signature_project_id()}')
+                        assigned.append(user_service.has_role(manager, CLA_MANAGER_ROLE, company.get_company_external_id(), signature.get_signature_project_id()))
+                    #Ensure that assigned list doesnt have any False values -> All Managers have role assigned
+                    if False not in assigned:
+                        cla.log.info(f'All managers have cla-manager role for company: {company.get_company_external_id()} and cla_group_id: {signature.get_signature_project_id()}')
+                        break
+                    time.sleep(0.5)
+
         raise falcon.HTTPFound(ret_url)
     cla.log.info('No return_url set for signature - returning success message')
     return {'success': 'Thank you for signing'}
