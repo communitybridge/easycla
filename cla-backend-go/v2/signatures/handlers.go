@@ -914,7 +914,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			return signatures.NewGetSignatureSignedDocumentNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, errors.New("signature not found")))
 		}
 
-		haveAccess, err := isUserHaveAccessOfSignedSignaturePDF(ctx, authUser, signatureModel, companyService, projectClaGroupsRepo)
+		haveAccess, err := isUserHaveAccessOfSignedSignaturePDF(ctx, authUser, signatureModel, companyService, projectClaGroupsRepo, projectRepo)
 		if err != nil {
 			log.WithFields(f).WithError(err).Warn("problem determining signature access")
 			return signatures.NewGetSignatureSignedDocumentBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
@@ -1194,7 +1194,7 @@ func getProjectIDsFromModels(f logrus.Fields, foundationSFID string, projectCLAG
 }
 
 // isUserHaveAccessOfSignedSignaturePDF returns true if the specified user has access to the provided signature, false otherwise
-func isUserHaveAccessOfSignedSignaturePDF(ctx context.Context, authUser *auth.User, signature *v1Models.Signature, companyService company.IService, projectClaGroupRepo projects_cla_groups.Repository) (bool, error) {
+func isUserHaveAccessOfSignedSignaturePDF(ctx context.Context, authUser *auth.User, signature *v1Models.Signature, companyService company.IService, projectClaGroupRepo projects_cla_groups.Repository, projectRepo project.ProjectRepository) (bool, error) {
 	f := logrus.Fields{
 		"functionName":           "isUserHaveAccessOfSignedSignaturePDF",
 		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
@@ -1205,6 +1205,7 @@ func isUserHaveAccessOfSignedSignaturePDF(ctx context.Context, authUser *auth.Us
 		"signatureType":          signature.SignatureType,
 		"signatureReferenceType": signature.SignatureReferenceType,
 	}
+	var projectCLAGroup *v1Models.ClaGroup
 
 	projects, err := projectClaGroupRepo.GetProjectsIdsForClaGroup(signature.ProjectID)
 	if err != nil {
@@ -1212,9 +1213,26 @@ func isUserHaveAccessOfSignedSignaturePDF(ctx context.Context, authUser *auth.Us
 		return false, err
 	}
 	if len(projects) == 0 {
-		log.WithFields(f).Warn("unable to locate any project IDs for CLA Group")
-		return false, fmt.Errorf("cannot find project(s) associated with CLA group cla_group_id: %s - please update the database with the foundation/project mapping",
-			signature.ProjectID)
+		projectCLAGroup, err = projectRepo.GetCLAGroupByID(ctx, signature.ProjectID, false)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warnf("problem loading cla group by ID - failed permission check")
+			return false, err
+		}
+		if projectCLAGroup == nil {
+			log.WithFields(f).Debug("cla group is not found using given ID")
+			return false, nil
+		}
+
+		claData := &projects_cla_groups.ProjectClaGroup{
+			ProjectExternalID: projectCLAGroup.ProjectExternalID,
+			ProjectSFID:       projectCLAGroup.ProjectExternalID,
+			ProjectName:       projectCLAGroup.ProjectName,
+			ClaGroupID:        projectCLAGroup.ProjectID,
+			ClaGroupName:      projectCLAGroup.ProjectName,
+			FoundationSFID:    projectCLAGroup.FoundationSFID,
+		}
+
+		projects = append(projects, claData)
 	}
 
 	// Foundation ID's should be all the same for each project ID - just grab the first one
