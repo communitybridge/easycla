@@ -737,7 +737,6 @@ class Repository(object):
         raise NotImplementedError()
 
     def get_repositories_by_organization(self, organization_name):
-
         """
         Loads all repositories configured under this organization.
 
@@ -926,6 +925,21 @@ class Signature(object):  # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
+    def get_domain_whitelist(self):
+        raise NotImplementedError()
+
+    def get_email_whitelist(self):
+        raise NotImplementedError()
+
+    def get_github_whitelist(self):
+        raise NotImplementedError()
+
+    def get_github_org_whitelist(self):
+        raise NotImplementedError()
+
+    def get_note(self):
+        raise NotImplementedError()
+
     def set_signature_id(self, signature_id):
         """
         Setter for an signature ID.
@@ -1063,12 +1077,12 @@ class Signature(object):  # pylint: disable=too-many-public-methods
         raise NotImplementedError()
 
     def get_signatures_by_reference(
-        self,
-        reference_id,
-        reference_type,  # pylint: disable=too-many-arguments
-        project_id=None,
-        signature_signed=None,
-        signature_approved=None,
+            self,
+            reference_id,
+            reference_type,  # pylint: disable=too-many-arguments
+            project_id=None,
+            signature_signed=None,
+            signature_approved=None,
     ):
         """
         Simple abstraction around the supported ORMs to get a user's or
@@ -2062,39 +2076,30 @@ class Event(object):
         raise NotImplementedError()
 
     def get_event_data(self):
-
         raise NotImplementedError()
 
     def get_events(self, event_id=None, event_type=None):
-
         raise NotImplementedError()
 
     def set_event_id(self, event_id):
-
         raise NotImplementedError()
 
     def set_event_user_id(self, user_id):
-
         raise NotImplementedError()
 
     def set_event_type(self, event_type):
-
         raise NotImplementedError()
 
     def set_event_project_id(self, event_project_id):
-
         raise NotImplementedError()
 
     def set_event_company_id(self, company_id):
-
         raise NotImplementedError()
 
     def set_event_data(self, event_data):
-
         raise NotImplementedError()
 
     def set_event_time(self, event_time):
-
         raise NotImplementedError()
 
     def all(self, ids=None):
@@ -2113,6 +2118,7 @@ class ProjectCLAGroup(object):
     """
     Interface to the ProjectCLA Model
     """
+
     def to_dict(self):
         """
         Converts models to dictionaries for JSON serialization.
@@ -2159,6 +2165,7 @@ class CCLAWhitelistRequest(object):
     """
     Interface to the CCLAWhitelistRequest Model
     """
+
     def to_dict(self):
         """
         Converts models to dictionaries for JSON serialization.
