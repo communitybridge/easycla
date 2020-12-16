@@ -709,13 +709,10 @@ def get_redirect_uri(repository_service, installation_id, github_repository_id, 
                                                                     params)
 
 
-def get_full_sign_url(repository_service, installation_id, github_repository_id, change_request_id):
+def get_full_sign_url(repository_service, installation_id, github_repository_id, change_request_id, project_version):
     """
     Helper function to get the full sign URL that the user should click to initiate the signing
     workflow.
-
-    :TODO: Update comments.
-
     :param repository_service: The repository service provider we're getting the sign url for.
         Should be one of the supported repository providers ('github', 'gitlab', etc).
     :type repository_service: string
@@ -729,10 +726,17 @@ def get_full_sign_url(repository_service, installation_id, github_repository_id,
         repository_service is 'github'. Should be a merge request ID when repository_service is
         'gitlab'.
     :type change_request_id: int
+    :param project_version: Project version associated with PR
+    :type project_version: string
     """
-    return '{}/v2/repository-provider/{}/sign/{}/{}/{}'.format(cla.conf['API_BASE_URL'], repository_service,
+    version = "1"
+    if project_version and project_version == 'v2':
+        version = "2"
+
+    return '{}/v2/repository-provider/{}/sign/{}/{}/{}?version={}'.format(cla.conf['API_BASE_URL'], repository_service,
                                                                str(installation_id), str(github_repository_id),
-                                                               str(change_request_id))
+                                                               str(change_request_id),
+                                                               version)
 
 
 def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=False, is_approved_by_manager=False):
@@ -794,9 +798,11 @@ def assemble_cla_status(author_name, signed=False):
     return author_name, 'Missing CLA Authorization.'
 
 
-def assemble_cla_comment(repository_type, installation_id, github_repository_id, change_request_id, signed, missing):
+def assemble_cla_comment(repository_type, installation_id, github_repository_id, change_request_id, signed, missing,
+                         project_version):
     """
     Helper function to generate a CLA comment based on a a change request.
+
 
     :TODO: Update comments
 
@@ -815,6 +821,8 @@ def assemble_cla_comment(repository_type, installation_id, github_repository_id,
     :param missing: The list of commit hashes and authors that have not signed for this
         change request.
     :type missing: [(string, list)]
+    :param project_version: Project version associated with PR comment
+    :type project_version: string
     """
     num_missing = len(missing)
     missing_ids = list(filter(lambda x: x[1][0] is None, missing))
@@ -823,7 +831,7 @@ def assemble_cla_comment(repository_type, installation_id, github_repository_id,
     # Logic not supported as we removed the DB query in the caller
     # approved_ids = list(filter(lambda x: len(x[1]) == 4 and x[1][3] is True, missing))
     # approved_by_manager = len(approved_ids) > 0
-    sign_url = get_full_sign_url(repository_type, installation_id, github_repository_id, change_request_id)
+    sign_url = get_full_sign_url(repository_type, installation_id, github_repository_id, change_request_id, project_version)
     comment = get_comment_body(repository_type, sign_url, signed, missing)
     all_signed = num_missing == 0
     badge = get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=no_user_id)
