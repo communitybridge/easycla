@@ -6,8 +6,9 @@ from unittest.mock import Mock, patch
 
 import cla
 from cla import utils
-from cla.models.dynamo_models import Signature, User
-from cla.utils import append_email_help_sign_off_content, get_email_help_content, get_email_sign_off_content
+from cla.models.dynamo_models import Signature, User, Project
+from cla.utils import append_email_help_sign_off_content, get_email_help_content, get_email_sign_off_content, \
+    get_full_sign_url
 
 
 class TestUtils(unittest.TestCase):
@@ -172,6 +173,22 @@ def test_append_email_help_sign_off_content():
     assert body in new_body_v1
     assert get_email_help_content(False) in new_body_v1
     assert get_email_sign_off_content() in new_body_v1
+
+
+def test_get_full_sign_url():
+    p = Project()
+    p.set_version("v1")
+    url = get_full_sign_url("github", "1234", 456, 1, p.get_version())
+    assert "?version=1" in url
+
+    p = Project()
+    p.set_version("v2")
+    url = get_full_sign_url("github", "1234", 456, 1, p.get_version())
+    assert "?version=2" in url
+
+    p = Project()
+    url = get_full_sign_url("github", "1234", 456, 1, p.get_version())
+    assert "?version=1" in url
 
 
 if __name__ == '__main__':

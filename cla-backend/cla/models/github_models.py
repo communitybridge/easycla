@@ -431,7 +431,7 @@ class GitHub(repository_service_interface.RepositoryService):
                       f'with missing authors: {missing}')
         repository_name = repository.get_repository_name()
         update_pull_request(installation_id, github_repository_id, pull_request, repository_name,
-                            signed=signed, missing=missing)
+                            signed=signed, missing=missing, project_version=project.get_version())
 
     def get_pull_request(self, github_repository_id, pull_request_number, installation_id):
         """
@@ -916,7 +916,7 @@ def has_check_previously_failed(pull_request: PullRequest):
 
 
 def update_pull_request(installation_id, github_repository_id, pull_request, repository_name, signed,
-                        missing):  # pylint: disable=too-many-locals
+                        missing, project_version):  # pylint: disable=too-many-locals
     """
     Helper function to update a PR's comment and status based on the list of signers.
 
@@ -934,6 +934,8 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
     :param missing: The list of (commit hash, author name) tuples that have not signed
         an signature for this PR.
     :type missing: [(string, list)]
+    :param project_version: Project version associated with PR
+    :type missing: string
     """
     notification = cla.conf['GITHUB_PR_NOTIFICATION']
     both = notification == 'status+comment' or notification == 'comment+status'
@@ -950,7 +952,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
                 help_url = "https://help.github.com/en/github/committing-changes-to-your-project/why-are-my-commits-linked-to-the-wrong-user"
             else:
                 help_url = cla.utils.get_full_sign_url('github', str(installation_id), github_repository_id,
-                                                       pull_request.number)
+                                                       pull_request.number, project_version)
             client = GitHubInstallation(installation_id)
             # check if unsigned user is whitelisted
             commit_sha = authors[0]
@@ -983,7 +985,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
     # Update the comment
     if both or notification == 'comment':
         body = cla.utils.assemble_cla_comment('github', str(installation_id), github_repository_id, pull_request.number,
-                                              signed, missing)
+                                              signed, missing, project_version)
         previously_failed, comment = has_check_previously_failed(pull_request)
         if not missing:
             # After Issue #167 wsa in place, they decided via Issue #289 that we
@@ -1016,7 +1018,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
             # specified default value per issue #166
             context, body = cla.utils.assemble_cla_status(context_name, signed=False)
             sign_url = cla.utils.get_full_sign_url(
-                'github', str(installation_id), github_repository_id, pull_request.number)
+                'github', str(installation_id), github_repository_id, pull_request.number, project_version)
             cla.log.debug(f'Creating new CLA {state} status - {len(signed)} passed, {missing}, signing url: {sign_url}')
             create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
         elif signed is not None and len(signed) > 0:
@@ -1035,7 +1037,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
             # specified default value per issue #166
             context, body = cla.utils.assemble_cla_status(context_name, signed=False)
             sign_url = cla.utils.get_full_sign_url(
-                'github', str(installation_id), github_repository_id, pull_request.number)
+                'github', str(installation_id), github_repository_id, pull_request.number, project_version)
             cla.log.debug(f'Creating new CLA {state} status - {len(signed)} passed, {missing}, signing url: {sign_url}')
             cla.log.warning('This is an error condition - should have at least one committer in one of these lists: '
                             f'{len(signed)} passed, {missing}')
