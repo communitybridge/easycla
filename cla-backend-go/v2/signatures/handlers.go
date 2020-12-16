@@ -1308,7 +1308,7 @@ func isUserHaveAccessToCLAGroupProjects(ctx context.Context, authUser *auth.User
 	if len(projectCLAGroupModels) == 0 {
 		projectCLAGroup, err = projectRepo.GetCLAGroupByID(ctx, claGroupID, false)
 		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("problem loading project cla group mappings by CLA Group ID - failed permission check")
+			log.WithFields(f).WithError(err).Warnf("problem loading cla group by ID - failed permission check")
 			return false
 		}
 		if projectCLAGroup == nil {
