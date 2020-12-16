@@ -1712,7 +1712,8 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             signature_signed=signature_signed,
         )
 
-    def get_latest_signature(self, project_id, company_id=None, signature_signed=None, signature_approved=None):
+    def get_latest_signature(self, project_id, company_id=None, signature_signed=None, signature_approved=None) -> \
+            Optional[Signature]:
         """
         Helper function to get a user's latest signature for a project.
 
@@ -1720,11 +1721,16 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         :type project_id: string
         :param company_id: The company ID if looking for an employee signature.
         :type company_id: string
+        :param signature_signed: The signature signed flag
+        :type signature_signed: bool
+        :param signature_approved: The signature approved flag
+        :type signature_approved: bool
         :return: The latest versioned signature object if it exists.
         :rtype: cla.models.model_interfaces.Signature or None
         """
+        fn = 'dynamodb_models.get_latest_signature'
         cla.log.debug(
-            "get_latest_signature -> self.get_user_signatures with "
+            f"{fn} - self.get_user_signatures with "
             f"user_id: {self.get_user_id()}, "
             f"project_id: {project_id}, "
             f"company_id: {company_id}"
@@ -1745,14 +1751,14 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
 
         if latest is None:
             cla.log.debug(
-                "get_latest_signature - unable to find user signature using "
+                f"{fn} - unable to find user signature using "
                 f"user_id: {self.get_user_id()}, "
                 f"project id: {project_id}, "
                 f"company id: {company_id}"
             )
         else:
             cla.log.debug(
-                "get_latest_signature - found user user signature using "
+                f"{fn} - found user user signature using "
                 f"user_id: {self.get_user_id()}, "
                 f"project id: {project_id}, "
                 f"company id: {company_id}"
@@ -1769,6 +1775,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         :return: True if at least one email is matched against pattern else False
         :rtype: bool
         """
+        fn = 'dynamo_models.preprocess_pattern'
         for pattern in patterns:
             if pattern.startswith("*."):
                 pattern = pattern.replace("*.", ".*")
@@ -1781,13 +1788,13 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             pat = re.compile(preprocessed_pattern)
             for email in emails:
                 if pat.match(email) is not None:
-                    self.log_debug("found user email in email whitelist pattern")
+                    self.log_debug(f'{fn} - found user email in email approval pattern')
                     return True
         return False
 
     # Accepts a Signature object
 
-    def is_whitelisted(self, ccla_signature) -> bool:
+    def is_approved(self, ccla_signature: Signature) -> bool:
         """
         Helper function to determine whether at least one of the user's email
         addresses are whitelisted for a particular ccla signature.
@@ -1797,6 +1804,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         :return: True if at least one email is whitelisted, False otherwise.
         :rtype: bool
         """
+        fn = 'dynamo_models.is_approved'
         # Returns the union of lf_emails and emails (separate columns)
         emails = self.get_all_user_emails()
         if len(emails) > 0:
@@ -1805,16 +1813,17 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
 
         # First, we check email whitelist
         whitelist = ccla_signature.get_email_whitelist()
-        cla.log.debug(f"is_whitelisted - testing user emails: {emails} with " f"CCLA whitelist emails: {whitelist}")
+        cla.log.debug(f'{fn} - testing user emails: {emails} with '
+                      f'CCLA approval emails: {whitelist}')
 
         if whitelist is not None:
             for email in emails:
                 # Case insensitive match
                 if email.lower() in (s.lower() for s in whitelist):
-                    self.log_debug("found user email in email whitelist")
+                    cla.log.debug(f'{fn} - found user email in email approval list')
                     return True
         else:
-            cla.log.debug(f"is_whitelisted - no email whitelist match for user: {self}")
+            cla.log.debug(f'{fn} - no email whitelist match for user: {self}')
 
         # Secondly, let's check domain whitelist
         # If a naked domain (e.g. google.com) is provided, we prefix it with '^.*@',
@@ -1822,20 +1831,17 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         # If a '*', '*.' or '.' prefix is provided, we replace the prefix with '.*\.',
         # which will allow subdomains.
         patterns = ccla_signature.get_domain_whitelist()
-        cla.log.debug(
-            f"is_whitelisted - testing user email domains: {emails} with "
-            f"whitelist domain values in database: {patterns}"
-        )
+        cla.log.debug(f'{fn} - testing user email domains: {emails} with '
+                      f'domain approval values: {patterns}')
+
         if patterns is not None:
             if self.preprocess_pattern(emails, patterns):
                 return True
             else:
-                self.log_debug(f"Did not match email: {emails} with domain: {patterns}")
+                self.log_debug(f'{fn} - did not match email: {emails} with domain: {patterns}')
         else:
-            cla.log.debug(
-                "is_whitelisted - no domain whitelist patterns defined in the database"
-                "- skipping domain whitelist check"
-            )
+            cla.log.debug(f'{fn} - no domain approval patterns defined - '
+                          'skipping domain approval checks')
 
         # Third and Forth, check github whitelists
         github_username = self.get_user_github_username()
@@ -1852,7 +1858,7 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
         if github_username is None and github_id is not None:
             github_username = cla.utils.lookup_user_github_username(github_id)
             if github_username is not None:
-                cla.log.debug(f"Updating user record - adding github username: {github_username}")
+                cla.log.debug(f'{fn} - updating user record - adding github username: {github_username}')
                 self.set_user_github_username(github_username)
                 self.save()
 
@@ -1861,29 +1867,26 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             github_username = github_username.strip()
             github_id = cla.utils.lookup_user_github_id(github_username)
             if github_id is not None:
-                cla.log.debug(f"Updating user record - adding github id: {github_id}")
+                cla.log.debug(f'{fn} - updating user record - adding github id: {github_id}')
                 self.set_user_github_id(github_id)
                 self.save()
 
-        # GitHub username whitelist
+        # GitHub username approval list processing
         if github_username is not None:
             # remove leading and trailing whitespace from github username
             github_username = github_username.strip()
             github_whitelist = ccla_signature.get_github_whitelist()
-            cla.log.debug(
-                f"is_whitelisted - testing user github username: {github_username} with "
-                f"CCLA github whitelist: {github_whitelist}"
-            )
+            cla.log.debug(f'{fn} - testing user github username: {github_username} with '
+                          f'CCLA github approval list: {github_whitelist}')
 
             if github_whitelist is not None:
                 # case insensitive search
                 if github_username.lower() in (s.lower() for s in github_whitelist):
-                    self.log_debug("found github username in github whitelist")
+                    self.log_debug(f'{fn} - found github username in github approval list')
                     return True
         else:
-            cla.log.debug(
-                "is_whitelisted - users github_username is not defined " "- skipping github username whitelist check"
-            )
+            cla.log.debug(f'{fn} - users github_username is not defined - '
+                          'skipping github username approval list check')
 
         # Check github org whitelist
         if github_username is not None:
@@ -1891,23 +1894,19 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             if "error" not in github_orgs:
                 # Fetch the list of orgs this user is part of
                 github_org_whitelist = ccla_signature.get_github_org_whitelist()
-                cla.log.debug(
-                    f"is_whitelisted - testing user github orgs: {github_orgs} with "
-                    f"CCLA github org whitelist values: {github_org_whitelist}"
-                )
+                cla.log.debug(f'{fn} - testing user github org: {github_orgs} with '
+                              f'CCLA github org approval list: {github_org_whitelist}')
 
                 if github_org_whitelist is not None:
                     for dynamo_github_org in github_org_whitelist:
                         # case insensitive search
                         if dynamo_github_org.lower() in (s.lower() for s in github_orgs):
-                            self.log_debug("found matching github org for user")
+                            self.log_debug(f'{fn} - found matching github organization for user')
                             return True
         else:
-            cla.log.debug(
-                "is_whitelisted - users github_username is not defined " "- skipping github org whitelist check"
-            )
+            cla.log.debug(f'{fn} - user\'s github_username is not defined - skipping github org approval list check')
 
-        self.log_debug("unable to find user in any whitelist")
+        self.log_debug(f'{fn} - unable to find user in any whitelist')
         return False
 
     def get_users_by_company(self, company_id):
@@ -3192,14 +3191,16 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
             signature_signed=signature_signed,
         )
 
-    def get_latest_signature(self, project_id, signature_signed=None, signature_approved=None):
+    def get_latest_signature(self, project_id, signature_signed=None, signature_approved=None) -> Optional[Signature]:
         """
         Helper function to get a company's latest signature for a project.
 
-        :param company: The company object to check for.
-        :type company: cla.models.model_interfaces.Company
         :param project_id: The ID of the project to check for.
         :type project_id: string
+        :param signature_signed: The signature signed flag
+        :type signature_signed: bool
+        :param signature_approved: The signature approved flag
+        :type signature_approved: bool
         :return: The latest versioned signature object if it exists.
         :rtype: cla.models.model_interfaces.Signature or None
         """

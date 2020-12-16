@@ -87,7 +87,7 @@ class TestGitHubModels(unittest.TestCase):
         self.mock_user_get.return_value.get_user_by_github_id.return_value = None
         self.mock_user_get.return_value.get_user_by_email.return_value = None
         self.mock_signature_get.return_value.get_signatures_by_project.return_value = [Signature()]
-        self.mock_utils_get.return_value.is_whitelisted.return_value = True
+        self.mock_utils_get.return_value.is_approved.return_value = True
         missing = []
         signed = []
         project = Project()

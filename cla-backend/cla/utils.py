@@ -594,7 +594,7 @@ def user_ccla_check(user: User, project: Project, signature: Signature) -> bool:
         return False
 
 
-def user_signed_project_signature(user: User, project: Project):
+def user_signed_project_signature(user: User, project: Project) -> bool:
     """
     Helper function to check if a user has signed a project signature tied to a repository.
     Will consider both ICLA and employee signatures.
@@ -608,58 +608,84 @@ def user_signed_project_signature(user: User, project: Project):
     :rtype: boolean
     """
 
+    fn = 'utils.user_signed_project_signature'
     # Check if we have an ICLA for this user
-    cla.log.debug(f'checking to see if user has signed an ICLA, user: {user}, project: {project}')
+    cla.log.debug(f'{fn} - checking to see if user has signed an ICLA, user: {user}, project: {project}')
 
     signature = user.get_latest_signature(project.get_project_id(), signature_signed=True, signature_approved=True)
     icla_pass = False
     if signature is not None:
         icla_pass = True
     else:
-        cla.log.debug(f'ICLA signature NOT found for User: {user} on project: {project}')
+        cla.log.debug(f'{fn} - ICLA signature NOT found for User: {user} on project: {project}')
 
     # If we passed the ICLA check - good, return true, no need to check CCLA
     if icla_pass:
-        cla.log.debug(f'ICLA signature check passed for User: {user} on project: {project} - skipping CCLA check')
+        cla.log.debug(
+            f'{fn} - ICLA signature check passed for User: {user} on project: {project} - skipping CCLA check')
         return True
     else:
-        cla.log.debug(f'ICLA signature check failed for User: {user} on project: {project} - will now check CCLA')
+        cla.log.debug(
+            f'{fn} - ICLA signature check failed for User: {user} on project: {project} - will now check CCLA')
 
     # Check if we have an CCLA for this user
     company_id = user.get_user_company_id()
 
     ccla_pass = False
     if company_id is not None:
+        cla.log.debug(f'{fn} - CCLA signature check - user has a company: {company_id} - '
+                      'looking up user\'s employee acknowledgement...')
+
         # Get employee signature
-        employee_signature = user.get_latest_signature(project.get_project_id(
-        ), company_id=company_id, signature_signed=True, signature_approved=True)
+        employee_signature = user.get_latest_signature(
+            project.get_project_id(),
+            company_id=company_id,
+            signature_signed=True,
+            signature_approved=True)
+
         if employee_signature is not None:
+            cla.log.debug(f'{fn} - CCLA signature check - located employee acknowledgement - '
+                          f'signature id: {employee_signature.get_signature_id()}')
+
+            cla.log.debug(f'{fn} - CCLA signature check - loading company record by id: {company_id}...')
             company = get_company_instance()
             company.load(company_id)
+
             # Get CCLA signature of company to access whitelist
-            cla.log.debug('checking to see if users company has signed an CCLA, '
+            cla.log.debug(f'{fn} - CCLA signature check - loading signed CCLA for project|company, '
                           f'user: {user}, project_id: {project}, company_id: {company_id}')
             signature = company.get_latest_signature(
                 project.get_project_id(), signature_signed=True, signature_approved=True)
 
             # Don't check the version for employee signatures.
             if signature is not None:
-                # Verify if user has been whitelisted: https://github.com/communitybridge/easycla/issues/332
-                if user.is_whitelisted(signature):
+                cla.log.debug(f'{fn} - CCLA signature check - loaded signed CCLA for project|company, '
+                              f'user: {user}, project_id: {project}, company_id: {company_id}, '
+                              f'signature_id: {signature.get_signature_id()}')
+
+                # Verify if user has been approved: https://github.com/communitybridge/easycla/issues/332
+                cla.log.debug(f'{fn} - CCLA signature check - '
+                              'checking to see if the user is in one of the approval lists...')
+                if user.is_approved(signature):
                     ccla_pass = True
                 else:
                     # Set user signatures approved = false due to user failing whitelist checks
-                    cla.log.debug('user not whitelisted- marking signature approved = false for '
+                    cla.log.debug(f'{fn} - user not in one of the approval lists - '
+                                  'marking signature approved = false for '
                                   f'user: {user}, project_id: {project}, company_id: {company_id}')
                     user_signatures = user.get_user_signatures(
                         project_id=project.get_project_id(), company_id=company_id, signature_approved=True,
                         signature_signed=True
                     )
                     for signature in user_signatures:
+                        cla.log.debug(f'{fn} - user not in one of the approval lists - '
+                                      'marking signature approved = false for '
+                                      f'user: {user}, project_id: {project}, company_id: {company_id}, '
+                                      f'signature: {signature.get_signature_id()}')
                         signature.set_signature_approved(False)
                         signature.save()
-                        event_data = (f'employee signature of user {user.get_user_name()} '
-                                      f'disapproved for project {project.get_project_name()} '
+                        event_data = (f'The employee signature of user {user.get_user_name()} was '
+                                      f'disapproved the during CCLA check for project {project.get_project_name()} '
                                       f'and company {company.get_company_name()}')
                         Event.create_event(
                             event_type=EventType.EmployeeSignatureDisapproved,
@@ -670,17 +696,25 @@ def user_signed_project_signature(user: User, project: Project):
                             event_summary=event_data,
                             contains_pii=True,
                         )
-
+            else:
+                cla.log.debug(f'{fn} - CCLA signature check - unable to load signed CCLA for project|company, '
+                              f'user: {user}, project_id: {project}, company_id: {company_id} - '
+                              'signatory needs to sign the CCLA before the user can be authorized')
+        else:
+            cla.log.debug(f'{fn} - CCLA signature check - unable to load employee acknowledgement for project|company, '
+                          f'user: {user}, project_id: {project}, company_id: {company_id}, '
+                          'signed=true, approved=true - user needs to be associated with an organization before '
+                          'they can be authorized.')
     else:
-        cla.log.debug(f'User: {user} is NOT associated with a company - unable to check for a CCLA.')
+        cla.log.debug(f'{fn} - user: {user} is NOT associated with a company - unable to check for a CCLA.')
 
     if ccla_pass:
-        cla.log.debug(f'CCLA signature check passed for User: {user} on project: {project}')
+        cla.log.debug(f'{fn} - CCLA signature check passed for User: {user} on project: {project}')
         return True
     else:
-        cla.log.debug(f'CCLA signature check failed for User: {user} on project: {project}')
+        cla.log.debug(f'{fn} - CCLA signature check failed for User: {user} on project: {project}')
 
-    cla.log.debug(f'User: {user} failed both ICLA and CCLA checks')
+    cla.log.debug(f'{fn} - User: {user} failed both ICLA and CCLA checks')
     return False
 
 
@@ -734,9 +768,10 @@ def get_full_sign_url(repository_service, installation_id, github_repository_id,
         version = "2"
 
     return '{}/v2/repository-provider/{}/sign/{}/{}/{}?version={}'.format(cla.conf['API_BASE_URL'], repository_service,
-                                                               str(installation_id), str(github_repository_id),
-                                                               str(change_request_id),
-                                                               version)
+                                                                          str(installation_id),
+                                                                          str(github_repository_id),
+                                                                          str(change_request_id),
+                                                                          version)
 
 
 def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=False, is_approved_by_manager=False):
@@ -831,7 +866,8 @@ def assemble_cla_comment(repository_type, installation_id, github_repository_id,
     # Logic not supported as we removed the DB query in the caller
     # approved_ids = list(filter(lambda x: len(x[1]) == 4 and x[1][3] is True, missing))
     # approved_by_manager = len(approved_ids) > 0
-    sign_url = get_full_sign_url(repository_type, installation_id, github_repository_id, change_request_id, project_version)
+    sign_url = get_full_sign_url(repository_type, installation_id, github_repository_id, change_request_id,
+                                 project_version)
     comment = get_comment_body(repository_type, sign_url, signed, missing)
     all_signed = num_missing == 0
     badge = get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=no_user_id)
@@ -1323,7 +1359,7 @@ def update_github_username(github_user: dict, user: User):
             user.set_user_github_username(github_user['login'])
 
 
-def is_whitelisted(ccla_signature: Signature, email=None, github_username=None, github_id=None):
+def is_approved(ccla_signature: Signature, email=None, github_username=None, github_id=None):
     """
     Given either email, github username or github id a check is made against ccla signature to
     check whether a given parameter is whitelisted . This check is vital for a first time user
@@ -1334,34 +1370,32 @@ def is_whitelisted(ccla_signature: Signature, email=None, github_username=None, 
     :param github_username: A given github username checked against ccla signature github/github-org whitelists
     :param github_id: A given github id checked against ccla signature github/github-org whitelists
     """
+    fn = 'utils.is_approved'
 
     if email:
         # Checking email whitelist
         whitelist = ccla_signature.get_email_whitelist()
-        cla.log.debug(f'is_whitelisted - testing email: {email} with '
+        cla.log.debug(f'{fn} - testing email: {email} with '
                       f'CCLA whitelist emails: {whitelist}'
                       )
         if whitelist is not None:
             if email.lower() in (s.lower() for s in whitelist):
-                cla.log.debug('found user email in email whitelist')
+                cla.log.debug(f'{fn} found user email in email whitelist')
                 return True
 
         # Checking domain whitelist
         patterns = ccla_signature.get_domain_whitelist()
-        cla.log.debug(
-            f"is_whitelisted - testing user email domain: {email} with "
-            f"whitelist domain values in database: {patterns}"
-        )
+        cla.log.debug(f"{fn} - testing user email domain: {email} with "
+                      f"domain approval list values in database: {patterns}")
         if patterns is not None:
             if get_user_instance().preprocess_pattern([email], patterns):
                 return True
             else:
-                cla.log.debug(f"Did not match email: {email} with domain: {patterns}")
+                cla.log.debug(f"{fn} - did not match email: {email} with domain: {patterns}")
         else:
-            cla.log.debug(
-                "is_whitelisted - no domain whitelist patterns defined in the database"
-                "- skipping domain whitelist check"
-            )
+            cla.log.debug(f'{fn} - no domain whitelist patterns defined in the database'
+                          '- skipping domain approval list check')
+
     if github_id:
         github_username = lookup_user_github_username(github_id)
 
@@ -1371,19 +1405,17 @@ def is_whitelisted(ccla_signature: Signature, email=None, github_username=None, 
         github_username = github_username.strip()
         github_whitelist = ccla_signature.get_github_whitelist()
         cla.log.debug(
-            f"is_whitelisted - testing user github username: {github_username} with "
-            f"CCLA github whitelist: {github_whitelist}"
+            f"{fn} - testing user github username: {github_username} with "
+            f"CCLA github approval list: {github_whitelist}"
         )
 
         if github_whitelist is not None:
             # case insensitive search
             if github_username.lower() in (s.lower() for s in github_whitelist):
-                cla.log.debug("found github username in github whitelist")
+                cla.log.debug(f'{fn} - found github username in github approval list')
                 return True
     else:
-        cla.log.debug(
-            "is_whitelisted - users github_username is not defined " "- skipping github username whitelist check"
-        )
+        cla.log.debug(f'{fn} - users github_username is not defined - skipping github username approval list check')
 
     # Check github org whitelist
     if github_username is not None:
@@ -1391,23 +1423,19 @@ def is_whitelisted(ccla_signature: Signature, email=None, github_username=None, 
         if "error" not in github_orgs:
             # Fetch the list of orgs this user is part of
             github_org_whitelist = ccla_signature.get_github_org_whitelist()
-            cla.log.debug(
-                f"is_whitelisted - testing user github orgs: {github_orgs} with "
-                f"CCLA github org whitelist values: {github_org_whitelist}"
-            )
+            cla.log.debug(f'{fn} - testing user github orgs: {github_orgs} with '
+                          f'CCLA github org approval list values: {github_org_whitelist}')
 
             if github_org_whitelist is not None:
                 for dynamo_github_org in github_org_whitelist:
                     # case insensitive search
                     if dynamo_github_org.lower() in (s.lower() for s in github_orgs):
-                        cla.log.debug("found matching github org for user")
+                        cla.log.debug(f'{fn} - found matching github org for user')
                         return True
     else:
-        cla.log.debug(
-            "is_whitelisted - users github_username is not defined " "- skipping github org whitelist check"
-        )
+        cla.log.debug(f'{fn} - users github_username is not defined - skipping github org approval list check')
 
-    cla.log.debug('unable to find user in any whitelist')
+    cla.log.debug(f'{fn} - unable to find user in any approval list')
     return False
 
 
