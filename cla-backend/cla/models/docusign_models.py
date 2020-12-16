@@ -369,35 +369,39 @@ class DocuSign(signing_service_interface.SigningService):
         # 3. The user is included as part of the whitelist of the CCLA that the company signed.
         # Returns an error if any of the above is false.
 
+        fn = 'docusign_models.check_and_prepare_employee_signature'
         request_info = f'project: {project_id}, company: {company_id}, user: {user_id}'
-        cla.log.info(f'Check and prepare employee signature for {request_info}')
+        cla.log.info(f'{fn} - check and prepare employee signature for {request_info}')
 
         # Ensure the project exists
         project = Project()
         try:
+            cla.log.debug(f'{fn} - loading cla group by id: {project_id}...')
             project.load(str(project_id))
+            cla.log.debug(f'{fn} - cla group {project.get_project_name()} exists for: {request_info}')
         except DoesNotExist:
-            cla.log.warning('Project does NOT exist for: {}'.format(request_info))
+            cla.log.warning(f'{fn} - project does NOT exist for: {request_info}')
             return {'errors': {'project_id': f'Project ({project_id}) does not exist.'}}
-        cla.log.debug(f'Project exists for: {request_info}')
 
         # Ensure the company exists
         company = Company()
         try:
+            cla.log.debug(f'{fn} - loading company by id: {company_id}...')
             company.load(str(company_id))
+            cla.log.debug(f'{fn} - company {company.get_company_name()} exists for: {request_info}')
         except DoesNotExist:
-            cla.log.warning(f'Company does NOT exist for: {request_info}')
+            cla.log.warning(f'{fn} - company does NOT exist for: {request_info}')
             return {'errors': {'company_id': f'Company ({company_id}) does not exist.'}}
-        cla.log.debug(f'Company exists for: {request_info}')
 
         # Ensure the user exists
         user = User()
         try:
+            cla.log.debug(f'{fn} - loading user by id: {user_id}...')
             user.load(str(user_id))
+            cla.log.debug(f'{fn} - user {user.get_user_name()} exists for: {request_info}')
         except DoesNotExist:
             cla.log.warning(f'User does NOT exist for: {request_info}')
             return {'errors': {'user_id': f'User ({user_id}) does not exist.'}}
-        cla.log.debug(f'User exists for: {request_info}')
 
         # Ensure the company actually has a CCLA with this project.
         # ccla_signatures = Signature().get_signatures_by_project(
@@ -405,26 +409,36 @@ class DocuSign(signing_service_interface.SigningService):
         #    signature_reference_type='company',
         #    signature_reference_id=company.get_company_id()
         # )
+        cla.log.debug(f'{fn} - loading CCLA signatures by cla group: {project.get_project_name()} '
+                      f'and company id: {company.get_company_id()}...')
         ccla_signatures = Signature().get_ccla_signatures_by_company_project(
             company_id=company.get_company_id(),
             project_id=project_id
         )
         if len(ccla_signatures) < 1:
-            cla.log.warning(f'Company does not have CCLA for: {request_info}')
+            cla.log.warning(f'{fn} - project {project.get_project_name()} and '
+                            f'company {company.get_company_name()} does not have CCLA for: {request_info}')
             return {'errors': {'missing_ccla': 'Company does not have CCLA with this project'}}
 
-        cla.log.debug(f'Company has {len(ccla_signatures)} CCLAs for: {request_info}')
+        # Add a note in the log if we have more than 1 signed and approved CCLA signature
+        if len(ccla_signatures) > 1:
+            cla.log.warning(f'{fn} - project {project.get_project_name()} and '
+                            f'company {company.get_company_name()} has more than 1 CCLA '
+                            f'signature: {len(ccla_signatures)}')
+
+        cla.log.debug(f'{fn} CLA Group {project.get_project_name()} and company {company.get_company_name()} has '
+                      f'{len(ccla_signatures)} CCLAs for: {request_info}')
 
         # TODO - DAD: why only grab the first one???
         ccla_signature = ccla_signatures[0]
 
-        # Ensure user is whitelisted for this company.
+        # Ensure user is approved for this company.
         if not user.is_approved(ccla_signature):
             # TODO: DAD - update this warning message
-            cla.log.warning('No user email authorized for this CCLA: {}'.format(request_info))
+            cla.log.warning(f'{fn} - user is not authorized for this CCLA: {request_info}')
             return {'errors': {'ccla_approval_list': 'user not authorized for this ccla'}}
 
-        cla.log.info(f'User is approved for this CCLA: {request_info}')
+        cla.log.info(f'{fn} - user is approved for this CCLA: {request_info}')
 
         # Assume this company is the user's employer.
         # TODO: DAD - we should check to see if they already have a company id assigned
@@ -459,7 +473,7 @@ class DocuSign(signing_service_interface.SigningService):
         if github_username is None and github_id is not None:
             github_username = cla.utils.lookup_user_github_username(github_id)
             if github_username is not None:
-                cla.log.debug(f'Updating user record - adding github username: {github_username}')
+                cla.log.debug(f'{fn} - updating user record - adding github username: {github_username}')
                 user.set_user_github_username(github_username)
 
         # Attempt to fetch the github id based on the github username
@@ -467,11 +481,11 @@ class DocuSign(signing_service_interface.SigningService):
             github_username = github_username.strip()
             github_id = cla.utils.lookup_user_github_id(github_username)
             if github_id is not None:
-                cla.log.debug(f'Updating user record - adding github id: {github_id}')
+                cla.log.debug(f'{fn} - updating user record - adding github id: {github_id}')
                 user.set_user_github_id(github_id)
 
         user.save()
-        cla.log.info(f'Assigned company ID to user. Employee is ready to sign the CCLA: {request_info}')
+        cla.log.info(f'{fn} - assigned company ID to user. Employee is ready to sign the CCLA: {request_info}')
 
         return {'success': {'the employee is ready to sign the CCLA'}}
 

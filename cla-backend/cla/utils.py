@@ -706,13 +706,14 @@ def user_signed_project_signature(user: User, project: Project) -> bool:
                           'signed=true, approved=true - user needs to be associated with an organization before '
                           'they can be authorized.')
     else:
-        cla.log.debug(f'{fn} - user: {user} is NOT associated with a company - unable to check for a CCLA.')
+        cla.log.debug(f'{fn} - CCLA signature check failed - user is NOT associated with a company - '
+                      f'unable to check for a CCLA, user info: {user}.')
 
     if ccla_pass:
-        cla.log.debug(f'{fn} - CCLA signature check passed for User: {user} on project: {project}')
+        cla.log.debug(f'{fn} - CCLA signature check passed for user: {user} on project: {project}')
         return True
     else:
-        cla.log.debug(f'{fn} - CCLA signature check failed for User: {user} on project: {project}')
+        cla.log.debug(f'{fn} - CCLA signature check failed for user: {user} on project: {project}')
 
     cla.log.debug(f'{fn} - User: {user} failed both ICLA and CCLA checks')
     return False
