@@ -1882,31 +1882,42 @@ class User(model_interfaces.User):  # pylint: disable=too-many-public-methods
             if github_whitelist is not None:
                 # case insensitive search
                 if github_username.lower() in (s.lower() for s in github_whitelist):
-                    self.log_debug(f'{fn} - found github username in github approval list')
+                    cla.log.debug(f'{fn} - found github username in github approval list')
                     return True
         else:
             cla.log.debug(f'{fn} - users github_username is not defined - '
                           'skipping github username approval list check')
 
-        # Check github org whitelist
+        # Check github org approval list
         if github_username is not None:
-            github_orgs = cla.utils.lookup_github_organizations(github_username)
-            if "error" not in github_orgs:
-                # Fetch the list of orgs this user is part of
-                github_org_whitelist = ccla_signature.get_github_org_whitelist()
-                cla.log.debug(f'{fn} - testing user github org: {github_orgs} with '
-                              f'CCLA github org approval list: {github_org_whitelist}')
+            # Load the github org approval list for this CCLA signature record
+            github_org_approval_list = ccla_signature.get_github_org_whitelist()
+            if github_org_approval_list is not None:
+                # Fetch the list of orgs associated with this user
+                cla.log.debug(f'{fn} - determining if github user {github_username} is associated '
+                              f'with any of the github organizations: {github_org_approval_list}')
+                github_orgs = cla.utils.lookup_github_organizations(github_username)
+                if "error" not in github_orgs:
+                    cla.log.debug(f'{fn} - testing user github org: {github_orgs} with '
+                                  f'CCLA github org approval list: {github_org_approval_list}')
 
-                if github_org_whitelist is not None:
-                    for dynamo_github_org in github_org_whitelist:
+                    for dynamo_github_org in github_org_approval_list:
                         # case insensitive search
                         if dynamo_github_org.lower() in (s.lower() for s in github_orgs):
-                            self.log_debug(f'{fn} - found matching github organization for user')
+                            cla.log.debug(f'{fn} - found matching github organization for user')
                             return True
+                        else:
+                            cla.log.debug(f'{fn} - user {github_username} is not in the '
+                                          f'organization: {dynamo_github_org}')
+                else:
+                    cla.log.warning(f'{fn} - unable to lookup github organizations for the user: {github_username}: '
+                                    f'{github_orgs}')
+            else:
+                cla.log.debug(f'{fn} - no github organization approval list defined for this CCLA')
         else:
             cla.log.debug(f'{fn} - user\'s github_username is not defined - skipping github org approval list check')
 
-        self.log_debug(f'{fn} - unable to find user in any whitelist')
+        cla.log.debug(f'{fn} - unable to find user in any whitelist')
         return False
 
     def get_users_by_company(self, company_id):
