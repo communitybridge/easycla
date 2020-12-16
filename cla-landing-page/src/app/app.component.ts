@@ -1,8 +1,7 @@
 // Copyright The Linux Foundation and each contributor to CommunityBridge.
 // SPDX-License-Identifier: MIT
 
-import { Component, OnInit } from '@angular/core';
-import { AppSettings } from './config/app-settings';
+import { Component } from '@angular/core';
 import { EnvConfig } from './config/cla-env-utils';
 import { LfxHeaderService } from './core/services/lfx-header.service';
 
@@ -11,39 +10,20 @@ import { LfxHeaderService } from './core/services/lfx-header.service';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
   hasExpanded: boolean;
-  links: any[];
 
   constructor(
     private lfxHeaderService: LfxHeaderService
   ) {
     this.hasExpanded = true;
-    this.links = [
-      {
-        title: 'Project Login',
-        url: EnvConfig.default[AppSettings.PROJECT_CONSOLE_LINK] + '#/login'
-      },
-      {
-        title: 'CLA Manager Login',
-        url: EnvConfig.default[AppSettings.CORPORATE_CONSOLE_LINK] + '#/login'
-      },
-      {
-        title: 'Developer',
-        url: AppSettings.CONTRIBUTORS_LEARN_MORE
-      }
-    ];
+
     this.mountHeader();
     this.mountFooter();
   }
 
   onToggled() {
     this.hasExpanded = !this.hasExpanded;
-  }
-
-  ngOnInit() {
-    const element: any = document.getElementById('lfx-header');
-    element.links = this.links;
   }
 
   mountHeader() {
