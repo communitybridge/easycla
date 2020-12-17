@@ -234,12 +234,13 @@ def return_url(signature_id, event=None):  # pylint: disable=unused-argument
                 cla.log.info(f'{fn} - checking if managers:{signature.get_signature_acl()} have roles with {num_tries} tries')
                 while i <= num_tries:
                     cla.log.info(f'{fn} - check try #: {i}')
-                    assigned = []
+                    assigned = {}
                     for manager in signature.get_signature_acl():
                         cla.log.info(f'{fn}- Checking {manager} for {CLA_MANAGER_ROLE} for company: {company.get_company_external_id()}, cla_group_id: {signature.get_signature_project_id()}')
-                        assigned.append(user_service.has_role(manager, CLA_MANAGER_ROLE, company.get_company_external_id(), signature.get_signature_project_id()))
+                        assigned[manager] = user_service.has_role(manager, CLA_MANAGER_ROLE, company.get_company_external_id(), signature.get_signature_project_id())
+                    cla.log.info(f'{fn} - Assigned status : {assigned}')
                     #Ensure that assigned list doesnt have any False values -> All Managers have role assigned
-                    if False not in assigned:
+                    if all(list(assigned.values())):
                         cla.log.info(f'All managers have cla-manager role for company: {company.get_company_external_id()} and cla_group_id: {signature.get_signature_project_id()}')
                         break
                     time.sleep(0.5)

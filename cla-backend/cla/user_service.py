@@ -131,11 +131,18 @@ class UserServiceInstance:
                     log.info(f'{function} - Checking if {username} has role... ')
                     return self._has_project_org_scope(pcgs[0].get_project_sfid(), organization_id, username, scopes)
                 log.info(f'{cla_group_id} signed at project level and checking user roles for user: {username}')
-                has_role_project_org = []
+                has_role_project_org = {}
                 for pcg in pcgs:
-                    has_role_project_org.append(self._has_project_org_scope(pcg.get_project_sfid(), organization_id, username, scopes))
-                if False not in has_role_project_org:
+                    has_scope = self._has_project_org_scope(pcg.get_project_sfid(), organization_id, username, scopes)
+                    has_role_project_org[username] = (pcg.get_project_sfid(), organization_id, has_scope)
+                log.info(f'{function} - user_scopes_status : {has_role_project_org}')
+                # check if all projects have user scope
+                user_scopes = [has_scope[2] for has_scope in list(has_role_project_org.values())]
+                if all(user_scopes):
+                    log.info(f'{function} - {username} has role scope at project level')
                     return True
+
+        log.info(f'{function} - {username} does not have role scope')
         return False
     
     def _has_project_org_scope(self, project_sfid: str, organization_id: str, username: str, scopes: dict) -> bool:
