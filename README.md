@@ -6,13 +6,11 @@ The Contributor License Agreement \(CLA\) service of the Linux Foundation lets p
 
 This repository contains both the backend and front-end UI for supporting and managing the application.
 
-This platform supports both GitHub and Gerrit source code repositories. Additional information can be found in the [Getting Started Guide](getting-started/).
+This platform supports both GitHub and Gerrit source code repositories. Additional information can be found in the [EasyCLA documentation](https://docs.linuxfoundation.org/lfx/easycla).
 
 ## Announcements
 
-- 06/10/2020 - We will be replacing code references from whitelist to Approval
-  List in the coming sprints.  This includes package names, code comments,
-  swagger specifications, API endpoints, variable names and UI components.
+- 06/10/2020 - We have replaced code references from whitelist to Approved List.  This includes package names, code comments, swagger specifications, API endpoints, variable names, and UI components.
 
 ## Third-party Services
 
@@ -21,34 +19,32 @@ This platform supports both GitHub and Gerrit source code repositories. Addition
 Besides integration with Auth0 and Salesforce, the CLA system has the following third party services:
 
 * [Docusign](https://www.docusign.com/) for CLA agreement e-sign flow
-* [Docraptor](https://docraptor.com/) for convert html CLA template as PDF file
+* [Docraptor](https://docraptor.com/) for converting html CLA template to PDF file
 
 ## CLA Backend
 
-The CLA project has two backend projects.
+The CLA project has two backend components:
 
-The majority of the backend APIs are implemented in python, and can be found in the `cla-backend` directory.
+* The majority of the backend APIs are implemented in python, and can be found in the [cla-backend](cla-backend/) directory.
 
-Recent backend development was implemented in Golang, and can be found in the
-`cla-backend-go` directory. In particular, this backend contains APIs powering
+* Recent backend development is implemented in Golang, and can be found in the
+[cla-backend-go](cla-backend-go/) directory. In particular, this backend contains APIs powering
 Automated Templates, GitHub Approval Lists, and Duplicate Company handling in the
 Corporate Console.
 
 ## CLA Frontend
 
-### Overview
+CLA frontend consists of three independent SPA built with [Ionic](https://ionicframework.com/) framework.
 
-CLA frontend consists of three independent SPA build with [Ionic](https://ionicframework.com/) framework.
+* [cla-frontend-project-console](cla-frontend-project-console/) for the LinuxFoundation director/admin/user to manage project CLA
+* [cla-frontend-corporate-console](cla-frontend-corporate-console/) for any concrete company CCLA manager to sign a CCLA and manage employee CLA approved list
+* [cla-frontend-contributor-console](cla-frontend-contributor-console) for any project contributor to sign ICLA or CCLA
 
-* `cla-frontend-project-console` for LinuxFoundation director/admin/user to manage project CLA
-* `cla-frontend-corporate-console` for any concrete company CCLA manager to sign a CCLA and manage employee CLA approved list
-* `cla-frontend-contributor-console` for any project contributor to sign ICLA or CCLA
-
-## EasyCLA Architechture
+## EasyCLA Architecture
 
 The following diagram explains the EasyCLA architecture.
 
-![CLA Architecture](.gitbook/assets/architecture-overview.png)
+![CLA Architecture](.gitbook/assets/easycla-architecture-overview.png)
 
 ## EasyCLA Release Process
 
