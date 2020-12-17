@@ -398,6 +398,23 @@ func (repo *repo) UpdateRepositoriesCount(projectSFID string, diff int64, reset 
 		"reset":        reset,
 	}
 
+	// Check to see if we have an existing record
+	existingProjectCLAGroupMapping, err := repo.GetClaGroupIDForProject(projectSFID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to lookup existing project cla group mapping")
+		return err
+	}
+	if existingProjectCLAGroupMapping == nil {
+		log.WithFields(f).Warn("unable to lookup existing project cla group mapping - response is empty")
+		return &utils.ProjectCLAGroupMappingNotFound{
+			ProjectSFID: projectSFID,
+			CLAGroupID:  "",
+			Err:         nil,
+		}
+	}
+
+	// TODO: DAD remove the above check and use the DB key exists condition
+
 	val := strconv.FormatInt(diff, 10)
 	expressionAttributeNames := map[string]*string{}
 	expressionAttributeValues := map[string]*dynamodb.AttributeValue{}
@@ -418,7 +435,7 @@ func (repo *repo) UpdateRepositoriesCount(projectSFID string, diff int64, reset 
 		updateExpression = "ADD repositories_count :val"
 	}
 
-	_, err := repo.dynamoDBClient.UpdateItem(&dynamodb.UpdateItemInput{
+	_, updateErr := repo.dynamoDBClient.UpdateItem(&dynamodb.UpdateItemInput{
 		UpdateExpression:          aws.String(updateExpression),
 		ExpressionAttributeNames:  expressionAttributeNames,
 		ExpressionAttributeValues: expressionAttributeValues,
@@ -428,11 +445,11 @@ func (repo *repo) UpdateRepositoriesCount(projectSFID string, diff int64, reset 
 		TableName: aws.String(repo.tableName),
 	})
 
-	if err != nil {
-		log.WithFields(f).WithError(err).Warn("update repositories count failed")
+	if updateErr != nil {
+		log.WithFields(f).WithError(updateErr).Warn("update repositories count failed")
 	}
 
-	return err
+	return updateErr
 }
 
 // IsExistingFoundationLevelCLAGroup is a query helper function to determine if the
