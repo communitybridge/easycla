@@ -124,16 +124,18 @@ class UserServiceInstance:
             log.info(f'{function} - Getting projectCLAGroups for cla_group_id: {cla_group_id}')
             pcg = ProjectCLAGroup()
             pcgs = pcg.get_by_cla_group_id(cla_group_id)
-            if pcgs[0].signed_at_foundation():
-                log.info(f'{cla_group_id} signed at foundation level ')
-                log.info(f'{function} - Checking if {username} has role... ')
-                return self._has_project_org_scope(pcgs[0].get_project_sfid(), organization_id, username, scopes)
-            log.info(f'{cla_group_id} signed at project level and checking user roles for user: {username}')
-            has_role_project_org = []
-            for pcg in pcgs:
-                has_role_project_org.append(self._has_project_org_scope(pcg.get_project_sfid(), organization_id, username, scopes))
-            if False not in has_role_project_org:
-                return True
+            log.info(f'{function} - Found ProjectCLAGroup Mappings: {pcgs}')
+            if pcgs:
+                if pcgs[0].signed_at_foundation:
+                    log.info(f'{cla_group_id} signed at foundation level ')
+                    log.info(f'{function} - Checking if {username} has role... ')
+                    return self._has_project_org_scope(pcgs[0].get_project_sfid(), organization_id, username, scopes)
+                log.info(f'{cla_group_id} signed at project level and checking user roles for user: {username}')
+                has_role_project_org = []
+                for pcg in pcgs:
+                    has_role_project_org.append(self._has_project_org_scope(pcg.get_project_sfid(), organization_id, username, scopes))
+                if False not in has_role_project_org:
+                    return True
         return False
     
     def _has_project_org_scope(self, project_sfid: str, organization_id: str, username: str, scopes: dict) -> bool:
