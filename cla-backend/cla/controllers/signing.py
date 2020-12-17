@@ -243,6 +243,7 @@ def return_url(signature_id, event=None):  # pylint: disable=unused-argument
                         cla.log.info(f'All managers have cla-manager role for company: {company.get_company_external_id()} and cla_group_id: {signature.get_signature_project_id()}')
                         break
                     time.sleep(0.5)
+                    i += 1
 
         raise falcon.HTTPFound(ret_url)
     cla.log.info('No return_url set for signature - returning success message')
