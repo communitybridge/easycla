@@ -68,24 +68,18 @@ func GetClient() *Client {
 }
 
 // SendUserInvite invites users to the LFX platform
-func (ac *Client) SendUserInvite(email *string,
+func (ac *Client) SendUserInvite(ctx context.Context, email *string,
 	roleName string, scope string, projectID *string, organizationID string, inviteType string, subject *string, emailContent *string, automate bool) error {
 	f := logrus.Fields{
 		"functionName":   "SendUserInvite",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"roleName":       roleName,
 		"scope":          scope,
+		"projectID":      utils.StringValue(projectID),
 		"organizationID": organizationID,
 		"inviteType":     inviteType,
-	}
-
-	if email != nil {
-		f["email"] = *email
-	}
-	if projectID != nil {
-		f["projectID"] = *projectID
-	}
-	if subject != nil {
-		f["subject"] = *subject
+		"subject":        utils.StringValue(subject),
+		"automate":       automate,
 	}
 
 	tok, err := token.GetToken()
@@ -93,6 +87,7 @@ func (ac *Client) SendUserInvite(email *string,
 		log.WithFields(f).WithError(err).Warnf("problem obtaining token, error: %+v", err)
 		return err
 	}
+
 	clientAuth := runtimeClient.BearerToken(tok)
 	params := &invite.CreateUserInviteParams{
 		SendInvite: &models.CreateInvite{
@@ -102,7 +97,7 @@ func (ac *Client) SendUserInvite(email *string,
 			RoleName: roleName,
 			Type:     inviteType,
 		},
-		Context: utils.NewContext(),
+		Context: ctx,
 	}
 	if scope == utils.ProjectOrgScope && projectID == nil {
 		log.WithFields(f).Warnf("Project ID required for project|organization scope, error: %+v", ErrProjectIDMissing)
@@ -115,22 +110,22 @@ func (ac *Client) SendUserInvite(email *string,
 		params.SendInvite.ScopeID = organizationID
 	}
 	if subject != nil {
-		f["subject"] = *subject
 		params.SendInvite.Subject = *subject
 	}
 	// Pass emailContent if passed in the args
 	if emailContent != nil {
 		params.SendInvite.Body = *emailContent
 	}
+
+	log.WithFields(f).Debugf("Submitting ACS Service CreateUserInvite with payload: %+v", params)
 	result, inviteErr := ac.cl.Invite.CreateUserInvite(params, clientAuth)
-	log.Debugf("CreateUserinvite called with args email: %s, scope: %s, roleName: %s, type: %s, scopeID: %s",
-		*email, scope, roleName, inviteType, organizationID)
 	if inviteErr != nil {
-		log.WithFields(f).Errorf("CreateUserInvite failed for payload : %+v : %v", params, inviteErr)
+		log.WithFields(f).WithError(inviteErr).Warnf("ACS Service CreateUserInvite failed with payload: %+v", params)
 		return nil
 	}
 
-	log.WithFields(f).Debugf("CreatedUserInvite :%+v", result.Payload)
+	log.WithFields(f).Debugf("Successfully submitted ACS Service CreatedUserInvite, response: %+v",
+		result.Payload)
 	return nil
 }
 

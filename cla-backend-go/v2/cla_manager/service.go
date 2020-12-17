@@ -625,7 +625,7 @@ func (s *service) CreateCLAManagerRequest(ctx context.Context, contactAdmin bool
 		msg := fmt.Sprintf("User: %s does not have an LF Login", userEmail)
 		log.WithFields(f).Warn(msg)
 		// Send email
-		sendEmailErr := sendEmailToUserWithNoLFID(projectSF.Name, authUser.UserName, authUser.Email, fullName, userEmail, companySFID, &projectSF.ID, utils.CLADesigneeRole)
+		sendEmailErr := sendEmailToUserWithNoLFID(ctx, projectSF.Name, authUser.UserName, authUser.Email, fullName, userEmail, companySFID, &projectSF.ID, utils.CLADesigneeRole)
 		if sendEmailErr != nil {
 			log.WithFields(f).Warnf("Error sending email: %+v", sendEmailErr)
 			return nil, sendEmailErr
@@ -664,7 +664,7 @@ func (s *service) CreateCLAManagerRequest(ctx context.Context, contactAdmin bool
 
 	log.WithFields(f).Debugf("sending Email to CLA Manager Designee email: %s ", userEmail)
 	designeeName := fmt.Sprintf("%s %s", lfxUser.FirstName, lfxUser.LastName)
-	sendEmailToCLAManagerDesigneeCorporate(LfxPortalURL, v1CompanyModel.CompanyName, []string{projectSF.Name}, userEmail, designeeName, authUser.Email, authUser.UserName)
+	sendEmailToCLAManagerDesigneeCorporate(ctx, LfxPortalURL, v1CompanyModel.CompanyName, []string{projectSF.Name}, userEmail, designeeName, authUser.Email, authUser.UserName)
 
 	log.WithFields(f).Debug("creating a contributor notify CLA designee log event...")
 	// Make a note in the event log
@@ -827,7 +827,7 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 
 		// Use FoundationSFID
 		foundationSFID := projectCLAGroups[0].FoundationSFID
-		sendErr := sendDesigneeEmailToUserWithNoLFID(name, userEmail, organization.ID, &foundationSFID, "cla-manager-designee")
+		sendErr := sendDesigneeEmailToUserWithNoLFID(ctx, name, userEmail, organization.ID, &foundationSFID, "cla-manager-designee")
 		if sendErr != nil {
 			msg := fmt.Sprintf("Problem sending email to user: %s , error: %+v", userEmail, sendErr)
 			log.Warn(msg)
@@ -870,10 +870,10 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 	log.Debugf("Sending Email to CLA Manager Designee email: %s ", userEmail)
 
 	if contributor.LFUsername != "" && contributor.LFEmail != "" && len(projectSFs) > 0 {
-		sendEmailToCLAManagerDesignee(LfxPortalURL, organization.Name, projectSFs, userEmail, user.Name, contributor.LFEmail, contributor.LFUsername)
+		sendEmailToCLAManagerDesignee(ctx, LfxPortalURL, organization.Name, projectSFs, userEmail, user.Name, contributor.LFEmail, contributor.LFUsername)
 	} else {
 		contributorUserName, contributorEmail := getContributorPublicEmail(contributor)
-		sendEmailToCLAManagerDesignee(LfxPortalURL, organization.Name, projectSFs, userEmail, user.Name, contributorUserName, contributorEmail)
+		sendEmailToCLAManagerDesignee(ctx, LfxPortalURL, organization.Name, projectSFs, userEmail, user.Name, contributorUserName, contributorEmail)
 	}
 
 	log.Debugf("CLA Manager designee created : %+v", designeeScopes)
@@ -1133,7 +1133,19 @@ func contributorEmailToOrgAdmin(adminEmail string, admin string, company string,
 	}
 }
 
-func sendEmailToCLAManagerDesigneeCorporate(corporateConsole string, companyName string, projectNames []string, designeeEmail string, designeeName string, senderEmail string, senderName string) {
+func sendEmailToCLAManagerDesigneeCorporate(ctx context.Context, corporateConsole string, companyName string, projectNames []string, designeeEmail string, designeeName string, senderEmail string, senderName string) {
+	f := logrus.Fields{
+		"functionName":     "sendEmailToCLAManagerDesigneeCorporate",
+		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
+		"corporateConsole": corporateConsole,
+		"companyName":      companyName,
+		"projectNames":     strings.Join(projectNames, ","),
+		"designeeEmail":    designeeEmail,
+		"designeeName":     designeeName,
+		"senderEmail":      senderEmail,
+		"senderName":       senderName,
+	}
+
 	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA ", companyName)
 	recipients := []string{designeeEmail}
 	projectList := projectsStrList(projectNames)
@@ -1153,13 +1165,25 @@ Either you or someone whom to designate from your company can login to this port
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
-		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+		log.WithFields(f).WithError(err).Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
 	} else {
-		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+		log.WithFields(f).Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
 	}
 }
 
-func sendEmailToCLAManagerDesignee(corporateConsole string, companyName string, projectNames []string, designeeEmail string, designeeName string, contributorID string, contributorName string) {
+func sendEmailToCLAManagerDesignee(ctx context.Context, corporateConsole string, companyName string, projectNames []string, designeeEmail string, designeeName string, contributorID string, contributorName string) {
+	f := logrus.Fields{
+		"functionName":     "sendEmailToCLAManagerDesignee",
+		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
+		"corporateConsole": corporateConsole,
+		"companyName":      companyName,
+		"projectNames":     strings.Join(projectNames, ","),
+		"designeeEmail":    designeeEmail,
+		"designeeName":     designeeName,
+		"contributorID":    contributorID,
+		"contributorName":  contributorName,
+	}
+
 	subject := fmt.Sprintf("EasyCLA:  Invitation to Sign the %s Corporate CLA and add to approved list %s ",
 		companyName, contributorID)
 	recipients := []string{designeeEmail}
@@ -1178,13 +1202,23 @@ func sendEmailToCLAManagerDesignee(corporateConsole string, companyName string, 
 
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
-		log.Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
+		log.WithFields(f).WithError(err).Warnf("problem sending email with subject: %s to recipients: %+v, error: %+v", subject, recipients, err)
 	} else {
-		log.Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
+		log.WithFields(f).Debugf("sent email with subject: %s to recipients: %+v", subject, recipients)
 	}
 }
 
-func sendDesigneeEmailToUserWithNoLFID(userWithNoLFIDName, userWithNoLFIDEmail, organizationID string, projectID *string, role string) error {
+func sendDesigneeEmailToUserWithNoLFID(ctx context.Context, userWithNoLFIDName, userWithNoLFIDEmail, organizationID string, projectID *string, role string) error {
+	f := logrus.Fields{
+		"functionName":        "sendDesigneeEmailToUserWithNoLFID",
+		utils.XREQUESTID:      ctx.Value(utils.XREQUESTID),
+		"userWithNoLFIDName":  userWithNoLFIDName,
+		"userWithNoLFIDEmail": userWithNoLFIDEmail,
+		"organizationID":      organizationID,
+		"projectID":           utils.StringValue(projectID),
+		"role":                role,
+	}
+
 	subject := "EasyCLA: Invitation to create LF Login and complete process of becoming CLA Manager"
 	body := fmt.Sprintf(`
 	<p>Hello %s, </p>
@@ -1200,13 +1234,26 @@ func sendDesigneeEmailToUserWithNoLFID(userWithNoLFIDName, userWithNoLFIDEmail, 
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 	acsClient := v2AcsService.GetClient()
 	automate := false
-
-	return acsClient.SendUserInvite(&userWithNoLFIDEmail, role, "project|organization", projectID, organizationID, "userinvite", &subject, &body, automate)
+	log.WithFields(f).Debug("sending user invite request...")
+	return acsClient.SendUserInvite(ctx, &userWithNoLFIDEmail, role, "project|organization", projectID, organizationID, "userinvite", &subject, &body, automate)
 
 }
 
 // sendEmailToUserWithNoLFID helper function to send email to a given user with no LFID
-func sendEmailToUserWithNoLFID(projectName, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail, organizationID string, projectID *string, role string) error {
+func sendEmailToUserWithNoLFID(ctx context.Context, projectName, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail, organizationID string, projectID *string, role string) error {
+	f := logrus.Fields{
+		"functionName":        "sendEmailToUserWithNoLFID",
+		utils.XREQUESTID:      ctx.Value(utils.XREQUESTID),
+		"projectName":         projectName,
+		"requesterUsername":   requesterUsername,
+		"requesterEmail":      requesterEmail,
+		"userWithNoLFIDName":  userWithNoLFIDName,
+		"userWithNoLFIDEmail": userWithNoLFIDEmail,
+		"organizationID":      organizationID,
+		"projectID":           utils.StringValue(projectID),
+		"role":                role,
+	}
+
 	// subject string, body string, recipients []string
 	subject := fmt.Sprintf("EasyCLA: Invitation to create LF Login and complete process of becoming CLA Manager with %s role", role)
 	body := fmt.Sprintf(`
@@ -1226,7 +1273,8 @@ Once complete, notify the user %s and they will be able to add you as a CLA Mana
 	acsClient := v2AcsService.GetClient()
 	automate := false
 
-	return acsClient.SendUserInvite(&userWithNoLFIDEmail, role, "project|organization", projectID, organizationID, "userinvite", &subject, &body, automate)
+	log.WithFields(f).Debug("sending user invite request...")
+	return acsClient.SendUserInvite(ctx, &userWithNoLFIDEmail, role, "project|organization", projectID, organizationID, "userinvite", &subject, &body, automate)
 }
 
 // buildErrorMessage helper function to build an error message
