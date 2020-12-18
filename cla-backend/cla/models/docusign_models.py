@@ -1137,7 +1137,7 @@ class DocuSign(signing_service_interface.SigningService):
                                        recipientId=1, clientUserId=signature.get_signature_id(),
                                        tabs=tabs,
                                        emailSubject=email_subject,
-                                       emailBody='CLA Sign Request for {}'.format(user.get_user_email()),
+                                       emailBody='CLA Sign Request for {}'.format(signatory_name),
                                        supportedLanguage='en',
                                        )
 
