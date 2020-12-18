@@ -14,7 +14,7 @@ This platform supports both GitHub and Gerrit source code repositories. Addition
 
 ## Third-party Services
 
-[EasyCLA](./#easycla-architecture)
+[EasyCLA](#easycla-architecture)
 
 Besides integration with Auth0 and Salesforce, the CLA system has the following third party services:
 
