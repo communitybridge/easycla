@@ -358,13 +358,19 @@ func requestApprovedEmailToRecipientContent(companyModel *models.Company, claGro
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the company %s.</p>
 <p>You have now been added to the approval list for %s. </p>
-<p> To get started, please log into the EasyCLA Corporate Console at %s, and select your company. </p>
+<p>To get started, please navigate back to GitHub or Gerrit and start the authorization process. Once you select the
+authorization link, you will be directed to the EasyCLA Contributor Console. GitHub users will need to authorize the
+tool to see your GitHub user name and email. Gerrit users will first need to log in with their LF Account. On the
+console landing page, select the corporate agreement option. To finish, search and select your company to acknowledge
+your association with your company. This will complete the authorization process. For GitHub users, your pull request
+will refresh and confirm that you are authorized. For Gerrit users, please log out of the UI and back in to complete the
+authorization. </p>
 %s
 %s`,
 		recipientName, companyName,
 		companyName,
-		utils.GetCorporateURL(claGroupModel.Version == utils.V2),
-		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
+		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2),
+		utils.GetEmailSignOffContent())
 
 	return subject, body, recipients
 }
