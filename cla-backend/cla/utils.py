@@ -1376,12 +1376,10 @@ def is_approved(ccla_signature: Signature, email=None, github_username=None, git
     if email:
         # Checking email whitelist
         whitelist = ccla_signature.get_email_whitelist()
-        cla.log.debug(f'{fn} - testing email: {email} with '
-                      f'CCLA whitelist emails: {whitelist}'
-                      )
+        cla.log.debug(f'{fn} - testing email: {email} with CCLA approval list emails: {whitelist}')
         if whitelist is not None:
             if email.lower() in (s.lower() for s in whitelist):
-                cla.log.debug(f'{fn} found user email in email whitelist')
+                cla.log.debug(f'{fn} found user email in email approval list')
                 return True
 
         # Checking domain whitelist
@@ -1394,8 +1392,7 @@ def is_approved(ccla_signature: Signature, email=None, github_username=None, git
             else:
                 cla.log.debug(f"{fn} - did not match email: {email} with domain: {patterns}")
         else:
-            cla.log.debug(f'{fn} - no domain whitelist patterns defined in the database'
-                          '- skipping domain approval list check')
+            cla.log.debug(f'{fn} - no domain approval list patterns defined - skipping domain approval list check')
 
     if github_id:
         github_username = lookup_user_github_username(github_id)
@@ -1404,31 +1401,29 @@ def is_approved(ccla_signature: Signature, email=None, github_username=None, git
     if github_username is not None:
         # remove leading and trailing whitespace from github username
         github_username = github_username.strip()
-        github_whitelist = ccla_signature.get_github_whitelist()
-        cla.log.debug(
-            f"{fn} - testing user github username: {github_username} with "
-            f"CCLA github approval list: {github_whitelist}"
-        )
+        github_approval_list = ccla_signature.get_github_whitelist()
+        cla.log.debug(f"{fn} - testing user github username: {github_username} with "
+                      f"CCLA github approval list: {github_approval_list}")
 
-        if github_whitelist is not None:
+        if github_approval_list is not None:
             # case insensitive search
-            if github_username.lower() in (s.lower() for s in github_whitelist):
+            if github_username.lower() in (s.lower() for s in github_approval_list):
                 cla.log.debug(f'{fn} - found github username in github approval list')
                 return True
     else:
         cla.log.debug(f'{fn} - users github_username is not defined - skipping github username approval list check')
 
-    # Check github org whitelist
+    # Check github org approval list
     if github_username is not None:
         github_orgs = cla.utils.lookup_github_organizations(github_username)
         if "error" not in github_orgs:
             # Fetch the list of orgs this user is part of
-            github_org_whitelist = ccla_signature.get_github_org_whitelist()
+            github_org_approval_list = ccla_signature.get_github_org_whitelist()
             cla.log.debug(f'{fn} - testing user github orgs: {github_orgs} with '
-                          f'CCLA github org approval list values: {github_org_whitelist}')
+                          f'CCLA github org approval list values: {github_org_approval_list}')
 
-            if github_org_whitelist is not None:
-                for dynamo_github_org in github_org_whitelist:
+            if github_org_approval_list is not None:
+                for dynamo_github_org in github_org_approval_list:
                     # case insensitive search
                     if dynamo_github_org.lower() in (s.lower() for s in github_orgs):
                         cla.log.debug(f'{fn} - found matching github org for user')
