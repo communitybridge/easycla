@@ -41,7 +41,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		if !utils.IsUserAuthorizedForProjectOrganizationTree(authUser, params.ProjectSFID, params.CompanySFID) {
+		if !utils.IsUserAuthorizedForProjectOrganizationTree(authUser, params.ProjectSFID, params.CompanySFID, utils.DISALLOW_ADMIN_SCOPE) {
 			return cla_manager.NewCreateCLAManagerForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAManager with Project|Organization scope of %s | %s",
@@ -80,7 +80,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		if !utils.IsUserAuthorizedForProjectOrganizationTree(authUser, params.ProjectSFID, params.CompanySFID) {
+		if !utils.IsUserAuthorizedForProjectOrganizationTree(authUser, params.ProjectSFID, params.CompanySFID, utils.DISALLOW_ADMIN_SCOPE) {
 			return cla_manager.NewDeleteCLAManagerForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to DeleteCLAManager with Project|Organization scope of %s | %s",
@@ -115,6 +115,8 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 			"ProjectSFID":    params.ProjectSFID,
 			"authUser":       *params.XUSERNAME,
 		}
+
+		// Note: anyone create assign a CLA manager designee...no permissions checks
 		log.WithFields(f).Debugf("processing CLA Manager Desginee request")
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 		claManagerDesignee, err := service.CreateCLAManagerDesignee(ctx, params.CompanySFID, params.ProjectSFID, params.Body.UserEmail.String())
@@ -153,6 +155,8 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				"Email":          params.Body.UserEmail.String(),
 				"authUser":       *params.XUSERNAME,
 			}
+
+			// Note: anyone create assign a CLA manager designee...no permissions checks
 			log.WithFields(f).Debugf("processing CLA Manager Designee by group request")
 
 			log.WithFields(f).Debugf("getting project IDs for CLA group")
@@ -276,7 +280,7 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 		}
 		log.WithFields(f).Debugf("processing CLA Manager request")
 		utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
-		if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+		if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID, utils.ALLOW_ADMIN_SCOPE) {
 			return cla_manager.NewCreateCLAManagerRequestForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to CreateCLAManagerRequest with Project|Organization scope of %s | %s",
