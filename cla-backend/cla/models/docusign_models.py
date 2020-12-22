@@ -1133,11 +1133,15 @@ class DocuSign(signing_service_interface.SigningService):
             # Max length for emailSubject is 100 characters - guard/truncate if necessary
             email_subject = f'EasyCLA: CLA Signature Request for {project.get_project_name()}'
             email_subject = (email_subject[:97] + '...') if len(email_subject) > 100 else email_subject
+            if signatory_name == 'Unknown' or signatory_name == None:
+                user_identifier = signatory_email
+            else:
+                user_identifier = signatory_name
             signer = pydocusign.Signer(email=signatory_email, name=signatory_name,
                                        recipientId=1, clientUserId=signature.get_signature_id(),
                                        tabs=tabs,
                                        emailSubject=email_subject,
-                                       emailBody='CLA Sign Request for {}'.format(signatory_name),
+                                       emailBody='CLA Sign Request for {}'.format(user_identifier),
                                        supportedLanguage='en',
                                        )
 
