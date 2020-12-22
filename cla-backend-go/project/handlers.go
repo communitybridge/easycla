@@ -80,6 +80,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			EventType:     events.CLAGroupCreated,
 			ClaGroupModel: claGroupModel,
 			UserID:        claUser.UserID,
+			LfUsername:    claUser.LFUsername,
 			EventData:     &events.CLAGroupCreatedEventData{},
 		})
 
@@ -203,6 +204,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 				EventType:     events.GerritRepositoryDeleted,
 				ClaGroupModel: claGroupModel,
 				UserID:        claUser.UserID,
+				LfUsername:    claUser.LFUsername,
 				EventData: &events.GerritProjectDeletedEventData{
 					DeletedCount: howMany,
 				},
@@ -223,7 +225,8 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 				EventType:     events.RepositoryDisabled,
 				ClaGroupModel: claGroupModel,
 				UserID:        claUser.UserID,
-				EventData: &events.GithubProjectDeletedEventData{
+				LfUsername:    claUser.LFUsername,
+				EventData: &events.GitHubProjectDeletedEventData{
 					DeletedCount: howMany,
 				},
 			})
@@ -242,6 +245,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 				EventType:     events.InvalidatedSignature,
 				ClaGroupModel: claGroupModel,
 				UserID:        claUser.UserID,
+				LfUsername:    claUser.LFUsername,
 				EventData: &events.SignatureProjectInvalidatedEventData{
 					InvalidatedCount: howMany,
 				},
@@ -259,6 +263,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			EventType:     events.CLAGroupDeleted,
 			ClaGroupModel: claGroupModel,
 			UserID:        claUser.UserID,
+			LfUsername:    claUser.LFUsername,
 			EventData:     &events.CLAGroupDeletedEventData{},
 		})
 
@@ -303,6 +308,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			EventType:     events.CLAGroupUpdated,
 			ClaGroupModel: claGroupModel,
 			UserID:        claUser.UserID,
+			LfUsername:    claUser.LFUsername,
 			EventData: &events.CLAGroupUpdatedEventData{
 				ClaGroupName:        projectParams.Body.ProjectName,
 				ClaGroupDescription: projectParams.Body.ProjectDescription,

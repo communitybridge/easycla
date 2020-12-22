@@ -210,12 +210,13 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 			companyID = signatureModel.SignatureReferenceID.String()
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType: events.ApprovalListGithubOrganizationAdded,
-			ProjectID: projectID,
-			CompanyID: companyID,
-			UserID:    claUser.UserID,
-			EventData: &events.ApprovalListGithubOrganizationAddedEventData{
-				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
+			EventType:  events.ApprovalListGithubOrganizationAdded,
+			ProjectID:  projectID,
+			CompanyID:  companyID,
+			UserID:     claUser.UserID,
+			LfUsername: claUser.LFUsername,
+			EventData: &events.ApprovalListGitHubOrganizationAddedEventData{
+				GitHubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
 
@@ -260,12 +261,13 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType: events.ApprovalListGithubOrganizationDeleted,
-			ProjectID: projectID,
-			CompanyID: companyID,
-			UserID:    claUser.UserID,
-			EventData: &events.ApprovalListGithubOrganizationDeletedEventData{
-				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
+			EventType:  events.ApprovalListGithubOrganizationDeleted,
+			ProjectID:  projectID,
+			CompanyID:  companyID,
+			UserID:     claUser.UserID,
+			LfUsername: claUser.LFUsername,
+			EventData: &events.ApprovalListGitHubOrganizationDeletedEventData{
+				GitHubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
 

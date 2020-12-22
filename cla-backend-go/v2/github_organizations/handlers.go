@@ -132,8 +132,8 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				LfUsername:        authUser.UserName,
 				EventType:         events.GithubOrganizationAdded,
 				ExternalProjectID: params.ProjectSFID,
-				EventData: &events.GithubOrganizationAddedEventData{
-					GithubOrganizationName: *params.Body.OrganizationName,
+				EventData: &events.GitHubOrganizationAddedEventData{
+					GitHubOrganizationName: *params.Body.OrganizationName,
 				},
 			})
 
@@ -171,8 +171,8 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				LfUsername:        authUser.UserName,
 				EventType:         events.GithubOrganizationDeleted,
 				ExternalProjectID: params.ProjectSFID,
-				EventData: &events.GithubOrganizationDeletedEventData{
-					GithubOrganizationName: params.OrgName,
+				EventData: &events.GitHubOrganizationDeletedEventData{
+					GitHubOrganizationName: params.OrgName,
 				},
 			})
 
@@ -218,8 +218,8 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 				LfUsername:        authUser.UserName,
 				EventType:         events.GithubOrganizationUpdated,
 				ExternalProjectID: params.ProjectSFID,
-				EventData: &events.GithubOrganizationUpdatedEventData{
-					GithubOrganizationName: params.OrgName,
+				EventData: &events.GitHubOrganizationUpdatedEventData{
+					GitHubOrganizationName: params.OrgName,
 					AutoEnabled:            *params.Body.AutoEnabled,
 				},
 			})

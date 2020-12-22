@@ -17,7 +17,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/github"
 	"github.com/communitybridge/easycla/cla-backend-go/user"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
-	psproject "github.com/communitybridge/easycla/cla-backend-go/v2/project-service/client/project"
+	v2ProjectServiceClient "github.com/communitybridge/easycla/cla-backend-go/v2/project-service/client/project"
 	"github.com/go-openapi/runtime/middleware"
 )
 
@@ -30,7 +30,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 
 			result, err := service.GetGithubOrganizations(ctx, params.ProjectSFID)
 			if err != nil {
-				if _, ok := err.(*psproject.GetProjectNotFound); ok {
+				if _, ok := err.(*v2ProjectServiceClient.GetProjectNotFound); ok {
 					return github_organizations.NewGetProjectGithubOrganizationsNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 						Code:    "404",
 						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
@@ -67,7 +67,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 
 			result, err := service.AddGithubOrganization(ctx, params.ProjectSFID, params.Body)
 			if err != nil {
-				if _, ok := err.(*psproject.GetProjectNotFound); ok {
+				if _, ok := err.(*v2ProjectServiceClient.GetProjectNotFound); ok {
 					return github_organizations.NewAddProjectGithubOrganizationNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 						Code:    "404",
 						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
@@ -94,8 +94,8 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 				EventType:         events.GithubOrganizationAdded,
 				ExternalProjectID: params.ProjectSFID,
 				LfUsername:        claUser.LFUsername,
-				EventData: &events.GithubOrganizationAddedEventData{
-					GithubOrganizationName:  *params.Body.OrganizationName,
+				EventData: &events.GitHubOrganizationAddedEventData{
+					GitHubOrganizationName:  *params.Body.OrganizationName,
 					AutoEnabled:             autoEnabled,
 					AutoEnabledClaGroupID:   params.Body.AutoEnabledClaGroupID,
 					BranchProtectionEnabled: branchProtectionEnabled,
@@ -116,7 +116,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 
 			err = service.DeleteGithubOrganization(ctx, params.ProjectSFID, params.OrgName)
 			if err != nil {
-				if _, ok := err.(*psproject.GetProjectNotFound); ok {
+				if _, ok := err.(*v2ProjectServiceClient.GetProjectNotFound); ok {
 					return github_organizations.NewDeleteProjectGithubOrganizationNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 						Code:    "404",
 						Message: fmt.Sprintf("project not found with given ID. [%s]", params.ProjectSFID),
@@ -130,8 +130,8 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 				EventType:         events.GithubOrganizationDeleted,
 				ExternalProjectID: params.ProjectSFID,
 				LfUsername:        claUser.LFUsername,
-				EventData: &events.GithubOrganizationDeletedEventData{
-					GithubOrganizationName: params.OrgName,
+				EventData: &events.GitHubOrganizationDeletedEventData{
+					GitHubOrganizationName: params.OrgName,
 				},
 			})
 			return github_organizations.NewDeleteProjectGithubOrganizationNoContent()
@@ -168,8 +168,8 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 				EventType:         events.GithubOrganizationUpdated,
 				ExternalProjectID: params.ProjectSFID,
 				LfUsername:        claUser.LFUsername,
-				EventData: &events.GithubOrganizationUpdatedEventData{
-					GithubOrganizationName: params.OrgName,
+				EventData: &events.GitHubOrganizationUpdatedEventData{
+					GitHubOrganizationName: params.OrgName,
 					AutoEnabled:            *params.Body.AutoEnabled,
 				},
 			})

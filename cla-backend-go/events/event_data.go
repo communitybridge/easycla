@@ -38,8 +38,8 @@ type GerritDeletedEventData struct {
 	GerritRepositoryName string
 }
 
-// GithubProjectDeletedEventData . . .
-type GithubProjectDeletedEventData struct {
+// GitHubProjectDeletedEventData . . .
+type GitHubProjectDeletedEventData struct {
 	DeletedCount int
 }
 
@@ -88,22 +88,22 @@ type CompanyACLUserAddedEventData struct {
 // CLATemplateCreatedEventData . . .
 type CLATemplateCreatedEventData struct{}
 
-// GithubOrganizationAddedEventData . . .
-type GithubOrganizationAddedEventData struct {
-	GithubOrganizationName  string
+// GitHubOrganizationAddedEventData . . .
+type GitHubOrganizationAddedEventData struct {
+	GitHubOrganizationName  string
 	AutoEnabled             bool
 	AutoEnabledClaGroupID   string
 	BranchProtectionEnabled bool
 }
 
-// GithubOrganizationDeletedEventData . . .
-type GithubOrganizationDeletedEventData struct {
-	GithubOrganizationName string
+// GitHubOrganizationDeletedEventData . . .
+type GitHubOrganizationDeletedEventData struct {
+	GitHubOrganizationName string
 }
 
-// GithubOrganizationUpdatedEventData . . .
-type GithubOrganizationUpdatedEventData struct {
-	GithubOrganizationName string
+// GitHubOrganizationUpdatedEventData . . .
+type GitHubOrganizationUpdatedEventData struct {
+	GitHubOrganizationName string
 	AutoEnabled            bool
 	AutoEnabledClaGroupID  string
 }
@@ -248,14 +248,14 @@ type CLAApprovalListRemoveGitHubOrgData struct {
 	ApprovalListGitHubOrg string
 }
 
-// ApprovalListGithubOrganizationAddedEventData . . .
-type ApprovalListGithubOrganizationAddedEventData struct {
-	GithubOrganizationName string
+// ApprovalListGitHubOrganizationAddedEventData . . .
+type ApprovalListGitHubOrganizationAddedEventData struct {
+	GitHubOrganizationName string
 }
 
-// ApprovalListGithubOrganizationDeletedEventData . . .
-type ApprovalListGithubOrganizationDeletedEventData struct {
-	GithubOrganizationName string
+// ApprovalListGitHubOrganizationDeletedEventData . . .
+type ApprovalListGitHubOrganizationDeletedEventData struct {
+	GitHubOrganizationName string
 }
 
 // ClaManagerAccessRequestAddedEventData . . .
@@ -326,13 +326,13 @@ type ClaManagerRoleDeletedData struct {
 
 // GetEventDetailsString . . .
 func (ed *RepositoryAddedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Github Repository: %s added to Project: %s by: %s.", ed.RepositoryName, args.projectName, args.userName)
+	data := fmt.Sprintf("The GitHub repository: %s was added to the Project %s by the user %s.", ed.RepositoryName, args.projectName, args.userName)
 	return data, true
 }
 
 // GetEventDetailsString . . .
 func (ed *RepositoryDisabledEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Github Repository: %s deleted from Project: %s by: %s.", ed.RepositoryName, args.projectName, args.userName)
+	data := fmt.Sprintf("The GitHub repository %s was deleted from the project %s by the user %s.", ed.RepositoryName, args.projectName, args.userName)
 	return data, true
 }
 
@@ -388,9 +388,9 @@ func (ed *CLATemplateCreatedEventData) GetEventDetailsString(args *LogEventArgs)
 }
 
 // GetEventDetailsString . . .
-func (ed *GithubOrganizationAddedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Github Organization: %s was added with auto-enabled: %t, with branch protection enabled: %t",
-		ed.GithubOrganizationName, ed.AutoEnabled, ed.BranchProtectionEnabled)
+func (ed *GitHubOrganizationAddedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("GitHub Organization: %s was added with auto-enabled: %t, with branch protection enabled: %t",
+		ed.GitHubOrganizationName, ed.AutoEnabled, ed.BranchProtectionEnabled)
 	if ed.AutoEnabledClaGroupID != "" {
 		data = data + fmt.Sprintf(" with auto-enabled-cla-group: %s", ed.AutoEnabledClaGroupID)
 	}
@@ -399,16 +399,16 @@ func (ed *GithubOrganizationAddedEventData) GetEventDetailsString(args *LogEvent
 }
 
 // GetEventDetailsString . . .
-func (ed *GithubOrganizationDeletedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Github Organization: %s was deleted by: %s.",
-		ed.GithubOrganizationName, args.userName)
+func (ed *GitHubOrganizationDeletedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("GitHub Organization: %s was deleted by: %s.",
+		ed.GitHubOrganizationName, args.userName)
 	return data, true
 }
 
 // GetEventDetailsString . . .
-func (ed *GithubOrganizationUpdatedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Github Organization:%s was updated with auto-enabled: %t",
-		ed.GithubOrganizationName, ed.AutoEnabled)
+func (ed *GitHubOrganizationUpdatedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("GitHub Organization:%s was updated with auto-enabled: %t",
+		ed.GitHubOrganizationName, ed.AutoEnabled)
 	if ed.AutoEnabledClaGroupID != "" {
 		data = data + fmt.Sprintf(" with auto-enabled-cla-group: %s", ed.AutoEnabledClaGroupID)
 	}
@@ -536,16 +536,16 @@ func (ed *CCLAApprovalListRequestCreatedEventData) GetEventDetailsString(args *L
 }
 
 // GetEventDetailsString . . .
-func (ed *ApprovalListGithubOrganizationAddedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+func (ed *ApprovalListGitHubOrganizationAddedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("CLA Manager: %s added GitHub Organization: %s to the whitelist for Company %s, Project: %s.",
-		args.userName, ed.GithubOrganizationName, args.companyName, args.projectName)
+		args.userName, ed.GitHubOrganizationName, args.companyName, args.projectName)
 	return data, true
 }
 
 // GetEventDetailsString . . .
-func (ed *ApprovalListGithubOrganizationDeletedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+func (ed *ApprovalListGitHubOrganizationDeletedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("CLA Manager: %s removed GitHub Organization: %s from the whitelist for Company: %s, Project: %s.",
-		args.userName, ed.GithubOrganizationName, args.companyName, args.projectName)
+		args.userName, ed.GitHubOrganizationName, args.companyName, args.projectName)
 	return data, true
 }
 
@@ -604,8 +604,8 @@ func (ed *GerritDeletedEventData) GetEventDetailsString(args *LogEventArgs) (str
 }
 
 // GetEventDetailsString . . .
-func (ed *GithubProjectDeletedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("%d Github Repositories were deleted due to CLA Group/Project: [%s] deletion.",
+func (ed *GitHubProjectDeletedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("%d GitHub Repositories were deleted due to CLA Group/Project: [%s] deletion.",
 		ed.DeletedCount, args.projectName)
 	return data, true
 }
@@ -673,13 +673,13 @@ func (ed *ClaManagerRoleDeletedData) GetEventDetailsString(args *LogEventArgs) (
 
 // GetEventSummaryString . . .
 func (ed *RepositoryAddedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Github Repository: %s was added to Project: %s by: %s.", ed.RepositoryName, args.projectName, args.userName)
+	data := fmt.Sprintf("GitHub Repository: %s was added to Project: %s by: %s.", ed.RepositoryName, args.projectName, args.userName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *RepositoryDisabledEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Github Repository: %s was deleted from Project: %s by: %s.", ed.RepositoryName, args.projectName, args.userName)
+	data := fmt.Sprintf("GitHub Repository: %s was deleted from Project: %s by: %s.", ed.RepositoryName, args.projectName, args.userName)
 	return data, true
 }
 
@@ -735,9 +735,9 @@ func (ed *CLATemplateCreatedEventData) GetEventSummaryString(args *LogEventArgs)
 }
 
 // GetEventSummaryString . . .
-func (ed *GithubOrganizationAddedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Github Organization: %s was added with auto-enabled: %t, branch protection enabled: %t",
-		ed.GithubOrganizationName, ed.AutoEnabled, ed.BranchProtectionEnabled)
+func (ed *GitHubOrganizationAddedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("GitHub Organization: %s was added with auto-enabled: %t, branch protection enabled: %t",
+		ed.GitHubOrganizationName, ed.AutoEnabled, ed.BranchProtectionEnabled)
 	if ed.AutoEnabledClaGroupID != "" {
 		data = data + fmt.Sprintf(" with auto-enabled-cla-group: %s", ed.AutoEnabledClaGroupID)
 	}
@@ -746,16 +746,16 @@ func (ed *GithubOrganizationAddedEventData) GetEventSummaryString(args *LogEvent
 }
 
 // GetEventSummaryString . . .
-func (ed *GithubOrganizationDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Github Organization: %s was deleted by: %s.",
-		ed.GithubOrganizationName, args.userName)
+func (ed *GitHubOrganizationDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("GitHub Organization: %s was deleted by: %s.",
+		ed.GitHubOrganizationName, args.userName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
-func (ed *GithubOrganizationUpdatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Github Organization: %s was updated with auto-enabled: %t",
-		ed.GithubOrganizationName, ed.AutoEnabled)
+func (ed *GitHubOrganizationUpdatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("GitHub Organization: %s was updated with auto-enabled: %t",
+		ed.GitHubOrganizationName, ed.AutoEnabled)
 	if ed.AutoEnabledClaGroupID != "" {
 		data = data + fmt.Sprintf(" with auto-enabled-cla-group: %s", ed.AutoEnabledClaGroupID)
 	}
@@ -883,96 +883,96 @@ func (ed *CCLAApprovalListRequestCreatedEventData) GetEventSummaryString(args *L
 }
 
 // GetEventSummaryString . . .
-func (ed *ApprovalListGithubOrganizationAddedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+func (ed *ApprovalListGitHubOrganizationAddedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("CLA Manager: %s added GitHub Organization: %s to the whitelist for Project: %s, Company: %s.",
-		args.userName, ed.GithubOrganizationName, args.projectName, args.companyName)
+		args.userName, ed.GitHubOrganizationName, args.projectName, args.companyName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
-func (ed *ApprovalListGithubOrganizationDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+func (ed *ApprovalListGitHubOrganizationDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("CLA Manager: %s removed GitHub Organization: %s from the whitelist for Project: %s, Company: %s.",
-		args.userName, ed.GithubOrganizationName, args.projectName, args.companyName)
+		args.userName, ed.GitHubOrganizationName, args.projectName, args.companyName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *ClaManagerAccessRequestAddedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("User: %s has requested to be CLA Manager for Project: %s, Company: %s.",
+	data := fmt.Sprintf("The user %s has requested to be CLA Manager for the project %s, the company %s.",
 		args.userName, ed.ProjectName, ed.CompanyName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *ClaManagerAccessRequestDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("User: %s has deleted a request to be CLA Manager.",
+	data := fmt.Sprintf("The user %s has deleted a request to be CLA Manager.",
 		args.userName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *CLAGroupCreatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("CLA Group: %s was created by: %s.",
+	data := fmt.Sprintf("The CLA Group %s was created by the user %s.",
 		args.projectName, args.userName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *CLAGroupUpdatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("CLA Group: %s was updated by: %s.", args.projectName, args.userName)
+	data := fmt.Sprintf("The CLA Group %s was updated by the user %s.", args.projectName, args.userName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *CLAGroupDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("CLA Group: %s was deleted by: %s.",
+	data := fmt.Sprintf("The CLA Group %s was deleted by the user %s.",
 		args.projectName, args.userName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *GerritProjectDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("%d Gerrit Repositories deleted  due to CLA Group/Project: %s deletion.",
+	data := fmt.Sprintf("%d Gerrit repositories were deleted due to CLA Group/Project %s deletion.",
 		ed.DeletedCount, args.projectName)
 	return data, false
 }
 
 // GetEventSummaryString . . .
 func (ed *GerritAddedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Gerrit Repository: %s added by: %s.", ed.GerritRepositoryName, args.userName)
+	data := fmt.Sprintf("The Gerrit repository %s was added by: %s.", ed.GerritRepositoryName, args.userName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *GerritDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("Gerrit Repository: %s was deleted by: %s.", ed.GerritRepositoryName, args.userName)
+	data := fmt.Sprintf("The Gerrit repository %s was deleted by %s.", ed.GerritRepositoryName, args.userName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
-func (ed *GithubProjectDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("%d Github Repositories deleted due to CLA Group/Project: %s deletion.",
+func (ed *GitHubProjectDeletedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("%d GitHub repositories were deleted due to CLA Group/project %s deletion.",
 		ed.DeletedCount, args.projectName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *SignatureProjectInvalidatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("%d Signatures invalidated (approved set to false) due to CLA Group/Project: %s deletion.",
+	data := fmt.Sprintf("%d signatures were invalidated (approved set to false) due to CLA Group/Project %s deletion.",
 		ed.InvalidatedCount, args.projectName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *ContributorNotifyCompanyAdminData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("User: %s notified Company Admin: %s by Email: %s for Company: %s.",
+	data := fmt.Sprintf("The user %s notified the company admin %s by the email address %s for the company %s.",
 		args.userName, ed.AdminName, ed.AdminEmail, args.companyName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *ContributorNotifyCLADesignee) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("User: %s notified CLA Designee: %s by Email: %s for Project: %s, Company: %s.",
+	data := fmt.Sprintf("The user %s notified the CLA Designee %s by email %s for the project: %s and the company %s.",
 		args.userName, ed.DesigneeName, ed.DesigneeEmail,
 		args.projectName, args.companyName)
 	return data, true
@@ -980,7 +980,7 @@ func (ed *ContributorNotifyCLADesignee) GetEventSummaryString(args *LogEventArgs
 
 // GetEventSummaryString . . .
 func (ed *ContributorAssignCLADesignee) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("User: %s was assigned as CLA Manager Designee for Project: %s, Company: %s by: %s.",
+	data := fmt.Sprintf("The user %s was assigned as CLA Manager Designee for the project: %s for the company %s by the user %s.",
 		ed.DesigneeName,
 		args.projectName, args.companyName, args.userName)
 	return data, true
@@ -988,25 +988,25 @@ func (ed *ContributorAssignCLADesignee) GetEventSummaryString(args *LogEventArgs
 
 // GetEventSummaryString . . .
 func (ed *UserConvertToContactData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("User: %s was converted to Contact state for Project: %s.",
+	data := fmt.Sprintf("The user %s was converted to a contact for the project %s.",
 		args.LfUsername, args.projectName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *AssignRoleScopeData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("User %s was added to Role: %s for Project: %s.", args.LfUsername, ed.Role, args.projectName)
+	data := fmt.Sprintf("The user %s was added to the role %s for project: %s.", args.LfUsername, ed.Role, args.projectName)
 	return data, true
 }
 
 // GetEventSummaryString . . .
 func (ed *ClaManagerRoleCreatedData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("User: %s was added with Role: %s by: %s.", ed.UserName, ed.Role, args.userName)
+	data := fmt.Sprintf("The user %s was added with to the role %s by user %s.", ed.UserName, ed.Role, args.userName)
 	return data, false
 }
 
 // GetEventSummaryString . . .
 func (ed *ClaManagerRoleDeletedData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("User: %s was removed from Role: %s by: %s.", ed.UserName, ed.Role, args.userName)
+	data := fmt.Sprintf("The user %s was removed from the role %s by user %s.", ed.UserName, ed.Role, args.userName)
 	return data, false
 }
