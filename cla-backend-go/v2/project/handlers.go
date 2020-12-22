@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	project_service "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
+	projectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 	v2ProjectServiceModels "github.com/communitybridge/easycla/cla-backend-go/v2/project-service/models"
 
 	"github.com/sirupsen/logrus"
@@ -73,7 +73,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewGetProjectByIDNotFound().WithXRequestID(reqID)
 		}
 
-		if !utils.IsUserAuthorizedForProjectTree(user, claGroupModel.ProjectExternalID) {
+		if !utils.IsUserAuthorizedForProjectTree(user, claGroupModel.ProjectExternalID, utils.ALLOW_ADMIN_SCOPE) {
 			return project.NewGetProjectByIDForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project By ID with Project scope of %s",
@@ -94,7 +94,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		utils.SetAuthUserProperties(user, params.XUSERNAME, params.XEMAIL)
-		if !utils.IsUserAuthorizedForProjectTree(user, params.ExternalID) {
+		if !utils.IsUserAuthorizedForProjectTree(user, params.ExternalID, utils.ALLOW_ADMIN_SCOPE) {
 			return project.NewGetProjectsByExternalIDForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Projects By External ID with Project scope of %s",
@@ -142,7 +142,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewGetProjectByNameNotFound().WithXRequestID(reqID)
 		}
 
-		if !utils.IsUserAuthorizedForProjectTree(user, claGroupModel.ProjectExternalID) {
+		if !utils.IsUserAuthorizedForProjectTree(user, claGroupModel.ProjectExternalID, utils.ALLOW_ADMIN_SCOPE) {
 			return project.NewGetProjectByNameForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Get Project By Name with Project scope of %s",
@@ -179,7 +179,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
 
-		if !utils.IsUserAuthorizedForProjectTree(user, claGroupModel.ProjectExternalID) {
+		if !utils.IsUserAuthorizedForProjectTree(user, claGroupModel.ProjectExternalID, utils.ALLOW_ADMIN_SCOPE) {
 			return project.NewDeleteProjectByIDForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Delete Project By ID with Project scope of %s",
@@ -217,7 +217,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 			}
 			return project.NewUpdateProjectNotFound().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 		}
-		if !utils.IsUserAuthorizedForProjectTree(user, claGroupModel.ProjectExternalID) {
+		if !utils.IsUserAuthorizedForProjectTree(user, claGroupModel.ProjectExternalID, utils.ALLOW_ADMIN_SCOPE) {
 			return project.NewUpdateProjectForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code: "403",
 				Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to Update Project By ID with Project scope of %s",
@@ -281,7 +281,7 @@ func Configure(api *operations.EasyclaAPI, service v1Project.Service, v2Service 
 		}
 
 		// No auth checks - anyone including contributors can request
-		psc := project_service.GetClient()
+		psc := projectService.GetClient()
 		sfProject, err := psc.GetProject(params.ProjectSFID)
 		if err != nil {
 			log.WithFields(f).WithError(err).Warn("unable to lookup SF project by ID")
@@ -319,6 +319,6 @@ func buildSFProjectSummary(sfProject *v2ProjectServiceModels.ProjectOutputDetail
 		Slug:         sfProject.Slug,
 		Status:       sfProject.Status,
 		Type:         sfProject.Type,
-		IsStandalone: ((sfProject.Type != utils.ProjectTypeProjectGroup) && (sfProject.Parent == "" || sfProject.Parent == utils.TheLinuxFoundation)),
+		IsStandalone: (sfProject.Type != utils.ProjectTypeProjectGroup) && (sfProject.Parent == "" || sfProject.Parent == utils.TheLinuxFoundation),
 	}
 }
