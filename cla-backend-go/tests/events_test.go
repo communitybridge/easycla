@@ -24,7 +24,7 @@ func TestEventsService(t *testing.T) {
 		ProjectID: "project-1234",
 		CompanyID: "company-1234",
 		UserID:    "testUserID",
-		EventData: &events.GithubOrganizationAddedEventData{GithubOrganizationName: "testorg"},
+		EventData: &events.GitHubOrganizationAddedEventData{GitHubOrganizationName: "testorg"},
 	})
 
 	eventsSearch, err := eventsService.SearchEvents(&eventOps.SearchEventsParams{
