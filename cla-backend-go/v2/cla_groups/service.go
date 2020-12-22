@@ -691,7 +691,7 @@ func (s *service) DeleteCLAGroup(ctx context.Context, claGroupModel *v1Models.Cl
 				EventType:     events.RepositoryDisabled,
 				ClaGroupModel: claGroup,
 				LfUsername:    authUser.UserName,
-				EventData: &events.GithubProjectDeletedEventData{
+				EventData: &events.GitHubProjectDeletedEventData{
 					DeletedCount: numDeleted,
 				},
 			})

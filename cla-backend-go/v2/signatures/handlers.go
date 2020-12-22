@@ -269,8 +269,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			ProjectID:  projectID,
 			CompanyID:  companyID,
 			LfUsername: authUser.UserName,
-			EventData: &events.ApprovalListGithubOrganizationAddedEventData{
-				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
+			EventData: &events.ApprovalListGitHubOrganizationAddedEventData{
+				GitHubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
 
@@ -335,8 +335,8 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			ProjectID:  projectID,
 			CompanyID:  companyID,
 			LfUsername: authUser.UserName,
-			EventData: &events.ApprovalListGithubOrganizationDeletedEventData{
-				GithubOrganizationName: utils.StringValue(params.Body.OrganizationID),
+			EventData: &events.ApprovalListGitHubOrganizationDeletedEventData{
+				GitHubOrganizationName: utils.StringValue(params.Body.OrganizationID),
 			},
 		})
 		var response []models.GithubOrg
