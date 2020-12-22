@@ -425,7 +425,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1ProjectService v1P
 
 		// Check permissions
 		log.WithFields(f).Debugf("checking permissions for %s", strings.Join(projectSFIDs, ","))
-		if !utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
+		if !utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs, utils.ALLOW_ADMIN_SCOPE) {
 			msg := fmt.Sprintf("user %s does not have access to list projects with project scope of: %s", authUser.UserName, params.ProjectSFID)
 			log.WithFields(f).Warn(msg)
 			return cla_group.NewListClaGroupsUnderFoundationForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
@@ -508,7 +508,7 @@ func isUserHaveAccessToCLAProject(ctx context.Context, authUser *auth.User, proj
 	}
 
 	log.WithFields(f).Debug("testing if user has access to project SFID")
-	if utils.IsUserAuthorizedForProject(authUser, projectSFID) {
+	if utils.IsUserAuthorizedForProject(authUser, projectSFID, utils.ALLOW_ADMIN_SCOPE) {
 		return true
 	}
 
@@ -525,11 +525,11 @@ func isUserHaveAccessToCLAProject(ctx context.Context, authUser *auth.User, proj
 
 	f["foundationSFID"] = projectCLAGroupModel.FoundationSFID
 	log.WithFields(f).Debug("testing if user has access to parent foundation...")
-	if utils.IsUserAuthorizedForProjectTree(authUser, projectCLAGroupModel.FoundationSFID) {
+	if utils.IsUserAuthorizedForProjectTree(authUser, projectCLAGroupModel.FoundationSFID, utils.ALLOW_ADMIN_SCOPE) {
 		log.WithFields(f).Debug("user has access to parent foundation tree...")
 		return true
 	}
-	if utils.IsUserAuthorizedForProject(authUser, projectCLAGroupModel.FoundationSFID) {
+	if utils.IsUserAuthorizedForProject(authUser, projectCLAGroupModel.FoundationSFID, utils.ALLOW_ADMIN_SCOPE) {
 		log.WithFields(f).Debug("user has access to parent foundation...")
 		return true
 	}
@@ -546,7 +546,7 @@ func isUserHaveAccessToCLAProject(ctx context.Context, authUser *auth.User, proj
 	projectSFIDs := getProjectIDsFromModels(f, projectCLAGroupModel.FoundationSFID, projectCLAGroupModels)
 	f["projectIDs"] = strings.Join(projectSFIDs, ",")
 	log.WithFields(f).Debug("testing if user has access to any projects")
-	if utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs) {
+	if utils.IsUserAuthorizedForAnyProjects(authUser, projectSFIDs, utils.ALLOW_ADMIN_SCOPE) {
 		log.WithFields(f).Debug("user has access to at least of of the projects...")
 		return true
 	}

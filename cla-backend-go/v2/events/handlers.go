@@ -89,7 +89,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			}
 
 			log.WithFields(f).Debug("checking permission...")
-			if !utils.IsUserAuthorizedForProjectTree(authUser, params.FoundationSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.FoundationSFID, utils.ALLOW_ADMIN_SCOPE) {
 				msg := fmt.Sprintf("user %s does not have access to Get Foundation Events for foundation %s.", authUser.UserName, params.FoundationSFID)
 				log.WithFields(f).Warn(msg)
 				return WriteResponse(http.StatusForbidden, runtime.JSONMime, runtime.JSONProducer(), utils.ErrorResponseForbidden(reqID, msg))
@@ -120,7 +120,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			}
 
 			log.WithFields(f).Debug("checking permission...")
-			if !utils.IsUserAuthorizedForProjectTree(authUser, params.FoundationSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.FoundationSFID, utils.ALLOW_ADMIN_SCOPE) {
 				msg := fmt.Sprintf("user %s does not have access to Get Foundation Events for foundation %s.", authUser.UserName, params.FoundationSFID)
 				log.WithFields(f).Warn(msg)
 				return events.NewGetRecentEventsForbidden().WithPayload(utils.ErrorResponseForbidden(reqID, msg))
@@ -165,7 +165,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			}
 
 			log.WithFields(f).Debug("checking permission...")
-			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID, utils.ALLOW_ADMIN_SCOPE) {
 				msg := fmt.Sprintf("user %s does not have access to Get Project Events for foundation %s.", authUser.UserName, params.ProjectSFID)
 				log.WithFields(f).Warn(msg)
 				return WriteResponse(http.StatusForbidden, runtime.JSONMime, runtime.JSONProducer(), &models.ErrorResponse{
@@ -217,7 +217,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 			}
 
 			log.WithFields(f).Debug("checking permission...")
-			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID) {
+			if !utils.IsUserAuthorizedForProjectTree(authUser, params.ProjectSFID, utils.ALLOW_ADMIN_SCOPE) {
 				msg := fmt.Sprintf("user %s does not have access to Get Project Events for foundation %s.", authUser.UserName, params.ProjectSFID)
 				log.WithFields(f).Warn(msg)
 				return events.NewGetRecentEventsForbidden().WithPayload(utils.ErrorResponseForbidden(reqID, msg))
@@ -281,7 +281,7 @@ func Configure(api *operations.EasyclaAPI, service v1Events.Service, v1CompanyRe
 				"projectSFID":    params.ProjectSFID,
 				"companySFID":    params.CompanySFID,
 			}
-			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID) {
+			if !utils.IsUserAuthorizedForOrganization(authUser, params.CompanySFID, utils.ALLOW_ADMIN_SCOPE) {
 				return events.NewGetCompanyProjectEventsForbidden().WithPayload(&models.ErrorResponse{
 					Code: "403",
 					Message: fmt.Sprintf("EasyCLA - 403 Forbidden - user %s does not have access to GetCompanyProject Events with Organization scope of %s",
