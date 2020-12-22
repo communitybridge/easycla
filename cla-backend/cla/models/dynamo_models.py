@@ -2235,6 +2235,8 @@ class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     user_github_username = UnicodeAttribute(null=True)
     user_name = UnicodeAttribute(null=True)
     user_lf_username = UnicodeAttribute(null=True)
+    user_docusign_name = UnicodeAttribute(null=True)
+    user_docusign_date_signed = UnicodeAttribute(null=True)
 
 
 class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-methods
@@ -2280,7 +2282,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             signature_company_secondary_manager_list=None,
             user_email=None,
             user_github_username=None,
-            user_name=None
+            user_name=None,
+            user_docusign_name=None,
+            user_docusign_date_signed=None,
     ):
         super(Signature).__init__()
         self.model = SignatureModel()
@@ -2322,6 +2326,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         self.model.user_email = user_email
         self.model.user_github_username = user_github_username
         self.model.user_name = user_name
+        self.model.user_docusign_name = user_docusign_name
+        # in format of 2020-12-21T08:29:20.51
+        self.model.user_docusign_date_signed = user_docusign_date_signed
 
     def __str__(self):
         return (
@@ -2334,7 +2341,8 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             "signature company signatory name: {}, signature company signatory email: {},"
             "signature company initial manager id: {}, signature company initial manager name: {},"
             "signature company initial manager email: {}, signature company secondary manager list: {},"
-            "user_email: {}, user_github_username: {}, user_name: {}"
+            "user_email: {}, user_github_username: {}, user_name: {}, "
+            "user_docusign_name: {}, user_docusign_date_signed: {}"
         ).format(
             self.model.signature_id,
             self.model.signature_project_id,
@@ -2363,7 +2371,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             self.model.signature_company_secondary_manager_list,
             self.model.user_email,
             self.model.user_github_username,
-            self.model.user_name
+            self.model.user_name,
+            self.model.user_docusign_name,
+            self.model.user_docusign_date_signed
         )
 
     def to_dict(self):
@@ -2501,6 +2511,12 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
     def get_user_lf_username(self):
         return self.model.user_lf_username
 
+    def get_user_docusign_name(self):
+        return self.model.user_docusign_name
+
+    def get_user_docusign_date_signed(self):
+        return self.model.user_docusign_date_signed
+
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -2624,6 +2640,12 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def set_user_lf_username(self, user_lf_username):
         self.model.user_lf_username = user_lf_username
+
+    def set_user_docusign_name(self, user_docusign_name):
+        self.model.user_docusign_name = user_docusign_name
+
+    def set_user_docusign_date_signed(self, user_docusign_date_signed):
+        self.model.user_docusign_date_signed = user_docusign_date_signed
 
     def get_signatures_by_reference(
             self,  # pylint: disable=too-many-arguments

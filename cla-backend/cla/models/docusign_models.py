@@ -31,7 +31,6 @@ from cla.models.s3_storage import S3Storage
 from cla.utils import get_email_help_content, append_email_help_sign_off_content
 from cla.user_service import UserService
 
-
 api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
 username = os.environ.get('DOCUSIGN_USERNAME', '')
@@ -90,9 +89,9 @@ class DocuSign(signing_service_interface.SigningService):
             'recipient_id': '{http://www.docusign.net/API/3.0}RecipientId',
             'recipient_statuses': '{http://www.docusign.net/API/3.0}RecipientStatuses',
             'recipient_status': '{http://www.docusign.net/API/3.0}RecipientStatus',
-            'field_value': '{http://www.docusign.net/API/3.0}value'
+            'field_value': '{http://www.docusign.net/API/3.0}value',
+            'agreement_date': '{http://www.docusign.net/API/3.0}AgreementDate',
             }
-            
 
     def __init__(self):
         self.client = None
@@ -451,9 +450,9 @@ class DocuSign(signing_service_interface.SigningService):
                           f'associated with company {company.get_company_name()} for '
                           f'project {project.get_project_name()}')
             event_summary_data = (f'user {user.get_user_name()}/'
-                          f'{user.get_github_username()} '
-                          f'associated with company {company.get_company_name()} for '
-                          f'project {project.get_project_name()}')
+                                  f'{user.get_github_username()} '
+                                  f'associated with company {company.get_company_name()} for '
+                                  f'project {project.get_project_name()}')
             Event.create_event(
                 event_type=EventType.UserAssociatedWithCompany,
                 event_company_id=company_id,
@@ -879,7 +878,7 @@ class DocuSign(signing_service_interface.SigningService):
 
         if cla_manager_user.get_user_email() is None:
             cla.log.warning(f'Loaded CLA Manager by username: {auth_user.username}, but '
-                'the user email is missing from profile - required for DocuSign.')
+                            'the user email is missing from profile - required for DocuSign.')
             # Add the emails
             platform_user_emails = platform_user.get('Emails', None)
             if len(platform_user_emails) > 0:
@@ -1229,6 +1228,7 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.info(f'signed_individual_callback - ICLA signature signed ({signature_id}) - '
                          'Notifying repository service provider')
             signature.set_signature_signed(True)
+            populate_signature_from_icla_callback(tree, signature)
             # Save signature
             signature.save()
 
@@ -1238,7 +1238,7 @@ class DocuSign(signing_service_interface.SigningService):
             # Send user their signed document.
             user = User()
             user.load(signature.get_signature_reference_id())
-            #Update user name in case is empty.
+            # Update user name in case is empty.
             if not user.get_user_name():
                 full_name_field = tree.find(".//*[@name='full_name']")
                 full_name = full_name_field.find(self.TAGS['field_value'])
@@ -1318,7 +1318,6 @@ class DocuSign(signing_service_interface.SigningService):
             # Save signature before adding user to LDAP Groups.
             signature.set_signature_signed(True)
             signature.save()
-
 
             # Load the Project by ID and send audit event
             project = Project()
@@ -1469,6 +1468,7 @@ class DocuSign(signing_service_interface.SigningService):
             # Note: cla-manager role assignment and cla-manager-designee cleanup is handled in the DB trigger handler
             # upon save with the signature signed flag transition to true...
             signature.set_signature_signed(True)
+            populate_signature_from_ccla_callback(tree, signature)
             signature.save()
 
             # Update our event/activity log
@@ -1813,6 +1813,48 @@ def get_docusign_tabs_from_document(document: Document,
         tabs.append(tab_obj)
 
     return tabs
+
+
+def populate_signature_from_icla_callback(icla_tree: ET, signature: Signature):
+    """
+    Populates the signature instance from the given xml payload from docusign icla
+    :param icla_tree:
+    :param signature:
+    :return:
+    """
+    user_docusign_date_signed = icla_tree.find('.//' + DocuSign.TAGS['agreement_date'])
+    if user_docusign_date_signed is not None:
+        user_docusign_date_signed = user_docusign_date_signed.text
+        cla.log.debug(f"setting user_docusign_date_signed attribute : {user_docusign_date_signed}")
+        signature.set_user_docusign_date_signed(user_docusign_date_signed)
+
+    full_name_field = icla_tree.find(".//*[@name='full_name']")
+    full_name = full_name_field.find(DocuSign.TAGS['field_value'])
+    if full_name is not None:
+        full_name = full_name.text
+        cla.log.debug(f"setting user_docusign_name attribute : {full_name}")
+        signature.set_user_docusign_name(full_name)
+
+
+def populate_signature_from_ccla_callback(ccla_tree: ET, signature: Signature):
+    """
+    Populates the signature instance from the given xml payload from docusign ccla
+    :param ccla_tree:
+    :param signature:
+    :return:
+    """
+    user_docusign_date_signed = ccla_tree.find('.//' + DocuSign.TAGS['agreement_date'])
+    if user_docusign_date_signed is not None:
+        user_docusign_date_signed = user_docusign_date_signed.text
+        cla.log.debug(f"setting user_docusign_date_signed attribute : {user_docusign_date_signed}")
+        signature.set_user_docusign_date_signed(user_docusign_date_signed)
+
+    signatory_name_field = ccla_tree.find(".//*[@name='signatory_name']")
+    signatory_name = signatory_name_field.find(DocuSign.TAGS['field_value'])
+    if signatory_name is not None:
+        signatory_name = signatory_name.text
+        cla.log.debug(f"setting user_docusign_name attribute : {signatory_name}")
+        signature.set_user_docusign_name(signatory_name)
 
 
 # Returns a dictionary of document id to value
