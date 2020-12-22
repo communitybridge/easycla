@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const RetrieveSSMValues = require('./read-ssm');
-const configVarArray = ['auth0-clientId', 'auth0-domain', 'proj-console-link', 'lfx-header', 'lfx-footer', 'corp-console-link', 'cla-corporate-v2-base', 'cla-admin-v2-base'];
+const configVarArray = ['auth0-clientId', 'auth0-domain', 'proj-console-link', 'lfx-header', 'lfx-footer', 'corp-console-link', 'corporate-v2-base', 'admin-v2-base'];
 const region = 'us-east-1';
 const profile = process.env.AWS_PROFILE;
 const stageEnv = process.env.STAGE_ENV;
