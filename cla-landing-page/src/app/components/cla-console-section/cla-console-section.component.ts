@@ -52,6 +52,7 @@ export class ClaConsoleSectionComponent implements OnInit {
   onClickProceed(type: string) {
     let url = '';
     this.storageService.setItem('type', type);
+    console.log('Version : ' + this.version);
     if (this.version === '2') {
       // Set redirect URL to new V2 console.
       const envKey = (type === 'Projects') ? AppSettings.PROJECT_CONSOLE_LINK_V2 : AppSettings.CORPORATE_CONSOLE_LINK_V2;
@@ -61,6 +62,7 @@ export class ClaConsoleSectionComponent implements OnInit {
       const envKey = (type === 'Projects') ? AppSettings.PROJECT_CONSOLE_LINK : AppSettings.CORPORATE_CONSOLE_LINK;
       url = EnvConfig.default[envKey] + '#/login';
     }
+    console.log('url : ' + url);
     window.open(url, '_self');
   }
 
