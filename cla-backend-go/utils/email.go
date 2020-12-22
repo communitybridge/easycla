@@ -101,9 +101,8 @@ func SendEmail(subject string, body string, recipients []string) error {
 // GetCorporateURL returns the corporate URL based on the specified flag
 func GetCorporateURL(isV2Project bool) string {
 	if isV2Project {
-		return fmt.Sprintf("https://%s", config.GetConfig().CorporateConsoleV2URL)
+		return config.GetConfig().CorporateConsoleV2URL
 	}
-
 	return fmt.Sprintf("https://%s", config.GetConfig().CorporateConsoleURL)
 }
 
