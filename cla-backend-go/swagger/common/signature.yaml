@@ -17,7 +17,7 @@ properties:
       * `icla` - for individual contributor signature records (individuals not associated with a corporation)
       * `ecla` - for employee contributor signature records (acknowledgements from corporate contributors)
       * `ccla` - for corporate contributor signature records (created by CLA Signatories and managed by CLA Managers)
-    enum: [icla,ecla,ccla]
+    enum: [ icla,ecla,ccla ]
   signatureCreated:
     type: string
     description: the signature record created time
@@ -134,3 +134,9 @@ properties:
     x-nullable: true
     items:
       type: string
+  user_docusign_name:
+    type: string
+    description: full name used on docusign document
+  user_docusign_date_signed:
+    type: string
+    description: docusign signature date

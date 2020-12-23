@@ -2139,6 +2139,8 @@ func (repo repository) buildProjectSignatureModels(ctx context.Context, results 
 			UserGHID:                    dbSignature.UserGithubUsername,
 			SignedOn:                    dbSignature.SignedOn,
 			SignatoryName:               dbSignature.SignatoryName,
+			UserDocusignName:            dbSignature.UserDocusignName,
+			UserDocusignDateSigned:      dbSignature.UserDocusignDateSigned,
 		}
 		sigs = append(sigs, sig)
 		go func(sigModel *models.Signature, signatureUserCompanyID string, sigACL []string) {
@@ -2387,12 +2389,14 @@ func (repo repository) GetClaGroupICLASignatures(ctx context.Context, claGroupID
 				signedOn = sig.SignedOn
 			}
 			out.List = append(out.List, &models.IclaSignature{
-				GithubUsername: sig.UserGithubUsername,
-				LfUsername:     sig.UserLFUsername,
-				SignatureID:    sig.SignatureID,
-				UserEmail:      sig.UserEmail,
-				UserName:       sig.UserName,
-				SignedOn:       signedOn,
+				GithubUsername:         sig.UserGithubUsername,
+				LfUsername:             sig.UserLFUsername,
+				SignatureID:            sig.SignatureID,
+				UserEmail:              sig.UserEmail,
+				UserName:               sig.UserName,
+				SignedOn:               signedOn,
+				UserDocusignName:       sig.UserDocusignName,
+				UserDocusignDateSigned: sig.UserDocusignDateSigned,
 			})
 		}
 
@@ -2479,12 +2483,14 @@ func (repo repository) GetClaGroupCorporateContributors(ctx context.Context, cla
 			}
 			signatureVersion := fmt.Sprintf("v%s.%s", sig.SignatureDocumentMajorVersion, sig.SignatureDocumentMinorVersion)
 			out.List = append(out.List, &models.CorporateContributor{
-				GithubID:          sig.UserGithubUsername,
-				LinuxFoundationID: sig.UserLFUsername,
-				Name:              sig.UserName,
-				SignatureVersion:  signatureVersion,
-				Email:             sig.UserEmail,
-				Timestamp:         sigCreatedTime,
+				GithubID:               sig.UserGithubUsername,
+				LinuxFoundationID:      sig.UserLFUsername,
+				Name:                   sig.UserName,
+				SignatureVersion:       signatureVersion,
+				Email:                  sig.UserEmail,
+				Timestamp:              sigCreatedTime,
+				UserDocusignName:       sig.UserDocusignName,
+				UserDocusignDateSigned: sig.UserDocusignDateSigned,
 			})
 		}
 
