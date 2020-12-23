@@ -796,7 +796,7 @@ def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=Fal
     alt = 'CLA'
     if all_signed:
         badge_url = f'{CLA_LOGO_URL}/cla-signed.svg'
-        badge_hyperlink = 'https://easycla.lfx.linuxfoundation.org'
+        badge_hyperlink = cla.conf["CLA_LANDING_PAGE"]
         alt = "CLA Signed"
     else:
         if missing_user_id:
