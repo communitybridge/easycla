@@ -56,6 +56,14 @@ func (s *service) ProjectServiceEnableCLAServiceHandler(event events.DynamoDBEve
 
 	psc := v2ProjectService.GetClient()
 	log.WithFields(f).Debug("enabling CLA service...")
+	projectDetails, prjerr := psc.GetProject(newProject.ProjectSFID)
+	if prjerr != nil {
+		log.WithError(err).Warn("enable to get project details")
+	}
+	projectName := newProject.ProjectSFID
+	if projectDetails != nil {
+		projectName = projectDetails.Name
+	}
 	start, _ := utils.CurrentTime()
 	err = psc.EnableCLA(newProject.ProjectSFID)
 	if err != nil {
@@ -68,8 +76,8 @@ func (s *service) ProjectServiceEnableCLAServiceHandler(event events.DynamoDBEve
 	// Log the event
 	eventErr := s.eventsRepo.CreateEvent(&models.Event{
 		ContainsPII:            false,
-		EventData:              fmt.Sprintf("enabled CLA service for project: %s", newProject.ProjectSFID),
-		EventSummary:           fmt.Sprintf("enabled CLA service for project: %s", newProject.ProjectSFID),
+		EventData:              fmt.Sprintf("enabled CLA service for project: %s", projectName),
+		EventSummary:           fmt.Sprintf("enabled CLA service for project: %s", projectName),
 		EventFoundationSFID:    newProject.FoundationSFID,
 		EventProjectExternalID: newProject.ProjectSFID,
 		EventProjectID:         newProject.ClaGroupID,
@@ -79,7 +87,7 @@ func (s *service) ProjectServiceEnableCLAServiceHandler(event events.DynamoDBEve
 		UserID:                 "easycla system",
 		UserName:               "easycla system",
 		// EventProjectName:       "",
-		// EventProjectSFName:     "",
+		EventProjectSFName: projectName,
 	})
 	if eventErr != nil {
 		log.WithFields(f).WithError(eventErr).Warn("problem logging event for enabling CLA service")
