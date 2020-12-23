@@ -2237,6 +2237,7 @@ class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     user_lf_username = UnicodeAttribute(null=True)
     user_docusign_name = UnicodeAttribute(null=True)
     user_docusign_date_signed = UnicodeAttribute(null=True)
+    user_docusign_raw_xml = UnicodeAttribute(null=True)
 
 
 class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-methods
@@ -2377,7 +2378,19 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         )
 
     def to_dict(self):
-        return dict(self.model)
+        """
+        to_dict returns dictionary  representation of the model, this is what's sent back as
+        API result to the users, this is the place we need to filter out some sensitive data
+        (eg. user_docusign_raw_xml)
+        :return:
+        """
+        d = dict(self.model)
+        keys_to_filter = ["user_docusign_raw_xml"]
+
+        for k in keys_to_filter:
+            if k in d:
+                del d[k]
+        return d
 
     def save(self):
         self.model.date_modified = datetime.datetime.utcnow()
@@ -2517,6 +2530,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
     def get_user_docusign_date_signed(self):
         return self.model.user_docusign_date_signed
 
+    def get_user_docusign_raw_xml(self):
+        return self.model.user_docusign_raw_xml
+
     def set_signature_id(self, signature_id):
         self.model.signature_id = str(signature_id)
 
@@ -2646,6 +2662,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def set_user_docusign_date_signed(self, user_docusign_date_signed):
         self.model.user_docusign_date_signed = user_docusign_date_signed
+
+    def set_user_docusign_raw_xml(self, user_docusign_raw_xml):
+        self.model.user_docusign_raw_xml = user_docusign_raw_xml
 
     def get_signatures_by_reference(
             self,  # pylint: disable=too-many-arguments

@@ -1228,7 +1228,7 @@ class DocuSign(signing_service_interface.SigningService):
             cla.log.info(f'signed_individual_callback - ICLA signature signed ({signature_id}) - '
                          'Notifying repository service provider')
             signature.set_signature_signed(True)
-            populate_signature_from_icla_callback(tree, signature)
+            populate_signature_from_icla_callback(content, tree, signature)
             # Save signature
             signature.save()
 
@@ -1468,7 +1468,7 @@ class DocuSign(signing_service_interface.SigningService):
             # Note: cla-manager role assignment and cla-manager-designee cleanup is handled in the DB trigger handler
             # upon save with the signature signed flag transition to true...
             signature.set_signature_signed(True)
-            populate_signature_from_ccla_callback(tree, signature)
+            populate_signature_from_ccla_callback(content, tree, signature)
             signature.save()
 
             # Update our event/activity log
@@ -1815,9 +1815,10 @@ def get_docusign_tabs_from_document(document: Document,
     return tabs
 
 
-def populate_signature_from_icla_callback(icla_tree: ET, signature: Signature):
+def populate_signature_from_icla_callback(content: str, icla_tree: ET, signature: Signature):
     """
     Populates the signature instance from the given xml payload from docusign icla
+    :param content: the raw xml
     :param icla_tree:
     :param signature:
     :return:
@@ -1835,10 +1836,13 @@ def populate_signature_from_icla_callback(icla_tree: ET, signature: Signature):
         cla.log.debug(f"setting user_docusign_name attribute : {full_name}")
         signature.set_user_docusign_name(full_name)
 
+    signature.set_user_docusign_raw_xml(content)
 
-def populate_signature_from_ccla_callback(ccla_tree: ET, signature: Signature):
+
+def populate_signature_from_ccla_callback(content: str, ccla_tree: ET, signature: Signature):
     """
     Populates the signature instance from the given xml payload from docusign ccla
+    :param content:
     :param ccla_tree:
     :param signature:
     :return:
@@ -1855,6 +1859,8 @@ def populate_signature_from_ccla_callback(ccla_tree: ET, signature: Signature):
         signatory_name = signatory_name.text
         cla.log.debug(f"setting user_docusign_name attribute : {signatory_name}")
         signature.set_user_docusign_name(signatory_name)
+
+    signature.set_user_docusign_raw_xml(content)
 
 
 # Returns a dictionary of document id to value

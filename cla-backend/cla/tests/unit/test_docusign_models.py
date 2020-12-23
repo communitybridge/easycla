@@ -5,7 +5,7 @@ from cla.models.dynamo_models import Signature
 
 
 def test_populate_signature_from_ccla_callback():
-    tree = ET.fromstring("""<?xml version="1.0" encoding="utf-8"?>
+    content = """<?xml version="1.0" encoding="utf-8"?>
 <DocuSignEnvelopeInformation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                              xmlns="http://www.docusign.net/API/3.0">
     <EnvelopeStatus>
@@ -268,16 +268,24 @@ def test_populate_signature_from_ccla_callback():
     <TimeZone>Pacific Standard Time</TimeZone>
     <TimeZoneOffset>-8</TimeZoneOffset>
 </DocuSignEnvelopeInformation> 
-    """)
+    """
+    tree = ET.fromstring(content)
 
     signature = Signature()
-    populate_signature_from_ccla_callback(tree, signature)
+    populate_signature_from_ccla_callback(content, tree, signature)
     assert signature.get_user_docusign_name() == "Example Signatory"
     assert signature.get_user_docusign_date_signed() == "2020-12-17T07:44:08.503"
+    assert signature.get_user_docusign_raw_xml() == content
+    assert "user_docusign_name" in signature.to_dict()
+    assert "user_docusign_date_signed" in signature.to_dict()
+    assert "user_docusign_raw_xml" not in signature.to_dict()
+    assert "user_docusign_name" in str(signature)
+    assert "user_docusign_date_signed" in str(signature)
+    assert "user_docusign_raw_xml" not in str(signature)
 
 
 def test_populate_signature_from_icla_callback():
-    tree = ET.fromstring("""<?xml version="1.0" encoding="utf-8"?>
+    content = """<?xml version="1.0" encoding="utf-8"?>
 <DocuSignEnvelopeInformation xmlns:xsd="http://www.w3.org/2001/XMLSchema"
                              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                              xmlns="http://www.docusign.net/API/3.0">
@@ -493,10 +501,17 @@ def test_populate_signature_from_icla_callback():
     </EnvelopeStatus>
     <TimeZone>Pacific Standard Time</TimeZone>
     <TimeZoneOffset>-8</TimeZoneOffset>
-</DocuSignEnvelopeInformation>""")
+</DocuSignEnvelopeInformation>"""
+    tree = ET.fromstring(content)
 
     signature = Signature()
-    populate_signature_from_icla_callback(tree, signature)
+    populate_signature_from_icla_callback(content, tree, signature)
     assert signature.get_user_docusign_name() == "Example FullName"
     assert signature.get_user_docusign_date_signed() == "2020-12-21T08:29:20.51"
-
+    assert signature.get_user_docusign_raw_xml() == content
+    assert "user_docusign_name" in signature.to_dict()
+    assert "user_docusign_date_signed" in signature.to_dict()
+    assert "user_docusign_raw_xml" not in signature.to_dict()
+    assert "user_docusign_name" in str(signature)
+    assert "user_docusign_date_signed" in str(signature)
+    assert "user_docusign_raw_xml" not in str(signature)
