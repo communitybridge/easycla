@@ -74,7 +74,7 @@ func (pmm *Client) GetProject(projectSFID string) (*models.ProjectOutputDetailed
 }
 
 // GetProjectByName returns project details for the associated project name
-func (pmm *Client) GetProjectByName(projectName string) (*models.ProjectList, error) {
+func (pmm *Client) GetProjectByName(projectName string) (*models.ProjectListSearch, error) {
 	tok, err := token.GetToken()
 	if err != nil {
 		return nil, err
@@ -96,21 +96,21 @@ func (pmm *Client) GetParentProject(projectSFID string) (string, error) {
 		"projectSFID":  projectSFID,
 	}
 
-	log.WithFields(f).Debug("looking up project in SF by projectSFID")
-	project, err := pmm.GetProject(projectSFID)
+	log.WithFields(f).Debug("looking up projectModel in SF by projectSFID")
+	projectModel, err := pmm.GetProject(projectSFID)
 	if err != nil {
-		log.WithFields(f).Warnf("unable to lookup project in project service by projectSFID, error: %+v", err)
+		log.WithFields(f).Warnf("unable to lookup projectModel in projectModel service by projectSFID, error: %+v", err)
 		return "", err
 	}
 
 	// Do they have a parent?
-	if project.Parent == "" || project.Parent == utils.TheLinuxFoundation {
+	if projectModel.Parent == "" || projectModel.Parent == utils.TheLinuxFoundation {
 		log.WithFields(f).Debugf("no parent for projectSFID or %s is the parent...", utils.TheLinuxFoundation)
 		return projectSFID, nil
 	}
 
-	log.WithFields(f).Debugf("returning parent projectSFID: %s", project.Parent)
-	return project.Parent, nil
+	log.WithFields(f).Debugf("returning parent projectSFID: %s", projectModel.Parent)
+	return projectModel.Parent, nil
 }
 
 // IsTheLinuxFoundation returns true if the specified project SFID is the The Linux Foundation project
