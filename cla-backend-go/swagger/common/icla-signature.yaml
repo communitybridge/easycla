@@ -16,3 +16,7 @@ properties:
     type: string
   signed_on:
     type: string
+  user_docusign_name:
+    type: string
+  user_docusign_date_signed:
+    type: string
