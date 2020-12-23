@@ -1,3 +1,6 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
+
 import xml.etree.ElementTree as ET
 
 from cla.models.docusign_models import populate_signature_from_ccla_callback, populate_signature_from_icla_callback
