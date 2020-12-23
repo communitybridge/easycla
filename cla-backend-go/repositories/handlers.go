@@ -57,6 +57,10 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 				ProjectID:         utils.StringValue(params.GithubRepositoryInput.RepositoryProjectID),
 				ExternalProjectID: params.ProjectSFID,
 				UserID:            claUser.UserID,
+				LfUsername:        claUser.LFUsername,
+				UserModel: &models.User{
+					Username: claUser.LFUsername,
+				},
 				EventData: &events.RepositoryAddedEventData{
 					RepositoryName: utils.StringValue(params.GithubRepositoryInput.RepositoryName),
 				},
