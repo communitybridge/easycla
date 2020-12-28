@@ -1337,7 +1337,7 @@ func (s *service) GetCompanyLookup(ctx context.Context, orgName string, websiteN
 	return result, nil
 }
 
-func (s *service) RequestCompanyAdmin(ctx context.Context, userID string, claManagerEmail string, claManagerName string, contributorName string, contributorEmail string, projectName string, companyName string, lFxPortalURL string) error {
+func (s *service) RequestCompanyAdmin(ctx context.Context, userID string, claManagerEmail string, claManagerName string, contributorName string, contributorEmail string, projectName string, companyName string, corporateLink string) error {
 	orgServices := orgService.GetClient()
 	f := logrus.Fields{
 		"functionName":     "RequestCompanyAdmin",
@@ -1385,7 +1385,7 @@ func (s *service) RequestCompanyAdmin(ctx context.Context, userID string, claMan
     %s`,
 		claManagerName, projectName, projectName, contributorName,
 		contributorEmail, companyName, projectName, projectName,
-		projectName, projectName, lFxPortalURL,
+		projectName, projectName, corporateLink,
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 	err := utils.SendEmail(subject, body, recipients)
 	if err != nil {
