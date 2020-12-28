@@ -2322,6 +2322,10 @@ paths:
               - claManagerEmail
             x-nullable: false
             properties:
+              version:
+                type: string
+                description: EasyCLA Version (v1|v2)
+                example: "v1"
               contributorName:
                 type: string
                 description: Proposed Contributor name

@@ -322,7 +322,7 @@ func server(localMode bool) http.Handler {
 	v2Repositories.Configure(v2API, v2RepositoriesService, eventsService)
 	gerrits.Configure(api, gerritService, projectService, eventsService)
 	v2Gerrits.Configure(v2API, gerritService, projectService, eventsService, projectClaGroupRepo)
-	v2Company.Configure(v2API, v2CompanyService, companyRepo, projectClaGroupRepo, configFile.LFXPortalURL)
+	v2Company.Configure(v2API, v2CompanyService, companyRepo, projectClaGroupRepo, configFile.LFXPortalURL, configFile.CorporateConsoleURL)
 	cla_manager.Configure(api, v1ClaManagerService, companyService, projectService, usersService, signaturesService, eventsService, configFile.CorporateConsoleURL)
 	v2ClaManager.Configure(v2API, v2ClaManagerService, configFile.LFXPortalURL, projectClaGroupRepo, userRepo)
 	sign.Configure(v2API, v2SignService)
