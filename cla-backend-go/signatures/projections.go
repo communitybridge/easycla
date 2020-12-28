@@ -34,6 +34,8 @@ func buildProjection() expression.ProjectionBuilder {
 		expression.Name("user_email"),
 		expression.Name("signed_on"),
 		expression.Name("signatory_name"),
+		expression.Name("user_docusign_date_signed"),
+		expression.Name("user_docusign_name"),
 	)
 }
 
