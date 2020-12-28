@@ -806,7 +806,7 @@ def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=Fal
             badge_url = f'{CLA_LOGO_URL}/cla-confirmation-needed.svg'
             alt = 'CLA Confirmation Needed'
         else:
-            badge_url = f'{CLA_LOGO_URL}/cla-notsigned.svg'
+            badge_url = f'{CLA_LOGO_URL}/cla-not-signed.svg'
             alt = "CLA Not Signed"
         badge_hyperlink = sign_url
     # return '[![CLA Check](' + badge_url + ')](' + badge_hyperlink + ')'
