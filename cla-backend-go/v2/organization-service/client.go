@@ -593,3 +593,31 @@ func (osc *Client) ListOrg(orgName string) (*models.OrganizationList, error) {
 	}
 	return result.Payload, nil
 }
+
+// SearchOrgLookup returns organization
+func (osc *Client) SearchOrgLookup(orgName string, websiteName string) (*organizations.LookupOK, error) {
+	f := logrus.Fields{
+		"functionName": "organization_service.Lookup",
+		"orgName":      orgName,
+		"websiteName":  websiteName,
+	}
+	tok, err := token.GetToken()
+	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to fetch token")
+		return nil, err
+	}
+
+	clientAuth := runtimeClient.BearerToken(tok)
+	params := &organizations.LookupParams{
+		Name:    aws.String(orgName),
+		Domain:  aws.String(websiteName),
+		Context: context.TODO(),
+	}
+	result, err := osc.cl.Organizations.Lookup(params, clientAuth)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("unable to search organization with params: %+v", params)
+		return nil, err
+	}
+
+	return result, nil
+}

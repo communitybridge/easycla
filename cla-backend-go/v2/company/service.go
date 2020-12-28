@@ -100,6 +100,9 @@ type Service interface {
 	AssociateContributorByGroup(ctx context.Context, companySFID, userEmail string, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, ClaGroupID string) ([]*models.Contributor, string, error)
 	GetCompanyAdmins(ctx context.Context, companyID string) (*models.CompanyAdminList, error)
 	RequestCompanyAdmin(ctx context.Context, userID string, claManagerEmail string, claManagerName string, contributorName string, contributorEmail string, projectName string, companyName string, lFxPortalURL string) error
+
+	// org service lookup
+	GetCompanyLookup(ctx context.Context, companyName string, websiteName string) (*models.Lookup, error)
 }
 
 // ProjectRepo contains project repo methods
@@ -1310,6 +1313,28 @@ func (s service) autoCreateCompany(ctx context.Context, companySFID string) (*v1
 
 	log.WithFields(f).Debugf("successfully created EasyCLA company record: %+v", companyModel)
 	return companyModel, nil
+}
+
+func (s *service) GetCompanyLookup(ctx context.Context, orgName string, websiteName string) (*models.Lookup, error) {
+	orgClient := orgService.GetClient()
+	org, err := orgClient.SearchOrgLookup(orgName, websiteName)
+	if err != nil {
+		return nil, err
+	}
+
+	var result *models.Lookup
+	if org != nil {
+		result = &models.Lookup{
+			Employees: org.Payload.Employees,
+			ID:        org.Payload.ID,
+			Industry:  org.Payload.Industry,
+			Link:      org.Payload.Link,
+			Name:      org.Payload.Name,
+			Sector:    org.Payload.Sector,
+			Source:    org.Payload.Source,
+		}
+	}
+	return result, nil
 }
 
 func (s *service) RequestCompanyAdmin(ctx context.Context, userID string, claManagerEmail string, claManagerName string, contributorName string, contributorEmail string, projectName string, companyName string, lFxPortalURL string) error {
