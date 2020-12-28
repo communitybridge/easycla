@@ -26,10 +26,10 @@ properties:
   timestamp:
     type: string
     x-omitempty: false
-  user_docusign_name:
+  userDocusignName:
     type: string
     description: full name used on docusign document
-  user_docusign_date_signed:
+  userDocusignDateSigned:
     type: string
     description: docusign signature date
 
