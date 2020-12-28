@@ -2940,6 +2940,47 @@ paths:
           $ref: '#/responses/internal-server-error'
       tags:
         - company
+  
+  /company/lookup:
+    get:
+      summary: Search companies from organization service
+      description: >-
+        Returns an organization whether it exists in the system or not. You must pass either a domain or name as query parameters. If any organization
+        in salesforce matches the domain or name, or both if given, it will be returned along with the salesforceID. If there are no results, the given
+        domain or name will be searched for clearbit and the first hit will be returned with a value of "clearbit" for Source in the response. If both
+        domain and name are given, domain take precedence.
+      security: [ ]
+      operationId: searchCompanyLookup
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: '#/parameters/companyName'
+        - name: websiteName
+          in: query
+          type: string
+          description: the company website
+          x-omitempty: false
+          pattern: "^((http|https):\\/\\/)?(www.)?[a-zA-Z0-9]+(\\.[a-zA-Z]{2,}){1,3}(#?\\/?[a-zA-Z0-9#]+)*\\/?(\\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$"
+      responses:
+        '200':
+          description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
+          schema:
+            $ref: '#/definitions/lookup'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+        '500':
+          $ref: '#/responses/internal-server-error'
+      tags:
+        - company
 
   /company/sfid/{companySFID}:
     delete:
@@ -3865,6 +3906,49 @@ definitions:
       companyID:
         type: string
 
+  lookup:
+    type: object
+    title: Lookup
+    description: Company results from organization service lookup
+    properties:
+      ID:
+        type: string
+        description: The unique company ID
+        example: "9765"
+        pattern: '^(\d+){1,}$'
+      Name:
+        type: string
+        description: The company name, such as "Linux Foundation", "Google LLC" or "23andMe, Inc."
+        example: "Linux Foundation"
+        pattern: '^([\w\d\s\-\,\.\/]+){2,255}$'
+      Link:
+        type: string
+        description: The company web site URL
+        example: "http://www.linuxfoundation.org"
+        pattern: '^([\w\d\s\-\,\.\/\:]+){2,255}$'
+      Source:
+        type: string
+        description: >-
+            The company account source, such as "Google Natural Search", "Event-Promo", "Direct Mail", or "Tradeshow".
+            If the information was found in clearbit, this value will be "clearbit".
+        example: "clearbit"
+      Industry:
+        type: string
+        description: >-
+            The company industry, such as "Banking" or "Communications"
+        example: "Education"
+        pattern: '^([\w\d\s\-\,\.]+){2,40}$'
+      Sector:
+        type: string
+        description: >-
+            The company industry sector, such as "Information Technology"
+        example: "Information Technology"
+      Employees:
+        type: string
+        description: The number of employees of the company
+        example: "500 - 4999, 10000+"
+        pattern: '^([\w\d\s\-\,\.\/]+){2,}$'
+  
   cla-manager-distribution:
     type: object
     properties:

@@ -479,6 +479,30 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			// successfully sent invite
 			return company.NewRequestCompanyAdminOK().WithXRequestID(reqID)
 		})
+
+	api.CompanySearchCompanyLookupHandler = company.SearchCompanyLookupHandlerFunc(func(params company.SearchCompanyLookupParams) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
+		if params.CompanyName == nil && params.WebsiteName == nil {
+			log.Debugf("CompanyName or WebsiteName atleast one required")
+			return company.NewSearchCompanyLookupBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, errors.New("companyName or websiteName at least one required")))
+		}
+
+		companyName, websiteName := validateParams(params)
+
+		result, err := service.GetCompanyLookup(ctx, companyName, websiteName)
+		if err != nil {
+			msg := fmt.Sprintf("error occured while search orgname %s, websitename %s", companyName, websiteName)
+			log.Warnf("error occured while search orgname %s, websitename %s. error = %s", companyName, websiteName, err.Error())
+			if _, ok := err.(*organizations.LookupNotFound); ok {
+				return company.NewSearchCompanyLookupNotFound().WithXRequestID(reqID).WithPayload(
+					utils.ErrorResponseNotFoundWithError(reqID, msg, err))
+			}
+			return company.NewSearchCompanyLookupBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
+		}
+		return company.NewSearchCompanyLookupOK().WithXRequestID(reqID).WithPayload(result)
+	})
 }
 
 type codedResponse interface {
@@ -611,4 +635,21 @@ func getProjectIDsFromModels(f logrus.Fields, foundationSFID string, projectCLAG
 	}
 	log.WithFields(f).Debugf("%d projects associated with the CLA Group...", len(projectSFIDs))
 	return projectSFIDs
+}
+
+func validateParams(params company.SearchCompanyLookupParams) (string, string) {
+	var companyName, websiteName string
+	if params.CompanyName == nil {
+		companyName = ""
+	} else {
+		companyName = *params.CompanyName
+	}
+
+	if params.WebsiteName == nil {
+		websiteName = ""
+	} else {
+		websiteName = *params.WebsiteName
+	}
+
+	return companyName, websiteName
 }
