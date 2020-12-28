@@ -91,6 +91,7 @@ class DocuSign(signing_service_interface.SigningService):
             'recipient_status': '{http://www.docusign.net/API/3.0}RecipientStatus',
             'field_value': '{http://www.docusign.net/API/3.0}value',
             'agreement_date': '{http://www.docusign.net/API/3.0}AgreementDate',
+            'signed_date': '{http://www.docusign.net/API/3.0}Signed',
             }
 
     def __init__(self):
@@ -1824,6 +1825,9 @@ def populate_signature_from_icla_callback(content: str, icla_tree: ET, signature
     :return:
     """
     user_docusign_date_signed = icla_tree.find('.//' + DocuSign.TAGS['agreement_date'])
+    if user_docusign_date_signed is None:
+        user_docusign_date_signed = icla_tree.find('.//' + DocuSign.TAGS['signed_date'])
+
     if user_docusign_date_signed is not None:
         user_docusign_date_signed = user_docusign_date_signed.text
         cla.log.debug(f"setting user_docusign_date_signed attribute : {user_docusign_date_signed}")
@@ -1854,6 +1858,9 @@ def populate_signature_from_ccla_callback(content: str, ccla_tree: ET, signature
     :return:
     """
     user_docusign_date_signed = ccla_tree.find('.//' + DocuSign.TAGS['agreement_date'])
+    if user_docusign_date_signed is None:
+        user_docusign_date_signed = ccla_tree.find('.//' + DocuSign.TAGS['signed_date'])
+
     if user_docusign_date_signed is not None:
         user_docusign_date_signed = user_docusign_date_signed.text
         cla.log.debug(f"setting user_docusign_date_signed attribute : {user_docusign_date_signed}")
