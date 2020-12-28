@@ -1836,6 +1836,12 @@ def populate_signature_from_icla_callback(content: str, icla_tree: ET, signature
         cla.log.debug(f"setting user_docusign_name attribute : {full_name}")
         signature.set_user_docusign_name(full_name)
 
+    # seems the content could be bytes
+    if hasattr(content, "decode"):
+        content = content.decode("utf-8")
+    else:
+        content = str(content)
+
     signature.set_user_docusign_raw_xml(content)
 
 
@@ -1860,6 +1866,11 @@ def populate_signature_from_ccla_callback(content: str, ccla_tree: ET, signature
         cla.log.debug(f"setting user_docusign_name attribute : {signatory_name}")
         signature.set_user_docusign_name(signatory_name)
 
+    # seems the content could be bytes
+    if hasattr(content, "decode"):
+        content = content.decode("utf-8")
+    else:
+        content = str(content)
     signature.set_user_docusign_raw_xml(content)
 
 
