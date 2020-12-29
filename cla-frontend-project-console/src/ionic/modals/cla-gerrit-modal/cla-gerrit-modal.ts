@@ -7,6 +7,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ExtraValidators } from '../../validators/requireSelfAnd';
 import { ClaService } from '../../services/cla.service';
 import { PlatformLocation } from '@angular/common';
+import { generalConstants } from '../../constants/general';
 
 @IonicPage({
   segment: 'cla-gerrit-modal'
@@ -36,7 +37,11 @@ export class ClaGerritModal {
       this.viewCtrl.dismiss(false);
     });
     this.form = formBuilder.group({
-      gerritName: ['', Validators.compose([Validators.required])],
+      gerritName: ['', Validators.compose([
+        Validators.required,
+        Validators.pattern(new RegExp(generalConstants.GERRIT_NAME_REGEX)),
+        Validators.maxLength(99)
+      ])],
       URL: ['', Validators.compose([Validators.required])],
       groupIdIcla: [
         '',
