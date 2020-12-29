@@ -153,6 +153,10 @@ func (s *service) GetCompanyProjectCLAManagers(ctx context.Context, companyID, c
 	for _, claGroup := range claGroups {
 		var sigErr error
 		// Should only have 1 per CLA Group/Company pair
+		if claGroup.ClaGroupID == "" {
+			log.WithFields(f).Debugf("claGroupID missing for project : %s ", claGroup.ProjectSFID)
+			continue
+		}
 		sig, sigErr := s.signatureRepo.GetProjectCompanySignature(ctx, companyID, claGroup.ClaGroupID, &signed, &approved, nil, &maxLoad)
 		if sigErr != nil {
 			log.WithFields(f).Warnf("problem fetching CLA signatures, error: %+v", sigErr)
