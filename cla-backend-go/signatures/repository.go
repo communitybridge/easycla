@@ -2397,6 +2397,7 @@ func (repo repository) GetClaGroupICLASignatures(ctx context.Context, claGroupID
 				SignedOn:               signedOn,
 				UserDocusignName:       sig.UserDocusignName,
 				UserDocusignDateSigned: sig.UserDocusignDateSigned,
+				SignatureModified:      sig.DateModified,
 			})
 		}
 
@@ -2491,6 +2492,7 @@ func (repo repository) GetClaGroupCorporateContributors(ctx context.Context, cla
 				Timestamp:              sigCreatedTime,
 				UserDocusignName:       sig.UserDocusignName,
 				UserDocusignDateSigned: sig.UserDocusignDateSigned,
+				SignatureModified:      sig.DateModified,
 			})
 		}
 
