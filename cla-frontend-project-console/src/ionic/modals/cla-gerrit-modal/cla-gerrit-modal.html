@@ -27,10 +27,10 @@
             <ion-label [hidden]="!form.controls.gerritName.errors.maxlength" class="error">
               Gerrit name should not exceed 99 characters.
             </ion-label>
-            <ion-label [hidden]="!form.controls.gerritName.errors.pattern" class="error">
+            <div [hidden]="!form.controls.gerritName.errors.pattern" class="error">
               Invalid Gerrit Name - allowed characters are: starts with alphanumeric, followed by alphanumeric,
               parentheses, brackets, period, comma, plus, minus, and underscore characters
-            </ion-label>
+            </div>
           </div>
         </ion-col>
       </ion-row>
