@@ -32,4 +32,9 @@ properties:
   userDocusignDateSigned:
     type: string
     description: docusign signature date
+  signatureModified:
+    type: string
+    description: the signature modified created time
+    example: '2019-05-03T18:59:13.082304+0000'
+
 
