@@ -12,7 +12,7 @@ properties:
     example: 'ONAP'
     minLength: 1
     maxLength: 99
-    pattern: '^[\w\p{L}][\w\s\p{L}()[]\.\,+-_]$'
+    pattern: '^[\w\p{L}][\w\s\p{L}\[\]\+\-\{\}\(\)\.\,\+\-]*$'
   gerritUrl:
     description: |
       the gerrit url - must be one of the currently supported LF managed Gerrit instances:
