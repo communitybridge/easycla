@@ -10,8 +10,9 @@ properties:
     type: string
     description: the gerrit name
     example: 'ONAP'
-    minLength: 3
-    pattern: "^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$"
+    minLength: 1
+    maxLength: 99
+    pattern: '^[\w\p{L}][\w\s\p{L}()[]\.\,+-_]$'
   gerritUrl:
     description: |
       the gerrit url - must be one of the currently supported LF managed Gerrit instances:
