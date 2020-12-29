@@ -12,5 +12,6 @@ export const generalConstants = {
     easyCLAHelpURL: 'https://lf-docs-linux-foundation.gitbook.io/easycla/getting-started/easycla-faqs',
     getAccessURL: 'https://jira.linuxfoundation.org/servicedesk/customer/portal/4',
     ALLOW_ALL_LANGUAGES: /^[^*|\":<>[\]{}`\\#%!~';@&$]+$/,
+    GERRIT_NAME_REGEX: /^[a-zA-Z0-9]+(([',. +-_][a-zA-Z0-9 ])?[a-zA-Z0-9 ().[\]]*)*$/,
     CLA_GROUP_DESCRIPTION_REGEX: /^([\w\p{L}][\w\s\p{L}()\[\]\.\,+-_]*)$/,
 }

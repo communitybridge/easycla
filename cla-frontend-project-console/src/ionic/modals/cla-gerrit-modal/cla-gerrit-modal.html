@@ -23,6 +23,15 @@
             <ion-label stacked>Gerrit Instance Name</ion-label>
             <ion-input formControlName="gerritName"></ion-input>
           </ion-item>
+          <div *ngIf="form.controls.gerritName.errors">
+            <ion-label [hidden]="!form.controls.gerritName.errors.maxlength" class="error">
+              Gerrit name should not exceed 99 characters.
+            </ion-label>
+            <div [hidden]="!form.controls.gerritName.errors.pattern" class="error">
+              Invalid Gerrit Name - allowed characters are: starts with alphanumeric, followed by alphanumeric,
+              parentheses, brackets, period, comma, plus, minus, and underscore characters
+            </div>
+          </div>
         </ion-col>
       </ion-row>
       <ion-row>
