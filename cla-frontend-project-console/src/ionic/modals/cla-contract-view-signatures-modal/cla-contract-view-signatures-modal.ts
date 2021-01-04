@@ -148,7 +148,8 @@ export class ClaContractViewSignaturesModal {
         if (this.data && this.data.signatures) {
           this.columnData = this.data.signatures.map(e => ({
             ...e,
-            signatureCreated: e.signatureCreated.split('T')[0],
+            // some really old records do not have dates, so the signatureCreated will be null/undefined
+            signatureCreated: e.signatureCreatd ? e.signatureCreated.split('T')[0] : '',
             signatureReferenceType: this.getSignatureType(e),
             companyName: e.companyName ? this.trimCharacter(e.companyName, 25) : '',
             userName: e.userName ? this.trimCharacter(e.userName, 25) : '',
