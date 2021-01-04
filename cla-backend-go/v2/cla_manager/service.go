@@ -832,10 +832,22 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 			msg := fmt.Sprintf("Problem sending email to user: %s , error: %+v", userEmail, sendErr)
 			log.Warn(msg)
 		}
-		// sendErr = sendEmailToUserWithNoLFID(project.ProjectName, contributor.UserName, *contributorEmail, name, userEmail, organization.ID, &foundationSFID, "company-owner")
-		// if sendErr != nil {
-		// 	return nil, sendErr
-		// }
+
+		// Get salesforce project by FoundationID
+		log.WithFields(f).Debugf("querying project service for project details...")
+		// GetSFProject
+		ps := v2ProjectService.GetClient()
+		sfProject, projectErr := ps.GetProject(foundationSFID)
+		if projectErr != nil {
+			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Project service lookup error for SFID: %s, error : %+v",
+				projectID, projectErr)
+			log.WithFields(f).Warn(msg)
+			return nil, projectErr
+		}
+		sendErr = sendEmailToUserWithNoLFID(ctx, sfProject.Name, contributor.UserName, contributor.UserEmails[0], name, userEmail, organization.ID, &foundationSFID, utils.CLADesigneeRole)
+		if sendErr != nil {
+			return nil, sendErr
+		}
 		return nil, ErrNoLFID
 	}
 
