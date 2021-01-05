@@ -417,6 +417,7 @@ func sendRemovedClaManagerEmailToRecipient(companyModel *models.Company, claGrou
 
 	var companyManagerText = ""
 	companyManagerText += "<ul>"
+	log.Debugf("CLA Managers found: %+v", claManagers)
 
 	// Build a fancy text string with CLA Manager name <email> as an HTML unordered list
 	for _, companyAdmin := range claManagers {
@@ -425,6 +426,7 @@ func sendRemovedClaManagerEmailToRecipient(companyModel *models.Company, claGrou
 		var whichEmail = ""
 		if companyAdmin.LfEmail != "" {
 			whichEmail = companyAdmin.LfEmail
+			log.Debugf("Found email : %s ", whichEmail)
 		}
 
 		// If no LF Email try to grab the first other email in their email list
@@ -434,7 +436,7 @@ func sendRemovedClaManagerEmailToRecipient(companyModel *models.Company, claGrou
 
 		// Try getting user email from userservice
 		userClient := v2UserService.GetClient()
-		if companyAdmin.LfUsername != "" {
+		if companyAdmin.LfUsername != "" && whichEmail == "" {
 			email, emailErr := userClient.GetUserEmail(companyAdmin.LfUsername)
 			if emailErr != nil {
 				log.Warnf("unable to get user by username: %s , error: %+v ", companyAdmin.LfUsername, emailErr)
@@ -446,7 +448,9 @@ func sendRemovedClaManagerEmailToRecipient(companyModel *models.Company, claGrou
 		if whichEmail == "" {
 			log.Warnf("unable to send email to manager: %+v - no email on file...", companyAdmin)
 		} else {
-			companyManagerText += fmt.Sprintf("<li>%s <%s></li>", companyAdmin.LfUsername, whichEmail)
+			log.Warnf("Username: %s", companyAdmin.LfUsername)
+			log.Warnf("Email: %s ", whichEmail)
+			companyManagerText += fmt.Sprintf("<li>%s %s</li>", companyAdmin.LfUsername, whichEmail)
 		}
 	}
 
