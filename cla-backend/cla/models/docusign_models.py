@@ -450,10 +450,10 @@ class DocuSign(signing_service_interface.SigningService):
                           f'{user.get_user_id()} '
                           f'associated with company {company.get_company_name()} for '
                           f'project {project.get_project_name()}')
-            event_summary_data = (f'user {user.get_user_name()}/'
+            event_summary_data = (f'User {user.get_user_name()}/'
                                   f'{user.get_github_username()} '
                                   f'associated with company {company.get_company_name()} for '
-                                  f'project {project.get_project_name()}')
+                                  f'project {project.get_project_name()}.')
             Event.create_event(
                 event_type=EventType.UserAssociatedWithCompany,
                 event_company_id=company_id,
@@ -1481,8 +1481,8 @@ class DocuSign(signing_service_interface.SigningService):
                 event_data = (f'individual signature of user {user.get_user_name()} '
                               f'signed for project {project.get_project_name()}, '
                               f'params: {param_str}')
-                event_summary = (f'individual signature of user {user.get_user_name()} '
-                                 f'signed for project {project.get_project_name()}')
+                event_summary = (f'Individual signature of user {user.get_user_name()} '
+                                 f'signed for project {project.get_project_name()}.')
                 Event.create_event(
                     event_type=EventType.IndividualSignatureSigned,
                     event_project_id=project_id,
@@ -1498,10 +1498,10 @@ class DocuSign(signing_service_interface.SigningService):
                               f'and company {company.get_company_name()} '
                               f'by user {user.get_user_name()}, '
                               f'params: {param_str}')
-                event_summary = (f'corporate signature '
-                                 f'signed for project {project.get_project_name()} '
+                event_summary = (f'A corporate signature '
+                                 f'was signed for project {project.get_project_name()} '
                                  f'and company {company.get_company_name()} '
-                                 f'by user {user.get_user_name()}')
+                                 f'by user {user.get_user_name()}.')
                 Event.create_event(
                     event_type=EventType.CompanySignatureSigned,
                     event_project_id=project_id,
