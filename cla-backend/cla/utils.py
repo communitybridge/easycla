@@ -21,7 +21,7 @@ import cla
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import User, Signature, Repository, \
     Company, Project, Document, \
-    GitHubOrg, Gerrit, UserPermissions, Event, CompanyInvite, ProjectCLAGroup, CCLAWhitelistRequest
+    GitHubOrg, Gerrit, UserPermissions, Event, CompanyInvite, ProjectCLAGroup, CCLAWhitelistRequest, CLAManagerRequest
 from cla.models.event_types import EventType
 
 API_BASE_URL = os.environ.get('CLA_API_BASE', '')
@@ -102,7 +102,7 @@ def get_database_models(conf=None):
                 'Company': Company, 'Project': Project, 'Document': Document,
                 'GitHubOrg': GitHubOrg, 'Gerrit': Gerrit, 'UserPermissions': UserPermissions,
                 'Event': Event, 'CompanyInvites': CompanyInvite, 'ProjectCLAGroup': ProjectCLAGroup,
-                'CCLAWhitelistRequest': CCLAWhitelistRequest,
+                'CCLAWhitelistRequest': CCLAWhitelistRequest, 'CLAManagerRequest': CLAManagerRequest,
                 }
     else:
         raise Exception('Invalid database selection in configuration: %s' % conf['DATABASE'])
@@ -118,6 +118,18 @@ def get_user_instance(conf=None) -> User:
     :rtype: cla.models.model_interfaces.User
     """
     return get_database_models(conf)['User']()
+
+
+def get_cla_manager_requests_instance(conf=None) -> CLAManagerRequest:
+    """
+    Helper function to get a database CLAManagerRequest model instance based on CLA configuration.
+
+    :param conf: Same as get_database_models().
+    :type conf: dict
+    :return: A CLAManagerRequest model instance based on configuration specified.
+    :rtype: cla.models.model_interfaces.CLAManagerRequest
+    """
+    return get_database_models(conf)['CLAManagerRequest']()
 
 
 def get_user_permissions_instance(conf=None) -> UserPermissions:

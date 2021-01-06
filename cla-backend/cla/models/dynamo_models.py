@@ -3727,6 +3727,184 @@ class Gerrit(model_interfaces.Gerrit):  # pylint: disable=too-many-public-method
         return ret
 
 
+class CLAManagerRequests(BaseModel):
+    """
+    Represents CLA Manager Requests in the database
+    """
+
+    class Meta:
+        """
+        Meta class for CLA Manager Requests.
+        """
+        table_name = "cla-{}-cla-manager-requests".format(stage)
+        if stage == "local":
+            host = "http://localhost:8000"
+
+    request_id = UnicodeAttribute(hash_key=True)
+    company_id = UnicodeAttribute(null=True)
+    company_external_id = UnicodeAttribute(null=True)
+    company_name = UnicodeAttribute(null=True)
+    project_id = UnicodeAttribute(null=True)
+    project_external_id = UnicodeAttribute(null=True)
+    project_name = UnicodeAttribute(null=True)
+    user_id = UnicodeAttribute(null=True)
+    user_external_id = UnicodeAttribute(null=True)
+    user_name = UnicodeAttribute(null=True)
+    user_email = UnicodeAttribute(null=True)
+    status = UnicodeAttribute(null=True)
+
+
+class CLAManagerRequest(model_interfaces.CLAManagerRequest):  # pylint: disable=too-many-public-methods
+    """
+    ORM-agnostic wrapper for the DynamoDB CLAManagerRequest model.
+    """
+
+    def __init__(
+            self,
+            request_id=None,
+            company_id=None,
+            company_external_id=None,
+            company_name=None,
+            project_id=None,
+            project_external_id=None,
+            project_name=None,
+            user_id=None,
+            user_external_id=None,
+            user_name=None,
+            user_email=None,
+            status=None,
+    ):
+        super(CLAManagerRequest).__init__()
+        self.model = CLAManagerRequests()
+        self.model.request_id = request_id
+        self.model.company_id = company_id
+        self.model.company_external_id = company_external_id
+        self.model.company_name = company_name
+        self.model.project_id = project_id
+        self.model.project_external_id = project_external_id
+        self.model.project_name = project_name
+        self.model.user_id = user_id
+        self.model.user_external_id = user_external_id
+        self.model.user_name = user_name
+        self.model.user_email = user_email
+        self.model.status = status
+
+    def __str__(self):
+        return (
+            f"request_id:{self.model.request_id}, "
+            f"company_id:{self.model.company_id}, "
+            f"company_external_id:{self.model.company_external_id}, "
+            f"company_name:{self.model.company_name}, "
+            f"project_id: {self.model.project_id}, "
+            f"project_external_id: {self.model.project_external_id}, "
+            f"project_name: {self.model.project_name}, "
+            f"user_id: {self.model.user_id}, "
+            f"user_external_id: {self.model.user_external_id},"
+            f"user_name: {self.model.user_name},"
+            f"user_email: {self.model.user_email},"
+            f"status: {self.model.status}"
+        )
+
+    def to_dict(self):
+        ret = dict(self.model)
+        return ret
+
+    def load(self, request_id):
+        try:
+            cla_manager_request = self.model.get(str(request_id))
+        except CLAManagerRequests.DoesNotExist:
+            raise cla.models.DoesNotExist("CLA Manager Request Instance not found")
+        self.model = cla_manager_request
+
+    def get_request_id(self):
+        return self.model.request_id
+
+    def get_company_id(self):
+        return self.model.company_id
+
+    def get_company_external_id(self):
+        return self.model.company_external_id
+
+    def get_company_name(self):
+        return self.model.company_name
+
+    def get_project_id(self):
+        return self.model.project_id
+
+    def get_project_external_id(self):
+        return self.model.project_external_id
+
+    def get_project_name(self):
+        return self.model.project_name
+
+    def get_user_id(self):
+        return self.model.user_id
+
+    def get_user_external_id(self):
+        return self.model.user_external_id
+
+    def get_user_name(self):
+        return self.model.user_name
+
+    def get_user_email(self):
+        return self.model.user_email
+
+    def get_status(self):
+        return self.model.status
+
+    def set_request_id(self, request_id):
+        self.model.request_id = request_id
+
+    def set_company_id(self, company_id):
+        self.model.company_id = company_id
+
+    def set_company_external_id(self, company_external_id):
+        self.model.company_external_id = company_external_id
+
+    def set_company_name(self, company_name):
+        self.model.company_name = company_name
+
+    def set_project_id(self, project_id):
+        self.model.project_id = project_id
+
+    def set_project_external_id(self, project_external_id):
+        self.model.project_external_id = project_external_id
+
+    def set_project_name(self, project_name):
+        self.model.project_name = project_name
+
+    def set_user_id(self, user_id):
+        self.model.user_id = user_id
+
+    def set_user_external_id(self, user_external_id):
+        self.model.user_external_id = user_external_id
+
+    def set_user_name(self, user_name):
+        self.model.user_name = user_name
+
+    def set_user_email(self, user_email):
+        self.model.user_email = user_email
+
+    def set_status(self, status):
+        self.model.status = status
+
+    def save(self):
+        self.model.date_modified = datetime.datetime.utcnow()
+        self.model.save()
+
+    def delete(self):
+        self.model.delete()
+
+    def all(self):
+        cla_manager_requests = self.model.scan()
+        ret = []
+        for cla_manager_request in cla_manager_requests:
+            manager_request = CLAManagerRequest()
+            manager_request.model = cla_manager_request
+            ret.append(manager_request)
+        return ret
+
+
 class UserPermissionsModel(BaseModel):
     """
     Represents user permissions in the database.
@@ -3763,6 +3941,9 @@ class UserPermissions(model_interfaces.UserPermissions):  # pylint: disable=too-
         if project_id in self.model.projects:
             self.model.projects.remove(project_id)
 
+    def has_permission(self, project_id: str):
+        return project_id in self.model.projects
+
     def to_dict(self):
         ret = dict(self.model)
         return ret
@@ -3789,6 +3970,9 @@ class UserPermissions(model_interfaces.UserPermissions):  # pylint: disable=too-
             permission.model = user_permission
             ret.append(permission)
         return ret
+
+    def get_username(self):
+        return self.model.username
 
 
 class CompanyInviteModel(BaseModel):
@@ -4138,7 +4322,8 @@ class Event(model_interfaces.Event):
             event_data=None,
             event_summary=None,
             event_user_id=None,
-            contains_pii=False
+            contains_pii=False,
+            dry_run=False
     ):
         """
         Creates an event returns the newly created event in dict format.
@@ -4194,7 +4379,8 @@ class Event(model_interfaces.Event):
             event.set_event_data(event_data)
             event.set_event_date_and_contains_pii(contains_pii)
             event.set_company_id_external_project_id()
-            event.save()
+            if not dry_run:
+                event.save()
             return {"data": event.to_dict()}
 
         except Exception as err:
@@ -4224,6 +4410,7 @@ class CCLAWhitelistRequestModel(BaseModel):
     user_github_id = UnicodeAttribute(null=True)
     user_github_username = UnicodeAttribute(null=True)
     user_name = UnicodeAttribute(null=True)
+    project_external_id = UnicodeAttribute(null=True)
     company_id_project_id_index = CompanyIDProjectIDIndex()
 
 
@@ -4245,6 +4432,7 @@ class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
             user_github_id=None,
             user_github_username=None,
             user_name=None,
+            project_external_id=None,
     ):
         super(CCLAWhitelistRequest).__init__()
         self.model = CCLAWhitelistRequestModel()
@@ -4259,6 +4447,7 @@ class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
         self.model.user_github_id = user_github_id
         self.model.user_github_username = user_github_username
         self.model.user_name = user_name
+        self.model.project_external_id = project_external_id
 
     def __str__(self):
         return (
@@ -4324,6 +4513,9 @@ class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
     def get_user_name(self):
         return self.model.user_name
 
+    def get_project_external_id(self):
+        return self.model.project_external_id
+
     def set_request_id(self, request_id):
         self.model.request_id = request_id
 
@@ -4356,6 +4548,9 @@ class CCLAWhitelistRequest(model_interfaces.CCLAWhitelistRequest):
 
     def set_user_name(self, user_name):
         self.model.user_name = user_name
+
+    def set_project_external_id(self, project_external_id):
+        self.model.project_external_id = project_external_id
 
     def all(self):
         ccla_whitelist_requests = self.model.scan()
