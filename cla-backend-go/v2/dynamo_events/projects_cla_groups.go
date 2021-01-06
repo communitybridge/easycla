@@ -251,10 +251,17 @@ func (s *service) AddCLAPermissions(event events.DynamoDBEventRecord) error {
 	f["ClaGroupID"] = newProject.ClaGroupID
 	f["FoundationSFID"] = newProject.FoundationSFID
 
-	// Add any relevant CLA related permissions for this CLA Group/Project SFID
-	permErr := s.addCLAPermissions(newProject.ClaGroupID, newProject.ProjectSFID)
+	// Add any relevant CLA Manager permissions for this CLA Group/Project SFID
+	permErr := s.addCLAManagerPermissions(newProject.ClaGroupID, newProject.ProjectSFID)
 	if permErr != nil {
-		log.WithFields(f).WithError(permErr).Warn("problem removing CLA permissions for projectSFID")
+		log.WithFields(f).WithError(permErr).Warn("problem adding CLA Manager permissions for projectSFID")
+		// Ok - don't fail for now
+	}
+
+	// Add any relevant CLA Manager Designee permissions for this CLA Group/Project SFID
+	permErr = s.addCLAManagerDesigneePermissions(newProject.ClaGroupID, newProject.ProjectSFID)
+	if permErr != nil {
+		log.WithFields(f).WithError(permErr).Warn("problem adding CLA Manager Designee permissions for projectSFID")
 		// Ok - don't fail for now
 	}
 
@@ -293,15 +300,51 @@ func (s *service) RemoveCLAPermissions(event events.DynamoDBEventRecord) error {
 	return nil
 }
 
-// addCLAPermissions handles adding the CLA Group (projects table) permissions for the specified project group (foundation) and project
-func (s *service) addCLAPermissions(claGroupID, projectSFID string) error {
+func (s *service) addCLAManagerDesigneePermissions(claGroupID, projectSFID string) error {
+	//ctx := utils.NewContext()
+	f := logrus.Fields{
+		"functionName": "addCLAManagerPermissions",
+		"claGroupID":   claGroupID,
+		"projectSFID":  projectSFID,
+	}
+	log.WithFields(f).Debug("adding CLA Manager Designee permissions...")
+
+	// Signed at Foundation Use Case
+	// Lookup Foundation SFID from the ProjectSFID
+	// Determine if any users have the CLA Manager Designee Role at the Foundation Level
+	// We will get zero or more Tuples:
+	// User A => (FoundationSFID + CompanySFID A)
+	// User B => (FoundationSFID + CompanySFID A)
+	// User C => (FoundationSFID + CompanySFID B)
+	// User D => (FoundationSFID + CompanySFID D)
+	// If so, for each user, add the CLA Manager Designee role for this projectSFID
+
+	// Signed at Project Level Use Case
+	// Query the Project CLA Group Table -> find the Projects Associated with the CLA Groups (not me, others)
+	// Example, three records, two existing with CLA Manager Designee set, 1 is us, who may have been recently enrolled
+	// Project A => CLA Group A (CLA Manager Designee Assigned already)
+	// Project B => CLA Group A (CLA Manager Designee Assigned already)
+	// Project C => CLA Group A (me, just enrolled, but no CLA Manager Designee Assigned yet)
+	// Loop through the records,
+	// For each project, identify the:
+	//   User A => (ProjectSFID + CompanySFID A)
+	//   User B => (ProjectSFID + CompanySFID A)
+	//   User C => (ProjectSFID + CompanySFID B)
+	//   User D => (ProjectSFID + CompanySFID D)
+	// If so, for each user, add the CLA Manager Designee role for this projectSFID (if not already set)
+
+	return nil
+}
+
+// addCLAManagerPermissions handles adding the CLA Manager permissions for the specified SF project
+func (s *service) addCLAManagerPermissions(claGroupID, projectSFID string) error {
 	ctx := utils.NewContext()
 	f := logrus.Fields{
-		"functionName": "addCLAPermissions",
+		"functionName": "addCLAManagerPermissions",
 		"projectSFID":  projectSFID,
 		"claGroupID":   claGroupID,
 	}
-	log.WithFields(f).Debug("adding CLA permissions...")
+	log.WithFields(f).Debug("adding CLA Manager permissions...")
 
 	sigModels, err := s.signatureRepo.GetProjectSignatures(ctx, signatures.GetProjectSignaturesParams{
 		ClaType:   aws.String(utils.ClaTypeCCLA),
