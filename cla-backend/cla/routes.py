@@ -1356,7 +1356,7 @@ def post_corporate_signed(body, project_id: hug.types.uuid, company_id: hug.type
     return cla.controllers.signing.post_corporate_signed(content, str(project_id), str(company_id))
 
 
-@hug.get("/return-url/{signature_id}", versions=2)
+@hug.get("/return-url/{signature_id}", versions=2, output=hug.output_format.html)
 def get_return_url(response: Response, signature_id: hug.types.uuid, event=None):
     """
     GET: /return-url/{signature_id}
