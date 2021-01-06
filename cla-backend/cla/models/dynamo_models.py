@@ -1986,6 +1986,7 @@ class Repository(model_interfaces.Repository):
             repository_organization_name=None,
             repository_external_id=None,
             repository_sfdc_id=None,
+            note=None,
     ):
         super(Repository).__init__()
         self.model = RepositoryModel()
@@ -1998,6 +1999,7 @@ class Repository(model_interfaces.Repository):
         self.model.repository_url = repository_url
         self.model.repository_organization_name = repository_organization_name
         self.model.repository_external_id = repository_external_id
+        self.model.note = note
 
     def to_dict(self):
         return dict(self.model)
@@ -2013,12 +2015,20 @@ class Repository(model_interfaces.Repository):
             raise cla.models.DoesNotExist("Repository not found")
         self.model = repo
 
-    def get_repository_by_project_sfid(self, project_sfid):
+    def get_repository_models_by_project_sfid(self, project_sfid) -> List[Repository]:
         repository_generator = self.model.project_sfid_repository_index.query(project_sfid)
         repositories = []
         for repository_model in repository_generator:
             repository = Repository()
-            cla.log.debug(f'repo_model: {repository.to_dict()}')
+            repository.model = repository_model
+            repositories.append(repository)
+        return repositories
+
+    def get_repository_by_project_sfid(self, project_sfid) -> List[dict]:
+        repository_generator = self.model.project_sfid_repository_index.query(project_sfid)
+        repositories = []
+        for repository_model in repository_generator:
+            repository = Repository()
             repository.model = repository_model
             repositories.append(repository.to_dict())
         return repositories
@@ -3406,6 +3416,7 @@ class GitHubOrgModel(BaseModel):
     organization_company_id = UnicodeAttribute(null=True)
     auto_enabled = BooleanAttribute(null=True)
     branch_protection_enabled = BooleanAttribute(null=True)
+    note = UnicodeAttribute(null=True)
 
 
 class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-methods
@@ -3415,7 +3426,7 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
 
     def __init__(
             self, organization_name=None, organization_installation_id=None, organization_sfid=None,
-            auto_enabled=False, branch_protection_enabled=False,
+            auto_enabled=False, branch_protection_enabled=False, note=None,
     ):
         super(GitHubOrg).__init__()
         self.model = GitHubOrgModel()
@@ -3426,6 +3437,7 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
         self.model.organization_sfid = organization_sfid
         self.model.auto_enabled = auto_enabled
         self.model.branch_protection_enabled = branch_protection_enabled
+        self.model.note = note
 
     def __str__(self):
         return (
@@ -3435,7 +3447,8 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
             f'organization project id: {self.model.organization_project_id}, '
             f'organization company id: {self.model.organization_company_id}, '
             f'auto_enabled: {self.model.auto_enabled},'
-            f'branch_protection_enabled: {self.model.branch_protection_enabled}'
+            f'branch_protection_enabled: {self.model.branch_protection_enabled},'
+            f'note: {self.model.note}'
         )
 
     def to_dict(self):
@@ -3481,6 +3494,14 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
     def get_branch_protection_enabled(self):
         return self.model.branch_protection_enabled
 
+    def get_note(self):
+        """
+        Getter for the note.
+        :return: the note value for the github organization record
+        :rtype: str
+        """
+        return self.model.note
+
     def set_organization_name(self, organization_name):
         self.model.organization_name = organization_name
         if self.model.organization_name:
@@ -3506,6 +3527,9 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
 
     def set_branch_protection_enabled(self, branch_protection_enabled):
         self.model.branch_protection_enabled = branch_protection_enabled
+
+    def set_note(self, note):
+        self.model.note = note
 
     def get_organization_by_sfid(self, sfid):
         organization_generator = self.model.organization_sfid_index.query(sfid)
