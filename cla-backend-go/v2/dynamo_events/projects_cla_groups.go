@@ -303,7 +303,7 @@ func (s *service) RemoveCLAPermissions(event events.DynamoDBEventRecord) error {
 func (s *service) addCLAManagerDesigneePermissions(claGroupID, foundationSFID, projectSFID string) error {
 	ctx := utils.NewContext()
 	f := logrus.Fields{
-		"functionName": "addCLAManagerPermissions",
+		"functionName": "addCLAManagerDesigneePermissions",
 		"claGroupID":   claGroupID,
 		"projectSFID":  projectSFID,
 	}
