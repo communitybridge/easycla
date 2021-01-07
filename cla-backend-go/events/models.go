@@ -5,6 +5,9 @@ package events
 
 import "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 
+//IndividualSignedEvent represntative of ICLA signatures
+const IndividualSignedEvent = "IndividualSignatureSigned"
+
 // Event data model
 type Event struct {
 	EventID                string `dynamodbav:"event_id"`
@@ -46,9 +49,7 @@ type DBUser struct {
 }
 
 func (e *Event) toEvent() *models.Event { //nolint
-	return &models.Event{
-		EventCompanyID:         e.EventCompanyID,
-		EventCompanyName:       e.EventCompanyName,
+	event := &models.Event{
 		EventData:              e.EventData,
 		EventSummary:           e.EventSummary,
 		EventID:                e.EventID,
@@ -66,6 +67,13 @@ func (e *Event) toEvent() *models.Event { //nolint
 		EventProjectSFName:     e.EventSFProjectName,
 		EventCompanySFID:       e.EventCompanySFID,
 	}
+	// Disregard Company details for ICLA event
+	if event.EventType != IndividualSignedEvent {
+		event.EventCompanyID = e.EventCompanyID
+		event.EventCompanyName = e.EventCompanyName
+	}
+
+	return event
 }
 
 // DBProjectModel data model
