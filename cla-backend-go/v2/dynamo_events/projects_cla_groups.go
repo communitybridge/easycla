@@ -259,7 +259,7 @@ func (s *service) AddCLAPermissions(event events.DynamoDBEventRecord) error {
 	}
 
 	// Add any relevant CLA Manager Designee permissions for this CLA Group/Project SFID
-	permErr = s.addCLAManagerDesigneePermissions(newProject.ClaGroupID, newProject.ProjectSFID)
+	permErr = s.addCLAManagerDesigneePermissions(newProject.ClaGroupID, newProject.FoundationSFID, newProject.ProjectSFID)
 	if permErr != nil {
 		log.WithFields(f).WithError(permErr).Warn("problem adding CLA Manager Designee permissions for projectSFID")
 		// Ok - don't fail for now
@@ -300,38 +300,94 @@ func (s *service) RemoveCLAPermissions(event events.DynamoDBEventRecord) error {
 	return nil
 }
 
-func (s *service) addCLAManagerDesigneePermissions(claGroupID, projectSFID string) error {
-	//ctx := utils.NewContext()
+func (s *service) addCLAManagerDesigneePermissions(claGroupID, foundationSFID, projectSFID string) error {
+	ctx := utils.NewContext()
 	f := logrus.Fields{
 		"functionName": "addCLAManagerPermissions",
 		"claGroupID":   claGroupID,
 		"projectSFID":  projectSFID,
 	}
+
+	//handle userscopes per project(users with Designee role)
+	var userScopes []acs_service.UserScope
+
 	log.WithFields(f).Debug("adding CLA Manager Designee permissions...")
+	// Check if signed at Foundation
+	signedAtFoundationLevel, signedErr := s.projectService.SignedAtFoundationLevel(ctx, claGroupID)
+	if signedErr != nil {
+		log.WithFields(f).Warnf("Problem getting level of CLA Group Signature for CLAGroup: %s ", claGroupID)
+		return signedErr
+	}
+	orgClient := organization_service.GetClient()
+	acsClient := acs_service.GetClient()
 
-	// Signed at Foundation Use Case
-	// Lookup Foundation SFID from the ProjectSFID
-	// Determine if any users have the CLA Manager Designee Role at the Foundation Level
-	// We will get zero or more Tuples:
-	// User A => (FoundationSFID + CompanySFID A)
-	// User B => (FoundationSFID + CompanySFID A)
-	// User C => (FoundationSFID + CompanySFID B)
-	// User D => (FoundationSFID + CompanySFID D)
-	// If so, for each user, add the CLA Manager Designee role for this projectSFID
+	log.WithFields(f).Debugf("locating role ID for role: %s", utils.CLADesigneeRole)
+	claManagerDesigneeRoleID, roleErr := acsClient.GetRoleID(utils.CLADesigneeRole)
+	if roleErr != nil {
+		log.WithFields(f).Warnf("problem looking up details for role: %s, error: %+v", utils.CLADesigneeRole, roleErr)
+		return roleErr
+	}
 
-	// Signed at Project Level Use Case
-	// Query the Project CLA Group Table -> find the Projects Associated with the CLA Groups (not me, others)
-	// Example, three records, two existing with CLA Manager Designee set, 1 is us, who may have been recently enrolled
-	// Project A => CLA Group A (CLA Manager Designee Assigned already)
-	// Project B => CLA Group A (CLA Manager Designee Assigned already)
-	// Project C => CLA Group A (me, just enrolled, but no CLA Manager Designee Assigned yet)
-	// Loop through the records,
-	// For each project, identify the:
-	//   User A => (ProjectSFID + CompanySFID A)
-	//   User B => (ProjectSFID + CompanySFID A)
-	//   User C => (ProjectSFID + CompanySFID B)
-	//   User D => (ProjectSFID + CompanySFID D)
-	// If so, for each user, add the CLA Manager Designee role for this projectSFID (if not already set)
+	if signedAtFoundationLevel {
+		// Determine if any users have the CLA Manager Designee Role at the Foundation Level
+		log.WithFields(f).Debugf("Getting users with role: %s for foundationSFID: %s  ", utils.CLADesigneeRole, foundationSFID)
+		foundationUserScopes, err := acsClient.GetProjectRoleUsersScopes(foundationSFID, utils.CLADesigneeRole)
+		if err != nil {
+			log.WithFields(f).Warnf("problem getting userscopes for foundationSFID: %s and role: %s ", foundationSFID, utils.CLADesigneeRole)
+			return err
+		}
+		//Tabulating userscopes for new ProjectSFID assignment
+		userScopes = append(userScopes, foundationUserScopes...)
+
+	} else {
+		// Signed at Project level Use case
+		pcgs, err := s.projectsClaGroupRepo.GetProjectsIdsForClaGroup(claGroupID)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warnf("problem getting project cla Groups for claGroupID: %s", claGroupID)
+			return err
+		}
+		log.WithFields(f).Debugf("Found mappings records: %+v for claGroup: %s ", pcgs, claGroupID)
+		for _, pcg := range pcgs {
+			//ignore newly added project
+			if pcg.ProjectSFID == projectSFID {
+				continue
+			}
+			projectUserScopes, err := acsClient.GetProjectRoleUsersScopes(pcg.ProjectSFID, utils.CLADesigneeRole)
+			if err != nil {
+				log.WithFields(f).Warnf("problem getting userscopes for projectSFID: %s ", pcg.ProjectSFID)
+				return err
+			}
+			//Tabulating userscopes for new ProjectSFID assignment
+			userScopes = append(userScopes, projectUserScopes...)
+		}
+	}
+
+	if len(userScopes) > 0 {
+		log.WithFields(f).Debugf("Identified users: %+v to be updated with role: %s for project : %s ", userScopes, utils.CLADesigneeRole, projectSFID)
+		// If so, for each user, add the CLA Manager Designee role for this projectSFID
+		var wg sync.WaitGroup
+		wg.Add(len(userScopes))
+
+		for _, userScope := range userScopes {
+			go func(userScope acs_service.UserScope) {
+				defer wg.Done()
+
+				orgID := strings.Split(userScope.ObjectID, "|")[1]
+				email := userScope.Email
+
+				roleErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(email, projectSFID, orgID, claManagerDesigneeRoleID)
+				if roleErr != nil {
+					log.WithFields(f).WithError(roleErr).Warnf("%s, role assignment for user %s failed for this project: %s, company: %s ",
+						utils.CLADesigneeRole, email, projectSFID, orgID)
+					return
+				}
+			}(userScope)
+		}
+
+		// Wait for the goroutines to finish
+		log.WithFields(f).Debugf("waiting for role:%s  assignment to complete for project: %s ", utils.CLADesigneeRole, projectSFID)
+		wg.Wait()
+	}
 
 	return nil
 }
