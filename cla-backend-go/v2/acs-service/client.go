@@ -398,9 +398,8 @@ func (ac *Client) GetProjectRoleUsersScopes(projectSFID, roleName string) ([]Use
 
 	log.WithFields(f).Debugf("Get objectRoleList with objectTypeID: %s ", strconv.Itoa(objectTypeID))
 	params := &object_type.GetObjectTypeRoleListParams{
-		ID:       strconv.Itoa(objectTypeID),
-		Objectid: &projectSFID,
-		Context:  context.Background(),
+		ID:      strconv.Itoa(objectTypeID),
+		Context: context.Background(),
 	}
 
 	response, err := ac.cl.ObjectType.GetObjectTypeRoleList(params, clientAuth)
@@ -414,11 +413,17 @@ func (ac *Client) GetProjectRoleUsersScopes(projectSFID, roleName string) ([]Use
 			if role.Name == roleName {
 				for _, scope := range role.Scopes {
 					log.WithFields(f).Debugf("Identified user: %s , role: %s , objectID: %s", objectScope.User.Username, role.Name, scope.ObjectID)
-					userScopes = append(userScopes, UserScope{
-						Username: objectScope.User.Username,
-						Email:    objectScope.User.Email,
-						ObjectID: scope.ObjectID,
-					})
+					// Consider project org scope
+					if scope.ObjectID == utils.ProjectOrgScope {
+						if strings.Split(scope.ObjectID, "|")[0] == projectSFID {
+							log.WithFields(f).Debugf("Project: %s found in scope: %s ", projectSFID, scope.ObjectID)
+							userScopes = append(userScopes, UserScope{
+								Username: objectScope.User.Username,
+								Email:    objectScope.User.Email,
+								ObjectID: scope.ObjectID,
+							})
+						}
+					}
 				}
 			}
 		}
