@@ -268,16 +268,16 @@ func (s service) sendRequestEmailToRecipient(companyModel *models.Company, claGr
 	body := fmt.Sprintf(`
 <p>Hello %s,</p>
 <p>This is a notification email from EasyCLA regarding the project %s.</p>
-<p>%s (%s) has requested to be added to the Allow List as an authorized contributor from
+<p>%s (%s) has requested to be added to the Approved List as an authorized contributor from
 %s to the project %s. You are receiving this message as a CLA Manager from %s for
 %s.</p>
 %s
-<p>If you want to add them to the Allow List, please
+<p>If you want to add them to the Approved List, please
 <a href="https://%s#/company/%s" target="_blank">log into the EasyCLA Corporate
 Console</a>, where you can approve this user's request by selecting the 'Manage Approved List' and adding the
 contributor's email, the contributor's entire email domain, their GitHub ID or the entire GitHub Organization for the
 repository. This will permit them to begin contributing to %s on behalf of %s.</p>
-<p>If you are not certain whether to add them to the Allow List, please reach out to them directly to discuss.</p>
+<p>If you are not certain whether to add them to the Approved List, please reach out to them directly to discuss.</p>
 %s
 %s`,
 		recipientName, projectName, contributorName, contributorEmail,
