@@ -366,3 +366,63 @@ func (ac *Client) RemoveCLAUserRolesByProjectOrganization(projectSFID, organizat
 
 	return nil
 }
+
+//UserScope entity representative of project and org for given role scope
+type UserScope struct {
+	Username string
+	Email    string
+	ObjectID string
+}
+
+// GetProjectRoleUsersScopes gets list of users with given role
+func (ac *Client) GetProjectRoleUsersScopes(projectSFID, roleName string) ([]UserScope, error) {
+	f := logrus.Fields{
+		"functionName": "GetProjectRoleUsersScopes",
+		"projectSFID":  projectSFID,
+		"roleName":     roleName,
+	}
+	var userScopes []UserScope
+	tok, err := token.GetToken()
+	if err != nil {
+		log.WithFields(f).Warnf("problem obtaining token, error: %+v", err)
+		return nil, err
+	}
+
+	objectTypeID, err := ac.GetObjectTypeIDByName(utils.ProjectOrgScope)
+	if err != nil {
+		log.WithFields(f).Warnf("problem getting objectType ID for objectName :%s ", utils.ProjectOrgScope)
+		return nil, err
+	}
+	log.WithFields(f).Debugf("Found objectID : %s for objectName: %s ", strconv.Itoa(objectTypeID), utils.ProjectOrgScope)
+	clientAuth := runtimeClient.BearerToken(tok)
+
+	log.WithFields(f).Debugf("Get objectRoleList with objectTypeID: %s ", strconv.Itoa(objectTypeID))
+	params := &object_type.GetObjectTypeRoleListParams{
+		ID:       strconv.Itoa(objectTypeID),
+		Objectid: &projectSFID,
+		Context:  context.Background(),
+	}
+
+	response, err := ac.cl.ObjectType.GetObjectTypeRoleList(params, clientAuth)
+	if err != nil {
+		log.WithFields(f).Warnf("problem getting objectTypeRoleList for objectID: %s ", strconv.Itoa(objectTypeID))
+		return nil, err
+	}
+
+	for _, objectScope := range response.Payload.Data {
+		for _, role := range objectScope.Roles {
+			if role.Name == roleName {
+				for _, scope := range role.Scopes {
+					log.WithFields(f).Debugf("Identified user: %s , role: %s , objectID: %s", objectScope.User.Username, role.Name, scope.ObjectID)
+					userScopes = append(userScopes, UserScope{
+						Username: objectScope.User.Username,
+						Email:    objectScope.User.Email,
+						ObjectID: scope.ObjectID,
+					})
+				}
+			}
+		}
+	}
+
+	return userScopes, nil
+}
