@@ -1838,11 +1838,17 @@ def populate_signature_from_icla_callback(content: str, icla_tree: ET, signature
         signature.set_user_docusign_date_signed(user_docusign_date_signed)
 
     full_name_field = icla_tree.find(".//*[@name='full_name']")
-    full_name = full_name_field.find(DocuSign.TAGS['field_value'])
-    if full_name is not None:
-        full_name = full_name.text
-        cla.log.debug(f"setting user_docusign_name attribute : {full_name}")
-        signature.set_user_docusign_name(full_name)
+    # If full_name not found, try looking for the signatory_name
+    if full_name_field is None:
+        full_name_field = icla_tree.find(".//*[@name='signatory_name']")
+
+    # If we found it...
+    if full_name_field is not None:
+        full_name = full_name_field.find(DocuSign.TAGS['field_value'])
+        if full_name is not None:
+            full_name = full_name.text
+            cla.log.debug(f"setting user_docusign_name attribute : {full_name}")
+            signature.set_user_docusign_name(full_name)
 
     # seems the content could be bytes
     if hasattr(content, "decode"):
