@@ -309,11 +309,11 @@ func (s *service) addCLAManagerDesigneePermissions(claGroupID, foundationSFID, p
 	}
 
 	//handle userscopes per project(users with Designee role)
-	var userScopes []acs_service.UserScope
+	userScopes := make([]acs_service.UserScope, 0)
 
 	log.WithFields(f).Debug("adding CLA Manager Designee permissions...")
 	// Check if signed at Foundation
-	signedAtFoundationLevel, signedErr := s.projectService.SignedAtFoundationLevel(ctx, claGroupID)
+	signedAtFoundationLevel, signedErr := s.projectService.SignedAtFoundationLevel(ctx, foundationSFID)
 	if signedErr != nil {
 		log.WithFields(f).Warnf("Problem getting level of CLA Group Signature for CLAGroup: %s ", claGroupID)
 		return signedErr
@@ -338,6 +338,7 @@ func (s *service) addCLAManagerDesigneePermissions(claGroupID, foundationSFID, p
 		}
 		//Tabulating userscopes for new ProjectSFID assignment
 		userScopes = append(userScopes, foundationUserScopes...)
+		log.WithFields(f).Debugf("Found userscopes: %+v for foundationSFID: %s ", userScopes, foundationSFID)
 
 	} else {
 		// Signed at Project level Use case
@@ -346,7 +347,6 @@ func (s *service) addCLAManagerDesigneePermissions(claGroupID, foundationSFID, p
 			log.WithFields(f).WithError(err).Warnf("problem getting project cla Groups for claGroupID: %s", claGroupID)
 			return err
 		}
-		log.WithFields(f).Debugf("Found mappings records: %+v for claGroup: %s ", pcgs, claGroupID)
 		for _, pcg := range pcgs {
 			//ignore newly added project
 			if pcg.ProjectSFID == projectSFID {
@@ -359,7 +359,9 @@ func (s *service) addCLAManagerDesigneePermissions(claGroupID, foundationSFID, p
 			}
 			//Tabulating userscopes for new ProjectSFID assignment
 			userScopes = append(userScopes, projectUserScopes...)
+			log.WithFields(f).Debugf("Found userscopes : %+v for project: %s ", userScopes, pcg.ProjectSFID)
 		}
+
 	}
 
 	if len(userScopes) > 0 {

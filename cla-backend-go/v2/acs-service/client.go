@@ -413,6 +413,7 @@ func (ac *Client) GetProjectRoleUsersScopes(projectSFID, roleName string) ([]Use
 			if role.Name == roleName {
 				for _, scope := range role.Scopes {
 					log.WithFields(f).Debugf("Identified user: %s , role: %s , objectID: %s", objectScope.User.Username, role.Name, scope.ObjectID)
+					log.WithFields(f).Debugf("Checking objectID: %s against projectSFID: %s", scope.ObjectID, projectSFID)
 					if strings.Split(scope.ObjectID, "|")[0] == projectSFID {
 						log.WithFields(f).Debugf("Project: %s found in scope: %s ", projectSFID, scope.ObjectID)
 						userScopes = append(userScopes, UserScope{
