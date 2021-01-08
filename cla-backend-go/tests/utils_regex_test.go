@@ -62,6 +62,11 @@ func TestValidWebsite(t *testing.T) {
 		"Augnewcompanynirupamav.io",
 		"Augnewcompanynirupamav.edu",
 		"Augnewcompanynirupamav.in",
+		"http://www.my-domain.com",
+		"http://www-2.my-domain.com",
+		"https://www.my-domain.com",
+		"https://www-2.my-domain.com",
+		"https://www-2.test.my-domain.com",
 	}
 
 	for _, str := range validInput {
