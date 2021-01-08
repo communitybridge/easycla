@@ -23,6 +23,26 @@ type RepositoryDisabledEventData struct {
 	RepositoryName string
 }
 
+// RepositoryUpdatedEventData . . .
+type RepositoryUpdatedEventData struct {
+	RepositoryName string
+}
+
+// RepositoryBranchProtectionAddedEventData . . .
+type RepositoryBranchProtectionAddedEventData struct {
+	RepositoryName string
+}
+
+// RepositoryBranchProtectionDisabledEventData . . .
+type RepositoryBranchProtectionDisabledEventData struct {
+	RepositoryName string
+}
+
+// RepositoryBranchProtectionUpdatedEventData . . .
+type RepositoryBranchProtectionUpdatedEventData struct {
+	RepositoryName string
+}
+
 // GerritProjectDeletedEventData . . .
 type GerritProjectDeletedEventData struct {
 	DeletedCount int
@@ -326,13 +346,37 @@ type ClaManagerRoleDeletedData struct {
 
 // GetEventDetailsString . . .
 func (ed *RepositoryAddedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("The GitHub repository: %s was added to the Project %s by the user %s.", ed.RepositoryName, args.projectName, args.userName)
+	data := fmt.Sprintf("The GitHub repository: %s was added for the project %s by the user %s.", ed.RepositoryName, args.projectName, args.userName)
 	return data, true
 }
 
 // GetEventDetailsString . . .
 func (ed *RepositoryDisabledEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
-	data := fmt.Sprintf("The GitHub repository %s was deleted from the project %s by the user %s.", ed.RepositoryName, args.projectName, args.userName)
+	data := fmt.Sprintf("The GitHub repository %s was deleted for the project %s by the user %s.", ed.RepositoryName, args.projectName, args.userName)
+	return data, true
+}
+
+// GetEventDetailsString . . .
+func (ed *RepositoryUpdatedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("The GitHub repository %s was updated for the project %s by the user %s.", ed.RepositoryName, args.projectName, args.userName)
+	return data, true
+}
+
+// GetEventDetailsString . . .
+func (ed *RepositoryBranchProtectionAddedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("The GitHub repository branch protection %s was added for the project %s by the user %s.", ed.RepositoryName, args.projectName, args.userName)
+	return data, true
+}
+
+// GetEventDetailsString . . .
+func (ed *RepositoryBranchProtectionDisabledEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("The GitHub repository branch protection %s was disabled for the project %s by the user %s.", ed.RepositoryName, args.projectName, args.userName)
+	return data, true
+}
+
+// GetEventDetailsString . . .
+func (ed *RepositoryBranchProtectionUpdatedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("The GitHub repository branch protection %s was updated for the project %s by the user %s.", ed.RepositoryName, args.projectName, args.userName)
 	return data, true
 }
 
@@ -680,6 +724,30 @@ func (ed *RepositoryAddedEventData) GetEventSummaryString(args *LogEventArgs) (s
 // GetEventSummaryString . . .
 func (ed *RepositoryDisabledEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
 	data := fmt.Sprintf("GitHub Repository: %s was deleted from Project: %s by: %s.", ed.RepositoryName, args.projectName, args.userName)
+	return data, true
+}
+
+// GetEventSummaryString . . .
+func (ed *RepositoryUpdatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("GitHub Repository: %s was updated for the project project: %s by: %s.", ed.RepositoryName, args.projectName, args.userName)
+	return data, true
+}
+
+// GetEventDetailsString . . .
+func (ed *RepositoryBranchProtectionAddedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("The GitHub repository branch protection %s was added for the project %s by the user %s.", ed.RepositoryName, args.projectName, args.userName)
+	return data, true
+}
+
+// GetEventDetailsString . . .
+func (ed *RepositoryBranchProtectionDisabledEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("The GitHub repository branch protection %s was disabled for the project %s by the user %s.", ed.RepositoryName, args.projectName, args.userName)
+	return data, true
+}
+
+// GetEventDetailsString . . .
+func (ed *RepositoryBranchProtectionUpdatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+	data := fmt.Sprintf("The GitHub repository branch protection %s was updated for the project %s by the user %s.", ed.RepositoryName, args.projectName, args.userName)
 	return data, true
 }
 
