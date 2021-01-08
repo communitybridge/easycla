@@ -304,6 +304,26 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 					utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
 			}
 
+			repoModel, repoErr := service.GetRepository(ctx, params.RepositoryID)
+			if repoErr != nil {
+				msg := fmt.Sprintf("problem fetching the repository for projectSFID: %s, with repository: %s, error: %+v", params.ProjectSFID, params.RepositoryID, err)
+				log.WithFields(f).WithError(repoErr).Warning(msg)
+				return github_repositories.NewGetProjectGithubRepositoryBranchProtectionBadRequest().WithPayload(
+					utils.ErrorResponseInternalServerErrorWithError(reqID, msg, err))
+			}
+
+			// We could extract the parameter values from the branch protection payload to determine if it was added/remove or simply updated
+			// For now, let's just set the updated event log
+			eventService.LogEvent(&events.LogEventArgs{
+				EventType:         events.RepositoryBranchProtectionUpdated,
+				ExternalProjectID: params.ProjectSFID,
+				ProjectID:         params.ProjectSFID,
+				LfUsername:        authUser.UserName,
+				EventData: &events.RepositoryBranchProtectionUpdatedEventData{
+					RepositoryName: repoModel.RepositoryName,
+				},
+			})
+
 			return github_repositories.NewGetProjectGithubRepositoryBranchProtectionOK().WithPayload(protectedBranch)
 		})
 }

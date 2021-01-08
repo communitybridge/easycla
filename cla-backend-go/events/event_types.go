@@ -36,8 +36,12 @@ const (
 	UserUpdated        = "user.updated"
 	UserDeleted        = "user.deleted"
 
-	RepositoryAdded    = "repository.added"
-	RepositoryDisabled = "repository.disabled"
+	RepositoryAdded                    = "repository.added"
+	RepositoryDisabled                 = "repository.disabled"
+	RepositoryUpdated                  = "repository.updated"
+	RepositoryBranchProtectionAdded    = "repository.branchprotection.updated"
+	RepositoryBranchProtectionDisabled = "repository.branchprotection.updated"
+	RepositoryBranchProtectionUpdated  = "repository.branchprotection.updated"
 
 	GerritRepositoryAdded   = "gerrit_repository.added"
 	GerritRepositoryDeleted = "gerrit_repository.deleted"
