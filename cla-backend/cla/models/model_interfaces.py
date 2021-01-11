@@ -1871,6 +1871,52 @@ class GitHubOrg(object):
         raise NotImplementedError()
 
 
+class CLAManagerRequest(object):
+    """
+    Interface to the CLAManagerRequest model.
+    """
+
+    def to_dict(self):
+        """
+        Converts models to dictionaries for JSON serialization.
+
+        :return: A dict representation of the model.
+        :rtype: dict
+        """
+        raise NotImplementedError()
+
+    def save(self):
+        """
+        Simple abstraction around the supported ORMs to save a model.
+        """
+        raise NotImplementedError()
+
+    def load(self, request_id):
+        """
+        Simple abstraction around the supported ORMs to load a model.
+        Should populate the current object.
+
+        :param request_id: The Request ID.
+        :type request_id: string
+        """
+        raise NotImplementedError()
+
+    def delete(self):
+        """
+        Simple abstraction around the supported ORMs to delete a model.
+        """
+        raise NotImplementedError()
+
+    def all(self):
+        """
+        Fetches all CLAManagerRequest instances in the CLA system.
+
+        :return: A list of CLAManagerRequest Instance objects.
+        :rtype: [cla.models.model_interfaces.CLAManagerRequest]
+        """
+        raise NotImplementedError()
+
+
 class Gerrit(object):
     """
     Interface to the Gerrit model.

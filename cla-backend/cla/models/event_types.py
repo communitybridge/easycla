@@ -3,6 +3,7 @@
 
 from enum import Enum
 
+
 class EventType(Enum):
     """
     Enumeraters representing type of CLA events
@@ -15,10 +16,11 @@ class EventType(Enum):
     CreateProject = "Create Project"
     UpdateProject = "Update Project"
     DeleteProject = "Delete Project"
+    MigrateProjectSFID = "Migrate Project SFID"
     CreateCompany = "Create Company"
     DeleteCompany = "Delete Company"
     UpdateCompany = "Update Company"
-    CreateProjectDocument= "Create Project Document"
+    CreateProjectDocument = "Create Project Document"
     CreateProjectDocumentTemplate = "Create Project Document with Template"
     DeleteProjectDocument = "Delete Project Document"
     AddPermission = "Add Permission"
@@ -47,4 +49,3 @@ class EventType(Enum):
     RepositoryRemoved = "Repository Removed"
     RepositoryDisable = "Repository Disabled"
     RepositoryEnabled = "Repository Enabled"
-
