@@ -4685,6 +4685,13 @@ definitions:
         type: string
         example: 'https://cla-signature-files-dev.s3.amazonaws.com/contract-group/b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f/template/ccla.pdf'
         x-omitempty: false
+      setup_completion_pct:
+        description: the CLA Group setup complete percentage, values range from 0-100 inclusive
+        type: integer
+        minimum: 0
+        maximum: 100
+        example: 100
+        x-omitempty: false
 
   cla-group-project:
     type: object

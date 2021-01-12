@@ -3531,7 +3531,7 @@ class GitHubOrg(model_interfaces.GitHubOrg):  # pylint: disable=too-many-public-
     def set_note(self, note):
         self.model.note = note
 
-    def get_organization_by_sfid(self, sfid):
+    def get_organization_by_sfid(self, sfid) -> List:
         organization_generator = self.model.organization_sfid_index.query(sfid)
         organizations = []
         for org_model in organization_generator:
