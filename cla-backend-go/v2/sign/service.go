@@ -352,7 +352,7 @@ func removeSignatoryRole(userEmail string, companySFID string, projectSFID strin
 
 func prepareUserForSigning(userEmail string, companySFID, projectSFID string) error {
 	var ErrNotInOrg error
-	role := "cla-signatory"
+	role := utils.CLASignatoryRole
 	f := logrus.Fields{"user_email": userEmail, "company_sfid": companySFID, "project_sfid": projectSFID}
 	log.WithFields(f).Debug("prepareUserForSigning called")
 	usc := userService.GetClient()
@@ -364,16 +364,7 @@ func prepareUserForSigning(userEmail string, companySFID, projectSFID string) er
 		log.Debugf("User with email : %s does not have an LF login", userEmail)
 		return nil
 	}
-	log.WithFields(f).Debugf("user type is %s", user.Type)
-	if user.Type == "lead" {
-		// convert user to contact
-		log.WithFields(f).Debug("converting lead to contact")
-		err = usc.ConvertToContact(user.ID)
-		if err != nil {
-			log.WithFields(f).Errorf("converting lead to contact failed: %v", err)
-			return err
-		}
-	}
+
 	ac := acsService.GetClient()
 	log.WithFields(f).Debugf("getting role_id for %s", role)
 	roleID, err := ac.GetRoleID(role)
@@ -394,8 +385,11 @@ func prepareUserForSigning(userEmail string, companySFID, projectSFID string) er
 			ErrNotInOrg = fmt.Errorf("user: %s already associated with some organization", user.Username)
 			return ErrNotInOrg
 		}
-		log.WithFields(f).Errorf("assigning user role of %s failed: %v", role, err)
-		return err
+		if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); !ok {
+			log.WithFields(f).Errorf("assigning user role of %s failed: %v", role, err)
+			return err
+		}
+
 	}
 	return nil
 }
