@@ -152,6 +152,8 @@ jobs:
           command: |
             cd cla-backend
             yarn install
+            echo "Upgrading pip..."
+            python3 -m pip install --upgrade pip
             sudo pip install -r requirements.txt
       - run:
           name: lint
@@ -215,6 +217,8 @@ jobs:
             sudo apt install -y software-properties-common
             sudo add-apt-repository ppa:deadsnakes/ppa -y
             sudo apt-get install -y python3.7 python3-pip
+            echo "Upgrading pip..."
+            python3 -m pip install --upgrade pip
             echo "Python 3 version:"
             python3 --version
             make -f cla-backend-go/Makefile setup-dev
