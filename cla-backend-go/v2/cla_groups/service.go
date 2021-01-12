@@ -489,6 +489,13 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 			log.WithFields(f).WithError(docErr).Warn("problem determining current CCLA for this CLA Group")
 		}
 
+		// Well, if we have a CLA Group definition, let's say we're 80% done.
+		setupPct := 80
+		// If we have a CLA Group setup and have at least one repository assigned to the CLA Group...then we're done
+		if v1ClaGroup.RootProjectRepositoriesCount > 0 {
+			setupPct = 100
+		}
+
 		cg := &models.ClaGroupSummary{
 			CclaEnabled:         v1ClaGroup.ProjectCCLAEnabled,
 			CclaRequiresIcla:    v1ClaGroup.ProjectCCLARequiresICLA,
@@ -503,6 +510,7 @@ func (s *service) ListClaGroupsForFoundationOrProject(ctx context.Context, proje
 			// Add root_project_repositories_count to repositories_count initially
 			RepositoriesCount:            v1ClaGroup.RootProjectRepositoriesCount,
 			RootProjectRepositoriesCount: v1ClaGroup.RootProjectRepositoriesCount,
+			SetupCompletionPct:           utils.Int64(int64(setupPct)),
 		}
 
 		// How many SF projects are associated with this CLA Group?
