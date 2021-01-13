@@ -11,6 +11,7 @@ func buildCompanyProjection() expression.ProjectionBuilder {
 	return expression.NamesList(
 		expression.Name("company_id"),
 		expression.Name("company_name"),
+		expression.Name("signing_entity_name"),
 		expression.Name("company_acl"),
 		expression.Name("company_external_id"),
 		expression.Name("company_manager_id"),

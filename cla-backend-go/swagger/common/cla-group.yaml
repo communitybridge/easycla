@@ -8,19 +8,16 @@ description: CLA Group data model
 properties:
   projectID:
     description: the CLA Group internal ID
-    example: 'b1e86e26-d8c8-4fd8-9f8d-5c723d5dac9f'
-    type: string
+    $ref: './common/properties/internal-id.yaml'
   foundationSFID:
     description: the foundation sfid of the CLA Group
-    example: 'a09410000182dD2AAI'
-    type: string
+    $ref: './common/properties/external-id.yaml'
   rootProjectRepositoriesCount:
     description: number of repositories configured from root CLA Group
     type: integer
   projectExternalID:
-    description: the CLA Group external ID (used by v1)
-    example: 'a09410000182dD2AAI'
-    type: string
+    description: a SalesForce project external ID
+    $ref: './common/properties/external-id.yaml'
   projectName:
     $ref: './common/properties/cla-group-name.yaml'
   projectDescription:

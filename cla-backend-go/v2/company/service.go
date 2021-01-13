@@ -89,7 +89,7 @@ type Service interface {
 	GetCompanyProjectActiveCLAs(ctx context.Context, companyID string, projectSFID string) (*models.ActiveClaList, error)
 	GetCompanyProjectContributors(ctx context.Context, projectSFID string, companySFID string, searchTerm string) (*models.CorporateContributorList, error)
 	GetCompanyProjectCLA(ctx context.Context, authUser *auth.User, companySFID, projectSFID string) (*models.CompanyProjectClaList, error)
-	CreateCompany(ctx context.Context, companyName string, companyWebsite string, userEmail string, userID string) (*models.CompanyOutput, error)
+	CreateCompany(ctx context.Context, companyName, signingEntityName, companyWebsite, userEmail, userID string) (*models.CompanyOutput, error)
 	GetCompanyByName(ctx context.Context, companyName string) (*models.Company, error)
 	GetCompanyByID(ctx context.Context, companyID string) (*models.Company, error)
 	GetCompanyBySFID(ctx context.Context, companySFID string) (*models.Company, error)
@@ -356,21 +356,22 @@ func (s *service) GetCompanyProjectContributors(ctx context.Context, projectSFID
 	}, nil
 }
 
-func (s *service) CreateCompany(ctx context.Context, companyName string, companyWebsite string, userEmail string, userID string) (*models.CompanyOutput, error) {
+func (s *service) CreateCompany(ctx context.Context, companyName, signingEntityName, companyWebsite, userEmail, userID string) (*models.CompanyOutput, error) {
 	f := logrus.Fields{
-		"functionName":   "CreateCompany",
-		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-		"companyName":    companyName,
-		"companyWebsite": companyWebsite,
-		"userEmail":      userEmail,
-		"userID":         userID,
+		"functionName":      "CreateCompany",
+		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
+		"companyName":       companyName,
+		"signingEntityName": signingEntityName,
+		"companyWebsite":    companyWebsite,
+		"userEmail":         userEmail,
+		"userID":            userID,
 	}
 	var lfUser *v2UserServiceModels.User
 
-	// Create Sales Force company
+	// Create SalesForce company
 	orgClient := orgService.GetClient()
-	log.WithFields(f).Debugf("Creating Organization : %s Website: %s", companyName, companyWebsite)
-	org, err := orgClient.CreateOrg(companyName, companyWebsite)
+	log.WithFields(f).Debugf("Creating Organization: %s, Signing Entity Name: %s, Website: %s", companyName, signingEntityName, companyWebsite)
+	org, err := orgClient.CreateOrg(companyName, signingEntityName, companyWebsite)
 	if err != nil {
 		log.WithFields(f).Warnf("unable to create platform organization service, error: %+v", err)
 		return nil, err
@@ -403,6 +404,7 @@ func (s *service) CreateCompany(ctx context.Context, companyName string, company
 		if scopeErr != nil {
 			msg := fmt.Sprintf("Problem creating Org scope for email: %s , companyID: %s", userEmail, org.ID)
 			log.WithFields(f).Warn(msg)
+			// Ignore conflict - role has already been assigned - otherwise, return error
 			if !strings.Contains(scopeErr.Error(), OrgAssociated) {
 				return nil, scopeErr
 			}
@@ -422,6 +424,7 @@ func (s *service) CreateCompany(ctx context.Context, companyName string, company
 		CompanyExternalID: org.ID,
 		CompanyManagerID:  userID,
 		CompanyName:       companyName,
+		SigningEntityName: signingEntityName,
 	}
 
 	_, createErr := s.companyRepo.CreateCompany(ctx, createCompanyModel)
@@ -433,10 +436,11 @@ func (s *service) CreateCompany(ctx context.Context, companyName string, company
 	}
 
 	return &models.CompanyOutput{
-		CompanyName:    org.Name,
-		CompanyWebsite: companyWebsite,
-		LogoURL:        org.LogoURL,
-		CompanyID:      org.ID,
+		CompanyName:       org.Name,
+		SigningEntityName: signingEntityName,
+		CompanyWebsite:    companyWebsite,
+		LogoURL:           org.LogoURL,
+		CompanyID:         org.ID,
 	}, nil
 }
 

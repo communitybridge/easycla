@@ -1154,7 +1154,7 @@ class Company(object):  # pylint: disable=too-many-public-methods
     Interface to the Company model.
     """
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """
         Converts models to dictionaries for JSON serialization.
 
@@ -1163,13 +1163,13 @@ class Company(object):  # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def save(self):
+    def save(self) -> None:
         """
         Simple abstraction around the supported ORMs to save a model.
         """
         raise NotImplementedError()
 
-    def load(self, company_id):
+    def load(self, company_id) -> None:
         """
         Simple abstraction around the supported ORMs to load a model.
         Populates the current object.
@@ -1179,13 +1179,13 @@ class Company(object):  # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def delete(self):
+    def delete(self) -> None:
         """
         Simple abstraction around the supported ORMs to delete a model.
         """
         raise NotImplementedError()
 
-    def get_company_id(self):
+    def get_company_id(self) -> str:
         """
         Getter for an company's ID.
 
@@ -1194,7 +1194,7 @@ class Company(object):  # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_company_external_id(self):
+    def get_company_external_id(self) -> str:
         """
         Getter for an company's External ID.
 
@@ -1203,7 +1203,7 @@ class Company(object):  # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_company_manager_id(self):
+    def get_company_manager_id(self) -> str:
         """
         Getter for the company's CLA manager user ID.
 
@@ -1212,7 +1212,7 @@ class Company(object):  # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_company_name(self):
+    def get_company_name(self) -> str:
         """
         Getter for an company's name.
 
@@ -1221,7 +1221,17 @@ class Company(object):  # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def get_company_signatures(self, project_id=None, signature_signed=None, signature_approved=None):
+    def get_signing_entity_name(self) -> str:
+        """
+        Getter for an company's signing entity name.
+
+        :return: The company's signing entity name.
+        :rtype: string
+        """
+        raise NotImplementedError()
+
+    def get_company_signatures(self, project_id: str = None, signature_signed: bool = None,
+                               signature_approved: bool = None):
         """
         Simple abstraction around the supported ORMs to fetch signatures for
         an company.
@@ -1238,7 +1248,7 @@ class Company(object):  # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def set_company_id(self, company_id):
+    def set_company_id(self, company_id: str) -> None:
         """
         Setter for an company ID.
 
@@ -1247,7 +1257,7 @@ class Company(object):  # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def set_company_external_id(self, company_external_id):
+    def set_company_external_id(self, company_external_id: str) -> None:
         """
         Setter for an company External ID.
 
@@ -1256,7 +1266,7 @@ class Company(object):  # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def set_company_manager_id(self, company_manager_id):
+    def set_company_manager_id(self, company_manager_id: str) -> None:
         """
         Setter for the company manager ID.
 
@@ -1265,12 +1275,21 @@ class Company(object):  # pylint: disable=too-many-public-methods
         """
         raise NotImplementedError()
 
-    def set_company_name(self, company_name):
+    def set_company_name(self, company_name: str) -> None:
         """
         Setter for an company's name.
 
         :param company_name: The name of the company.
         :type company_name: string
+        """
+        raise NotImplementedError()
+
+    def set_signing_entity_name(self, signing_entity_name: str) -> None:
+        """
+        Setter for an company's name.
+
+        :param signing_entity_name: The name of the company's signing entity name.
+        :type signing_entity_name: string
         """
         raise NotImplementedError()
 
@@ -1321,7 +1340,7 @@ class Company(object):  # pylint: disable=too-many-public-methods
         Adds another entry in the list of whitelistd patterns.
         Does not query the DB - save() will take care of that.
 
-        :param whitelist_pattern: A regex string to add to the exluded patterns of this company.
+        :param whitelist_pattern: A regex string to add to the excluded patterns of this company.
         :type whitelist_pattern: string
         """
         raise NotImplementedError()

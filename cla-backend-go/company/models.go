@@ -14,6 +14,7 @@ import (
 type DBModel struct {
 	CompanyID         string   `dynamodbav:"company_id" json:"company_id"`
 	CompanyName       string   `dynamodbav:"company_name" json:"company_name"`
+	SigningEntityName string   `dynamodbav:"signing_entity_name" json:"signing_entity_name"`
 	CompanyACL        []string `dynamodbav:"company_acl" json:"company_acl"`
 	CompanyExternalID string   `dynamodbav:"company_external_id" json:"company_external_id"`
 	CompanyManagerID  string   `dynamodbav:"company_manager_id" json:"company_manager_id"`
@@ -92,11 +93,16 @@ func toSwaggerModel(dbCompanyModel *DBModel) (*models.Company, error) {
 		return nil, err
 	}
 
+	if dbCompanyModel.SigningEntityName == "" {
+		dbCompanyModel.SigningEntityName = dbCompanyModel.CompanyName
+	}
+
 	// Convert the local DB model to a public swagger model
 	return &models.Company{
 		CompanyACL:        dbCompanyModel.CompanyACL,
 		CompanyID:         dbCompanyModel.CompanyID,
 		CompanyName:       dbCompanyModel.CompanyName,
+		SigningEntityName: dbCompanyModel.SigningEntityName,
 		CompanyExternalID: dbCompanyModel.CompanyExternalID,
 		CompanyManagerID:  dbCompanyModel.CompanyManagerID,
 		Created:           strfmt.DateTime(createdDateTime),

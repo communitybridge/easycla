@@ -20,6 +20,9 @@ func TestValidCompanyName(t *testing.T) {
 		"sdfsdfsdfááÀÁ(test)[test]0343+_7343-9(@)/the world",
 		"ááÀÁ test",
 		"世界",
+		"?ááÀÁ test",
+		"!valid name",
+		".test",
 	}
 
 	for _, str := range validInput {
@@ -35,11 +38,9 @@ func TestValidCompanyName(t *testing.T) {
 
 	// Invalid company names
 	inValidInput := []string{
-		"+invalid name",
-		"%invalid name",
-		"!invalid name",
-		".test",
-		"?ááÀÁ test",
+		"<html>",
+		"<p>test</p>",
+		"<javascript src=\"harold.js\"/>",
 		"",  // min 2 chars
 		"1", // min 2 chars
 		longString,

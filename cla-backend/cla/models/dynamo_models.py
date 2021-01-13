@@ -348,6 +348,24 @@ class CompanyNameIndex(GlobalSecondaryIndex):
     company_name = UnicodeAttribute(hash_key=True)
 
 
+class SigningEntityNameIndex(GlobalSecondaryIndex):
+    """
+    This class represents a global secondary index for querying companies by the signing entity name.
+    """
+
+    class Meta:
+        """Meta class for company name index."""
+
+        index_name = "company-signing-entity-name-index"
+        write_capacity_units = int(cla.conf["DYNAMO_WRITE_UNITS"])
+        read_capacity_units = int(cla.conf["DYNAMO_READ_UNITS"])
+        # All attributes are projected - not sure if this is necessary.
+        projection = AllProjection()
+
+    # This attribute is the hash key for the index.
+    signing_entity_name = UnicodeAttribute(hash_key=True)
+
+
 class ExternalCompanyIndex(GlobalSecondaryIndex):
     """
     This class represents a global secondary index for querying companies by external ID.
@@ -3132,8 +3150,10 @@ class CompanyModel(BaseModel):
     company_id = UnicodeAttribute(hash_key=True)
     company_external_id = UnicodeAttribute(null=True)
     company_manager_id = UnicodeAttribute(null=True)
-    company_name = UnicodeAttribute()
+    company_name = UnicodeAttribute()  # parent
+    signing_entity_name = UnicodeAttribute()  # also the parent name or could be alternative name
     company_name_index = CompanyNameIndex()
+    signing_entity_name_index = SigningEntityNameIndex()
     company_external_id_index = ExternalCompanyIndex()
     company_acl = UnicodeSetAttribute(default=set())
 
@@ -3149,6 +3169,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
             company_external_id=None,
             company_manager_id=None,
             company_name=None,
+            signing_entity_name=None,
             company_acl=None,
     ):
         super(Company).__init__()
@@ -3157,32 +3178,37 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         self.model.company_external_id = company_external_id
         self.model.company_manager_id = company_manager_id
         self.model.company_name = company_name
+        if signing_entity_name:
+            self.model.signing_entity_name = signing_entity_name
+        else:
+            self.model.signing_entity_name = company_name
         self.model.company_acl = company_acl
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"id:{self.model.company_id}, "
             f"name: {self.model.company_name}, "
+            f"signing_entity_name: {self.model.signing_entity_name}, "
             f"external id: {self.model.company_external_id}, "
             f"manager id: {self.model.company_manager_id}, "
             f"acl: {self.model.company_acl}"
         )
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return dict(self.model)
 
-    def save(self):
+    def save(self) -> None:
         self.model.date_modified = datetime.datetime.utcnow()
         self.model.save()
 
-    def load(self, company_id):
+    def load(self, company_id: str) -> None:
         try:
             company = self.model.get(str(company_id))
         except CompanyModel.DoesNotExist:
             raise cla.models.DoesNotExist("Company not found")
         self.model = company
 
-    def load_company_by_name(self, company_name):
+    def load_company_by_name(self, company_name: str) -> Optional[DoesNotExist]:
         try:
             company_generator = self.model.company_name_index.query(company_name)
             for company_model in company_generator:
@@ -3193,58 +3219,63 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         except CompanyModel.DoesNotExist:
             raise cla.models.DoesNotExist(f'Company with name {company_name} not found')
 
-    def delete(self):
+    def delete(self) -> None:
         self.model.delete()
 
-    def get_company_id(self):
+    def get_company_id(self) -> str:
         return self.model.company_id
 
-    def get_company_external_id(self):
+    def get_company_external_id(self) -> str:
         return self.model.company_external_id
 
-    def get_company_manager_id(self):
+    def get_company_manager_id(self) -> str:
         return self.model.company_manager_id
 
-    def get_company_name(self):
+    def get_company_name(self) -> str:
         return self.model.company_name
 
-    def get_company_acl(self):
+    def get_signing_entity_name(self) -> str:
+        return self.model.signing_entity_name
+
+    def get_company_acl(self) -> Optional[List[str]]:
         return self.model.company_acl
 
-    def set_company_id(self, company_id):
+    def set_company_id(self, company_id: str) -> None:
         self.model.company_id = company_id
 
-    def set_company_external_id(self, company_external_id):
+    def set_company_external_id(self, company_external_id: str) -> None:
         self.model.company_external_id = company_external_id
 
-    def set_company_manager_id(self, company_manager_id):
+    def set_company_manager_id(self, company_manager_id: str) -> None:
         self.model.company_manager_id = company_manager_id
 
-    def set_company_name(self, company_name):
+    def set_company_name(self, company_name: str) -> None:
         self.model.company_name = str(company_name)
 
-    def set_company_acl(self, company_acl_username):
+    def set_signing_entity_name(self, signing_entity_name: str) -> None:
+        self.model.signing_entity_name = signing_entity_name
+
+    def set_company_acl(self, company_acl_username: str) -> None:
         self.model.company_acl = set([company_acl_username])
 
-    def set_date_modified(self):
+    def set_date_modified(self) -> None:
         """
         Updates the company modified date/time to the current time.
         """
         self.model.date_modified = datetime.datetime.now()
 
-    def add_company_acl(self, username):
+    def add_company_acl(self, username: str) -> None:
         self.model.company_acl.add(username)
 
-    def remove_company_acl(self, username):
+    def remove_company_acl(self, username: str) -> None:
         if username in self.model.company_acl:
             self.model.company_acl.remove(username)
 
-    def get_managers(self):
+    def get_managers(self) -> List[User]:
         return self.get_managers_by_company_acl(self.get_company_acl())
 
-    def get_company_signatures(
-            self, project_id=None, signature_signed=None, signature_approved=None,  # pylint: disable=arguments-differ
-    ):
+    def get_company_signatures(self, project_id: str = None, signature_signed: bool = None,
+                               signature_approved: bool = None) -> Optional[List[Signature]]:
         return Signature().get_signatures_by_reference(
             self.get_company_id(),
             "company",
@@ -3253,7 +3284,8 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
             signature_signed=signature_signed,
         )
 
-    def get_latest_signature(self, project_id, signature_signed=None, signature_approved=None) -> Optional[Signature]:
+    def get_latest_signature(self, project_id: str, signature_signed: bool = None,
+                             signature_approved: bool = None) -> Optional[Signature]:
         """
         Helper function to get a company's latest signature for a project.
 
@@ -3282,7 +3314,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
 
         return latest
 
-    def get_company_by_id(self, company_id):
+    def get_company_by_id(self, company_id: str):
         companies = self.model.scan()
         for company in companies:
             org = Company()
@@ -3291,7 +3323,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
                 return org
         return None
 
-    def get_company_by_external_id(self, company_external_id):
+    def get_company_by_external_id(self, company_external_id: str):
         company_generator = self.model.company_external_id_index.query(company_external_id)
         for company_model in company_generator:
             company = Company()
@@ -3299,7 +3331,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
             return company
         return None
 
-    def all(self, ids=None):
+    def all(self, ids: List[str] = None):
         if ids is None:
             companies = self.model.scan()
         else:
@@ -3311,7 +3343,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
             ret.append(org)
         return ret
 
-    def get_companies_by_manager(self, manager_id):
+    def get_companies_by_manager(self, manager_id: str):
         company_generator = self.model.scan(company_manager_id__eq=str(manager_id))
         companies = []
         for company_model in company_generator:
@@ -3321,7 +3353,7 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         companies_dict = [company_model.to_dict() for company_model in companies]
         return companies_dict
 
-    def get_managers_by_company_acl(self, company_acl):
+    def get_managers_by_company_acl(self, company_acl: List[str]) -> Optional[List[User]]:
         managers = []
         user_model = User()
         for username in company_acl:
