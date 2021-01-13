@@ -4,11 +4,14 @@
 type: object
 properties:
   organization_id:
-    type: string
     description: salesforce id of the organization
+    $ref: './common/properties/external-id.yaml'
   organization_name:
-    type: string
-    description: name of the organization
+    $ref: './common/properties/company-name.yaml'
+  signing_entity_names:
+    type: array
+    items:
+      $ref: './common/properties/company-signing-entity-name.yaml'
   organization_website:
     $ref: './common/properties/website.yaml'
     description: website of the organization
