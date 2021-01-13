@@ -578,18 +578,6 @@ var templateMap = map[string]models.Template{
 				OffsetY:      -7,
 			},
 			{
-				ID:           "signing_entity_name",
-				Name:         "Legal Entity Name",
-				AnchorString: "Legal Entity Name:",
-				FieldType:    "text",
-				IsOptional:   false,
-				IsEditable:   true,
-				Width:        355,
-				Height:       20,
-				OffsetX:      120,
-				OffsetY:      -5,
-			},
-			{
 				ID:           "signatory_name",
 				Name:         "Signatory Name",
 				AnchorString: "Signatory Name:",
@@ -757,7 +745,6 @@ var templateMap = map[string]models.Template{
 		<p style="page-break-after: always; text-align: center">[Please complete and sign on the next page.]</p>
 
 		<p>Please sign: __________________________________ Date: _______________ </p>
-		<p>Legal Entity Name: ______________________________________________________</p>
 		<p>Signatory Name: ______________________________________________________</p>
 		<p>Signatory E-mail: ____________________________________________________</p>
 		<p>Signatory Title: _____________________________________________________</p>
@@ -914,18 +901,6 @@ var templateMap = map[string]models.Template{
 				Height:       0,
 				OffsetX:      40,
 				OffsetY:      -7,
-			},
-			{
-				ID:           "signing_entity_name",
-				Name:         "Legal Entity Name",
-				AnchorString: "Legal Entity Name:",
-				FieldType:    "text",
-				IsOptional:   false,
-				IsEditable:   true,
-				Width:        355,
-				Height:       20,
-				OffsetX:      120,
-				OffsetY:      -5,
 			},
 			{
 				ID:           "signatory_name",
@@ -1095,7 +1070,6 @@ var templateMap = map[string]models.Template{
 		<p style="page-break-after: always; text-align: center">[Please complete and sign on the next page.]</p>
 
 		<p>Please sign: __________________________________ Date: _______________ </p>
-		<p>Legal Entity Name: ______________________________________________________</p>
 		<p>Signatory Name: ______________________________________________________</p>
 		<p>Signatory E-mail: ____________________________________________________</p>
 		<p>Signatory Title: _____________________________________________________</p>

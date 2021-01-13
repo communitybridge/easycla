@@ -3,8 +3,9 @@
 
 import xml.etree.ElementTree as ET
 
-from cla.models.docusign_models import populate_signature_from_ccla_callback, populate_signature_from_icla_callback
-from cla.models.dynamo_models import Signature
+from cla.models.docusign_models import populate_signature_from_ccla_callback, populate_signature_from_icla_callback, \
+    create_default_company_values
+from cla.models.dynamo_models import Signature, Company
 
 content_icla_agreement_date = """<?xml version="1.0" encoding="utf-8"?>
 <DocuSignEnvelopeInformation xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -746,3 +747,50 @@ def test_populate_signature_missing_agreement_date():
     assert signature.get_user_docusign_name() == "Example FullName"
     assert signature.get_user_docusign_date_signed() == signed_date
     assert signature.get_user_docusign_raw_xml() == content_icla_agreement_date
+
+
+def test_create_default_company_values():
+    company = Company(
+        company_name="Google",
+    )
+
+    values = create_default_company_values(
+        company=company,
+        signatory_name="Signatory1",
+        signatory_email="signatory@example.com",
+        manager_name="Manager1",
+        manager_email="manager@example.com",
+        schedule_a="Schedule"
+    )
+
+    assert "corporation_name" in values
+    assert "corporation" in values
+
+    company = Company(
+        company_name="Google",
+        signing_entity_name="Google1"
+    )
+
+    values = create_default_company_values(
+        company=company,
+        signatory_name="Signatory1",
+        signatory_email="signatory@example.com",
+        manager_name="Manager1",
+        manager_email="manager@example.com",
+        schedule_a="Schedule"
+    )
+
+    assert "corporation_name" in values
+    assert "corporation" in values
+
+    values = create_default_company_values(
+        company=None,
+        signatory_name="Signatory1",
+        signatory_email="signatory@example.com",
+        manager_name="Manager1",
+        manager_email="manager@example.com",
+        schedule_a="Schedule"
+    )
+
+    assert "corporation_name" not in values
+    assert "corporation" not in values

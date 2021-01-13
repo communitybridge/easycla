@@ -2225,6 +2225,7 @@ class SignatureModel(BaseModel):  # pylint: disable=too-many-instance-attributes
     # Signed on date/time
     signed_on = UnicodeAttribute(null=True)
     signatory_name = UnicodeAttribute(null=True)
+    signing_entity_name = UnicodeAttribute(null=True)
     # Encoded string for searching
     # eg: icla#true#true#123abd-sadf0-458a-adba-a9393939393
     sigtype_signed_approved_id = UnicodeAttribute(null=True)
@@ -2288,6 +2289,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             signature_approved=False,
             signed_on=None,
             signatory_name=None,
+            signing_entity_name=None,
             sigtype_signed_approved_id=None,
             signature_sign_url=None,
             signature_return_url=None,
@@ -2331,6 +2333,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         self.model.signature_signed = signature_signed
         self.model.signed_on = signed_on
         self.model.signatory_name = signatory_name
+        self.model.signing_entity_name = signing_entity_name
         self.model.sigtype_signed_approved_id = sigtype_signed_approved_id
         self.model.signature_approved = signature_approved
         self.model.signature_sign_url = signature_sign_url
@@ -2363,7 +2366,8 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
         return (
             "id: {}, project id: {}, reference id: {}, reference name: {}, reference name lower: {}, "
             "reference type: {}, "
-            "user cla company id: {}, signed: {}, signed_on: {}, signatory_name: {}, sigtype_signed_approved_id: {}, "
+            "user cla company id: {}, signed: {}, signed_on: {}, signatory_name: {}, signing entity name: {},"
+            "sigtype_signed_approved_id: {}, "
             "approved: {}, domain whitelist: {}, "
             "email whitelist: {}, github user whitelist: {}, github domain whitelist: {}, "
             "note: {},signature project external id: {}, signature company signatory id: {}, "
@@ -2383,6 +2387,7 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             self.model.signature_signed,
             self.model.signed_on,
             self.model.signatory_name,
+            self.model.signing_entity_name,
             self.model.sigtype_signed_approved_id,
             self.model.signature_approved,
             self.model.domain_whitelist,
@@ -2460,6 +2465,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def get_signatory_name(self):
         return self.model.signatory_name
+
+    def get_signing_entity_name(self):
+        return self.model.signing_entity_name
 
     def get_sigtype_signed_approved_id(self):
         return self.model.sigtype_signed_approved_id
@@ -2587,6 +2595,9 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
 
     def set_signatory_name(self, signatory_name):
         self.model.signatory_name = signatory_name
+
+    def set_signing_entity_name(self, signing_entity_name):
+        self.model.signing_entity_name = signing_entity_name
 
     def set_sigtype_signed_approved_id(self, sigtype_signed_approved_id):
         self.model.sigtype_signed_approved_id = sigtype_signed_approved_id
@@ -3235,6 +3246,8 @@ class Company(model_interfaces.Company):  # pylint: disable=too-many-public-meth
         return self.model.company_name
 
     def get_signing_entity_name(self) -> str:
+        if self.model.signing_entity_name is None:
+            return self.model.company_name
         return self.model.signing_entity_name
 
     def get_company_acl(self) -> Optional[List[str]]:

@@ -740,6 +740,7 @@ class DocuSign(signing_service_interface.SigningService):
                                   signature_reference_name=company.get_company_name(),
                                   signature_type='ccla',
                                   signatory_name=signatory_name,
+                                  signing_entity_name=company.get_signing_entity_name(),
                                   signature_signed=False,
                                   signature_approved=True)
 
@@ -771,9 +772,11 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.debug(f'Saved the signature {signature} - response mode: {response_model}')
         return response_model
 
-    def request_corporate_signature(self, auth_user, project_id, company_id, send_as_email=False,
-                                    signatory_name=None, signatory_email=None, return_url_type=None,
-                                    return_url=None):
+    def request_corporate_signature(self, auth_user: object, project_id: object, company_id: object,
+                                    send_as_email: object = False,
+                                    signatory_name: object = None, signatory_email: object = None,
+                                    return_url_type: object = None,
+                                    return_url: object = None) -> object:
 
         cla.log.debug('Request corporate signature - '
                       f'project id: {project_id}, '
@@ -1133,7 +1136,7 @@ class DocuSign(signing_service_interface.SigningService):
             # Max length for emailSubject is 100 characters - guard/truncate if necessary
             email_subject = f'EasyCLA: CLA Signature Request for {project.get_project_name()}'
             email_subject = (email_subject[:97] + '...') if len(email_subject) > 100 else email_subject
-            #Update Signed for label according to signature_type (company or name)
+            # Update Signed for label according to signature_type (company or name)
             if sig_type == 'company':
                 user_identifier = company.get_company_name()
             else:
@@ -1900,9 +1903,13 @@ def create_default_company_values(company: Company,
                                   schedule_a: str) -> Dict[str, Any]:
     values = {}
 
-    if company is not None and company.get_company_name() is not None:
-        values['corporation_name'] = company.get_company_name()
-        values['corporation'] = company.get_company_name()
+    if company is not None:
+        if company.get_company_name() is not None:
+            values['corporation'] = company.get_company_name()
+        if company.get_signing_entity_name() is not None:
+            values['corporation_name'] = company.get_signing_entity_name()
+        else:
+            values['corporation_name'] = company.get_company_name()
 
     if signatory_name is not None:
         values['signatory_name'] = signatory_name
