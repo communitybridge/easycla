@@ -28,8 +28,8 @@ produces:
 paths:
   /ops/version:
     get:
-      summary: API Version Information
-      description: Returns the API version of the product
+      summary: Returns the application version information
+      description: Returns the version of the product
       security: [ ]
       operationId: getVersion
       responses:
@@ -42,8 +42,8 @@ paths:
 
   /ops/health:
     get:
-      summary: API Health Check
-      description: Returns the API health status
+      summary: Returns the Health of the application
+      description: Returns the health status
       security: [ ]
       operationId: healthCheck
       parameters:
@@ -73,7 +73,7 @@ paths:
   /api-docs:
     get:
       security: [ ]
-      summary: API documentation
+      summary: API Documentation
       description: Endpoint to render the API documentation
       operationId: getDoc
       produces:
@@ -87,7 +87,7 @@ paths:
   /swagger.json:
     get:
       security: [ ]
-      summary: Swagger API as JSON
+      summary: Swagger specification as JSON
       description: Returns the Swagger specification as a JSON document
       operationId: getSwagger
       produces:
@@ -189,7 +189,7 @@ paths:
 
   /metrics/top-companies:
     get:
-      summary: company metrics of top companies
+      summary: Get topi company metrics
       description: Returns list company metrics of top companies
       operationId: getTopCompanies
       parameters:
@@ -217,7 +217,7 @@ paths:
 
   /metrics/top-projects:
     get:
-      summary: project metrics of top projects
+      summary: Get project metrics of the top projects
       description: Returns list project metrics of top projects
       operationId: getTopProjects
       parameters:
@@ -284,7 +284,7 @@ paths:
 
   /metrics/project:
     get:
-      summary: list metrics of project
+      summary: List the metrics for the projects
       description: Returns list of project metrics
       operationId: listProjectMetrics
       parameters:
@@ -314,7 +314,7 @@ paths:
 
   /metrics/company/{companySFID}/project/{projectSFID}:
     get:
-      summary: list project metrics of company
+      summary: List project metrics for a company
       description: Returns list of project metrics for company
       operationId: listCompanyProjectMetrics
       parameters:
@@ -347,8 +347,8 @@ paths:
   # Cla group Service
   /cla-group:
     post:
-      summary: Create an EasyCLA CLA Group
-      description: Creates a new CLA Group within the EasyCLA system.
+      summary: Creates a new CLA Group
+      description: Creates a new CLA Group
       operationId: createClaGroup
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -385,8 +385,8 @@ paths:
 
   /cla-group/{claGroupID}:
     put:
-      summary: Update an EasyCLA CLA Group
-      description: Update CLA Group within the EasyCLA system.
+      summary: Updates a CLA Group
+      description: Updates CLA Group
       operationId: updateClaGroup
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -420,8 +420,8 @@ paths:
       tags:
         - cla-group
     delete:
-      summary: Delete an EasyCLA CLA Group
-      description: Delete CLA Group within the EasyCLA system.
+      summary: Deletes a CLA Group
+      description: Deletes a CLA Group
       operationId: deleteClaGroup
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -451,8 +451,8 @@ paths:
 
   /cla-group/{claGroupID}/enroll-projects:
     put:
-      summary: Enroll projects in an EasyCLA CLA Group
-      description: Enroll projects in  CLA Group
+      summary: Enroll projects in a CLA Group
+      description: Enroll projects in a CLA Group
       operationId: enrollProjects
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -486,8 +486,8 @@ paths:
 
   /cla-group/{claGroupID}/unenroll-projects:
     put:
-      summary: Unenroll projects in an EasyCLA CLA Group
-      description: Unenroll projects in  CLA Group
+      summary: Unenroll projects in a CLA Group
+      description: Unenroll projects in a CLA Group
       operationId: unenrollProjects
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -552,8 +552,8 @@ paths:
 
   /foundation-mapping:
     get:
-      summary: return cla groups under all foundation
-      description: Return list of all cla groups under foundation
+      summary: Get CLA Groups under a foundation
+      description: Return list of all CLA Groups under foundation
       operationId: listFoundationClaGroups
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -963,7 +963,7 @@ paths:
 
   /events/foundation/{foundationSFID}:
     get:
-      summary: get the events for the foundation
+      summary: Get the events for the foundation
       description: get all the events for the foundation
       operationId: getFoundationEvents
       parameters:
@@ -1000,7 +1000,7 @@ paths:
 
   /events/project/{projectSFID}:
     get:
-      summary: get the events for the project
+      summary: Get the events for the project
       description: get all the events for the project
       operationId: getProjectEvents
       parameters:
@@ -1070,7 +1070,7 @@ paths:
 
   /company/{companySFID}/project/{projectSFID}/events:
     get:
-      summary: return recent events of company and project
+      summary: Get recent events of company and project
       description: Returns list of events of company and project
       operationId: getCompanyProjectEvents
       parameters:
@@ -1109,7 +1109,7 @@ paths:
 
   /template:
     get:
-      summary: Get Available Templates
+      summary: Get templates
       description: Endpoint to return the list of available templates
       operationId: getTemplates
       parameters:
@@ -1260,7 +1260,7 @@ paths:
 
   /project/{projectSFID}/github/organizations:
     post:
-      summary: API to add new GitHub Oranization in the project
+      summary: Add new GitHub Oranization in the project
       description: Endpoint to create the template preview for the CLA Group
       operationId: addProjectGithubOrganization
       parameters:
@@ -1297,7 +1297,7 @@ paths:
       tags:
         - github-organizations
     get:
-      summary: API to fetch the GitHub oranizations of the project
+      summary: Get the GitHub oranizations of the project
       description: Endpoint to return the list of GitHub organization for the project
       operationId: getProjectGithubOrganizations
       parameters:
@@ -1374,7 +1374,7 @@ paths:
 
   /project/{projectSFID}/github/organizations/{orgName}:
     delete:
-      summary: API to delete GitHub oranization in the project
+      summary: Delete GitHub oranization in the project
       description: Endpoint to delete the GitHub organization for the project
       operationId: deleteProjectGithubOrganization
       parameters:
@@ -1410,7 +1410,7 @@ paths:
 
   /project/{projectSFID}/github/repositories:
     post:
-      summary: API to add the GitHub repository
+      summary: Add a GitHub repository to the project
       description: Endpoint to add a GitHub repository for the project
       operationId: addProjectGithubRepository
       parameters:
@@ -1447,7 +1447,7 @@ paths:
       tags:
         - github-repositories
     get:
-      summary: API to fetch the gitHub repositories of the project
+      summary: Get the GitHub repositories of the project
       description: Endpoint to fetch the list of GitHub repositories for the project
       operationId: getProjectGithubRepositories
       parameters:
@@ -1483,7 +1483,7 @@ paths:
 
   /project/{projectSFID}/github/repositories/{repositoryID}:
     delete:
-      summary: API to remove the GitHub repository from the project
+      summary: Remove the GitHub repository from the project
       description: Endpoint to remove a GitHub repository from a project
       operationId: deleteProjectGithubRepository
       parameters:
@@ -1519,7 +1519,7 @@ paths:
 
   /project/{projectSFID}/github/repositories/{repositoryID}/branch-protection:
     post:
-      summary: API to manage github branch protection for given repository
+      summary: Update github branch protection for given repository
       description: Endpoint to set branch protection options for the given branch, defaults to repository's default branch
       operationId: updateProjectGithubRepositoryBranchProtection
       parameters:
@@ -1563,7 +1563,7 @@ paths:
         - github-repositories
 
     get:
-      summary: API to manage github branch protection for given repository
+      summary: Get GitHub branch protection for given repository
       description: Endpoint to get branch protection options for the given branch, defaults to repository's default branch
       operationId: getProjectGithubRepositoryBranchProtection
       parameters:
@@ -2879,7 +2879,7 @@ paths:
 
   /company/name/{companyName}:
     get:
-      summary: gets the company by name
+      summary: Gets the company by name
       description: Returns the matching company by name
       operationId: getCompanyByName
       parameters:
@@ -2914,7 +2914,7 @@ paths:
 
   /company/id/{companyID}:
     delete:
-      summary: deletes the company by ID
+      summary: Deletes the company by ID
       description: Deletes the company by ID
       operationId: deleteCompanyByID
       parameters:
@@ -2988,7 +2988,7 @@ paths:
 
   /company/sfid/{companySFID}:
     delete:
-      summary: deletes the company by the SFID
+      summary: Deletes the company by the SFID
       description: Deletes the company by the SFID
       operationId: deleteCompanyBySFID
       parameters:
@@ -3021,7 +3021,7 @@ paths:
 
   /company/{companySFID}/project/{projectSFID}/cla-managers:
     get:
-      summary: get CLA manager of company for particular project/foundation
+      summary: Get CLA manager of company for particular project/foundation
       description: Returns list CLA managers of the company for project/foundation
       operationId: getCompanyProjectClaManagers
       parameters:
@@ -3083,7 +3083,7 @@ paths:
 
   /company/{companySFID}/project/{projectSFID}/active-cla-list:
     get:
-      summary: get active CLA list of company for particular project/foundation
+      summary: Get active CLA list of company for particular project/foundation
       description: Returns list active CLA of the company under particular project/foundation
       operationId: getCompanyProjectActiveCla
       parameters:
@@ -3114,7 +3114,7 @@ paths:
         - company
   /company/{companySFID}/project/{projectSFID}/contributors:
     get:
-      summary: get corporate contributors for project
+      summary: Get corporate contributors for project
       description: Returns list of corporate contributors for project
       operationId: getCompanyProjectContributors
       parameters:
@@ -3200,8 +3200,8 @@ paths:
 
   /user/{userID}/company:
     post:
-      summary: API that creates a salesforce company
-      description: Creates a Company for an individual contributor that fails to get a company during the signing getProjectSignatures
+      summary: Creates a new salesforce company
+      description: Creates a new salesforce company
       security: [ ]
       operationId: createCompany
       parameters:
@@ -3232,7 +3232,7 @@ paths:
 
   /request-corporate-signature:
     post:
-      summary: api generates the corporate signature which is ready to sign
+      summary: Requests and generates a new Corporate Signature
       description: Creates a new signature given project and company IDs. The manager will be redirected to the
         return_url once signature is complete.
       operationId: requestCorporateSignature
