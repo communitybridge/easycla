@@ -82,6 +82,7 @@ def get_company(company_id: str):
 
 def create_company(auth_user: AuthUser,
                    company_name: str = None,
+                   signing_entity_name: str = None,
                    company_manager_id=None,
                    company_manager_user_name=None,
                    company_manager_user_email=None,
@@ -94,6 +95,8 @@ def create_company(auth_user: AuthUser,
     :type auth_user: object
     :param company_name: The company name.
     :type company_name: string
+    :param signing_entity_name: The company's signing entity name.
+    :type signing_entity_name: string
     :param company_manager_id: The ID of the company manager user.
     :type company_manager_id: string
     :param company_manager_user_name: The user name of the company manager user.
@@ -119,15 +122,16 @@ def create_company(auth_user: AuthUser,
     company = Company()
     company.set_company_id(str(uuid.uuid4()))
     company.set_company_name(company_name)
+    company.set_signing_entity_name(signing_entity_name)
     company.set_company_manager_id(manager.get_user_id())
     company.set_company_acl(manager.get_lf_username())
     company.save()
     cla.log.debug(f'{fn} - created company with name: {company_name} with company_id: {company.get_company_id()}')
 
     # Create audit trail for company
-    event_data = f'User {auth_user.username} created Company {company.get_company_name()} ' \
+    event_data = f'User {auth_user.username} created company {company.get_company_name()} ' \
                  f'with company_id: {company.get_company_id()}.'
-    event_summary = f'User {auth_user.username} created Company {company.get_company_name()}.'
+    event_summary = f'User {auth_user.username} created company {company.get_company_name()}.'
     Event.create_event(
         event_type=EventType.CreateCompany,
         event_company_id=company.get_company_id(),

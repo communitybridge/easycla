@@ -3422,6 +3422,7 @@ parameters:
     type: string
     required: false
     pattern: '^([\w\d\s\-\,\./]+){2,255}$'
+    #$ref: './common/properties/company-name.yaml'
   userName:
     name: userName
     description: The optional user name filter
@@ -3889,9 +3890,12 @@ definitions:
       - userEmail
       - companyName
       - companyWebsite
+      - signingEntityName
     properties:
       companyName:
         $ref: './common/properties/company-name.yaml'
+      signingEntityName:
+        $ref: './common/properties/company-signing-entity-name.yaml'
       companyWebsite:
         $ref: './common/properties/website.yaml'
         description: the company website
@@ -3903,6 +3907,8 @@ definitions:
     properties:
       companyName:
         $ref: './common/properties/company-name.yaml'
+      signingEntityName:
+        $ref: './common/properties/company-signing-entity-name.yaml'
       companyWebsite:
         type: string
       logoURL:
@@ -3952,7 +3958,12 @@ definitions:
         description: The number of employees of the company
         example: "500 - 4999, 10000+"
         pattern: '^([\w\d\s\-\,\.\/]+){2,}$'
-  
+      signingEntityNames:
+        type: array
+        description: A list of signing entity names associated with the Company
+        items:
+          $ref: './common/properties/company-signing-entity-name.yaml'
+
   cla-manager-distribution:
     type: object
     properties:

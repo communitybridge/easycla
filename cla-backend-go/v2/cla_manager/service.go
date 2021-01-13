@@ -316,8 +316,8 @@ func (s *service) CreateCLAManagerDesignee(ctx context.Context, companySFID stri
 		"projectSFID":    projectSFID,
 		"userEmail":      userEmail,
 	}
+
 	// integrate user,acs,org and project services
-	userClient := v2UserService.GetClient()
 	acServiceClient := v2AcsService.GetClient()
 	orgClient := v2OrgService.GetClient()
 	projectClient := v2ProjectService.GetClient()
@@ -365,8 +365,8 @@ func (s *service) CreateCLAManagerDesignee(ctx context.Context, companySFID stri
 		}
 	}
 	if hasRoleScope {
-		log.WithFields(f).Warnf("Conflict - user has role scope: %s", utils.CLADesigneeRole)
-		return nil, ErrCLAManagerDesigneeConflict
+		// this is fine...just return with value...
+		log.WithFields(f).Debugf("User already has role scope: %s", utils.CLADesigneeRole)
 	}
 
 	log.WithFields(f).Debug("loading project by SFID...")
@@ -387,13 +387,13 @@ func (s *service) CreateCLAManagerDesignee(ctx context.Context, companySFID stri
 		userEmail, utils.CLADesigneeRole, roleID, projectSFID, companySFID)
 	scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(userEmail, projectSFID, companySFID, roleID)
 	if scopeErr != nil {
-		msg := fmt.Sprintf("Problem creating projectOrg scope for email: %s , projectSFID: %s, companyID: %s", userEmail, projectSFID, companySFID)
-		log.Warn(msg)
-		if _, ok := scopeErr.(*organizations.CreateOrgUsrRoleScopesConflict); ok {
-			return nil, ErrRoleScopeConflict
+		// Ignore conflict - role has already been assigned - otherwise, return error
+		if _, ok := scopeErr.(*organizations.CreateOrgUsrRoleScopesConflict); !ok {
+			log.Warn(fmt.Sprintf("Problem creating projectOrg scope for email: %s , projectSFID: %s, companyID: %s", userEmail, projectSFID, companySFID))
+			return nil, scopeErr
 		}
-		return nil, scopeErr
 	}
+
 	log.WithFields(f).Debugf("created user role organization scope for user: %s, with role: %s with role ID: %s using project|org: %s|%s...",
 		userEmail, utils.CLADesigneeRole, roleID, projectSFID, companySFID)
 
@@ -411,22 +411,6 @@ func (s *service) CreateCLAManagerDesignee(ctx context.Context, companySFID stri
 				Scope: fmt.Sprintf("%s|%s", projectSFID, companySFID),
 			},
 		})
-
-	if lfxUser.Type == utils.Lead {
-		log.Debugf("Converting user: %s from lead to contact ", userEmail)
-		contactErr := userClient.ConvertToContact(lfxUser.ID)
-		if contactErr != nil {
-			log.Debugf("failed to convert user: %s to contact ", userEmail)
-			return nil, contactErr
-		}
-		// Log user conversion event
-		s.eventService.LogEvent(&events.LogEventArgs{
-			EventType:         events.ConvertUserToContactType,
-			LfUsername:        lfxUser.Username,
-			ExternalProjectID: projectSFID,
-			EventData:         &events.UserConvertToContactData{},
-		})
-	}
 
 	claManagerDesignee := &models.ClaManagerDesignee{
 		LfUsername:  lfxUser.Username,

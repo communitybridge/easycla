@@ -1,0 +1,6 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
+
+type: string
+example: "00117000015vpjXAAQ"
+pattern: '^[a-zA-Z0-9]{18}|[a-zA-Z0-9]{15}$' # see: https://stackoverflow.com/questions/9742913/validating-a-salesforce-id

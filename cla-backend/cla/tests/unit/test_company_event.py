@@ -31,22 +31,25 @@ def test_create_company_event(mock_event, auth_user, create_event_company, user,
     company_controller.get_companies = Mock(return_value=[])
     Company.save = Mock()
     company_name = "new_company"
+    signing_entity_name = "company_signing_entity_name"
     company_id = 'aa939686-0ef1-4d46-a8cb-6a3f5604f70a'
     Company.get_company_name = Mock(return_value=company_name)
+    Company.get_signing_entity_name = Mock(return_value=signing_entity_name)
     Company.get_company_id = Mock(return_value=company_id)
     Company.get_company_manager_id = Mock(return_value='manager_id')
     auth_user.username = 'foo'
     company_controller.create_company(
         auth_user,
         company_name=company_name,
+        signing_entity_name=company_name,
         company_manager_id="manager_id",
         company_manager_user_name="user name",
         company_manager_user_email="email",
         user_id=user.get_user_id(),
     )
-    event_data = f'User {auth_user.username} created Company {company.get_company_name()} ' \
+    event_data = f'User {auth_user.username} created company {company.get_company_name()} ' \
                  f'with company_id: {company_id}.'
-    event_summary = f'User {auth_user.username} created Company {company.get_company_name()}.'
+    event_summary = f'User {auth_user.username} created company {company.get_company_name()}.'
     mock_event.assert_called_once_with(
         event_data=event_data,
         event_summary=event_summary,

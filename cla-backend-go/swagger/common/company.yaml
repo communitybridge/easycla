@@ -8,21 +8,17 @@ description: Company Model
 properties:
   companyID:
     description: The company unique internal ID
-    example: "13f79a8f-734d-44c1-ab03-ab98c2a1b64a"
-    type: string
+    $ref: './common/properties/internal-id.yaml'
   companyExternalID:
     description: the company external ID
-    type: string
-    example: "00117000015vpjXAAQ"
+    $ref: './common/properties/external-id.yaml'
   companyName:
-    description: The company name
-    example: "Linux Foundation"
-    type: string
-    pattern: '^([\w\p{L}][\w\s\p{L}()\[\]+\-/%!@#$]*){2,255}$'
+    $ref: './common/properties/company-name.yaml'
+  signingEntityName:
+    $ref: './common/properties/company-signing-entity-name.yaml'
   companyManagerID:
     description: The company manager id
-    type: string
-    example: "333b7f59-0847-40dc-88a0-5ee4d4ea3075"
+    $ref: './common/properties/internal-id.yaml'
   companyACL:
     type: array
     description: A list of user ID's authorized to make changes to the company

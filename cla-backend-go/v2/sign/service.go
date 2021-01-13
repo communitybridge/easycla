@@ -177,15 +177,19 @@ func (s *service) RequestCorporateSignature(ctx context.Context, lfUsername stri
 	if len(proj.ProjectCorporateDocuments) == 0 {
 		return nil, ErrTemplateNotConfigured
 	}
+
+	// Email flow
 	if input.SendAsEmail {
 		// this would be used only in case of cla-signatory
 		err = prepareUserForSigning(input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
 		if err != nil {
+			// Ignore conflict - role has already been assigned
 			if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); !ok {
 				return nil, err
 			}
 		}
 	} else {
+		// Direct to DocuSign flow...
 		var currentUserEmail string
 
 		userModel, userErr := usc.GetUserByUsername(lfUsername)
@@ -203,12 +207,13 @@ func (s *service) RequestCorporateSignature(ctx context.Context, lfUsername stri
 
 		err = prepareUserForSigning(currentUserEmail, utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
 		if err != nil {
+			// Ignore conflict - role has already been assigned
 			if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); !ok {
 				return nil, err
 			}
-
 		}
 	}
+
 	out, err := requestCorporateSignature(authorizationHeader, s.ClaV1ApiURL, &requestCorporateSignatureInput{
 		ProjectID:      proj.ProjectID,
 		CompanyID:      comp.CompanyID,
@@ -385,6 +390,7 @@ func prepareUserForSigning(userEmail string, companySFID, projectSFID string) er
 			ErrNotInOrg = fmt.Errorf("user: %s already associated with some organization", user.Username)
 			return ErrNotInOrg
 		}
+		// Ignore conflict - role has already been assigned, otherwise, return the error
 		if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); !ok {
 			log.WithFields(f).Errorf("assigning user role of %s failed: %v", role, err)
 			return err
