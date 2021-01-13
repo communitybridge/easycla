@@ -14,3 +14,13 @@ func TrimRemoveTrailingComma(input string) string {
 	s := strings.TrimSpace(input)
 	return strings.TrimSuffix(s, ",")
 }
+
+// TrimSpaceFromItems is a helper function to trim space on array items
+func TrimSpaceFromItems(arr []string) []string {
+	newArr := make([]string, len(arr))
+	for i := range arr {
+		newArr[i] = strings.TrimSpace(arr[i])
+	}
+
+	return newArr
+}

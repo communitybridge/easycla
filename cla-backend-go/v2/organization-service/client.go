@@ -481,8 +481,7 @@ func (osc *Client) ListOrgUserAdminScopes(orgID string, role *string) (*models.U
 	return result.Payload, nil
 }
 
-// ListOrgUserScopes returns role scope of organization
-// rolename is optional filter
+// ListOrgUserScopes returns role scope of organization, rolename is optional filter
 func (osc *Client) ListOrgUserScopes(orgID string, roleName []string) (*models.UserrolescopesList, error) {
 	f := logrus.Fields{
 		"functionName": "organization_service.ListOrgUserScopes",
@@ -611,7 +610,7 @@ func (osc *Client) UpdateOrg(existingCompanyModel *models.Organization, signingE
 	}
 
 	signingEntityNames := existingCompanyModel.SigningEntityName
-	signingEntityNames = append(signingEntityNames, signingEntityName)
+	signingEntityNames = append(signingEntityNames, strings.TrimSpace(signingEntityName))
 	// Ensure no duplicates
 	signingEntityNames = utils.RemoveDuplicates(signingEntityNames)
 	// Sort nicely
