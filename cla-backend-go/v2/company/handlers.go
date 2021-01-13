@@ -235,11 +235,12 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 			f := logrus.Fields{
-				"functionName":   "CompanyCreateCompanyHandler",
-				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-				"userID":         params.UserID,
-				"companyName":    aws.StringValue(params.Input.CompanyName),
-				"companyWebsite": aws.StringValue(params.Input.CompanyWebsite),
+				"functionName":      "CompanyCreateCompanyHandler",
+				utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
+				"userID":            params.UserID,
+				"companyName":       aws.StringValue(params.Input.CompanyName),
+				"companyWebsite":    aws.StringValue(params.Input.CompanyWebsite),
+				"signingEntityName": aws.StringValue(params.Input.SigningEntityName),
 			}
 			// No permissions needed - anyone can create a company
 
@@ -252,7 +253,7 @@ func Configure(api *operations.EasyclaAPI, service Service, v1CompanyRepo v1Comp
 			}
 
 			log.WithFields(f).Debug("creating company...")
-			companyModel, err := service.CreateCompany(ctx, *params.Input.CompanyName, *params.Input.CompanyWebsite, params.Input.UserEmail.String(), params.UserID)
+			companyModel, err := service.CreateCompany(ctx, *params.Input.CompanyName, *params.Input.SigningEntityName, *params.Input.CompanyWebsite, params.Input.UserEmail.String(), params.UserID)
 			if err != nil {
 				log.Warnf("error returned from create company api: %+v", err)
 				if strings.Contains(err.Error(), "website already exists") {

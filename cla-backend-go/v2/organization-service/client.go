@@ -6,6 +6,7 @@ package organization_service
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -512,22 +513,46 @@ func (osc *Client) ListOrgUserScopes(orgID string, roleName []string) (*models.U
 }
 
 // CreateOrg creates company based on name and website with additional data for required fields
-func (osc *Client) CreateOrg(companyName string, companyWebsite string) (*models.Organization, error) {
+func (osc *Client) CreateOrg(companyName, signingEntityName, companyWebsite string) (*models.Organization, error) {
 	f := logrus.Fields{
-		"functionName":   "organization_service.CreateOrg",
-		"companyName":    companyName,
-		"companyWebsite": companyWebsite,
+		"functionName":      "organization_service.CreateOrg",
+		"companyName":       companyName,
+		"signingEntityName": signingEntityName,
+		"companyWebsite":    companyWebsite,
 	}
 
-	tok, err := token.GetToken()
-	if err != nil {
-		log.WithFields(f).WithError(err).Warn("unable to fetch token")
-		return nil, err
+	tok, tokenErr := token.GetToken()
+	if tokenErr != nil {
+		log.WithFields(f).WithError(tokenErr).Warn("unable to fetch token")
+		return nil, tokenErr
 	}
+
+	// If not specified, use the company name as the signing entity name
+	if signingEntityName == "" {
+		signingEntityName = companyName
+	}
+
+	// Search for an existing record by website
+	existingRecords, lookupErr := osc.SearchOrganization("", companyWebsite, "")
+	if lookupErr != nil {
+		log.WithFields(f).WithError(lookupErr).Warn("unable to search for existing company using company website value")
+		return nil, lookupErr
+	}
+
+	// If we have an existing record... should only be one record if any
+	if len(existingRecords) > 0 {
+		updatedModel, updateErr := osc.UpdateOrg(existingRecords[0], signingEntityName)
+		if updateErr != nil {
+			log.WithFields(f).WithError(updateErr).Warn("unable to update for existing company")
+			return nil, updateErr
+		}
+		return updatedModel, nil
+	}
+
 	// use linux foundation logo as default
-	linuxFoundation, err := osc.SearchOrganization("Linux Foundation", "", "")
-	if err != nil {
-		log.WithFields(f).WithError(err).Warn("unable to search organization")
+	linuxFoundation, err := osc.SearchOrganization(utils.TheLinuxFoundation, "", "")
+	if err != nil || len(linuxFoundation) == 0 {
+		log.WithFields(f).WithError(err).Warn("unable to search Linux Foundation organization")
 		return nil, err
 	}
 
@@ -544,13 +569,14 @@ func (osc *Client) CreateOrg(companyName string, companyWebsite string) (*models
 	f["type"] = companyType
 
 	org := models.CreateOrg{
-		Description: &description,
-		Name:        &companyName,
-		Website:     &companyWebsite,
-		Industry:    &industry,
-		Source:      &companySource,
-		Type:        &companyType,
-		LogoURL:     &logoURL,
+		Description:       &description,
+		Name:              &companyName,
+		Website:           &companyWebsite,
+		Industry:          &industry,
+		Source:            &companySource,
+		Type:              &companyType,
+		LogoURL:           &logoURL,
+		SigningEntityName: []string{signingEntityName},
 	}
 
 	params := &organizations.CreateOrgParams{
@@ -558,12 +584,56 @@ func (osc *Client) CreateOrg(companyName string, companyWebsite string) (*models
 		Context: context.Background(),
 	}
 
+	log.WithFields(f).Debugf("Creating organization with params: %+v", org)
 	result, err := osc.cl.Organizations.CreateOrg(params, clientAuth)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warnf("Failed to create salesforce Company :%s , err: %+v ", companyName, err)
 		return nil, err
 	}
 	log.WithFields(f).Infof("Company: %s  successfuly created ", companyName)
+
+	return result.Payload, err
+}
+
+// UpdateOrg updates the company record based on the provided name, signingEntityName, and website
+func (osc *Client) UpdateOrg(existingCompanyModel *models.Organization, signingEntityName string) (*models.Organization, error) {
+	f := logrus.Fields{
+		"functionName":      "organization_service.UpdateOrg",
+		"companyName":       existingCompanyModel.Name,
+		"signingEntityName": signingEntityName,
+		"companyWebsite":    existingCompanyModel.Link,
+	}
+
+	tok, tokenErr := token.GetToken()
+	if tokenErr != nil {
+		log.WithFields(f).WithError(tokenErr).Warn("unable to fetch token")
+		return nil, tokenErr
+	}
+
+	signingEntityNames := existingCompanyModel.SigningEntityName
+	signingEntityNames = append(signingEntityNames, signingEntityName)
+	// Ensure no duplicates
+	signingEntityNames = utils.RemoveDuplicates(signingEntityNames)
+	// Sort nicely
+	sort.Strings(signingEntityNames)
+
+	clientAuth := runtimeClient.BearerToken(tok)
+	params := &organizations.UpdateOrgParams{
+		UpdateOrganization: &models.UpdateOrg{
+			SigningEntityName: signingEntityNames,
+		},
+		SalesforceID: existingCompanyModel.ID,
+		Context:      context.Background(),
+	}
+
+	log.WithFields(f).Debugf("Update organization with params: %+v", params)
+	result, err := osc.cl.Organizations.UpdateOrg(params, clientAuth)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("Failed to update salesforce Company: %s, err: %+v",
+			existingCompanyModel.Name, err)
+		return nil, err
+	}
+	log.WithFields(f).Infof("Company: %s successfuly updated ", existingCompanyModel.Name)
 
 	return result.Payload, err
 }

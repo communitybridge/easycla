@@ -288,7 +288,7 @@ func (repo repository) GetCompany(ctx context.Context, companyID string) (*model
 // SearchCompanyByName locates companies by the matching name and return any potential matches
 func (repo repository) SearchCompanyByName(ctx context.Context, companyName string, nextKey string) (*models.Companies, error) {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "SearchCompanyByName",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companyName":    companyName,
 		"nextKey":        nextKey,
@@ -634,6 +634,7 @@ func buildCompanyModels(ctx context.Context, results *dynamodb.ScanOutput) ([]mo
 	type ItemSignature struct {
 		CompanyID         string   `json:"company_id"`
 		CompanyName       string   `json:"company_name"`
+		SigningEntityName string   `json:"signing_entity_name"`
 		CompanyACL        []string `json:"company_acl"`
 		CompanyExternalID string   `json:"company_external_id"`
 		Created           string   `json:"date_created"`
@@ -666,10 +667,15 @@ func buildCompanyModels(ctx context.Context, results *dynamodb.ScanOutput) ([]mo
 			modifiedDateTime = now
 		}
 
+		if dbCompany.SigningEntityName == "" {
+			dbCompany.SigningEntityName = dbCompany.CompanyName
+		}
+
 		companies = append(companies, models.Company{
 			CompanyACL:        dbCompany.CompanyACL,
 			CompanyID:         dbCompany.CompanyID,
 			CompanyName:       dbCompany.CompanyName,
+			SigningEntityName: dbCompany.SigningEntityName,
 			CompanyExternalID: dbCompany.CompanyExternalID,
 			Created:           strfmt.DateTime(createdDateTime),
 			Updated:           strfmt.DateTime(modifiedDateTime),
@@ -1138,9 +1144,15 @@ func (repo repository) CreateCompany(ctx context.Context, in *models.Company) (*
 		CompanyID:         companyID.String(),
 		CompanyName:       in.CompanyName,
 		CompanyExternalID: in.CompanyExternalID,
+		SigningEntityName: in.SigningEntityName,
 		Created:           now,
 		Updated:           now,
 		Version:           "v1",
+	}
+
+	// Use the company name if signing entity name is not provided
+	if in.SigningEntityName == "" {
+		comp.SigningEntityName = in.CompanyName
 	}
 	if in.CompanyACL != nil {
 		comp.CompanyACL = in.CompanyACL

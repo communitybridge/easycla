@@ -77,6 +77,7 @@ def company_instance():
         instance = Company()
         instance.set_company_id("uuid")
         instance.set_company_name("co")
+        instance.set_signing_entity_name("co entity name")
         instance.set_company_external_id("external id")
         instance.save()
         yield instance
@@ -172,6 +173,7 @@ def company(company_table):
         company_instance = Company()
         company_instance.set_company_id("foo_company_id")
         company_instance.set_company_name("foo_company_name")
+        company_instance.set_signing_entity_name("foo_comapny_entity_name")
         company_instance.save()
         yield company_instance
 
