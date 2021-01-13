@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -619,9 +620,17 @@ func (s service) SearchOrganizationByName(ctx context.Context, orgName string, w
 
 	result := &models.OrgList{List: make([]*models.Org, 0, len(orgs))}
 	for _, org := range orgs {
+		var signingEntityNames []string
+		if len(org.SigningEntityName) > 0 {
+			// Weird, seems to have a 1 element slice which contains a comma-delimited list of values
+			for _, entityName := range org.SigningEntityName {
+				signingEntityNames = append(signingEntityNames, strings.Split(entityName, ",")...)
+			}
+		}
 		result.List = append(result.List, &models.Org{
 			OrganizationID:      org.ID,
 			OrganizationName:    org.Name,
+			SigningEntityNames:  signingEntityNames,
 			OrganizationWebsite: org.Link,
 		})
 	}
