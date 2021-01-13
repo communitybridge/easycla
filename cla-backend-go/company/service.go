@@ -191,23 +191,31 @@ func (s service) GetCompanyUserInviteRequests(ctx context.Context, companyID str
 
 // AddPendingCompanyInviteRequest adds a new company invite request
 func (s service) AddPendingCompanyInviteRequest(ctx context.Context, companyID string, userID string) (*InviteModel, error) {
+	f := logrus.Fields{
+		"functionName":   "company.AddPendingCompanyInviteRequest",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companyID":      companyID,
+		"userID":         userID,
+	}
 
+	log.WithFields(f).Debug("Fetching company by company ID")
 	companyModel, companyErr := s.GetCompany(ctx, companyID)
 	if companyErr != nil {
-		log.Warnf("AddPendingCompanyInviteRequest - unable to locate company model by ID: %s, error: %+v",
-			companyID, companyErr)
+		log.WithFields(f).WithError(companyErr).Warn("AddPendingCompanyInviteRequest - unable to locate company model by ID")
 		return nil, companyErr
 	}
 
+	log.WithFields(f).Debug("Fetching user by user ID")
 	userModel, userErr := s.userDynamoRepo.GetUser(userID)
 	if userErr != nil {
-		log.Warnf("AddPendingCompanyInviteRequest - unable to locate user model by ID: %s, error: %+v",
-			userID, userErr)
+		log.WithFields(f).WithError(userErr).Warn("unable to locate user model by ID")
 		return nil, userErr
 	}
 
+	log.WithFields(f).Debug("Adding pending company invite request")
 	newInvite, err := s.repo.AddPendingCompanyInviteRequest(ctx, companyID, userModel)
 	if err != nil {
+		log.WithFields(f).WithError(userErr).Warn("problem adding pending company invite request")
 		return nil, err
 	}
 
@@ -226,7 +234,7 @@ func (s service) AddPendingCompanyInviteRequest(ctx context.Context, companyID s
 	for _, companyManagerLFID := range companyModel.CompanyACL {
 		companyManagerName, companyManagerEmail, err := s.getPreferredNameAndEmail(ctx, companyManagerLFID)
 		if err != nil {
-			log.Warnf("unable to lookup company manager's name and email using LFID: %s - unable to send email, error: %+v",
+			log.WithFields(f).WithError(err).Warnf("unable to lookup company manager's name and email using LFID: %s - unable to send email, error: %+v",
 				companyManagerLFID, err)
 			continue
 		}
@@ -250,35 +258,43 @@ func (s service) AddPendingCompanyInviteRequest(ctx context.Context, companyID s
 
 // ApproveCompanyAccessRequest approve access request service method
 func (s service) ApproveCompanyAccessRequest(ctx context.Context, companyInviteID string) (*InviteModel, error) {
+	f := logrus.Fields{
+		"functionName":    "company.ApproveCompanyAccessRequest",
+		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
+		"companyInviteID": companyInviteID,
+	}
+
+	log.WithFields(f).Debug("Approve company access request")
 	err := s.repo.ApproveCompanyAccessRequest(ctx, companyInviteID)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("Error approving company access request")
 		return nil, err
 	}
 
 	inviteModel, inviteErr := s.repo.GetCompanyInviteRequest(ctx, companyInviteID)
 	if inviteErr != nil || inviteModel == nil {
-		log.Warnf("ApproveCompanyAccessRequest - unable to locate company invite: %s, error: %+v",
+		log.WithFields(f).Warnf("unable to locate company invite: %s, error: %+v",
 			companyInviteID, inviteErr)
 		return nil, inviteErr
 	}
 
 	companyModel, companyErr := s.GetCompany(ctx, inviteModel.RequestedCompanyID)
 	if companyErr != nil {
-		log.Warnf("ApproveCompanyAccessRequest - unable to locate company model by ID: %s, error: %+v",
+		log.WithFields(f).WithError(companyErr).Warnf("unable to locate company model by ID: %s, error: %+v",
 			inviteModel.RequestedCompanyID, companyErr)
 		return nil, companyErr
 	}
 
 	userModel, userErr := s.userDynamoRepo.GetUser(inviteModel.UserID)
 	if userErr != nil {
-		log.Warnf("ApproveCompanyAccessRequest - unable to locate user model by ID: %s, error: %+v",
+		log.WithFields(f).WithError(userErr).Warnf("unable to locate user model by ID: %s, error: %+v",
 			inviteModel.UserID, userErr)
 		return nil, userErr
 	}
 
 	updatedUserModel, userUpdateErr := s.userDynamoRepo.SetCompanyID(userModel.UserID, companyModel.CompanyID)
 	if userUpdateErr != nil {
-		log.Warnf("ApproveCompanyAccessRequest - unable to update user model by ID: %s, with company ID: %s error: %+v",
+		log.WithFields(f).WithError(userUpdateErr).Warnf("unable to update user model by ID: %s, with company ID: %s error: %+v",
 			inviteModel.UserID, companyModel.CompanyID, userUpdateErr)
 		return nil, userUpdateErr
 	}
@@ -319,8 +335,16 @@ func (s service) ApproveCompanyAccessRequest(ctx context.Context, companyInviteI
 
 // RejectCompanyAccessRequest approve access request service method
 func (s service) RejectCompanyAccessRequest(ctx context.Context, companyInviteID string) (*InviteModel, error) {
+	f := logrus.Fields{
+		"functionName":    "company.RejectCompanyAccessRequest",
+		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
+		"companyInviteID": companyInviteID,
+	}
+
+	log.WithFields(f).Debug("Rejecting company access request")
 	err := s.repo.RejectCompanyAccessRequest(ctx, companyInviteID)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("Error rejecting company access request")
 		return nil, err
 	}
 
@@ -556,6 +580,7 @@ func (s service) getPreferredNameAndEmail(ctx context.Context, lfid string) (str
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"lfid":           lfid,
 	}
+	log.WithFields(f).Debug("Searching user by LF User ID...")
 	userModel, userErr := s.userService.GetUserByLFUserName(lfid)
 	if userErr != nil {
 		log.WithFields(f).WithError(userErr).Warnf("getPreferredNameAndEmail - unable to locate user model by ID: %s, error: %+v",
@@ -597,8 +622,15 @@ func (s service) getPreferredNameAndEmail(ctx context.Context, lfid string) (str
 }
 
 func (s service) GetCompanyByExternalID(ctx context.Context, companySFID string) (*models.Company, error) {
+	f := logrus.Fields{
+		"functionName":   "company.GetCompanyByExternalID",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companySFID":    companySFID,
+	}
+	log.WithFields(f).Debug("Searching company by external ID...")
 	comp, err := s.repo.GetCompanyByExternalID(ctx, companySFID)
 	if err == nil {
+		log.WithFields(f).WithError(err).Warn("problem searching organizations by external ID")
 		return comp, nil
 	}
 	if err == ErrCompanyDoesNotExist {
@@ -612,9 +644,19 @@ func (s service) GetCompanyByExternalID(ctx context.Context, companySFID string)
 }
 
 func (s service) SearchOrganizationByName(ctx context.Context, orgName string, websiteName string, filter string) (*models.OrgList, error) {
+	f := logrus.Fields{
+		"functionName":   "company.SearchOrganizationByName",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"orgName":        orgName,
+		"websiteName":    websiteName,
+		"filter":         filter,
+	}
+
 	osc := organization_service.GetClient()
+	log.WithFields(f).Debug("Searching organizations by name and website...")
 	orgs, err := osc.SearchOrganization(orgName, websiteName, filter)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("problem searching organizations by name and website")
 		return nil, err
 	}
 
@@ -645,7 +687,7 @@ func (s service) CreateOrgFromExternalID(ctx context.Context, companySFID string
 		"companySFID":    companySFID,
 	}
 	osc := organization_service.GetClient()
-	log.WithFields(f).Debugf("getting organization details")
+	log.WithFields(f).Debugf("Searching organization by company SFID")
 	org, err := osc.GetOrganization(companySFID)
 	if err != nil {
 		log.WithFields(f).Errorf("getting organization details failed. error = %s", err.Error())
@@ -702,7 +744,7 @@ func (s service) CreateOrgFromExternalID(ctx context.Context, companySFID string
 // getCompanyAdmin is helper function which queries org-service to get first company-admin
 func getCompanyAdmin(ctx context.Context, companySFID string) (*models.User, error) {
 	f := logrus.Fields{
-		"functionName":   "getCompanyAdmin",
+		"functionName":   "company.getCompanyAdmin",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companySFID":    companySFID,
 	}
