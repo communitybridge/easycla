@@ -32,7 +32,7 @@ tags:
 paths:
   /ops/version:
     get:
-      summary: API Version Information
+      summary: Returns the application version information
       security: [ ]
       operationId: getVersion
       parameters:
@@ -51,7 +51,7 @@ paths:
 
   /ops/health:
     get:
-      summary: API Health Check
+      summary: Returns the Health of the application
       security: [ ]
       operationId: healthCheck
       parameters:
@@ -81,7 +81,7 @@ paths:
   /api-docs:
     get:
       security: [ ]
-      summary: Get swagger documentation
+      summary: API Documentation
       operationId: getDoc
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -96,7 +96,7 @@ paths:
   /swagger.json:
     get:
       security: [ ]
-      summary: Get swagger JSON
+      summary: Swagger specification as JSON
       operationId: getSwagger
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -110,7 +110,7 @@ paths:
 
   /users/search:
     get:
-      summary: Search users
+      summary: Search Users
       description: Searches for matching users by field
       security:
         - OauthSecurity:
@@ -145,7 +145,7 @@ paths:
 
   /users/{userID}:
     get:
-      summary: Get user by ID
+      summary: Get User by ID
       description: Returns a user for the provided user ID
       security:
         - OauthSecurity:
@@ -172,7 +172,7 @@ paths:
       tags:
         - users
     delete:
-      summary: Delete user by ID
+      summary: Delete User by ID
       description: Deletes a user when provided the user ID
       security:
         - OauthSecurity:
@@ -205,7 +205,7 @@ paths:
 
   /users:
     post:
-      summary: Add user
+      summary: Add User
       description: Creates a new user record
       security:
         - OauthSecurity:
@@ -233,7 +233,7 @@ paths:
       tags:
         - users
     put:
-      summary: Update user
+      summary: Update User
       description: Updates a new user record
       security:
         - OauthSecurity:
@@ -268,7 +268,7 @@ paths:
 
   /users/username/{userName}:
     get:
-      summary: Get user by User Name
+      summary: Get User by User Name
       description: Returns a user for the provided user name
       security:
         - OauthSecurity:
@@ -303,7 +303,7 @@ paths:
 
   /signatures/id/{signatureID}:
     get:
-      summary: Get the signature by ID
+      summary: Get the Signature by ID
       description: Returns the signature when provided the signature ID
       security:
         - OauthSecurity:
@@ -334,7 +334,7 @@ paths:
 
   /signatures/project/{projectID}:
     get:
-      summary: Get project signatures
+      summary: Get Project Signatures
       description: Returns a list of project signature models when provided the project ID
       security:
         - OauthSecurity: [ ]
@@ -370,7 +370,7 @@ paths:
 
   /signatures/project/{projectID}/company/{companyID}:
     get:
-      summary: Get project company signatures
+      summary: Get Project Company Signatures
       description: Returns a list of project signature models when provided the project ID and company ID
       security: [ ]
       operationId: getProjectCompanySignatures
@@ -401,7 +401,7 @@ paths:
 
   /signatures/company/{companyID}:
     get:
-      summary: Get company signatures
+      summary: Get Company Signatures
       description: Returns a list of company signatures when provided the company ID
       security:
         - OauthSecurity: [ ]
@@ -434,7 +434,7 @@ paths:
 
   /signatures/user/{userID}:
     get:
-      summary: Get user signatures
+      summary: Get User Signatures
       description: Returns a list of user signatures when provided the user ID
       security:
         - OauthSecurity: [ ]
@@ -465,7 +465,7 @@ paths:
 
   /signatures/project/{projectID}/company/{companyID}/employee:
     get:
-      summary: Get project company signatures for the employees
+      summary: Get Project Company Signatures for the Employees
       description: Returns a list of employee project signature models when provided the project ID and company ID
       security:
         - OauthSecurity: [ ]
@@ -537,7 +537,7 @@ paths:
 
   /signatures/{signatureID}/gh-org-whitelist:
     get:
-      summary: Signature Update
+      summary: Get GitHub Organization Approval List Entries
       security:
         - OauthSecurity: [ ]
       operationId: getGitHubOrgWhitelist
@@ -567,7 +567,7 @@ paths:
       tags:
         - signatures
     delete:
-      summary: Signature Update
+      summary: Delete GitHub Organization Approval List Entry
       security:
         - OauthSecurity: [ ]
       operationId: deleteGitHubOrgWhitelist
@@ -601,7 +601,7 @@ paths:
       tags:
         - signatures
     post:
-      summary: Signature Update
+      summary: Update GitHub Organization Approval List Entries
       security:
         - OauthSecurity: [ ]
       operationId: addGitHubOrgWhitelist
@@ -694,7 +694,7 @@ paths:
   # Project Service
   /project:
     post:
-      summary: Create a Project/CLA Group
+      summary: Create a new CLA Group
       security:
         - OauthSecurity: [ ]
       operationId: createProject
@@ -724,7 +724,7 @@ paths:
       tags:
         - project
     put:
-      summary: Update CLA Group by ID
+      summary: Update a CLA Group by ID
       security:
         - OauthSecurity: [ ]
       operationId: updateProject
@@ -754,7 +754,7 @@ paths:
       tags:
         - project
     get:
-      summary: Get Projects
+      summary: Get CLA Groups
       security:
         - OauthSecurity: [ ]
       operationId: getProjects
@@ -791,7 +791,7 @@ paths:
         type: string
         required: true
     get:
-      summary: Get Project by ID
+      summary: Get CLA Group by ID
       security:
         - OauthSecurity: [ ]
       operationId: getProjectById
@@ -815,7 +815,7 @@ paths:
       tags:
         - project
     delete:
-      summary: Delete Project by ID
+      summary: Delete CLA Group by ID
       security:
         - OauthSecurity: [ ]
       operationId: deleteProjectById
@@ -839,7 +839,7 @@ paths:
 
   /project/external/{projectSFID}:
     get:
-      summary: Get CLA Groups/Projects By External ID
+      summary: Get CLA Groups By External ID
       description: Returns a list of CLA groups associated with the specified external ID
       parameters:
         - $ref: "#/parameters/x-request-id"
@@ -905,7 +905,7 @@ paths:
   # Company Service
   /company:
     get:
-      summary: Get all companies
+      summary: Get All Companies
       description: Returns a list of companies
       security:
         - OauthSecurity:
@@ -935,7 +935,7 @@ paths:
 
   /company/{companyID}:
     get:
-      summary: Get company
+      summary: Get Company By ID
       description: Returns the company by ID
       security:
         - OauthSecurity:
@@ -966,7 +966,7 @@ paths:
 
   /company/external/{companySFID}:
     get:
-      summary: Get company by external ID
+      summary: Get Company by External SFID
       description: Returns the company by external ID
       security: [ ]
       operationId: getCompanyByExternalID
@@ -998,7 +998,7 @@ paths:
 
   /company/signing-entity-name:
     get:
-      summary: Get company by Signing Entity Name
+      summary: Get Company by Signing Entity Name
       description: Returns the company by signing entity name
       security: [ ]
       operationId: getCompanyBySigningEntityName
@@ -1034,7 +1034,7 @@ paths:
 
   /company/user/{userID}:
     get:
-      summary: API to retrieve a list of companies where the user is the manager
+      summary: Get User Company Manager by ID
       security:
         - OauthSecurity:
             - company
@@ -1064,7 +1064,8 @@ paths:
 
   /company/user/{userID}/invites:
     get:
-      summary: API to retrieve a list of companies where the user is the manager (approved) and in the invite list
+      summary: Get User Invites
+      description: API to retrieve a list of companies where the user is the manager (approved) and in the invite list
       security:
         - OauthSecurity:
             - company
@@ -1094,7 +1095,7 @@ paths:
 
   /company/search:
     get:
-      summary: Search companies
+      summary: Search Companies
       description: Searches for matching companies by name
       security:
         - OauthSecurity:
@@ -1132,7 +1133,7 @@ paths:
 
   /organization/search:
     get:
-      summary: Search companies from organization service
+      summary: Search SalesForce Companies
       description: Searches for matching organization by name
       security: [ ]
       operationId: searchOrganization
@@ -1168,7 +1169,7 @@ paths:
 
   /company/{companyID}/cla/invitelist:
     get:
-      summary: API to retrieve pending invite requests
+      summary: Get Company Invites
       security:
         - OauthSecurity:
             - company
@@ -1202,7 +1203,7 @@ paths:
 
   /company/{companyID}/{userID}/invitelist:
     get:
-      summary: API to retrieve pending invite requests
+      summary: Get Company User Invite
       security:
         - OauthSecurity:
             - company
@@ -1233,7 +1234,7 @@ paths:
 
   /company/{companyID}/cla/accesslist:
     post:
-      summary: Add user to the company access list
+      summary: Get Company Access List
       security:
         - OauthSecurity:
             - company
@@ -1265,7 +1266,7 @@ paths:
 
   /company/{companyID}/cla/accesslist/request:
     put:
-      summary: Request access to the Company
+      summary: Get Company Access List Requests
       security:
         - OauthSecurity:
             - company
@@ -1295,7 +1296,7 @@ paths:
 
   /company/{companyID}/cla/accesslist/{requestID}/approve:
     put:
-      summary: Approve the Company Access List Request
+      summary: Approve Company Access List Request
       security:
         - OauthSecurity:
             - company
@@ -1325,7 +1326,7 @@ paths:
 
   /company/{companyID}/cla/accesslist/{requestID}/reject:
     put:
-      summary: Rejects the Company Access List Request
+      summary: Reject Company Access List Request
       security:
         - OauthSecurity:
             - company
@@ -1356,7 +1357,7 @@ paths:
 
   /company/{companyID}/ccla-whitelist-requests/{projectID}:
     get:
-      summary: get ccla whitelist requests for given company and project
+      summary: Get Project Company Approval List Entries
       security:
         - OauthSecurity:
             - user
@@ -1389,7 +1390,7 @@ paths:
       tags:
         - company
     post:
-      summary: create ccla Approval request for given project
+      summary: Create Project Company Approval List Entries
       security: [ ]
       operationId: addCclaWhitelistRequest
       parameters:
@@ -1421,7 +1422,7 @@ paths:
 
   /company/{companyID}/ccla-whitelist-requests/{projectID}/user/{userID}:
     get:
-      summary: get ccla whitelist requests for given company, project, user
+      summary: Get Project Company Approval List Entries by User
       security:
         - OauthSecurity:
             - user
@@ -1457,7 +1458,7 @@ paths:
 
   /company/{companyID}/ccla-whitelist-requests/{projectID}/{requestID}/approve:
     put:
-      summary: Approve CCLA whitelist request
+      summary: Approve CCLA Approval Request
       security:
         - OauthSecurity:
             - company
@@ -1490,7 +1491,7 @@ paths:
 
   /company/{companyID}/ccla-whitelist-requests/{projectID}/{requestID}/reject:
     put:
-      summary: Reject CCLA whitelist request
+      summary: Reject CCLA Approval Request
       security:
         - OauthSecurity:
             - company
@@ -1523,7 +1524,7 @@ paths:
 
   /company/{companyID}/ccla-whitelist-requests:
     get:
-      summary: get ccla whitelist requests for given company
+      summary: Get CCLA Approval Requests for Company
       security:
         - OauthSecurity:
             - user
@@ -1558,7 +1559,7 @@ paths:
 
   /company/{companyID}/project/{projectID}/cla-manager:
     post:
-      summary: Adds a new CLA Manager to the specified Company and Project
+      summary: Adds new Project Company CLA Manager
       description: Allows an existing CLA Manager to add another CLA Manager to the specified Company and Project.
       security:
         - OauthSecurity:
@@ -1595,7 +1596,7 @@ paths:
 
   /company/{companyID}/project/{projectID}/cla-manager/{userLFID}:
     delete:
-      summary: Removes the CLA Manager from ACL for specified Company and Project
+      summary: Removes Project Company CLA Manager
       description: Allows an existing CLA Manager to remove another CLA Manager from the specified Company and Project.
       security:
         - OauthSecurity:
@@ -1631,7 +1632,7 @@ paths:
 
   /company/{companyID}/project/{projectID}/cla-manager/requests:
     get:
-      summary: Returns the CLA Manager requests list for the specified Company and Project
+      summary: Get Project Company CLA Manager Requests
       security:
         - OauthSecurity:
             - user
@@ -1664,7 +1665,7 @@ paths:
       tags:
         - cla-manager
     post:
-      summary: Creates a new CLA Manager request for the specified Company and Project
+      summary: Creates a new Project Company CLA Manager Request
       security:
         - OauthSecurity:
             - user
@@ -1700,7 +1701,7 @@ paths:
 
   /company/{companyID}/project/{projectID}/cla-manager/requests/{requestID}:
     get:
-      summary: Returns the CLA Manager request for the specified Company, Project and Request ID
+      summary: Get the Project Company CLA Manager Request by ID
       security:
         - OauthSecurity:
             - user
@@ -1733,7 +1734,7 @@ paths:
       tags:
         - cla-manager
     delete:
-      summary: Deletes the CLA Manager request for the specified Company, Project and Request ID
+      summary: Deletes the Project Company CLA Manager Request
       security:
         - OauthSecurity:
             - user
@@ -1766,7 +1767,7 @@ paths:
 
   /company/{companyID}/project/{projectID}/cla-manager/requests/{requestID}/approve:
     put:
-      summary: Approves the CLA Manager request for the specified Company and Project
+      summary: Approves the Project Company CLA Manager Request
       security:
         - OauthSecurity:
             - user
@@ -1801,7 +1802,7 @@ paths:
 
   /company/{companyID}/project/{projectID}/cla-manager/requests/{requestID}/deny:
     put:
-      summary: Denies/Rejects the CLA Manager request for the specified Company and Project
+      summary: Denies/Rejects the Project Company CLA Manager Request
       security:
         - OauthSecurity:
             - user
@@ -1836,7 +1837,7 @@ paths:
 
   /template:
     get:
-      summary: Get Available Templates
+      summary: Get Templates
       security:
         - OauthSecurity: [ ]
       operationId: getTemplates
@@ -1868,7 +1869,7 @@ paths:
         type: string
         required: true
     post:
-      summary: Create contract template for CLA Group
+      summary: Create New CLA Group Template
       security:
         - OauthSecurity: [ ]
       operationId: createCLAGroupTemplate
@@ -1943,7 +1944,7 @@ paths:
 
   /github/org/{orgName}/exists:
     get:
-      summary: API to fetch the GitHub Oranization Details
+      summary: Get GitHub Oranization Details
       security:
         - OauthSecurity: [ ]
       operationId: getOrg
@@ -1973,7 +1974,7 @@ paths:
 
   /project/{projectSFID}/github/organizations:
     post:
-      summary: API to add new gitHub oranization in the project
+      summary: Create Project GitHub Organization
       security:
         - OauthSecurity: [ ]
       operationId: addProjectGithubOrganization
@@ -2005,7 +2006,7 @@ paths:
       tags:
         - github-organizations
     get:
-      summary: API to fetch the GitHub Oranizations for the project
+      summary: Get Project GitHub Oranizations
       security:
         - OauthSecurity: [ ]
       operationId: getProjectGithubOrganizations
@@ -2033,7 +2034,7 @@ paths:
         - github-organizations
   /project/{projectSFID}/github/organizations/{orgName}:
     delete:
-      summary: API to delete gitHub oranization in the project
+      summary: Delete Project GitHub Oranizations
       security:
         - OauthSecurity: [ ]
       operationId: deleteProjectGithubOrganization
@@ -2064,7 +2065,7 @@ paths:
 
   /project/{projectSFID}/github/repositories:
     post:
-      summary: API to add the gitHub repository
+      summary: Add Project GitHub Repositories
       security:
         - OauthSecurity:
             - project
@@ -2095,7 +2096,7 @@ paths:
       tags:
         - github-repositories
     get:
-      summary: API to fetch the gitHub repositories of the project
+      summary: Get Project GitHub Repositories
       security:
         - OauthSecurity:
             - project
@@ -2122,7 +2123,7 @@ paths:
         - github-repositories
   /project/{projectSFID}/github/repositories/{repositoryID}:
     delete:
-      summary: API to add the gitHub repository
+      summary: Delete Project Repository
       security:
         - OauthSecurity:
             - project
@@ -2154,7 +2155,7 @@ paths:
 
   /project/{projectSFID}/github/organizations/{orgName}/config:
     put:
-      summary: Update GitHub Organization Configuration
+      summary: Update Project GitHub Organization
       description: Endpoint to adjust the GitHub Organization Configuration, such as toggling the auto-enable flag
       security:
         - OauthSecurity:
@@ -2195,7 +2196,7 @@ paths:
 
   /events:
     get:
-      summary: search events
+      summary: Search Events
       security:
         - OauthSecurity: [ ]
       description: Returns list of events matching with search criteria
@@ -2269,7 +2270,7 @@ paths:
 
   /project/{projectID}/gerrits/{gerritID}:
     delete:
-      summary: delete the gerrit
+      summary: Delete Gerrit Configuration
       description: Delete the gerrit
       security:
         - OauthSecurity:
@@ -2297,7 +2298,7 @@ paths:
 
   /project/{projectID}/gerrits:
     post:
-      summary: add the gerrit
+      summary: Add Project Gerrit Configuration
       description: add the gerrit
       security:
         - OauthSecurity:

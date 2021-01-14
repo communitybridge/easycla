@@ -180,3 +180,22 @@ func (e *GitHubOrgNotFound) Error() string {
 func (e *GitHubOrgNotFound) Unwrap() error {
 	return e.Err
 }
+
+// CompanyAdminNotFound is an error model for Salesforce Project not found errors
+type CompanyAdminNotFound struct {
+	CompanySFID string
+	Err         error
+}
+
+// Error is an error string function for Salesforce Project not found errors
+func (e *CompanyAdminNotFound) Error() string {
+	if e.Err == nil {
+		return fmt.Sprintf("company admin for company with ID %s not found", e.CompanySFID)
+	}
+	return fmt.Sprintf("company admin for company with ID %s not found: %+v", e.CompanySFID, e.Err)
+}
+
+// Unwrap method returns its contained error
+func (e *CompanyAdminNotFound) Unwrap() error {
+	return e.Err
+}

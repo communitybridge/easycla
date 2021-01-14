@@ -5,7 +5,6 @@ package company
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -658,8 +657,10 @@ func (s service) GetCompanyBySigningEntityName(ctx context.Context, signingEntit
 	}
 
 	if err == ErrCompanyDoesNotExist {
+		log.WithFields(f).Debugf("Company with signing entity name %s does not exist", signingEntityName)
 		comp, err = s.CreateOrgFromExternalID(ctx, signingEntityName, companySFID)
 		if err != nil {
+			log.WithFields(f).WithError(err).Warnf("Unable to create organization from external ID: %s using signing entity name: %s", companySFID, signingEntityName)
 			return comp, err
 		}
 		return comp, nil
@@ -713,7 +714,7 @@ func (s service) CreateOrgFromExternalID(ctx context.Context, signingEntityName,
 	log.WithFields(f).Debugf("Searching organization by company SFID")
 	org, err := osc.GetOrganization(companySFID)
 	if err != nil {
-		log.WithFields(f).Errorf("getting organization details failed. error = %s", err.Error())
+		log.WithFields(f).WithError(err).Warn("getting organization details failed")
 		return nil, err
 	}
 
@@ -725,47 +726,62 @@ func (s service) CreateOrgFromExternalID(ctx context.Context, signingEntityName,
 	log.WithFields(f).Debugf("getting company-admin information")
 	companyAdmin, err := getCompanyAdmin(ctx, companySFID)
 	if err != nil {
-		return nil, err
+		log.WithFields(f).WithError(err).Warnf("unable to load company admin information for company: %s", companySFID)
 	}
 
-	f["company-admin"] = companyAdmin
-	log.WithFields(f).Debugf("getting user information from cla")
-	claUser, err := s.userService.GetUserByLFUserName(companyAdmin.LfUsername)
-	if err != nil {
-		log.WithFields(f).Errorf("getting user information from cla failed. error = %s", err.Error())
-		return nil, err
-	}
-	if claUser == nil {
-		// create cla-user
-		log.WithFields(f).Debugf("cla user not found. creating cla user.")
-		claUser, err = s.userService.CreateUser(companyAdmin, nil)
+	var claUser *models.User
+	if companyAdmin != nil {
+		f["company-admin"] = companyAdmin
+		log.WithFields(f).Debugf("loaded company admin: %+v", companyAdmin)
+
+		log.WithFields(f).Debugf("getting user information from cla")
+		claUser, err = s.userService.GetUserByLFUserName(companyAdmin.LfUsername)
 		if err != nil {
-			log.WithFields(f).Debugf("creating cla user failed. error = %s", err.Error())
+			log.WithFields(f).WithError(err).Warnf("problem loading user by username: %s", companyAdmin.LfUsername)
 			return nil, err
+		}
+
+		if claUser == nil {
+			// create cla-user
+			log.WithFields(f).Debugf("cla user not found. creating cla user.")
+			claUser, err = s.userService.CreateUser(companyAdmin, nil)
+			if err != nil {
+				log.WithFields(f).WithError(err).Warn("creating cla user failed")
+				return nil, err
+			}
 		}
 	}
 
 	if signingEntityName == "" {
+		log.WithFields(f).Debugf("signing entity name not set - using organization name: %s", org.Name)
 		signingEntityName = org.Name
 	}
 
+	_, now := utils.CurrentTime()
 	newComp := &models.Company{
-		CompanyACL:        []string{companyAdmin.LfUsername},
 		CompanyExternalID: org.ID,
 		CompanyName:       org.Name,
-		CompanyManagerID:  claUser.UserID,
 		SigningEntityName: signingEntityName,
-		Note:              "created based on SF Organization Service record",
+		Note:              fmt.Sprintf("%s - Created based on SF Organization Service record", now),
+	}
+	if companyAdmin != nil {
+		newComp.CompanyACL = []string{companyAdmin.LfUsername}
+	}
+	if claUser != nil {
+		newComp.CompanyManagerID = claUser.UserID
 	}
 
 	f["company"] = newComp
-	log.WithFields(f).Debugf("creating cla company")
+	log.WithFields(f).Debugf("creating cla company record")
 	// create company
 	comp, err := s.repo.CreateCompany(ctx, newComp)
 	if err != nil {
-		log.WithFields(f).Debugf("creating cla company failed. error = %s", err.Error())
+		log.WithFields(f).WithError(err).Warnf("creating cla company failed")
 		return nil, err
 	}
+
+	log.WithFields(f).Debugf("Created company %s with Signing Entity Name: %s with ID: %s",
+		comp.CompanyName, signingEntityName, comp.CompanyID)
 	return comp, nil
 }
 
@@ -801,5 +817,8 @@ func getCompanyAdmin(ctx context.Context, companySFID string) (*models.User, err
 		}
 	}
 	log.WithFields(f).Warnf("no company-admin found")
-	return nil, errors.New("no company-admin found")
+	return nil, &utils.CompanyAdminNotFound{
+		CompanySFID: companySFID,
+		Err:         nil,
+	}
 }
