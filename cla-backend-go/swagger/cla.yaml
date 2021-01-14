@@ -966,7 +966,7 @@ paths:
 
   /company/external/{companySFID}:
     get:
-      summary: Get company
+      summary: Get company by external ID
       description: Returns the company by external ID
       security: [ ]
       operationId: getCompanyByExternalID
@@ -974,6 +974,42 @@ paths:
         - $ref: "#/parameters/x-request-id"
         - name: companySFID
           in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
+          schema:
+            $ref: '#/definitions/company'
+        '400':
+          $ref: '#/responses/invalid-request'
+        '401':
+          $ref: '#/responses/unauthorized'
+        '403':
+          $ref: '#/responses/forbidden'
+        '404':
+          $ref: '#/responses/not-found'
+      tags:
+        - company
+
+  /company/signing-entity-name:
+    get:
+      summary: Get company by Signing Entity Name
+      description: Returns the company by signing entity name
+      security: [ ]
+      operationId: getCompanyBySigningEntityName
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - name: name
+          in: query
+          type: string
+          required: true
+        - name: companySFID
+          in: query
           type: string
           required: true
       responses:

@@ -35,11 +35,12 @@ const (
 
 // IService interface defining the functions for the company service
 type IService interface { // nolint
-	CreateOrgFromExternalID(ctx context.Context, companySFID string) (*models.Company, error)
+	CreateOrgFromExternalID(ctx context.Context, signingEntityName, companySFID string) (*models.Company, error)
 
 	GetCompanies(ctx context.Context) (*models.Companies, error)
 	GetCompany(ctx context.Context, companyID string) (*models.Company, error)
 	GetCompanyByExternalID(ctx context.Context, companySFID string) (*models.Company, error)
+	GetCompanyBySigningEntityName(ctx context.Context, signingEntityName, companySFID string) (*models.Company, error)
 	SearchCompanyByName(ctx context.Context, companyName string, nextKey string) (*models.Companies, error)
 	GetCompaniesByUserManager(ctx context.Context, userID string) (*models.Companies, error)
 	GetCompaniesByUserManagerWithInvites(ctx context.Context, userID string) (*models.CompaniesWithInvites, error)
@@ -191,7 +192,7 @@ func (s service) GetCompanyUserInviteRequests(ctx context.Context, companyID str
 // AddPendingCompanyInviteRequest adds a new company invite request
 func (s service) AddPendingCompanyInviteRequest(ctx context.Context, companyID string, userID string) (*InviteModel, error) {
 	f := logrus.Fields{
-		"functionName":   "company.AddPendingCompanyInviteRequest",
+		"functionName":   "company.service.AddPendingCompanyInviteRequest",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companyID":      companyID,
 		"userID":         userID,
@@ -258,7 +259,7 @@ func (s service) AddPendingCompanyInviteRequest(ctx context.Context, companyID s
 // ApproveCompanyAccessRequest approve access request service method
 func (s service) ApproveCompanyAccessRequest(ctx context.Context, companyInviteID string) (*InviteModel, error) {
 	f := logrus.Fields{
-		"functionName":    "company.ApproveCompanyAccessRequest",
+		"functionName":    "company.service.ApproveCompanyAccessRequest",
 		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
 		"companyInviteID": companyInviteID,
 	}
@@ -335,7 +336,7 @@ func (s service) ApproveCompanyAccessRequest(ctx context.Context, companyInviteI
 // RejectCompanyAccessRequest approve access request service method
 func (s service) RejectCompanyAccessRequest(ctx context.Context, companyInviteID string) (*InviteModel, error) {
 	f := logrus.Fields{
-		"functionName":    "company.RejectCompanyAccessRequest",
+		"functionName":    "company.service.RejectCompanyAccessRequest",
 		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
 		"companyInviteID": companyInviteID,
 	}
@@ -397,7 +398,7 @@ func (s service) RejectCompanyAccessRequest(ctx context.Context, companyInviteID
 // AddUserToCompanyAccessList adds a user to the specified company
 func (s service) AddUserToCompanyAccessList(ctx context.Context, companyID, lfid string) error {
 	f := logrus.Fields{
-		"functionName":   "company.AddUserToCompanyAccessList",
+		"functionName":   "company.service.AddUserToCompanyAccessList",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companyID":      companyID,
 		"lfid":           lfid,
@@ -432,7 +433,7 @@ func (s service) AddUserToCompanyAccessList(ctx context.Context, companyID, lfid
 // sendRequestAccessEmail sends the request access email
 func (s service) sendRequestAccessEmail(ctx context.Context, companyModel *models.Company, requesterName, requesterEmail, recipientName, recipientAddress string) {
 	f := logrus.Fields{
-		"functionName":     "company.sendRequestAccessEmail",
+		"functionName":     "company.service.sendRequestAccessEmail",
 		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
 		"requesterName":    requesterName,
 		"requesterEmail":   requesterEmail,
@@ -472,7 +473,7 @@ company.You can choose to accept or deny the request.
 // sendRequestApprovedEmailToRecipient generates and sends an email to the specified recipient
 func (s service) sendRequestApprovedEmailToRecipient(ctx context.Context, companyModel *models.Company, recipientName, recipientAddress string) {
 	f := logrus.Fields{
-		"functionName":     "company.sendRequestApprovedEmailToRecipient",
+		"functionName":     "company.service.sendRequestApprovedEmailToRecipient",
 		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
 		"recipientName":    recipientName,
 		"recipientAddress": recipientAddress,
@@ -509,7 +510,7 @@ Manager status.
 // sendRequestRejectedEmailToRecipient generates and sends an email to the specified recipient
 func (s service) sendRequestRejectedEmailToRecipient(ctx context.Context, companyModel *models.Company, recipientName, recipientAddress string) {
 	f := logrus.Fields{
-		"functionName":     "company.sendRequestRejectedEmailToRecipient",
+		"functionName":     "company.service.sendRequestRejectedEmailToRecipient",
 		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
 		"recipientName":    recipientName,
 		"recipientAddress": recipientAddress,
@@ -575,7 +576,7 @@ If you have further questions about this denial, please contact one of the exist
 // getPreferredNameAndEmail when given the user LFID, this routine returns the user's name and preferred email
 func (s service) getPreferredNameAndEmail(ctx context.Context, lfid string) (string, string, error) {
 	f := logrus.Fields{
-		"functionName":   "company.getPreferredNameAndEmail",
+		"functionName":   "company.service.getPreferredNameAndEmail",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"lfid":           lfid,
 	}
@@ -622,7 +623,7 @@ func (s service) getPreferredNameAndEmail(ctx context.Context, lfid string) (str
 
 func (s service) GetCompanyByExternalID(ctx context.Context, companySFID string) (*models.Company, error) {
 	f := logrus.Fields{
-		"functionName":   "company.GetCompanyByExternalID",
+		"functionName":   "company.service.GetCompanyByExternalID",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companySFID":    companySFID,
 	}
@@ -633,7 +634,7 @@ func (s service) GetCompanyByExternalID(ctx context.Context, companySFID string)
 		return comp, nil
 	}
 	if err == ErrCompanyDoesNotExist {
-		comp, err = s.CreateOrgFromExternalID(ctx, companySFID)
+		comp, err = s.CreateOrgFromExternalID(ctx, "", companySFID)
 		if err != nil {
 			return comp, err
 		}
@@ -642,9 +643,34 @@ func (s service) GetCompanyByExternalID(ctx context.Context, companySFID string)
 	return nil, err
 }
 
+func (s service) GetCompanyBySigningEntityName(ctx context.Context, signingEntityName, companySFID string) (*models.Company, error) {
+	f := logrus.Fields{
+		"functionName":      "company.service.GetCompanyBySigningEntityName",
+		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
+		"signingEntityName": signingEntityName,
+		"companySFID":       companySFID,
+	}
+	log.WithFields(f).Debug("Searching company by signing entity name...")
+	comp, err := s.repo.GetCompanyBySigningEntityName(ctx, signingEntityName)
+	if err == nil {
+		log.WithFields(f).WithError(err).Warn("problem searching organizations by signing entity name")
+		return comp, nil
+	}
+
+	if err == ErrCompanyDoesNotExist {
+		comp, err = s.CreateOrgFromExternalID(ctx, signingEntityName, companySFID)
+		if err != nil {
+			return comp, err
+		}
+		return comp, nil
+	}
+
+	return nil, err
+}
+
 func (s service) SearchOrganizationByName(ctx context.Context, orgName string, websiteName string, filter string) (*models.OrgList, error) {
 	f := logrus.Fields{
-		"functionName":   "company.SearchOrganizationByName",
+		"functionName":   "company.service.SearchOrganizationByName",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"orgName":        orgName,
 		"websiteName":    websiteName,
@@ -676,11 +702,12 @@ func (s service) SearchOrganizationByName(ctx context.Context, orgName string, w
 }
 
 // CreateOrgFromExternalID creates a new EasyCLA company from the external SF Organization ID
-func (s service) CreateOrgFromExternalID(ctx context.Context, companySFID string) (*models.Company, error) {
+func (s service) CreateOrgFromExternalID(ctx context.Context, signingEntityName, companySFID string) (*models.Company, error) {
 	f := logrus.Fields{
-		"functionName":   "company.CreateOrgFromExternalID",
-		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-		"companySFID":    companySFID,
+		"functionName":      "company.service.CreateOrgFromExternalID",
+		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
+		"companySFID":       companySFID,
+		"signingEntityName": signingEntityName,
 	}
 	osc := organization_service.GetClient()
 	log.WithFields(f).Debugf("Searching organization by company SFID")
@@ -718,11 +745,16 @@ func (s service) CreateOrgFromExternalID(ctx context.Context, companySFID string
 		}
 	}
 
+	if signingEntityName == "" {
+		signingEntityName = org.Name
+	}
+
 	newComp := &models.Company{
 		CompanyACL:        []string{companyAdmin.LfUsername},
 		CompanyExternalID: org.ID,
 		CompanyName:       org.Name,
 		CompanyManagerID:  claUser.UserID,
+		SigningEntityName: signingEntityName,
 		Note:              "created based on SF Organization Service record",
 	}
 
@@ -740,7 +772,7 @@ func (s service) CreateOrgFromExternalID(ctx context.Context, companySFID string
 // getCompanyAdmin is helper function which queries org-service to get first company-admin
 func getCompanyAdmin(ctx context.Context, companySFID string) (*models.User, error) {
 	f := logrus.Fields{
-		"functionName":   "company.getCompanyAdmin",
+		"functionName":   "company.service.getCompanyAdmin",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companySFID":    companySFID,
 	}

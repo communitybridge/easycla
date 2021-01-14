@@ -39,6 +39,7 @@ type IRepository interface { //nolint
 	GetCompanies(ctx context.Context) (*models.Companies, error)
 	GetCompany(ctx context.Context, companyID string) (*models.Company, error)
 	GetCompanyByExternalID(ctx context.Context, companySFID string) (*models.Company, error)
+	GetCompanyBySigningEntityName(ctx context.Context, signingEntityName string) (*models.Company, error)
 	GetCompanyByName(ctx context.Context, companyName string) (*models.Company, error)
 	SearchCompanyByName(ctx context.Context, companyName string, nextKey string) (*models.Companies, error)
 	DeleteCompanyByID(ctx context.Context, companyID string) error
@@ -78,7 +79,7 @@ func NewRepository(awsSession *session.Session, stage string) IRepository {
 // GetCompanies retrieves all the companies
 func (repo repository) GetCompanies(ctx context.Context) (*models.Companies, error) {
 	f := logrus.Fields{
-		"functionName":   "GetCompanies",
+		"functionName":   "company.repository.GetCompanies",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 	// Use the nice builder to create the expression
@@ -156,7 +157,7 @@ func (repo repository) GetCompanies(ctx context.Context) (*models.Companies, err
 // GetCompanyByExternalID returns a company based on the company external ID
 func (repo repository) GetCompanyByExternalID(ctx context.Context, companySFID string) (*models.Company, error) {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.GetCompanyByExternalID",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companySFID":    companySFID,
 	}
@@ -196,10 +197,54 @@ func (repo repository) GetCompanyByExternalID(ctx context.Context, companySFID s
 	return dbCompanyModel.toModel()
 }
 
+// GetCompanyBySigningEntityName search the company by signing entity name
+func (repo repository) GetCompanyBySigningEntityName(ctx context.Context, signingEntityName string) (*models.Company, error) {
+	f := logrus.Fields{
+		"functionName":      "company.repository.GetCompanyBySigningEntityName",
+		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
+		"signingEntityName": signingEntityName,
+	}
+	condition := expression.Key("signing_entity_name").Equal(expression.Value(signingEntityName))
+	builder := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildCompanyProjection())
+	// Use the nice builder to create the expression
+	expr, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		FilterExpression:          expr.Filter(),
+		TableName:                 aws.String(repo.companyTableName),
+		IndexName:                 aws.String("company-signing-entity-name-index"),
+	}
+
+	results, err := repo.dynamoDBClient.Query(queryInput)
+	if err != nil {
+		log.WithFields(f).Warnf("error retrieving company using signing_entity_name. error = %s", err.Error())
+		return nil, err
+	}
+
+	if len(results.Items) == 0 {
+		return nil, ErrCompanyDoesNotExist
+	}
+	dbCompanyModel := DBModel{}
+	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbCompanyModel)
+	if err != nil {
+		return nil, err
+	}
+
+	return dbCompanyModel.toModel()
+}
+
 // GetCompanyByName searches the database and returns the matching company names
 func (repo repository) GetCompanyByName(ctx context.Context, companyName string) (*models.Company, error) {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.GetCompanyByName",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companyName":    companyName,
 	}
@@ -253,7 +298,7 @@ func (repo repository) GetCompanyByName(ctx context.Context, companyName string)
 // GetCompany returns a company based on the company ID
 func (repo repository) GetCompany(ctx context.Context, companyID string) (*models.Company, error) {
 	f := logrus.Fields{
-		"functionName":   "GetCompany",
+		"functionName":   "company.repository.GetCompany",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companyID":      companyID,
 	}
@@ -288,7 +333,7 @@ func (repo repository) GetCompany(ctx context.Context, companyID string) (*model
 // SearchCompanyByName locates companies by the matching name and return any potential matches
 func (repo repository) SearchCompanyByName(ctx context.Context, companyName string, nextKey string) (*models.Companies, error) {
 	f := logrus.Fields{
-		"functionName":   "SearchCompanyByName",
+		"functionName":   "company.repository.SearchCompanyByName",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companyName":    companyName,
 		"nextKey":        nextKey,
@@ -398,7 +443,7 @@ func (repo repository) SearchCompanyByName(ctx context.Context, companyName stri
 // DeleteCompanyByID deletes the company by ID
 func (repo repository) DeleteCompanyByID(ctx context.Context, companyID string) error {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.DeleteCompanyByID",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companyID":      companyID,
 	}
@@ -420,7 +465,7 @@ func (repo repository) DeleteCompanyByID(ctx context.Context, companyID string) 
 // DeleteCompanyBySFID deletes the company by SFID
 func (repo repository) DeleteCompanyBySFID(ctx context.Context, companySFID string) error {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.DeleteCompanyBySFID",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companySFID":    companySFID,
 	}
@@ -443,7 +488,7 @@ func (repo repository) DeleteCompanyBySFID(ctx context.Context, companySFID stri
 // GetCompanyUserManager the get a list of companies when provided the company id and user manager
 func (repo repository) GetCompaniesByUserManager(ctx context.Context, userID string, userModel user.User) (*models.Companies, error) {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.GetCompaniesByUserManager",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"userID":         userID,
 		"userModel":      userModel,
@@ -551,7 +596,7 @@ func (repo repository) GetCompaniesByUserManager(ctx context.Context, userID str
 // GetCompanyUserManagerWithInvites the get a list of companies including status when provided the company id and user manager
 func (repo repository) GetCompaniesByUserManagerWithInvites(ctx context.Context, userID string, userModel user.User) (*models.CompaniesWithInvites, error) {
 	f := logrus.Fields{
-		"functionName":   "GetCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.GetCompaniesByUserManagerWithInvites",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"userID":         userID,
 		"userModel":      userModel,
@@ -575,7 +620,7 @@ func (repo repository) GetCompaniesByUserManagerWithInvites(ctx context.Context,
 
 func (repo repository) buildCompaniesByUserManagerWithInvites(ctx context.Context, companies *models.Companies, invites []Invite) *models.CompaniesWithInvites {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.buildCompaniesByUserManagerWithInvites",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 	companiesWithInvites := models.CompaniesWithInvites{
@@ -626,7 +671,7 @@ func (repo repository) buildCompaniesByUserManagerWithInvites(ctx context.Contex
 // buildCompanyModels converts the response model into a response data model
 func buildCompanyModels(ctx context.Context, results *dynamodb.ScanOutput) ([]models.Company, error) {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.buildCompanyModels",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 	var companies []models.Company
@@ -688,7 +733,7 @@ func buildCompanyModels(ctx context.Context, results *dynamodb.ScanOutput) ([]mo
 // GetCompanyInviteRequest returns the specified request
 func (repo repository) GetCompanyInviteRequest(ctx context.Context, companyInviteID string) (*Invite, error) {
 	f := logrus.Fields{
-		"functionName":    "buildCompaniesByUserManagerWithInvites",
+		"functionName":    "company.repository.GetCompanyInviteRequest",
 		utils.XREQUESTID:  ctx.Value(utils.XREQUESTID),
 		"companyInviteID": companyInviteID,
 	}
@@ -736,7 +781,7 @@ func (repo repository) GetCompanyInviteRequest(ctx context.Context, companyInvit
 // GetCompanyInviteRequests returns a list of company invites when provided the company ID
 func (repo repository) GetCompanyInviteRequests(ctx context.Context, companyID string, status *string) ([]Invite, error) {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.GetCompanyInviteRequests",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companyID":      companyID,
 		"status":         aws.StringValue(status),
@@ -791,7 +836,7 @@ func (repo repository) GetCompanyInviteRequests(ctx context.Context, companyID s
 // GetCompanyUserInviteRequests returns a list of company invites when provided the company ID and user ID
 func (repo repository) GetCompanyUserInviteRequests(ctx context.Context, companyID string, userID string) (*Invite, error) {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.GetCompanyUserInviteRequests",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companyID":      companyID,
 		"userID":         userID,
@@ -853,7 +898,7 @@ func (repo repository) GetCompanyUserInviteRequests(ctx context.Context, company
 // GetUserInviteRequests returns a list of company invites when provided the user ID
 func (repo repository) GetUserInviteRequests(ctx context.Context, userID string) ([]Invite, error) {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.GetUserInviteRequests",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"userID":         userID,
 	}
@@ -920,7 +965,7 @@ func (repo repository) GetUserInviteRequests(ctx context.Context, userID string)
 // AddPendingCompanyInviteRequest adds a pending company invite when provided the company ID and user ID
 func (repo repository) AddPendingCompanyInviteRequest(ctx context.Context, companyID string, userModel user.User) (*Invite, error) {
 	f := logrus.Fields{
-		"functionName":       "AddPendingCompanyInviteRequest",
+		"functionName":       "company.repository.AddPendingCompanyInviteRequest",
 		utils.XREQUESTID:     ctx.Value(utils.XREQUESTID),
 		"companyID":          companyID,
 		"UserID":             userModel.UserID,
@@ -1033,7 +1078,7 @@ func (repo repository) RejectCompanyAccessRequest(ctx context.Context, companyIn
 // updateInviteRequestStatus updates the specified invite with the specified status
 func (repo repository) updateInviteRequestStatus(ctx context.Context, companyInviteID, status string) error {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.updateInviteRequestStatus",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 
@@ -1090,7 +1135,7 @@ func (repo repository) updateInviteRequestStatus(ctx context.Context, companyInv
 // UpdateCompanyAccessList updates the company ACL when provided the company ID and ACL list
 func (repo repository) UpdateCompanyAccessList(ctx context.Context, companyID string, companyACL []string) error {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.UpdateCompanyAccessList",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"companyID":      companyID,
 		"companyACL":     strings.Join(companyACL, ","),
@@ -1131,7 +1176,7 @@ func (repo repository) UpdateCompanyAccessList(ctx context.Context, companyID st
 // CreateCompany creates a new company record
 func (repo repository) CreateCompany(ctx context.Context, in *models.Company) (*models.Company, error) {
 	f := logrus.Fields{
-		"functionName":   "buildCompaniesByUserManagerWithInvites",
+		"functionName":   "company.repository.CreateCompany",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 	companyID, err := uuid.NewV4()
