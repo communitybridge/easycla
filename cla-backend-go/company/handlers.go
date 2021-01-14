@@ -35,7 +35,7 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		companiesModel, err := service.GetCompanies(ctx)
 		if err != nil {
-			msg := fmt.Sprintf("Bad Request - unable to query all companies, error: %v", err)
+			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - unable to query all companies, error: %v", err)
 			log.Warnf(msg)
 			return company.NewGetCompaniesBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
@@ -51,7 +51,7 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		companyModel, err := service.GetCompany(ctx, params.CompanyID)
 		if err != nil {
-			msg := fmt.Sprintf("Bad Request - unable to query company by ID: %s, error: %v", params.CompanyID, err)
+			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - unable to query company by ID: %s, error: %v", params.CompanyID, err)
 			log.Warnf(msg)
 			return company.NewGetCompanyBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
@@ -86,7 +86,7 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 		}
 		companyModel, err := service.GetCompanyByExternalID(ctx, params.CompanySFID)
 		if err != nil {
-			msg := fmt.Sprintf("Bad Request - unable to get associated salesforce Organization: %s for EasyCLA Company: %s, error: %v", org.Name, companyModel.CompanyName, err)
+			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - unable to get associated salesforce Organization: %s for EasyCLA Company: %s, error: %v", org.Name, companyModel.CompanyName, err)
 			log.Warnf(msg)
 			return company.NewGetCompanyByExternalIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
@@ -100,11 +100,11 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		f := logrus.Fields{
-			"functionName":      "company.CompanyGetCompanyBySigningEntityNameHandler",
+			"functionName":      "company.handler.CompanyGetCompanyBySigningEntityNameHandler",
 			"signingEntityName": params.Name,
 			"companySFID":       params.CompanySFID,
 		}
-		log.WithFields(f).Debug("Searching by signing entity name")
+		log.WithFields(f).Debug("Searching by signing entity name...")
 		companyModel, err := service.GetCompanyBySigningEntityName(ctx, params.Name, params.CompanySFID)
 		if err != nil {
 			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Unable to locate Company with Signing Entity Request of %s", params.Name)
@@ -120,6 +120,12 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 	api.CompanySearchCompanyHandler = company.SearchCompanyHandlerFunc(func(params company.SearchCompanyParams, claUser *user.CLAUser) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		f := logrus.Fields{
+			"functionName": "company.handler.CompanySearchCompanyHandler",
+			"CompanyName":  params.CompanyName,
+			"NextKey":      params.NextKey,
+		}
+		log.WithFields(f).Debug("Searching company...")
 		var nextKey = ""
 		if params.NextKey != nil {
 			nextKey = *params.NextKey
@@ -127,7 +133,7 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 
 		companiesModel, err := service.SearchCompanyByName(ctx, params.CompanyName, nextKey)
 		if err != nil {
-			msg := fmt.Sprintf("Bad Request - unable to query company by name: %s, error: %v", params.CompanyName, err)
+			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - unable to query company by name: %s, error: %v", params.CompanyName, err)
 			log.Warnf(msg)
 			return company.NewSearchCompanyBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
@@ -141,8 +147,13 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 	api.CompanyGetCompaniesByUserManagerHandler = company.GetCompaniesByUserManagerHandlerFunc(func(params company.GetCompaniesByUserManagerParams, claUser *user.CLAUser) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		f := logrus.Fields{
+			"functionName": "company.handler.CompanyGetCompaniesByUserManagerHandler",
+			"UserID":       params.UserID,
+		}
+		log.WithFields(f).Debug("Searching company by user manager...")
 		if companyUserValidation {
-			log.Debugf("Company User Validation - GetUserByUserName() - claUser: %+v", claUser)
+			log.Debugf("Company User Validation - claUser: %+v", claUser)
 			userModel, userErr := usersService.GetUserByUserName(claUser.LFUsername, true)
 			if userErr != nil {
 				return company.NewGetCompaniesByUserManagerUnauthorized().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
@@ -161,7 +172,7 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 
 		companies, err := service.GetCompaniesByUserManager(ctx, params.UserID)
 		if err != nil {
-			msg := fmt.Sprintf("Bad Request - unable to query companies by user manager id: %s, error: %v", params.UserID, err)
+			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - unable to query companies by user manager id: %s, error: %v", params.UserID, err)
 			log.Warnf(msg)
 			return company.NewGetCompaniesByUserManagerBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
@@ -195,7 +206,7 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 
 		companies, err := service.GetCompaniesByUserManagerWithInvites(ctx, params.UserID)
 		if err != nil {
-			msg := fmt.Sprintf("Bad Request - unable to query companies by user manager id: %s, error: %v", params.UserID, err)
+			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - unable to query companies by user manager id: %s, error: %v", params.UserID, err)
 			log.Warnf(msg)
 			return company.NewGetCompaniesByUserManagerWithInvitesBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",
