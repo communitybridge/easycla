@@ -512,9 +512,10 @@ func (osc *Client) ListOrgUserScopes(orgID string, roleName []string) (*models.U
 }
 
 // CreateOrg creates company based on name and website with additional data for required fields
-func (osc *Client) CreateOrg(companyName, signingEntityName, companyWebsite string) (*models.Organization, error) {
+func (osc *Client) CreateOrg(ctx context.Context, companyName, signingEntityName, companyWebsite string) (*models.Organization, error) {
 	f := logrus.Fields{
 		"functionName":      "organization_service.CreateOrg",
+		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
 		"companyName":       companyName,
 		"signingEntityName": signingEntityName,
 		"companyWebsite":    companyWebsite,
@@ -557,17 +558,31 @@ func (osc *Client) CreateOrg(companyName, signingEntityName, companyWebsite stri
 
 	clientAuth := runtimeClient.BearerToken(tok)
 	description := "No Description"
+	f["description"] = description
 	companyType := "Customer"
+	f["type"] = companyType
+	f["companyType"] = companyType
 	companySource := "No Source"
 	industry := "No Industry"
-	logoURL := linuxFoundation[0].LogoURL
-
-	f["companyType"] = companyType
 	f["industry"] = industry
+	logoURL := linuxFoundation[0].LogoURL
 	f["logoURL"] = logoURL
-	f["type"] = companyType
 
-	org := models.CreateOrg{
+	params := &organizations.CreateOrgParams{
+		Org: &models.CreateOrg{
+			Description:       &description,
+			Name:              &companyName,
+			Website:           &companyWebsite,
+			Industry:          &industry,
+			Source:            &companySource,
+			Type:              &companyType,
+			LogoURL:           &logoURL,
+			SigningEntityName: []string{signingEntityName},
+		},
+		Context: context.Background(),
+	}
+
+	log.WithFields(f).Debugf("Creating organization with params: %+v", models.CreateOrg{
 		Description:       &description,
 		Name:              &companyName,
 		Website:           &companyWebsite,
@@ -576,14 +591,7 @@ func (osc *Client) CreateOrg(companyName, signingEntityName, companyWebsite stri
 		Type:              &companyType,
 		LogoURL:           &logoURL,
 		SigningEntityName: []string{signingEntityName},
-	}
-
-	params := &organizations.CreateOrgParams{
-		Org:     &org,
-		Context: context.Background(),
-	}
-
-	log.WithFields(f).Debugf("Creating organization with params: %+v", org)
+	})
 	result, err := osc.cl.Organizations.CreateOrg(params, clientAuth)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warnf("Failed to create salesforce Company :%s , err: %+v ", companyName, err)

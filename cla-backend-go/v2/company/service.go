@@ -371,7 +371,7 @@ func (s *service) CreateCompany(ctx context.Context, companyName, signingEntityN
 	// Create SalesForce company
 	orgClient := orgService.GetClient()
 	log.WithFields(f).Debugf("Creating Organization: %s, Signing Entity Name: %s, Website: %s", companyName, signingEntityName, companyWebsite)
-	org, err := orgClient.CreateOrg(companyName, signingEntityName, companyWebsite)
+	org, err := orgClient.CreateOrg(ctx, companyName, signingEntityName, companyWebsite)
 	if err != nil {
 		log.WithFields(f).Warnf("unable to create platform organization service, error: %+v", err)
 		return nil, err
