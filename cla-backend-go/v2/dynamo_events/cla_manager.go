@@ -189,7 +189,7 @@ func (s service) assignCLAManager(ctx context.Context, email, username, companyS
 
 	if signedAtFoundation {
 		// add cla manager role at foundation level
-		err := orgService.CreateOrgUserRoleOrgScopeProjectOrg(email, foundationID, companySFID, claManagerRoleID)
+		err := orgService.CreateOrgUserRoleOrgScopeProjectOrg(ctx, email, foundationID, companySFID, claManagerRoleID)
 		if err != nil {
 			log.WithFields(f).Warnf("unable to add %s scope. error = %s", utils.CLAManagerRole, err)
 		}
@@ -207,7 +207,7 @@ func (s service) assignCLAManager(ctx context.Context, email, username, companyS
 		for _, projectSFID := range projectSFIDList.List() {
 			go func(projectSFID string) {
 				defer wg.Done()
-				err := orgService.CreateOrgUserRoleOrgScopeProjectOrg(email, projectSFID, companySFID, claManagerRoleID)
+				err := orgService.CreateOrgUserRoleOrgScopeProjectOrg(ctx, email, projectSFID, companySFID, claManagerRoleID)
 				if err != nil {
 					log.WithFields(f).Warnf("unable to add %s scope for project: %s, company: %s using roleID: %s for user email: %s. error = %s",
 						utils.CLAManagerRole, projectSFID, companySFID, claManagerRoleID, email, err)

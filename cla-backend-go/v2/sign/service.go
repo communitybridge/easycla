@@ -181,7 +181,7 @@ func (s *service) RequestCorporateSignature(ctx context.Context, lfUsername stri
 	// Email flow
 	if input.SendAsEmail {
 		// this would be used only in case of cla-signatory
-		err = prepareUserForSigning(input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
+		err = prepareUserForSigning(ctx, input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
 		if err != nil {
 			// Ignore conflict - role has already been assigned
 			if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); !ok {
@@ -205,7 +205,7 @@ func (s *service) RequestCorporateSignature(ctx context.Context, lfUsername stri
 			}
 		}
 
-		err = prepareUserForSigning(currentUserEmail, utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
+		err = prepareUserForSigning(ctx, currentUserEmail, utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
 		if err != nil {
 			// Ignore conflict - role has already been assigned
 			if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); !ok {
@@ -225,7 +225,7 @@ func (s *service) RequestCorporateSignature(ctx context.Context, lfUsername stri
 	if err != nil {
 		if input.AuthorityEmail.String() != "" {
 			// remove role
-			removeErr := removeSignatoryRole(input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
+			removeErr := removeSignatoryRole(ctx, input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
 			if removeErr != nil {
 				log.Warnf("failed to remove signatory role. companySFID :%s, email :%s error: %+v", *input.CompanySfid, input.AuthorityEmail.String(), removeErr)
 			}
@@ -312,7 +312,7 @@ func requestCorporateSignature(authToken string, apiURL string, input *requestCo
 	return &out, nil
 }
 
-func removeSignatoryRole(userEmail string, companySFID string, projectSFID string) error {
+func removeSignatoryRole(ctx context.Context, userEmail string, companySFID string, projectSFID string) error {
 	f := logrus.Fields{"functionName": "removeSignatoryRole", "user_email": userEmail, "company_sfid": companySFID, "project_sfid": projectSFID}
 	log.WithFields(f).Debug("removing role for user")
 
@@ -335,7 +335,7 @@ func removeSignatoryRole(userEmail string, companySFID string, projectSFID strin
 	// Get scope id
 	log.WithFields(f).Debug("getting scope id")
 	orgClient := organizationService.GetClient()
-	scopeID, scopeErr := orgClient.GetScopeID(companySFID, projectSFID, "cla-signatory", "project|organization", user.Username)
+	scopeID, scopeErr := orgClient.GetScopeID(ctx, companySFID, projectSFID, "cla-signatory", "project|organization", user.Username)
 
 	if scopeErr != nil {
 		log.WithFields(f).Debug("Failed to get scope id for cla-signatory role")
@@ -344,7 +344,7 @@ func removeSignatoryRole(userEmail string, companySFID string, projectSFID strin
 
 	//Unassign role
 	log.WithFields(f).Debug("Unassigning role")
-	deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(companySFID, roleID, scopeID, &user.Username, &userEmail)
+	deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(ctx, companySFID, roleID, scopeID, &user.Username, &userEmail)
 
 	if deleteErr != nil {
 		log.WithFields(f).Debug("Failed to remove cla-signatory role")
@@ -355,7 +355,7 @@ func removeSignatoryRole(userEmail string, companySFID string, projectSFID strin
 
 }
 
-func prepareUserForSigning(userEmail string, companySFID, projectSFID string) error {
+func prepareUserForSigning(ctx context.Context, userEmail string, companySFID, projectSFID string) error {
 	var ErrNotInOrg error
 	role := utils.CLASignatoryRole
 	f := logrus.Fields{"user_email": userEmail, "company_sfid": companySFID, "project_sfid": projectSFID}
@@ -384,7 +384,7 @@ func prepareUserForSigning(userEmail string, companySFID, projectSFID string) er
 
 	// make user cla-signatory
 	log.WithFields(f).Debugf("assigning user role of %s", role)
-	err = osc.CreateOrgUserRoleOrgScopeProjectOrg(userEmail, projectSFID, companySFID, roleID)
+	err = osc.CreateOrgUserRoleOrgScopeProjectOrg(ctx, userEmail, projectSFID, companySFID, roleID)
 	if err != nil {
 		if strings.Contains(err.Error(), "associated with some organization") {
 			ErrNotInOrg = fmt.Errorf("user: %s already associated with some organization", user.Username)
