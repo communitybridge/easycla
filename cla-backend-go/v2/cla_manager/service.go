@@ -356,7 +356,7 @@ func (s *service) CreateCLAManagerDesignee(ctx context.Context, companySFID stri
 
 	log.WithFields(f).Debugf("checking if user has %s role scope...", utils.CLADesigneeRole)
 	// Check if user is already CLA Manager designee of project|organization scope
-	hasRoleScope, hasRoleScopeErr := orgClient.IsUserHaveRoleScope(utils.CLADesigneeRole, lfxUser.ID, companySFID, projectSFID)
+	hasRoleScope, hasRoleScopeErr := orgClient.IsUserHaveRoleScope(ctx, utils.CLADesigneeRole, lfxUser.ID, companySFID, projectSFID)
 	if hasRoleScopeErr != nil {
 		// Skip 404 for ListOrgUsrServiceScopes endpoint
 		if _, ok := hasRoleScopeErr.(*organizations.ListOrgUsrServiceScopesNotFound); !ok {
@@ -385,7 +385,7 @@ func (s *service) CreateCLAManagerDesignee(ctx context.Context, companySFID stri
 
 	log.WithFields(f).Debugf("creating user role organization scope for user: %s, with role: %s with role ID: %s using project|org: %s|%s...",
 		userEmail, utils.CLADesigneeRole, roleID, projectSFID, companySFID)
-	scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(userEmail, projectSFID, companySFID, roleID)
+	scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(ctx, userEmail, projectSFID, companySFID, roleID)
 	if scopeErr != nil {
 		// Ignore conflict - role has already been assigned - otherwise, return error
 		if _, ok := scopeErr.(*organizations.CreateOrgUsrRoleScopesConflict); !ok {
@@ -564,7 +564,7 @@ func (s *service) CreateCLAManagerRequest(ctx context.Context, contactAdmin bool
 	if contactAdmin {
 		log.WithFields(f).Debug("sending email to company Admin")
 		log.WithFields(f).Debug("querying user admin scopes...")
-		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companySFID, nil)
+		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(ctx, companySFID, nil)
 		if listScopeErr != nil {
 			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Admin lookup error for organisation SFID: %s, error: %+v ",
 				companySFID, listScopeErr)
@@ -747,7 +747,7 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 		return nil, ErrCLACompanyNotFound
 	}
 
-	organization, orgErr := orgService.GetOrganization(companyModel.CompanyExternalID)
+	organization, orgErr := orgService.GetOrganization(ctx, companyModel.CompanyExternalID)
 	if orgErr != nil {
 		msg := fmt.Sprintf("Problem getting company by ID: %s ", companyID)
 		log.Warn(msg)
@@ -771,7 +771,7 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 	// Check if sending cla manager request to company admin
 	if contactAdmin {
 		log.Debugf("Sending email to company Admin")
-		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(companyModel.CompanyExternalID, nil)
+		scopes, listScopeErr := orgService.ListOrgUserAdminScopes(ctx, companyModel.CompanyExternalID, nil)
 		if listScopeErr != nil {
 			msg := fmt.Sprintf("Admin lookup error for organisation SFID: %s ", companyModel.CompanyExternalID)
 			log.WithFields(f).Warn(msg)

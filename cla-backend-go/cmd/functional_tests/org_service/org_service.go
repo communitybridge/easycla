@@ -4,6 +4,8 @@
 package org_service
 
 import (
+	"context"
+
 	"github.com/communitybridge/easycla/cla-backend-go/cmd/functional_tests/test_models"
 	"github.com/communitybridge/easycla/cla-backend-go/company"
 	"github.com/communitybridge/easycla/cla-backend-go/config"
@@ -80,7 +82,7 @@ func (t *TestBehaviour) RunIsUserHaveRoleScope() {
 	log.Debugf("Role ID for cla-manager-role : %s", roleID)
 	orgClient := organization_service.GetClient()
 	userSFID := "clamanager1devintel"
-	hasScope, err := orgClient.IsUserHaveRoleScope(roleID, userSFID, "00117000015vpjXAAQ", "a092M00001IfVmKQAV")
+	hasScope, err := orgClient.IsUserHaveRoleScope(context.Background(), roleID, userSFID, "00117000015vpjXAAQ", "a092M00001IfVmKQAV")
 	if err != nil {
 		log.Fatalf("unable to invoke org client IsUserHaveRoleScope, error: %+v", err)
 	}

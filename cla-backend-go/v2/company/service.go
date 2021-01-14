@@ -142,7 +142,7 @@ func (s *service) GetCompanyProjectCLAManagers(ctx context.Context, companyID, c
 
 	// get the org client for org info filling
 	orgClient := orgService.GetClient()
-	orgModel, err := orgClient.GetOrganization(companySFID)
+	orgModel, err := orgClient.GetOrganization(ctx, companySFID)
 	if err != nil {
 		return nil, fmt.Errorf("fetching org model failed for companySFID : %s : %w", companySFID, err)
 	}
@@ -249,7 +249,7 @@ func (s *service) GetCompanyAdmins(ctx context.Context, companySFID string) (*mo
 	orgClient := orgService.GetClient()
 
 	log.WithFields(f).Info("Getting user admins for company")
-	admins, adminErr := orgClient.ListOrgUserAdminScopes(companySFID, nil)
+	admins, adminErr := orgClient.ListOrgUserAdminScopes(ctx, companySFID, nil)
 	adminList := make([]*models.AdminSf, 0)
 	if adminErr != nil {
 		if _, ok := adminErr.(*organizations.ListOrgUsrAdminScopesNotFound); ok {
@@ -400,7 +400,7 @@ func (s *service) CreateCompany(ctx context.Context, companyName, signingEntityN
 			return nil, adminErr
 		}
 
-		scopeErr := orgClient.CreateOrgUserRoleOrgScope(userEmail, org.ID, roleID)
+		scopeErr := orgClient.CreateOrgUserRoleOrgScope(ctx, userEmail, org.ID, roleID)
 		if scopeErr != nil {
 			msg := fmt.Sprintf("Problem creating Org scope for email: %s , companyID: %s", userEmail, org.ID)
 			log.WithFields(f).Warn(msg)
@@ -528,7 +528,7 @@ func (s *service) AssociateContributor(ctx context.Context, companySFID string, 
 	}
 
 	log.WithFields(f).Info("creating contributor role scope")
-	scopeErr := orgClient.CreateOrgUserRoleOrgScope(userEmail, companySFID, roleID)
+	scopeErr := orgClient.CreateOrgUserRoleOrgScope(ctx, userEmail, companySFID, roleID)
 	if scopeErr != nil {
 		log.WithFields(f).Warnf("Problem creating role scope")
 		return nil, scopeErr
@@ -568,7 +568,7 @@ func (s *service) CreateContributor(ctx context.Context, companyID string, proje
 	}
 
 	// Check if user is already contributor of project|organization scope
-	hasRoleScope, hasRoleScopeErr := orgClient.IsUserHaveRoleScope("contributor", user.ID, companyID, projectID)
+	hasRoleScope, hasRoleScopeErr := orgClient.IsUserHaveRoleScope(ctx, "contributor", user.ID, companyID, projectID)
 	if hasRoleScopeErr != nil {
 		// Skip 404 for ListOrgUsrServiceScopes endpoint
 		if _, ok := hasRoleScopeErr.(*organizations.ListOrgUsrServiceScopesNotFound); !ok {
@@ -588,7 +588,7 @@ func (s *service) CreateContributor(ctx context.Context, companyID string, proje
 		return nil, designeeErr
 	}
 
-	scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(userEmail, projectID, companyID, roleID)
+	scopeErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(ctx, userEmail, projectID, companyID, roleID)
 	if scopeErr != nil {
 		msg := fmt.Sprintf("Problem creating projectOrg scope for email: %s , projectID: %s, companyID: %s", userEmail, projectID, companyID)
 		log.Warn(msg)
@@ -1293,7 +1293,7 @@ func (s service) autoCreateCompany(ctx context.Context, companySFID string) (*v1
 	log.WithFields(f).Debug("locating Organization in SF")
 
 	// Lookup organization by ID in the Org Service
-	sfOrgModel, sfOrgErr := orgClient.GetOrganization(companySFID)
+	sfOrgModel, sfOrgErr := orgClient.GetOrganization(ctx, companySFID)
 	if sfOrgErr != nil {
 		log.WithFields(f).Warnf("unable to locate platform organization record by SF ID, error: %+v", sfOrgErr)
 		return nil, sfOrgErr
@@ -1363,7 +1363,7 @@ func (s *service) RequestCompanyAdmin(ctx context.Context, userID string, claMan
 		return validateError
 	}
 
-	organizations, orgErr := orgServices.ListOrg(companyName)
+	organizations, orgErr := orgServices.ListOrg(ctx, companyName)
 	if orgErr != nil {
 		msg := fmt.Sprintf("Problem getting company by ID: %s ", companyName)
 		log.Warn(msg)

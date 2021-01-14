@@ -74,7 +74,7 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 		// Check for Salesforce org
 		orgClient := orgService.GetClient()
-		org, getErr := orgClient.GetOrganization(params.CompanySFID)
+		org, getErr := orgClient.GetOrganization(ctx, params.CompanySFID)
 
 		if getErr != nil {
 			msg := fmt.Sprintf("Failed to get salesforce org for ID: %s ", params.CompanySFID)

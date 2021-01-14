@@ -359,7 +359,7 @@ func (s *service) UpdateCLAPermissions(event events.DynamoDBEventRecord) error {
 	if len(managers) > 0 {
 		log.WithFields(f).Debugf("managers to be added/deleted : %+v", managers)
 		for _, entry := range managers {
-			log.WithFields(f).Debugf("processing difference: %+s", entry)
+			log.WithFields(f).Debugf("processing difference: %s", entry)
 			if utils.StringInSlice(entry, newSignature.SignatureACL) {
 				// Assign CLA Manager role
 				log.WithFields(f).Debugf("Assigning user %s to the %s role", entry, utils.CLAManagerRole)
@@ -477,7 +477,7 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 		return ErrNoExternalID
 	}
 
-	org, orgErr := orgClient.GetOrganization(companyModel.CompanyExternalID)
+	org, orgErr := orgClient.GetOrganization(ctx, companyModel.CompanyExternalID)
 	if orgErr != nil {
 		log.WithFields(f).WithError(orgErr).Warnf("failed to get organisation for ID: %s ", companyModel.CompanyExternalID)
 		return orgErr
@@ -524,7 +524,7 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 		// Get User email
 		email := lfUser.Emails[0].EmailAddress
 		if signedAtFoundation {
-			scopeID, scopeErr := orgClient.GetScopeID(org.ID, foundationSFID, utils.CLAManagerRole, utils.ProjectOrgScope, mgr)
+			scopeID, scopeErr := orgClient.GetScopeID(ctx, org.ID, foundationSFID, utils.CLAManagerRole, utils.ProjectOrgScope, mgr)
 			if scopeErr != nil {
 				log.WithFields(f).WithError(scopeErr).Warnf("failed to get scopeID for foundation: %s , organization: %s, manager: %s and role: %s ", foundationSFID, org.Name, mgr, utils.CLAManagerRole)
 				continue
@@ -532,7 +532,7 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 			if action == AddCLAManager {
 				log.WithFields(f).Debugf("Adding CLA Manager permissions...")
 
-				hasScope, scopeErr := orgClient.IsUserHaveRoleScope(utils.CLAManagerRole, lfUser.ID, org.ID, foundationSFID)
+				hasScope, scopeErr := orgClient.IsUserHaveRoleScope(ctx, utils.CLAManagerRole, lfUser.ID, org.ID, foundationSFID)
 				if scopeErr != nil {
 					log.WithFields(f).WithError(scopeErr).Warnf("Failed to get scope for role: %s , user:%s , foundation: %s and org: %s ", utils.CLAManagerRole, lfUser.ID, foundationSFID, org.ID)
 					continue
@@ -541,7 +541,7 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 					log.WithFields(f).Warnf("User: %s already has scope ", mgr)
 					continue
 				}
-				createErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(*email, foundationSFID, org.ID, roleID)
+				createErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(ctx, *email, foundationSFID, org.ID, roleID)
 				if createErr != nil {
 					log.WithFields(f).WithError(createErr).Warnf("failed to create CLA Manager role for user: %s ", *email)
 					return scopeErr
@@ -549,7 +549,7 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 
 			} else if action == DeleteCLAManager {
 				log.WithFields(f).Debugf("Deleting CLA Manager permissions...")
-				deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(org.ID, roleID, scopeID, &mgr, email)
+				deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(ctx, org.ID, roleID, scopeID, &mgr, email)
 				if deleteErr != nil {
 					log.WithFields(f).WithError(deleteErr).Warn("Failed to remove CLA Manager from user: &s ", mgr)
 					return deleteErr
@@ -565,7 +565,7 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 					projectSFID := projectSfid
 					eg.Go(func() error {
 						log.WithFields(f).Debugf("Adding CLA Manager role...")
-						err := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(*email, projectSFID, org.ID, roleID)
+						err := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(ctx, *email, projectSFID, org.ID, roleID)
 						if err != nil {
 							msg := fmt.Sprintf("unable to add %s scope for project: %s, company: %s using roleID: %s for user email: %s error = %s",
 								utils.CLAManagerRole, projectSFID, org.ID, roleID, *email, err)
@@ -589,13 +589,13 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 					// ensure that following goroutine gets a copy of projectSFID
 					projectSFID := projectSfid
 					eg.Go(func() error {
-						scopeID, scopeErr := orgClient.GetScopeID(org.ID, projectSFID, utils.CLAManagerRole, utils.ProjectOrgScope, mgr)
+						scopeID, scopeErr := orgClient.GetScopeID(ctx, org.ID, projectSFID, utils.CLAManagerRole, utils.ProjectOrgScope, mgr)
 						if scopeErr != nil {
 							log.WithFields(f).Warn(scopeErr)
 							return scopeErr
 						}
 						log.WithFields(f).Debugf("Removing CLA Manager role...")
-						deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(org.ID, roleID, scopeID, &mgr, email)
+						deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(ctx, org.ID, roleID, scopeID, &mgr, email)
 						if deleteErr != nil {
 							log.WithFields(f).Warn(deleteErr)
 							return deleteErr
