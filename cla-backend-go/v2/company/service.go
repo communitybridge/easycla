@@ -1324,22 +1324,51 @@ func (s service) autoCreateCompany(ctx context.Context, companySFID string) (*v1
 }
 
 func (s *service) GetCompanyLookup(ctx context.Context, orgName string, websiteName string) (*models.Lookup, error) {
+	f := logrus.Fields{
+		"functionName":   "company.service.GetCompanyLookup",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"orgName":        orgName,
+		"websiteName":    websiteName,
+	}
 	orgClient := orgService.GetClient()
+	log.WithFields(f).Debug("Looking up organization by name and website")
 	org, err := orgClient.SearchOrgLookup(orgName, websiteName)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("unable to lookup organization by name or website")
 		return nil, err
 	}
 
 	var result *models.Lookup
 	if org != nil {
+		var signingEntityName []string
+		// Sadly, search org lookup doesn't return signing entity name values
+		if org.Payload.ID != "" {
+			// lookup org with the signing entity name values
+			log.WithFields(f).Debugf("Looking up organization by ID: %s", org.Payload.ID)
+			orgModel, orgQueryErr := orgClient.GetOrganization(ctx, org.Payload.ID)
+			if orgQueryErr != nil {
+				log.WithFields(f).WithError(orgQueryErr).Warnf("unable to lookup organization using SFID: %s", org.Payload.ID)
+			} else {
+				log.WithFields(f).Debugf("Found organization by ID: %s", org.Payload.ID)
+				// If we have any values in the project...
+				if orgModel != nil && len(orgModel.SigningEntityName) > 0 {
+					log.WithFields(f).Debugf("Adding signing entity name values to response: %s", strings.Join(orgModel.SigningEntityName, ";"))
+					signingEntityName = orgModel.SigningEntityName
+				} else {
+					log.WithFields(f).Debug("No signing entity name values for Organization.")
+				}
+			}
+		}
+
 		result = &models.Lookup{
-			Employees: org.Payload.Employees,
-			ID:        org.Payload.ID,
-			Industry:  org.Payload.Industry,
-			Link:      org.Payload.Link,
-			Name:      org.Payload.Name,
-			Sector:    org.Payload.Sector,
-			Source:    org.Payload.Source,
+			Employees:          org.Payload.Employees,
+			ID:                 org.Payload.ID,
+			Industry:           org.Payload.Industry,
+			Link:               org.Payload.Link,
+			Name:               org.Payload.Name,
+			Sector:             org.Payload.Sector,
+			Source:             org.Payload.Source,
+			SigningEntityNames: signingEntityName,
 		}
 	}
 	return result, nil
