@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/restapi/operations/organization"
@@ -26,7 +28,7 @@ import (
 )
 
 // Configure sets up the middleware handlers
-func Configure(api *operations.ClaAPI, service IService, usersService users.Service, companyUserValidation bool, eventsService events.Service) {
+func Configure(api *operations.ClaAPI, service IService, usersService users.Service, companyUserValidation bool, eventsService events.Service) { // nolint
 
 	api.CompanyGetCompaniesHandler = company.GetCompaniesHandlerFunc(func(params company.GetCompaniesParams, claUser *user.CLAUser) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
@@ -92,6 +94,27 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 			})
 		}
 		return company.NewGetCompanyByExternalIDOK().WithXRequestID(reqID).WithPayload(companyModel)
+	})
+
+	api.CompanyGetCompanyBySigningEntityNameHandler = company.GetCompanyBySigningEntityNameHandlerFunc(func(params company.GetCompanyBySigningEntityNameParams) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+		f := logrus.Fields{
+			"functionName":      "company.CompanyGetCompanyBySigningEntityNameHandler",
+			"signingEntityName": params.Name,
+			"companySFID":       params.CompanySFID,
+		}
+		log.WithFields(f).Debug("Searching by signing entity name")
+		companyModel, err := service.GetCompanyBySigningEntityName(ctx, params.Name, params.CompanySFID)
+		if err != nil {
+			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - Unable to locate Company with Signing Entity Request of %s", params.Name)
+			log.Warnf(msg)
+			return company.NewGetCompanyBySigningEntityNameBadRequest().WithPayload(&models.ErrorResponse{
+				Code:    "400",
+				Message: msg,
+			})
+		}
+		return company.NewGetCompanyBySigningEntityNameOK().WithXRequestID(reqID).WithPayload(companyModel)
 	})
 
 	api.CompanySearchCompanyHandler = company.SearchCompanyHandlerFunc(func(params company.SearchCompanyParams, claUser *user.CLAUser) middleware.Responder {
