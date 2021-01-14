@@ -680,7 +680,7 @@ func (s service) SearchOrganizationByName(ctx context.Context, orgName string, w
 
 	osc := organization_service.GetClient()
 	log.WithFields(f).Debug("Searching organizations by name and website...")
-	orgs, err := osc.SearchOrganization(orgName, websiteName, filter)
+	orgs, err := osc.SearchOrganization(ctx, orgName, websiteName, filter)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("problem searching organizations by name and website")
 		return nil, err
@@ -712,7 +712,7 @@ func (s service) CreateOrgFromExternalID(ctx context.Context, signingEntityName,
 	}
 	osc := organization_service.GetClient()
 	log.WithFields(f).Debugf("Searching organization by company SFID")
-	org, err := osc.GetOrganization(companySFID)
+	org, err := osc.GetOrganization(ctx, companySFID)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("getting organization details failed")
 		return nil, err
@@ -793,7 +793,7 @@ func getCompanyAdmin(ctx context.Context, companySFID string) (*models.User, err
 		"companySFID":    companySFID,
 	}
 	osc := organization_service.GetClient()
-	result, err := osc.ListOrgUserAdminScopes(companySFID, nil)
+	result, err := osc.ListOrgUserAdminScopes(ctx, companySFID, nil)
 	if err != nil {
 		if _, ok := err.(*organizations.ListOrgUsrAdminScopesNotFound); !ok {
 			log.WithFields(f).Warnf("getting company-admin failed. error = %s", err.Error())
