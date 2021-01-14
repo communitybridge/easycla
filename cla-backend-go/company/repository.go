@@ -1211,6 +1211,7 @@ func (repo repository) CreateCompany(ctx context.Context, in *models.Company) (*
 
 	av, err := dynamodbattribute.MarshalMap(&comp)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem marshing company record")
 		return nil, err
 	}
 	_, err = repo.dynamoDBClient.PutItem(&dynamodb.PutItemInput{
