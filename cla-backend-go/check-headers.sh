@@ -21,6 +21,8 @@ echo "Searching python files..."
 files+=($(find . -name '*.py' -print | egrep -v ${exclude_pattern}))
 echo "Searching sh files..."
 files+=($(find . -name '*.sh' -print | egrep -v ${exclude_pattern}))
+echo "Searching make files..."
+files+=($(find . -name 'Makefile' -print | egrep -v ${exclude_pattern}))
 echo "Searching txt files..."
 files+=($(find . -name '*.txt' -print | egrep -v ${exclude_pattern}))
 echo "Searching yaml|yml files..."

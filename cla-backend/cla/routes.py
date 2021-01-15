@@ -1565,44 +1565,50 @@ def github_app_activity(body, request, response):
     Acts upon any events triggered by our app installed in someone's organization.
     """
     # Verify that Webhook Signature is valid
+    fn = 'routes.github.activity'
     event_type = request.headers.get('X-GITHUB-EVENT')
     action = get_github_activity_action(body)
+    cla.log.debug(f'{fn} - received github activity with event type: {event_type} with action: {action}')
+
     if event_type == "installation_repositories" or \
             event_type == "integration_installation_repositories" or \
             event_type == "repository" or \
             (event_type == "push" and action and action == "created"):
         try:
-            cla.log.debug(f"redirecting event to {event_type} v4 golang api")
+            cla.log.debug(f'{fn} - redirecting event to {event_type} v4 golang api')
             v4_easycla_github_activity(cla.config.PLATFORM_GATEWAY_URL, request)
             response.status = HTTP_OK
             return {"status": "OK"}
         except requests.exceptions.HTTPError as ex:
-            cla.log.error(f"v4 golang api failed with : {ex.response.status_code} : {ex.response.json()}")
+            cla.log.error(f'{fn} - v4 golang api failed with : {ex.response.status_code} : {ex.response.json()}')
             response.status = HTTP_OK
             return {"status": "OK"}
         except Exception as ex:
-            cla.log.error("v4 golang api failed with : 500 : {}".format(str(ex)))
+            cla.log.error(f'{fn} - v4 golang api failed with : 500 : {ex}')
             response.status = HTTP_500
-            return {"status": "v4_easycla_github_activity failed {}".format(str(ex))}
+            return {"status": f'v4_easycla_github_activity failed {ex}'}
 
     # if not any of the events above we handle it via python
     valid_request = cla.controllers.github.webhook_secret_validation(request.headers.get('X-HUB-SIGNATURE'),
                                                                      request.bounded_stream.read())
     if not valid_request:
-        cla.log.error("/github/activity webhook secret validation failed, sending email")
+        cla.log.error(f'{fn} - /github/activity webhook secret validation failed, sending email')
         maintainers = cla.config.PLATFORM_MAINTAINERS.split(',') if cla.config.PLATFORM_MAINTAINERS else []
-        cla.log.error(f"/github/activity maintainer list: {maintainers}")
+
+        cla.log.error(f'{fn} - /github/activity maintainer list: {maintainers}')
         cla.controllers.github.webhook_secret_failed_email(event_type, body, maintainers)
+
         response.status = HTTP_401
         return {'status': "Invalid Secret Token"}
-
-    cla.log.debug("the webhook secret validation passed")
+    cla.log.debug("{fn} - the webhook secret validation passed")
 
     if event_type is None:
+        cla.log.error(f"{fn} - unable to determine the event_type from request headers: {request.headers}")
         response.status = HTTP_400
         return {'status': 'Invalid request'}
 
-    return cla.controllers.github.activity(event_type, body)
+    cla.log.debug(f'{fn} - routing action: {action} with event type: {event_type} for processing...')
+    return cla.controllers.github.activity(action, event_type, body)
 
 
 @hug.post("/github/validate", versions=1)

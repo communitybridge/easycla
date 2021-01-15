@@ -12,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/go-openapi/swag"
-	githubsdk "github.com/google/go-github/v32/github"
+	githubsdk "github.com/google/go-github/v33/github"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 
