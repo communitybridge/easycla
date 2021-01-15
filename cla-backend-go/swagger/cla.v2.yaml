@@ -3273,8 +3273,8 @@ paths:
 
   /github/activity:
     post:
-      summary: Github Activity Callback Handler
-      description: Github Activity Callback Handler reacts to github events emmited.
+      summary: GitHub Activity Callback Handler
+      description: GitHub Activity Callback Handler reacts to GitHub events emmited.
       security: [ ]
       operationId: githubActivity
       parameters:
