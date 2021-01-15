@@ -15,7 +15,7 @@ import (
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 
-	githubpkg "github.com/google/go-github/v32/github"
+	githubpkg "github.com/google/go-github/v33/github"
 	"go.uber.org/ratelimit"
 	"golang.org/x/time/rate"
 )

@@ -21,7 +21,7 @@ from cla.controllers.project import check_user_authorization
 from cla.models import DoesNotExist
 from cla.models.dynamo_models import Event, UserPermissions, Repository, GitHubOrg
 from cla.utils import get_github_organization_instance, get_repository_service, get_oauth_client, get_email_service, \
-    get_email_sign_off_content, get_email_help_content, get_project_instance, append_email_help_sign_off_content
+    get_email_sign_off_content, get_project_instance, append_email_help_sign_off_content
 from cla.models.event_types import EventType
 
 
@@ -231,26 +231,29 @@ def get_github_activity_action(body: dict) -> Optional[str]:
         return None
 
 
-def activity(event_type, body):
+def activity(action: str, event_type: str, body: dict):
     """
     Processes the GitHub activity event.
+    :param action: the action value
+    :type action: str
     :param event_type: the event type string value
     :type event_type: str
     :param body: the webhook body payload
     :type body: dict
     """
-    cla.log.debug(f'github.activity - received github activity event of type: {event_type}')
-    action = get_github_activity_action(body)
+    fn = 'github.activity'
+    cla.log.debug(f'{fn} - received github activity event of type: {event_type}')
+
     if action is None:
-        cla.log.warning(f'github.activity - unable to determine action type from body: {json.dumps(body)}. '
+        cla.log.warning(f'{fn} - unable to determine action type from body: {json.dumps(body)}. '
                         'Unable to process this request.')
         return
 
-    cla.log.debug(f'github.activity - received github activity event, action: {action}...')
+    cla.log.debug(f'{fn} - received github activity event, action: {action}...')
 
     # If we have the GitHub debug flag set/on...
     if bool(os.environ.get('GH_APP_DEBUG', '')):
-        cla.log.debug(f'github.activity - body: {json.dumps(body)}')
+        cla.log.debug(f'{fn} - body: {json.dumps(body)}')
 
     # From GitHub: Starting October 1st, 2020 - We no longer support two events which your GitHub Apps may rely on,
     #   "integration_installation" and
@@ -279,11 +282,11 @@ def activity(event_type, body):
         handle_pull_request_event(action, body)
 
     elif event_type == "issue_comment":
-        cla.log.debug(f'github.activity - received issue_comment action: {action}...')
+        cla.log.debug(f'{fn} - received issue_comment action: {action}...')
         handle_pull_request_comment_event(action, body)
 
     else:
-        cla.log.debug(f'github.activity - ignoring github activity event, action: {action}...')
+        cla.log.debug(f'{fn} - ignoring github activity event, action: {action}...')
 
 
 def handle_installation_event(action: str, body: dict):

@@ -14,7 +14,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/bmizerany/assert"
-	githubsdk "github.com/google/go-github/v32/github"
+	githubsdk "github.com/google/go-github/v33/github"
 )
 
 // TestMergeStatusChecks tests the functionality of where we enable/disable checks

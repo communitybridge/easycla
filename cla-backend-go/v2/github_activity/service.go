@@ -18,7 +18,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v33/github"
 )
 
 // Service is responsible for handling the github activity events

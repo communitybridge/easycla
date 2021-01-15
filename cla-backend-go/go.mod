@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: MIT
 module github.com/communitybridge/easycla/cla-backend-go
 
-go 1.14
+go 1.15
 
 replace github.com/awslabs/aws-lambda-go-api-proxy => github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
 
 require (
 	github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
-	github.com/LF-Engineering/lfx-kit v0.1.18
-	github.com/LF-Engineering/lfx-models v0.6.25
-	github.com/aws/aws-lambda-go v1.17.0
-	github.com/aws/aws-sdk-go v1.30.14
+	github.com/LF-Engineering/lfx-kit v0.1.22
+	github.com/LF-Engineering/lfx-models v0.6.34
+	github.com/aws/aws-lambda-go v1.22.0
+	github.com/aws/aws-sdk-go v1.36.27
 	github.com/aymerick/raymond v2.0.2+incompatible
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
@@ -30,10 +30,10 @@ require (
 	github.com/go-resty/resty/v2 v2.3.0
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/mock v1.4.4
-	github.com/golang/protobuf v1.4.2 // indirect
-	github.com/google/go-github/v32 v32.1.0
-	github.com/google/uuid v1.1.1
-	github.com/gorilla/sessions v1.2.0 // indirect
+	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/google/go-github/v33 v33.0.0
+	github.com/google/uuid v1.1.4
+	github.com/gorilla/sessions v1.2.1 // indirect
 	github.com/imroc/req v0.3.0
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
@@ -47,23 +47,19 @@ require (
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/savaki/dynastore v0.0.0-20171109173440-28d8558bb429
-	github.com/sirupsen/logrus v1.5.0
+	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/afero v1.3.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
-	github.com/spf13/cobra v1.0.0
+	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.7.0
+	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
 	github.com/tencentyun/scf-go-lib v0.0.0-20200116145541-9a6ea1bf75b8
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
 	go.uber.org/ratelimit v0.1.0
-	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9 // indirect
-	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
+	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
-	golang.org/x/sys v0.0.0-20200622182413-4b0db7f3f76b // indirect
-	golang.org/x/text v0.3.3 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/protobuf v1.24.0 // indirect
