@@ -5,6 +5,26 @@ package utils
 
 import "fmt"
 
+// ConversionError is an error model for representing conversion errors
+type ConversionError struct {
+	FromType string
+	ToType   string
+	Err      error
+}
+
+// Error is an error string function for Salesforce Project not found errors
+func (e *ConversionError) Error() string {
+	if e.Err == nil {
+		return fmt.Sprintf("unable to convert %s to %s", e.FromType, e.ToType)
+	}
+	return fmt.Sprintf("unable to convert %s to %s due to error: %+v", e.FromType, e.ToType, e.Err)
+}
+
+// Unwrap method returns its contained error
+func (e *ConversionError) Unwrap() error {
+	return e.Err
+}
+
 // SFProjectNotFound is an error model for Salesforce Project not found errors
 type SFProjectNotFound struct {
 	ProjectSFID string
