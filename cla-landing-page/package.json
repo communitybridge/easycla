@@ -48,6 +48,7 @@
     "@auth0/auth0-spa-js": "^1.12.1",
     "@types/auth0-js": "^8.11.7",
     "@types/node": "^12.11.1",
+    "@ng-bootstrap/ng-bootstrap": "^6.1.0",
     "auth0-js": "^9.13.2",
     "aws-sdk": "^2.733.0",
     "bootstrap": "^4.4.0",
