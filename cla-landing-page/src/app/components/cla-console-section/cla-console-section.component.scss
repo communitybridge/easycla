@@ -90,3 +90,70 @@
         }
     }
 }
+
+.dialog {
+    .dialog-header {
+        color: #8492a6;
+        font-family: "Poppins";
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+
+        .close-btn {
+            cursor: pointer;
+            color: #000 !important;
+        }
+    }
+    .info-icon {
+        font-size: 24px;
+        color: #0099cc;
+    }
+
+    .message {
+        color: #333333;
+        font-family: "Source Sans Pro";
+        font-size: 16px;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    .version-btn {
+        width: 170px;
+        cursor: pointer;
+        padding: 5px;
+        color: #000000;
+        font-family: "Source Sans Pro";
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        background: #ffffff;
+        border: 1px solid #8492a6;
+        border-radius: 5px;
+        margin-bottom: 10px;
+
+        &.active {
+            background-color: #8bc34a;
+            color: #fff;
+        }
+    }
+
+    .error {
+        font-size: 12px;
+        color: red;
+    }
+
+    .proceed-btn {
+        width: 170px;
+        padding: 5px;
+        cursor: pointer;
+        color: #ffffff;
+        font-family: "Source Sans Pro";
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        background: #0099cc;
+        border: 1px solid #0099cc;
+        border-radius: 50px;
+        margin-top: 15px;
+    }
+}
