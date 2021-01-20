@@ -465,7 +465,7 @@ func (s *service) IsCLAManagerDesignee(ctx context.Context, companySFID, claGrou
 		}
 		if signedAtFoundationLevel {
 			// Check if user has cla-manager-designee role at foundation level
-			hasfoundationLevelRole, roleErr := orgClient.IsUserHaveRoleScope(utils.CLADesigneeRole, user.ID, companySFID, foundationSFID)
+			hasfoundationLevelRole, roleErr := orgClient.IsUserHaveRoleScope(ctx, utils.CLADesigneeRole, user.ID, companySFID, foundationSFID)
 			if roleErr != nil {
 				log.WithFields(f).Debugf("problem getting role:%s for user and project: %s ", utils.CLADesigneeRole, foundationSFID)
 				return nil, roleErr
@@ -491,7 +491,7 @@ func (s *service) IsCLAManagerDesignee(ctx context.Context, companySFID, claGrou
 					defer swg.Done()
 					var output result
 					log.WithFields(f).Debugf("Checking role status for projectSFID: %s", pcg.ProjectSFID)
-					hasProjectlevelRole, roleErr := orgClient.IsUserHaveRoleScope(utils.CLADesigneeRole, user.ID, companySFID, pcg.ProjectSFID)
+					hasProjectLevelRole, roleErr := orgClient.IsUserHaveRoleScope(ctx, utils.CLADesigneeRole, user.ID, companySFID, pcg.ProjectSFID)
 					if roleErr != nil {
 						log.WithFields(f).Debugf("problem getting role:%s for user and project: %s ", utils.CLADesigneeRole, pcg.ProjectSFID)
 						output = result{
@@ -501,7 +501,7 @@ func (s *service) IsCLAManagerDesignee(ctx context.Context, companySFID, claGrou
 						roleStatusChan <- &output
 						return
 					}
-					if hasProjectlevelRole {
+					if hasProjectLevelRole {
 						log.WithFields(f).Debugf("user has :%s role for company: %s ", utils.CLADesigneeRole, companySFID)
 						roleStatusChan <- &result{
 							hasRole: true,
