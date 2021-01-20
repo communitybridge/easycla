@@ -39,6 +39,7 @@ type IService interface { // nolint
 	GetCompanies(ctx context.Context) (*models.Companies, error)
 	GetCompany(ctx context.Context, companyID string) (*models.Company, error)
 	GetCompanyByExternalID(ctx context.Context, companySFID string) (*models.Company, error)
+	GetCompaniesByExternalID(ctx context.Context, companySFID string) ([]*models.Company, error)
 	GetCompanyBySigningEntityName(ctx context.Context, signingEntityName, companySFID string) (*models.Company, error)
 	SearchCompanyByName(ctx context.Context, companyName string, nextKey string) (*models.Companies, error)
 	GetCompaniesByUserManager(ctx context.Context, userID string) (*models.Companies, error)
@@ -629,9 +630,10 @@ func (s service) GetCompanyByExternalID(ctx context.Context, companySFID string)
 	log.WithFields(f).Debug("Searching company by external ID...")
 	comp, err := s.repo.GetCompanyByExternalID(ctx, companySFID)
 	if err == nil {
-		log.WithFields(f).WithError(err).Warn("problem searching organizations by external ID")
+		log.WithFields(f).Debugf("Loaded and returning company: %+v...", comp)
 		return comp, nil
 	}
+
 	if err == ErrCompanyDoesNotExist {
 		comp, err = s.CreateOrgFromExternalID(ctx, "", companySFID)
 		if err != nil {
@@ -640,6 +642,23 @@ func (s service) GetCompanyByExternalID(ctx context.Context, companySFID string)
 		return comp, nil
 	}
 	return nil, err
+}
+
+func (s service) GetCompaniesByExternalID(ctx context.Context, companySFID string) ([]*models.Company, error) {
+	f := logrus.Fields{
+		"functionName":   "company.service.GetCompaniesByExternalID",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"companySFID":    companySFID,
+	}
+
+	log.WithFields(f).Debug("Searching companies by external ID...")
+	comp, err := s.repo.GetCompaniesByExternalID(ctx, companySFID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to locate matching records by companySFID")
+		return nil, err
+	}
+
+	return comp, nil
 }
 
 func (s service) GetCompanyBySigningEntityName(ctx context.Context, signingEntityName, companySFID string) (*models.Company, error) {
@@ -711,7 +730,7 @@ func (s service) CreateOrgFromExternalID(ctx context.Context, signingEntityName,
 		"signingEntityName": signingEntityName,
 	}
 	osc := organization_service.GetClient()
-	log.WithFields(f).Debugf("Searching organization by company SFID")
+	log.WithFields(f).Debugf("Searching organization by company SFID...")
 	org, err := osc.GetOrganization(ctx, companySFID)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("getting organization details failed")
@@ -723,7 +742,7 @@ func (s service) CreateOrgFromExternalID(ctx context.Context, signingEntityName,
 	f["companyStatus"] = org.Status
 
 	// Query the platform user service to locate the company admin
-	log.WithFields(f).Debugf("getting company-admin information")
+	log.WithFields(f).Debugf("getting company-admin information...")
 	companyAdmin, err := getCompanyAdmin(ctx, companySFID)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warnf("unable to load company admin information for company: %s", companySFID)
@@ -750,10 +769,14 @@ func (s service) CreateOrgFromExternalID(ctx context.Context, signingEntityName,
 				return nil, err
 			}
 		}
+	} else {
+		log.WithFields(f).Debug("unable to load company admin from companySFID - admin not found")
 	}
 
+	additionalNote := ""
 	if signingEntityName == "" {
-		log.WithFields(f).Debugf("signing entity name not set - using organization name: %s", org.Name)
+		additionalNote = fmt.Sprintf("signing entity name not set - using organization name: %s", org.Name)
+		log.WithFields(f).Debugf(additionalNote)
 		signingEntityName = org.Name
 	}
 
@@ -762,7 +785,7 @@ func (s service) CreateOrgFromExternalID(ctx context.Context, signingEntityName,
 		CompanyExternalID: org.ID,
 		CompanyName:       org.Name,
 		SigningEntityName: signingEntityName,
-		Note:              fmt.Sprintf("%s - Created based on SF Organization Service record", now),
+		Note:              fmt.Sprintf("%s - Created based on SF Organization Service record - %s", now, additionalNote),
 	}
 	if companyAdmin != nil {
 		newComp.CompanyACL = []string{companyAdmin.LfUsername}

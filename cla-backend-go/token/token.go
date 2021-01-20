@@ -64,9 +64,9 @@ func Init(paramClientID, paramClientSecret, paramAuth0URL, paramAudience string)
 
 func retrieveToken() error {
 	f := logrus.Fields{
-		"functionName": "retrieveToken",
+		"functionName": "token.retrieveToken",
 	}
-	log.WithFields(f).Debugf("Refreshing auth0 token...")
+	log.WithFields(f).Debug("refreshing auth0 token...")
 
 	tg := tokenGen{
 		GrantType:    "client_credentials",

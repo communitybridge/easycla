@@ -82,10 +82,10 @@ swagger-prep:
 swagger-build-v1-services:
 	@echo
 	@echo "Generating v1 legacy API models..."
-	cd swagger; source .venv/bin/activate && python3 multi-file-swagger.py --spec-input-file cla.yaml --spec-output-file cla.compiled.yaml
+	cd swagger; source .venv/bin/activate && python3 multi-file-swagger.py --spec-input-file cla.v1.yaml --spec-output-file cla.v1.compiled.yaml
 	swagger -q generate server \
 		-t gen \
-		-f swagger/cla.compiled.yaml \
+		-f swagger/cla.v1.compiled.yaml \
 		--copyright-file=copyright-header.txt \
 		--exclude-main \
 		-A cla \
@@ -156,7 +156,7 @@ swagger-validate: swagger-v1-validate swagger-v2-validate
 swagger-v1-validate:
 	@echo ""
 	@echo "Validating EasyCLA v1 legacy API specification..."
-	@swagger validate --stop-on-error swagger/cla.compiled.yaml
+	@swagger validate --stop-on-error swagger/cla.v1.compiled.yaml
 
 swagger-v2-validate:
 	@echo ""
