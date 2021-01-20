@@ -14,10 +14,10 @@ from cla.models import DoesNotExist
 from cla.models.dynamo_models import Signature
 from cla.user_service import UserService
 from cla.utils import get_signing_service, get_signature_instance, get_email_service, \
-    get_supported_repository_providers, get_repository_service, get_project_instance, get_company_instance
-
+    get_repository_service, get_project_instance, get_company_instance
 
 CLA_MANAGER_ROLE = 'cla-manager'
+
 
 def request_individual_signature(project_id, user_id, return_url_type, return_url=None, request=None):
     """
@@ -44,8 +44,15 @@ def request_individual_signature(project_id, user_id, return_url_type, return_ur
                                                             preferred_email=primary_user_email)
 
 
-def request_corporate_signature(auth_user, project_id, company_id, send_as_email=False,
-                                authority_name=None, authority_email=None, return_url_type=None, return_url=None):
+def request_corporate_signature(auth_user,
+                                project_id,
+                                company_id,
+                                signing_entity_name: str = None,
+                                send_as_email=False,
+                                authority_name=None,
+                                authority_email=None,
+                                return_url_type=None,
+                                return_url=None):
     """
     Creates CCLA signature object that represents a company signing a CCLA.
 
@@ -55,6 +62,8 @@ def request_corporate_signature(auth_user, project_id, company_id, send_as_email
     :type project_id: string
     :param company_id: The ID of the company that is signing the CCLA.
     :type company_id: string
+    :param signing_entity_name: The CLA signing entity name for the DocuSign form
+    :type signing_entity_name: string
     :param send_as_email: the send as email flag
     :type send_as_email: bool
     :param authority_name: the company manager/authority who is responsible for whitelisting/managing the company, but
@@ -69,9 +78,16 @@ def request_corporate_signature(auth_user, project_id, company_id, send_as_email
     :param return_url: The URL to return the user to after signing is complete.
     :type return_url: string
     """
-    return get_signing_service().request_corporate_signature(auth_user, str(project_id), str(company_id), send_as_email,
-                                                             authority_name, authority_email,
-                                                             return_url_type, return_url)
+    return get_signing_service().request_corporate_signature(
+        auth_user=auth_user,
+        project_id=str(project_id),
+        company_id=str(company_id),
+        signing_entity_name=signing_entity_name,
+        send_as_email=send_as_email,
+        authority_name=authority_name,
+        authority_email=authority_email,
+        return_url_type=return_url_type,
+        return_url=return_url)
 
 
 def request_employee_signature(project_id, company_id, user_id, return_url_type, return_url=None):
@@ -216,8 +232,8 @@ def return_url(signature_id, event=None):  # pylint: disable=unused-argument
             project = get_project_instance()
             project.load(str(signature.get_signature_project_id()))
         except DoesNotExist as err:
-            cla.log.error('%s - Invalid project_id provided when trying to send user back to'\
-                        'their return_url : %s', fn, signature.get_signature_project_id())
+            cla.log.error('%s - Invalid project_id provided when trying to send user back to' \
+                          'their return_url : %s', fn, signature.get_signature_project_id())
 
         if project.get_version() == 'v2':
             if signature.get_signature_reference_type() == 'company':
@@ -226,22 +242,28 @@ def return_url(signature_id, event=None):  # pylint: disable=unused-argument
                     company = get_company_instance()
                     company.load(str(signature.get_signature_reference_id()))
                 except DoesNotExist as err:
-                    cla.log.error('%s - Invalid company_id provided : err: %s', fn, signature.get_signature_reference_id)
+                    cla.log.error('%s - Invalid company_id provided : err: %s', fn,
+                                  signature.get_signature_reference_id)
                 user_service = UserService
                 cla.log.info('%s - Checking if cla managers have cla-manager role permission', fn)
                 num_tries = 10
                 i = 1
-                cla.log.info(f'{fn} - checking if managers:{signature.get_signature_acl()} have roles with {num_tries} tries')
+                cla.log.info(
+                    f'{fn} - checking if managers:{signature.get_signature_acl()} have roles with {num_tries} tries')
                 while i <= num_tries:
                     cla.log.info(f'{fn} - check try #: {i}')
                     assigned = {}
                     for manager in signature.get_signature_acl():
-                        cla.log.info(f'{fn}- Checking {manager} for {CLA_MANAGER_ROLE} for company: {company.get_company_external_id()}, cla_group_id: {signature.get_signature_project_id()}')
-                        assigned[manager] = user_service.has_role(manager, CLA_MANAGER_ROLE, company.get_company_external_id(), signature.get_signature_project_id())
+                        cla.log.info(
+                            f'{fn}- Checking {manager} for {CLA_MANAGER_ROLE} for company: {company.get_company_external_id()}, cla_group_id: {signature.get_signature_project_id()}')
+                        assigned[manager] = user_service.has_role(manager, CLA_MANAGER_ROLE,
+                                                                  company.get_company_external_id(),
+                                                                  signature.get_signature_project_id())
                     cla.log.info(f'{fn} - Assigned status : {assigned}')
-                    #Ensure that assigned list doesnt have any False values -> All Managers have role assigned
+                    # Ensure that assigned list doesnt have any False values -> All Managers have role assigned
                     if all(list(assigned.values())):
-                        cla.log.info(f'All managers have cla-manager role for company: {company.get_company_external_id()} and cla_group_id: {signature.get_signature_project_id()}')
+                        cla.log.info(
+                            f'All managers have cla-manager role for company: {company.get_company_external_id()} and cla_group_id: {signature.get_signature_project_id()}')
                         break
                     time.sleep(0.5)
                     i += 1
