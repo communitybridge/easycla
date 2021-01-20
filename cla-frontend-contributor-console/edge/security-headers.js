@@ -54,7 +54,7 @@ function generateCSP(env, isDevServer) {
     'https://cdn.platform.linuxfoundation.org/lfx-footer-no-zone.js'
   ];
 
-  let styleSources = [SELF, UNSAFE_INLINE, 'https://communitybridge.org/'];
+  let styleSources = [SELF, UNSAFE_INLINE, 'https://communitybridge.org/', 'https://lfx.linuxfoundation.org/'];
 
   if (isDevServer) {
     connectSources = [...connectSources, 'https://localhost:8100/sockjs-node/', 'wss://localhost:8100/sockjs-node/'];
