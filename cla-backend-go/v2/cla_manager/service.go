@@ -98,6 +98,7 @@ type Service interface {
 	CreateCLAManagerRequest(ctx context.Context, contactAdmin bool, companyID string, projectID string, userEmail string, fullName string, authUser *auth.User, LfxPortalURL string) (*models.ClaManagerDesignee, error)
 	NotifyCLAManagers(ctx context.Context, notifyCLAManagers *models.NotifyClaManagerList, LfxPortalURL string) error
 	CreateCLAManagerDesigneeByGroup(ctx context.Context, params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error)
+	IsCLAManagerDesignee(ctx context.Context, companySFID, claGroupID, userLFID string) (*models.UserRoleStatus, error)
 }
 
 // NewService returns instance of CLA Manager service
@@ -426,20 +427,128 @@ func (s *service) CreateCLAManagerDesignee(ctx context.Context, companySFID stri
 	return claManagerDesignee, nil
 }
 
+func (s *service) IsCLAManagerDesignee(ctx context.Context, companySFID, claGroupID, userLFID string) (*models.UserRoleStatus, error) {
+
+	f := logrus.Fields{
+		"functionName": "IsCLAManagerDesignee",
+		"claGroupID":   claGroupID,
+		"userLFID":     userLFID,
+	}
+
+	// Get LF User
+	userClient := v2UserService.GetClient()
+	user, userErr := userClient.GetUserByUsername(userLFID)
+	if userErr != nil {
+		log.WithFields(f).Warnf("Failed to get user by username: %s , error: %+v", userLFID, userErr)
+		return nil, userErr
+	}
+
+	log.WithFields(f).Debugf("Getting project sf mappings for claGroupID: %s ", claGroupID)
+	pcgs, pcgErr := s.projectCGRepo.GetProjectsIdsForClaGroup(claGroupID)
+	if pcgErr != nil {
+		log.WithFields(f).Warnf("Problem getting mappings for claGroup: %s , error: %+v ", claGroupID, pcgErr)
+		return nil, pcgErr
+	}
+
+	orgClient := v2OrgService.GetClient()
+	//default to false
+	var hasRole = false
+
+	if len(pcgs) > 0 {
+
+		foundationSFID := pcgs[0].FoundationSFID
+		log.WithFields(f).Debugf("Check signed level status for foundationSFID: %s ...", foundationSFID)
+		signedAtFoundationLevel, signedErr := s.projectService.SignedAtFoundationLevel(ctx, foundationSFID)
+		if signedErr != nil {
+			log.WithFields(f).Warnf("problem checking for signed level for foundationSFID: %s ", foundationSFID)
+			return nil, signedErr
+		}
+		if signedAtFoundationLevel {
+			// Check if user has cla-manager-designee role at foundation level
+			hasfoundationLevelRole, roleErr := orgClient.IsUserHaveRoleScope(utils.CLADesigneeRole, user.ID, companySFID, foundationSFID)
+			if roleErr != nil {
+				log.WithFields(f).Debugf("problem getting role:%s for user and project: %s ", utils.CLADesigneeRole, foundationSFID)
+				return nil, roleErr
+			}
+			hasRole = hasfoundationLevelRole
+		} else {
+			// Check for role at project level
+			type result struct {
+				hasRole bool
+				err     error
+			}
+			roleStatusChan := make(chan *result)
+			var wg sync.WaitGroup
+			wg.Add(len(pcgs))
+
+			go func() {
+				wg.Wait()
+				close(roleStatusChan)
+			}()
+
+			for _, pcg := range pcgs {
+				go func(swg *sync.WaitGroup, pcg *projects_cla_groups.ProjectClaGroup, roleStatusChan chan *result) {
+					defer swg.Done()
+					var output result
+					log.WithFields(f).Debugf("Checking role status for projectSFID: %s", pcg.ProjectSFID)
+					hasProjectlevelRole, roleErr := orgClient.IsUserHaveRoleScope(utils.CLADesigneeRole, user.ID, companySFID, pcg.ProjectSFID)
+					if roleErr != nil {
+						log.WithFields(f).Debugf("problem getting role:%s for user and project: %s ", utils.CLADesigneeRole, pcg.ProjectSFID)
+						output = result{
+							hasRole: false,
+							err:     roleErr,
+						}
+						roleStatusChan <- &output
+						return
+					}
+					if hasProjectlevelRole {
+						log.WithFields(f).Debugf("user has :%s role for company: %s ", utils.CLADesigneeRole, companySFID)
+						roleStatusChan <- &result{
+							hasRole: true,
+							err:     nil,
+						}
+					} else {
+						log.WithFields(f).Debugf("user does not have :%s role for company: %s ", utils.CLADesigneeRole, companySFID)
+						roleStatusChan <- &result{
+							hasRole: false,
+							err:     nil,
+						}
+					}
+
+				}(&wg, pcg, roleStatusChan)
+			}
+
+			//confirm user has cla-manager-designee for all projects
+			for resultCh := range roleStatusChan {
+				if resultCh.err != nil {
+					return nil, resultCh.err
+				}
+			}
+			log.WithFields(f).Debugf("User has %s role at project level", utils.CLADesigneeRole)
+			hasRole = true
+		}
+
+	}
+
+	return &models.UserRoleStatus{
+		HasRole:    &hasRole,
+		LfUsername: userLFID,
+	}, nil
+}
+
 //CreateCLAManagerDesigneeByGroup creates designee by group for cla manager prospect
 func (s *service) CreateCLAManagerDesigneeByGroup(ctx context.Context, params cla_manager.CreateCLAManagerDesigneeByGroupParams, projectCLAGroups []*projects_cla_groups.ProjectClaGroup, f logrus.Fields) ([]*models.ClaManagerDesignee, string, error) {
 	var designeeScopes []*models.ClaManagerDesignee
 	userEmail := params.Body.UserEmail.String()
 
-	claGroupID := projectCLAGroups[0].ClaGroupID
-	signedAtFoundationLevel, signedErr := s.projectService.SignedAtFoundationLevel(ctx, claGroupID)
+	foundationSFID := projectCLAGroups[0].FoundationSFID
+	signedAtFoundationLevel, signedErr := s.projectService.SignedAtFoundationLevel(ctx, foundationSFID)
 	if signedErr != nil {
-		msg := fmt.Sprintf("Problem getting level of CLA Group Signature for claGroup: %s ", claGroupID)
+		msg := fmt.Sprintf("Problem getting level of CLA Group Signature for claGroup: %s ", foundationSFID)
 		return nil, msg, signedErr
 	}
 
 	if signedAtFoundationLevel {
-		foundationSFID := projectCLAGroups[0].FoundationSFID
 		if foundationSFID != "" {
 			claManagerDesignee, err := s.CreateCLAManagerDesignee(ctx, params.CompanySFID, foundationSFID, userEmail)
 			if err != nil {
@@ -489,6 +598,8 @@ func (s *service) CreateCLAManagerDesigneeByGroup(ctx context.Context, params cl
 						msg:      msg,
 						err:      err,
 					}
+					designeeChannel <- &output
+					return
 				}
 				output = result{
 					designee: claManagerDesignee,
