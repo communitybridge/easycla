@@ -206,6 +206,18 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 				List: designeeScopes,
 			})
 		})
+	api.ClaManagerIsCLAManagerDesigneeHandler = cla_manager.IsCLAManagerDesigneeHandlerFunc(func(params cla_manager.IsCLAManagerDesigneeParams) middleware.Responder {
+		reqID := utils.GetRequestID(params.XREQUESTID)
+		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
+		userRoleStatus, err := service.IsCLAManagerDesignee(ctx, params.CompanySFID, params.ClaGroupID, params.UserLFID)
+		if err != nil {
+			log.Debugf("Problem checking cla-manager-designee role status for user: %s, error: %+v  ", params.UserLFID, err)
+			return cla_manager.NewIsCLAManagerDesigneeBadRequest().WithXRequestID(reqID)
+		}
+
+		return cla_manager.NewIsCLAManagerDesigneeOK().WithXRequestID(reqID).WithPayload(userRoleStatus)
+	})
 
 	api.ClaManagerInviteCompanyAdminHandler = cla_manager.InviteCompanyAdminHandlerFunc(func(params cla_manager.InviteCompanyAdminParams) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
