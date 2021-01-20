@@ -2211,6 +2211,34 @@ paths:
           $ref: '#/responses/internal-server-error'
       tags:
         - signatures
+  
+  /company/{companySFID}/user/{userLFID}/claGroupID/{claGroupID}/is-cla-manager-designee:
+    get:
+      summary: Checks cla-manager-designee role
+      description: Checks if user has cla-manager designee role for associaeted salesforce projects
+      operationId: isCLAManagerDesignee
+      security: [ ]
+      parameters:
+        - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/path-userLFID"
+        - $ref: "#/parameters/path-claGroupID"
+        - $ref: "#/parameters/path-companySFID"
+      responses:
+        "200":
+          description: 'Success'
+          headers:
+            x-request-id:
+              type: string
+              description: The unique request ID value - assigned/set by the API Gateway based on the session
+          schema:
+            $ref: '#/definitions/user-role-status'
+        "400":
+          $ref: '#/responses/invalid-request'
+        "404":
+          $ref: '#/responses/not-found'
+      tags:
+        - cla-manager
+
 
   /notify-cla-managers:
     post:
@@ -4093,6 +4121,20 @@ definitions:
         items:
           $ref:
             '#/definitions/cla-manager-designee'
+  
+  
+  user-role-status:
+    type: object
+    title: User Role status
+    description: status of LF User checking cla-manager-designee role
+    properties:
+      lfUsername:
+        type: string
+      hasRole:
+        type: boolean
+        default: false
+      companySFID:
+        type: string
 
   contributors:
     type: object
