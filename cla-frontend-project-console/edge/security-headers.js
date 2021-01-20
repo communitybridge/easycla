@@ -56,7 +56,7 @@ function generateCSP(env, isDevServer) {
     'https://cdn.platform.linuxfoundation.org/lfx-footer-no-zone.js'
   ];
 
-  let styleSources = [SELF, UNSAFE_INLINE, 'https://communitybridge.org/'];
+  let styleSources = [SELF, UNSAFE_INLINE, 'https://communitybridge.org/', 'https://lfx.linuxfoundation.org/'];
 
   if (isDevServer) {
     connectSources = [...connectSources, 'https://localhost:8100/sockjs-node/', 'wss://localhost:8100/sockjs-node/'];
@@ -71,26 +71,26 @@ function generateCSP(env, isDevServer) {
 
   const sources = {
     'default-src': [NONE],
-      'img-src': ['*'], // allow all sources
-      /*
-      'img-src': [
-        SELF,
-        'data:',
-        '*',
-        // 'https://s3.amazonaws.com/cla-project-logo-dev/', // project logos
-        // 'https://s3.amazonaws.com/cla-project-logo-staging/', // project logos
-        // 'https://s3.amazonaws.com/cla-project-logo-prod/', // project logos
-        // 'https://s3.amazonaws.com/lf-master-project-logos-prod/', // project logos
-        // 'https://lf-master-project-logos-prod.s3.us-east-2.amazonaws.com/', // project logos
-        // 'https://s.gravatar.com/', // my profile user logos
-        // 'https://lh3.googleusercontent.com/', // my profile user logos
-        // 'https://platform-logos-myprofile-api-dev.s3.us-east-2.amazonaws.com/', // my profile user logos
-        // 'https://platform-logos-myprofile-api-staging.s3.us-east-2.amazonaws.com/', // my profile user logos
-        // 'https://platform-logos-myprofile-api-prod.s3.us-east-2.amazonaws.com/', // my profile user logos
-        // 'https://avatars3.githubusercontent.com/', // my profile user logos
-        // 'https://cdn.platform.linuxfoundation.org/', // cdn for the LF favicon: https://cdn.platform.linuxfoundation.org/assets/lf-favicon.png
-      ],
-       */
+    'img-src': ['*'], // allow all sources
+    /*
+    'img-src': [
+      SELF,
+      'data:',
+      '*',
+      // 'https://s3.amazonaws.com/cla-project-logo-dev/', // project logos
+      // 'https://s3.amazonaws.com/cla-project-logo-staging/', // project logos
+      // 'https://s3.amazonaws.com/cla-project-logo-prod/', // project logos
+      // 'https://s3.amazonaws.com/lf-master-project-logos-prod/', // project logos
+      // 'https://lf-master-project-logos-prod.s3.us-east-2.amazonaws.com/', // project logos
+      // 'https://s.gravatar.com/', // my profile user logos
+      // 'https://lh3.googleusercontent.com/', // my profile user logos
+      // 'https://platform-logos-myprofile-api-dev.s3.us-east-2.amazonaws.com/', // my profile user logos
+      // 'https://platform-logos-myprofile-api-staging.s3.us-east-2.amazonaws.com/', // my profile user logos
+      // 'https://platform-logos-myprofile-api-prod.s3.us-east-2.amazonaws.com/', // my profile user logos
+      // 'https://avatars3.githubusercontent.com/', // my profile user logos
+      // 'https://cdn.platform.linuxfoundation.org/', // cdn for the LF favicon: https://cdn.platform.linuxfoundation.org/assets/lf-favicon.png
+    ],
+     */
     'script-src': scriptSources,
     'style-src': styleSources, // Unfortunately using Angular basically requires inline styles.
     'font-src': [SELF, 'data:', 'https://communitybridge.org/', 'http://lfx.linuxfoundation.org'],
