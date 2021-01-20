@@ -212,8 +212,13 @@ func Configure(api *operations.EasyclaAPI, service Service, LfxPortalURL string,
 
 		userRoleStatus, err := service.IsCLAManagerDesignee(ctx, params.CompanySFID, params.ClaGroupID, params.UserLFID)
 		if err != nil {
-			log.Debugf("Problem checking cla-manager-designee role status for user: %s, error: %+v  ", params.UserLFID, err)
-			return cla_manager.NewIsCLAManagerDesigneeBadRequest().WithXRequestID(reqID)
+			msg := fmt.Sprintf("Problem checking cla-manager-designee role status for user: %s, error: %+v  ", params.UserLFID, err)
+			return cla_manager.NewIsCLAManagerDesigneeBadRequest().WithXRequestID(reqID).WithPayload(
+				&models.ErrorResponse{
+					Code:       BadRequest,
+					Message:    msg,
+					XRequestID: reqID,
+				})
 		}
 
 		return cla_manager.NewIsCLAManagerDesigneeOK().WithXRequestID(reqID).WithPayload(userRoleStatus)
