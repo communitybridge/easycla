@@ -84,8 +84,8 @@ def request_corporate_signature(auth_user,
         company_id=str(company_id),
         signing_entity_name=signing_entity_name,
         send_as_email=send_as_email,
-        authority_name=authority_name,
-        authority_email=authority_email,
+        signatory_name=authority_name,
+        signatory_email=authority_email,
         return_url_type=return_url_type,
         return_url=return_url)
 
