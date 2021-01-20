@@ -1172,6 +1172,7 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
         return documents
 
     def get_project_individual_document(self, major_version=None, minor_version=None):
+        fn = 'models.dynamodb_models.get_project_individual_document'
         document_models = self.get_project_individual_documents()
         num_documents = len(document_models)
 
@@ -1179,21 +1180,26 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
             raise cla.models.DoesNotExist("No individual document exists for this project")
 
         version = self._get_latest_version(document_models)
+        cla.log.debug(f'{fn} - latest version is : {version}')
         document = version[2]
         return document
 
     def get_latest_individual_document(self):
+        fn = 'models.dynamodb_models.get_latest_individual_document'
         document_models = self.get_project_individual_documents()
         version = self._get_latest_version(document_models)
+        cla.log.debug(f'{fn} - latest version is : {version}')
         document = version[2]
         return document
 
     def get_project_corporate_document(self, major_version=None, minor_version=None):
+        fn = 'models.dynamodb_models.get_project_corporate_document'
         document_models = self.get_project_corporate_documents()
         num_documents = len(document_models)
         if num_documents < 1:
             raise cla.models.DoesNotExist("No corporate document exists for this project")
         version = self._get_latest_version(document_models)
+        cla.log.debug(f'{fn} - latest version is : {version}')
         document = version[2]
         return document
 
@@ -1204,8 +1210,10 @@ class Project(model_interfaces.Project):  # pylint: disable=too-many-public-meth
         :return: Latest CCLA document object for this project.
         :rtype: cla.models.model_instances.Document
         """
+        fn = 'models.dynamodb_models.get_latest_corporate_document'
         document_models = self.get_project_corporate_documents()
         version = self._get_latest_version(document_models)
+        cla.log.debug(f'{fn} - latest version is : {version}')
         document = version[2]
 
         return document
