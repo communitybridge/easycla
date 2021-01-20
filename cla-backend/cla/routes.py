@@ -1263,7 +1263,15 @@ def request_corporate_signature(
     """
     # staff_verify(user) or company_manager_verify(user, company_id)
     return cla.controllers.signing.request_corporate_signature(
-        auth_user, project_id, company_id, signing_entity_name, send_as_email, authority_name, authority_email, return_url_type, return_url,
+        auth_user=auth_user,
+        project_id=project_id,
+        company_id=company_id,
+        signing_entity_name=signing_entity_name,
+        send_as_email=send_as_email,
+        signatory_name=authority_name,
+        signatory_email=authority_email,
+        return_url_type=return_url_type,
+        return_url=return_url,
     )
 
 

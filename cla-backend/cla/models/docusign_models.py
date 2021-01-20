@@ -782,7 +782,8 @@ class DocuSign(signing_service_interface.SigningService):
     def request_corporate_signature(self, auth_user: object, project_id: object, company_id: object,
                                     signing_entity_name: str = None,
                                     send_as_email: object = False,
-                                    signatory_name: object = None, signatory_email: object = None,
+                                    signatory_name: object = None,
+                                    signatory_email: object = None,
                                     return_url_type: object = None,
                                     return_url: object = None) -> object:
 
@@ -791,9 +792,12 @@ class DocuSign(signing_service_interface.SigningService):
                       f'project id: {project_id}, '
                       f'company id: {company_id}, '
                       f'signing entity name: {signing_entity_name}, '
+                      f'send email: {send_as_email}',
                       f'signatory name: {signatory_name}, '
                       f'signatory email: {signatory_email} '
-                      f'send email: {send_as_email}')
+                      f'return url type: {return_url_type}',
+                      f'return url: {return_url}',
+                      )
 
         # Auth user is the currently logged in user - the user who started the signing process
         # Signatory Name and Signatory Email are from the web form - will be empty if CLA Manager is the CLA Signatory
