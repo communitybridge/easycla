@@ -930,11 +930,6 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 
 		// Use FoundationSFID
 		foundationSFID := projectCLAGroups[0].FoundationSFID
-		sendErr := sendDesigneeEmailToUserWithNoLFID(ctx, name, userEmail, organization.ID, &foundationSFID, "cla-manager-designee")
-		if sendErr != nil {
-			msg := fmt.Sprintf("Problem sending email to user: %s , error: %+v", userEmail, sendErr)
-			log.Warn(msg)
-		}
 
 		// Get salesforce project by FoundationID
 		log.WithFields(f).Debugf("querying project service for project details...")
@@ -947,10 +942,13 @@ func (s *service) InviteCompanyAdmin(ctx context.Context, contactAdmin bool, com
 			log.WithFields(f).Warn(msg)
 			return nil, projectErr
 		}
-		sendErr = sendEmailToUserWithNoLFID(ctx, sfProject.Name, contributor.UserName, contributor.UserEmails[0], name, userEmail, organization.ID, &foundationSFID, utils.CLADesigneeRole)
+
+		sendErr := sendDesigneeEmailToUserWithNoLFID(ctx, contributor.UserName, contributor.UserEmails[0], name, userEmail, organization.Name, organization.ID, sfProject.Name, &foundationSFID, "cla-manager-designee")
 		if sendErr != nil {
-			return nil, sendErr
+			msg := fmt.Sprintf("Problem sending email to user: %s , error: %+v", userEmail, sendErr)
+			log.Warn(msg)
 		}
+
 		return nil, ErrNoLFID
 	}
 
@@ -1323,7 +1321,7 @@ func sendEmailToCLAManagerDesignee(ctx context.Context, corporateConsole string,
 	}
 }
 
-func sendDesigneeEmailToUserWithNoLFID(ctx context.Context, userWithNoLFIDName, userWithNoLFIDEmail, organizationID string, projectID *string, role string) error {
+func sendDesigneeEmailToUserWithNoLFID(ctx context.Context, requesterUsername, requesterEmail, userWithNoLFIDName, userWithNoLFIDEmail, organizationName, organizationID, projectName string, projectID *string, role string) error {
 	f := logrus.Fields{
 		"functionName":        "sendDesigneeEmailToUserWithNoLFID",
 		utils.XREQUESTID:      ctx.Value(utils.XREQUESTID),
@@ -1334,10 +1332,11 @@ func sendDesigneeEmailToUserWithNoLFID(ctx context.Context, userWithNoLFIDName, 
 		"role":                role,
 	}
 
-	subject := "EasyCLA: Invitation to create LF Login and complete process of becoming CLA Manager"
+	subject := fmt.Sprintf("EasyCLA: Invitation to create LF Login and complete process of becoming CLA Manager for project: %s ", projectName)
 	body := fmt.Sprintf(`
 	<p>Hello %s, </p>
-	<p> This email will guide you to completing the CLA Manager role assignment.
+	<p> User %s (%s) was trying to add you as a CLA Manager for Project %s and Company %s but was unable to identify your account details in the EasyCLA system </p>
+	<p> This email will guide you to completing the CLA Manager role assignment </p>
 	<p>1. Accept Invite link below will take you SSO login page where you can login with your LF Login or create a LF Login and then login.</p>
 	<p>2. After logging in SSO screen should direct you to CLA Corporate Console page where you will see the project you a re associated with.</p>
 	<p>3. Click on workflow steps to complete the signup process. Please follow this documentation to help you guide through the process - https://docs.linuxfoundation.org/lfx/easycla/ccla-managers-and-ccla-signatories</p>
@@ -1345,7 +1344,7 @@ func sendDesigneeEmailToUserWithNoLFID(ctx context.Context, userWithNoLFIDName, 
 	<p> <a href="USERACCEPTLINK">Accept Invite</a> </p>
 	%s
 	%s
-	`, userWithNoLFIDName,
+	`, userWithNoLFIDName, requesterUsername, requesterEmail, organizationName, projectName,
 		utils.GetEmailHelpContent(true), utils.GetEmailSignOffContent())
 	acsClient := v2AcsService.GetClient()
 	automate := false
