@@ -779,7 +779,9 @@ class DocuSign(signing_service_interface.SigningService):
         cla.log.debug(f'{fn} - Saved the signature {signature} - response mode: {response_model}')
         return response_model
 
-    def request_corporate_signature(self, auth_user: object, project_id: object, company_id: object,
+    def request_corporate_signature(self, auth_user: object,
+                                    project_id: object,
+                                    company_id: object,
                                     signing_entity_name: str = None,
                                     send_as_email: object = False,
                                     signatory_name: object = None,
