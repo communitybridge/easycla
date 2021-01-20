@@ -76,12 +76,13 @@ func NewService(apiURL string, compRepo company.IRepository, projectRepo Project
 }
 
 type requestCorporateSignatureInput struct {
-	ProjectID      string `json:"project_id,omitempty"`
-	CompanyID      string `json:"company_id,omitempty"`
-	SendAsEmail    bool   `json:"send_as_email,omitempty"`
-	AuthorityName  string `json:"authority_name,omitempty"`
-	AuthorityEmail string `json:"authority_email,omitempty"`
-	ReturnURL      string `json:"return_url,omitempty"`
+	ProjectID         string `json:"project_id,omitempty"`
+	CompanyID         string `json:"company_id,omitempty"`
+	SendAsEmail       bool   `json:"send_as_email,omitempty"`
+	SigningEntityName string `json:"signing_entity_name,omitempty"`
+	AuthorityName     string `json:"authority_name,omitempty"`
+	AuthorityEmail    string `json:"authority_email,omitempty"`
+	ReturnURL         string `json:"return_url,omitempty"`
 }
 
 type requestCorporateSignatureOutput struct {
@@ -123,26 +124,60 @@ func validateCorporateSignatureInput(input *models.CorporateSignatureInput) erro
 }
 
 func (s *service) RequestCorporateSignature(ctx context.Context, lfUsername string, authorizationHeader string, input *models.CorporateSignatureInput) (*models.CorporateSignatureOutput, error) {
+	f := logrus.Fields{
+		"functionName":      "sign.RequestCorporateSignature",
+		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
+		"lfUsername":        lfUsername,
+		"projectSFID":       input.ProjectSfid,
+		"companySFID":       input.CompanySfid,
+		"signingEntityName": input.SigningEntityName,
+		"authorityName":     input.AuthorityName,
+		"authorityEmail":    input.AuthorityEmail.String(),
+		"sendAsEmail":       input.SendAsEmail,
+		"returnURL":         input.ReturnURL,
+	}
 	usc := userService.GetClient()
 
+	log.WithFields(f).Debug("validating input parameters...")
 	err := validateCorporateSignatureInput(input)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to validat corporate signature input")
 		return nil, err
 	}
-	comp, err := s.companyRepo.GetCompanyByExternalID(ctx, utils.StringValue(input.CompanySfid))
-	if err != nil {
-		return nil, err
+
+	var comp *v1Models.Company
+	// Backwards compatible - if the signing entity name is not set, then we fall back to using the CompanySFID lookup
+	// which will return the company record where the company name == signing entity name
+	if input.SigningEntityName == "" {
+		comp, err = s.companyRepo.GetCompanyByExternalID(ctx, utils.StringValue(input.CompanySfid))
+		if err != nil {
+			log.WithFields(f).WithError(err).Warn("unable to fetch company records by signing entity name value")
+			return nil, err
+		}
+	} else {
+		// Big change here - since we can have multiple EasyCLA Company records with the same external SFID, we now
+		// switch over to query by the signing entity name.
+		comp, err = s.companyRepo.GetCompanyBySigningEntityName(ctx, input.SigningEntityName)
+		if err != nil {
+			log.WithFields(f).WithError(err).Warn("unable to fetch company records by signing entity name value")
+			return nil, err
+		}
 	}
+
 	psc := projectService.GetClient()
+	log.WithFields(f).Debug("looking up project by SFID...")
 	project, err := psc.GetProject(utils.StringValue(input.ProjectSfid))
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to fetch project SFID")
 		return nil, err
 	}
+
 	var claGroupID string
 	if project.Parent == "" || project.Parent == utils.TheLinuxFoundation {
 		// this is root project
 		cgmlist, perr := s.projectClaGroupsRepo.GetProjectsIdsForFoundation(utils.StringValue(input.ProjectSfid))
 		if perr != nil {
+			log.WithFields(f).WithError(err).Warn("unable to lookup other projects associated with this project SFID")
 			return nil, perr
 		}
 		if len(cgmlist) == 0 {
@@ -162,26 +197,33 @@ func (s *service) RequestCorporateSignature(ctx context.Context, lfUsername stri
 	} else {
 		cgm, perr := s.projectClaGroupsRepo.GetClaGroupIDForProject(utils.StringValue(input.ProjectSfid))
 		if perr != nil {
+			log.WithFields(f).WithError(err).Warn("unable to lookup CLA Group ID for this project SFID")
 			return nil, perr
 		}
 		claGroupID = cgm.ClaGroupID
 	}
 
+	f["claGroupID"] = claGroupID
+	log.WithFields(f).Debug("loading CLA Group by ID...")
 	proj, err := s.projectRepo.GetCLAGroupByID(ctx, claGroupID, DontLoadRepoDetails)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warn("unable to lookup CLA Group by CLA Group ID")
 		return nil, err
 	}
 	if !proj.ProjectCCLAEnabled {
+		log.WithFields(f).Warn("unable to request corporate signature - CCLA is not enabled for this CLA Group")
 		return nil, ErrCCLANotEnabled
 	}
 	if len(proj.ProjectCorporateDocuments) == 0 {
+		log.WithFields(f).Warn("unable to request corporate signature - missing corporate documents in the CLA Group configuration")
 		return nil, ErrTemplateNotConfigured
 	}
 
 	// Email flow
 	if input.SendAsEmail {
+		log.WithFields(f).Debugf("Sending request as an email to: %s...", input.AuthorityEmail.String())
 		// this would be used only in case of cla-signatory
-		err = prepareUserForSigning(ctx, input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
+		err = prepareUserForSigning(ctx, input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid), input.SigningEntityName)
 		if err != nil {
 			// Ignore conflict - role has already been assigned
 			if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); !ok {
@@ -192,6 +234,7 @@ func (s *service) RequestCorporateSignature(ctx context.Context, lfUsername stri
 		// Direct to DocuSign flow...
 		var currentUserEmail string
 
+		log.WithFields(f).Debugf("Loading user by username: %s...", lfUsername)
 		userModel, userErr := usc.GetUserByUsername(lfUsername)
 		if userErr != nil {
 			return nil, userErr
@@ -205,7 +248,7 @@ func (s *service) RequestCorporateSignature(ctx context.Context, lfUsername stri
 			}
 		}
 
-		err = prepareUserForSigning(ctx, currentUserEmail, utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
+		err = prepareUserForSigning(ctx, currentUserEmail, utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid), input.SigningEntityName)
 		if err != nil {
 			// Ignore conflict - role has already been assigned
 			if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); !ok {
@@ -214,53 +257,58 @@ func (s *service) RequestCorporateSignature(ctx context.Context, lfUsername stri
 		}
 	}
 
+	log.WithFields(f).Debug("Forwarding request to v1 API for requestCorporateSignature...")
 	out, err := requestCorporateSignature(authorizationHeader, s.ClaV1ApiURL, &requestCorporateSignatureInput{
-		ProjectID:      proj.ProjectID,
-		CompanyID:      comp.CompanyID,
-		SendAsEmail:    input.SendAsEmail,
-		AuthorityName:  input.AuthorityName,
-		AuthorityEmail: input.AuthorityEmail.String(),
-		ReturnURL:      input.ReturnURL.String(),
+		ProjectID:         proj.ProjectID,
+		CompanyID:         comp.CompanyID,
+		SigningEntityName: input.SigningEntityName,
+		SendAsEmail:       input.SendAsEmail,
+		AuthorityName:     input.AuthorityName,
+		AuthorityEmail:    input.AuthorityEmail.String(),
+		ReturnURL:         input.ReturnURL.String(),
 	})
 	if err != nil {
 		if input.AuthorityEmail.String() != "" {
 			// remove role
 			removeErr := removeSignatoryRole(ctx, input.AuthorityEmail.String(), utils.StringValue(input.CompanySfid), utils.StringValue(input.ProjectSfid))
 			if removeErr != nil {
-				log.Warnf("failed to remove signatory role. companySFID :%s, email :%s error: %+v", *input.CompanySfid, input.AuthorityEmail.String(), removeErr)
+				log.WithFields(f).WithError(removeErr).Warnf("failed to remove signatory role. companySFID :%s, email :%s error: %+v", *input.CompanySfid, input.AuthorityEmail.String(), removeErr)
 			}
 		}
 		return nil, err
 	}
 
 	// Update the company ACL
+	log.WithFields(f).Debugf("Adding user with LFID: %s to company access list...", lfUsername)
 	companyACLError := s.companyService.AddUserToCompanyAccessList(ctx, comp.CompanyID, lfUsername)
 	if companyACLError != nil {
-		log.Warnf("AddCLAManager- Unable to add user to company ACL, companyID: %s, user: %s, error: %+v", *input.CompanySfid, lfUsername, companyACLError)
+		log.WithFields(f).WithError(companyACLError).Warnf("Unable to add user with LFID: %s to company ACL, companyID: %s", lfUsername, *input.CompanySfid)
 	}
 
 	return out.toModel(), nil
 }
 
 func requestCorporateSignature(authToken string, apiURL string, input *requestCorporateSignatureInput) (*requestCorporateSignatureOutput, error) {
-	log.Debugf("input.AuthorityName %s", input.AuthorityName)
 	f := logrus.Fields{
-		"functionName":   "requestCorporateSignature",
-		"apiURL":         apiURL,
-		"CompanyID":      input.CompanyID,
-		"ProjectID":      input.ProjectID,
-		"AuthorityName":  input.AuthorityName,
-		"AuthorityEmail": input.AuthorityEmail,
-		"ReturnURL":      input.ReturnURL,
-		"SendAsEmail":    input.SendAsEmail,
+		"functionName":      "requestCorporateSignature",
+		"apiURL":            apiURL,
+		"CompanyID":         input.CompanyID,
+		"ProjectID":         input.ProjectID,
+		"SigningEntityName": input.SigningEntityName,
+		"AuthorityName":     input.AuthorityName,
+		"AuthorityEmail":    input.AuthorityEmail,
+		"ReturnURL":         input.ReturnURL,
+		"SendAsEmail":       input.SendAsEmail,
 	}
+	log.WithFields(f).Debug("Processing request...")
 	requestBody, err := json.Marshal(input)
 	if err != nil {
-		log.WithFields(f).Warnf("json marshal error: %+v", err)
+		log.WithFields(f).WithError(err).Warnf("problem marshalling input request - error: %+v", err)
 		return nil, err
 	}
+
 	client := http.Client{}
-	log.WithFields(f).Debugf("requesting corporate signatures: %#v\n", string(requestBody))
+	log.WithFields(f).Debugf("requesting corporate signatures: %#v", string(requestBody))
 	req, err := http.NewRequest("POST", apiURL+"/v1/request-corporate-signature", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
@@ -355,18 +403,25 @@ func removeSignatoryRole(ctx context.Context, userEmail string, companySFID stri
 
 }
 
-func prepareUserForSigning(ctx context.Context, userEmail string, companySFID, projectSFID string) error {
+func prepareUserForSigning(ctx context.Context, userEmail string, companySFID, projectSFID, signedEntityName string) error {
+	f := logrus.Fields{
+		"functionName":     "sign.prepareUserForSigning",
+		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
+		"user_email":       userEmail,
+		"company_sfid":     companySFID,
+		"project_sfid":     projectSFID,
+		"signedEntityName": signedEntityName,
+	}
+
 	var ErrNotInOrg error
 	role := utils.CLASignatoryRole
-	f := logrus.Fields{"user_email": userEmail, "company_sfid": companySFID, "project_sfid": projectSFID}
-	log.WithFields(f).Debug("prepareUserForSigning called")
+	log.WithFields(f).Debug("called")
 	usc := userService.GetClient()
 	// search user
 	log.WithFields(f).Debug("searching user by email")
 	user, err := usc.SearchUserByEmail(userEmail)
-
 	if err != nil {
-		log.Debugf("User with email : %s does not have an LF login", userEmail)
+		log.WithFields(f).WithError(err).Debugf("User with email: %s does not have an LF login", userEmail)
 		return nil
 	}
 
@@ -374,28 +429,29 @@ func prepareUserForSigning(ctx context.Context, userEmail string, companySFID, p
 	log.WithFields(f).Debugf("getting role_id for %s", role)
 	roleID, err := ac.GetRoleID(role)
 	if err != nil {
-		fmt.Println("error", err)
-		log.WithFields(f).Errorf("getting role_id for %s failed: %v", role, err.Error())
+		log.WithFields(f).WithError(err).Warnf("getting role_id for %s failed: %v", role, err.Error())
 		return err
 	}
-	log.Debugf("role %s, role_id %s", role, roleID)
+	log.WithFields(f).Debugf("fetched role %s, role_id %s", role, roleID)
 	// assign user role of cla signatory for this project
 	osc := organizationService.GetClient()
 
 	// make user cla-signatory
-	log.WithFields(f).Debugf("assigning user role of %s", role)
+	log.WithFields(f).Debugf("assigning user role of %s...", role)
 	err = osc.CreateOrgUserRoleOrgScopeProjectOrg(ctx, userEmail, projectSFID, companySFID, roleID)
 	if err != nil {
 		if strings.Contains(err.Error(), "associated with some organization") {
-			ErrNotInOrg = fmt.Errorf("user: %s already associated with some organization", user.Username)
+			msg := fmt.Sprintf("user: %s already associated with some organization", user.Username)
+			ErrNotInOrg = errors.New(msg)
+			log.WithFields(f).WithError(err).Warn(msg)
 			return ErrNotInOrg
 		}
 		// Ignore conflict - role has already been assigned, otherwise, return the error
 		if _, ok := err.(*organizations.CreateOrgUsrRoleScopesConflict); !ok {
-			log.WithFields(f).Errorf("assigning user role of %s failed: %v", role, err)
+			log.WithFields(f).WithError(err).Warnf("assigning user role of %s failed: %v", role, err)
 			return err
 		}
-
 	}
+
 	return nil
 }

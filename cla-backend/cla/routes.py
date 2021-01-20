@@ -1226,6 +1226,7 @@ def request_corporate_signature(
         auth_user: check_auth,
         project_id: hug.types.uuid,
         company_id: hug.types.uuid,
+        signing_entity_name=None,
         send_as_email=False,
         authority_name=None,
         authority_email=None,
@@ -1237,6 +1238,7 @@ def request_corporate_signature(
 
     DATA: {'project_id': 'some-project-id',
            'company_id': 'some-company-id',
+           'signing_entity_name': 'string',
            'send_as_email': 'boolean',
            'authority_name': 'string',
            'authority_email': 'string',
@@ -1261,7 +1263,7 @@ def request_corporate_signature(
     """
     # staff_verify(user) or company_manager_verify(user, company_id)
     return cla.controllers.signing.request_corporate_signature(
-        auth_user, project_id, company_id, send_as_email, authority_name, authority_email, return_url_type, return_url,
+        auth_user, project_id, company_id, signing_entity_name, send_as_email, authority_name, authority_email, return_url_type, return_url,
     )
 
 

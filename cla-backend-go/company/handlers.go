@@ -86,7 +86,7 @@ func Configure(api *operations.ClaAPI, service IService, usersService users.Serv
 		}
 		companyModel, err := service.GetCompanyByExternalID(ctx, params.CompanySFID)
 		if err != nil {
-			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - unable to get associated salesforce Organization: %s for EasyCLA Company: %s, error: %v", org.Name, companyModel.CompanyName, err)
+			msg := fmt.Sprintf("EasyCLA - 400 Bad Request - unable to get associated salesforce Organization: %s using SFID: %s, error: %v", org.Name, params.CompanySFID, err)
 			log.Warnf(msg)
 			return company.NewGetCompanyByExternalIDBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
 				Code:    "400",

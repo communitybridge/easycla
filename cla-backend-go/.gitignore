@@ -71,6 +71,7 @@ swagger/organization-service.yaml
 swagger/organization-service.yaml.bak
 swagger/user_service.yaml.bak
 swagger/cla.compiled.yaml
+swagger/cla.v1.compiled.yaml
 swagger/cla.v2.compiled.yaml
 v2/organization-service/client/
 v2/organization-service/models/

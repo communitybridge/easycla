@@ -474,7 +474,7 @@ func wrapHandlers(v1 http.Handler, v1BasePath string, v2 http.Handler, v2BasePat
 // setupCORSHandlerLocal allows all origins and sets up the handler
 func setupCORSHandlerLocal(handler http.Handler) http.Handler {
 	f := logrus.Fields{
-		"functionName": "setupCORSHandlerLocal",
+		"functionName": "cmd.setupCORSHandlerLocal",
 	}
 
 	log.WithFields(f).Debug("Allowing all origins")
@@ -523,7 +523,7 @@ func (lrw *LoggingResponseWriter) WriteHeader(statusCode int) {
 // setRequestIDHandler adds the x-request-id header, if missing
 func setRequestIDHandler(next http.Handler) http.Handler {
 	f := logrus.Fields{
-		"functionName": "setRequestIDHandler",
+		"functionName": "cmd.setRequestIDHandler",
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

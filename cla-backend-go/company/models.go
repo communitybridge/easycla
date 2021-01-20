@@ -4,10 +4,13 @@
 package company
 
 import (
+	"context"
+
 	"github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/communitybridge/easycla/cla-backend-go/utils"
 	"github.com/go-openapi/strfmt"
+	"github.com/sirupsen/logrus"
 )
 
 // DBModel data model
@@ -65,11 +68,18 @@ func (dbCompanyModel *DBModel) toModel() (*models.Company, error) {
 		return nil, err
 	}
 
+	// For backwards compatibility, if the signing entity name is missing, use the company name
+	signingEntityName := dbCompanyModel.SigningEntityName
+	if signingEntityName == "" {
+		signingEntityName = dbCompanyModel.CompanyName
+	}
+
 	// Convert the local DB model to a public swagger model
 	return &models.Company{
 		CompanyACL:        dbCompanyModel.CompanyACL,
 		CompanyID:         dbCompanyModel.CompanyID,
 		CompanyName:       dbCompanyModel.CompanyName,
+		SigningEntityName: signingEntityName,
 		CompanyExternalID: dbCompanyModel.CompanyExternalID,
 		CompanyManagerID:  dbCompanyModel.CompanyManagerID,
 		Created:           strfmt.DateTime(createdDateTime),
@@ -77,6 +87,28 @@ func (dbCompanyModel *DBModel) toModel() (*models.Company, error) {
 		Note:              dbCompanyModel.Note,
 		Version:           dbCompanyModel.Version,
 	}, nil
+}
+
+// dbModelsToResponseModels is a helper routine to convert the (internal) database model to a (public) swagger model
+func dbModelsToResponseModels(ctx context.Context, dbModels []DBModel) ([]*models.Company, error) {
+	f := logrus.Fields{
+		"functionName":   "company.models.dbModelsToResponseModels",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
+	var companyModels []*models.Company
+	var err error
+	for _, dbModel := range dbModels {
+		respModel, conversionErr := dbModel.toModel()
+		if conversionErr != nil {
+			log.WithFields(f).WithError(conversionErr).Warn("unable to convert db model to company model")
+			err = conversionErr
+		} else {
+			log.WithFields(f).Debugf("Converted %+v to %+v", dbModel, respModel)
+			companyModels = append(companyModels, respModel)
+		}
+	}
+
+	return companyModels, err
 }
 
 // toModel is a helper routine to convert the (internal) database model to a (public) swagger model

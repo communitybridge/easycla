@@ -4531,6 +4531,10 @@ definitions:
         type: string
         example: '0014100000Te0fMAAR'
         description: salesforce id of the company
+      signing_entity_name:
+        type: string
+        example: 'My Company Signing Entity, Ltd.'
+        description: the corporate signing entity name used for signing the CLA, may be the same as the company name or a different value
       send_as_email:
         type: boolean
         example: false
