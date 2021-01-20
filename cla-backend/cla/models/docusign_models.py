@@ -1236,7 +1236,8 @@ class DocuSign(signing_service_interface.SigningService):
         Will be called on ICLA signature callback, but also when a document has been
         opened by a user - no action required then.
         """
-        cla.log.debug(f'signed_individual_callback - Docusign ICLA signed callback POST data: {content}')
+        fn = 'models.docusign_models.signed_individual_callback'
+        cla.log.debug(f'{fn} - Docusign ICLA signed callback POST data: {content}')
         tree = ET.fromstring(content)
         # Get envelope ID.
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
@@ -1246,14 +1247,14 @@ class DocuSign(signing_service_interface.SigningService):
         try:
             signature.load(signature_id)
         except DoesNotExist:
-            cla.log.error('signed_individual_callback - DocuSign ICLA callback returned signed info on '
+            cla.log.error(f'{fn} - DocuSign ICLA callback returned signed info on '
                           f'invalid signature: {content}')
             return
         # Iterate through recipients and update the signature signature status if changed.
         elem = tree.find('.//' + self.TAGS['recipient_statuses'] + '/' + self.TAGS['recipient_status'])
         status = elem.find(self.TAGS['status']).text
         if status == 'Completed' and not signature.get_signature_signed():
-            cla.log.info(f'signed_individual_callback - ICLA signature signed ({signature_id}) - '
+            cla.log.info(f'{fn} - ICLA signature signed ({signature_id}) - '
                          'Notifying repository service provider')
             signature.set_signature_signed(True)
             populate_signature_from_icla_callback(content, tree, signature)
@@ -1269,11 +1270,15 @@ class DocuSign(signing_service_interface.SigningService):
             # Update user name in case is empty.
             if not user.get_user_name():
                 full_name_field = tree.find(".//*[@name='full_name']")
-                full_name = full_name_field.find(self.TAGS['field_value'])
-                if full_name:
-                    cla.log.info(f'Updating user: {user.get_user_github_id()} with name : {full_name.text}')
-                    user.set_user_name(full_name.text)
-                    user.save()
+                if full_name_field is not None:
+                    full_name = full_name_field.find(self.TAGS['field_value'])
+                    if full_name:
+                        cla.log.info(f'{fn} - updating user: {user.get_user_github_id()} with name : {full_name.text}')
+                        user.set_user_name(full_name.text)
+                        user.save()
+                    else:
+                        cla.log.warning(f'{fn} - unable to locate full_name value in the docusign callback - '
+                                        f'unable to update user record.')
             # Remove the active signature metadata.
             cla.utils.delete_active_signature_metadata(user.get_user_id())
             # Get signed document
@@ -1284,8 +1289,7 @@ class DocuSign(signing_service_interface.SigningService):
             # Verify user id exist for saving on storage
             user_id = user.get_user_id()
             if user_id is None:
-                cla.log.warning('signed_individual_callback - '
-                                'Missing user_id on ICLA for saving signed file on s3 storage.')
+                cla.log.warning(f'{fn} - missing user_id on ICLA for saving signed file on s3 storage.')
                 raise SigningError('Missing user_id on ICLA for saving signed file on s3 storage.')
 
             # Store document on S3
@@ -1311,15 +1315,14 @@ class DocuSign(signing_service_interface.SigningService):
                     contains_pii=False,
                 )
             except DoesNotExist as err:
-                msg = (f'signed_individual_callback - '
-                       f'unable to load project by CLA Group ID: {signature.get_signature_project_id()}, '
+                msg = (f'{fn} - unable to load project by CLA Group ID: {signature.get_signature_project_id()}, '
                        f'unable to send audit event, error: {err}')
                 cla.log.warning(msg)
                 return
 
     def signed_individual_callback_gerrit(self, content, user_id):
-        cla.log.debug('signed_individual_callback_gerrit - '
-                      f'Docusign Gerrit ICLA signed callback POST data: {content}')
+        fn = 'models.docusign_models.signed_individual_callback_gerrit'
+        cla.log.debug(f'{fn} - Docusign Gerrit ICLA signed callback POST data: {content}')
         tree = ET.fromstring(content)
         # Get envelope ID.
         envelope_id = tree.find('.//' + self.TAGS['envelope_id']).text
@@ -1329,7 +1332,7 @@ class DocuSign(signing_service_interface.SigningService):
         try:
             signature.load(signature_id)
         except DoesNotExist:
-            cla.log.error('signed_individual_callback_gerrit - DocuSign Gerrit ICLA callback returned signed info '
+            cla.log.error(f'{fn} - DocuSign Gerrit ICLA callback returned signed info '
                           f'on invalid signature: {content}')
             return
         # Iterate through recipients and update the signature signature status if changed.
@@ -1337,14 +1340,12 @@ class DocuSign(signing_service_interface.SigningService):
                          '/' + self.TAGS['recipient_status'])
         status = elem.find(self.TAGS['status']).text
         if status == 'Completed' and not signature.get_signature_signed():
-            cla.log.info(f'signed_individual_callback_gerrit - ICLA signature signed ({signature_id}) - '
-                         'Notifying repository service provider')
+            cla.log.info(f'{fn} - ICLA signature signed ({signature_id}) - notifying repository service provider')
             # Get User
             user = cla.utils.get_user_instance()
             user.load(user_id)
 
-            cla.log.debug('signed_individual_callback_gerrit - updating signature in database - '
-                          'setting signed=true...')
+            cla.log.debug(f'{fn} - updating signature in database - setting signed=true...')
             # Save signature before adding user to LDAP Groups.
             signature.set_signature_signed(True)
             signature.save()
@@ -1367,8 +1368,7 @@ class DocuSign(signing_service_interface.SigningService):
                     contains_pii=False,
                 )
             except DoesNotExist as err:
-                msg = (f'signed_individual_callback_gerrit - '
-                       f'unable to load project by CLA Group ID: {signature.get_signature_project_id()}, '
+                msg = (f'{fn} - unable to load project by CLA Group ID: {signature.get_signature_project_id()}, '
                        f'unable to send audit event, error: {err}')
                 cla.log.warning(msg)
                 return
@@ -1385,8 +1385,7 @@ class DocuSign(signing_service_interface.SigningService):
                     try:
                         lf_group.add_user_to_group(group_id, lf_username)
                     except Exception as e:
-                        cla.log.error('signed_individual_callback_gerrit - '
-                                      f'Failed in adding user to the LDAP group: {e}')
+                        cla.log.error(f'{fn} - failed in adding user to the LDAP group: {e}')
                         return
 
             # Get signed document
@@ -1396,22 +1395,22 @@ class DocuSign(signing_service_interface.SigningService):
 
             # Verify user id exist for saving on storage
             if user_id is None:
-                cla.log.warning('signed_individual_callback_gerrit - '
-                                'Missing user_id on ICLA for saving signed file on s3 storage')
+                cla.log.warning(f'{fn} - missing user_id on ICLA for saving signed file on s3 storage')
                 raise SigningError('Missing user_id on ICLA for saving signed file on s3 storage.')
 
             # Store document on S3
             project_id = signature.get_signature_project_id()
             self.send_to_s3(document_data, project_id, signature_id, 'icla', user_id)
-            cla.log.debug('signed_individual_callback_gerrit - uploaded ICLA document to s3')
+            cla.log.debug(f'{fn} - uploaded ICLA document to s3')
 
     def signed_corporate_callback(self, content, project_id, company_id):
         """
         Will be called on CCLA signature callback, but also when a document has been
         opened by a user - no action required then.
         """
+        fn = 'models.docusign_models.signed_corporate_callback'
         param_str = f'project_id={project_id}, company_id={company_id}'
-        cla.log.debug(f'signed_corporate_callback - DocuSign CCLA signed callback POST data: {content} '
+        cla.log.debug(f'{fn} - DocuSign CCLA signed callback POST data: {content} '
                       f'with params: {param_str}')
         tree = ET.fromstring(content)
         # Get envelope ID.
@@ -1422,7 +1421,7 @@ class DocuSign(signing_service_interface.SigningService):
         try:
             project.load(project_id)
         except DoesNotExist as err:
-            msg = (f'signed_corporate_callback - Docusign callback failed: invalid project ID, params: {param_str}, '
+            msg = (f'{fn} - Docusign callback failed: invalid project ID, params: {param_str}, '
                    f'error: {err}')
             cla.log.warning(msg)
             return {'errors': {'error': msg}}
@@ -1432,7 +1431,7 @@ class DocuSign(signing_service_interface.SigningService):
         try:
             company.load(str(company_id))
         except DoesNotExist as err:
-            msg = (f'signed_corporate_callback - Docusign callback failed: invalid company ID, params: {param_str}, '
+            msg = (f'{fn} - Docusign callback failed: invalid company ID, params: {param_str}, '
                    f'error: {err}')
             cla.log.warning(msg)
             return {'errors': {'error': msg}}
@@ -1445,7 +1444,7 @@ class DocuSign(signing_service_interface.SigningService):
             try:
                 signature.load(signature_id)
             except DoesNotExist as err:
-                msg = (f'signed_corporate_callback - DocuSign callback returned signed info on an '
+                msg = (f'{fn} - DocuSign callback returned signed info on an '
                        f'invalid signature: {content} with params: {param_str}')
                 cla.log.warning(msg)
                 return {'errors': {'error': msg}}
@@ -1459,12 +1458,12 @@ class DocuSign(signing_service_interface.SigningService):
         user = cla.utils.get_user_instance()
         if signature.get_signature_reference_type() == 'user':
             # ICLA
-            cla.log.debug(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
+            cla.log.debug(f'{fn} - {signature.get_signature_reference_type()} - '
                           f'loading user by id: {signature.get_signature_reference_id()} for params: {param_str}')
             user.load(signature.get_signature_reference_id())
         elif signature.get_signature_reference_type() == 'company':
             # CCLA
-            cla.log.debug(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
+            cla.log.debug(f'{fn} - {signature.get_signature_reference_type()} - '
                           f'loading CLA Managers with params: {param_str}...')
             # Should have only 1 CLA Manager assigned at this point - grab the list of cla managers from the signature
             # record
@@ -1472,18 +1471,18 @@ class DocuSign(signing_service_interface.SigningService):
 
             # Load the user record of the initial CLA Manager
             if len(cla_manager_list) > 0:
-                cla.log.debug(f'signed_corporate_callback - loading user: {cla_manager_list[0]} '
+                cla.log.debug(f'{fn} - loading user: {cla_manager_list[0]} '
                               f'with params: {param_str}...')
                 user_list = user.get_user_by_username(cla_manager_list[0])
                 if user_list is None:
-                    msg = (f'signed_corporate_callback - CLA Manager not assign for signature: {signature} '
+                    msg = (f'{fn} - CLA Manager not assign for signature: {signature} '
                            f'with params: {param_str}')
                     cla.log.warning(msg)
                     return {'errors': {'error': msg}}
                 else:
                     user = user_list[0]
             else:
-                msg = (f'signed_corporate_callback - CLA Manager not assign for signature: {signature} '
+                msg = (f'{fn} - CLA Manager not assign for signature: {signature} '
                        f'with params: {param_str}')
                 cla.log.warning(msg)
                 return {'errors': {'error': msg}}
@@ -1494,7 +1493,7 @@ class DocuSign(signing_service_interface.SigningService):
         status = elem.find(self.TAGS['status']).text
 
         if status == 'Completed' and not signature.get_signature_signed():
-            cla.log.info(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
+            cla.log.info(f'{fn} - {signature.get_signature_reference_type()} - '
                          f'CLA signature signed ({signature_id}) - setting signature signed attribute to true, '
                          f'params: {param_str}')
             # Note: cla-manager role assignment and cla-manager-designee cleanup is handled in the DB trigger handler
@@ -1556,7 +1555,7 @@ class DocuSign(signing_service_interface.SigningService):
                     try:
                         lf_group.add_user_to_group(group_id, lf_username)
                     except Exception as e:
-                        cla.log.error(f'signed_corporate_callback - {signature.get_signature_reference_type()} - '
+                        cla.log.error(f'{fn} - {signature.get_signature_reference_type()} - '
                                       f'Failed in adding user to the LDAP group: {e}, '
                                       f'params: {param_str}')
                         return
@@ -1570,38 +1569,39 @@ class DocuSign(signing_service_interface.SigningService):
 
             # verify company_id is not none
             if company_id is None:
-                cla.log.warning('signed_corporate_callback - '
+                cla.log.warning('{fn} - '
                                 'Missing company_id on CCLA for saving signed file on s3 storage, '
                                 f'params: {param_str}')
                 raise SigningError('Missing company_id on CCLA for saving signed file on s3 storage.')
 
             # Store document on S3
-            cla.log.debug(f'signed_corporate_callback - uploading CCLA document to s3, params: {param_str}...')
+            cla.log.debug(f'{fn} - uploading CCLA document to s3, params: {param_str}...')
             self.send_to_s3(document_data, project_id, signature_id, 'ccla', company_id)
-            cla.log.debug(f'signed_corporate_callback - uploaded CCLA document to s3, params: {param_str}')
-            cla.log.debug(f'signed_corporate_callback - DONE!, params: {param_str}')
+            cla.log.debug(f'{fn} - uploaded CCLA document to s3, params: {param_str}')
+            cla.log.debug(f'{fn} - DONE!, params: {param_str}')
 
     def get_signed_document(self, envelope_id, user):
         """Helper method to get the signed document from DocuSign."""
 
-        cla.log.debug(f'get_signed_document - fetching signed CLA document for envelope: {envelope_id}')
+        fn = 'models.docusign_models.get_signed_document'
+        cla.log.debug(f'{fn} - fetching signed CLA document for envelope: {envelope_id}')
         envelope = pydocusign.Envelope()
         envelope.envelopeId = envelope_id
 
         try:
             documents = envelope.get_document_list(self.client)
         except Exception as err:
-            cla.log.error('get_signed_document - unknown error when trying to load signed document: %s', str(err))
+            cla.log.error(f'{fn} - unknown error when trying to load signed document: {err}')
             return
 
         if documents is None or len(documents) < 1:
-            cla.log.error(f'get_signed_document - could not find signed document'
+            cla.log.error(f'{fn} - could not find signed document'
                           f'envelope {envelope_id} and user {user.get_user_email()}')
             return
 
         document = documents[0]
         if 'documentId' not in document:
-            cla.log.error(f'get_signed_document - not document ID found in document response: {document}')
+            cla.log.error(f'{fn} - not document ID found in document response: {document}')
             return
 
         try:
@@ -1609,7 +1609,7 @@ class DocuSign(signing_service_interface.SigningService):
             document_file = envelope.get_document(document['documentId'], self.client)
             return document_file.read()
         except Exception as err:
-            cla.log.error('get_signed_document - unknown error when trying to fetch signed document content '
+            cla.log.error('{fn} - unknown error when trying to fetch signed document content '
                           f'for document ID {document["documentId"]}, error: {err}')
             return
 
@@ -1617,9 +1617,10 @@ class DocuSign(signing_service_interface.SigningService):
         """Helper method to send the user their signed document."""
 
         # Check if the user's email is public
+        fn = 'models.docusign_models.send_signed_document'
         recipient = cla.utils.get_public_email(user)
         if not recipient:
-            cla.log.debug(f'No email found for user : {user.get_user_id()}')
+            cla.log.debug(f'{fn} - no email found for user : {user.get_user_id()}')
             return
 
         # Load and ensure the CLA Group/Project record exists
@@ -1627,7 +1628,7 @@ class DocuSign(signing_service_interface.SigningService):
             project = Project()
             project.load(signature.get_signature_project_id())
         except DoesNotExist as err:
-            cla.log.warning(f'send_signed_document - unable to load project by id: {project.get_project_id()} - '
+            cla.log.warning(f'{fn} - unable to load project by id: {project.get_project_id()} - '
                             'unable to send email to user')
             return
 
@@ -1653,8 +1654,9 @@ class DocuSign(signing_service_interface.SigningService):
         body = append_email_help_sign_off_content(body, project.get_version())
 
         # Third, send the email.
-        cla.log.info(f'Sending signed CLA document to {recipient} with subject: {subject}')
+        cla.log.debug(f'{fn} - sending signed CLA document to {recipient} with subject: {subject}')
         cla.utils.get_email_service().send(subject, body, recipient)
+        cla.log.debug(f'{fn} - sent signed CLA document to {recipient} with subject: {subject}')
 
     def send_to_s3(self, document_data, project_id, signature_id, cla_type, identifier):
         # cla_type could be: icla or ccla (String)
@@ -1893,28 +1895,42 @@ def populate_signature_from_ccla_callback(content: str, ccla_tree: ET, signature
     :param signature:
     :return:
     """
+    fn = 'models.docusign_models.populate_signature_from_ccla_callback'
     user_docusign_date_signed = ccla_tree.find('.//' + DocuSign.TAGS['agreement_date'])
     if user_docusign_date_signed is None:
         user_docusign_date_signed = ccla_tree.find('.//' + DocuSign.TAGS['signed_date'])
 
     if user_docusign_date_signed is not None:
         user_docusign_date_signed = user_docusign_date_signed.text
-        cla.log.debug(f"setting user_docusign_date_signed attribute : {user_docusign_date_signed}")
+        cla.log.debug(f'{fn} - located agreement_date or signed_dated in the docusign document callback - '
+                      f'setting the user_docusign_date_signed attribute : {user_docusign_date_signed}')
         signature.set_user_docusign_date_signed(user_docusign_date_signed)
 
     signatory_name_field = ccla_tree.find(".//*[@name='signatory_name']")
-    signatory_name = signatory_name_field.find(DocuSign.TAGS['field_value'])
-    if signatory_name is not None:
-        signatory_name = signatory_name.text
-        cla.log.debug(f"setting user_docusign_name attribute : {signatory_name}")
-        signature.set_user_docusign_name(signatory_name)
+    # If signatory_name not found, try looking for the point_of_contact
+    if signatory_name_field is None:
+        signatory_name_field = ccla_tree.find(".//*[@name='point_of_contact']")
+
+    if signatory_name_field is not None:
+        signatory_name = signatory_name_field.find(DocuSign.TAGS['field_value'])
+        if signatory_name is not None:
+            signatory_name = signatory_name.text
+            cla.log.debug(f'{fn} - located signatory_name value in the docusign document callback - '
+                          f'setting user_docusign_name attribute: {signatory_name} value in the signature')
+            signature.set_user_docusign_name(signatory_name)
+        else:
+            cla.log.warning(f'{fn} - unable to extract signatory_name field_value from docusign callback')
+    else:
+        cla.log.warning(f'{fn} - unable to locate signatory_name field from docusign callback')
 
     # seems the content could be bytes
     if hasattr(content, "decode"):
         content = content.decode("utf-8")
     else:
         content = str(content)
+    cla.log.debug(f'{fn} - saving raw XML to the signature record...')
     signature.set_user_docusign_raw_xml(content)
+    cla.log.debug(f'{fn} - saved raw XML to the signature record...')
 
 
 # Returns a dictionary of document id to value
