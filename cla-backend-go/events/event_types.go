@@ -9,11 +9,6 @@ const (
 	// CreateTemplate event type
 	CreateTemplate = "Create Template"
 
-	// AddGithubOrgToWL event type
-	AddGithubOrgToWL = "Add GH Org To WL"
-	// DeleteGithubOrgFromWL event type
-	DeleteGithubOrgFromWL = "Delete GH Org From WL"
-
 	// CreateCCLAApprovalListRequest event type
 	CreateCCLAApprovalListRequest = "Create CCLA Approval List Request"
 	// DeleteCCLAApprovalListRequest event type
@@ -24,8 +19,8 @@ const (
 	//DeleteUserFromCompanyACL = "Delete User From Company ACL"
 
 	// DeletePendingInvite event type
-	AddGithubOrganization    = "Add Github Organization"
-	DeleteGithubOrganization = "Delete Github Organization"
+	AddGitHubOrganization    = "Add GitHub Organization"
+	DeleteGitHubOrganization = "Delete GitHub Organization"
 )
 
 // events
@@ -46,9 +41,9 @@ const (
 	GerritRepositoryAdded   = "gerrit_repository.added"
 	GerritRepositoryDeleted = "gerrit_repository.deleted"
 
-	GithubOrganizationAdded   = "github_organization.added"
-	GithubOrganizationDeleted = "github_organization.deleted"
-	GithubOrganizationUpdated = "github_organization.updated"
+	GitHubOrganizationAdded   = "github_organization.added"
+	GitHubOrganizationDeleted = "github_organization.deleted"
+	GitHubOrganizationUpdated = "github_organization.updated"
 
 	CompanyACLUserAdded       = "company_acl.user_added"
 	CompanyACLRequestAdded    = "company_acl.request_added"
@@ -59,8 +54,8 @@ const (
 	CCLAApprovalListRequestApproved = "ccla_approval_list_request.approved"
 	CCLAApprovalListRequestRejected = "ccla_approval_list_request.rejected"
 
-	ApprovalListGithubOrganizationAdded   = "approval_list.github_organization_added"
-	ApprovalListGithubOrganizationDeleted = "approval_list.github_organization_deleted"
+	ApprovalListGitHubOrganizationAdded   = "approval_list.github_organization_added"
+	ApprovalListGitHubOrganizationDeleted = "approval_list.github_organization_deleted"
 
 	ClaManagerAccessRequestCreated  = "cla_manager.access_request_created"
 	ClaManagerAccessRequestApproved = "cla_manager.access_request_approved"

@@ -65,7 +65,7 @@ func (s *service) UpdateClaGroupID(ctx context.Context, repositoryID, claGroupID
 
 func (s *service) AddGithubRepository(ctx context.Context, externalProjectID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
 	f := logrus.Fields{
-		"functionName":               "AddGithubRepository",
+		"functionName":               "AddGitHubRepository",
 		utils.XREQUESTID:             ctx.Value(utils.XREQUESTID),
 		"projectSFID":                externalProjectID,
 		"claGroupID":                 utils.StringValue(input.RepositoryProjectID),

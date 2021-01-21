@@ -65,7 +65,7 @@ func NewRepository(awsSession *session.Session, stage string) repository {
 // AddGithubOrganization add github organization logic
 func (repo repository) AddGithubOrganization(ctx context.Context, parentProjectSFID string, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
 	f := logrus.Fields{
-		"functionName":            "AddGithubOrganization",
+		"functionName":            "AddGitHubOrganization",
 		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
 		"parentProjectSFID":       parentProjectSFID,
 		"projectSFID":             projectSFID,
@@ -186,7 +186,7 @@ func (repo repository) AddGithubOrganization(ctx context.Context, parentProjectS
 // GetGithubOrganizations get github organizations based on the project SFID
 func (repo repository) GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.GithubOrganizations, error) {
 	f := logrus.Fields{
-		"functionName":   "GetGithubOrganizations",
+		"functionName":   "GetGitHubOrganizations",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"projectSFID":    projectSFID,
 	}
@@ -238,7 +238,7 @@ func (repo repository) GetGithubOrganizations(ctx context.Context, projectSFID s
 
 func (repo repository) GetGithubOrganizationsByParent(ctx context.Context, parentProjectSFID string) (*models.GithubOrganizations, error) {
 	f := logrus.Fields{
-		"functionName":      "GetGithubOrganizations",
+		"functionName":      "GetGitHubOrganizations",
 		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
 		"parentProjectSFID": parentProjectSFID,
 	}
@@ -289,7 +289,7 @@ func (repo repository) GetGithubOrganizationsByParent(ctx context.Context, paren
 
 func (repo repository) GetGithubOrganizationByName(ctx context.Context, githubOrganizationName string) (*models.GithubOrganizations, error) {
 	f := logrus.Fields{
-		"functionName":           "GetGithubOrganizationByName",
+		"functionName":           "GetGitHubOrganizationByName",
 		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
 		"githubOrganizationName": githubOrganizationName,
 	}
@@ -337,7 +337,7 @@ func (repo repository) GetGithubOrganizationByName(ctx context.Context, githubOr
 
 func (repo repository) GetGithubOrganization(ctx context.Context, githubOrganizationName string) (*models.GithubOrganization, error) {
 	f := logrus.Fields{
-		"functionName":           "GetGithubOrganization",
+		"functionName":           "GetGitHubOrganization",
 		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
 		"githubOrganizationName": githubOrganizationName,
 	}
@@ -371,7 +371,7 @@ func (repo repository) GetGithubOrganization(ctx context.Context, githubOrganiza
 // UpdateGithubOrganization updates the specified GitHub organization based on the update model provided
 func (repo repository) UpdateGithubOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, autoEnabledClaGroupID string, branchProtectionEnabled bool) error {
 	f := logrus.Fields{
-		"functionName":            "UpdateGithubOrganization",
+		"functionName":            "UpdateGitHubOrganization",
 		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
 		"projectSFID":             projectSFID,
 		"organizationName":        organizationName,
@@ -384,12 +384,12 @@ func (repo repository) UpdateGithubOrganization(ctx context.Context, projectSFID
 	_, currentTime := utils.CurrentTime()
 	githubOrg, lookupErr := repo.GetGithubOrganization(ctx, organizationName)
 	if lookupErr != nil {
-		log.WithFields(f).Warnf("error looking up github organization by name, error: %+v", lookupErr)
+		log.WithFields(f).Warnf("error looking up GitHub organization by name, error: %+v", lookupErr)
 		return lookupErr
 	}
 	if githubOrg == nil {
-		lookupErr := errors.New("unable to lookup github organization by name")
-		log.WithFields(f).Warnf("error looking up github organization, error: %+v", lookupErr)
+		lookupErr := errors.New("unable to lookup GitHub organization by name")
+		log.WithFields(f).Warnf("error looking up GitHub organization, error: %+v", lookupErr)
 		return lookupErr
 	}
 
@@ -426,7 +426,7 @@ func (repo repository) UpdateGithubOrganization(ctx context.Context, projectSFID
 	log.WithFields(f).Debug("updating github organization record...")
 	_, updateErr := repo.dynamoDBClient.UpdateItem(input)
 	if updateErr != nil {
-		log.WithFields(f).Warnf("unable to update github organization record, error: %+v", updateErr)
+		log.WithFields(f).Warnf("unable to update GitHub organization record, error: %+v", updateErr)
 		return updateErr
 	}
 
@@ -435,7 +435,7 @@ func (repo repository) UpdateGithubOrganization(ctx context.Context, projectSFID
 
 func (repo repository) DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error {
 	f := logrus.Fields{
-		"functionName":   "DeleteGithubOrganization",
+		"functionName":   "DeleteGitHubOrganization",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"projectSFID":    projectSFID,
 		"githubOrgName":  githubOrgName,
@@ -475,7 +475,7 @@ func (repo repository) DeleteGithubOrganization(ctx context.Context, projectSFID
 
 func (repo repository) DeleteGithubOrganizationByParent(ctx context.Context, parentProjectSFID string, githubOrgName string) error {
 	f := logrus.Fields{
-		"functionName":      "DeleteGithubOrganization",
+		"functionName":      "DeleteGitHubOrganization",
 		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
 		"parentProjectSFID": parentProjectSFID,
 		"githubOrgName":     githubOrgName,

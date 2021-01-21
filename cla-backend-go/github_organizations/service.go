@@ -46,7 +46,7 @@ func NewService(repo Repository, ghRepository repositories.Repository, claReposi
 
 func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
 	f := logrus.Fields{
-		"functionName":            "AddGithubOrganization",
+		"functionName":            "AddGitHubOrganization",
 		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
 		"projectSFID":             projectSFID,
 		"organizationName":        input.OrganizationName,
@@ -72,7 +72,7 @@ func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, 
 
 func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.GithubOrganizations, error) {
 	f := logrus.Fields{
-		"functionName":   "GetGithubOrganizations",
+		"functionName":   "GetGitHubOrganizations",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"projectSFID":    projectSFID,
 	}
@@ -110,7 +110,7 @@ func (s service) GetGithubOrganizationsByParent(ctx context.Context, parentProje
 
 func (s service) GetGithubOrganizationByName(ctx context.Context, githubOrgName string) (*models.GithubOrganization, error) {
 	f := logrus.Fields{
-		"functionName":   "GetGithubOrganizationByName",
+		"functionName":   "GetGitHubOrganizationByName",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"githubOrgName":  githubOrgName,
 	}
@@ -144,7 +144,7 @@ func (s service) UpdateGithubOrganization(ctx context.Context, projectSFID strin
 
 func (s service) DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error {
 	f := logrus.Fields{
-		"functionName":   "DeleteGithubOrganization",
+		"functionName":   "DeleteGitHubOrganization",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"projectSFID":    projectSFID,
 		"githubOrgName":  githubOrgName,
