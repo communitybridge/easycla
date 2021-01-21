@@ -8,7 +8,7 @@ import cla
 from cla import utils
 from cla.models.dynamo_models import Signature, User, Project
 from cla.utils import append_email_help_sign_off_content, get_email_help_content, get_email_sign_off_content, \
-    get_full_sign_url
+    get_full_sign_url, append_project_version_to_url
 
 
 class TestUtils(unittest.TestCase):
@@ -189,6 +189,41 @@ def test_get_full_sign_url():
     p = Project()
     url = get_full_sign_url("github", "1234", 456, 1, p.get_version())
     assert "?version=1" in url
+
+
+def test_append_project_version_to_url():
+    url = "http://localhost:5000/v1/sign"
+    url = append_project_version_to_url(address=url, project_version="v1")
+    assert "?version=1" in url
+
+    url = "http://localhost:5000/v1/sign"
+    url = append_project_version_to_url(address=url, project_version="v2")
+    assert "?version=2" in url
+    assert "http://localhost:5000/v1/sign?version=2" == url
+
+    url = "http://localhost:5000/v1/sign"
+    url = append_project_version_to_url(address=url, project_version=None)
+    assert "?version=1" in url
+
+    url = "http://localhost:5000/v1/sign"
+    url = append_project_version_to_url(address=url, project_version="invalid")
+    assert "?version=1" in url
+
+    url = "http://localhost:5000/v1/sign?something=else"
+    url = append_project_version_to_url(address=url, project_version="v2")
+    assert "version=2" in url
+    assert "something=else" in url
+
+    url = "http://localhost:5000/v1/sign?version=1"
+    url = append_project_version_to_url(address=url, project_version="v2")
+    assert "version=2" not in url
+    assert "version=1" in url
+
+    url = "http://localhost:5000/v1/sign?something=else&version=1"
+    url = append_project_version_to_url(address=url, project_version="v2")
+    assert "version=2" not in url
+    assert "version=1" in url
+    assert "something=else" in url
 
 
 if __name__ == '__main__':

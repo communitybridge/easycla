@@ -16,6 +16,7 @@ import falcon
 import requests
 from hug.middleware import SessionMiddleware
 from requests_oauthlib import OAuth2Session
+from furl import furl
 
 import cla
 from cla.models import DoesNotExist
@@ -776,15 +777,31 @@ def get_full_sign_url(repository_service, installation_id, github_repository_id,
     :param project_version: Project version associated with PR
     :type project_version: string
     """
+
+    base_url = '{}/v2/repository-provider/{}/sign/{}/{}/{}'.format(cla.conf['API_BASE_URL'], repository_service,
+                                                                   str(installation_id),
+                                                                   str(github_repository_id),
+                                                                   str(change_request_id))
+
+    return append_project_version_to_url(address=base_url, project_version=project_version)
+
+
+def append_project_version_to_url(address: str, project_version: str) -> str:
+    """
+    appends the project version to given url if not already exists
+    :param address:
+    :param project_version:
+    :return: returns the final url
+    """
     version = "1"
     if project_version and project_version == 'v2':
         version = "2"
 
-    return '{}/v2/repository-provider/{}/sign/{}/{}/{}?version={}'.format(cla.conf['API_BASE_URL'], repository_service,
-                                                                          str(installation_id),
-                                                                          str(github_repository_id),
-                                                                          str(change_request_id),
-                                                                          version)
+    f = furl(address)
+    if "version" in f.args:
+        return address
+    f.args["version"] = version
+    return f.url
 
 
 def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=False, is_approved_by_manager=False):
