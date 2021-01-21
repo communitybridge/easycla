@@ -19,7 +19,7 @@ import cla
 from cla.controllers.github_application import GitHubInstallation
 from cla.models import repository_service_interface, DoesNotExist
 from cla.models.dynamo_models import Repository, GitHubOrg
-from cla.utils import get_project_instance
+from cla.utils import get_project_instance, append_project_version_to_url
 
 
 class GitHub(repository_service_interface.RepositoryService):
@@ -430,8 +430,14 @@ class GitHub(repository_service_interface.RepositoryService):
                       f'with signed authors: {signed} '
                       f'with missing authors: {missing}')
         repository_name = repository.get_repository_name()
-        update_pull_request(installation_id, github_repository_id, pull_request, repository_name,
-                            signed=signed, missing=missing, project_version=project.get_version())
+        update_pull_request(
+            installation_id=installation_id,
+            github_repository_id=github_repository_id,
+            pull_request=pull_request,
+            repository_name=repository_name,
+            signed=signed,
+            missing=missing,
+            project_version=project.get_version())
 
     def get_pull_request(self, github_repository_id, pull_request_number, installation_id):
         """
@@ -1027,6 +1033,7 @@ def update_pull_request(installation_id, github_repository_id, pull_request, rep
             # specified default value per issue #166
             context, body = cla.utils.assemble_cla_status(context_name, signed=True)
             sign_url = cla.conf["CLA_LANDING_PAGE"]  # Remove this once signature detail page ready.
+            sign_url = append_project_version_to_url(address=sign_url, project_version=project_version)
             cla.log.debug(f'Creating new CLA {state} status - {len(signed)} passed, {missing}, signing url: {sign_url}')
             create_commit_status(pull_request, last_commit.sha, state, sign_url, body, context)
         else:
