@@ -847,7 +847,6 @@ def webhook_secret_failed_email_content(event_type: str, req_body: dict, maintai
     in the GitHub Online Help Pages</a>.</p>
     {get_email_sign_off_content()}
     """
-    cla.log.debug(msg)
 
     subject = f'EasyCLA: Webhook Secret Failure'
     body = '<p>' + body.replace('\n', '<br>') + '</p>'
