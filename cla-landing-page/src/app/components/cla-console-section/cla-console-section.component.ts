@@ -7,6 +7,7 @@ import { StorageService } from 'src/app/core/services/storage.service';
 import { EnvConfig } from 'src/app/config/cla-env-utils';
 import { ActivatedRoute } from '@angular/router';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { LandingPageService } from 'src/app/service/landing-page.service';
 
 @Component({
   selector: 'app-cla-console-section',
@@ -26,13 +27,25 @@ export class ClaConsoleSectionComponent implements OnInit {
   constructor(
     private storageService: StorageService,
     private router: ActivatedRoute,
-    private modalService: NgbModal
-  ) { }
+    private modalService: NgbModal,
+    private landingPageService: LandingPageService
+  ) {
+    if (!this.landingPageService.hasEventInitilize) {
+      this.landingPageService.hasEventInitilize = true;
+
+      document.getElementById('lfx-header').addEventListener('project-login-event', () => {
+        this.onClickProceed('Projects');
+      });
+
+      document.getElementById('lfx-header').addEventListener('corporate-login-event', () => {
+        this.onClickProceed('Organizations');
+      });
+    }
+  }
 
   ngOnInit() {
     this.version = this.router.snapshot.queryParamMap.get('version');
     const element: any = document.getElementById('lfx-header');
-    console.log(this.version);
     let projectConsoleUrl = EnvConfig.default[AppSettings.PROJECT_CONSOLE_LINK] + '#/login';
     let corporateConsoleUrl = EnvConfig.default[AppSettings.CORPORATE_CONSOLE_LINK] + '#/login'
     if (this.version === '2') {
@@ -43,11 +56,11 @@ export class ClaConsoleSectionComponent implements OnInit {
     this.links = [
       {
         title: 'Project Login',
-        url: projectConsoleUrl
+        emit: "project-login-event"
       },
       {
         title: 'CLA Manager Login',
-        url: corporateConsoleUrl
+        emit: "corporate-login-event"
       },
       {
         title: 'Developer',
@@ -93,7 +106,7 @@ export class ClaConsoleSectionComponent implements OnInit {
 
   onClickVersionProceed() {
     if (this.selectedVersion === '') {
-      this.error = 'Please select a LFX Version.'
+      this.error = 'Please select a EasyCLA Version.'
     } else {
       this.redirectAsPerTypeAndVersion(this.consoleType, this.selectedVersion);
     }
