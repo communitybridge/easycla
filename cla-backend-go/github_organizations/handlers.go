@@ -91,7 +91,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 			}
 			eventService.LogEvent(&events.LogEventArgs{
 				UserID:            claUser.UserID,
-				EventType:         events.GithubOrganizationAdded,
+				EventType:         events.GitHubOrganizationAdded,
 				ExternalProjectID: params.ProjectSFID,
 				LfUsername:        claUser.LFUsername,
 				EventData: &events.GitHubOrganizationAddedEventData{
@@ -127,7 +127,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 
 			eventService.LogEvent(&events.LogEventArgs{
 				UserID:            claUser.UserID,
-				EventType:         events.GithubOrganizationDeleted,
+				EventType:         events.GitHubOrganizationDeleted,
 				ExternalProjectID: params.ProjectSFID,
 				LfUsername:        claUser.LFUsername,
 				EventData: &events.GitHubOrganizationDeletedEventData{
@@ -165,7 +165,7 @@ func Configure(api *operations.ClaAPI, service Service, eventService events.Serv
 
 			eventService.LogEvent(&events.LogEventArgs{
 				UserID:            claUser.UserID,
-				EventType:         events.GithubOrganizationUpdated,
+				EventType:         events.GitHubOrganizationUpdated,
 				ExternalProjectID: params.ProjectSFID,
 				LfUsername:        claUser.LFUsername,
 				EventData: &events.GitHubOrganizationUpdatedEventData{

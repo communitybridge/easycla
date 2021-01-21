@@ -30,7 +30,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
 
 			f := logrus.Fields{
-				"functionName":   "GithubOrganizationsGetProjectGithubOrganizationsHandler",
+				"functionName":   "GitHubOrganizationsGetProjectGithubOrganizationsHandler",
 				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 				"authUser":       authUser.UserName,
 				"authEmail":      authUser.Email,
@@ -70,7 +70,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 
 			f := logrus.Fields{
-				"functionName":   "GithubOrganizationsAddProjectGithubOrganizationHandler",
+				"functionName":   "GitHubOrganizationsAddProjectGithubOrganizationHandler",
 				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 				"authUser":       authUser.UserName,
 				"authEmail":      authUser.Email,
@@ -130,7 +130,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			// Log the event
 			eventService.LogEvent(&events.LogEventArgs{
 				LfUsername:        authUser.UserName,
-				EventType:         events.GithubOrganizationAdded,
+				EventType:         events.GitHubOrganizationAdded,
 				ExternalProjectID: params.ProjectSFID,
 				EventData: &events.GitHubOrganizationAddedEventData{
 					GitHubOrganizationName: *params.Body.OrganizationName,
@@ -169,7 +169,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 
 			eventService.LogEvent(&events.LogEventArgs{
 				LfUsername:        authUser.UserName,
-				EventType:         events.GithubOrganizationDeleted,
+				EventType:         events.GitHubOrganizationDeleted,
 				ExternalProjectID: params.ProjectSFID,
 				EventData: &events.GitHubOrganizationDeletedEventData{
 					GitHubOrganizationName: params.OrgName,
@@ -216,7 +216,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 
 			eventService.LogEvent(&events.LogEventArgs{
 				LfUsername:        authUser.UserName,
-				EventType:         events.GithubOrganizationUpdated,
+				EventType:         events.GitHubOrganizationUpdated,
 				ExternalProjectID: params.ProjectSFID,
 				EventData: &events.GitHubOrganizationUpdatedEventData{
 					GitHubOrganizationName: params.OrgName,

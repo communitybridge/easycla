@@ -68,8 +68,8 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			"authenticatedUserName":       claUser.Name,
 			"paramsBodyLfUsername":        params.Body.LfUsername,
 			"paramsBodyLfEmail":           params.Body.LfEmail,
-			"paramsBodyGithubID":          params.Body.GithubID,
-			"paramsBodyGithubUsername":    params.Body.GithubUsername,
+			"paramsBodyGitHubID":          params.Body.GithubID,
+			"paramsBodyGitHubUsername":    params.Body.GithubUsername,
 			"paramsBodyUsername":          params.Body.Username,
 		}
 		// Update supports two scenarios:
@@ -82,7 +82,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 		// Check to see if the provided payload includes a GH Username we can use for locating the record
 		if params.Body.GithubUsername != "" {
 			// Locate the user record by the user's github user name
-			log.WithFields(f).Debugf("searching user by GithubUsername: %s", params.Body.GithubUsername)
+			log.WithFields(f).Debugf("searching user by GitHubUsername: %s", params.Body.GithubUsername)
 			userModel, err := service.GetUserByGitHubUsername(params.Body.GithubUsername)
 			if err != nil {
 				log.WithFields(f).Warnf("error locating user from by github username: %s, error: %+v",
@@ -93,7 +93,7 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 			// Found it!
 			if userModel != nil {
 				// Update the record base on the specified values
-				log.WithFields(f).Debugf("found user by GithubUsername: %s - updating record",
+				log.WithFields(f).Debugf("found user by GitHubUsername: %s - updating record",
 					params.Body.GithubUsername)
 				userModel, err := service.Save(params.Body, claUser)
 				if err != nil {

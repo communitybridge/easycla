@@ -6,8 +6,18 @@ package utils
 import (
 	"fmt"
 
+	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 )
+
+// ToV1ErrorResponse is a wrapper function to convert a v2 swagger error response to a v1 swagger error response
+func ToV1ErrorResponse(err *models.ErrorResponse) *v1Models.ErrorResponse {
+	return &v1Models.ErrorResponse{
+		Code:       err.Code,
+		Message:    err.Message,
+		XRequestID: err.XRequestID,
+	}
+}
 
 // ErrorResponseBadRequest Helper function to generate a bad request error response
 func ErrorResponseBadRequest(reqID, msg string) *models.ErrorResponse {

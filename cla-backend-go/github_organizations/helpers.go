@@ -17,7 +17,7 @@ import (
 
 func buildGithubOrganizationListModels(ctx context.Context, githubOrganizations []*GithubOrganization) []*models.GithubOrganization {
 	f := logrus.Fields{
-		"functionName":   "buildGithubOrganizationListModels",
+		"functionName":   "buildGitHubOrganizationListModels",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 

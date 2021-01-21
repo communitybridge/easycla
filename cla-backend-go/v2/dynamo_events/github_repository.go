@@ -19,7 +19,7 @@ import (
 func (s *service) GithubRepoModifyAddEvent(event events.DynamoDBEventRecord) error {
 	ctx := utils.NewContext()
 	f := logrus.Fields{
-		"functionName":   "GithubRepoModifyEvent",
+		"functionName":   "GitHubRepoModifyEvent",
 		"eventID":        event.EventID,
 		"eventName":      event.EventName,
 		"eventSource":    event.EventSource,

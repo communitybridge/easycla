@@ -265,7 +265,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 		}
 
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:  events.ApprovalListGithubOrganizationAdded,
+			EventType:  events.ApprovalListGitHubOrganizationAdded,
 			ProjectID:  projectID,
 			CompanyID:  companyID,
 			LfUsername: authUser.UserName,
@@ -331,7 +331,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 			companyID = signatureModel.SignatureReferenceID.String()
 		}
 		eventsService.LogEvent(&events.LogEventArgs{
-			EventType:  events.ApprovalListGithubOrganizationDeleted,
+			EventType:  events.ApprovalListGitHubOrganizationDeleted,
 			ProjectID:  projectID,
 			CompanyID:  companyID,
 			LfUsername: authUser.UserName,
@@ -722,7 +722,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				rw.Header().Set(utils.XREQUESTID, reqID)
 				rw.WriteHeader(http.StatusOK)
 				// Just the header information - no records
-				_, writeErr := rw.Write([]byte("Github ID,LF_ID,Name,Email,Date Signed"))
+				_, writeErr := rw.Write([]byte("GitHub ID,LF_ID,Name,Email,Date Signed"))
 				if writeErr != nil {
 					log.WithFields(f).WithError(writeErr).Warn("error writing csv file")
 				}
@@ -1020,7 +1020,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				rw.Header().Set(utils.XREQUESTID, reqID)
 				rw.WriteHeader(http.StatusOK)
 				// Just the header information - no records
-				_, writeErr := rw.Write([]byte("Github ID,LF_ID,Name,Email,Date Signed"))
+				_, writeErr := rw.Write([]byte("GitHub ID,LF_ID,Name,Email,Date Signed"))
 				if writeErr != nil {
 					log.WithFields(f).WithError(writeErr).Warn("error writing csv file")
 				}
@@ -1140,7 +1140,7 @@ func Configure(api *operations.EasyclaAPI, projectService project.Service, proje
 				rw.Header().Set(utils.XREQUESTID, reqID)
 				rw.WriteHeader(http.StatusOK)
 				// Just the header information - no records
-				_, writeErr := rw.Write([]byte("Github ID,LF_ID,Name,Email,Date Signed"))
+				_, writeErr := rw.Write([]byte("GitHub ID,LF_ID,Name,Email,Date Signed"))
 				if writeErr != nil {
 					log.WithFields(f).WithError(writeErr).Warn("error writing csv file")
 				}
