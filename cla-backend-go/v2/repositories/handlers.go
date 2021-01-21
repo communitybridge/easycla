@@ -35,7 +35,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 			f := logrus.Fields{
-				"functionName":   "GithubRepositoriesGetProjectGithubRepositoriesHandler",
+				"functionName":   "GitHubRepositoriesGetProjectGithubRepositoriesHandler",
 				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 				"authUser":       authUser.UserName,
 				"authEmail":      authUser.Email,
@@ -83,7 +83,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 			f := logrus.Fields{
-				"functionName":   "GithubRepositoriesAddProjectGithubRepositoryHandler",
+				"functionName":   "GitHubRepositoriesAddProjectGithubRepositoryHandler",
 				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 				"authUser":       authUser.UserName,
 				"authEmail":      authUser.Email,
@@ -139,7 +139,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 			f := logrus.Fields{
-				"functionName":   "GithubRepositoriesDeleteProjectGithubRepositoryHandler",
+				"functionName":   "GitHubRepositoriesDeleteProjectGithubRepositoryHandler",
 				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 				"authUser":       authUser.UserName,
 				"authEmail":      authUser.Email,
@@ -197,7 +197,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 			f := logrus.Fields{
-				"functionName":   "GithubRepositoriesGetProjectGithubRepositoryBranchProtectionHandler",
+				"functionName":   "GitHubRepositoriesGetProjectGithubRepositoryBranchProtectionHandler",
 				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 				"authUser":       authUser.UserName,
 				"authEmail":      authUser.Email,
@@ -251,7 +251,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			ctx := context.WithValue(params.HTTPRequest.Context(), utils.XREQUESTID, reqID) // nolint
 			f := logrus.Fields{
-				"functionName":   "GithubRepositoriesUpdateProjectGithubRepositoryBranchProtectionHandler",
+				"functionName":   "GitHubRepositoriesUpdateProjectGitHubRepositoryBranchProtectionHandler",
 				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 				"authUser":       authUser.UserName,
 				"authEmail":      authUser.Email,
@@ -269,7 +269,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 
 			protectedBranch, err := service.UpdateProtectedBranch(ctx, params.RepositoryID, params.ProjectSFID, params.GithubRepositoryBranchProtectionInput)
 			if err != nil {
-				log.Warnf("UpdateProjectGithubRepositoryBranchProtectionHandler : failed for repo %s : %v", params.RepositoryID, err)
+				log.Warnf("update protected branch failed for repo %s : %v", params.RepositoryID, err)
 				if err == repositories.ErrGithubRepositoryNotFound {
 					msg := fmt.Sprintf("unable to update branch protection projectSFID: %s, repository: %s", params.ProjectSFID, params.RepositoryID)
 					log.WithFields(f).WithError(err).Warn(msg)

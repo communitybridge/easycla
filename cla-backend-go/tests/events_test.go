@@ -20,7 +20,7 @@ func TestEventsService(t *testing.T) {
 	eventsService := events.NewService(eventsMockRepo, combinedMockRepo)
 
 	eventsService.LogEvent(&events.LogEventArgs{
-		EventType: events.GithubOrganizationAdded,
+		EventType: events.GitHubOrganizationAdded,
 		ProjectID: "project-1234",
 		CompanyID: "company-1234",
 		UserID:    "testUserID",

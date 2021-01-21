@@ -106,7 +106,7 @@ func NewRepository(awsSession *session.Session, stage string, companyRepo compan
 // GetGithubOrganizationsFromWhitelist returns a list of GH organizations stored in the whitelist
 func (repo repository) GetGithubOrganizationsFromWhitelist(ctx context.Context, signatureID string) ([]models.GithubOrg, error) {
 	f := logrus.Fields{
-		"functionName":   "GetGithubOrganizationsFromWhitelist",
+		"functionName":   "GetGitHubOrganizationsFromWhitelist",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"signatureID":    signatureID,
 	}
@@ -148,15 +148,15 @@ func (repo repository) GetGithubOrganizationsFromWhitelist(ctx context.Context, 
 }
 
 // AddGithubOrganizationToWhitelist adds the specified GH organization to the whitelist
-func (repo repository) AddGithubOrganizationToWhitelist(ctx context.Context, signatureID, GithubOrganizationID string) ([]models.GithubOrg, error) {
+func (repo repository) AddGithubOrganizationToWhitelist(ctx context.Context, signatureID, GitHubOrganizationID string) ([]models.GithubOrg, error) {
 	f := logrus.Fields{
-		"functionName":         "AddGithubOrganizationToWhitelist",
+		"functionName":         "AddGitHubOrganizationToWhitelist",
 		utils.XREQUESTID:       ctx.Value(utils.XREQUESTID),
 		"signatureID":          signatureID,
-		"GithubOrganizationID": GithubOrganizationID,
+		"GitHubOrganizationID": GitHubOrganizationID,
 	}
 	// get item from dynamoDB table
-	log.WithFields(f).Debugf("querying database for github organization whitelist using signatureID: %s", signatureID)
+	log.WithFields(f).Debugf("querying database for GitHub organization whitelist using signatureID: %s", signatureID)
 
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(repo.signatureTableName),
@@ -168,8 +168,8 @@ func (repo repository) AddGithubOrganizationToWhitelist(ctx context.Context, sig
 	})
 
 	if err != nil {
-		log.WithFields(f).Warnf("Error retrieving GH organization whitelist for signatureID: %s and GH Org: %s, error: %v",
-			signatureID, GithubOrganizationID, err)
+		log.WithFields(f).Warnf("Error retrieving GitHub organization whitelist for signatureID: %s and GH Org: %s, error: %v",
+			signatureID, GitHubOrganizationID, err)
 		return nil, err
 	}
 
@@ -184,18 +184,18 @@ func (repo repository) AddGithubOrganizationToWhitelist(ctx context.Context, sig
 	var newList []*dynamodb.AttributeValue
 	for _, element := range itemFromMap.L {
 		newList = append(newList, element)
-		if *element.S == GithubOrganizationID {
-			log.WithFields(f).Debugf("github organization for signature: %s already in the list - nothing to do, org id: %s",
-				signatureID, GithubOrganizationID)
+		if *element.S == GitHubOrganizationID {
+			log.WithFields(f).Debugf("GitHub organization for signature: %s already in the list - nothing to do, org id: %s",
+				signatureID, GitHubOrganizationID)
 			return buildResponse(itemFromMap.L), nil
 		}
 	}
 
 	// Add the organization to list
-	log.WithFields(f).Debugf("adding github organization for signature: %s to the list, org id: %s",
-		signatureID, GithubOrganizationID)
+	log.WithFields(f).Debugf("adding GitHub organization for signature: %s to the list, org id: %s",
+		signatureID, GitHubOrganizationID)
 	newList = append(newList, &dynamodb.AttributeValue{
-		S: aws.String(GithubOrganizationID),
+		S: aws.String(GitHubOrganizationID),
 	})
 
 	// return values flag - Returns all of the attributes of the item, as they appear after the UpdateItem operation.
@@ -232,7 +232,7 @@ func (repo repository) AddGithubOrganizationToWhitelist(ctx context.Context, sig
 	if !ok {
 		msg := fmt.Sprintf("unable to fetch updated whitelist organization values for "+
 			"organization id: %s for signature: %s - list is empty - returning empty list",
-			GithubOrganizationID, signatureID)
+			GitHubOrganizationID, signatureID)
 		log.WithFields(f).Debugf(msg)
 		return []models.GithubOrg{}, nil
 	}
@@ -241,12 +241,12 @@ func (repo repository) AddGithubOrganizationToWhitelist(ctx context.Context, sig
 }
 
 // DeleteGithubOrganizationFromWhitelist removes the specified GH organization from the whitelist
-func (repo repository) DeleteGithubOrganizationFromWhitelist(ctx context.Context, signatureID, GithubOrganizationID string) ([]models.GithubOrg, error) {
+func (repo repository) DeleteGithubOrganizationFromWhitelist(ctx context.Context, signatureID, GitHubOrganizationID string) ([]models.GithubOrg, error) {
 	f := logrus.Fields{
-		"functionName":         "DeleteGithubOrganizationFromWhitelist",
+		"functionName":         "DeleteGitHubOrganizationFromWhitelist",
 		utils.XREQUESTID:       ctx.Value(utils.XREQUESTID),
 		"signatureID":          signatureID,
-		"GithubOrganizationID": GithubOrganizationID,
+		"GitHubOrganizationID": GitHubOrganizationID,
 	}
 	// get item from dynamoDB table
 	result, err := repo.dynamoDBClient.GetItem(&dynamodb.GetItemInput{
@@ -260,21 +260,21 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(ctx context.Context
 
 	if err != nil {
 		log.WithFields(f).Warnf("error retrieving GH organization whitelist for signatureID: %s and GH Org: %s, error: %v",
-			signatureID, GithubOrganizationID, err)
+			signatureID, GitHubOrganizationID, err)
 		return nil, err
 	}
 
 	itemFromMap, ok := result.Item["github_org_whitelist"]
 	if !ok {
 		log.WithFields(f).Warnf("unable to remove whitelist organization: %s for signature: %s - list is empty",
-			GithubOrganizationID, signatureID)
+			GitHubOrganizationID, signatureID)
 		return nil, errors.New("no github_org_whitelist column")
 	}
 
 	// generate new List L without element to be deleted
 	var newList []*dynamodb.AttributeValue
 	for _, element := range itemFromMap.L {
-		if *element.S != GithubOrganizationID {
+		if *element.S != GitHubOrganizationID {
 			newList = append(newList, element)
 		}
 	}
@@ -287,7 +287,7 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(ctx context.Context
 		// is empty, must contain exactly one of the supported data types for the key)
 
 		log.WithFields(f).Debugf("clearing out github org whitelist for organization: %s for signature: %s - list is empty",
-			GithubOrganizationID, signatureID)
+			GitHubOrganizationID, signatureID)
 		nullFlag := true
 
 		// update dynamoDB table
@@ -352,7 +352,7 @@ func (repo repository) DeleteGithubOrganizationFromWhitelist(ctx context.Context
 	if !ok {
 		msg := fmt.Sprintf("unable to fetch updated whitelist organization values for "+
 			"organization id: %s for signature: %s - list is empty - returning empty list",
-			GithubOrganizationID, signatureID)
+			GitHubOrganizationID, signatureID)
 		log.WithFields(f).Debugf(msg)
 		return []models.GithubOrg{}, nil
 	}

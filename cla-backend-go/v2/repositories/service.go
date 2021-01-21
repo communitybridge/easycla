@@ -71,12 +71,12 @@ func NewService(repo v1Repositories.Repository, pcgRepo projects_cla_groups.Repo
 
 func (s *service) AddGithubRepository(ctx context.Context, projectSFID string, input *models.GithubRepositoryInput) (*v1Models.GithubRepository, error) {
 	f := logrus.Fields{
-		"functionName":           "AddGithubRepository",
+		"functionName":           "AddGitHubRepository",
 		utils.XREQUESTID:         ctx.Value(utils.XREQUESTID),
 		"projectSFID":            projectSFID,
 		"claGroupID":             utils.StringValue(input.ClaGroupID),
 		"githubOrganizationName": utils.StringValue(input.GithubOrganizationName),
-		"repositoryGithubID":     utils.StringValue(input.RepositoryGithubID),
+		"repositoryGitHubID":     utils.StringValue(input.RepositoryGithubID),
 	}
 	psc := v2ProjectService.GetClient()
 	project, err := psc.GetProject(projectSFID)
@@ -259,7 +259,7 @@ func (s *service) GetRepository(ctx context.Context, repositoryID string) (*v1Mo
 
 func (s *service) GetProtectedBranch(ctx context.Context, projectSFID, repositoryID string) (*v2Models.GithubRepositoryBranchProtection, error) {
 	f := logrus.Fields{
-		"functionName":   "repositories.GetProtectedBranch",
+		"functionName":   "repositories.service.GetProtectedBranch",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"projectSFID":    projectSFID,
 		"repositoryID":   repositoryID,
@@ -313,7 +313,7 @@ func (s *service) GetProtectedBranch(ctx context.Context, projectSFID, repositor
 
 func (s *service) UpdateProtectedBranch(ctx context.Context, projectSFID, repositoryID string, input *v2Models.GithubRepositoryBranchProtectionInput) (*v2Models.GithubRepositoryBranchProtection, error) {
 	f := logrus.Fields{
-		"functionName":   "repositories.UpdateProtectedBranch",
+		"functionName":   "repositories.service.UpdateProtectedBranch",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"projectSFID":    projectSFID,
 		"repositoryID":   repositoryID,
@@ -384,7 +384,7 @@ func (s *service) UpdateProtectedBranch(ctx context.Context, projectSFID, reposi
 
 func (s *service) getGithubRepo(ctx context.Context, projectSFID, repositoryID string) (*v1Models.GithubRepository, error) {
 	f := logrus.Fields{
-		"functionName":   "repositories.getGithubRepo",
+		"functionName":   "repositories.service.getGitHubRepo",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"projectSFID":    projectSFID,
 		"repositoryID":   repositoryID,
@@ -413,7 +413,7 @@ func (s *service) getGithubRepo(ctx context.Context, projectSFID, repositoryID s
 
 func (s *service) getGithubClientForOrgName(ctx context.Context, githubOrgName string) (*githubsdk.Client, error) {
 	f := logrus.Fields{
-		"functionName":   "repositories.getGithubClientForOrgName",
+		"functionName":   "repositories.service.getGitHubClientForOrgName",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"githubOrgName":  githubOrgName,
 	}
@@ -441,14 +441,14 @@ func (s *service) getGithubOwnerBranchName(ctx context.Context, branchProtection
 	}
 
 	if owner == "" {
-		log.Warnf("github returned empty owner name for org : %s and repo : %s", githubOrgName, githubRepoName)
+		log.Warnf("GitHub returned empty owner name for org : %s and repo : %s", githubOrgName, githubRepoName)
 		return "", "", fmt.Errorf("empty owner name")
 	}
 
-	log.Debugf("getGithubOwnerBranchName : owner of the repo : %s found : %s", owner, githubRepoName)
+	log.Debugf("getGitHubOwnerBranchName : owner of the repo : %s found : %s", owner, githubRepoName)
 	branchName, err := branchProtectionRepository.GetDefaultBranchForRepo(ctx, owner, githubRepoName)
 	if err != nil {
-		log.Warnf("getting default github branch failed for owner : %s and repo : %s : %v", owner, githubRepoName, err)
+		log.Warnf("getting default GitHub branch failed for owner : %s and repo : %s : %v", owner, githubRepoName, err)
 		return "", "", err
 	}
 
@@ -458,10 +458,10 @@ func (s *service) getGithubOwnerBranchName(ctx context.Context, branchProtection
 // getRequiredProtectedBranchCheckStatus
 func (s *service) getRequiredProtectedBranchCheckStatus(protectedBranch *githubsdk.Protection, requiredChecks []string) []*v2Models.GithubRepositoryBranchProtectionStatusChecks {
 	f := logrus.Fields{
-		"functionName": "repositories.getRequiredProtectedBranchCheckStatus",
+		"functionName": "repositories.service.getRequiredProtectedBranchCheckStatus",
 	}
 
-	log.WithFields(f).Debug("querying github for status checks...")
+	log.WithFields(f).Debug("querying GitHub for status checks...")
 	var result []*v2Models.GithubRepositoryBranchProtectionStatusChecks
 	resultMap := map[string]bool{}
 	for _, rc := range requiredChecks {

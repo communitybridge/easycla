@@ -12,6 +12,7 @@ from cla.tests.unit.data import GH_TABLE_DESCRIPTION
 
 PATCH_METHOD = "pynamodb.connection.Connection._make_api_call"
 
+
 @pytest.fixture()
 def gh_instance():
     """ GitHubOrg instance """
@@ -25,13 +26,14 @@ def gh_instance():
         gh_org.save()
         yield gh_org
 
+
 def test_set_organization_name(gh_instance):
-    """ Test setting Github org name #1126 """
+    """ Test setting GitHub org name #1126 """
     assert gh_instance.get_organization_name_lower() == "foo"
 
 
 def test_get_org_by_name_lower(gh_instance):
-    """ Test getting Github org with case insensitive search """
+    """ Test getting GitHub org with case insensitive search """
     gh_org = cla.utils.get_github_organization_instance()
     gh_org.model.scan = Mock(return_value=[gh_instance.model])
     found_gh_org = gh_org.get_organization_by_lower_name(gh_instance.get_organization_name())

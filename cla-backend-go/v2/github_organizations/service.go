@@ -71,7 +71,7 @@ const (
 
 func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string) (*models.ProjectGithubOrganizations, error) {
 	f := logrus.Fields{
-		"functionName":   "GetGithubOrganizations",
+		"functionName":   "GetGitHubOrganizations",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"projectSFID":    projectSFID,
 	}
@@ -237,7 +237,7 @@ func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string)
 
 func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, input *models.CreateGithubOrganization) (*models.GithubOrganization, error) {
 	f := logrus.Fields{
-		"functionName":            "AddGithubOrganization",
+		"functionName":            "AddGitHubOrganization",
 		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
 		"projectSFID":             projectSFID,
 		"autoEnabled":             utils.BoolValue(input.AutoEnabled),
@@ -285,7 +285,7 @@ func (s service) UpdateGithubOrganization(ctx context.Context, projectSFID strin
 
 func (s service) DeleteGithubOrganization(ctx context.Context, projectSFID string, githubOrgName string) error {
 	f := logrus.Fields{
-		"functionName":   "DeleteGithubOrganization",
+		"functionName":   "DeleteGitHubOrganization",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 		"projectSFID":    projectSFID,
 		"githubOrgName":  githubOrgName,

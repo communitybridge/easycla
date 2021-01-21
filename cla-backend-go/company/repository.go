@@ -1019,8 +1019,8 @@ func (repo repository) AddPendingCompanyInviteRequest(ctx context.Context, compa
 		"companyID":          companyID,
 		"UserID":             userModel.UserID,
 		"UserName":           userModel.UserName,
-		"UserGithubID":       userModel.UserGithubID,
-		"UserGithubUsername": userModel.UserGithubUsername,
+		"UserGitHubID":       userModel.UserGithubID,
+		"UserGitHubUsername": userModel.UserGithubUsername,
 		"LFUsername":         userModel.LFUsername,
 	}
 
