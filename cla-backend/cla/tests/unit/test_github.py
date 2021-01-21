@@ -105,7 +105,7 @@ def test_get_comment_badge_with_no_user_id():
     missing_id_badge = "cla-missing-id.svg"
     missing_user_id = True
     all_signed = False
-    response = get_comment_badge("github", all_signed, SIGN_URL, missing_user_id=missing_user_id)
+    response = get_comment_badge("github", all_signed, SIGN_URL, "v1", missing_user_id=missing_user_id)
     assert missing_id_badge in response
 
 
@@ -114,7 +114,7 @@ def test_comment_badge_with_missing_whitelisted_user():
     Test CLA badge for CLA fail check and whitelisted user
     """
     confirmation_needed_badge = "cla-confirmation-needed.svg"
-    response = get_comment_badge("github", False, SIGN_URL, missing_user_id=False, is_approved_by_manager=True)
+    response = get_comment_badge("github", False, SIGN_URL, "v1", missing_user_id=False, is_approved_by_manager=True)
     assert confirmation_needed_badge in response
 
 

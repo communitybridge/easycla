@@ -804,7 +804,8 @@ def append_project_version_to_url(address: str, project_version: str) -> str:
     return f.url
 
 
-def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=False, is_approved_by_manager=False):
+def get_comment_badge(repository_type, all_signed, sign_url, project_version, missing_user_id=False,
+                      is_approved_by_manager=False):
     """
     Returns the CLA badge that will appear on the change request comment (PR for 'github', merge
     request for 'gitlab', etc)
@@ -826,6 +827,7 @@ def get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=Fal
     if all_signed:
         badge_url = f'{CLA_LOGO_URL}/cla-signed.svg'
         badge_hyperlink = cla.conf["CLA_LANDING_PAGE"]
+        badge_hyperlink = append_project_version_to_url(address=badge_hyperlink, project_version=project_version)
         alt = "CLA Signed"
     else:
         if missing_user_id:
@@ -900,7 +902,12 @@ def assemble_cla_comment(repository_type, installation_id, github_repository_id,
                                  project_version)
     comment = get_comment_body(repository_type, sign_url, signed, missing)
     all_signed = num_missing == 0
-    badge = get_comment_badge(repository_type, all_signed, sign_url, missing_user_id=no_user_id)
+    badge = get_comment_badge(
+        repository_type=repository_type,
+        all_signed=all_signed,
+        sign_url=sign_url,
+        project_version=project_version,
+        missing_user_id=no_user_id)
     return badge + '<br />' + comment
 
 

@@ -1080,7 +1080,8 @@ def create_commit_status(pull_request, commit_hash, state, sign_url, body, conte
         # context is a string label to differentiate one signer status from another signer status.
         # committer name is used as context label
         commit_obj.create_status(state, sign_url, body, context)
-        cla.log.info(f'Successfully posted status {state} on PR {pull_request.number}: Commit {commit_hash}')
+        cla.log.info(f'Successfully posted status {state} on PR {pull_request.number}: Commit {commit_hash}'
+                     f'with SignUrl : {sign_url}')
     except GithubException as exc:
         cla.log.error(f'Could not post status {state} on PR: {pull_request.number}, '
                       f'Commit: {commit_hash}, '
