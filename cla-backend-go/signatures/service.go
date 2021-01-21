@@ -536,11 +536,9 @@ func (s service) sendApprovalListUpdateEmailToCLAManagers(companyModel *models.C
 <p>The EasyCLA approval list for %s for project %s was modified.</p>
 <p>The modification was as follows:</p>
 %s
-<p>Contributors with previously failed pull requests to %s can close and re-open the pull request to force a recheck by
-the EasyCLA system.</p>
 %s
 %s`,
-		recipientName, projectName, companyName, projectName, buildApprovalListSummary(approvalListChanges), projectName,
+		recipientName, projectName, companyName, projectName, buildApprovalListSummary(approvalListChanges),
 		utils.GetEmailHelpContent(claGroupModel.Version == utils.V2), utils.GetEmailSignOffContent())
 
 	err := utils.SendEmail(subject, body, recipients)
