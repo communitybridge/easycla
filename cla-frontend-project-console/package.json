@@ -16,7 +16,7 @@
     "graceful-fs": "^4.2.2",
     "ionic": "^3.20.0",
     "serverless": "^2.17.0",
-    "serverless-cloudfront-invalidate": "^1.5.0",
+    "serverless-cloudfront-invalidate": "^1.2.1",
     "serverless-finch": "^2.6.0",
     "serverless-plugin-tracing": "^2.0.0",
     "serverless-pseudo-parameters": "^2.5.0"
