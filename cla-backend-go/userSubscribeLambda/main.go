@@ -61,7 +61,8 @@ func init() {
 // Handler is the user subscribe handler lambda entry function
 func Handler(ctx context.Context, snsEvent events.SNSEvent) error {
 	f := logrus.Fields{
-		"functionName": "userSubscribeLambda.main.Handler",
+		"functionName":   "userSubscribeLambda.main.Handler",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 	if len(snsEvent.Records) == 0 {
 		log.WithFields(f).Warn("SNS event contained 0 records - ignoring message.")
@@ -79,14 +80,15 @@ func Handler(ctx context.Context, snsEvent events.SNSEvent) error {
 			return err
 		}
 
+		f["modelType"] = model.Type
 		log.WithFields(f).Debugf("Processing model.Type: %s", model.Type)
 		switch model.Type {
 		case "UserSignedUp":
 			log.WithFields(f).Debugf("Detected model.Type: %s - processing...", model.Type)
-			Create(model)
+			Create(ctx, model)
 		case "UserUpdatedProfile":
 			log.WithFields(f).Debugf("Detected model.Type: %s - processing...", model.Type)
-			Update(model)
+			Update(ctx, model)
 		default:
 			log.WithFields(f).Warnf("unrecognized message type: %s - unable to process message ", model.Type)
 		}
@@ -96,9 +98,10 @@ func Handler(ctx context.Context, snsEvent events.SNSEvent) error {
 }
 
 // Create saves the user data model to persistent storage
-func Create(user event.Event) {
+func Create(ctx context.Context, user event.Event) {
 	f := logrus.Fields{
 		"functionName": "userSubscribeLambda.main.Create",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 
 	uc := &usersModels.UserCreated{}
@@ -173,9 +176,10 @@ func Create(user event.Event) {
 }
 
 // Update saves the user data model to persistent storage
-func Update(user event.Event) {
+func Update(ctx context.Context, user event.Event) {
 	f := logrus.Fields{
 		"functionName": "userSubscribeLambda.main.Update",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
 	}
 
 	uc := &usersModels.UserUpdated{}
