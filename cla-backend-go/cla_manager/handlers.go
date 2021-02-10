@@ -6,6 +6,7 @@ package cla_manager
 import (
 	"context"
 	"fmt"
+
 	user_service "github.com/communitybridge/easycla/cla-backend-go/v2/user-service"
 	"github.com/sirupsen/logrus"
 
