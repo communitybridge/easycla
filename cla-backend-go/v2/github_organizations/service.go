@@ -265,8 +265,8 @@ func (s service) AddGithubOrganization(ctx context.Context, projectSFID string, 
 	}
 
 	var parentProjectSFID string
-	if project.Parent == "" || (project.Foundation != nil &&
-		(project.Foundation.Name == utils.TheLinuxFoundation || project.Foundation.Name == utils.LFProjectsLLC)) {
+	if project.Parent == "" || (project.ParentHierarchy != nil &&
+		(project.ParentHierarchy.Name == utils.TheLinuxFoundation || project.ParentHierarchy.Name == utils.LFProjectsLLC)) {
 		parentProjectSFID = projectSFID
 	} else {
 		parentProjectSFID = project.Parent
