@@ -185,11 +185,11 @@ const (
 	// V2ToCLAManagerDesigneeTemplate is email template for
 	V2ToCLAManagerDesigneeTemplate = `
 <p>Hello {{.RecipientName}},</p>
-<p>This is a notification email from EasyCLA regarding the project(s) {{.GetProjectsOrProject}}.</p>
+<p>This is a notification email from EasyCLA regarding the project(s): {{.GetProjectsOrProject}}.</p>
 <p>The following contributor is requesting to sign the CLA for the organization {{.CompanyName}}: </p>
 <p> {{.ContributorID}} ({{.ContributorName}}) </p>
 <p>Before the user contribution can be accepted, your organization must sign a CLA.
-<p>Kindly login to this portal {{.CorporateConsole}} and sign the CLA for one of the project(s) {{range $index, $projectName := .Projects}}{{if $index}},{{end}}{{$projectName.GetProjectFullURL}}{{end}}. </p>
+<p>Kindly login to this portal {{.CorporateConsole}} and sign the CLA for one of the project(s): {{range $index, $projectName := .Projects}}{{if $index}},{{end}}{{$projectName.GetProjectFullURL}}{{end}}. </p>
 <p>After signing the CLA, you will need to add this contributor to the approved list. Please notify the contributor once they are added, so that they can complete the contribution process.</p>
 `
 )
