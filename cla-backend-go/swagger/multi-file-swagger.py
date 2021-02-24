@@ -13,7 +13,7 @@ import yaml
 
 
 def append_path(current_path, item) -> str:
-    return "".join([current_path.rstrip("/"), "/", str(item)  ])
+    return "".join([current_path.rstrip("/"), "/", str(item)])
 
 
 def resolve_reference(reference: str, logger) -> dict:
@@ -82,8 +82,10 @@ def main(spec_input_file, spec_output_file, log_dir):
         return
 
     logger = log.setup_custom_logger('root', log_dir=log_dir, prefix='multi-file-swagger')
-    logger.setLevel(logging.INFO)
-    logger.info('log-dir     : {}'.format(log_dir))
+    log_level = logging.INFO
+    logger.setLevel(log_level)
+    logger.info(f'log directory               : {log_dir}')
+    logger.info(f'log level                   : {log_level}')
 
     start_time = datetime.now()
     try:

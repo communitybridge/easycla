@@ -198,7 +198,7 @@ jobs:
 
   buildGoBackend: &buildGoBackendAnchor
     docker:
-      - image: circleci/golang:1.15.6
+      - image: circleci/golang:1.16
     working_directory: /go/src/github.com/communitybridge/easycla/
     steps:
       - checkout
@@ -237,11 +237,13 @@ jobs:
           name: Build Swagger
           command: |
             cd cla-backend-go
+            echo "Using: $(go version)"
             make swagger
       - run:
           name: Build
           command: |
             cd cla-backend-go
+            echo "Using: $(go version)"
             echo "Building AWS Lambda - API..."
             make build-aws-lambda-linux
             echo "Building AWS Metrics Lambda..."
@@ -888,7 +890,7 @@ jobs:
 
   functionalTestsGo: &functionalTestsGo
     docker:
-      - image: circleci/golang:1.15.6
+      - image: circleci/golang:1.16
     steps:
       - attach_workspace:
           at: ~/

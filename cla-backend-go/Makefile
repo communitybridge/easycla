@@ -41,12 +41,15 @@ tool-setup:
 	@# gobin is the equivalent of 'go get' whilst in module-aware mode but this does not modify your go.mod
 	GO111MODULE=off go get -u github.com/myitcv/gobin
 
-setup_dev: setup-dev
-setup-dev: tool-setup
-	@echo "Removing previously install version of swagger..."
+install-swagger:
+	@echo "Removing previously installed version of swagger..."
 	@rm -Rf $(shell echo $(GOPATH))/bin/swagger $(shell echo $(GOPATH))/src/github.com/go-swagger
 	@echo "Installing swagger version: '$(SWAGGER_TOOL_VERSION)'..."
 	gobin github.com/go-swagger/go-swagger/cmd/swagger@$(SWAGGER_TOOL_VERSION)
+	@echo "Installed swagger $(swagger version | head -1)"
+
+setup_dev: setup-dev
+setup-dev: install-swagger tool-setup
 	@echo "Installing goimports..."
 	gobin golang.org/x/tools/cmd/goimports
 	@echo "Installing cover..."
@@ -76,7 +79,7 @@ clean-swagger:
 clean-all: clean clean-swagger
 	@rm -rf vendor/
 
-swagger: clean-swagger swagger-build swagger-validate
+swagger: install-swagger clean-swagger swagger-build swagger-validate
 
 swagger-prep:
 	@mkdir gen
@@ -85,6 +88,7 @@ swagger-build-v1-services:
 	@echo
 	@echo "Generating v1 legacy API models..."
 	cd swagger; source .venv/bin/activate && python3 multi-file-swagger.py --spec-input-file cla.v1.yaml --spec-output-file cla.v1.compiled.yaml
+	@echo "Swagger generation $(shell swagger version | head -1)"
 	swagger -q generate server \
 		-t gen \
 		-f swagger/cla.v1.compiled.yaml \
@@ -97,6 +101,7 @@ swagger-build-v2-services:
 	@echo
 	@echo "Generating v2 API models..."
 	cd swagger; source .venv/bin/activate && python3 multi-file-swagger.py --spec-input-file cla.v2.yaml --spec-output-file cla.v2.compiled.yaml
+	@echo "Swagger generation $(shell swagger version | head -1)"
 	swagger -q generate server \
 		-t gen \
 		-f swagger/cla.v2.compiled.yaml \
@@ -113,6 +118,7 @@ swagger-build-project-service:
 	@mkdir -p v2/project-service
 	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/project-service/swagger.json --output swagger/project-service.yaml
 	sed -i.bak 's/X-ACL/Empty-Header/g' swagger/project-service.yaml
+	@echo "Swagger generation $(shell swagger version | head -1)"
 	swagger -q generate client \
 		--copyright-file=copyright-header.txt \
 		-t v2/project-service \
@@ -124,6 +130,7 @@ swagger-build-organization-service:
 	@mkdir -p v2/organization-service
 	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/organization-service/swagger.json --output swagger/organization-service.yaml
 	sed -i.bak 's/X-ACL/Empty-Header/g' swagger/organization-service.yaml
+	@echo "Swagger generation $(shell swagger version | head -1)"
 	swagger -q generate client \
 		--copyright-file=copyright-header.txt \
 		-t v2/organization-service \
@@ -135,6 +142,7 @@ swagger-build-user-service:
 	@mkdir -p v2/user-service
 	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/user-service/swagger.json --output swagger/user-service.yaml
 	sed -i.bak 's/X-ACL/Empty-Header/g' swagger/user-service.yaml
+	@echo "Swagger generation $(shell swagger version | head -1)"
 	swagger -q generate client \
 		--copyright-file=copyright-header.txt \
 		-t v2/user-service \
@@ -146,6 +154,7 @@ swagger-build-acs-service:
 	@mkdir -p v2/acs-service
 	curl -sfL https://api-gw.dev.platform.linuxfoundation.org/acs/v1/api-docs/swagger/swagger.json --output swagger/acs-service.yaml
 	sed -i.bak 's/X-ACL/X-API-KEY/g' swagger/acs-service.yaml
+	@echo "Swagger generation $(shell swagger version | head -1)"
 	swagger -q generate client \
 		--copyright-file=copyright-header.txt \
 		-t v2/acs-service \
@@ -158,11 +167,13 @@ swagger-validate: swagger-v1-validate swagger-v2-validate
 swagger-v1-validate:
 	@echo ""
 	@echo "Validating EasyCLA v1 legacy API specification..."
+	@echo "Swagger generation $(shell swagger version | head -1)"
 	@swagger validate --stop-on-error swagger/cla.v1.compiled.yaml
 
 swagger-v2-validate:
 	@echo ""
 	@echo "Validating EasyCLA v2 API specification..."
+	@echo "Swagger generation $(shell swagger version | head -1)"
 	@swagger validate --stop-on-error swagger/cla.v2.compiled.yaml
 
 fmt:

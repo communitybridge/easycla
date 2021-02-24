@@ -65,16 +65,14 @@ paths:
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/health'
-        '503':
-          description: ''
-          schema:
-            $ref: '#/definitions/health'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '503':
+          $ref: '#/responses/service-unavailable'
       tags:
         - health
 
@@ -1035,10 +1033,7 @@ paths:
       operationId: getCompanyByExternalID
       parameters:
         - $ref: "#/parameters/x-request-id"
-        - name: companySFID
-          in: path
-          type: string
-          required: true
+        - $ref: "#/parameters/path-companySFID"
       responses:
         '200':
           description: 'Success'
@@ -2564,12 +2559,16 @@ parameters:
     in: path
     type: string
     required: true
-  #path-companySFID:
-  #  name: companySFID
-  #  description: the external SalesForce ID of the Company/Organization
-  #  in: path
-  #  type: string
-  #  required: true
+  path-companySFID:
+    name: companySFID
+    description: salesforce id of the company
+    in: path
+    type: string
+    required: true
+    # \w - Any word character (alphanumeric & underscore), dashes, periods
+    pattern: '^(\w)([\w\-.])+$'
+    minLength: 5
+    maxLength: 255
   path-claGroupID:
     name: claGroupID
     description: the CLA Group ID
@@ -3158,6 +3157,14 @@ responses:
       $ref: '#/definitions/error-response'
   internal-server-error:
     description: 'Internal server error'
+    headers:
+      x-request-id:
+        type: string
+        description: The unique request ID value - assigned/set by the API Gateway based on the session
+    schema:
+      $ref: '#/definitions/error-response'
+  service-unavailable:
+    description: 'Service unavailable error'
     headers:
       x-request-id:
         type: string

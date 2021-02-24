@@ -57,16 +57,14 @@ paths:
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
             $ref: '#/definitions/health'
-        '503':
-          description: 'Service unavailable'
-          schema:
-            $ref: '#/definitions/health'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
           $ref: '#/responses/unauthorized'
         '403':
           $ref: '#/responses/forbidden'
+        '503':
+          $ref: '#/responses/service-unavailable'
       tags:
         - health
 
@@ -3472,6 +3470,14 @@ responses:
         description: The unique request ID value - assigned/set by the API Gateway based on the session
     schema:
       $ref: '#/definitions/error-response'
+  service-unavailable:
+    description: Service unavailable error
+    headers:
+      x-request-id:
+        type: string
+        description: The unique request ID value - assigned/set by the API Gateway based on the session
+    schema:
+      $ref: '#/definitions/error-response'
   conflict:
     description: Duplicate Resource
     headers:
@@ -3590,12 +3596,12 @@ parameters:
     description: the Salesforce ID of the Foundation
     in: query
     type: string
-  signingEntityName:
-    name: signingEntityName
-    description: The signing entity name of a Company (Salesforce and EasyCLA)
-    in: query
-    type: string
-    required: true
+#  signingEntityName:
+#    name: signingEntityName
+#    description: The signing entity name of a Company (Salesforce and EasyCLA)
+#    in: query
+#    type: string
+#    required: true
   companyID:
     name: companyID
     description: The internal company ID representing signing entity name instance (EasyCLA)
@@ -3694,11 +3700,11 @@ parameters:
     pattern: '^(\w)([\w\-.])+$'
     minLength: 5
     maxLength: 255
-  companySFID:
-    name: companySFID
-    description: salesforce id of the company
-    in: query
-    type: string
+#  companySFID:
+#    name: companySFID
+#    description: salesforce id of the company
+#    in: query
+#    type: string
   gerritHost:
     name: gerritHost
     description: host of the gerrit server
@@ -3868,8 +3874,8 @@ definitions:
   template-pdfs:
     $ref: './common/template-pdfs.yaml'
 
-  github-organizations:
-    $ref: './common/github-organizations.yaml'
+#  github-organizations:
+#    $ref: './common/github-organizations.yaml'
 
   github-organization:
     $ref: './common/github-organization.yaml'
@@ -4097,7 +4103,7 @@ definitions:
         type: string
         description: The company web site URL
         example: "http://www.linuxfoundation.org"
-        pattern: '^([\w\d\s\-\,\.\/\:]+){2,255}$'
+        pattern: ^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$
       Source:
         type: string
         description: >-
@@ -4119,7 +4125,7 @@ definitions:
         type: string
         description: The number of employees of the company
         example: "500 - 4999, 10000+"
-        pattern: '^([\w\d\s\-\,\.\/]+){2,}$'
+        pattern: '^([\w\d\s\-\,\.\/\+]+){2,}$'
       signingEntityNames:
         type: array
         description: A list of signing entity names associated with the Company
@@ -4270,16 +4276,16 @@ definitions:
       companySFID:
         type: string
 
-  contributors:
-    type: object
-    title: contributors
-    description: List of contributor roles for a user
-    properties:
-      list:
-        type: array
-        items:
-          $ref:
-            '#/definitions/contributor'
+#  contributors:
+#    type: object
+#    title: contributors
+#    description: List of contributor roles for a user
+#    properties:
+#      list:
+#        type: array
+#        items:
+#          $ref:
+#            '#/definitions/contributor'
 
   contributor:
     type: object
@@ -4312,40 +4318,40 @@ definitions:
         example: 'contributor'
         x-omitempty: false
 
-  company-owner:
-    type: object
-    title: Company Owner
-    description: Company Owner
-    properties:
-      lf_username:
-        type: string
-        description: 'the LF username'
-        x-omitempty: false
-        example: 'username'
-      name:
-        type: string
-        description: 'name of the user'
-        example: 'john'
-        x-omitempty: false
-      user_sfid:
-        type: string
-        description: 'the user SalesForce ID'
-        x-omitempty: false
-      email:
-        $ref: './common/properties/email.yaml'
-        x-omitempty: false
-      type:
-        type: string
-        x-omitempty: false
-        example: 'contact'
-      assigned_on:
-        type: string
-        x-omitempty: false
-      company_sfid:
-        type: string
-        description: 'the Organization SalesForce ID'
-        x-omitempty: false
-        example: 'abc134234adsdf43'
+#  company-owner:
+#    type: object
+#    title: Company Owner
+#    description: Company Owner
+#    properties:
+#      lf_username:
+#        type: string
+#        description: 'the LF username'
+#        x-omitempty: false
+#        example: 'username'
+#      name:
+#        type: string
+#        description: 'name of the user'
+#        example: 'john'
+#        x-omitempty: false
+#      user_sfid:
+#        type: string
+#        description: 'the user SalesForce ID'
+#        x-omitempty: false
+#      email:
+#        $ref: './common/properties/email.yaml'
+#        x-omitempty: false
+#      type:
+#        type: string
+#        x-omitempty: false
+#        example: 'contact'
+#      assigned_on:
+#        type: string
+#        x-omitempty: false
+#      company_sfid:
+#        type: string
+#        description: 'the Organization SalesForce ID'
+#        x-omitempty: false
+#        example: 'abc134234adsdf43'
 
 
   cla-manager-designee:
