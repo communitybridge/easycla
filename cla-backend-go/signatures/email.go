@@ -18,6 +18,6 @@ const (
 	InvalidateSignatureTemplate = `
 	<p>Hello {{.RecipientName}}</p>
     <p>This is a notification email from EasyCLA regarding approval list removal for {{.RemovalCriteria}}</p>
-	<p>Due to this change your signature record has been invalidated.</p>
+	<p>Due to this change your individual contribution authorization has been removed and you will be blocked from making subsequent code contributions on behalf of this project.</p>
 	`
 )
