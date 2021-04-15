@@ -468,16 +468,11 @@ func Configure(api *operations.EasyclaAPI, claGroupService project.Service, proj
 			})
 		}
 
-		// Must be in the one of the above scopes to see this
-		// - if project scope (like a PM)
-		// - if project|organization scope (like CLA Manager, CLA Signatory)
-		// - if organization scope (like company admin)
 		if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, params.ProjectSFID, companyModel.CompanyExternalID, projectClaGroupsRepo) {
 			msg := fmt.Sprintf("user %s is not authorized to view project company signatures any scope of project: %s, organization %s",
 				authUser.UserName, params.ProjectSFID, params.CompanyID)
 			log.WithFields(f).Warn(msg)
-			return signatures.NewGetProjectCompanySignaturesForbidden().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseForbidden(reqID, msg))
+			return signatures.NewGetProjectCompanySignaturesForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
 		}
 
 		log.WithFields(f).Debug("loading project company signatures...")
@@ -511,21 +506,14 @@ func Configure(api *operations.EasyclaAPI, claGroupService project.Service, proj
 			msg := fmt.Sprintf("user lookup for company by ID: '%s' failed : %v", params.CompanyID, err)
 			log.Warn(msg)
 			if _, ok := err.(*utils.CompanyNotFound); ok {
-				return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-					Message: "EasyCLA - 404 Not Found - error getting company - " + msg,
-					Code:    "404",
-				})
+				return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequest(reqID, msg))
 			}
-			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
-				Message: "EasyCLA - 400 Bad Request - error getting company - " + msg,
-				Code:    "400",
-			})
+			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequestWithError(reqID, msg, err))
 		}
 		if companyModel == nil {
 			msg := fmt.Sprintf("problem loading company by ID: %s", params.CompanyID)
 			log.WithFields(f).WithError(err).Warn(msg)
-			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseNotFound(reqID, msg))
+			return signatures.NewGetProjectCompanyEmployeeSignaturesBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseNotFound(reqID, msg))
 		}
 
 		log.WithFields(f).Debug("checking access control permissions...")
@@ -533,8 +521,7 @@ func Configure(api *operations.EasyclaAPI, claGroupService project.Service, proj
 			msg := fmt.Sprintf("user '%s' is not authorized to view project company signatures any scope of project or project|organization for project: '%s', organization '%s'",
 				authUser.UserName, params.ProjectSFID, params.CompanyID)
 			log.Warn(msg)
-			return signatures.NewGetProjectCompanyEmployeeSignaturesForbidden().WithXRequestID(reqID).WithPayload(
-				utils.ErrorResponseForbidden(reqID, msg))
+			return signatures.NewGetProjectCompanyEmployeeSignaturesForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
 		}
 
 		// Locate the CLA Group for the provided project SFID
@@ -767,8 +754,19 @@ func Configure(api *operations.EasyclaAPI, claGroupService project.Service, proj
 			})
 		}
 
+		// Lookup the Project to CLA Group mapping table entries - this will have the correct details
+		projectCLAGroupEntries, projectCLAGroupErr := projectClaGroupsRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
+		// Should have at least one entry if we're setup correctly - it will have the foundation (parent project/project group) and project details set
+		if projectCLAGroupErr != nil || len(projectCLAGroupEntries) == 0 {
+			msg := fmt.Sprintf("unable to load project CLA Group mappings for CLA Group: %s - has this project been migrated to v2?", params.ClaGroupID)
+			log.WithFields(f).Warn(msg)
+			return signatures.NewListClaGroupCorporateContributorsBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequest(reqID, msg))
+		}
+		// All the records will point to the same parent SFID
+		f["foundationSFID"] = projectCLAGroupEntries[0].FoundationSFID
+
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, claGroupModel.FoundationSFID, companyModel.CompanyExternalID, projectClaGroupsRepo) {
+		if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, projectCLAGroupEntries[0].FoundationSFID, companyModel.CompanyExternalID, projectClaGroupsRepo) {
 			msg := fmt.Sprintf(" user %s is not authorized to view project employee signatures any scope of project", authUser.UserName)
 			log.Warn(msg)
 			return signatures.NewDownloadProjectSignatureEmployeeAsCSVForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
@@ -930,13 +928,21 @@ func Configure(api *operations.EasyclaAPI, claGroupService project.Service, proj
 			return signatures.NewListClaGroupCorporateContributorsOK().WithXRequestID(reqID).WithPayload(&models.CorporateContributorList{
 				List: []*models.CorporateContributor{}, // empty list
 			})
-			//return signatures.NewListClaGroupCorporateContributorsBadRequest().WithXRequestID(reqID).WithPayload(
-			//	utils.ErrorResponseBadRequest(reqID, msg))
 		}
-		f["foundationSFID"] = claGroupModel.FoundationSFID
+
+		// Lookup the Project to CLA Group mapping table entries - this will have the correct details
+		projectCLAGroupEntries, projectCLAGroupErr := projectClaGroupsRepo.GetProjectsIdsForClaGroup(params.ClaGroupID)
+		// Should have at least one entry if we're setup correctly - it will have the foundation (parent project/project group) and project details set
+		if projectCLAGroupErr != nil || len(projectCLAGroupEntries) == 0 {
+			msg := fmt.Sprintf("unable to load project CLA Group mappings for CLA Group: %s - has this project been migrated to v2?", params.ClaGroupID)
+			log.WithFields(f).Warn(msg)
+			return signatures.NewListClaGroupCorporateContributorsBadRequest().WithXRequestID(reqID).WithPayload(utils.ErrorResponseBadRequest(reqID, msg))
+		}
+		// All the records will point to the same parent SFID
+		f["foundationSFID"] = projectCLAGroupEntries[0].FoundationSFID
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, claGroupModel.FoundationSFID, companyModel.CompanyExternalID, projectClaGroupsRepo) {
+		if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, projectCLAGroupEntries[0].FoundationSFID, companyModel.CompanyExternalID, projectClaGroupsRepo) {
 			msg := fmt.Sprintf("user '%s' is not authorized to view project CCLA signatures project scope or project|organization scope for company ID: %s",
 				authUser.UserName, companyModel.CompanyID)
 			log.Warn(msg)
@@ -1512,9 +1518,9 @@ func isUserHaveAccessToCLAProjectOrganization(ctx context.Context, authUser *aut
 		"userEmail":        authUser.Email,
 	}
 
-	log.WithFields(f).Debugf("testing if user %s/%s has access to project SFID...", authUser.UserName, authUser.Email)
+	log.WithFields(f).Debugf("testing if user %s/%s has access to project SFID: %s...", authUser.UserName, authUser.Email, projectSFID)
 	if utils.IsUserAuthorizedForProject(ctx, authUser, projectSFID, utils.ALLOW_ADMIN_SCOPE) {
-		log.WithFields(f).Debugf("user %s/%s has access to project SFID...", authUser.UserName, authUser.Email)
+		log.WithFields(f).Debugf("user %s/%s has access to project SFID: %s...", authUser.UserName, authUser.Email, projectSFID)
 		return true
 	}
 
