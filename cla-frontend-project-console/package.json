@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "graceful-fs": "^4.2.2",
-    "ionic": "^3.20.0",
+    "ionic": "^4.0.0",
     "serverless": "^2.15.0",
     "serverless-cloudfront-invalidate": "^1.2.1",
     "serverless-finch": "^2.6.0",
