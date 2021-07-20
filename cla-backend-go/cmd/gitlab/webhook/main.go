@@ -1,9 +1,13 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 package main
 
 import (
+	"os"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/xanzy/go-gitlab"
-	"os"
 )
 
 const (
@@ -31,8 +35,7 @@ func main() {
 
 	log.Infof("fetched current user : %s", user.Name)
 
-	projects, _, err := gitlabClient.Projects.ListUserProjects(user.ID, &gitlab.ListProjectsOptions{
-	})
+	projects, _, err := gitlabClient.Projects.ListUserProjects(user.ID, &gitlab.ListProjectsOptions{})
 	if err != nil {
 		log.Fatalf("listing projects failed : %v", err)
 	}
@@ -41,9 +44,7 @@ func main() {
 		log.Println("**********************")
 		log.Println("Name : ", p.Name)
 		log.Println("ID: ", p.ID)
-		hooks, _, err := gitlabClient.Projects.ListProjectHooks(p.ID, &gitlab.ListProjectHooksOptions{
-
-		})
+		hooks, _, err := gitlabClient.Projects.ListProjectHooks(p.ID, &gitlab.ListProjectHooksOptions{})
 
 		if err != nil {
 			log.Fatalf("fetching hooks for project : %s, failed : %v", p.Name, err)

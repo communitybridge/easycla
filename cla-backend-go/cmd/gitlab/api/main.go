@@ -1,11 +1,15 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 package main
 
 import (
 	"flag"
 	"fmt"
+	"os"
+
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
 	"github.com/xanzy/go-gitlab"
-	"os"
 )
 
 const (
@@ -36,8 +40,7 @@ func main() {
 
 	log.Infof("fetched current user : %s", user.Name)
 
-	projects, _, err := gitlabClient.Projects.ListUserProjects(user.ID, &gitlab.ListProjectsOptions{
-	})
+	projects, _, err := gitlabClient.Projects.ListUserProjects(user.ID, &gitlab.ListProjectsOptions{})
 	if err != nil {
 		log.Fatalf("listing projects failed : %v", err)
 	}
@@ -67,7 +70,7 @@ func main() {
 			State:       setState,
 			Name:        gitlab.String("easyCLA Bot"),
 			Description: gitlab.String(getDescription(setState)),
-			TargetURL: gitlab.String(getTargetURL("deniskurov@gmail.com")),
+			TargetURL:   gitlab.String(getTargetURL("deniskurov@gmail.com")),
 		})
 		if err != nil {
 			log.Fatalf("setting commit status for the sha failed : %v", err)
