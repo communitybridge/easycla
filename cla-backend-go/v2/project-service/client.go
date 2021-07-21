@@ -147,12 +147,12 @@ func (pmm *Client) GetParentProject(projectSFID string) (string, error) {
 		log.WithFields(f).WithError(err).Warnf("unable to lookup parentProjectModel using projectSFID: '%s'", projectSFID)
 		return projectSFID, err
 	}
-	if parentModel == nil || parentModel.Foundation == nil || parentModel.Foundation.ID == "" {
+	if parentModel == nil {
 		log.WithFields(f).WithError(err).Warnf("unable to lookup parentProjectModel using projectSFID: '%s'", projectSFID)
 		return projectSFID, err
 	}
 
-	return parentModel.Foundation.ID, nil
+	return parentModel.ID, nil
 }
 
 // GetParentProjectModel returns the parent project model if there is a parent, otherwise returns nil
@@ -173,14 +173,18 @@ func (pmm *Client) GetParentProjectModel(projectSFID string) (*models.ProjectOut
 	if exists {
 		log.WithFields(f).Debugf("cache hit - cache size: %d", len(projectServiceModels))
 
+		if !utils.IsProjectHaveParent(existingModel) {
+			return nil, nil
+		}
+
 		// Does this project they have a parent? projectModel.Parent is deprecated and no longer returned, use project.Foundation.ID/Name attribute instead
-		if existingModel.Foundation != nil && existingModel.Foundation.ID != "" && (existingModel.Foundation.Name == utils.TheLinuxFoundation || existingModel.Foundation.Name == utils.LFProjectsLLC) {
+		if existingModel.Foundation.Name == utils.TheLinuxFoundation || existingModel.Foundation.Name == utils.LFProjectsLLC {
 			log.WithFields(f).Debugf("no parent for projectSFID %s or %s or %s is the parent...", projectSFID, utils.TheLinuxFoundation, utils.LFProjectsLLC)
 			return nil, nil
 		}
 
 		// Grab the parent ID once
-		projectParentSFID := existingModel.Foundation.ID
+		projectParentSFID := utils.GetProjectParentSFID(existingModel)
 
 		// Parent SFID in the cache?
 		existingParentModel, exists = projectServiceModels[projectParentSFID]
@@ -217,18 +221,18 @@ func (pmm *Client) GetParentProjectModel(projectSFID string) (*models.ProjectOut
 	log.WithFields(f).Debugf("added project model to cache - cache size: %d", len(projectServiceModels))
 
 	// No parent
-	if projectModel.Foundation == nil || projectModel.Foundation.ID == "" {
+	if !utils.IsProjectHaveParent(projectModel) {
 		return nil, nil
 	}
 
 	// Do they have a parent? projectModel.Parent is deprecated and no longer returned
-	if projectModel.Foundation != nil && projectModel.Foundation.ID != "" && (projectModel.Foundation.Name == utils.TheLinuxFoundation || projectModel.Foundation.Name == utils.LFProjectsLLC) {
+	if projectModel.Foundation.Name == utils.TheLinuxFoundation || projectModel.Foundation.Name == utils.LFProjectsLLC {
 		log.WithFields(f).Debugf("no parent for projectSFID or %s or %s is the parent...", utils.TheLinuxFoundation, utils.LFProjectsLLC)
 		return nil, nil
 	}
 
 	// Grab the parent ID once
-	projectParentSFID := projectModel.Foundation.ID
+	projectParentSFID := utils.GetProjectParentSFID(projectModel)
 
 	// Parent in the cache?
 	existingParentModel, exists = projectServiceModels[projectParentSFID]
@@ -258,7 +262,6 @@ func (pmm *Client) IsTheLinuxFoundation(projectSFID string) (bool, error) {
 		"apiGWHost":    apiGWHost,
 	}
 
-	log.WithFields(f).Debug("querying project...")
 	projectModel, err := pmm.GetProject(projectSFID)
 	if err != nil {
 		log.WithFields(f).Warnf("unable to lookup project by ID: %s error: %+v", projectSFID, err)
@@ -289,7 +292,7 @@ func (pmm *Client) IsParentTheLinuxFoundation(projectSFID string) (bool, error) 
 		return false, err
 	}
 
-	if projectModel.Foundation == nil || projectModel.Foundation.ID == "" {
+	if !utils.IsProjectHaveParent(projectModel) {
 		return false, nil
 	}
 
@@ -460,4 +463,20 @@ func (pmm *Client) GetSummary(ctx context.Context, projectSFID string) ([]*model
 	}
 
 	return result.Payload.Data, nil
+}
+
+// IsAnyProjectTheRootParent returns true if one or more of the project ID's in the list is one of the root parents, returns false otherwise
+func (pmm *Client) IsAnyProjectTheRootParent(sliceProjectSFID []string) bool {
+	var retVal bool
+
+	// Check each project to see if it is one of the root parents
+	for _, projectSFID := range sliceProjectSFID {
+		// If so, return true, we're done
+		if isTLF, err := pmm.IsTheLinuxFoundation(projectSFID); isTLF && err == nil {
+			retVal = isTLF
+			break
+		}
+	}
+
+	return retVal
 }
