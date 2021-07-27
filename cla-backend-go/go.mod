@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 module github.com/communitybridge/easycla/cla-backend-go
 
-go 1.15
+go 1.16
 
 replace github.com/awslabs/aws-lambda-go-api-proxy => github.com/LF-Engineering/aws-lambda-go-api-proxy v0.3.2
 
@@ -32,8 +32,13 @@ require (
 	github.com/go-resty/resty/v2 v2.3.0
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/golang/mock v1.4.4
+<<<<<<< Updated upstream
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-github/v33 v33.0.0
+=======
+	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/google/go-github/v37 v37.0.0
+>>>>>>> Stashed changes
 	github.com/google/uuid v1.1.4
 	github.com/gorilla/sessions v1.2.1 // indirect
 	github.com/imroc/req v0.3.0
