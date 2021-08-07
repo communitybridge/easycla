@@ -26,7 +26,7 @@ import (
 // Service contains functions of GitlabOrganizations service
 type Service interface {
 	GetGitlabOrganizations(ctx context.Context, projectSFID string) (*models.ProjectGitlabOrganizations, error)
-	AddGitlabOrganization(ctx context.Context, projectSFID string, input *models.CreateGitlabOrganization) (*models.GitlabOrganization, error)
+	AddGitlabOrganization(ctx context.Context, projectSFID string, input *models.GitlabCreateOrganization) (*models.GitlabOrganization, error)
 	GetGitlabOrganization(ctx context.Context, gitlabOrganizationID string) (*models.GitlabOrganization, error)
 	GetGitlabOrganizationByState(ctx context.Context, gitlabOrganizationID, authState string) (*models.GitlabOrganization, error)
 	UpdateGitlabOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, autoEnabledClaGroupID string, branchProtectionEnabled bool) error
@@ -112,7 +112,7 @@ func (s service) GetGitlabOrganizationByState(ctx context.Context, gitlabOrganiz
 	return ToModel(dbModel), nil
 }
 
-func (s service) AddGitlabOrganization(ctx context.Context, projectSFID string, input *models.CreateGitlabOrganization) (*models.GitlabOrganization, error) {
+func (s service) AddGitlabOrganization(ctx context.Context, projectSFID string, input *models.GitlabCreateOrganization) (*models.GitlabOrganization, error) {
 	f := logrus.Fields{
 		"functionName":            "v2.gitlab_organizations.service.AddGitlabOrganization",
 		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
@@ -122,7 +122,6 @@ func (s service) AddGitlabOrganization(ctx context.Context, projectSFID string, 
 		"organizationName":        utils.StringValue(input.OrganizationName),
 	}
 
-	log.WithFields(f).Debug("looking up project in project service...")
 	psc := v2ProjectService.GetClient()
 	project, err := psc.GetProject(projectSFID)
 	if err != nil {
@@ -279,7 +278,7 @@ func (s service) DeleteGitlabOrganization(ctx context.Context, projectSFID strin
 	log.WithFields(f).Debugf("retrieved parent of project sfid : %s -> %s", projectSFID, parentProjectSFID)
 
 	// Todo: Enable this when the repositories are implemented
-	//err := s.ghRepository.DisableRepositoriesOfGithubOrganization(ctx, parentProjectSFID, gitlabOrgName)
+	//err := s.ghRepository.GitHubDisableRepositoriesOfOrganization(ctx, parentProjectSFID, gitlabOrgName)
 	//if err != nil {
 	//	log.WithFields(f).Warnf("problem disabling repositories for github organizations, error: %+v", projErr)
 	//	return err

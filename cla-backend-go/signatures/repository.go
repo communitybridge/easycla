@@ -2457,7 +2457,7 @@ func (repo repository) UpdateApprovalList(ctx context.Context, claManager *model
 			approvalList.Action = utils.RemoveApprovals
 			approvalList.Version = claGroupModel.Version
 			// Get repositories by CLAGroup
-			repositories, getRepoByCLAGroupErr := repo.repositoriesRepo.GetRepositoriesByCLAGroup(ctx, projectID, true)
+			repositories, getRepoByCLAGroupErr := repo.repositoriesRepo.GitHubGetRepositoriesByCLAGroup(ctx, projectID, true)
 			if getRepoByCLAGroupErr != nil {
 				msg := fmt.Sprintf("unable to fetch repositories for cla group ID: %s ", projectID)
 				log.WithFields(f).WithError(getRepoByCLAGroupErr).Warn(msg)
@@ -2609,7 +2609,7 @@ func (repo repository) UpdateApprovalList(ctx context.Context, claManager *model
 			approvalList.Action = utils.RemoveApprovals
 			approvalList.Version = claGroupModel.Version
 			// Get repositories by CLAGroup
-			repositories, getRepoByCLAGroupErr := repo.repositoriesRepo.GetRepositoriesByCLAGroup(ctx, projectID, true)
+			repositories, getRepoByCLAGroupErr := repo.repositoriesRepo.GitHubGetRepositoriesByCLAGroup(ctx, projectID, true)
 			if getRepoByCLAGroupErr != nil {
 				msg := fmt.Sprintf("unable to fetch repositories for cla group ID: %s ", projectID)
 				log.WithFields(f).WithError(getRepoByCLAGroupErr).Warn(msg)

@@ -32,7 +32,7 @@ const (
 
 // RepositoryInterface is interface for gitlab org data model
 type RepositoryInterface interface {
-	AddGitlabOrganization(ctx context.Context, parentProjectSFID string, projectSFID string, input *models2.CreateGitlabOrganization) (*models2.GitlabOrganization, error)
+	AddGitlabOrganization(ctx context.Context, parentProjectSFID string, projectSFID string, input *models2.GitlabCreateOrganization) (*models2.GitlabOrganization, error)
 	GetGitlabOrganizations(ctx context.Context, projectSFID string) (*models2.GitlabOrganizations, error)
 	GetGitlabOrganization(ctx context.Context, gitlabOrganizationID string) (*GitlabOrganization, error)
 	GetGitlabOrganizationByName(ctx context.Context, githubOrganizationName string) (*models2.GitlabOrganizations, error)
@@ -57,7 +57,7 @@ func NewRepository(awsSession *session.Session, stage string) RepositoryInterfac
 	}
 }
 
-func (repo Repository) AddGitlabOrganization(ctx context.Context, parentProjectSFID string, projectSFID string, input *models2.CreateGitlabOrganization) (*models2.GitlabOrganization, error) {
+func (repo Repository) AddGitlabOrganization(ctx context.Context, parentProjectSFID string, projectSFID string, input *models2.GitlabCreateOrganization) (*models2.GitlabOrganization, error) {
 	f := logrus.Fields{
 		"functionName":            "v2.gitlab_organizations.repository.AddGitlabOrganization",
 		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),

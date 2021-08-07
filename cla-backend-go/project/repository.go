@@ -856,7 +856,7 @@ func (repo *repo) buildCLAGroupModel(ctx context.Context, dbModel DBProjectModel
 			go func() {
 				defer wg.Done()
 				var err error
-				ghOrgs, err = repo.ghRepo.GetCLAGroupRepositoriesGroupByOrgs(ctx, dbModel.ProjectID, true)
+				ghOrgs, err = repo.ghRepo.GitHubGetCLAGroupRepositoriesGroupByOrgs(ctx, dbModel.ProjectID, true)
 				if err != nil {
 					log.Warnf("buildPCLAGroupModel - unable to load GH organizations by project ID: %s, error: %+v",
 						dbModel.ProjectID, err)
