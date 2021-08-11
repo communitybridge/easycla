@@ -33,12 +33,12 @@ type ServiceInterface interface {
 // Service object/struct
 type Service struct {
 	repo          RepositoryInterface
-	ghRepository  repositories.Repository
+	ghRepository  repositories.RepositoryInterface
 	claRepository projects_cla_groups.Repository
 }
 
 // NewService creates a new githubOrganizations service
-func NewService(repo RepositoryInterface, ghRepository repositories.Repository, claRepository projects_cla_groups.Repository) Service {
+func NewService(repo RepositoryInterface, ghRepository repositories.RepositoryInterface, claRepository projects_cla_groups.Repository) Service {
 	return Service{
 		repo:          repo,
 		ghRepository:  ghRepository,

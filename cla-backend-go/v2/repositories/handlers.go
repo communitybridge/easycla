@@ -305,7 +305,7 @@ func Configure(api *operations.EasyclaAPI, service ServiceInterface, eventServic
 
 			protectedBranch, err := service.GitHubUpdateProtectedBranch(ctx, params.ProjectSFID, params.RepositoryID, params.GithubRepositoryBranchProtectionInput)
 			if err != nil {
-				log.Warnf("update protected branch failed for repo %s : %v", params.RepositoryID, err)
+				log.Warnf("update protected branch failed for gitV1Repository %s : %v", params.RepositoryID, err)
 				if _, ok := err.(*utils.GitHubRepositoryNotFound); ok {
 					msg := fmt.Sprintf("unable to update branch protection for projectSFID: %s, repository: %s", params.ProjectSFID, params.RepositoryID)
 					log.WithFields(f).WithError(err).Warn(msg)
@@ -383,7 +383,7 @@ func Configure(api *operations.EasyclaAPI, service ServiceInterface, eventServic
 				return gitlab_repositories.NewGetProjectGitLabRepositoriesForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
 			}
 
-			result, err := service.GitHubGetRepositoriesByProjectSFID(ctx, params.ProjectSFID)
+			result, err := service.GitLabGetRepositoriesByProjectSFID(ctx, params.ProjectSFID)
 			if err != nil {
 				if strings.ContainsAny(err.Error(), "getProjectNotFound") {
 					msg := fmt.Sprintf("repository not found for projectSFID: %s", params.ProjectSFID)

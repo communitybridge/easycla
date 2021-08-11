@@ -44,13 +44,13 @@ type GithubOrgRepo interface {
 }
 
 type service struct {
-	repo                  Repository
+	repo                  RepositoryInterface
 	ghOrgRepo             GithubOrgRepo
 	projectsClaGroupsRepo projects_cla_groups.Repository
 }
 
 // NewService creates a new githubOrganizations service
-func NewService(repo Repository, ghOrgRepo GithubOrgRepo, pcgRepo projects_cla_groups.Repository) Service {
+func NewService(repo RepositoryInterface, ghOrgRepo GithubOrgRepo, pcgRepo projects_cla_groups.Repository) Service {
 	return &service{
 		repo:                  repo,
 		ghOrgRepo:             ghOrgRepo,

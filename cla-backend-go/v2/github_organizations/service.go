@@ -22,7 +22,7 @@ import (
 	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/v1/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	v1GithubOrg "github.com/communitybridge/easycla/cla-backend-go/github_organizations"
-	v1Repositories "github.com/communitybridge/easycla/cla-backend-go/repositories"
+	gitV1Repository "github.com/communitybridge/easycla/cla-backend-go/repositories"
 	v2ProjectService "github.com/communitybridge/easycla/cla-backend-go/v2/project-service"
 	"github.com/jinzhu/copier"
 )
@@ -46,16 +46,16 @@ type Service interface {
 
 type service struct {
 	repo                    v1GithubOrg.RepositoryInterface
-	ghRepository            v1Repositories.Repository
+	gitV1Repository         gitV1Repository.RepositoryInterface
 	ghService               v1GithubOrg.ServiceInterface
 	projectsCLAGroupService projects_cla_groups.Repository
 }
 
 // NewService creates a new githubOrganizations service
-func NewService(repo v1GithubOrg.RepositoryInterface, ghRepository v1Repositories.Repository, projectsCLAGroupService projects_cla_groups.Repository, ghService v1GithubOrg.ServiceInterface) Service {
+func NewService(repo v1GithubOrg.RepositoryInterface, gitV1Repository gitV1Repository.RepositoryInterface, projectsCLAGroupService projects_cla_groups.Repository, ghService v1GithubOrg.ServiceInterface) Service {
 	return service{
 		repo:                    repo,
-		ghRepository:            ghRepository,
+		gitV1Repository:         gitV1Repository,
 		projectsCLAGroupService: projectsCLAGroupService,
 		ghService:               ghService,
 	}
@@ -169,7 +169,7 @@ func (s service) GetGithubOrganizations(ctx context.Context, projectSFID string)
 	log.WithFields(f).Debugf("loading github repositories from %d organizations for projectSFID: %s...", len(orgs.List), projectSFID)
 	var repoList []*v1Models.GithubRepository
 	for _, org := range orgs.List {
-		orgRepos, orgReposErr := s.ghRepository.GitHubGetRepositoriesByOrganizationName(ctx, org.OrganizationName)
+		orgRepos, orgReposErr := s.gitV1Repository.GitHubGetRepositoriesByOrganizationName(ctx, org.OrganizationName)
 		if orgReposErr != nil || orgRepos == nil {
 			if _, ok := orgReposErr.(*utils.GitHubRepositoryNotFound); ok {
 				log.WithFields(f).Debug(orgReposErr)
@@ -325,7 +325,7 @@ func (s service) DeleteGithubOrganization(ctx context.Context, projectSFID strin
 	}
 
 	log.WithFields(f).Debug("disabling repositories for github organization...")
-	err := s.ghRepository.GitHubDisableRepositoriesOfOrganization(ctx, projectSFID, githubOrgName)
+	err := s.gitV1Repository.GitHubDisableRepositoriesOfOrganization(ctx, projectSFID, githubOrgName)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("problem disabling repositories for github organization")
 		return err

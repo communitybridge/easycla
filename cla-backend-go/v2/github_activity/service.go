@@ -36,7 +36,7 @@ type Service interface {
 }
 
 type eventHandlerService struct {
-	githubRepo        repositories.Repository
+	gitV1Repository   repositories.RepositoryInterface
 	githubOrgRepo     v1GithubOrg.RepositoryInterface
 	eventService      events.Service
 	autoEnableService dynamo_events.AutoEnableService
@@ -45,23 +45,23 @@ type eventHandlerService struct {
 }
 
 // NewService creates a new instance of the Event Handler Service
-func NewService(githubRepo repositories.Repository,
+func NewService(gitV1Repository repositories.RepositoryInterface,
 	githubOrgRepo v1GithubOrg.RepositoryInterface,
 	eventService events.Service,
 	autoEnableService dynamo_events.AutoEnableService,
 	emailService emails.Service) Service {
 
-	return newService(githubRepo, githubOrgRepo, eventService, autoEnableService, emailService, true)
+	return newService(gitV1Repository, githubOrgRepo, eventService, autoEnableService, emailService, true)
 }
 
-func newService(githubRepo repositories.Repository,
+func newService(gitV1Repository repositories.RepositoryInterface,
 	githubOrgRepo v1GithubOrg.RepositoryInterface,
 	eventService events.Service,
 	autoEnableService dynamo_events.AutoEnableService,
 	emailService emails.Service,
 	sendEmail bool) Service {
 	return &eventHandlerService{
-		githubRepo:        githubRepo,
+		gitV1Repository:   gitV1Repository,
 		githubOrgRepo:     githubOrgRepo,
 		eventService:      eventService,
 		autoEnableService: autoEnableService,
@@ -168,7 +168,7 @@ func (s *eventHandlerService) handleRepositoryRemovedAction(ctx context.Context,
 		return fmt.Errorf("missing repo id")
 	}
 	repositoryExternalID := strconv.FormatInt(*repo.ID, 10)
-	repoModel, err := s.githubRepo.GitHubGetRepositoryByGithubID(context.Background(), repositoryExternalID, true)
+	repoModel, err := s.gitV1Repository.GitHubGetRepositoryByGithubID(context.Background(), repositoryExternalID, true)
 	if err != nil {
 		if _, ok := err.(*utils.GitHubRepositoryNotFound); ok {
 			log.WithFields(f).Warnf("event for non existing local repo : %s, nothing to do", *repo.FullName)
@@ -179,7 +179,7 @@ func (s *eventHandlerService) handleRepositoryRemovedAction(ctx context.Context,
 
 	log.WithFields(f).Infof("disabling repo : %s", repoModel.RepositoryID)
 
-	if err := s.githubRepo.GitHubDisableRepository(context.Background(), repoModel.RepositoryID); err != nil {
+	if err := s.gitV1Repository.GitHubDisableRepository(context.Background(), repoModel.RepositoryID); err != nil {
 		log.WithFields(f).Warnf("disabling repo : %s failed : %v", *repo.FullName, err)
 		return err
 	}
@@ -232,7 +232,7 @@ func (s *eventHandlerService) handleRepositoryRenamedAction(ctx context.Context,
 		return fmt.Errorf("missing repo id")
 	}
 	repositoryExternalID := strconv.FormatInt(*repo.ID, 10)
-	repoModel, err := s.githubRepo.GitHubGetRepositoryByGithubID(context.Background(), repositoryExternalID, true)
+	repoModel, err := s.gitV1Repository.GitHubGetRepositoryByGithubID(context.Background(), repositoryExternalID, true)
 	if err != nil {
 		if _, ok := err.(*utils.GitHubRepositoryNotFound); ok {
 			log.WithFields(f).Warnf("event for non existing local repo : %s, nothing to do", *repo.FullName)
@@ -243,7 +243,7 @@ func (s *eventHandlerService) handleRepositoryRenamedAction(ctx context.Context,
 
 	log.WithFields(f).Infof("renaming Github Repository from : %s to : %s", repoModel.RepositoryName, *repo.Name)
 
-	if _, err := s.githubRepo.GitHubUpdateRepository(ctx, repoModel.RepositoryID, &models.GithubRepositoryInput{
+	if _, err := s.gitV1Repository.GitHubUpdateRepository(ctx, repoModel.RepositoryID, &models.GithubRepositoryInput{
 		RepositoryName: repo.Name,
 		Note:           "repository was renamed externally",
 	}); err != nil {
@@ -317,7 +317,7 @@ func (s *eventHandlerService) handleRepositoryTransferredAction(ctx context.Cont
 	}
 
 	repositoryExternalID := strconv.FormatInt(*repo.ID, 10)
-	repoModel, err := s.githubRepo.GitHubGetRepositoryByGithubID(context.Background(), repositoryExternalID, true)
+	repoModel, err := s.gitV1Repository.GitHubGetRepositoryByGithubID(context.Background(), repositoryExternalID, true)
 	if err != nil {
 		if _, ok := err.(*utils.GitHubRepositoryNotFound); ok {
 			log.WithFields(f).Warnf("event for non existing local repo : %s, nothing to do", repoName)
@@ -364,7 +364,7 @@ func (s *eventHandlerService) handleRepositoryTransferredAction(ctx context.Cont
 		return fmt.Errorf("aborting the repository : %s transfer, new githubOrg : %s doesn't have claGroupID set", repoModel.RepositoryName, newGithubOrg.OrganizationName)
 	}
 
-	_, err = s.githubRepo.GitHubUpdateRepository(ctx, repoModel.RepositoryID, &models.GithubRepositoryInput{
+	_, err = s.gitV1Repository.GitHubUpdateRepository(ctx, repoModel.RepositoryID, &models.GithubRepositoryInput{
 		Note:                       fmt.Sprintf("repository was transferred from org : %s to : %s", oldGithubOrg.OrganizationName, newGithubOrg.OrganizationName),
 		RepositoryOrganizationName: aws.String(newGithubOrg.OrganizationName),
 		RepositoryURL:              repo.HTMLURL,
@@ -398,7 +398,7 @@ func (s *eventHandlerService) handleRepositoryTransferredAction(ctx context.Cont
 
 func (s *eventHandlerService) disableFailedTransferRepo(ctx context.Context, sender *github.User, f logrus.Fields, repoModel *models.GithubRepository, oldGithubOrg *models.GithubOrganization, newGithubOrg *models.GithubOrganization) error {
 	log.WithFields(f).Warnf("can't proceed with repo transfer operation because the new org doesn't have autoenabled=true, disabling the repo : %s", repoModel.RepositoryName)
-	if err := s.githubRepo.GitHubDisableRepository(ctx, repoModel.RepositoryID); err != nil {
+	if err := s.gitV1Repository.GitHubDisableRepository(ctx, repoModel.RepositoryID); err != nil {
 		return fmt.Errorf("disabling the repo : %s failed : %v", repoModel.RepositoryID, err)
 	}
 
@@ -452,7 +452,7 @@ func (s *eventHandlerService) handleRepositoryArchivedAction(ctx context.Context
 		return fmt.Errorf("missing repo id")
 	}
 	repositoryExternalID := strconv.FormatInt(*repo.ID, 10)
-	repoModel, err := s.githubRepo.GitHubGetRepositoryByGithubID(context.Background(), repositoryExternalID, true)
+	repoModel, err := s.gitV1Repository.GitHubGetRepositoryByGithubID(context.Background(), repositoryExternalID, true)
 	if err != nil {
 		if _, ok := err.(*utils.GitHubRepositoryNotFound); ok {
 			log.WithFields(f).Warnf("event for non existing local repo : %s, nothing to do", *repo.FullName)

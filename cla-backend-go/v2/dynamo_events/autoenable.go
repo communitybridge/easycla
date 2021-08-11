@@ -40,14 +40,14 @@ type AutoEnableService interface {
 
 // NewAutoEnableService creates a new AutoEnableService
 func NewAutoEnableService(repositoryService repositories.Service,
-	githubRepo repositories.Repository,
+	githubRepo repositories.RepositoryInterface,
 	githubOrgRepo github_organizations.RepositoryInterface,
 	claRepository projects_cla_groups.Repository,
 	claService project.Service,
 ) AutoEnableService {
 	return &autoEnableServiceProvider{
 		repositoryService: repositoryService,
-		githubRepo:        githubRepo,
+		gitV1Repository:   githubRepo,
 		githubOrgRepo:     githubOrgRepo,
 		claRepository:     claRepository,
 		claService:        claService,
@@ -58,7 +58,7 @@ func NewAutoEnableService(repositoryService repositories.Service,
 // having it separated in its own struct makes testing easier.
 type autoEnableServiceProvider struct {
 	repositoryService repositories.Service
-	githubRepo        repositories.Repository
+	gitV1Repository   repositories.RepositoryInterface
 	githubOrgRepo     github_organizations.RepositoryInterface
 	claRepository     projects_cla_groups.Repository
 	claService        project.Service
@@ -119,7 +119,7 @@ func (a *autoEnableServiceProvider) CreateAutoEnabledRepository(repo *github.Rep
 
 	externalProjectID := claGroupModel.ProjectExternalID
 
-	repoModel, err := a.githubRepo.GitHubAddRepository(ctx, externalProjectID, projectSFID, &models.GithubRepositoryInput{
+	repoModel, err := a.gitV1Repository.GitHubAddRepository(ctx, externalProjectID, projectSFID, &models.GithubRepositoryInput{
 		RepositoryProjectID:        swag.String(claGroupID),
 		RepositoryName:             swag.String(repositoryFullName),
 		RepositoryType:             swag.String("github"),

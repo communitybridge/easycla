@@ -13,7 +13,7 @@ import (
 	"github.com/communitybridge/easycla/cla-backend-go/config"
 	"github.com/go-openapi/strfmt"
 
-	v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/v1/models"
+	//v1Models "github.com/communitybridge/easycla/cla-backend-go/gen/v1/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gen/v2/models"
 	"github.com/communitybridge/easycla/cla-backend-go/gitlab"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
@@ -26,7 +26,7 @@ import (
 // Service contains functions of GitlabOrganizations service
 type Service interface {
 	GetGitlabOrganizations(ctx context.Context, projectSFID string) (*models.ProjectGitlabOrganizations, error)
-	AddGitlabOrganization(ctx context.Context, projectSFID string, input *models.GitlabCreateOrganization) (*models.GitlabOrganization, error)
+	AddGitlabOrganization(ctx context.Context, projectSFID string, input *models.GitlabCreateOrganization) (*models.ProjectGitlabOrganizations, error)
 	GetGitlabOrganization(ctx context.Context, gitlabOrganizationID string) (*models.GitlabOrganization, error)
 	GetGitlabOrganizationByState(ctx context.Context, gitlabOrganizationID, authState string) (*models.GitlabOrganization, error)
 	UpdateGitlabOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, autoEnabledClaGroupID string, branchProtectionEnabled bool) error
@@ -39,7 +39,7 @@ type service struct {
 	claGroupRepository projects_cla_groups.Repository
 }
 
-// NewService creates a new githubOrganizations service
+// NewService creates a new gitlab organization service
 func NewService(repo RepositoryInterface, claGroupRepository projects_cla_groups.Repository) Service {
 	return service{
 		repo:               repo,
@@ -112,7 +112,7 @@ func (s service) GetGitlabOrganizationByState(ctx context.Context, gitlabOrganiz
 	return ToModel(dbModel), nil
 }
 
-func (s service) AddGitlabOrganization(ctx context.Context, projectSFID string, input *models.GitlabCreateOrganization) (*models.GitlabOrganization, error) {
+func (s service) AddGitlabOrganization(ctx context.Context, projectSFID string, input *models.GitlabCreateOrganization) (*models.ProjectGitlabOrganizations, error) {
 	f := logrus.Fields{
 		"functionName":            "v2.gitlab_organizations.service.AddGitlabOrganization",
 		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
@@ -139,14 +139,15 @@ func (s service) AddGitlabOrganization(ctx context.Context, projectSFID string, 
 	f["parentProjectSFID"] = parentProjectSFID
 	log.WithFields(f).Debug("located parentProjectID...")
 
-	log.WithFields(f).Debug("adding github organization...")
+	log.WithFields(f).Debug("adding gitlab organization...")
 	resp, err := s.repo.AddGitlabOrganization(ctx, parentProjectSFID, projectSFID, input)
 	if err != nil {
-		log.WithFields(f).WithError(err).Warn("problem adding github organization for project")
+		log.WithFields(f).WithError(err).Warn("problem adding gitlab organization for project")
 		return nil, err
 	}
+	log.WithFields(f).Debugf("created GitLab organization with ID: %s", resp.OrganizationID)
 
-	return resp, nil
+	return s.GetGitlabOrganizations(ctx, projectSFID)
 }
 
 func (s service) GetGitlabOrganizations(ctx context.Context, projectSFID string) (*models.ProjectGitlabOrganizations, error) {
@@ -156,7 +157,7 @@ func (s service) GetGitlabOrganizations(ctx context.Context, projectSFID string)
 		"projectSFID":    projectSFID,
 	}
 
-	// Load the GitHub Organization and Repository details - result will be missing CLA Group info and ProjectSFID details
+	// Load the GitLab Organization and Repository details - result will be missing CLA Group info and ProjectSFID details
 	log.WithFields(f).Debugf("loading Gitlab organizations for projectSFID: %s", projectSFID)
 	orgs, err := s.repo.GetGitlabOrganizations(ctx, projectSFID)
 	if err != nil {
@@ -186,19 +187,19 @@ func (s service) GetGitlabOrganizations(ctx context.Context, projectSFID string)
 		List: make([]*models.ProjectGitlabOrganization, 0),
 	}
 
-	// Next, we need to load a bunch of additional data for the response including the github status (if it's still connected/live, not renamed/moved), the CLA Group details, etc.
+	// Next, we need to load a bunch of additional data for the response including the GitLab status (if it's still connected/live, not renamed/moved), the CLA Group details, etc.
 
-	// A temp data model for holding the intermediate results
-	type gitlabRepoInfo struct {
-		orgName  string
-		repoInfo *v1Models.GithubRepositoryInfo
-	}
+	//// A temp data model for holding the intermediate results
+	//type gitlabRepoInfo struct {
+	//	orgName  string
+	//	repoInfo *v1Models.GitLabRepositoryInfo
+	//}
 
 	orgmap := make(map[string]*models.ProjectGitlabOrganization)
 	for _, org := range orgs.List {
 		autoEnabledCLAGroupName := ""
 		if org.AutoEnabledClaGroupID != "" {
-			log.WithFields(f).Debugf("Loading CLA Group by ID: %s to obtain the name for GitHub auth enabled CLA Group response", org.AutoEnabledClaGroupID)
+			log.WithFields(f).Debugf("Loading CLA Group by ID: %s to obtain the name for GitLab auth enabled CLA Group response", org.AutoEnabledClaGroupID)
 			claGroupMode, claGroupLookupErr := s.claGroupRepository.GetCLAGroup(ctx, org.AutoEnabledClaGroupID)
 			if claGroupLookupErr != nil {
 				log.WithFields(f).WithError(claGroupLookupErr).Warnf("Unable to lookup CLA Group by ID: %s", org.AutoEnabledClaGroupID)
@@ -220,7 +221,7 @@ func (s service) GetGitlabOrganizations(ctx context.Context, projectSFID string)
 			AutoEnableCLAGroupID:    org.AutoEnabledClaGroupID,
 			AutoEnabledCLAGroupName: autoEnabledCLAGroupName,
 			GitlabOrganizationName:  org.OrganizationName,
-			Repositories:            make([]*models.ProjectGithubRepository, 0),
+			Repositories:            make([]*models.ProjectGitlabRepository, 0),
 			InstallationURL:         installationURL,
 		}
 

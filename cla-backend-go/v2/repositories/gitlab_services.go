@@ -13,7 +13,7 @@ import (
 
 // GitLabAddRepository service function
 func (s *Service) GitLabAddRepository(ctx context.Context, projectSFID string, input *v2Models.GitlabAddRepository) (*v2Models.GitlabRepository, error) {
-	dbModel, err := s.v2GitLabRepositoryRepo.GitLabAddRepository(ctx, projectSFID, input)
+	dbModel, err := s.gitV2Repository.GitLabAddRepository(ctx, projectSFID, input)
 	if err != nil {
 		return nil, err
 	}
@@ -23,7 +23,7 @@ func (s *Service) GitLabAddRepository(ctx context.Context, projectSFID string, i
 
 // GitLabGetRepository service function
 func (s *Service) GitLabGetRepository(ctx context.Context, repositoryID string) (*v2Models.GitlabRepository, error) {
-	dbModel, err := s.v2GitLabRepositoryRepo.GitLabGetRepository(ctx, repositoryID)
+	dbModel, err := s.gitV2Repository.GitLabGetRepository(ctx, repositoryID)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (s *Service) GitLabGetRepository(ctx context.Context, repositoryID string) 
 
 // GitLabGetRepositoryByName service function
 func (s *Service) GitLabGetRepositoryByName(ctx context.Context, repositoryName string) (*v2Models.GitlabRepository, error) {
-	dbModel, err := s.v2GitLabRepositoryRepo.GitLabGetRepositoryByName(ctx, repositoryName)
+	dbModel, err := s.gitV2Repository.GitLabGetRepositoryByName(ctx, repositoryName)
 	if err != nil {
 		return nil, err
 	}
@@ -41,9 +41,9 @@ func (s *Service) GitLabGetRepositoryByName(ctx context.Context, repositoryName 
 	return dbModelToGitLabRepository(dbModel)
 }
 
-// GitHubGetRepositoriesByProjectSFID service function
-func (s *Service) GitHubGetRepositoriesByProjectSFID(ctx context.Context, projectSFID string) (*v2Models.GitlabListRepositories, error) {
-	dbModel, err := s.v2GitLabRepositoryRepo.GitHubGetRepositoriesByProjectSFID(ctx, projectSFID)
+// GitLabGetRepositoriesByProjectSFID service function
+func (s *Service) GitLabGetRepositoriesByProjectSFID(ctx context.Context, projectSFID string) (*v2Models.GitlabListRepositories, error) {
+	dbModel, err := s.gitV2Repository.GitHubGetRepositoriesByProjectSFID(ctx, projectSFID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,14 +58,14 @@ func (s *Service) GitHubGetRepositoriesByProjectSFID(ctx context.Context, projec
 	}, nil
 }
 
-// GitHubGetRepositoriesByCLAGroup service function
-func (s *Service) GitHubGetRepositoriesByCLAGroup(ctx context.Context, claGroupID string, enabled bool) (*v2Models.GitlabListRepositories, error) {
+// GitLabGetRepositoriesByCLAGroup service function
+func (s *Service) GitLabGetRepositoriesByCLAGroup(ctx context.Context, claGroupID string, enabled bool) (*v2Models.GitlabListRepositories, error) {
 	var dbModels []*repoModels.RepositoryDBModel
 	var err error
 	if enabled {
-		dbModels, err = s.v2GitLabRepositoryRepo.GitHubGetRepositoriesByCLAGroupEnabled(ctx, claGroupID)
+		dbModels, err = s.gitV2Repository.GitHubGetRepositoriesByCLAGroupEnabled(ctx, claGroupID)
 	} else {
-		dbModels, err = s.v2GitLabRepositoryRepo.GitHubGetRepositoriesByCLAGroupDisabled(ctx, claGroupID)
+		dbModels, err = s.gitV2Repository.GitHubGetRepositoriesByCLAGroupDisabled(ctx, claGroupID)
 	}
 	if err != nil {
 		return nil, err
@@ -83,17 +83,17 @@ func (s *Service) GitHubGetRepositoriesByCLAGroup(ctx context.Context, claGroupI
 
 // GitLabEnableRepository service function
 func (s *Service) GitLabEnableRepository(ctx context.Context, repositoryID string) error {
-	return s.v2GitLabRepositoryRepo.GitLabEnableRepositoryByID(ctx, repositoryID)
+	return s.gitV2Repository.GitLabEnableRepositoryByID(ctx, repositoryID)
 }
 
 // GitLabDisableRepository service function
 func (s *Service) GitLabDisableRepository(ctx context.Context, repositoryID string) error {
-	return s.v2GitLabRepositoryRepo.GitLabDisableRepositoryByID(ctx, repositoryID)
+	return s.gitV2Repository.GitLabDisableRepositoryByID(ctx, repositoryID)
 }
 
 // GitLabDisableCLAGroupRepositories service function
 func (s *Service) GitLabDisableCLAGroupRepositories(ctx context.Context, claGroupID string) error {
-	return s.v2GitLabRepositoryRepo.GitLabDisableCLAGroupRepositories(ctx, claGroupID)
+	return s.gitV2Repository.GitLabDisableCLAGroupRepositories(ctx, claGroupID)
 }
 
 // dbModelToGitLabRepository converts the database model to a v2 response model
@@ -108,7 +108,7 @@ func dbModelToGitLabRepository(dbModel *repoModels.RepositoryDBModel) (*v2Models
 		RepositoryID:               dbModel.RepositoryID,               // Internal database ID for this repository record
 		RepositoryProjectSfid:      dbModel.ProjectSFID,                // Project SFID
 		RepositoryClaGroupID:       dbModel.RepositoryCLAGroupID,       // CLA Group ID
-		RepositoryExternalID:       gitLabExternalID,                   // GitLab unique repo ID
+		RepositoryExternalID:       gitLabExternalID,                   // GitLab unique gitV1Repository ID
 		RepositoryName:             dbModel.RepositoryName,             // Short repository name
 		RepositoryOrganizationName: dbModel.RepositoryOrganizationName, // Group/Organization name
 		RepositoryURL:              dbModel.RepositoryURL,              // full url

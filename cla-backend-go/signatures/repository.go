@@ -107,14 +107,14 @@ type repository struct {
 	companyRepo        company.IRepository
 	usersRepo          users.UserRepository
 	eventsService      events.Service
-	repositoriesRepo   repositories.Repository
+	repositoriesRepo   repositories.RepositoryInterface
 	ghOrgRepo          github_organizations.RepositoryInterface
 	gerritService      gerrits.Service
 	signatureTableName string
 }
 
 // NewRepository creates a new instance of the signature repository service
-func NewRepository(awsSession *session.Session, stage string, companyRepo company.IRepository, usersRepo users.UserRepository, eventsService events.Service, repositoriesRepo repositories.Repository, ghOrgRepo github_organizations.RepositoryInterface, gerritService gerrits.Service) SignatureRepository {
+func NewRepository(awsSession *session.Session, stage string, companyRepo company.IRepository, usersRepo users.UserRepository, eventsService events.Service, repositoriesRepo repositories.RepositoryInterface, ghOrgRepo github_organizations.RepositoryInterface, gerritService gerrits.Service) SignatureRepository {
 	return repository{
 		stage:              stage,
 		dynamoDBClient:     dynamodb.New(awsSession),

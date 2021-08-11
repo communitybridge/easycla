@@ -1636,7 +1636,7 @@ paths:
               type: string
               description: The unique request ID value - assigned/set by the API Gateway based on the session
           schema:
-            $ref: '#/definitions/gitlab-organization'
+            $ref: '#/definitions/project-gitlab-organizations'
         '400':
           $ref: '#/responses/invalid-request'
         '401':
@@ -5563,6 +5563,35 @@ definitions:
         items:
           $ref: '#/definitions/project-github-repository'
 
+  project-github-repository:
+    type: object
+    properties:
+      repository_id:
+        type: string
+        x-omitempty: false
+      repository_github_id:
+        type: integer
+      repository_name:
+        type: string
+        x-omitempty: false
+      cla_group_id:
+        type: string
+        x-omitempty: false
+      project_id:
+        type: string
+        x-omitempty: false
+      parent_project_id:
+        type: string
+        x-omitempty: false
+      enabled:
+        type: boolean
+        x-omitempty: false
+      connection_status:
+        type: string
+        enum:
+          - connected
+          - connection_failure
+
   project-gitlab-organizations:
     type: object
     properties:
@@ -5611,9 +5640,9 @@ definitions:
       repositories:
         type: array
         items:
-          $ref: '#/definitions/project-github-repository'
+          $ref: '#/definitions/project-gitlab-repository'
 
-  project-github-repository:
+  project-gitlab-repository:
     type: object
     properties:
       repository_id:

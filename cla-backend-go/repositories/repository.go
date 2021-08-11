@@ -36,8 +36,8 @@ const (
 // ErrRepositoryDoesNotExist ...
 var ErrRepositoryDoesNotExist = errors.New("repository does not exist")
 
-// Repository defines functions of V3Repositories
-type Repository interface {
+// RepositoryInterface contains functions of the repositories service
+type RepositoryInterface interface {
 	GitHubAddRepository(ctx context.Context, externalProjectID string, projectSFID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
 	GitHubUpdateRepository(ctx context.Context, repositoryID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error)
 	GitHubUpdateClaGroupID(ctx context.Context, repositoryID, claGroupID string) error
@@ -56,22 +56,23 @@ type Repository interface {
 }
 
 // NewRepository create new Repository
-func NewRepository(awsSession *session.Session, stage string) Repository {
-	return &repo{
+func NewRepository(awsSession *session.Session, stage string) *Repository {
+	return &Repository{
 		stage:               stage,
 		dynamoDBClient:      dynamodb.New(awsSession),
 		repositoryTableName: fmt.Sprintf("cla-%s-repositories", stage),
 	}
 }
 
-type repo struct {
+// Repository structure
+type Repository struct {
 	stage               string
 	dynamoDBClient      *dynamodb.DynamoDB
 	repositoryTableName string
 }
 
 // GitHubAddRepository adds the specified repository
-func (r repo) GitHubAddRepository(ctx context.Context, externalProjectID string, projectSFID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
+func (r *Repository) GitHubAddRepository(ctx context.Context, externalProjectID string, projectSFID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":               "v1.repositories.repository.AddGitHubRepository",
 		utils.XREQUESTID:             ctx.Value(utils.XREQUESTID),
@@ -136,7 +137,7 @@ func (r repo) GitHubAddRepository(ctx context.Context, externalProjectID string,
 }
 
 // GitHubUpdateRepository updates the repository record for given ID
-func (r *repo) GitHubUpdateRepository(ctx context.Context, repositoryID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
+func (r *Repository) GitHubUpdateRepository(ctx context.Context, repositoryID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
 
 	externalID := utils.StringValue(input.RepositoryExternalID)
 	repositoryName := utils.StringValue(input.RepositoryName)
@@ -165,7 +166,7 @@ func (r *repo) GitHubUpdateRepository(ctx context.Context, repositoryID string, 
 	}
 
 	if repoModel == nil {
-		log.WithFields(f).Warnf("CombinedRepository does not exist for repo: %s ", repositoryID)
+		log.WithFields(f).Warnf("CombinedRepository does not exist for *Repository: %s ", repositoryID)
 		return nil, ErrRepositoryDoesNotExist
 	}
 
@@ -265,27 +266,27 @@ func (r *repo) GitHubUpdateRepository(ctx context.Context, repositoryID string, 
 }
 
 // GitHubUpdateClaGroupID updates the claGroupID of the repository
-func (r *repo) GitHubUpdateClaGroupID(ctx context.Context, repositoryID, claGroupID string) error {
+func (r *Repository) GitHubUpdateClaGroupID(ctx context.Context, repositoryID, claGroupID string) error {
 	return r.setClaGroupIDGithubRepository(ctx, repositoryID, claGroupID)
 }
 
 // GitHubEnableRepository enables the repository entry
-func (r *repo) GitHubEnableRepository(ctx context.Context, repositoryID string) error {
+func (r *Repository) GitHubEnableRepository(ctx context.Context, repositoryID string) error {
 	return r.enableGithubRepository(ctx, repositoryID)
 }
 
 // GitHubEnableRepositoryWithCLAGroupID enables the repository entry with the specified CLA Group ID
-func (r *repo) GitHubEnableRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string) error {
+func (r *Repository) GitHubEnableRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string) error {
 	return r.enableGithubRepositoryWithCLAGroupID(ctx, repositoryID, claGroupID)
 }
 
 // GitHubDisableRepository disables the repository entry (we don't delete)
-func (r *repo) GitHubDisableRepository(ctx context.Context, repositoryID string) error {
+func (r *Repository) GitHubDisableRepository(ctx context.Context, repositoryID string) error {
 	return r.disableGithubRepository(ctx, repositoryID)
 }
 
 // GitHubDisableRepositoriesByProjectID  disables the repository by the project ID
-func (r *repo) GitHubDisableRepositoriesByProjectID(ctx context.Context, projectID string) error {
+func (r *Repository) GitHubDisableRepositoriesByProjectID(ctx context.Context, projectID string) error {
 	repoModels, err := r.getProjectRepositories(ctx, projectID, true)
 	if err != nil {
 		return err
@@ -303,7 +304,7 @@ func (r *repo) GitHubDisableRepositoriesByProjectID(ctx context.Context, project
 }
 
 // GitHubDisableRepositoriesOfOrganization disables the repositories under the GitHub organization
-func (r repo) GitHubDisableRepositoriesOfOrganization(ctx context.Context, projectSFID, githubOrgName string) error {
+func (r *Repository) GitHubDisableRepositoriesOfOrganization(ctx context.Context, projectSFID, githubOrgName string) error {
 	repoModels, err := r.getRepositoriesByGithubOrg(ctx, githubOrgName)
 	if err != nil {
 		return err
@@ -320,7 +321,7 @@ func (r repo) GitHubDisableRepositoriesOfOrganization(ctx context.Context, proje
 }
 
 // GitHubGetRepository by repository id
-func (r *repo) GitHubGetRepository(ctx context.Context, repositoryID string) (*models.GithubRepository, error) {
+func (r *Repository) GitHubGetRepository(ctx context.Context, repositoryID string) (*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":   "v1.repositories.repository.GitHubGetRepository",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -357,7 +358,7 @@ func (r *repo) GitHubGetRepository(ctx context.Context, repositoryID string) (*m
 }
 
 // GitHubGetRepositoryByName fetches the repository by repository name
-func (r *repo) GitHubGetRepositoryByName(ctx context.Context, repositoryName string) (*models.GithubRepository, error) {
+func (r *Repository) GitHubGetRepositoryByName(ctx context.Context, repositoryName string) (*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":   "v1.repositories.repository.GitHubGetRepositoryByName",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -411,7 +412,7 @@ func (r *repo) GitHubGetRepositoryByName(ctx context.Context, repositoryName str
 }
 
 // GitHubGetRepositoriesByCLAGroup gets the list of repositories based on the CLA Group ID
-func (r *repo) GitHubGetRepositoriesByCLAGroup(ctx context.Context, claGroupID string, enabled bool) ([]*models.GithubRepository, error) {
+func (r *Repository) GitHubGetRepositoriesByCLAGroup(ctx context.Context, claGroupID string, enabled bool) ([]*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":   "v1.repositories.repository.GetRepositoryByCLAGroup",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -463,7 +464,7 @@ func (r *repo) GitHubGetRepositoriesByCLAGroup(ctx context.Context, claGroupID s
 }
 
 // GitHubGetRepositoriesByOrganizationName gets the repositories by organization name
-func (r *repo) GitHubGetRepositoriesByOrganizationName(ctx context.Context, gitHubOrgName string) ([]*models.GithubRepository, error) {
+func (r *Repository) GitHubGetRepositoriesByOrganizationName(ctx context.Context, gitHubOrgName string) ([]*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":   "v1.repositories.repository.GitHubGetRepositoriesByOrganizationName",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -515,7 +516,7 @@ func (r *repo) GitHubGetRepositoriesByOrganizationName(ctx context.Context, gitH
 }
 
 // GitHubGetCLAGroupRepositoriesGroupByOrgs returns a list of GH organizations by CLA Group - enabled flag indicates that we search the enabled repositories list
-func (r repo) GitHubGetCLAGroupRepositoriesGroupByOrgs(ctx context.Context, projectID string, enabled bool) ([]*models.GithubRepositoriesGroupByOrgs, error) {
+func (r *Repository) GitHubGetCLAGroupRepositoriesGroupByOrgs(ctx context.Context, projectID string, enabled bool) ([]*models.GithubRepositoriesGroupByOrgs, error) {
 	out := make([]*models.GithubRepositoriesGroupByOrgs, 0)
 	outMap := make(map[string]*models.GithubRepositoriesGroupByOrgs)
 	ghrepos, err := r.getProjectRepositories(ctx, projectID, enabled)
@@ -537,7 +538,7 @@ func (r repo) GitHubGetCLAGroupRepositoriesGroupByOrgs(ctx context.Context, proj
 }
 
 // GitHubListProjectRepositories lists GitHub repositories of project by external/salesforce project id
-func (r repo) GitHubListProjectRepositories(ctx context.Context, projectSFID string, enabled *bool) (*models.GithubListRepositories, error) {
+func (r *Repository) GitHubListProjectRepositories(ctx context.Context, projectSFID string, enabled *bool) (*models.GithubListRepositories, error) {
 	f := logrus.Fields{
 		"functionName":   "v1.repositories.repository.GitHubListProjectRepositories",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -591,7 +592,7 @@ func (r repo) GitHubListProjectRepositories(ctx context.Context, projectSFID str
 }
 
 // getProjectRepositories returns an array of GH repositories for the specified project ID
-func (r repo) getProjectRepositories(ctx context.Context, projectID string, enabled bool) ([]*models.GithubRepository, error) {
+func (r *Repository) getProjectRepositories(ctx context.Context, projectID string, enabled bool) ([]*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":   "v1.repositories.repository.getProjectRepositories",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -639,7 +640,7 @@ func (r repo) getProjectRepositories(ctx context.Context, projectID string, enab
 }
 
 // getRepositoriesByGithubOrg returns an array of GH repositories for the specified project ID
-func (r repo) getRepositoriesByGithubOrg(ctx context.Context, githubOrgName string) ([]*models.GithubRepository, error) {
+func (r *Repository) getRepositoriesByGithubOrg(ctx context.Context, githubOrgName string) ([]*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":   "v1.repositories.repository.getRepositoriesByGitHubOrg",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -684,7 +685,7 @@ func (r repo) getRepositoriesByGithubOrg(ctx context.Context, githubOrgName stri
 }
 
 // GitHubGetRepositoryByGithubID fetches the repository model by its external GitHub id
-func (r repo) GitHubGetRepositoryByGithubID(ctx context.Context, externalID string, enabled bool) (*models.GithubRepository, error) {
+func (r *Repository) GitHubGetRepositoryByGithubID(ctx context.Context, externalID string, enabled bool) (*models.GithubRepository, error) {
 	f := logrus.Fields{
 		"functionName":   "v1.repositories.repository.GetRepositoryByGitHubID",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -734,20 +735,20 @@ func (r repo) GitHubGetRepositoryByGithubID(ctx context.Context, externalID stri
 	return result.ToGitHubModel(), nil
 }
 
-func (r repo) enableGithubRepository(ctx context.Context, repositoryID string) error {
+func (r *Repository) enableGithubRepository(ctx context.Context, repositoryID string) error {
 	return r.setEnabledGithubRepository(ctx, repositoryID, true)
 }
 
-func (r repo) enableGithubRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string) error {
+func (r *Repository) enableGithubRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string) error {
 	return r.setEnabledGithubRepositoryWithCLAGroupID(ctx, repositoryID, claGroupID, true)
 }
 
-func (r repo) disableGithubRepository(ctx context.Context, repositoryID string) error {
+func (r *Repository) disableGithubRepository(ctx context.Context, repositoryID string) error {
 	return r.setEnabledGithubRepository(ctx, repositoryID, false)
 }
 
 // setEnabledGithubRepository updates the existing repository record by setting the enabled flag to false
-func (r repo) setEnabledGithubRepository(ctx context.Context, repositoryID string, enabled bool) error {
+func (r *Repository) setEnabledGithubRepository(ctx context.Context, repositoryID string, enabled bool) error {
 	f := logrus.Fields{
 		"functionName":   "v1.repositories.repository.setEnabledGitHubRepository",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -806,7 +807,7 @@ func (r repo) setEnabledGithubRepository(ctx context.Context, repositoryID strin
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeConditionalCheckFailedException:
-				return errors.New("github repository entry does not exist or repository_sfdc_id does not match with specified project id")
+				return errors.New("github repository entry does not exist or *Repositorysitory_sfdc_id does not match with specified project id")
 			}
 		}
 		log.WithFields(f).WithError(err).Warn("error disabling github repository")
@@ -817,7 +818,7 @@ func (r repo) setEnabledGithubRepository(ctx context.Context, repositoryID strin
 }
 
 // setEnabledGithubRepositoryWithCLAGroupID updates the existing repository record by setting the enabled flag to false
-func (r repo) setEnabledGithubRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string, enabled bool) error {
+func (r *Repository) setEnabledGithubRepositoryWithCLAGroupID(ctx context.Context, repositoryID, claGroupID string, enabled bool) error {
 	f := logrus.Fields{
 		"functionName":   "v1.repositories.repository.setEnabledGitHubRepositoryWithCLAGroupID",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -881,7 +882,7 @@ func (r repo) setEnabledGithubRepositoryWithCLAGroupID(ctx context.Context, repo
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeConditionalCheckFailedException:
-				return errors.New("github repository entry does not exist or repository_sfdc_id does not match with specified project id")
+				return errors.New("github repository entry does not exist or *Repositorysitory_sfdc_id does not match with specified project id")
 			}
 		}
 		log.WithFields(f).WithError(err).Warn("error disabling github repository")
@@ -892,7 +893,7 @@ func (r repo) setEnabledGithubRepositoryWithCLAGroupID(ctx context.Context, repo
 }
 
 // setEnabledGithubRepository updates the existing repository record by setting the enabled flag to false
-func (r repo) setClaGroupIDGithubRepository(ctx context.Context, repositoryID, claGroupID string) error {
+func (r *Repository) setClaGroupIDGithubRepository(ctx context.Context, repositoryID, claGroupID string) error {
 	f := logrus.Fields{
 		"functionName":   "v1.repositories.repository.setClaGroupIDGitHubRepository",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -948,7 +949,7 @@ func (r repo) setClaGroupIDGithubRepository(ctx context.Context, repositoryID, c
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeConditionalCheckFailedException:
-				return errors.New("github repository entry does not exist or repository_sfdc_id does not match with specified project id")
+				return errors.New("github repository entry does not exist or *Repositorysitory_sfdc_id does not match with specified project id")
 			}
 		}
 		log.WithFields(f).WithError(err).Warn("error disabling github repository")
