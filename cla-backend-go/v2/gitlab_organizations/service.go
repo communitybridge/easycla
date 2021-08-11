@@ -25,8 +25,8 @@ import (
 
 // Service contains functions of GitlabOrganizations service
 type Service interface {
-	GetGitlabOrganizations(ctx context.Context, projectSFID string) (*models.ProjectGitlabOrganizations, error)
-	AddGitlabOrganization(ctx context.Context, projectSFID string, input *models.GitlabCreateOrganization) (*models.ProjectGitlabOrganizations, error)
+	GetGitlabOrganizations(ctx context.Context, projectSFID string) (*models.GitlabProjectOrganizations, error)
+	AddGitlabOrganization(ctx context.Context, projectSFID string, input *models.GitlabCreateOrganization) (*models.GitlabProjectOrganizations, error)
 	GetGitlabOrganization(ctx context.Context, gitlabOrganizationID string) (*models.GitlabOrganization, error)
 	GetGitlabOrganizationByState(ctx context.Context, gitlabOrganizationID, authState string) (*models.GitlabOrganization, error)
 	UpdateGitlabOrganization(ctx context.Context, projectSFID string, organizationName string, autoEnabled bool, autoEnabledClaGroupID string, branchProtectionEnabled bool) error
@@ -112,7 +112,7 @@ func (s service) GetGitlabOrganizationByState(ctx context.Context, gitlabOrganiz
 	return ToModel(dbModel), nil
 }
 
-func (s service) AddGitlabOrganization(ctx context.Context, projectSFID string, input *models.GitlabCreateOrganization) (*models.ProjectGitlabOrganizations, error) {
+func (s service) AddGitlabOrganization(ctx context.Context, projectSFID string, input *models.GitlabCreateOrganization) (*models.GitlabProjectOrganizations, error) {
 	f := logrus.Fields{
 		"functionName":            "v2.gitlab_organizations.service.AddGitlabOrganization",
 		utils.XREQUESTID:          ctx.Value(utils.XREQUESTID),
@@ -150,7 +150,7 @@ func (s service) AddGitlabOrganization(ctx context.Context, projectSFID string, 
 	return s.GetGitlabOrganizations(ctx, projectSFID)
 }
 
-func (s service) GetGitlabOrganizations(ctx context.Context, projectSFID string) (*models.ProjectGitlabOrganizations, error) {
+func (s service) GetGitlabOrganizations(ctx context.Context, projectSFID string) (*models.GitlabProjectOrganizations, error) {
 	f := logrus.Fields{
 		"functionName":   "v2.gitlab_organizations.service.GetGitlabOrganizations",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -183,8 +183,8 @@ func (s service) GetGitlabOrganizations(ctx context.Context, projectSFID string)
 	log.WithFields(f).Debug("located parentProjectID...")
 
 	// Our response model
-	out := &models.ProjectGitlabOrganizations{
-		List: make([]*models.ProjectGitlabOrganization, 0),
+	out := &models.GitlabProjectOrganizations{
+		List: make([]*models.GitlabProjectOrganization, 0),
 	}
 
 	// Next, we need to load a bunch of additional data for the response including the GitLab status (if it's still connected/live, not renamed/moved), the CLA Group details, etc.
@@ -195,7 +195,7 @@ func (s service) GetGitlabOrganizations(ctx context.Context, projectSFID string)
 	//	repoInfo *v1Models.GitLabRepositoryInfo
 	//}
 
-	orgmap := make(map[string]*models.ProjectGitlabOrganization)
+	orgmap := make(map[string]*models.GitlabProjectOrganization)
 	for _, org := range orgs.List {
 		autoEnabledCLAGroupName := ""
 		if org.AutoEnabledClaGroupID != "" {
@@ -216,12 +216,12 @@ func (s service) GetGitlabOrganizations(ctx context.Context, projectSFID string)
 		}
 
 		installationURL := buildInstallationURL(org.OrganizationID, orgDetailed.AuthState)
-		rorg := &models.ProjectGitlabOrganization{
+		rorg := &models.GitlabProjectOrganization{
 			AutoEnabled:             org.AutoEnabled,
 			AutoEnableCLAGroupID:    org.AutoEnabledClaGroupID,
 			AutoEnabledCLAGroupName: autoEnabledCLAGroupName,
 			GitlabOrganizationName:  org.OrganizationName,
-			Repositories:            make([]*models.ProjectGitlabRepository, 0),
+			Repositories:            make([]*models.GitlabProjectRepository, 0),
 			InstallationURL:         installationURL,
 		}
 
