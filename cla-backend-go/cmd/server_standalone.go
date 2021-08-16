@@ -36,3 +36,4 @@ func runServer(cmd *cobra.Command, args []string) {
 
 	log.Infof("HTTP Server terminated - errors: %v", <-errs)
 }
+

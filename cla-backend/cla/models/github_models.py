@@ -99,7 +99,7 @@ class GitHub(repository_service_interface.RepositoryService):
         session = self._get_request_session(request)
         cla.log.debug(f'{fn} - Adding github details to session...')
         session['github_installation_id'] = installation_id
-        session['github_repository_id'] = github_repository_id
+        session['github_repository_id'] = github_repository_id          
         session['github_change_request_id'] = change_request_id
 
         cla.log.debug(f'{fn} - Determining return URL from the inbound request...')
