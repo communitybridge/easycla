@@ -15,14 +15,13 @@ import (
 	"strings"
 
 	gitlab_activity "github.com/communitybridge/easycla/cla-backend-go/v2/gitlab-activity"
-	"github.com/communitybridge/easycla/cla-backend-go/v2/gitlab_sign"
 
 	"github.com/go-openapi/strfmt"
 
 	"github.com/communitybridge/easycla/cla-backend-go/v2/gitlab_organizations"
 
 	"github.com/communitybridge/easycla/cla-backend-go/gitlab"
-	"github.com/communitybridge/easycla/cla-backend-go/gitlab_sign"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/gitlab_sign"
 
 	"github.com/communitybridge/easycla/cla-backend-go/emails"
 
@@ -308,7 +307,7 @@ func server(localMode bool) http.Handler {
 	githubOrganizationsService := github_organizations.NewService(githubOrganizationsRepo, gitV1Repository, v1ProjectClaGroupRepo)
 	gitlabOrganizationsService := gitlab_organizations.NewService(gitlabOrganizationRepo, v1ProjectClaGroupRepo)
 	gitlabActivityService := gitlab_activity.NewService(gitlabOrganizationRepo, gitV1Repository, gitV2Repository, usersRepo, signaturesRepo, v1ProjectClaGroupRepo, v1CompanyRepo, signaturesRepo)
-	gitlabSignService := gitlab_sign.NewService(gitlabOrganizationRepo)
+	gitlabSignService := gitlab_sign.NewService(v2RepositoriesService, gitlabOrganizationRepo, usersService)
 	v2GithubOrganizationsService := v2GithubOrganizations.NewService(githubOrganizationsRepo, gitV1Repository, v1ProjectClaGroupRepo, githubOrganizationsService)
 	autoEnableService := dynamo_events.NewAutoEnableService(v1RepositoriesService, gitV1Repository, githubOrganizationsRepo, v1ProjectClaGroupRepo, v1ProjectService)
 	v2GithubActivityService := v2GithubActivity.NewService(gitV1Repository, githubOrganizationsRepo, eventsService, autoEnableService, emailService)

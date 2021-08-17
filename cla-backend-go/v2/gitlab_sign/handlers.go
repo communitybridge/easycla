@@ -26,14 +26,14 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 			f := logrus.Fields{
 				"functionName":   "v2.gitlab_sign.handlers.GitlabSignSignRequestHandler",
 				utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-				"installationID": srp.InstallationID,
+				"installationID": srp.OrganizationID,
 				"repositoryID":   srp.GitlabRepositoryID,
 				"mergeRequestID": srp.MergeRequestID,
 			}
 
 			log.WithFields(f).Debugf("Initiating Gitlab sign request for : %+v ", srp)
 
-			err := service.GitlabSignRequest(ctx, srp.HTTPRequest, srp.InstallationID, srp.GitlabRepositoryID, srp.MergeRequestID, contributorConsoleV2Base, eventService)
+			err := service.GitlabSignRequest(ctx, srp.HTTPRequest, srp.OrganizationID, srp.GitlabRepositoryID, srp.MergeRequestID, contributorConsoleV2Base, eventService)
 
 			if err != nil {
 				msg := fmt.Sprintf("problem initiating sign request for :%+v", srp)

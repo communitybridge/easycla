@@ -1,60 +1,123 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+
 package gitlab_sign
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
+	"strconv"
 
-	"github.com/communitybridge/easycla/cla-backend-go/auth"
-	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
 
 	"github.com/communitybridge/easycla/cla-backend-go/events"
-	"github.com/communitybridge/easycla/cla-backend-go/v2/gitlab_organizations"
+	"github.com/communitybridge/easycla/cla-backend-go/gen/v1/models"
+	v2Gitlab "github.com/communitybridge/easycla/cla-backend-go/gitlab"
 	log "github.com/communitybridge/easycla/cla-backend-go/logging"
-	"github.com/communitybridge/easycla/cla-backend-go/user"
+	"github.com/communitybridge/easycla/cla-backend-go/users"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/gitlab_organizations"
+	"github.com/communitybridge/easycla/cla-backend-go/v2/repositories"
+	"github.com/xanzy/go-gitlab"
 )
 
+
+
 type service struct {
-	gitlabRepository gitlab_organizations.RepositoryInterface
+	repoService   repositories.ServiceInterface
+	gitlabOrgRepo gitlab_organizations.RepositoryInterface
+	userService   users.Service
 }
 
 type Service interface {
-	GitlabSignRequest(ctx context.Context, req *http.Request, installationID, repositoryID, mergeRequestID, contributorConsoleV2Base string, eventService events.Service) error
+	GitlabSignRequest(ctx context.Context, req *http.Request, organizationID, repositoryID, mergeRequestID, contributorConsoleV2Base string, eventService events.Service) error
 }
 
-func NewService(gitlabRepository gitlab_organizations.RepositoryInterface) Service {
+func NewService(gitlabRepositoryService repositories.ServiceInterface, gitlabOrgRepository gitlab_organizations.RepositoryInterface, userService users.Service) Service {
 	return &service{
-		gitlabRepository: gitlabRepository,
+		repoService:   gitlabRepositoryService,
+		gitlabOrgRepo: gitlabOrgRepository,
+		userService:   userService,
 	}
 }
 
-func (s service) GitlabSignRequest(ctx context.Context,req *http.Request, installationID, repositoryID, mergeRequestID string, eventService events.Service) error {
-	
-}
-
-func(s service) redirectToConsole(ctx context.Context,req *http.Request,authorizer auth.Authorizer, installationID, repositoryID, mergeRequestID, originURL, contributorBaseURL string, eventService events.Service) error{
+func (s service) GitlabSignRequest(ctx context.Context, req *http.Request, organizationID, repositoryID, mergeRequestID, contributorConsoleV2Base string, eventService events.Service) error {
 	f := logrus.Fields{
-		"functionName": "v2.gitlab_sign.service.redirectToConsole",
-		"installationID": installationID,
-		"repositoryID": repositoryID,
+		"functionName":   "v2.gitlab_sign.service.GitlabSignRequest",
+		"organizationID": organizationID,
+		"repositoryID":   repositoryID,
 		"mergeRequestID": mergeRequestID,
-		"originURL": originURL,
 	}
 
-	claUser, err := s.getOrCreateUser(ctx, req, eventService)
+	organization, err := s.gitlabOrgRepo.GetGitlabOrganization(ctx, organizationID)
+	if err != nil {
+		log.WithFields(f).Debugf("unable to get gitlab organiztion by ID: %s, error: %+v ", organizationID, err)
+		return nil
+	}
+
+	if organization.AuthInfo == "" {
+		msg := fmt.Sprintf("organization: %s  has no auth details", organizationID)
+		log.WithFields(f).Debug(msg)
+		return nil
+	}
+
+	gitlabClient, err := v2Gitlab.NewGitlabOauthClient(organization.AuthInfo)
+	if err != nil {
+		log.WithFields(f).Debugf("initializaing gitlab client for gitlab org: %s failed: %v", organizationID, err)
+		return nil
+	}
+
+	mergeRequestIDInt, err := strconv.Atoi(mergeRequestID)
+	if err != nil {
+		log.WithFields(f).Debugf("unable to convert organization string value : %s to Int", organizationID)
+		return err
+	}
+
+	log.WithFields(f).Debug("Determining return URL from the inbound request ...")
+	mergeRequest, _, err := gitlabClient.MergeRequests.GetMergeRequest(repositoryID, mergeRequestIDInt, &gitlab.GetMergeRequestsOptions{})
+	if err != nil || mergeRequest == nil {
+		log.WithFields(f).Debugf("unable to fetch MR Web URL: mergeRequestID: %s ", mergeRequestID)
+		return err
+	}
+
+	originURL := mergeRequest.WebURL
+	log.WithFields(f).Debugf("Return URL from the inbound request is : %s ", originURL)
+
+	err = s.redirectToConsole(ctx, req, gitlabClient, repositoryID, mergeRequestID, originURL, contributorConsoleV2Base, eventService)
+	if err != nil {
+		log.WithFields(f).Debug("unable to redirect to contributor console")
+		return err
+	}
+
+	return nil
+}
+
+func (s service) redirectToConsole(ctx context.Context, req *http.Request, gitlabClient *gitlab.Client, repositoryID, mergeRequestID, originURL, contributorBaseURL string, eventService events.Service) error {
+	f := logrus.Fields{
+		"functionName":   "v2.gitlab_sign.service.redirectToConsole",
+		"repositoryID":   repositoryID,
+		"mergeRequestID": mergeRequestID,
+		"originURL":      originURL,
+	}
+
+	claUser, err := s.getOrCreateUser(ctx, gitlabClient, eventService)
 	if err != nil {
 		msg := fmt.Sprintf("unable to get or create user : %+v ", err)
 		log.WithFields(f).Warn(msg)
 		return err
 	}
 
-	s.gitlabRepository.GetGitlabOrganization()
+	gitlabRepo, err := s.repoService.GitHubGetRepository(ctx, repositoryID)
+	if err != nil {
+		msg := fmt.Sprintf("unable to find repository by ID: %s , error: %+v ", repositoryID, err)
+		log.WithFields(f).Warn(msg)
+		return err
+	}
 
-	consoleURL := fmt.Sprintf("https://%s/#/cla/project/%s/user/%s")
-	resp, err := http.Get(consoleURL)
+	params := "redirect=" + url.QueryEscape(originURL)
+	consoleURL := fmt.Sprintf("https://%s/#/cla/project/%s/user/%s?%s", contributorBaseURL, gitlabRepo.RepositoryClaGroupID, claUser.UserID, params)
+	_, err = http.Get(consoleURL)
 
 	if err != nil {
 		msg := fmt.Sprintf("unable to redirect to : %s , error: %+v ", consoleURL, err)
@@ -62,74 +125,47 @@ func(s service) redirectToConsole(ctx context.Context,req *http.Request,authoriz
 		return err
 	}
 
+	return nil
 }
 
-func(s service) getOrCreateUser(ctx context.Context, r *http.Request, eventsService events.Service) (*user.CLAUser, error) {
+func (s service) getOrCreateUser(ctx context.Context, gitlabClient *gitlab.Client, eventsService events.Service) (*models.User, error) {
 
-	f := logrus.Fields {
-		"functionName": "v2.gitlab_sign.service.getOrCreateUser"
+	f := logrus.Fields{
+		"functionName": "v2.gitlab_sign.service.getOrCreateUser",
 	}
 
-	claUser, err := authorizer.SecurityAuth(t[1], []string{})
+	gitlabUser, _, err := gitlabClient.Users.CurrentUser()
 	if err != nil {
-		log.WithFields(f).WithError(err).Warn("parsing failed")
-		return nil, err 
+		log.WithFields(f).Debugf("getting gitlab current user for failed : %v ", err)
+		return nil, err
 	}
-	f["claUserName"] = claUser.Name
-	f["claUserID"] = claUser.UserID
-	f["claUserLFUsername"] = claUser.LFUsername
-	f["claUserLFEmail"] = claUser.LFEmail
-	f["claUserEmails"] = strings.Join(claUser.Emails, ",")
 
-	// search if user exist in database by username
-	userModel, err := usersService.GetUserByLFUserName(claUser.LFUsername)
+	claUser, err := s.userService.GetUserByGitlabID(gitlabUser.ID)
 	if err != nil {
-		if err, ok := err.(*utils.UserNotFound); ok {
-			log.WithFields(f).Debug("unable to locate user by lf-email")
-		} else {
-			log.WithFields(f).WithError(err).Warn("searching user by lf-username failed")
-			return
+		log.WithFields(f).Debugf("unable to get CLA user by github ID: %d , error: %+v ", gitlabUser.ID, err)
+		log.WithFields(f).Infof("creating user record for gitlab user : %+v ", gitlabUser)
+		user := &models.User{
+			GitlabID:       fmt.Sprintf("%d", gitlabUser.ID),
+			GitlabUsername: gitlabUser.Username,
+			Emails:         []string{gitlabUser.Email},
 		}
-	}
-	// If found - just return
-	if userModel != nil {
-		return
-	}
-
-	// search if user exist in database by username
-	userModel, err = usersService.GetUserByEmail(claUser.LFEmail)
-	if err != nil {
-		if err, ok := err.(*utils.UserNotFound); ok {
-			log.WithFields(f).Debug("unable to locate user by lf-email")
-		} else {
-			log.WithFields(f).WithError(err).Warn("searching user by lf-email failed")
-			return
+		claUser, userErr := s.userService.CreateUser(user, nil)
+		if err != nil {
+			log.WithFields(f).Debugf("unable to create claUser with details : %+v, error: %+v", user, userErr)
+			return nil, userErr
 		}
-	}
-	// If found - just return
-	if userModel != nil {
-		return
+
+		// Log the event
+		eventsService.LogEvent(&events.LogEventArgs{
+			EventType: events.UserCreated,
+			UserID:    user.UserID,
+			UserModel: user,
+			EventData: &events.UserCreatedEventData{},
+		})
+		return claUser, nil
+
 	}
 
-	// Attempt to create the user
-	newUser := &models.User{
-		LfEmail:    strfmt.Email(claUser.LFEmail),
-		LfUsername: claUser.LFUsername,
-		Username:   claUser.Name,
-	}
-	log.WithFields(f).Debug("creating new user")
-	userModel, err = usersService.CreateUser(newUser, nil)
-	if err != nil {
-		log.WithFields(f).WithField("user", newUser).WithError(err).Warn("creating new user failed")
-		return
-	}
-
-	// Log the event
-	eventsService.LogEvent(&events.LogEventArgs{
-		EventType: events.UserCreated,
-		UserID:    userModel.UserID,
-		UserModel: userModel,
-		EventData: &events.UserCreatedEventData{},
-	})
+	return claUser, nil
 
 }

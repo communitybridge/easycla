@@ -4001,7 +4001,7 @@ paths:
       tags:
         - gitlab-activity
   
-  /repository-provider/gitlab/sign/{installationID}/{gitlabRepositoryID}/{mergeRequestID}:
+  /repository-provider/gitlab/sign/{organizationID}/{gitlabRepositoryID}/{mergeRequestID}:
     get:
       summary: Gitlab sign request handler
       description: Endpoint that will initiate a CLA Signature for the User
@@ -4009,7 +4009,7 @@ paths:
       operationId: signRequest
       parameters:
         - $ref: "#/parameters/x-request-id"
-        - $ref: "#/parameters/path-gitlabInstallationID"
+        - $ref: "#/parameters/path-gitlabOrganizationID"
         - $ref: "#/parameters/path-gitlabRepositoryID"
         - $ref: "#/parameters/path-mergeRequestID"
       responses:
@@ -4296,9 +4296,9 @@ parameters:
     pattern: '^[a-fA-F0-9]{8}-?[a-fA-F0-9]{4}-?4[a-fA-F0-9]{3}-?[89ab][a-fA-F0-9]{3}-?[a-fA-F0-9]{12}$' # uuidv4
     minLength: 5
     maxLength: 255
-  path-gitlabInstallationID:
-    name: installationID
-    description: gitlab client ID
+  path-gitlabOrganizationID:
+    name: organizationID
+    description: gitlab organization ID
     type: string
     in: path
     required: true
