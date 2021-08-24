@@ -80,7 +80,6 @@ func (s service) ProcessMergeOpenedActivity(ctx context.Context, mergeEvent *git
 	projectName := mergeEvent.Project.Name
 	projectID := mergeEvent.Project.ID
 	mergeID := mergeEvent.ObjectAttributes.IID
-	repositoryName := mergeEvent.Repository.Name
 	repositoryPath := mergeEvent.Project.PathWithNamespace
 	lastCommitSha := mergeEvent.ObjectAttributes.LastCommit.ID
 
@@ -89,8 +88,7 @@ func (s service) ProcessMergeOpenedActivity(ctx context.Context, mergeEvent *git
 		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
 		"gitlabProjectName": projectName,
 		"gitlabProjectID":   projectID,
-		"repositoryName":    repositoryName,
-		"repositoryPath":    repositoryPath,
+		"repositoryName":    repositoryPath,
 		"mergeID":           mergeID,
 	}
 
@@ -113,7 +111,7 @@ func (s service) ProcessMergeOpenedActivity(ctx context.Context, mergeEvent *git
 	}
 
 	// try to find the repository via the external id
-	gitlabRepo, err := s.getGitlabRepoByName(ctx, repositoryName)
+	gitlabRepo, err := s.getGitlabRepoByName(ctx, repositoryPath)
 	if err != nil {
 		return fmt.Errorf("finding internal repository for gitlab org name failed : %v", err)
 	}
