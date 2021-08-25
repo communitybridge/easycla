@@ -31,7 +31,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 		log.WithFields(f).Debugf("handling gitlab activity callback")
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID)
 
-		if params.XGitlabToken == ""{
+		if params.XGitlabToken == "" {
 			return gitlab_activity.NewGitlabActivityUnauthorized().WithPayload(
 				utils.ErrorResponseUnauthorized(reqID, "missing webhook secret token"))
 		}
@@ -71,7 +71,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 		if err != nil {
 			msg := fmt.Sprintf("processing gitlab merge event failed : %v", err)
 			log.WithFields(f).Errorf(msg)
-			if errors.Is(err, secretTokenMismatch){
+			if errors.Is(err, secretTokenMismatch) {
 				return gitlab_activity.NewGitlabActivityUnauthorized().WithPayload(
 					utils.ErrorResponseUnauthorized(reqID, msg))
 			}
