@@ -33,7 +33,7 @@ func Configure(api *operations.EasyclaAPI, service Service, eventService events.
 
 		if params.XGitlabToken == ""{
 			return gitlab_activity.NewGitlabActivityUnauthorized().WithPayload(
-				utils.ErrorResponseBadRequest(reqID, "missing webhook secret token"))
+				utils.ErrorResponseUnauthorized(reqID, "missing webhook secret token"))
 		}
 
 		jsonData, err := params.GitlabActivityInput.MarshalJSON()
