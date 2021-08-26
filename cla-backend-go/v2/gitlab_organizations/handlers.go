@@ -169,6 +169,10 @@ func Configure(api *operations.EasyclaAPI, service ServiceInterface, eventServic
 
 			result, err := service.AddGitLabOrganization(ctx, params.ProjectSFID, params.Body)
 			if err != nil {
+				if _, ok := err.(*utils.ProjectConflict); ok {
+					return gitlab_organizations.NewAddProjectGitlabOrganizationConflict().WithPayload(
+						utils.ErrorResponseBadRequestWithError(reqID, err.Error(), err))
+				}
 				msg := fmt.Sprintf("unable to add GitLab organization, error: %+v", err)
 				log.WithFields(f).WithError(err).Warn(msg)
 				return gitlab_organizations.NewAddProjectGitlabOrganizationBadRequest().WithPayload(
