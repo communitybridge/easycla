@@ -74,6 +74,7 @@ type ProjectSummary struct {
 
 // ProjectConflict is an error model for project conflict
 type ProjectConflict struct {
+	Message  string
 	ProjectA ProjectSummary
 	ProjectB ProjectSummary
 	Err      error
@@ -81,15 +82,17 @@ type ProjectConflict struct {
 
 // Error is an error string function for CLA Group not found errors
 func (e *ProjectConflict) Error() string {
-	msg := fmt.Sprintf("conflict between project %s (%s) and project %s (%s)",
+	msg := fmt.Sprintf("%s - ", e.Message)
+	msg = fmt.Sprintf("%s conflict between project %s (%s) and project %s (%s)",
+		msg,
 		e.ProjectA.Name, e.ProjectA.ID,
 		e.ProjectB.Name, e.ProjectB.ID,
 	)
 	if e.Err == nil {
-		return msg
+		return strings.TrimSpace(msg)
 	}
 
-	return fmt.Sprintf("%s, error: %+v", msg, e.Err)
+	return strings.TrimSpace(fmt.Sprintf("%s, error: %+v", msg, e.Err))
 }
 
 // Unwrap method returns its contained error

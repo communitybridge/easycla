@@ -114,13 +114,14 @@ func (s *Service) AddGitLabOrganization(ctx context.Context, projectSFID string,
 
 			// Return the error model
 			return nil, &utils.ProjectConflict{
+				Message: "unable to add or update the GitLab Group/Organization - already taken by another project",
 				ProjectA: utils.ProjectSummary{
-					ID:   requestedProjectModel.Name,
-					Name: projectSFID,
+					Name: requestedProjectModel.Name,
+					ID:   projectSFID,
 				},
 				ProjectB: utils.ProjectSummary{
-					ID:   existingProjectModel.Name,
-					Name: existingModel.ProjectSfid,
+					Name: existingProjectModel.Name,
+					ID:   existingModel.ProjectSfid,
 				},
 			}
 		}
