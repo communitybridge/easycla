@@ -89,6 +89,7 @@
     "typescript": "~3.8.3"
   },
   "resolutions": {
+    "ansi-regex": "^6.0.1",
     "axios": "^0.21.4"
   }
 }
