@@ -888,46 +888,60 @@ def get_pull_request_commit_authors(pull_request):
     """
     cla.log.debug('Querying pull request commits for author information...')
     commit_authors = []
-    for commit in pull_request.get_commits():
-        cla.log.debug('Processing commit while looking for authors, commit: {}'.format(commit.sha))
+
+    # For each commit associated with this pull request...
+    for commit_model in pull_request.get_commits():
+        cla.log.debug('Processing commit while looking for authors, commit: {}'.format(commit_model.sha))
         # Note: we can get the author info in two different ways:
-        if commit.author is not None:
+        # Note: commit.author is not None doesn't seem to catch empty author child elements
+        if 'author' in commit_model \
+                and 'name' in commit_model.author \
+                and 'email' in commit_model.author \
+                and commit_model.author.name != '':
+            # Note: sometimes we see commit_model.author.email == '', is this a problem?
             # commit.author is a github.NamedUser.NamedUser type object
             # https://pygithub.readthedocs.io/en/latest/github_objects/NamedUser.html
-            if commit.author.name is not None:
-                cla.log.debug('PR: {}, GitHub commit.author.name author found for commit SHA {}, '
+            if commit_model.author.name is not None:
+                cla.log.debug('PR: {}, GitHub commit_model.author.name author found for commit SHA {}, '
                               'author id: {}, name: {}, email: {}'.
-                              format(pull_request.number, commit.sha, commit.author.id,
-                                     commit.author.name, commit.author.email))
-                commit_authors.append((commit.sha, (commit.author.id, commit.author.name, commit.author.email)))
-            elif commit.author.login is not None:
-                cla.log.debug('PR: {}, GitHub commit.author.login author found for commit SHA {}, '
+                              format(pull_request.number, commit_model.sha, commit_model.author.id,
+                                     commit_model.author.name, commit_model.author.email))
+                commit_authors.append(
+                    (commit_model.sha, (commit_model.author.id, commit_model.author.name, commit_model.author.email)))
+            elif commit_model.author.login is not None:
+                cla.log.debug('PR: {}, GitHub commit_model.author.login author found for commit SHA {}, '
                               'author id: {}, login: {}, email: {}'.
-                              format(pull_request.number, commit.sha, commit.author.id,
-                                     commit.author.login, commit.author.email))
-                commit_authors.append((commit.sha, (commit.author.id, commit.author.login, commit.author.email)))
+                              format(pull_request.number, commit_model.sha, commit_model.author.id,
+                                     commit_model.author.login, commit_model.author.email))
+                commit_authors.append(
+                    (commit_model.sha, (commit_model.author.id, commit_model.author.login, commit_model.author.email)))
             else:
-                cla.log.debug(f'PR: {pull_request.number}, GitHub commit.author.name and commit.author.login '
-                              f'author information NOT found for commit SHA {commit.sha}, '
-                              f'author id: {commit.author.id}, '
-                              f'name: {commit.author.name}, '
-                              f'login: {commit.author.login}, '
-                              f'email: {commit.author.email}')
-                commit_authors.append((commit.sha, None))
-        elif commit.commit.author is not None:
-            cla.log.debug('github.GitAuthor.GitAuthor object: {}'.format(commit.commit.author))
+                cla.log.debug(f'PR: {pull_request.number}, GitHub commit_model.author.name and commit.author.login '
+                              f'author information NOT found for commit SHA {commit_model.sha}, '
+                              f'author id: {commit_model.author.id}, '
+                              f'name: {commit_model.author.name}, '
+                              f'login: {commit_model.author.login}, '
+                              f'email: {commit_model.author.email}')
+                commit_authors.append((commit_model.sha, None))
+        elif 'author' in commit_model.commit \
+                and 'name' in commit_model.commit.author \
+                and 'email' in commit_model.commit.author \
+                and commit_model.commit.author.name != '':
+            # Note: sometimes we see commit_model.commit.author.email == '', is this a problem?
+            cla.log.debug('github.GitAuthor.GitAuthor object: {}'.format(commit_model.commit.author))
             # commit.commit.author is a github.GitAuthor.GitAuthor object type - object
             # only has date, name and email attributes - no ID attribute/value
             # https://pygithub.readthedocs.io/en/latest/github_objects/GitAuthor.html
             cla.log.debug('PR: {}, GitHub NamedUser author NOT found for commit SHA {}, '
                           'however, found GitAuthor author id: None, name: {}, email: {}'.
-                          format(pull_request.number, commit.sha,
-                                 commit.commit.author.name, commit.commit.author.email))
-            commit_authors.append((commit.sha, (None, commit.commit.author.name, commit.commit.author.email)))
+                          format(pull_request.number, commit_model.sha,
+                                 commit_model.commit.author.name, commit_model.commit.author.email))
+            commit_authors.append(
+                (commit_model.sha, (None, commit_model.commit.author.name, commit_model.commit.author.email)))
         else:
             cla.log.warning('PR: {}, could not find any commit author for SHA {}'.
-                            format(pull_request.number, commit.sha))
-            commit_authors.append((commit.sha, None))
+                            format(pull_request.number, commit_model.sha))
+            commit_authors.append((commit_model.sha, None))
 
     return commit_authors
 
