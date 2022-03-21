@@ -127,6 +127,19 @@ step-library:
         nvm alias default ${node_version}
         echo "[ -s \"${NVM_DIR}/nvm.sh\" ] && . \"${NVM_DIR}/nvm.sh\"" >> $BASH_ENV
 
+  - &install-node-14
+    run:
+      name: Install node 14
+      command: |
+        set +e
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
+        [ -s "${NVM_DIR}/nvm.sh" ] && \. "${NVM_DIR}/nvm.sh"
+        node_version="v14.18.1"
+        echo "Installing node ${node_version}..."
+        nvm install ${node_version}
+        nvm alias default ${node_version}
+        echo "[ -s \"${NVM_DIR}/nvm.sh\" ] && . \"${NVM_DIR}/nvm.sh\"" >> $BASH_ENV
+
 jobs:
   # Builds
   buildBackend: &buildBackendAnchor
@@ -577,7 +590,7 @@ jobs:
       - checkout
       - *setup_aws
       - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
-      - *install-node-12
+      - *install-node-14
       - run:
           name: Install Top Level Dependencies
           command: |
