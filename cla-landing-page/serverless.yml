@@ -1,5 +1,8 @@
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
+
 service: cla-landing-page
-frameworkVersion: '^2.57.0'
+frameworkVersion: '^3.7.9'
 
 package:
   patterns:
