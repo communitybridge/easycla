@@ -863,7 +863,7 @@ jobs:
       - checkout
       - *setup_aws
       - run: echo 'export NVM_DIR=${HOME}/.nvm' >> $BASH_ENV
-      - *install-node-12
+      - *install-node-14
       - run:
           name: Install Top Level Dependencies
           command: |
