@@ -20,9 +20,20 @@ COMMIT := $(shell sh -c 'git rev-parse --short HEAD')
 LDFLAGS=-ldflags "-s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.branch=$(BRANCH) -X main.buildDate=$(BUILD_TIME)"
 BUILD_TAGS=-tags aws_lambda
 
+ifeq "$(shell uname -s)" "Darwin"
+	BUILD_HOST=darwin
+endif
+ifeq "$(shell uname -s)" "Linux"
+	BUILD_HOST=linux
+endif
+
 LINT_TOOL=$(shell go env GOPATH)/bin/golangci-lint
 LINT_VERSION=v1.41.1
+SWAGGER_DIR:=$(ROOT_DIR)/swagger
+SWAGGER_BIN_DIR:=/usr/local/bin
 SWAGGER_TOOL_VERSION=v0.24.0
+SWAGGER_ASSET="swagger_$(BUILD_HOST)_amd64"
+SWAGGER_ASSET_URL="https://github.com/go-swagger/go-swagger/releases/download/$(SWAGGER_TOOL_VERSION)/$(SWAGGER_ASSET)"
 GO_PKGS=$(shell go list ./... | grep -v /vendor/ | grep -v /node_modules/)
 GO_FILES=$(shell find . -type f -name '*.go' -not -path './vendor/*')
 
@@ -46,12 +57,17 @@ tool-setup:
 	#GO111MODULE=off go get -u github.com/myitcv/gobin
 	go get -u github.com/myitcv/gobin
 
+.PHONY: swagger-tool
+swagger-tool:
+	@sudo rm -Rf $(SWAGGER_BIN_DIR)/swagger
+	@echo "Downloading $(SWAGGER_ASSET_URL)"
+	sudo curl -o $(SWAGGER_BIN_DIR)/swagger -L'#' $(SWAGGER_ASSET_URL)
+	sudo chmod +x $(SWAGGER_BIN_DIR)/swagger
+	$(SWAGGER_BIN_DIR)/swagger version
+
 setup_dev: setup-dev
-setup-dev: tool-setup
+setup-dev: tool-setup swagger-tool
 	@echo "Removing previously install version of swagger..."
-	@rm -Rf $(shell echo $(GOPATH))/bin/swagger $(shell echo $(GOPATH))/src/github.com/go-swagger
-	@echo "Installing swagger version: '$(SWAGGER_TOOL_VERSION)'..."
-	gobin github.com/go-swagger/go-swagger/cmd/swagger@$(SWAGGER_TOOL_VERSION)
 	@echo "Installing goimports..."
 	gobin golang.org/x/tools/cmd/goimports
 	@echo "Installing cover..."
@@ -60,7 +76,7 @@ setup-dev: tool-setup
 	@echo "Downloading golangci-lint version $(LINT_VERSION)..."
 	@# Latest releases: https://github.com/golangci/golangci-lint/releases
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(shell go env GOPATH)/bin $(LINT_VERSION)
-	cd $(dir $(realpath $(firstword $(MAKEFILE_LIST))))swagger && pip3 install virtualenv && virtualenv .venv && source .venv/bin/activate && pip3 install -r requirements.txt
+	cd $(dir $(realpath $(firstword $(MAKEFILE_LIST))))swagger && pip3 install virtualenv && virtualenv .venv && source .venv/bin/activate && python -m pip install --upgrade pip && pip3 install -r requirements.txt
 
 setup_deploy: setup-deploy
 setup-deploy:
