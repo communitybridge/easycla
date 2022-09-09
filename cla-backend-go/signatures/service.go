@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/go-openapi/strfmt"
 	"strings"
 	"sync"
 
@@ -387,26 +388,39 @@ func (s service) DeleteGithubOrganizationFromApprovalList(ctx context.Context, s
 	return gitHubOrgApprovalList, nil
 }
 
-// UpdateApprovalList service method
+// UpdateApprovalList service method which handles updating the various approval lists
 func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, claGroupModel *models.ClaGroup, companyModel *models.Company, claGroupID string, params *models.ApprovalList) (*models.Signature, error) {
+	f := logrus.Fields{
+		"functionName":      "v1.signatures.service.UpdateApprovalList",
+		utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
+		"authUser.UserName": authUser.UserName,
+		"authUser.Email":    authUser.Email,
+		"claGroupID":        claGroupID,
+		"claGroupName":      claGroupModel.ProjectName,
+		"companyName":       companyModel.CompanyName,
+		"companyID":         companyModel.CompanyID,
+	}
+
+	// Lookup the project corporate signature - should have one
 	pageSize := int64(1)
 	signed, approved := true, true
-	sigModel, sigErr := s.GetProjectCompanySignature(ctx, companyModel.CompanyID, claGroupID, &signed, &approved, nil, &pageSize)
+	corporateSigModel, sigErr := s.GetProjectCompanySignature(ctx, companyModel.CompanyID, claGroupID, &signed, &approved, nil, &pageSize)
 	if sigErr != nil {
 		msg := fmt.Sprintf("unable to locate project company signature by Company ID: %s, Project ID: %s, CLA Group ID: %s, error: %+v",
 			companyModel.CompanyID, claGroupModel.ProjectID, claGroupID, sigErr)
-		log.Warn(msg)
+		log.WithFields(f).WithError(sigErr).Warn(msg)
 		return nil, NewBadRequestError(msg)
 	}
-	if sigModel == nil {
+	// If not found, return error
+	if corporateSigModel == nil {
 		msg := fmt.Sprintf("unable to locate signature for company ID: %s CLA Group ID: %s, type: ccla, signed: %t, approved: %t",
 			companyModel.CompanyID, claGroupID, signed, approved)
-		log.Warn(msg)
+		log.WithFields(f).Warn(msg)
 		return nil, NewBadRequestError(msg)
 	}
 
 	// Ensure current user is in the Signature ACL
-	claManagers := sigModel.SignatureACL
+	claManagers := corporateSigModel.SignatureACL
 	if !utils.CurrentUserInACL(authUser, claManagers) {
 		msg := fmt.Sprintf("EasyCLA - 403 Forbidden - CLA Manager %s / %s is not authorized to approve request for company ID: %s / %s / %s, project ID: %s / %s / %s",
 			authUser.UserName, authUser.Email,
@@ -415,9 +429,10 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 		return nil, NewForbiddenError(msg)
 	}
 
-	// Lookup the user making the request
+	// Lookup the user making the request - should be the CLA Manager
 	userModel, userErr := s.usersService.GetUserByUserName(authUser.UserName, true)
 	if userErr != nil {
+		log.WithFields(f).WithError(userErr).Warnf("unable to lookup user by user name: %s", authUser.UserName)
 		return nil, userErr
 	}
 
@@ -434,36 +449,110 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 	}
 
 	updatedSig, err := s.repo.UpdateApprovalList(ctx, userModel, claGroupModel, companyModel.CompanyID, params, eventArgs)
-
 	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem updating approval list for company ID: %s, project ID: %s, cla group ID: %s", companyModel.CompanyID, claGroupModel.ProjectID, claGroupID)
 		return updatedSig, err
 	}
 
-	// Log Events
+	// Log Events that the CLA manager updated the approval lists
 	s.createEventLogEntries(ctx, companyModel, claGroupModel, userModel, params)
 
-	// Send an email to the CLA Managers
+	// Send an email to each of the CLA Managers
 	for _, claManager := range claManagers {
 		claManagerEmail := getBestEmail(&claManager) // nolint
 		s.sendApprovalListUpdateEmailToCLAManagers(companyModel, claGroupModel, claManager.Username, claManagerEmail, params)
 	}
 
-	// Send emails to contributors if email or GH username as added/removed
+	// TODO: DAD - update email template to indicate that if auto crate ECLA is enabled, that users should be good-to-go
+	// Send emails to contributors if email or GitHub/GitLab username was added or removed
 	s.sendRequestAccessEmailToContributors(authUser, companyModel, claGroupModel, params)
+
+	// If auto create ECLA is enabled for this Corporate Agreement, then create an ECLA for each employee that was added to the approval list
+	if corporateSigModel.AutoCreateECLA {
+		for _, email := range params.AddEmailApprovalList {
+			// Lookup the user making the request
+			employeeUserModel, userLookupErr := s.usersService.GetUserByEmail(email)
+			if userLookupErr != nil {
+				log.WithFields(f).WithError(userLookupErr).Warnf("unable to lookup user by email: %s - unable to auto-create employee acknowledgement", email)
+				continue
+			}
+			if employeeUserModel == nil {
+				// TODO: Need to create a new user record based on the email
+				employeeUserModel, userCreateErr := s.usersService.CreateUser(&models.User{
+					Admin:          false,
+					CompanyID:      "",
+					DateCreated:    "",
+					DateModified:   "",
+					Emails:         []string{email},
+					GithubID:       "",
+					GithubUsername: "",
+					GitlabID:       "",
+					GitlabUsername: "",
+					LfEmail:        strfmt.Email(email),
+					LfUsername:     "",
+					Note:           "",
+					UserExternalID: "",
+					UserID:         "",
+					Username:       "",
+					Version:        "v1",
+				}, &user.ClaUser{})
+			}
+
+			createErr := s.repo.CreateProjectCompanyEmployeeSignature(ctx, companyModel, claGroupModel, employeeUserModel)
+			if createErr != nil {
+				log.WithFields(f).WithError(createErr).Warnf("unable to create project company employee signature record for: %+v", employeeUserModel)
+				continue
+			}
+		}
+		for _, gitHubUserName := range params.AddGithubUsernameApprovalList {
+			// Lookup the user making the request
+			employeeUserModel, userLookupErr := s.usersService.GetUserByGitHubUsername(gitHubUserName)
+			if userLookupErr != nil {
+				log.WithFields(f).WithError(userLookupErr).Warnf("unable to lookup user by GitHub username: %s - unable to auto-create employee acknowledgement", gitHubUserName)
+				continue
+			}
+			if employeeUserModel == nil {
+				// TODO: Need to create a new user record based on the GitHub username
+			}
+
+			createErr := s.repo.CreateProjectCompanyEmployeeSignature(ctx, companyModel, claGroupModel, employeeUserModel)
+			if createErr != nil {
+				log.WithFields(f).WithError(createErr).Warnf("unable to create project company employee signature record for: %+v", employeeUserModel)
+				continue
+			}
+		}
+		for _, gitLabUserName := range params.AddGitlabUsernameApprovalList {
+			// Lookup the user making the request
+			employeeUserModel, userLookupErr := s.usersService.GetUserByGitlabUsername(gitLabUserName)
+			if userLookupErr != nil {
+				log.WithFields(f).WithError(userLookupErr).Warnf("unable to lookup user by GitLab username: %s - unable to auto-create employee acknowledgement", gitLabUserName)
+				continue
+			}
+			if employeeUserModel == nil {
+				// TODO: Need to create a new user record based on the GitLab username
+			}
+
+			createErr := s.repo.CreateProjectCompanyEmployeeSignature(ctx, companyModel, claGroupModel, employeeUserModel)
+			if createErr != nil {
+				log.WithFields(f).WithError(createErr).Warnf("unable to create project company employee signature record for: %+v", employeeUserModel)
+				continue
+			}
+		}
+	}
 
 	return updatedSig, nil
 }
 
-// Disassociate project signatures
+// InvalidateProjectRecords disassociates project signatures
 func (s service) InvalidateProjectRecords(ctx context.Context, projectID, note string) (int, error) {
 	f := logrus.Fields{
-		"functionName": "InvalidateProjectRecords",
+		"functionName": "v1.signatures.service.InvalidateProjectRecords",
 		"projectID":    projectID,
 	}
 
 	result, err := s.repo.ProjectSignatures(ctx, projectID)
 	if err != nil {
-		log.WithFields(f).Warnf(fmt.Sprintf("Unable to get signatures for project: %s", projectID))
+		log.WithFields(f).WithError(err).Warnf(fmt.Sprintf("Unable to get signatures for project: %s", projectID))
 		return 0, err
 	}
 
@@ -478,8 +567,7 @@ func (s service) InvalidateProjectRecords(ctx context.Context, projectID, note s
 				defer wg.Done()
 				updateErr := s.repo.InvalidateProjectRecord(ctx, sigID, note)
 				if updateErr != nil {
-					log.WithFields(f).Warnf("Unable to update signature: %s with project ID: %s, error: %v",
-						sigID, projectID, updateErr)
+					log.WithFields(f).WithError(updateErr).Warnf("Unable to update signature: %s with project ID: %s, error: %v", sigID, projectID, updateErr)
 				}
 			}(signature.SignatureID, projectID)
 		}

@@ -76,6 +76,8 @@ type SignatureRepository interface {
 	GetProjectCompanySignature(ctx context.Context, companyID, projectID string, approved, signed *bool, nextKey *string, pageSize *int64) (*models.Signature, error)
 	GetProjectCompanySignatures(ctx context.Context, companyID, projectID string, approved, signed *bool, nextKey *string, sortOrder *string, pageSize *int64) (*models.Signatures, error)
 	GetProjectCompanyEmployeeSignatures(ctx context.Context, params signatures.GetProjectCompanyEmployeeSignaturesParams, criteria *ApprovalCriteria) (*models.Signatures, error)
+	GetProjectCompanyEmployeeSignature(ctx context.Context, companyModel *models.Company, claGroupModel *models.ClaGroup, employeeUserModel *models.User) (*models.Signature, error)
+	CreateProjectCompanyEmployeeSignature(ctx context.Context, companyModel *models.Company, claGroupModel *models.ClaGroup, employeeUserModel *models.User) error
 	getProjectCompanyEmployeeSignatureCount(ctx context.Context, params signatures.GetProjectCompanyEmployeeSignaturesParams, criteria *ApprovalCriteria, responseChannel chan int64)
 	GetCompanySignatures(ctx context.Context, params signatures.GetCompanySignaturesParams, pageSize int64, loadACL bool) (*models.Signatures, error)
 	GetCompanyIDsWithSignedCorporateSignatures(ctx context.Context, claGroupID string) ([]SignatureCompanyID, error)
@@ -1626,6 +1628,103 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(ctx context.Context, 
 		LastKeyScanned: lastEvaluatedKey,
 		Signatures:     sigs,
 	}, nil
+}
+
+func (repo repository) GetProjectCompanyEmployeeSignature(ctx context.Context, companyModel *models.Company, claGroupModel *models.ClaGroup, employeeUserModel *models.User) (*models.Signature, error) {
+	f := logrus.Fields{
+		"functionName":     "v1.signatures.repository.GetProjectCompanyEmployeeSignature",
+		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
+		"projectID":        claGroupModel.ProjectID,
+		"projectName":      claGroupModel.ProjectName,
+		"companyID":        companyModel.CompanyID,
+		"companyName":      companyModel.CompanyName,
+		"employeeUserID":   employeeUserModel.UserID,
+		"employeeUserName": employeeUserModel.Username,
+		"employeeEmails":   strings.Join(employeeUserModel.Emails, ","),
+	}
+
+	if companyModel == nil || claGroupModel == nil || employeeUserModel == nil {
+		return nil, nil
+	}
+
+	// This is the keys we want to match
+	condition := expression.Key("signature_user_ccla_company_id").Equal(expression.Value(companyModel.CompanyID)).And(
+		expression.Key("signature_project_id").Equal(expression.Value(claGroupModel.ProjectID))).And(
+		expression.Key("signature_user_id").Equal(expression.Value(employeeUserModel.UserID)))
+
+	log.WithFields(f).Debugf("running employee signature query on table: %s", repo.signatureTableName)
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).WithProjection(buildProjection()).Build()
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("error building expression for employee signature query, company model: %+v, CLA group model: %+v, employee model: %+v",
+			companyModel, claGroupModel, employeeUserModel)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(repo.signatureTableName),
+		IndexName:                 aws.String("signature-user-ccla-company-index"), // Name of a secondary index to scan
+		Limit:                     aws.Int64(10),
+	}
+
+	// Make the DynamoDB Query API call
+	results, errQuery := repo.dynamoDBClient.Query(queryInput)
+	if errQuery != nil {
+		log.WithFields(f).WithError(errQuery).Warnf("error retrieving project company employee acknowledgement record for company model: %+v, CLA group model: %+v, employee model: %+v",
+			companyModel, claGroupModel, employeeUserModel)
+		return nil, errQuery
+	}
+	if results == nil || len(results.Items) == 0 {
+		return nil, nil
+	}
+	log.WithFields(f).Debugf("returned %d results", len(results.Items))
+	// Convert the list of DB models to a list of response models
+	signatureList, modelErr := repo.buildProjectSignatureModels(ctx, results, claGroupModel.ProjectID, LoadACLDetails)
+	if modelErr != nil {
+		log.WithFields(f).WithError(modelErr).Warnf("error converting DB model to response model for project company employee acknowledgement record for company model: %+v, CLA group model: %+v, employee model: %+v",
+			companyModel, claGroupModel, employeeUserModel)
+		return nil, modelErr
+	}
+
+	if len(signatureList) == 0 {
+		return nil, nil
+	}
+
+	return signatureList[0], nil
+}
+
+// CreateProjectCompanyEmployeeSignature creates a new project employee signature using the provided details
+func (repo repository) CreateProjectCompanyEmployeeSignature(ctx context.Context, companyModel *models.Company, claGroupModel *models.ClaGroup, employeeUserModel *models.User) error {
+	f := logrus.Fields{
+		"functionName":     "v1.signatures.repository.CreateProjectCompanyEmployeeSignature",
+		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
+		"projectID":        claGroupModel.ProjectID,
+		"projectName":      claGroupModel.ProjectName,
+		"companyID":        companyModel.CompanyID,
+		"companyName":      companyModel.CompanyName,
+		"employeeUserID":   employeeUserModel.UserID,
+		"employeeUserName": employeeUserModel.Username,
+		"employeeEmails":   strings.Join(employeeUserModel.Emails, ","),
+	}
+
+	existingSig, lookupErr := repo.GetProjectCompanyEmployeeSignature(ctx, companyModel, claGroupModel, employeeUserModel)
+	if lookupErr != nil {
+		log.WithFields(f).WithError(lookupErr).Warnf("problem looking up existing signature for project: %+v, company: %+v, employee: %+v", claGroupModel, companyModel, employeeUserModel)
+	}
+	if existingSig != nil {
+		log.WithFields(f).Debugf("found existing employee acknowledgement for project: %+v, company: %+v, employee: %+v", claGroupModel, companyModel, employeeUserModel)
+	}
+	log.WithFields(f).Debugf("creating project company employee signature for project: %+v, company: %+v, employee: %+v", claGroupModel, companyModel, employeeUserModel)
+
+	// If exists, need to update
+	// If not exists, need to create
+
+	return nil
 }
 
 // getProjectCompanyEmployeeSignatureCount returns the total count of employee signatures for the specified project and specified company
