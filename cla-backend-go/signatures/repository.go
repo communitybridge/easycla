@@ -1632,15 +1632,21 @@ func (repo repository) GetProjectCompanyEmployeeSignatures(ctx context.Context, 
 
 func (repo repository) GetProjectCompanyEmployeeSignature(ctx context.Context, companyModel *models.Company, claGroupModel *models.ClaGroup, employeeUserModel *models.User) (*models.Signature, error) {
 	f := logrus.Fields{
-		"functionName":     "v1.signatures.repository.GetProjectCompanyEmployeeSignature",
-		utils.XREQUESTID:   ctx.Value(utils.XREQUESTID),
-		"projectID":        claGroupModel.ProjectID,
-		"projectName":      claGroupModel.ProjectName,
-		"companyID":        companyModel.CompanyID,
-		"companyName":      companyModel.CompanyName,
-		"employeeUserID":   employeeUserModel.UserID,
-		"employeeUserName": employeeUserModel.Username,
-		"employeeEmails":   strings.Join(employeeUserModel.Emails, ","),
+		"functionName":   "v1.signatures.repository.GetProjectCompanyEmployeeSignature",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+	}
+	if claGroupModel != nil {
+		f["projectID"] = claGroupModel.ProjectID
+		f["projectName"] = claGroupModel.ProjectName
+	}
+	if companyModel != nil {
+		f["companyID"] = companyModel.CompanyID
+		f["companyName"] = companyModel.CompanyName
+	}
+	if employeeUserModel != nil {
+		f["employeeUserID"] = employeeUserModel.UserID
+		f["employeeUserName"] = employeeUserModel.Username
+		f["employeeEmails"] = strings.Join(employeeUserModel.Emails, ",")
 	}
 
 	if companyModel == nil || claGroupModel == nil || employeeUserModel == nil {
@@ -2742,7 +2748,7 @@ func (repo repository) UpdateApprovalList(ctx context.Context, claManager *model
 							eclas = signs.Signatures
 						}
 
-						claUser, claErr := repo.usersRepo.GetUserByGitlabUsername(gitLabUsername)
+						claUser, claErr := repo.usersRepo.GetUserByGitLabUsername(gitLabUsername)
 						if claErr != nil {
 							log.WithFields(f).Debugf("unable to get User by gitlab username: %s ", gitLabUsername)
 							return
