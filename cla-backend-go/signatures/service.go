@@ -450,6 +450,7 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 		ProjectSFID:   claGroupModel.ProjectExternalID,
 	}
 
+	// Here we perform the approval list updates for all the different types of approval lists
 	updatedSig, err := s.repo.UpdateApprovalList(ctx, userModel, claGroupModel, companyModel.CompanyID, params, eventArgs)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warnf("problem updating approval list for company ID: %s, project ID: %s, cla group ID: %s", companyModel.CompanyID, claGroupModel.ProjectID, claGroupID)
@@ -470,6 +471,7 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 	s.sendRequestAccessEmailToContributors(authUser, companyModel, claGroupModel, params)
 
 	// If auto create ECLA is enabled for this Corporate Agreement, then create an ECLA for each employee that was added to the approval list
+	// TODO: DAD should we move this to above the actual approval list update and email blast?
 	if corporateSigModel.AutoCreateECLA {
 		// For the add email list, create an ECLA signature record for each user
 		for _, email := range params.AddEmailApprovalList {
@@ -479,10 +481,11 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 			// initiating the workflow.
 			employeeUserModel, userLookupErr := s.usersService.GetUserByEmail(email)
 			// If we couldn't find the user, then create a user record
-			if userLookupErr == nil || employeeUserModel == nil {
+			if userLookupErr != nil || employeeUserModel == nil {
 				log.WithFields(f).WithError(userLookupErr).Warnf("unable to lookup existing user by email: %s", email)
 				var userCreateErr error
-				employeeUserModel, userCreateErr = s.createUserModelFromEmail(email)
+				// Create a new user record based on the email and company ID
+				employeeUserModel, userCreateErr = s.createUserModel("", "", "", "", email, companyModel.CompanyID, "auto-create ECLA user from CLA Manager approval list update")
 				if userCreateErr != nil || employeeUserModel == nil {
 					log.WithFields(f).WithError(userCreateErr).Warnf("unable to create a new user with email: %s", email)
 					// TODO: DAD - how do we communicate this back to the CLA Manager in the UI - simply return the error?
@@ -504,10 +507,11 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 			// username directly from the UI without the user first initiating the workflow.
 			employeeUserModel, userLookupErr := s.usersService.GetUserByGitHubUsername(gitHubUserName)
 			// If we couldn't find the user, then create a user record
-			if userLookupErr == nil || employeeUserModel == nil {
+			if userLookupErr != nil || employeeUserModel == nil {
 				log.WithFields(f).WithError(userLookupErr).Infof("unable to lookup existing user by GitHub username: %s in our local database - will attempt to create a new record", gitHubUserName)
 				var gitHubUserID = ""
 				var gitHubUserEmail = ""
+				// Attempt to lookup the GitHub user record by the GitHub username - we need the GitHub numeric ID value which was not provided by the UI/API call
 				gitHubUserModel, gitHubErr := github.GetUserDetails(gitHubUserName)
 				// Should get a model, no errors and have at least the ID
 				if gitHubErr != nil || gitHubUserModel == nil || gitHubUserModel.ID == nil {
@@ -525,7 +529,8 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 				}
 
 				var userCreateErr error
-				employeeUserModel, userCreateErr = s.createUserModelFromGitHubUsername(gitHubUserName, gitHubUserID, gitHubUserEmail)
+				// Create a new user record based on the GitHub information, email and company ID
+				employeeUserModel, userCreateErr = s.createUserModel(gitHubUserName, gitHubUserID, "", "", gitHubUserEmail, companyModel.CompanyID, "auto-create ECLA user from CLA Manager approval list update")
 				if userCreateErr != nil || employeeUserModel == nil {
 					log.WithFields(f).WithError(userCreateErr).Warnf("unable to create a new user with GitHub username: %s", gitHubUserName)
 					// TODO: DAD - how do we communicate this back to the CLA Manager in the UI - simply return the error?
@@ -541,17 +546,19 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 				return nil, createErr
 			}
 		}
+
+		/* Note: GitLab API is currently not working - plus, what credentials do we use to lookup the user details? Our current API leverages the GitHub app credentials (again, broken as of 09/2022 due to needing to refresh the token every hour)
 		for _, gitLabUserName := range params.AddGitlabUsernameApprovalList {
 			// Lookup the user by GitLab username in the local EasyCLA database - this will exist if the user first
 			// initiated the request from GitLab. This record will likely not exist if the CLA Manager added the GitLab
 			// username directly from the UI without the user first initiating the workflow.
 			employeeUserModel, userLookupErr := s.usersService.GetUserByGitLabUsername(gitLabUserName)
 			// If we couldn't find the user, then create a user record
-			if userLookupErr == nil || employeeUserModel == nil {
+			if userLookupErr != nil || employeeUserModel == nil {
 				log.WithFields(f).WithError(userLookupErr).Warnf("unable to lookup existing user by GitLab username: %s", gitLabUserName)
 				var gitLabUserID = ""
 				var gitLabUserEmail = ""
-				/* GitLab API is currently not working - plus, what credentials do we use to lookup the user details? Our current API leverages the GitHub app credentials (again, broken as of 09/2022 due to needing to refresh the token every hour)
+				// GitLab API is currently not working - plus, what credentials do we use to lookup the user details? Our current API leverages the GitHub app credentials (again, broken as of 09/2022 due to needing to refresh the token every hour)
 				gitHubUserModel, gitHubErr := gitlab.List(gitLabUserName)
 				// Should get a model, no errors and have at least the ID
 				if gitHubErr != nil || gitHubUserModel == nil || gitHubUserModel.ID == nil {
@@ -567,10 +574,10 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 						gitLabUserEmail = *gitHubUserModel.Email
 					}
 				}
-				*/
 
 				var userCreateErr error
-				employeeUserModel, userCreateErr = s.createUserModelFromGitHubUsername(gitLabUserName, gitLabUserID, gitLabUserEmail)
+				// Create a new user record based on the GitHub information, email and company ID
+				employeeUserModel, userCreateErr = s.createUserModel("", "", gitLabUserName, gitLabUserID, gitLabUserEmail, companyModel.CompanyID, "auto-create ECLA user from CLA Manager approval list update")
 				if userCreateErr != nil || employeeUserModel == nil {
 					log.WithFields(f).WithError(userCreateErr).Warnf("unable to create a new user with GitLab username: %s", gitLabUserName)
 					// TODO: DAD - how do we communicate this back to the CLA Manager in the UI - simply return the error?
@@ -586,6 +593,7 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 				return nil, createErr
 			}
 		}
+		*/
 	}
 
 	return updatedSig, nil

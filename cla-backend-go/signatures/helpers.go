@@ -100,101 +100,33 @@ func (s service) getRemoveGitlabContributors(approvalList *models.ApprovalList) 
 	return userModelList
 }
 
-// createUserModelFromEmail is a helper function to create a user model in our local database based on the specified email only
-func (s service) createUserModelFromEmail(email string) (*models.User, error) {
-	return s.usersService.CreateUser(&models.User{
-		Admin:          false,
-		CompanyID:      "",
-		DateCreated:    "",
-		DateModified:   "",
-		Emails:         []string{email},
-		GithubID:       "",
-		GithubUsername: "",
-		GitlabID:       "",
-		GitlabUsername: "",
-		LfEmail:        strfmt.Email(email),
-		LfUsername:     "",
-		Note:           "",
-		UserExternalID: "",
-		UserID:         "",
-		Username:       "",
-		Version:        "v1",
-	}, &user.CLAUser{
-		UserID:         "",
-		Name:           "",
-		Emails:         nil,
-		LFEmail:        "",
-		LFUsername:     "",
-		LfidProvider:   user.Provider{},
-		GithubProvider: user.Provider{},
-		ProjectIDs:     nil,
-		ClaIDs:         nil,
-		CompanyIDs:     nil,
-	})
-}
+func (s service) createUserModel(gitHubUsername, gitHubUserID, gitLabUsername, gitLabUserID, email, companyID, note string) (*models.User, error) {
+	userModel := models.User{
+		Admin:     false,
+		CompanyID: companyID,
+		Note:      note,
+	}
+	// Email
+	if email != "" {
+		userModel.LfEmail = strfmt.Email(email)
+		userModel.Emails = []string{email}
+	}
 
-// createUserModelFromGitHubUsername is a helper function to create a user model in our local database based on the specified GitHub username
-func (s service) createUserModelFromGitHubUsername(gitHubUsername, gitHubUserID, email string) (*models.User, error) {
-	return s.usersService.CreateUser(&models.User{
-		Admin:          false,
-		CompanyID:      "",
-		DateCreated:    "",
-		DateModified:   "",
-		Emails:         []string{email},
-		GithubID:       gitHubUserID,
-		GithubUsername: gitHubUsername,
-		GitlabID:       "",
-		GitlabUsername: "",
-		LfEmail:        strfmt.Email(email),
-		LfUsername:     "",
-		Note:           "",
-		UserExternalID: "",
-		UserID:         "",
-		Username:       "",
-		Version:        "v1",
-	}, &user.CLAUser{
-		UserID:         "",
-		Name:           "",
-		Emails:         nil,
-		LFEmail:        "",
-		LFUsername:     "",
-		LfidProvider:   user.Provider{},
-		GithubProvider: user.Provider{},
-		ProjectIDs:     nil,
-		ClaIDs:         nil,
-		CompanyIDs:     nil,
-	})
-}
+	// GitHub info
+	if gitHubUserID != "" {
+		userModel.GithubID = gitHubUserID
+	}
+	if gitHubUsername != "" {
+		userModel.GithubUsername = gitHubUsername
+	}
 
-// createUserModelFromGitLabUsername is a helper function to create a user model in our local database based on the specified GitLab username
-func (s service) createUserModelFromGitLabUsername(gitLabUsername, gitLabUserID, email string) (*models.User, error) {
-	return s.usersService.CreateUser(&models.User{
-		Admin:          false,
-		CompanyID:      "",
-		DateCreated:    "",
-		DateModified:   "",
-		Emails:         []string{email},
-		GithubID:       "",
-		GithubUsername: "",
-		GitlabID:       gitLabUserID,
-		GitlabUsername: gitLabUsername,
-		LfEmail:        strfmt.Email(email),
-		LfUsername:     "",
-		Note:           "",
-		UserExternalID: "",
-		UserID:         "",
-		Username:       "",
-		Version:        "v1",
-	}, &user.CLAUser{
-		UserID:         "",
-		Name:           "",
-		Emails:         nil,
-		LFEmail:        "",
-		LFUsername:     "",
-		LfidProvider:   user.Provider{},
-		GithubProvider: user.Provider{},
-		ProjectIDs:     nil,
-		ClaIDs:         nil,
-		CompanyIDs:     nil,
-	})
+	// GitLab info
+	if gitLabUserID != "" {
+		userModel.GitlabID = gitLabUserID
+	}
+	if gitLabUsername != "" {
+		userModel.GitlabUsername = gitLabUsername
+	}
+
+	return s.usersService.CreateUser(&userModel, &user.CLAUser{})
 }
