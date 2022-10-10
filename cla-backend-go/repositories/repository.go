@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/communitybridge/easycla/cla-backend-go/project"
 	"strconv"
 	"strings"
 
@@ -53,6 +54,8 @@ type RepositoryInterface interface {
 	GitHubGetRepositoriesByOrganizationName(ctx context.Context, gitHubOrgName string) ([]*models.GithubRepository, error)
 	GitHubGetCLAGroupRepositoriesGroupByOrgs(ctx context.Context, projectID string, enabled bool) ([]*models.GithubRepositoriesGroupByOrgs, error)
 	GitHubListProjectRepositories(ctx context.Context, projectSFID string, enabled *bool) (*models.GithubListRepositories, error)
+
+	GetCLAGroupByID(ctx context.Context, claGroupID string) (*project.DBProjectModel, error)
 }
 
 // NewRepository create new Repository
@@ -74,7 +77,7 @@ type Repository struct {
 // GitHubAddRepository adds the specified repository
 func (r *Repository) GitHubAddRepository(ctx context.Context, externalProjectID string, projectSFID string, input *models.GithubRepositoryInput) (*models.GithubRepository, error) {
 	f := logrus.Fields{
-		"functionName":               "v1.repositories.repository.AddGitHubRepository",
+		"functionName":               "v1.repositories.repository.GitHubAddRepository",
 		utils.XREQUESTID:             ctx.Value(utils.XREQUESTID),
 		"externalProjectID":          externalProjectID,
 		"projectSFID":                projectSFID,
@@ -957,4 +960,54 @@ func (r *Repository) setClaGroupIDGithubRepository(ctx context.Context, reposito
 	}
 
 	return nil
+}
+
+// GetCLAGroupByID is a helper function to get the CLA Group by ID - we duplicated this function here because we would otherwise introduce a circular dependency (bad design, we know)
+func (r *Repository) GetCLAGroupByID(ctx context.Context, claGroupID string) (*project.DBProjectModel, error) {
+	tableName := fmt.Sprintf("cla-%s-projects", r.stage)
+	f := logrus.Fields{
+		"functionName":   "repositories.repository.getCLAGroupByID",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"claGroupID":     claGroupID,
+		"tableName":      tableName,
+	}
+	log.WithFields(f).Debugf("loading cla group...")
+	// This is the key we want to match
+	condition := expression.Key("project_id").Equal(expression.Value(claGroupID))
+
+	// Use the builder to create the expression
+	expr, err := expression.NewBuilder().WithKeyCondition(condition).Build()
+	if err != nil {
+		log.WithFields(f).Warnf("error building expression for CLA Group query, claGroupID: %s, error: %v",
+			claGroupID, err)
+		return nil, err
+	}
+
+	// Assemble the query input parameters
+	queryInput := &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(tableName),
+	}
+
+	// Make the DynamoDB Query API call
+	results, queryErr := r.dynamoDBClient.Query(queryInput)
+	if queryErr != nil {
+		log.WithFields(f).Warnf("error retrieving cla group by claGroupID: %s, error: %v", claGroupID, queryErr)
+		return nil, queryErr
+	}
+
+	if len(results.Items) < 1 {
+		return nil, &utils.CLAGroupNotFound{CLAGroupID: claGroupID}
+	}
+	var dbModel project.DBProjectModel
+	err = dynamodbattribute.UnmarshalMap(results.Items[0], &dbModel)
+	if err != nil {
+		log.WithFields(f).Warnf("error unmarshalling db cla group model, error: %+v", err)
+		return nil, err
+	}
+
+	return &dbModel, nil
 }

@@ -125,20 +125,20 @@ func (s *Service) GitHubAddRepositories(ctx context.Context, projectSFID string,
 		"repositoryGithubIds":    input.RepositoryGithubIds,
 	}
 
-	log.WithFields(f).Debugf("loading project by SFID: %s", projectSFID)
-	psc := v2ProjectService.GetClient()
-	project, err := psc.GetProject(projectSFID)
-	if err != nil {
-		log.WithFields(f).WithError(err).Warn("unable to load projectSFID from the platform project service")
-		return nil, err
-	}
-
-	var parentProjectSFID string
-	if !utils.IsProjectHaveParent(project) || utils.IsProjectHasRootParent(project) || utils.GetProjectParentSFID(project) == "" {
-		parentProjectSFID = projectSFID
-	} else {
-		parentProjectSFID = utils.GetProjectParentSFID(project)
-	}
+	//log.WithFields(f).Debugf("loading project by SFID: %s", projectSFID)
+	//psc := v2ProjectService.GetClient()
+	//project, err := psc.GetProject(projectSFID)
+	//if err != nil {
+	//	log.WithFields(f).WithError(err).Warn("unable to load projectSFID from the platform project service")
+	//	return nil, err
+	//}
+	//
+	//var parentProjectSFID string
+	//if !utils.IsProjectHaveParent(project) || utils.IsProjectHasRootParent(project) || utils.GetProjectParentSFID(project) == "" {
+	//	parentProjectSFID = projectSFID
+	//} else {
+	//	parentProjectSFID = utils.GetProjectParentSFID(project)
+	//}
 
 	allMappings, err := s.projectsClaGroupsRepo.GetProjectsIdsForClaGroup(ctx, aws.StringValue(input.ClaGroupID))
 	if err != nil {
@@ -162,7 +162,7 @@ func (s *Service) GitHubAddRepositories(ctx context.Context, projectSFID string,
 		return nil, err
 	}
 
-	// Updated to process a list of repository IDs - take the list (may be empty) and add the single repository GH ID if it was set
+	// Updated to process a list of repository IDs - take the list (maybe empty) and add the single repository GH ID if it was set
 	repositoryIDList := input.RepositoryGithubIds
 	if input.RepositoryGithubID != "" {
 		repositoryIDList = append(repositoryIDList, input.RepositoryGithubID)
@@ -251,7 +251,13 @@ func (s *Service) GitHubAddRepositories(ctx context.Context, projectSFID string,
 				RepositoryURL:              ghRepo.HTMLURL,
 			}
 
-			addedModel, addErr := s.gitV1Repository.GitHubAddRepository(ctx, parentProjectSFID, projectSFID, in)
+			claGroupDBModel, claGroupErr := s.gitV1Repository.GetCLAGroupByID(ctx, utils.StringValue(input.ClaGroupID))
+			if claGroupErr != nil {
+				log.WithFields(f).WithError(claGroupErr).Warnf("unable to load CLA Group by ID: %s", utils.StringValue(input.ClaGroupID))
+				return nil, claGroupErr
+			}
+
+			addedModel, addErr := s.gitV1Repository.GitHubAddRepository(ctx, claGroupDBModel.ProjectExternalID, projectSFID, in)
 			if addErr != nil {
 				log.WithFields(f).WithError(addErr).Warnf("unable to add github repository: %s for project: %s", *ghRepo.FullName, projectSFID)
 				return nil, addErr
@@ -307,13 +313,13 @@ func (s *Service) GitHubListProjectRepositories(ctx context.Context, projectSFID
 	//var githubOrgList *v1Models.GithubOrganizations
 	//githubOrgList, err = s.ghOrgRepo.GetGitHubOrganizations(ctx, projectSFID)
 	//if err != nil {
-	//	log.WithFields(f).WithError(err).Warn("unable to lookup project by id in the github organization table")
+	//	log.WithFields(f).WithError(err).Warn("unable to lookup project by id in the GitHub organization table")
 	//	if projectModel.Parent != "" {
 	//		log.WithFields(f).Debugf("querying for organizations by parent project id: %s...", projectModel.Parent)
 	//		var ghOrgErr error
 	//		githubOrgList, ghOrgErr = s.ghOrgRepo.GetGitHubOrganizations(ctx, projectModel.Parent)
 	//		if ghOrgErr != nil {
-	//			log.WithFields(f).WithError(ghOrgErr).Warn("unable to lookup project by parent id in the github organization table")
+	//			log.WithFields(f).WithError(ghOrgErr).Warn("unable to lookup project by the parent id in the GitHub organization table")
 	//			return nil, ghOrgErr
 	//		}
 	//	}
@@ -336,12 +342,12 @@ func (s *Service) GitHubListProjectRepositories(ctx context.Context, projectSFID
 	//	log.WithFields(f).Debugf("querying github by organization: %s", gitHubOrg.OrganizationName)
 	//	ghRepoList, getRepoErr := github.GetRepositories(ctx, gitHubOrg.OrganizationName)
 	//	if getRepoErr != nil {
-	//		log.WithFields(f).WithError(getRepoErr).Warn("unable to lookup github organization details")
+	//		log.WithFields(f).WithError(getRepoErr).Warn("unable to lookup GitHub organization details")
 	//		return response, getRepoErr
 	//	}
 	//
 	//	// Add to our response model...use default values (enabled = false)
-	//	log.WithFields(f).Debugf("found %d github repositories for organization: %s", len(ghRepoList), gitHubOrg.OrganizationName)
+	//	log.WithFields(f).Debugf("found %d GitHub repositories for organization: %s", len(ghRepoList), gitHubOrg.OrganizationName)
 	//	for _, ghRepo := range ghRepoList {
 	//		response.List = append(response.List, &v1Models.GithubRepository{
 	//			Enabled:                    false,
