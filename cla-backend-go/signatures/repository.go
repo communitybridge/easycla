@@ -9,11 +9,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gofrs/uuid"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/gofrs/uuid"
 
 	"github.com/communitybridge/easycla/cla-backend-go/config"
 
