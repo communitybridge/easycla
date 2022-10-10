@@ -2535,6 +2535,11 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             user_docusign_date_signed=None,
     ):
         super(Signature).__init__()
+
+        # Patch the deserialize function of the ListAttribute - this addresses the issue when the List is 'None'
+        # See notes below in the patched function which describes the problem in more details
+        attributes.ListAttribute.deserialize = patched_deserialize
+
         self.model = SignatureModel()
         self.model.signature_id = signature_id
         self.model.signature_external_id = signature_external_id
@@ -2952,14 +2957,12 @@ class Signature(model_interfaces.Signature):  # pylint: disable=too-many-public-
             signature_approved=None,
     ):
         fn = 'cla.models.dynamo_models.signature.get_signatures_by_reference'
-        # TODO: Optimize this query to use filters properly.
         cla.log.debug(f'{fn} - reference_id: {reference_id}, reference_type: {reference_type}'
                       f' project_id: {project_id}, user_ccla_company_id: {project_id}'
                       f' signature_signed: {signature_signed}, signature_approved: {signature_approved}')
 
-        # TODO - monkey patch here
-
         cla.log.debug(f'{fn} - performing signature_reference_id query using: {reference_id}')
+        # TODO: Optimize this query to use filters properly.
         signature_generator = self.model.signature_reference_index.query(str(reference_id))
         cla.log.debug(f'{fn} - generator.last_evaluated_key: {signature_generator.last_evaluated_key}')
 
