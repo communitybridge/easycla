@@ -7,10 +7,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 
+	service2 "github.com/communitybridge/easycla/cla-backend-go/project/service"
+
 	"github.com/communitybridge/easycla/cla-backend-go/github"
+	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
+	"github.com/communitybridge/easycla/cla-backend-go/repositories"
 
 	"github.com/aws/aws-sdk-go/aws"
 
@@ -66,16 +72,22 @@ type service struct {
 	usersService        users.Service
 	eventsService       events.Service
 	githubOrgValidation bool
+	repositoryService   repositories.Service
+	githubOrgService    github_organizations.ServiceInterface
+	claGroupService     service2.Service
 }
 
 // NewService creates a new signature service
-func NewService(repo SignatureRepository, companyService company.IService, usersService users.Service, eventsService events.Service, githubOrgValidation bool) SignatureService {
+func NewService(repo SignatureRepository, companyService company.IService, usersService users.Service, eventsService events.Service, githubOrgValidation bool, repositoryService repositories.Service, githubOrgService github_organizations.ServiceInterface, claGroupService service2.Service) SignatureService {
 	return service{
 		repo,
 		companyService,
 		usersService,
 		eventsService,
 		githubOrgValidation,
+		repositoryService,
+		githubOrgService,
+		claGroupService,
 	}
 }
 
@@ -448,6 +460,9 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 		log.WithFields(f).Debugf("auto-create ECLA option is enabled: %t...", corporateSigModel.AutoCreateECLA)
 
 		// For the add email list, create an ECLA signature record for each user
+		var employeeUserModel *models.User
+		var userLookupErr error
+
 		for _, email := range params.AddEmailApprovalList {
 			log.WithFields(f).Debugf("auto-create ECLA option - add email: %s", email)
 
@@ -455,7 +470,8 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 			// initiated the request from GitHub and if they shared their email (made it public). This record will
 			// likely not exist if the CLA Manager added the email directly from the UI without the user first
 			// initiating the workflow.
-			employeeUserModel, userLookupErr := s.usersService.GetUserByEmail(email)
+			employeeUserModel, userLookupErr = s.usersService.GetUserByEmail(email)
+
 			// If we couldn't find the user, then create a user record
 			if userLookupErr != nil || employeeUserModel == nil {
 				log.WithFields(f).WithError(userLookupErr).Warnf("unable to lookup existing user by email: %s", email)
@@ -498,7 +514,7 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 			// initiated the request from GitHub. This record will likely not exist if the CLA Manager added the GitHub
 			// username directly from the UI without the user first initiating the workflow.
 			log.WithFields(f).Debugf("locating user by GitHub username: %s", gitHubUserName)
-			employeeUserModel, userLookupErr := s.usersService.GetUserByGitHubUsername(gitHubUserName)
+			employeeUserModel, userLookupErr = s.usersService.GetUserByGitHubUsername(gitHubUserName)
 
 			// If we couldn't find the user, then create a user record
 			if userLookupErr != nil || employeeUserModel == nil {
@@ -556,9 +572,51 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 			createdECLARecord = true
 		}
 
-		if createdECLARecord {
+		if createdECLARecord && employeeUserModel != nil {
 			log.WithFields(f).Debug("created one or more ECLA records - need to update GitHub status check")
 			// TODO: add GitHub status check update
+			signatureMetadata, activeSigErr := s.repo.GetActiveSignatureMetadata(ctx, employeeUserModel.UserID)
+			if activeSigErr != nil {
+				log.WithFields(f).WithError(activeSigErr).Warnf("unable to get active signature record for : %+v", employeeUserModel)
+				return nil, activeSigErr
+			}
+
+			// Fetch easycla repository
+			claRepository, repoErr := s.repositoryService.GetRepository(ctx, signatureMetadata.RepositoryID)
+			if repoErr != nil {
+				log.WithFields(f).WithError(repoErr).Warnf("unable to fetch repository by ID : %s ", signatureMetadata.RepositoryID)
+				return nil, repoErr
+			}
+
+			if !claRepository.Enabled {
+				msg := fmt.Sprintf("repository: %s associated with PR: %s is NOT enabled", claRepository.RepositoryURL, signatureMetadata.PullRequestID)
+				log.WithFields(f).Debug(msg)
+				return nil, errors.New(msg)
+			}
+
+			// fetch GitHub org details
+			githubOrg, githubOrgErr := s.githubOrgService.GetGitHubOrganizationByName(ctx, claRepository.RepositoryName)
+			if githubOrgErr != nil {
+				log.WithFields(f).WithError(githubOrgErr).Warn("unable to get githubOrg")
+				return nil, githubOrgErr
+			}
+
+			repositoryID, idErr := strconv.Atoi(signatureMetadata.RepositoryID)
+			if idErr != nil {
+				return nil, idErr
+			}
+
+			pullRequestID, idErr := strconv.Atoi(signatureMetadata.PullRequestID)
+			if idErr != nil {
+				return nil, idErr
+			}
+
+			// Update change request
+			updateErr := s.updateChangeRequest(ctx, githubOrg, int64(repositoryID), int64(pullRequestID), signatureMetadata.ProjectID)
+			if updateErr != nil {
+				log.WithFields(f).WithError(updateErr).Warnf("unable to update pull request: %d ", pullRequestID)
+				return nil, updateErr
+			}
 		} else {
 			log.WithFields(f).Debug("no ECLA records created - no need to update GitHub status check")
 		}
@@ -701,4 +759,220 @@ func (s service) GetClaGroupCCLASignatures(ctx context.Context, claGroupID strin
 
 func (s service) GetClaGroupCorporateContributors(ctx context.Context, claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error) {
 	return s.repo.GetClaGroupCorporateContributors(ctx, claGroupID, companyID, searchTerm)
+}
+
+// updateChangeRequest is a helper function that updates PR upong auto ecla update
+func (s service) updateChangeRequest(ctx context.Context, ghOrg *models.GithubOrganization, repositoryID, pullRequestID int64, projectID string) error {
+	f := logrus.Fields{
+		"functionName":  "v1.signatures.service.updateChangeRequest",
+		"repositoryID":  repositoryID,
+		"pullRequestID": pullRequestID,
+		"projectID":     projectID,
+	}
+
+	githubRepository, ghErr := github.GetGitHubRepository(ctx, ghOrg.OrganizationInstallationID, repositoryID)
+	if ghErr != nil {
+		log.WithFields(f).WithError(ghErr).Warn("unable to get github repository")
+		return ghErr
+	}
+
+	// Fetch committers
+	log.WithFields(f).Debugf("fetching commit authors for PR: %d", pullRequestID)
+
+	authors, _, authorsErr := github.GetPullRequestCommitAuthors(ctx, ghOrg.OrganizationInstallationID, int(pullRequestID), *githubRepository.Owner.Name, *githubRepository.Name)
+	if authorsErr != nil {
+		log.WithFields(f).WithError(authorsErr).Warnf("unable to get commit authors for PR: %d", pullRequestID)
+		return authorsErr
+	}
+
+	signed := make([]*github.UserCommitSummary, 0)
+	unsigned := make([]*github.UserCommitSummary, 0)
+
+	// triage signed and unsigned users
+	for _, userSummary := range authors {
+		if !userSummary.IsValid() {
+			unsigned = append(unsigned, userSummary)
+		}
+		user, userErr := s.usersService.GetUserByGitHubUsername(*userSummary.CommitAuthor.Name)
+		if userErr != nil {
+			unsigned = append(unsigned, userSummary)
+			break
+		}
+		userSigned, signedErr := s.hasUserSigned(ctx, user, projectID)
+		if signedErr != nil {
+			break
+		}
+		if userSigned != nil && *userSigned {
+			signed = append(signed, userSummary)
+		}
+	}
+
+	log.WithFields(f).Debugf("user status signed: %+v and missing: %+v", signed, unsigned)
+
+	// update pull request
+
+	return nil
+}
+
+func (s service) hasUserSigned(ctx context.Context, user *models.User, projectID string) (*bool, error) {
+	f := logrus.Fields{
+		"functionName": "v1.signatures.service.updateChangeRequest",
+		"projectID":    projectID,
+		"user":         user,
+	}
+	var hasSigned bool
+	log.WithFields(f).Debugf("checking to see if user has signed an ICLA ")
+
+	approved := true
+	signed := true
+
+	// check for ICLA
+	signature, sigErr := s.GetIndividualSignature(ctx, projectID, user.UserID, &approved, &signed)
+	if sigErr != nil {
+		return nil, sigErr
+	}
+
+	if signature != nil {
+		hasSigned = true
+		log.WithFields(f).Debugf("ICLA signature check passed for user: %+v on project : %s", user, projectID)
+	} else {
+		log.WithFields(f).Debugf("ICLA signature check failed for user: %+v on project : %s", user, projectID)
+	}
+
+	// Check for CCLA
+	companyID := user.CompanyID
+
+	if companyID != "" {
+		// Get employee signature
+
+		log.WithFields(f).Debugf("CCLA signature check - user has a company: %s - looking for user's employee acknowledgement...", companyID)
+		companyModel, compModelErr := s.companyService.GetCompany(ctx, companyID)
+		if compModelErr != nil {
+			return nil, compModelErr
+		}
+		claGroupModel, claGroupModelErr := s.claGroupService.GetCLAGroupByID(ctx, projectID)
+		if claGroupModelErr != nil {
+			return nil, claGroupModelErr
+		}
+		employeeSignature, empSigErr := s.repo.GetProjectCompanyEmployeeSignature(ctx, companyModel, claGroupModel, user)
+		if empSigErr != nil {
+			return nil, empSigErr
+		}
+
+		if employeeSignature != nil {
+			log.WithFields(f).Debugf("CCLA Signature check - located employee acknowledgement - signature id: %s", employeeSignature.SignatureID)
+			// Get ccla signature of company to access whitelist
+			cclaSignature, cclaErr := s.GetCorporateSignature(ctx, projectID, companyID, &approved, &signed)
+			if cclaErr != nil {
+				return nil, cclaErr
+			}
+
+			if cclaSignature != nil {
+				approved, approvedErr := s.userIsApproved(ctx, user, cclaSignature)
+				if approvedErr != nil {
+					return nil, approvedErr
+				}
+				if approved {
+					log.WithFields(f).Debugf("user:%s is in the approval list for signature : %s", user.UserID, signature.SignatureID)
+					hasSigned = true
+				}
+			}
+		}
+
+	}
+
+	return &hasSigned, nil
+}
+
+func (s service) userIsApproved(ctx context.Context, user *models.User, cclaSignature *models.Signature) (bool, error) {
+	emails := append(user.Emails, string(user.LfEmail))
+
+	f := logrus.Fields{
+		"functionName": "v1.signatures.service.userIsApproved",
+	}
+
+	// check email whitelist
+	whitelist := cclaSignature.EmailApprovalList
+	if len(whitelist) > 0 {
+		for _, email := range emails {
+			if s.contains(whitelist, strings.ToLower(strings.TrimSpace(email))) {
+				return true, nil
+			}
+		}
+	} else {
+		log.WithFields(f).Debugf("no whitelist found for ccla: %s", cclaSignature.SignatureID)
+	}
+
+	// check domain whitelist
+	domainWhitelist := cclaSignature.DomainApprovalList
+	if len(domainWhitelist) > 0 {
+		matched, err := s.processPattern(emails, domainWhitelist)
+		if err != nil {
+			return false, err
+		}
+		if matched != nil && *matched {
+			return true, nil
+		}
+	}
+
+	// check github whitelist
+	if user.GithubUsername != "" {
+		githubOrgApprovalList := cclaSignature.GithubOrgApprovalList
+		if len(githubOrgApprovalList) > 0 {
+			log.WithFields(f).Debugf("determining if github user :%s is associated with ant of the github orgs : %+v", user.GithubUsername, githubOrgApprovalList)
+		}
+
+		for _, org := range githubOrgApprovalList {
+			membership, err := github.GetMembership(ctx, user.GithubUsername, org)
+			if err != nil {
+				break
+			}
+			if membership != nil {
+				log.WithFields(f).Debugf("found matching github organization: %s for user: %s", org, user.GithubUsername)
+				return true, nil
+			} else {
+				log.WithFields(f).Debugf("user: %s is not in the organization: %s", user.GithubUsername, org)
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (s service) contains(items []string, val string) bool {
+	for _, item := range items {
+		if val == item {
+			return true
+		}
+	}
+	return false
+}
+
+func (s service) processPattern(emails []string, patterns []string) (*bool, error) {
+	matched := false
+
+	for _, pattern := range patterns {
+		if strings.HasPrefix(pattern, "*.") {
+			pattern = strings.Replace(pattern, "*.", ".*", -1)
+		} else if strings.HasPrefix(pattern, "*") {
+			pattern = strings.Replace(pattern, "*", ".*", -1)
+		} else if strings.HasPrefix(pattern, ".") {
+			pattern = strings.Replace(pattern, ".", ".*", -1)
+		}
+
+		preProcessedPattern := fmt.Sprintf("^.*@%s$", pattern)
+		compiled, err := regexp.Compile(preProcessedPattern)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, email := range emails {
+			if compiled.MatchString(email) {
+				matched = true
+				break
+			}
+		}
+	}
+
+	return &matched, nil
 }
