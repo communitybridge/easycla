@@ -114,3 +114,12 @@ type SignatureDynamoDB struct {
 	Note                          string   `json:"note"`
 	Version                       string   `json:"version"` // v1
 }
+
+//SignatureMetadata model
+
+type ActiveSignature struct {
+	UserID        string `json:"user_id,omitempty"`
+	ProjectID     string `json:"project_id,omitempty"`
+	PullRequestID string `json:"pull_request_id,omitempty"`
+	RepositoryID  string `json:"repository_id,omitempty"`
+}
