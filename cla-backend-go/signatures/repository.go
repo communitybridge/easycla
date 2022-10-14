@@ -71,7 +71,7 @@ type SignatureRepository interface {
 	InvalidateProjectRecord(ctx context.Context, signatureID, note string) error
 
 	GetSignature(ctx context.Context, signatureID string) (*models.Signature, error)
-	GetActiveSignatureMetadata(ctx context.Context, userID string) (*ActiveSignature, error)
+	GetActivePullRequestMetadata(ctx context.Context, gitHubAuthorUsername, gitHubAuthorEmail string) (*ActivePullRequest, error)
 	GetIndividualSignature(ctx context.Context, claGroupID, userID string, approved, signed *bool) (*models.Signature, error)
 	GetCorporateSignature(ctx context.Context, claGroupID, companyID string, approved, signed *bool) (*models.Signature, error)
 	GetSignatureACL(ctx context.Context, signatureID string) ([]string, error)
@@ -674,16 +674,20 @@ func (repo repository) GetCorporateSignature(ctx context.Context, claGroupID, co
 	return sigs[0], nil
 }
 
-// GetActiveSignatureMetadata returns the signature metadata for the given user ID
-func (repo repository) GetActiveSignatureMetadata(ctx context.Context, userID string) (*ActiveSignature, error) {
+// GetActivePullRequestMetadata returns the pull request metadata for the given user ID
+func (repo repository) GetActivePullRequestMetadata(ctx context.Context, gitHubAuthorUsername, gitHubAuthorEmail string) (*ActivePullRequest, error) {
 	f := logrus.Fields{
-		"functionName":   "v1.signatures.repository.GetActiveSignatureMetadata",
-		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-		"userID":         userID,
-		"key":            fmt.Sprintf("active_signature:%s", userID),
+		"functionName":         "v1.signatures.repository.GetActivePullRequestMetadata",
+		utils.XREQUESTID:       ctx.Value(utils.XREQUESTID),
+		"gitHubAuthorUsername": gitHubAuthorUsername,
+		"gitHubAuthorEmail":    gitHubAuthorEmail,
 	}
 
-	var activeSignature ActiveSignature
+	if gitHubAuthorUsername == "" && gitHubAuthorEmail == "" {
+		return nil, nil
+	}
+
+	var activeSignature ActivePullRequest
 	var dbSignatureMetadata DBSignatureMetadata
 	expr, err := expression.NewBuilder().WithProjection(buildSignatureMetadata()).Build()
 	if err != nil {
@@ -691,46 +695,74 @@ func (repo repository) GetActiveSignatureMetadata(ctx context.Context, userID st
 		return nil, err
 	}
 
-	key := fmt.Sprintf("active_signature:%s", userID)
-	itemInput := &dynamodb.GetItemInput{
-		Key: map[string]*dynamodb.AttributeValue{
-			"key": {S: aws.String(key)},
-		},
-		ExpressionAttributeNames: expr.Names(),
-		ProjectionExpression:     expr.Projection(),
-		TableName:                aws.String(fmt.Sprintf("cla-%s-store", repo.stage)),
+	// Try to lookup based on the following keys - could be indexed by either or both (depends if user shared their
+	// email and went through the GitHub authorization flow)
+	var keys []string
+	if gitHubAuthorUsername != "" {
+		keys = append(keys, fmt.Sprintf("active_pr:u:%s", gitHubAuthorUsername))
+	}
+	if gitHubAuthorEmail != "" {
+		keys = append(keys, fmt.Sprintf("active_pr:e:%s", gitHubAuthorEmail))
 	}
 
-	// Make the DynamoDb Query API call
-	log.WithFields(f).Debugf("loading active signature metadata for user ID: %s", userID)
-	result, queryErr := repo.dynamoDBClient.GetItem(itemInput)
-	if queryErr != nil || result == nil || result.Item == nil {
-		log.WithFields(f).WithError(queryErr).Warnf("error retrieving active signature metadata for user: %s ", userID)
-		return nil, queryErr
+	for _, key := range keys {
+		itemInput := &dynamodb.GetItemInput{
+			Key: map[string]*dynamodb.AttributeValue{
+				"key": {S: aws.String(key)},
+			},
+			ExpressionAttributeNames: expr.Names(),
+			ProjectionExpression:     expr.Projection(),
+			TableName:                aws.String(fmt.Sprintf("cla-%s-store", repo.stage)),
+		}
+
+		// Make the DynamoDb Query API call
+		log.WithFields(f).Debugf("loading active signature using key: %s", key)
+		result, queryErr := repo.dynamoDBClient.GetItem(itemInput)
+		if queryErr != nil {
+			if queryErr.Error() == dynamodb.ErrCodeResourceNotFoundException {
+				continue
+			}
+			log.WithFields(f).WithError(queryErr).Warnf("error retrieving active signature metadata using key: %s", key)
+			return nil, queryErr
+		}
+
+		if result == nil || result.Item == nil || result.Item["value"] == nil || result.Item["value"].S == nil {
+			log.WithFields(f).Debugf("query result is empty for key: %s", key)
+			continue
+		}
+		if result.Item["value"] == nil || result.Item["value"].S == nil {
+			log.WithFields(f).Debugf("query result value is empty for key: %s", key)
+			continue
+		}
+
+		/*
+			log.WithFields(f).Debugf("decoding value for key: %s", key)
+			unmarshallErr := dynamodbattribute.Unmarshal(result.Item[key], &dbSignatureMetadata)
+			if unmarshallErr != nil {
+				log.WithFields(f).WithError(unmarshallErr).Warn("error converting DB model for signatureMetadata")
+				return nil, unmarshallErr
+			}
+
+			if dbSignatureMetadata.Value == "" {
+				msg := fmt.Sprintf("empty metadata value for user: %s", userID)
+				missingMetadataValue := errors.New(msg)
+				log.WithFields(f).WithError(missingMetadataValue).Warn(msg)
+				return nil, missingMetadataValue
+			}
+
+		*/
+
+		log.WithFields(f).Debugf("decoding value: %s", dbSignatureMetadata.Value)
+		jsonUnMarshallErr := json.Unmarshal([]byte(utils.StringValue(result.Item["value"].S)), &activeSignature)
+		if jsonUnMarshallErr != nil {
+			log.WithFields(f).WithError(jsonUnMarshallErr).Warn("unable to convert model for active signature ")
+			return nil, jsonUnMarshallErr
+		}
+
+		return &activeSignature, nil
 	}
 
-	log.WithFields(f).Debugf("decoding value for key: %s", key)
-	unmarshallErr := dynamodbattribute.Unmarshal(result.Item[key], &dbSignatureMetadata)
-	if unmarshallErr != nil {
-		log.WithFields(f).WithError(unmarshallErr).Warn("error converting DB model for signatureMetadata")
-		return nil, unmarshallErr
-	}
-
-	if dbSignatureMetadata.Value == "" {
-		msg := fmt.Sprintf("empty metadata value for user: %s", userID)
-		missingMetadataValue := errors.New(msg)
-		log.WithFields(f).WithError(missingMetadataValue).Warn(msg)
-		return nil, missingMetadataValue
-	}
-
-	log.WithFields(f).Debugf("decoding value: %s", dbSignatureMetadata.Value)
-	jsonUnMarshallErr := json.Unmarshal([]byte(dbSignatureMetadata.Value), &activeSignature)
-	if jsonUnMarshallErr != nil {
-		log.WithFields(f).WithError(jsonUnMarshallErr).Warn("unable to convert model for active signature ")
-		return nil, jsonUnMarshallErr
-	}
-
-	return &activeSignature, nil
+	return nil, nil
 }
 
 // GetSignatureACL returns the signature ACL for the specified signature id

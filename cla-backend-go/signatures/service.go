@@ -456,7 +456,6 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 
 	// If auto create ECLA is enabled for this Corporate Agreement, then create an ECLA for each employee that was added to the approval list
 	if corporateSigModel.AutoCreateECLA {
-		createdECLARecord := false
 		log.WithFields(f).Debugf("auto-create ECLA option is enabled: %t...", corporateSigModel.AutoCreateECLA)
 
 		// For the add email list, create an ECLA signature record for each user
@@ -505,8 +504,16 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 				log.WithFields(f).WithError(createErr).Warnf("unable to create project company employee signature record for: %+v", employeeUserModel)
 				return nil, createErr
 			}
-			createdECLARecord = true
+
+			// Update the GitHub status - do this as a background task
+			go func(c context.Context, userModel *models.User) {
+				handleStatusErr := s.handleGitHubStatusUpdate(c, userModel)
+				if handleStatusErr != nil {
+					log.WithFields(f).WithError(handleStatusErr).Warnf("problem updating GitHub status for user: %s", userModel.UserID)
+				}
+			}(ctx, employeeUserModel)
 		}
+
 		for _, gitHubUserName := range params.AddGithubUsernameApprovalList {
 			log.WithFields(f).Debugf("auto-create ECLA option - add githubUserName: %s", gitHubUserName)
 
@@ -569,57 +576,16 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 				// TODO: DAD - how do we communicate this back to the CLA Manager in the UI - simply return the error?
 				return nil, createErr
 			}
-			createdECLARecord = true
+
+			// Update the GitHub status - do this as a background task
+			go func(c context.Context, userModel *models.User) {
+				handleStatusErr := s.handleGitHubStatusUpdate(c, userModel)
+				if handleStatusErr != nil {
+					log.WithFields(f).WithError(handleStatusErr).Warnf("problem updating GitHub status for user: %s", userModel.UserID)
+				}
+			}(ctx, employeeUserModel)
 		}
 
-		if createdECLARecord && employeeUserModel != nil {
-			log.WithFields(f).Debug("created one or more ECLA records - need to update GitHub status check")
-			// TODO: add GitHub status check update
-			signatureMetadata, activeSigErr := s.repo.GetActiveSignatureMetadata(ctx, employeeUserModel.UserID)
-			if activeSigErr != nil {
-				log.WithFields(f).WithError(activeSigErr).Warnf("unable to get active signature record for : %+v", employeeUserModel)
-				return nil, activeSigErr
-			}
-
-			// Fetch easycla repository
-			claRepository, repoErr := s.repositoryService.GetRepository(ctx, signatureMetadata.RepositoryID)
-			if repoErr != nil {
-				log.WithFields(f).WithError(repoErr).Warnf("unable to fetch repository by ID : %s ", signatureMetadata.RepositoryID)
-				return nil, repoErr
-			}
-
-			if !claRepository.Enabled {
-				msg := fmt.Sprintf("repository: %s associated with PR: %s is NOT enabled", claRepository.RepositoryURL, signatureMetadata.PullRequestID)
-				log.WithFields(f).Debug(msg)
-				return nil, errors.New(msg)
-			}
-
-			// fetch GitHub org details
-			githubOrg, githubOrgErr := s.githubOrgService.GetGitHubOrganizationByName(ctx, claRepository.RepositoryName)
-			if githubOrgErr != nil {
-				log.WithFields(f).WithError(githubOrgErr).Warn("unable to get githubOrg")
-				return nil, githubOrgErr
-			}
-
-			repositoryID, idErr := strconv.Atoi(signatureMetadata.RepositoryID)
-			if idErr != nil {
-				return nil, idErr
-			}
-
-			pullRequestID, idErr := strconv.Atoi(signatureMetadata.PullRequestID)
-			if idErr != nil {
-				return nil, idErr
-			}
-
-			// Update change request
-			updateErr := s.updateChangeRequest(ctx, githubOrg, int64(repositoryID), int64(pullRequestID), signatureMetadata.ProjectID)
-			if updateErr != nil {
-				log.WithFields(f).WithError(updateErr).Warnf("unable to update pull request: %d ", pullRequestID)
-				return nil, updateErr
-			}
-		} else {
-			log.WithFields(f).Debug("no ECLA records created - no need to update GitHub status check")
-		}
 	} else {
 		log.WithFields(f).Debugf("auto-create ECLA option is disabled: %t...", corporateSigModel.AutoCreateECLA)
 	}
@@ -975,4 +941,70 @@ func (s service) processPattern(emails []string, patterns []string) (*bool, erro
 	}
 
 	return &matched, nil
+}
+
+func (s service) handleGitHubStatusUpdate(ctx context.Context, employeeUserModel *models.User) error {
+	if employeeUserModel == nil {
+		return fmt.Errorf("employee user model is nil")
+	}
+
+	f := logrus.Fields{
+		"functionName":   "v1.signatures.service.handleGitHubStatusUpdate",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"userID":         employeeUserModel.UserID,
+		"gitHubUsername": employeeUserModel.GithubUsername,
+		"gitHubID":       employeeUserModel.GithubID,
+		"userEmail":      employeeUserModel.LfEmail.String(),
+	}
+
+	log.WithFields(f).Debug("processing GitHub status check request for user")
+	signatureMetadata, activeSigErr := s.repo.GetActivePullRequestMetadata(ctx, employeeUserModel.GithubUsername, employeeUserModel.LfEmail.String())
+	if activeSigErr != nil {
+		log.WithFields(f).WithError(activeSigErr).Warnf("unable to get active pull request metadata for user: %+v - unable to update GitHub status", employeeUserModel)
+		return activeSigErr
+	}
+	if signatureMetadata == nil {
+		log.WithFields(f).Debugf("unable to get active pull requst metadata for user: %+v - unable to update GitHub status", employeeUserModel)
+		return nil
+	}
+
+	// Fetch easycla repository
+	claRepository, repoErr := s.repositoryService.GetRepository(ctx, signatureMetadata.RepositoryID)
+	if repoErr != nil {
+		log.WithFields(f).WithError(repoErr).Warnf("unable to fetch repository by ID: %s - unable to update GitHub status", signatureMetadata.RepositoryID)
+		return repoErr
+	}
+
+	if !claRepository.Enabled {
+		log.WithFields(f).Debugf("repository: %s associated with PR: %s is NOT enabled - unable to update GitHub status", claRepository.RepositoryURL, signatureMetadata.PullRequestID)
+		return nil
+	}
+
+	// fetch GitHub org details
+	githubOrg, githubOrgErr := s.githubOrgService.GetGitHubOrganizationByName(ctx, claRepository.RepositoryOrganizationName)
+	if githubOrgErr != nil {
+		log.WithFields(f).WithError(githubOrgErr).Warnf("unable to lookup GitHub organization by name: %s - unable to update GitHub status", claRepository.RepositoryOrganizationName)
+		return githubOrgErr
+	}
+
+	repositoryID, idErr := strconv.Atoi(signatureMetadata.RepositoryID)
+	if idErr != nil {
+		log.WithFields(f).WithError(idErr).Warnf("unable to convert repository ID: %s to integer - unable to update GitHub status", signatureMetadata.RepositoryID)
+		return idErr
+	}
+
+	pullRequestID, idErr := strconv.Atoi(signatureMetadata.PullRequestID)
+	if idErr != nil {
+		log.WithFields(f).WithError(idErr).Warnf("unable to convert pull request ID: %s to integer - unable to update GitHub status", signatureMetadata.RepositoryID)
+		return idErr
+	}
+
+	// Update change request
+	updateErr := s.updateChangeRequest(ctx, githubOrg, int64(repositoryID), int64(pullRequestID), signatureMetadata.CLAGroupID)
+	if updateErr != nil {
+		log.WithFields(f).WithError(updateErr).Warnf("unable to update pull request: %d", pullRequestID)
+		return updateErr
+	}
+
+	return nil
 }
