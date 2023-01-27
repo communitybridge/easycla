@@ -731,7 +731,7 @@ bl@^4.1.0:
     inherits "^2.0.4"
     readable-stream "^3.4.0"
 
-bluebird@^3.4.1, bluebird@^3.4.7, bluebird@^3.5.3, bluebird@^3.7.2:
+bluebird@^3.4.1, bluebird@^3.5.3, bluebird@^3.7.2:
   version "3.7.2"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.7.2.tgz#9f229c15be272454ffa973ace0dbee79a1b0c36f"
   integrity sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==
@@ -3883,12 +3883,12 @@ serverless-plugin-tracing@^2.0.0:
   resolved "https://registry.yarnpkg.com/serverless-plugin-tracing/-/serverless-plugin-tracing-2.0.0.tgz#df6b8b3166ac9bb70a37c7fc875014b2369158f6"
   integrity sha1-32uLMWasm7cKN8f8h1AUsjaRWPY=
 
-serverless-prune-plugin@^1.5.1:
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/serverless-prune-plugin/-/serverless-prune-plugin-1.5.1.tgz#a628551151228eeee8da2f454d0b062d9c1dda40"
-  integrity sha512-lCxHNQXmGL0GEe7gBGOx1MdafYXAi9RkiuKPE4DDSSdrdbVnn0KLcbriKWGC2MdOpn/vs358MaeBuVSefuzMzA==
+serverless-prune-plugin@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/serverless-prune-plugin/-/serverless-prune-plugin-2.0.1.tgz#c50d408a2e6f89ce1e72e0bb8ea3c914be1e67d9"
+  integrity sha512-fWttDV5TD3K6g9NRDJUuA/cq0AzAI0ya1FZXQKtCnWFfaGP7CzZHZWzlvnNofqvKdpY8vXtaAiswc6gdHXaTUw==
   dependencies:
-    bluebird "^3.4.7"
+    bluebird "^3.7.2"
 
 serverless@^3.27.0:
   version "3.27.0"
