@@ -4062,15 +4062,16 @@ serverless-python-requirements@^5.1.1:
     sha256-file "1.0.0"
     shell-quote "^1.7.2"
 
-serverless-wsgi@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/serverless-wsgi/-/serverless-wsgi-2.0.1.tgz#3d2858b414e9819d15ef6010637b67b37a227f10"
-  integrity sha512-nEBmY3qWrH7XLQTLKJR8SUNLYwLCWJP0IK7v7NLYM1fAtui8Mm0mtWvN/r4bcLlvo70DY0FdXR3JhJ4XLLM3aw==
+serverless-wsgi@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/serverless-wsgi/-/serverless-wsgi-3.0.1.tgz#33bf093302badd90a1bbe8ab66dbba7ae19319e0"
+  integrity sha512-FPwdCSKcvtW8bVUO+watXqcjBZ+Gq1ZxKZCT6P71KuNTkx01RyMzp0a0Fsp5nHE3ieYem8cepTYjvUH8SZOojg==
   dependencies:
     bluebird "^3.7.2"
-    fs-extra "^9.1.0"
+    fs-extra "^10.1.0"
     hasbin "^1.2.3"
     lodash "^4.17.21"
+    process-utils "^4.0.0"
 
 serverless@^3.27.0:
   version "3.27.0"
