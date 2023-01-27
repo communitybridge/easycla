@@ -41,7 +41,7 @@
     "serverless-finch": "^2.6.0",
     "serverless-layers": "^2.5.1",
     "serverless-plugin-tracing": "^2.0.0",
-    "serverless-prune-plugin": "^1.5.1",
+    "serverless-prune-plugin": "^2.0.1",
     "serverless-python-requirements": "^5.1.1",
     "serverless-wsgi": "^2.0.1"
   },
