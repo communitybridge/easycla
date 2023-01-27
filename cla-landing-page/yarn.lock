@@ -1426,10 +1426,10 @@
   resolved "https://registry.yarnpkg.com/@tokenizer/token/-/token-0.3.0.tgz#fe98a93fe789247e998c75e74e9c7c63217aa276"
   integrity sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==
 
-"@types/auth0-js@^8.11.7":
-  version "8.11.12"
-  resolved "https://registry.yarnpkg.com/@types/auth0-js/-/auth0-js-8.11.12.tgz#7d074e393cb93cc40f017687040955ff27e1c485"
-  integrity sha512-HyoxyxZTjF+fn6uWnUbe+F55u31206UJnTH8f00AGswKRpr47WCRFZA+T0KfBpF8l8fwXfq9OT5eb5mAt7nIEw==
+"@types/auth0-js@^9.14.7":
+  version "9.14.7"
+  resolved "https://registry.yarnpkg.com/@types/auth0-js/-/auth0-js-9.14.7.tgz#ffa07e66ba37b1e07c5299e877658c0c841c071e"
+  integrity sha512-Lfoj9XItsnjI/1lxHs4r5wlQjkD4XLy81tAVt6B3j3N9mJL4o4ZQu1SbNcq7aImdhkzss53vxubwBJ3rp3AjUQ==
 
 "@types/cacheable-request@^6.0.1":
   version "6.0.1"
@@ -2156,15 +2156,15 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-auth0-js@^9.16.0:
-  version "9.16.2"
-  resolved "https://registry.yarnpkg.com/auth0-js/-/auth0-js-9.16.2.tgz#7c4ca32add3d8f7419ce33deb8f4839179606779"
-  integrity sha512-cF1nRjmMDezmhJ+ZwwYp23F0gPqU0zNmF/VvTpcwvCrEMl9lAvkCd4iburN1I7G8SYaaIYEfcGedCphpDZw6OQ==
+auth0-js@^9.20.1:
+  version "9.20.1"
+  resolved "https://registry.yarnpkg.com/auth0-js/-/auth0-js-9.20.1.tgz#6f2fcceb453450314d2a44a4f791825473412734"
+  integrity sha512-m7k3O0Qs3Emr7cC2OPbbOp1duzgMzuTeESHgWK+FimGV6FjBX53dYtNIgQ49J7mkACeKje/Jlto9/6CO9YQhcQ==
   dependencies:
-    base64-js "^1.3.0"
-    idtoken-verifier "^2.1.2"
+    base64-js "^1.5.1"
+    idtoken-verifier "^2.2.2"
     js-cookie "^2.2.0"
-    qs "^6.7.0"
+    qs "^6.10.1"
     superagent "^5.3.1"
     url-join "^4.0.1"
     winchan "^0.2.2"
@@ -2268,10 +2268,10 @@ base64-arraybuffer@0.1.4:
   resolved "https://registry.yarnpkg.com/base64-arraybuffer/-/base64-arraybuffer-0.1.4.tgz#9818c79e059b1355f97e0428a017c838e90ba812"
   integrity sha1-mBjHngWbE1X5fgQooBfIOOkLqBI=
 
-base64-js@^1.0.2, base64-js@^1.3.0:
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.3.1.tgz#58ece8cb75dd07e71ed08c736abc5fac4dbf8df1"
-  integrity sha512-mLQ4i2QO1ytvGWFWmcngKO//JXAQueZvwEKtjgQFM4jIK0kU+ytMfplL8j+n5mspOfjHwoAg+9yhb7BwAHm36g==
+base64-js@^1.0.2, base64-js@^1.5.1:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.5.1.tgz#1b1b440160a5bf7ad40b650f095963481903930a"
+  integrity sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==
 
 base64id@2.0.0:
   version "2.0.0"
@@ -3492,10 +3492,10 @@ crypto-browserify@^3.11.0:
     randombytes "^2.0.0"
     randomfill "^1.0.3"
 
-crypto-js@3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/crypto-js/-/crypto-js-3.3.0.tgz#846dd1cce2f68aacfa156c8578f926a609b7976b"
-  integrity sha512-DIT51nX0dCfKltpRiXV+/TVZq+Qq2NgF4644+K7Ttnla7zEzqc+kjJyiB96BHNyUTBxyjzRcZYpUdZa+QAqi6Q==
+crypto-js@^4.1.1:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/crypto-js/-/crypto-js-4.1.1.tgz#9e485bcf03521041bd85844786b83fb7619736cf"
+  integrity sha512-o2JlM7ydqd3Qk9CA0L4NL6mTzU2sdx96a+oOfPu8Mkl/PK51vSyoi8/rQ8NknZtk44vq15lmhAj9CIAGwgeWKw==
 
 css-color-names@0.0.4, css-color-names@^0.0.4:
   version "0.0.4"
@@ -5675,16 +5675,16 @@ icss-utils@^4.0.0, icss-utils@^4.1.1:
   dependencies:
     postcss "^7.0.14"
 
-idtoken-verifier@^2.1.2:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/idtoken-verifier/-/idtoken-verifier-2.1.2.tgz#185ec29b70400b47a1d48b068e7b95d1bbf7dcef"
-  integrity sha512-YMHiP9zAMjB+pWreV4EHnIj3XCQ168+InWirVRFeRtlsMQIK61S+LLnyLGI8EL0wtlk/v7ya69Gjfio3P9/7Gw==
+idtoken-verifier@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/idtoken-verifier/-/idtoken-verifier-2.2.2.tgz#0d91a2f92231ebd763e5098d2ac44f038eb1068b"
+  integrity sha512-PFNivtWIUKFt0B53FOACLAM2PaejEwB/wh6fPqlWoLGMWP05JKGJyKyMv/uS9kduevEfRhHaSVdoLYUnQ0YmsA==
   dependencies:
-    base64-js "^1.3.0"
-    crypto-js "3.3.0"
+    base64-js "^1.5.1"
+    crypto-js "^4.1.1"
     es6-promise "^4.2.8"
     jsbn "^1.1.0"
-    unfetch "^4.1.0"
+    unfetch "^4.2.0"
     url-join "^4.0.1"
 
 ieee754@1.1.13, ieee754@^1.1.4:
@@ -8823,7 +8823,7 @@ qjobs@^1.2.0:
   resolved "https://registry.yarnpkg.com/qjobs/-/qjobs-1.2.0.tgz#c45e9c61800bd087ef88d7e256423bdd49e5d071"
   integrity sha512-8YOJEHtxpySA3fFDyCRxA+UUV+fA+rTWnuWvylOK/NCjhY+b4ocCtmu8TtsWb+mYeU+GCHf/S66KZF/AsteKHg==
 
-qs@6.11.0, qs@^6.5.1, qs@^6.7.0, qs@^6.9.4:
+qs@6.11.0, qs@^6.10.1, qs@^6.5.1, qs@^6.9.4:
   version "6.11.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.11.0.tgz#fd0d963446f7a65e1367e01abd85429453f0c37a"
   integrity sha512-MvjoMCJwEarSbUYk5O+nmoSzSutSsTwF85zcHPQ9OrlFoZOYIjaqBAJIqIXjptyD5vThxGq52Xu/MaJzRkIk4Q==
@@ -10775,7 +10775,7 @@ unbzip2-stream@^1.0.9:
     buffer "^5.2.1"
     through "^2.3.8"
 
-unfetch@^4.1.0:
+unfetch@^4.1.0, unfetch@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/unfetch/-/unfetch-4.2.0.tgz#7e21b0ef7d363d8d9af0fb929a5555f6ef97a3be"
   integrity sha512-F9p7yYCn6cIW9El1zi0HI6vqpeIvBsr3dSuRO6Xuppb1u5rXpCPmMvLSyECLhybr9isec8Ohl0hPekMVrEinDA==
