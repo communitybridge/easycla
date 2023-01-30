@@ -45,17 +45,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Install SSH key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.SSH_KEY }}
-          name: id_rsa # optional
-          config: ${{ secrets.SSH_CONFIG }} # ssh_config; optional
-          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
-          if_key_exists: fail # replace / ignore / fail; optional (defaults to fail)
-
-      - name: Git Config
-        run: git config --global url.ssh://git@github.com/.insteadOf https://github.com/
+      - name: Configure Git to clone private Github repos
+        run: git config --global url."https://${TOKEN_USER}:${TOKEN}@github.com".insteadOf "https://github.com"
+        env:
+          TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          TOKEN_USER: ${{ secrets.PERSONAL_ACCESS_TOKEN_USER }}
 
       - name: Add OS Tools
         run: sudo apt update && sudo apt-get install file -y
