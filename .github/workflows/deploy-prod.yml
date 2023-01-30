@@ -68,6 +68,12 @@ jobs:
         working-directory: cla-backend
         run: |
           pytest "cla/tests" -p no:warnings
+        env:
+          PLATFORM_GATEWAY_URL: https://api-gw.platform.linuxfoundation.org
+          AUTH0_PLATFORM_URL: https://linuxfoundation.auth0.com/oauth/token
+          AUTH0_PLATFORM_CLIENT_ID: ${{ secrets.AUTH0_PLATFORM_CLIENT_ID }}
+          AUTH0_PLATFORM_CLIENT_SECRET: ${{ secrets.AUTH0_PLATFORM_CLIENT_SECRET }}
+          AUTH0_PLATFORM_AUDIENCE: https://api-gw.platform.linuxfoundation.org/
 
       - name: Go Setup
         working-directory: cla-backend-go
