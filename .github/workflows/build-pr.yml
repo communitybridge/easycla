@@ -1,0 +1,97 @@
+---
+# Copyright The Linux Foundation and each contributor to CommunityBridge.
+# SPDX-License-Identifier: MIT
+
+name: Build and Test Pull Request
+on:
+  # https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-pr:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.19.5'
+      - name: Go Version
+        run: go version
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+      - name: Cache Go modules
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          name: id_rsa # optional
+          config: ${{ secrets.SSH_CONFIG }} # ssh_config; optional
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          if_key_exists: fail # replace / ignore / fail; optional (defaults to fail)
+
+      - name: Git Config
+        run: git config --global url.ssh://git@github.com/.insteadOf https://github.com/
+
+      - name: Add OS Tools
+        run: sudo apt update && sudo apt-get install file -y
+
+      - name: Python Setup
+        working-directory: cla-backend
+        run: |
+          pip install -r requirements.txt
+
+      - name: Python Lint
+        working-directory: cla-backend
+        run: |
+          pylint cla/*.py || true
+
+      - name: Python Test
+        working-directory: cla-backend
+        run: |
+          pytest "cla/tests" -p no:warnings
+
+      - name: Go Setup
+        working-directory: cla-backend-go
+        run: |
+          make clean setup
+
+      - name: Go Dependencies
+        working-directory: cla-backend-go
+        run: make deps
+
+      - name: Go Swagger Generate
+        working-directory: cla-backend-go
+        run: |
+          make swagger
+
+      - name: Go Build
+        working-directory: cla-backend-go
+        run: |
+          make build-lambdas-linux build-functional-tests-linux
+
+      - name: Go Test
+        working-directory: cla-backend-go
+        run: |
+          make test
+
+      - name: Go Lint
+        working-directory: cla-backend-go
+        run: make lint
