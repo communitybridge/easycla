@@ -3943,6 +3943,7 @@ func (repo repository) GetClaGroupCorporateContributors(ctx context.Context, cla
 	return out, nil
 }
 
+// EclaAutoCreate this routine updates the CCLA signature record by adjusting the auto_create_ecla column to the specified value
 func (repo repository) EclaAutoCreate(ctx context.Context, signatureID string, autoCreateECLA bool) error {
 	f := logrus.Fields{
 		"functionName":   "v1.signature.repository.EclaAutoCreate",
