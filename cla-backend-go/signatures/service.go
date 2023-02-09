@@ -7,18 +7,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	gitlab "github.com/communitybridge/easycla/cla-backend-go/gitlab_api"
+	service2 "github.com/communitybridge/easycla/cla-backend-go/project/service"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 
-	service2 "github.com/communitybridge/easycla/cla-backend-go/project/service"
-
 	"github.com/communitybridge/easycla/cla-backend-go/github"
 	"github.com/communitybridge/easycla/cla-backend-go/github_organizations"
 	"github.com/communitybridge/easycla/cla-backend-go/repositories"
-
-	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/sirupsen/logrus"
 
@@ -64,6 +63,8 @@ type SignatureService interface {
 	GetClaGroupICLASignatures(ctx context.Context, claGroupID string, searchTerm *string, approved, signed *bool, pageSize int64, nextKey string, withExtraDetails bool) (*models.IclaSignatures, error)
 	GetClaGroupCCLASignatures(ctx context.Context, claGroupID string, approved, signed *bool) (*models.Signatures, error)
 	GetClaGroupCorporateContributors(ctx context.Context, claGroupID string, companyID *string, searchTerm *string) (*models.CorporateContributorList, error)
+
+	processAutoEnableRequest(ctx context.Context, claGroupModel *models.ClaGroup, companyModel *models.Company, corporateSignatureModel *models.Signature)
 }
 
 type service struct {
@@ -637,6 +638,12 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 		return updatedSig, err
 	}
 
+	// If auto create ECLA is enabled for this Corporate Agreement, then create an ECLA for each employee that was added to the approval list
+	if corporateSigModel.AutoCreateECLA {
+		log.WithFields(f).Debug("auto-create ECLA option is enabled - processing auto-enable request for all items on the approval list...")
+		go s.processAutoEnableRequest(ctx, claGroupModel, companyModel, updatedSig)
+	}
+
 	// Log Events that the CLA manager updated the approval lists
 	log.WithFields(f).Debugf("creating event log entry...")
 	go s.createEventLogEntries(ctx, companyModel, claGroupModel, userModel, params)
@@ -661,6 +668,180 @@ func (s service) UpdateApprovalList(ctx context.Context, authUser *auth.User, cl
 	}
 
 	return updatedSig, nil
+}
+
+func (s service) processAutoEnableRequest(ctx context.Context, claGroupModel *models.ClaGroup, companyModel *models.Company, corporateSignatureModel *models.Signature) {
+	f := logrus.Fields{
+		"functionName":   "v2.company.service.processAutoEnableRequest",
+		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
+		"claGroupID":     claGroupModel.ProjectID,
+		"claGroupName":   claGroupModel.ProjectName,
+		"companyName":    companyModel.CompanyName,
+		"companyID":      companyModel.CompanyID,
+	}
+
+	var employeeUserModel *models.User
+	var userLookupErr error
+
+	// A simple/temp user model to consolidate the email list, GitHub username list, and GitLab username list
+	type simpleUserInfoModel struct {
+		Email          string
+		GitHubUserName string
+		GitHubUserID   string
+		GitLabUserName string
+		GitLabUserID   string
+	}
+
+	// Most of the following business logic is all the same - however, we need to handle the different types of approval lists entries and process them in the same way
+	// We build a list of users to process - this is a list of simple user models that contain the email, GitHub username, and GitLab username - typically only one of the values in the model will be set
+	userList := make([]simpleUserInfoModel, len(corporateSignatureModel.EmailApprovalList)+len(corporateSignatureModel.GithubUsernameApprovalList)+len(corporateSignatureModel.GitlabUsernameApprovalList))
+	for _, email := range corporateSignatureModel.EmailApprovalList {
+		userList = append(userList, simpleUserInfoModel{
+			Email: email,
+		})
+	}
+	for _, gitHubUserName := range corporateSignatureModel.GithubUsernameApprovalList {
+		userList = append(userList, simpleUserInfoModel{
+			GitHubUserName: gitHubUserName,
+		})
+	}
+	for _, gitLabUserName := range corporateSignatureModel.GitlabUsernameApprovalList {
+		userList = append(userList, simpleUserInfoModel{
+			GitLabUserName: gitLabUserName,
+		})
+	}
+
+	// For each item in the email approval list...
+	for _, simpleUserInfoModelEntry := range userList {
+		log.WithFields(f).Debugf("processing email approval list entry: %+v", simpleUserInfoModelEntry)
+
+		// Grab the current time
+		_, currentTime := utils.CurrentTime()
+
+		userRecordOk := false
+
+		// Lookup the user by email in the local EasyCLA database - this will exist if the user first
+		// initiated the request from GitHub or GitLab and if they shared their email (made it public). This record will
+		// likely not exist if the CLA Manager added the email directly from the UI without the user first
+		// initiating the workflow.
+		if simpleUserInfoModelEntry.Email != "" {
+			employeeUserModel, userLookupErr = s.usersService.GetUserByEmail(simpleUserInfoModelEntry.Email)
+		} else if simpleUserInfoModelEntry.GitHubUserName != "" {
+			employeeUserModel, userLookupErr = s.usersService.GetUserByGitHubUsername(simpleUserInfoModelEntry.GitHubUserName)
+
+			// Additional lookup logic - use the GitHub API to grab additional user information
+			if userLookupErr != nil && employeeUserModel == nil {
+				// Attempt to lookup the GitHub user record by the GitHub username - we need the GitHub numeric ID value which was not provided by the UI/API call
+				gitHubUserModel, gitHubErr := github.GetUserDetails(simpleUserInfoModelEntry.GitHubUserName)
+				// Should get a model, no errors and have at least the ID
+				if gitHubErr != nil || gitHubUserModel == nil || gitHubUserModel.ID == nil {
+					log.WithFields(f).WithError(gitHubErr).Warnf("problem looking up GitHub user details for user: %s, model: %+v, error: %+v", simpleUserInfoModelEntry.GitHubUserName, gitHubUserModel, gitHubErr)
+					return nil, gitHubErr
+				}
+
+				if gitHubUserModel.ID != nil {
+					simpleUserInfoModelEntry.GitHubUserID = strconv.FormatInt(*gitHubUserModel.ID, 10)
+				}
+				// User may not have a public email
+				if gitHubUserModel.Email != nil {
+					simpleUserInfoModelEntry.Email = *gitHubUserModel.Email
+				}
+			} else {
+				// copy over the values
+				simpleUserInfoModelEntry.GitHubUserID = employeeUserModel.GithubID
+				simpleUserInfoModelEntry.Email = employeeUserModel.LfEmail.String()
+			}
+		} else if simpleUserInfoModelEntry.GitLabUserName != "" {
+			employeeUserModel, userLookupErr = s.usersService.GetUserByGitLabUsername(simpleUserInfoModelEntry.GitLabUserName)
+
+			// Additional lookup logic - use the GitLab API to grab additional user information
+			if userLookupErr != nil && employeeUserModel == nil {
+				// Attempt to lookup the GitLab user record by the GitLab username - we need the GitLab numeric ID value which was not provided by the UI/API call
+				gitLabUserModel, gitHubErr := gitlab.GetUserByName(ctx,, simpleUserInfoModelEntry.GitHubUserName)
+				// Should get a model, no errors and have at least the ID
+				if gitHubErr != nil || gitLabUserModel == nil || gitLabUserModel.ID == 0 {
+					log.WithFields(f).WithError(gitHubErr).Warnf("problem looking up GitHub user details for user: %s, model: %+v, error: %+v", simpleUserInfoModelEntry.GitHubUserName, gitLabUserModel, gitHubErr)
+					return nil, gitHubErr
+				}
+
+				if gitHubUserModel.ID != nil {
+					simpleUserInfoModelEntry.GitHubUserID = strconv.FormatInt(*gitHubUserModel.ID, 10)
+				}
+				// User may not have a public email
+				if gitHubUserModel.Email != nil {
+					simpleUserInfoModelEntry.Email = *gitHubUserModel.Email
+				}
+			} else {
+				// copy over the values
+				simpleUserInfoModelEntry.GitHubUserID = employeeUserModel.GithubID
+				simpleUserInfoModelEntry.Email = employeeUserModel.LfEmail.String()
+			}
+		}
+
+		// If we couldn't find the user, then create a user record
+		if userLookupErr != nil || employeeUserModel == nil {
+			log.WithFields(f).WithError(userLookupErr).Debugf("unable to lookup existing user by one of the values: %+v", simpleUserInfoModelEntry)
+			var userCreateErr error
+
+			// Create a new user record based on the email and company ID
+			employeeUserModel, userCreateErr = s.createUserModel(
+				simpleUserInfoModelEntry.GitHubUserName, simpleUserInfoModelEntry.GitHubUserID,
+				simpleUserInfoModelEntry.GitLabUserName, simpleUserInfoModelEntry.GitLabUserID,
+				simpleUserInfoModelEntry.Email, companyModel.CompanyID,
+				fmt.Sprintf("auto generated ECLA user from CLA Manager adding user to the approval list with auto_create_ecla feature flag set to true on %+v.", currentTime))
+			if userCreateErr != nil || employeeUserModel == nil {
+				log.WithFields(f).WithError(userCreateErr).Warnf("unable to create a new user by one of the values: %+v", simpleUserInfoModelEntry)
+			} else {
+				log.WithFields(f).Debugf("created user using: %+v with company ID: %s", simpleUserInfoModelEntry, companyModel.CompanyID)
+				userRecordOk = true
+			}
+		} else {
+			log.WithFields(f).Debugf("located user by one of the values: %+v", simpleUserInfoModelEntry)
+			if employeeUserModel.CompanyID == "" || employeeUserModel.CompanyID != companyModel.CompanyID {
+				log.WithFields(f).Debugf("updating user record - set company ID = %s - previous value was: %s", companyModel.CompanyID, employeeUserModel.CompanyID)
+				employeeUserModel.CompanyID = companyModel.CompanyID
+				userUpdateErr := s.usersService.UpdateUserCompanyID(
+					employeeUserModel.UserID,
+					companyModel.CompanyID,
+					fmt.Sprintf("auto assign companyID from CLA Manager adding user to the company approval list with auto_create_ecla feature flag set to true on %+v.", currentTime))
+				if userUpdateErr != nil {
+					log.WithFields(f).WithError(userUpdateErr).Warnf("problem updating user record with company ID: %s", companyModel.CompanyID)
+				} else {
+					log.WithFields(f).Debugf("updated user record with company ID: %s", companyModel.CompanyID)
+					userRecordOk = true
+				}
+			} else {
+				userRecordOk = true
+			}
+		}
+
+		if !userRecordOk {
+			log.WithFields(f).Warn("unable to locate/create/update user record - skipping auto-create of employee acknowledgement record for this user")
+			continue
+		}
+
+		// Look up the employee signature record - it may not exist
+		employeeSignatureModel, employeeSignatureErr := s.repo.GetProjectCompanyEmployeeSignature(ctx, companyModel, claGroupModel, employeeUserModel)
+		if employeeSignatureErr != nil {
+			log.WithFields(f).WithError(employeeSignatureErr).Warnf("unexpected problem looking up employee signature record for: %+v - unable to process new employee acknowledgement request", employeeUserModel)
+			continue
+		}
+
+		if employeeSignatureModel != nil {
+			if !employeeSignatureModel.SignatureApproved || !employeeSignatureModel.SignatureSigned {
+				updateErr := s.repo.CreateProjectCompanyEmployeeSignature(ctx, companyModel, claGroupModel, employeeUserModel)
+				if updateErr != nil {
+					log.WithFields(f).WithError(updateErr).Warnf("problem updating employee signature record for: %+v", employeeUserModel)
+				}
+			}
+		} else {
+			// Ok, auto-create the employee acknowledgement record
+			createErr := s.repo.CreateProjectCompanyEmployeeSignature(ctx, companyModel, claGroupModel, employeeUserModel)
+			if createErr != nil {
+				log.WithFields(f).WithError(createErr).Warnf("unable to create project company employee signature record for: %+v", employeeUserModel)
+			}
+		}
+	}
 }
 
 // InvalidateProjectRecords disassociates project signatures
