@@ -18,7 +18,6 @@ require (
 	github.com/bradleyfalzon/ghinstallation v1.1.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/fnproject/fdk-go v0.0.2
 	github.com/gin-gonic/gin v1.7.2
 	github.com/go-openapi/errors v0.20.2
 	github.com/go-openapi/loads v0.21.0
@@ -55,7 +54,6 @@ require (
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.8.0
-	github.com/tencentyun/scf-go-lib v0.0.0-20200116145541-9a6ea1bf75b8
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
 	github.com/xanzy/go-gitlab v0.50.1
 	go.uber.org/ratelimit v0.1.0

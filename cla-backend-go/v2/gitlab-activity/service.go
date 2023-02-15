@@ -320,26 +320,30 @@ func getAuthorInfo(gitlabUser *gitlab.User) string {
 	log.WithFields(f).Debug("getting author info")
 	if gitlabUser.Username != "" {
 		return fmt.Sprintf("login:@%s/name:%s", gitlabUser.Username, gitlabUser.Name)
+	} else if gitlabUser.Email != "" {
+		return fmt.Sprintf("email:%s/name:%s", gitlabUser.Email, gitlabUser.Name)
 	}
-	return fmt.Sprintf("email:%s/name:%s", gitlabUser.Username, gitlabUser.Name)
+	return fmt.Sprintf("name:%s", gitlabUser.Name)
 }
 
 func (s service) getGitlabOrganizationFromProjectPath(ctx context.Context, projectPath, projectNameSpace string) (*v2Models.GitlabOrganization, error) {
+	f := logrus.Fields{
+		"functionName":     "getGitlabOrganizationFromProjectPath",
+		"projectPath":      projectPath,
+		"projectNameSpace": projectNameSpace,
+	}
+
+	log.WithFields(f).Debug("getting gitlab organization from project path")
 	parts := strings.Split(projectPath, "/")
 	organizationName := parts[0]
 
-	gitlabOrg, err := s.gitlabOrgService.GetGitLabOrganizationByName(ctx, organizationName)
+	gitlabOrg, err := s.gitlabOrgService.GetGitLabOrganizationByFullPath(ctx, organizationName)
 	if err != nil || gitlabOrg == nil {
 		// try getting it with project name as well
-		gitlabOrg, err = s.gitlabOrgService.GetGitLabOrganizationByName(ctx, projectNameSpace)
+		gitlabOrg, err = s.gitlabOrgService.GetGitLabOrganizationByFullPath(ctx, projectNameSpace)
 		if err != nil || gitlabOrg == nil {
 			return nil, fmt.Errorf("gitlab org : %s doesn't exist : %v", organizationName, err)
 		}
-	}
-
-	gitlabOrg, err = s.gitlabOrgService.GetGitLabOrganization(ctx, gitlabOrg.OrganizationID)
-	if err != nil {
-		return nil, fmt.Errorf("fetching gitlab org : %s failed : %v", gitlabOrg.OrganizationID, err)
 	}
 
 	return gitlabOrg, nil
