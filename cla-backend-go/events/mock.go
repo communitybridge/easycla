@@ -86,9 +86,9 @@ func (mr *MockServiceMockRecorder) GetCompanyEvents(arg0, arg1, arg2, arg3, arg4
 }
 
 // GetCompanyFoundationEvents mocks base method
-func (m *MockService) GetCompanyFoundationEvents(arg0, arg1, arg2 string, arg3 *string, arg4 *int64, arg5 bool) (*models.EventList, error) {
+func (m *MockService) GetCompanyFoundationEvents(arg0, arg1, arg2 string, arg3 *string, arg4 *int64, arg5 *string, arg6 bool) (*models.EventList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCompanyFoundationEvents", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "GetCompanyFoundationEvents", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(*models.EventList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
