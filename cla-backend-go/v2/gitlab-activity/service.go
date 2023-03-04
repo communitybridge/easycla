@@ -171,14 +171,15 @@ func (s *service) ProcessMergeActivity(ctx context.Context, secretToken string, 
 		return fmt.Errorf("finding internal repository for gitlab org name failed : %v", err)
 	}
 
-	log.WithFields(f).Debugf("internal gitlab repository found with id : %s", gitlabRepo.RepositoryID)
+	log.WithFields(f).Debugf("loading GitLab merge request participatants for merge request: %d", mergeID)
 	participants, err := gitlab_api.FetchMrParticipants(gitlabClient, projectID, mergeID)
 	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("problem loading GitLab merge request participants for merge request: %d", mergeID)
 		return fmt.Errorf("fetching mr participants : %v", err)
 	}
 
 	if len(participants) == 0 {
-		return fmt.Errorf("no participants found in gitlab mr : %d, and gitlab project : %d", mergeID, projectID)
+		return fmt.Errorf("no participants found in GitLab mr : %d, and gitlab project : %d", mergeID, projectID)
 	}
 
 	claGroup, err := s.projectsCLAGroupsRepository.GetClaGroupIDForProject(ctx, gitlabOrg.ProjectSfid)
@@ -533,6 +534,7 @@ func (s *service) findUserModelForGitlabUser(f logrus.Fields, gitlabUser *gitlab
 
 	userModels := make([]*models.User, 0)
 
+	// DD: gitLab user object does not have this set...
 	if gitlabUser.ID != 0 {
 		log.WithFields(f).Debugf("Looking up GitLab user via ID: %d", gitlabUser.ID)
 		userModel, lookupErr := s.usersRepository.GetUserByGitlabID(gitlabUser.ID)
@@ -544,6 +546,7 @@ func (s *service) findUserModelForGitlabUser(f logrus.Fields, gitlabUser *gitlab
 		}
 	}
 
+	// DD: gitLab user object does not have this set...
 	if gitlabUser.Username != "" {
 		log.WithFields(f).Debugf("Looking up GitLab user via username: %s", gitlabUser.Username)
 		userModel, lookupErr := s.usersRepository.GetUserByGitLabUsername(gitlabUser.Username)
@@ -557,7 +560,7 @@ func (s *service) findUserModelForGitlabUser(f logrus.Fields, gitlabUser *gitlab
 
 	if gitlabUser.Email != "" {
 		log.WithFields(f).Debugf("Looking up GitLab user via user email: %s", gitlabUser.Email)
-		users, err := s.usersRepository.GetUsersByEmail(gitlabUser.Email)
+		users, err := s.usersRepository.GetUsersByEmail(gitlabUser.Email) // DD: query is failing
 		if err != nil || len(users) == 0 {
 			log.WithFields(f).Warnf("unable to lookup user by email : %s, error : %v", gitlabUser.Email, err)
 			// If we can't find the user by email, we'll try to find them by lf_email
