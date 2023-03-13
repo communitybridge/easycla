@@ -18,10 +18,12 @@ import xml.etree.ElementTree as ET
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
-import cla
 import pydocusign  # type: ignore
 import requests
 from attr import dataclass
+from pydocusign.exceptions import DocuSignException  # type: ignore
+
+import cla
 from cla.controllers.lf_group import LFGroup
 from cla.models import DoesNotExist, signing_service_interface
 from cla.models.dynamo_models import (Company, Document, Event, Gerrit,
@@ -30,8 +32,7 @@ from cla.models.event_types import EventType
 from cla.models.s3_storage import S3Storage
 from cla.user_service import UserService
 from cla.utils import (append_email_help_sign_off_content, get_corporate_url,
-                       get_email_help_content, get_project_cla_group_instance)
-from pydocusign.exceptions import DocuSignException  # type: ignore
+                       get_project_cla_group_instance)
 
 api_base_url = os.environ.get('CLA_API_BASE', '')
 root_url = os.environ.get('DOCUSIGN_ROOT_URL', '')
@@ -126,7 +127,8 @@ class DocuSign(signing_service_interface.SigningService):
         self.s3storage = S3Storage()
         self.s3storage.initialize(None)
 
-    def request_individual_signature(self, project_id, user_id, return_url=None, return_url_type="github", callback_url=None,
+    def request_individual_signature(self, project_id, user_id, return_url=None, return_url_type="github",
+                                     callback_url=None,
                                      preferred_email=None):
         request_info = 'project: {project_id}, user: {user_id} with return_url: {return_url}'.format(
             project_id=project_id, user_id=user_id, return_url=return_url)
@@ -256,7 +258,7 @@ class DocuSign(signing_service_interface.SigningService):
         elif return_url_type.lower() == "gitlab":
             acl = user.get_user_gitlab_id()
         cla.log.debug('Individual Signature - setting ACL using user {} id: {}'.format(return_url_type, acl))
-        signature.set_signature_acl('{}:{}'.format(return_url_type.lower(),acl))
+        signature.set_signature_acl('{}:{}'.format(return_url_type.lower(), acl))
 
         # Populate sign url
         self.populate_sign_url(signature, callback_url, default_values=default_cla_values,
@@ -745,7 +747,7 @@ class DocuSign(signing_service_interface.SigningService):
                     return {'errors': {'github_repository_id': 'The given github repository ID does not exist. '}}
 
                 update_repository_provider(installation_id, github_repository_id, change_request_id)
-    
+
             elif return_url_type.lower() == "gitlab":
                 gitlab_repository_id = int(signature_metadata['repository_id'])
                 merge_request_id = int(signature_metadata['merge_request_id'])
@@ -754,7 +756,6 @@ class DocuSign(signing_service_interface.SigningService):
 
                 if organization_id is None:
                     return {'errors': {'gitlab_repository_id': 'The given github repository ID does not exist. '}}
-                
 
             cla.utils.delete_active_signature_metadata(user_id)
         else:
@@ -869,7 +870,6 @@ class DocuSign(signing_service_interface.SigningService):
 
         """
         return os.path.join(api_base_url, 'v2/signed/gerrit/individual', str(user_id))
-
 
     def _get_corporate_signature_callback_url(self, project_id, company_id):
         """
@@ -1285,7 +1285,7 @@ class DocuSign(signing_service_interface.SigningService):
                 return
             cla.log.debug(f'populate_sign_url - {sig_type} - loaded project_individual_document...')
 
-        # Void the existing envelope to prevent multiple envelopes pending for a signer. 
+        # Void the existing envelope to prevent multiple envelopes pending for a signer.
         envelope_id = signature.get_signature_envelope_id()
         if envelope_id is not None:
             try:
@@ -1431,7 +1431,6 @@ class DocuSign(signing_service_interface.SigningService):
         signature.save()
         cla.log.debug(f'{fn} - {sig_type} - saved signature to database - id: {signature.get_signature_id()}...')
         cla.log.debug(f'populate_sign_url - {sig_type} - complete')
-    
 
     def signed_individual_callback(self, content, installation_id, github_repository_id, change_request_id):
         """
@@ -1501,7 +1500,8 @@ class DocuSign(signing_service_interface.SigningService):
             # Log the event
             try:
                 # Load the Project by ID and send audit event
-                cla.log.debug(f'{fn} - creating an event log entry for event_type: {EventType.IndividualSignatureSigned}')
+                cla.log.debug(
+                    f'{fn} - creating an event log entry for event_type: {EventType.IndividualSignatureSigned}')
                 project = Project()
                 project.load(signature.get_signature_project_id())
                 event_data = (f'The user {user.get_user_name()} signed an individual CLA for '
@@ -1518,7 +1518,8 @@ class DocuSign(signing_service_interface.SigningService):
                     event_summary=event_summary,
                     contains_pii=False,
                 )
-                cla.log.debug(f'{fn} - created an event log entry for event_type: {EventType.IndividualSignatureSigned}')
+                cla.log.debug(
+                    f'{fn} - created an event log entry for event_type: {EventType.IndividualSignatureSigned}')
             except DoesNotExist as err:
                 msg = (f'{fn} - unable to load project by CLA Group ID: {signature.get_signature_project_id()}, '
                        f'unable to send audit event, error: {err}')
@@ -1608,13 +1609,13 @@ class DocuSign(signing_service_interface.SigningService):
             project_id = signature.get_signature_project_id()
             self.send_to_s3(document_data, project_id, signature_id, 'icla', user_id)
             cla.log.debug(f'{fn} - uploaded ICLA document to s3')
-    
-    def _update_gitlab_mr(self, organization_id: str , gitlab_repository_id: int, merge_request_id: int) -> None:
+
+    def _update_gitlab_mr(self, organization_id: str, gitlab_repository_id: int, merge_request_id: int) -> None:
         """
         Helper function that updates mr upon a successful signing
-        param organization_id: Gitlab group id 
+        param organization_id: Gitlab group id
         rtype organization_id: int
-        param gitlab_repository_id: Gitlab repository 
+        param gitlab_repository_id: Gitlab repository
         rtype: int
         param merge_request_id: Gitlab MR
         rtype: int
@@ -1622,22 +1623,23 @@ class DocuSign(signing_service_interface.SigningService):
         fn = 'models.docusign_models._update_gitlab_mr'
         try:
             headers = {
-                        'Content-type': 'application/json',
-                        'Accept': 'application/json'
-                    }
+                'Content-type': 'application/json',
+                'Accept': 'application/json'
+            }
             url = f'{cla.config.PLATFORM_GATEWAY_URL}/cla-service/v4/gitlab/trigger'
             payload = {
-                        "gitlab_external_repository_id": gitlab_repository_id,
-                        "gitlab_mr_id": merge_request_id,
-                        "gitlab_organization_id": organization_id
-                    }
+                "gitlab_external_repository_id": gitlab_repository_id,
+                "gitlab_mr_id": merge_request_id,
+                "gitlab_organization_id": organization_id
+            }
             requests.post(url, data=json.dumps(payload), headers=headers)
             cla.log.debug(f'{fn} - Updating GitLab MR with payload: {payload}')
         except requests.exceptions.HTTPError as err:
             msg = f'{fn} - Unable to update GitLab MR: {merge_request_id}, error: {err}'
             cla.log.warning(msg)
-    
-    def signed_individual_callback_gitlab(self, content, user_id, organization_id, gitlab_repository_id, merge_request_id):
+
+    def signed_individual_callback_gitlab(self, content, user_id, organization_id, gitlab_repository_id,
+                                          merge_request_id):
         fn = 'models.docusign_models.signed_individual_callback_gitlab'
         cla.log.debug(f'{fn} - Docusign GitLab ICLA signed callback POST data: {content}')
         tree = ET.fromstring(content)
@@ -1667,7 +1669,7 @@ class DocuSign(signing_service_interface.SigningService):
             populate_signature_from_icla_callback(content, tree, signature)
             signature.save()
 
-            #Update repository provider (GitLab)
+            # Update repository provider (GitLab)
             self._update_gitlab_mr(organization_id, gitlab_repository_id, merge_request_id)
 
             # Load the Project by ID and send audit event
@@ -1758,7 +1760,7 @@ class DocuSign(signing_service_interface.SigningService):
                 cla.log.warning(msg)
                 return {'errors': {'error': msg}}
         else:
-            # If client_user_id is None, the callback came from the email that finished signing. 
+            # If client_user_id is None, the callback came from the email that finished signing.
             # Retrieve the latest signature with projectId and CompanyId.
             signature = company.get_latest_signature(str(project_id))
             signature_id = signature.get_signature_id()
@@ -1855,7 +1857,7 @@ class DocuSign(signing_service_interface.SigningService):
             except DoesNotExist:
                 gerrits = []
 
-            # Get LF user name. 
+            # Get LF user name.
             lf_username = user.get_lf_username()
             for gerrit in gerrits:
                 # Get Gerrit Group ID
@@ -2060,7 +2062,7 @@ def get_org_from_return_url(repo_provider_type, return_url, orgs):
     :param return_url: The URL will be redirected after signature done.
     :type return_url: string
     :return: List of Organizations of any repo service provider.
-    :rtype: [any_repo_service_provider.Organization] 
+    :rtype: [any_repo_service_provider.Organization]
     """
     if repo_provider_type == 'github':
         split_url = return_url.split('/')  # parse repo name from URL
@@ -2101,7 +2103,7 @@ def get_docusign_tabs_from_document(document: Document,
         }
 
         if tab.get_document_tab_anchor_string() is not None:
-            # Set only when anchor string exists 
+            # Set only when anchor string exists
             args['anchorString'] = tab.get_document_tab_anchor_string()
             args['anchorIgnoreIfNotPresent'] = tab.get_document_tab_anchor_ignore_if_not_present()
             args['anchorXOffset'] = tab.get_document_tab_anchor_x_offset()
@@ -2122,11 +2124,19 @@ def get_docusign_tabs_from_document(document: Document,
             args['locked'] = False
         elif tab_type == 'text_optional':
             tab_class = TextOptionalTab
+            # https://developers.docusign.com/docs/esign-rest-api/reference/envelopes/enveloperecipienttabs/create/#schema__enveloperecipienttabs_texttabs_required
+            # required: string - When true, the signer is required to fill out this tab.
             args['required'] = False
         elif tab_type == 'number':
             tab_class = pydocusign.NumberTab
         elif tab_type == 'sign':
             tab_class = pydocusign.SignHereTab
+        elif tab_type == 'sign_optional':
+            tab_class = pydocusign.SignHereTab
+            # https://developers.docusign.com/docs/esign-rest-api/reference/envelopes/enveloperecipienttabs/create/#schema__enveloperecipienttabs_signheretabs_optional
+            # optional: string - When true, the recipient does not need to complete this tab to
+            # complete the signing process.
+            args['optional'] = True
         elif tab_type == 'date':
             tab_class = pydocusign.DateSignedTab
         else:
