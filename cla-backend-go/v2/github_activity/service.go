@@ -305,6 +305,16 @@ func (s *eventHandlerService) handleRepositoryTransferredAction(ctx context.Cont
 		return fmt.Errorf("missing organization login information can't proceed with transferring the rpo : %s", *org.Name)
 	}
 
+	if repo.ID == nil || *repo.ID == 0 {
+		return fmt.Errorf("missing repo id")
+	}
+
+	if repo.FullName == nil || *repo.FullName == "" {
+		return fmt.Errorf("repo full name missing")
+	}
+
+	repositoryExternalID := strconv.FormatInt(*repo.ID, 10)
+
 	f := logrus.Fields{
 		"functionName":          "v2.github_activity.service.handleRepositoryTransferredAction",
 		"repositoryName":        repoName,
@@ -312,12 +322,7 @@ func (s *eventHandlerService) handleRepositoryTransferredAction(ctx context.Cont
 		utils.XREQUESTID:        ctx.Value(utils.XREQUESTID),
 	}
 
-	if repo.ID == nil || *repo.ID == 0 {
-		return fmt.Errorf("missing repo id")
-	}
-
-	repositoryExternalID := strconv.FormatInt(*repo.ID, 10)
-	repoModel, err := s.gitV1Repository.GitHubGetRepositoryByGithubID(context.Background(), repositoryExternalID, true)
+	repoModel, err := s.gitV1Repository.GitHubGetRepositoryByExternalID(context.Background(), repositoryExternalID)
 	if err != nil {
 		if _, ok := err.(*utils.GitHubRepositoryNotFound); ok {
 			log.WithFields(f).Warnf("event for non existing local repo : %s, nothing to do", repoName)
@@ -367,6 +372,7 @@ func (s *eventHandlerService) handleRepositoryTransferredAction(ctx context.Cont
 	_, err = s.gitV1Repository.GitHubUpdateRepository(ctx, repoModel.RepositoryID, "", "", &models.GithubRepositoryInput{
 		Note:                       fmt.Sprintf("repository was transferred from org : %s to : %s", oldGithubOrg.OrganizationName, newGithubOrg.OrganizationName),
 		RepositoryOrganizationName: aws.String(newGithubOrg.OrganizationName),
+		RepositoryName:             aws.String(*repo.FullName),
 		RepositoryURL:              repo.HTMLURL,
 	})
 
