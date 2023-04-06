@@ -207,6 +207,12 @@ func (mr *MockRepositoryMockRecorder) GetRepositoryByGithubID(ctx, externalID, e
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GitHubGetRepositoryByGithubID", reflect.TypeOf((*MockRepository)(nil).GitHubGetRepositoryByGithubID), ctx, externalID, enabled)
 }
 
+// GetRepositoryByExternalID indicates an expected call of GetRepositoryByExternalID
+func (mr *MockRepositoryMockRecorder) GetRepositoryByExternalID(ctx, externalID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GitHubGetRepositoryByExternalID", reflect.TypeOf((*MockRepository)(nil).GitHubGetRepositoryByExternalID), ctx, externalID)
+}
+
 // GetRepositoriesByCLAGroup mocks base method
 func (m *MockRepository) GitHubGetRepositoriesByCLAGroup(ctx context.Context, claGroup string, enabled bool) ([]*models.GithubRepository, error) {
 	m.ctrl.T.Helper()

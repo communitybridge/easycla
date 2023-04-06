@@ -73,7 +73,8 @@ func TestEventHandlerService_ProcessRepositoryEvent_HandleRepositoryRenamedActio
 
 func TestEventHandlerService_ProcessRepositoryEvent_HandleRepositoryTransferredAction(t *testing.T) {
 	repoID := "1f15f478-0659-43f3-bcf1-383052de7616"
-	repoName := "org1/repo-name"
+	repoName := "repo-name"
+	repoFullName := "org1/repo-name"
 	oldOrgName := "org1"
 	newOrgName := "org2"
 	newRepoUrl := "org2/repo-name"
@@ -105,15 +106,13 @@ func TestEventHandlerService_ProcessRepositoryEvent_HandleRepositoryTransferredA
 			defer ctrl.Finish()
 			githubOrganizationRepo := github_organizations.NewMockRepository(ctrl)
 			githubRepo := mock.NewMockRepository(ctrl)
-			githubRepo.EXPECT().
-				GetRepositoryByGithubID(gomock.Any(), "1", true).
-				Return(&models.GithubRepository{
-					Enabled:                    true,
-					RepositoryExternalID:       1,
-					RepositoryID:               repoID,
-					RepositoryName:             repoName,
-					RepositoryOrganizationName: oldOrgName,
-				}, nil)
+			githubRepo.EXPECT().GetRepositoryByExternalID(gomock.Any(), "1").Return(&models.GithubRepository{
+				Enabled:                    true,
+				RepositoryExternalID:       1,
+				RepositoryID:               repoID,
+				RepositoryName:             repoName,
+				RepositoryOrganizationName: oldOrgName,
+			}, nil)
 
 			// return the old one
 			githubOrganizationRepo.EXPECT().
@@ -132,6 +131,7 @@ func TestEventHandlerService_ProcessRepositoryEvent_HandleRepositoryTransferredA
 				githubRepo.EXPECT().
 					UpdateGithubRepository(gomock.Any(), repoID, &models.GithubRepositoryInput{
 						RepositoryOrganizationName: &newOrgName,
+						RepositoryName:             &repoFullName,
 						RepositoryURL:              &newRepoUrl,
 						Note:                       fmt.Sprintf("repository was transferred from org : %s to : %s", oldOrgName, newOrgName),
 					}).Return(nil, nil)
@@ -165,9 +165,10 @@ func TestEventHandlerService_ProcessRepositoryEvent_HandleRepositoryTransferredA
 			err := activityService.ProcessRepositoryEvent(&github.RepositoryEvent{
 				Action: aws.String("transferred"),
 				Repo: &github.Repository{
-					ID:      aws.Int64(1),
-					Name:    &repoName,
-					HTMLURL: &newRepoUrl,
+					ID:       aws.Int64(1),
+					Name:     &repoName,
+					HTMLURL:  &newRepoUrl,
+					FullName: &repoFullName,
 				},
 				Org: &github.Organization{
 					Login: &newOrgName,
