@@ -98,7 +98,8 @@ func (r *Repository) GitHubAddRepository(ctx context.Context, externalProjectID 
 		}
 		// Here repository already exists. We update the same repository with latest document in order to avoid duplicate entries.
 		var enabled = true
-		repository, err := r.GitHubUpdateRepository(ctx, repo.RepositoryID, projectSFID, externalProjectID, &models.GithubRepositoryInput{
+		var repository *models.GithubRepository
+		repository, err = r.GitHubUpdateRepository(ctx, repo.RepositoryID, projectSFID, externalProjectID, &models.GithubRepositoryInput{
 			RepositoryName:             input.RepositoryName,
 			RepositoryOrganizationName: input.RepositoryOrganizationName,
 			RepositoryProjectID:        input.RepositoryProjectID,
