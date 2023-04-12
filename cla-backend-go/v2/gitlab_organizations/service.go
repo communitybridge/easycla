@@ -843,7 +843,7 @@ func (s *Service) InitiateSignRequest(ctx context.Context, req *http.Request, gi
 		return nil, err
 	}
 	var signatureID string
-	icla, signErr := s.signatureRepo.GetIndividualSignature(ctx, gitlabRepo.RepositoryClaGroupID, claUser.UserID, aws.Bool(false), aws.Bool(true))
+	icla, signErr := s.signatureRepo.GetIndividualSignature(ctx, gitlabRepo.RepositoryClaGroupID, claUser.UserID, aws.Bool(false), nil)
 	if signErr != nil {
 		log.WithFields(f).WithError(signErr).Warnf("problem checking for ICLA signature for user: %s", claUser.UserID)
 	}
@@ -865,7 +865,7 @@ func (s *Service) InitiateSignRequest(ctx context.Context, req *http.Request, gi
 			return &consoleURL, nil
 		}
 
-		corporateSignature, err := s.signatureRepo.GetCorporateSignature(ctx, gitlabRepo.RepositoryClaGroupID, companyID, aws.Bool(false), aws.Bool(true))
+		corporateSignature, err := s.signatureRepo.GetCorporateSignature(ctx, gitlabRepo.RepositoryClaGroupID, companyID, aws.Bool(false), nil)
 		if err != nil {
 			msg := fmt.Sprintf("can't load company signature record for company: %s for user : %s (%s), error : %v", companyID, claUser.Username, claUser.UserID, err)
 			log.WithFields(f).Errorf(msg)
