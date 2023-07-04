@@ -32,7 +32,7 @@ oauthlib==3.1.0
 packaging==20.5
 pluggy==0.13.1
 py==1.10.0
-pyasn1==0.4.8
+pyasn1==0.5.0
 docusign-esign==3.23.0
 PyGithub==1.55
 PyJWT==2.7.0
