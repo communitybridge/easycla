@@ -4,10 +4,11 @@
 FROM public.ecr.aws/lambda/python:3.7
 
 # Copy requirements.txt
-ADD requirements.txt requirements-test.txt ${LAMBDA_TASK_ROOT}
+COPY requirements.txt requirements-test.txt ${LAMBDA_TASK_ROOT}
 
 # Copy function code
-ADD *.py .serverless-wsgi serverless-authorizer.yml ${LAMBDA_TASK_ROOT}
+COPY *.py .serverless-wsgi serverless-authorizer.yml ${LAMBDA_TASK_ROOT}
+# Add the CLA library folder
 ADD /cla ${LAMBDA_TASK_ROOT}/cla
 
 # Install the specified packages
