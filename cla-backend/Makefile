@@ -1,6 +1,12 @@
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
 
+ifeq ($(shell command -v podman 2> /dev/null),)
+    DOCKER_CMD=docker
+else
+    DOCKER_CMD=podman
+endif
+
 .PHONY: setup
 setup:
 	npm install;
@@ -15,7 +21,7 @@ setup_circle:
 	sudo pip install -r requirements.txt; \
 
 # username: LFID username
-# projects: quoted list of SFDC project IDs. e.g. '\"abcd\",\"1234\"' 
+# projects: quoted list of SFDC project IDs. e.g. '\"abcd\",\"1234\"'
 .PHONY: add_project_manager
 add_project_manager:
 	aws dynamodb put-item \
@@ -111,3 +117,9 @@ deploy-dynamodb-backups:
 	source ~/.env/lf-cla/bin/activate; \
 	cd serverless-dynamodb-backups; \
 	../node_modules/.bin/serverless deploy --region us-east-1; \
+
+build-docker-mac:
+	$(DOCKER_CMD) build --platform linux/arm64 -t easycla-python:latest .
+build-docker-linux: build-docker
+build-docker:
+	$(DOCKER_CMD) build --platform linux/amd64 -t easycla-python:latest .

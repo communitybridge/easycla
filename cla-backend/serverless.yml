@@ -125,7 +125,7 @@ provider:
     # In this section you can define images that will be built locally and uploaded to ECR
     # Ref: https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml#docker-image-deployments-in-ecr
     images:
-      easyclaPythonAppImage:
+      easycla_python_app_image:
         uri: ${self:custom.ecr_img.${sls:stage}}
 
   apiGateway:
@@ -604,7 +604,7 @@ functions:
     handler: wsgi_handler.handler
     description: "EasyCLA Python API handler for the /v1 endpoints"
     image:
-      name: easyclaPythonAppImage
+      name: easycla_python_app_image
       command:
         - 'wsgi_handler.handler'
       #entryPoint:
@@ -619,7 +619,7 @@ functions:
     handler: wsgi_handler.handler
     description: "EasyCLA Python API handler for the /v2 endpoints"
     image:
-      name: easyclaPythonAppImage
+      name: easycla_python_app_image
       command:
         - 'wsgi_handler.handler'
     #    layers:
@@ -634,7 +634,7 @@ functions:
     handler: cla.salesforce.get_projects
     description: "EasyCLA API Callback Handler for fetching all SalesForce projects"
     image:
-      name: easyclaPythonAppImage
+      name: easycla_python_app_image
       command:
         - 'cla.salesforce.get_projects'
 #    layers:
@@ -649,7 +649,7 @@ functions:
     handler: cla.salesforce.get_project
     description: "EasyCLA API Callback Handler for fetching SalesForce projects by ID"
     image:
-      name: easyclaPythonAppImage
+      name: easycla_python_app_image
       command:
         - 'cla.salesforce.get_project'
 #    layers:
@@ -665,7 +665,7 @@ functions:
     handler: wsgi_handler.handler
     description: "EasyCLA API Callback Handler for GitHub bot installations"
     image:
-      name: easyclaPythonAppImage
+      name: easycla_python_app_image
       command:
         - 'wsgi_handler.handler'
 #    layers:
@@ -680,7 +680,7 @@ functions:
     handler: wsgi_handler.handler
     description: "EasyCLA API Callback Handler for GitHub activity"
     image:
-      name: easyclaPythonAppImage
+      name: easycla_python_app_image
       command:
         - 'wsgi_handler.handler'
 #    layers:
