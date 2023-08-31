@@ -123,9 +123,10 @@ provider:
 
   ecr:
     # In this section you can define images that will be built locally and uploaded to ECR
+    # Ref: https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml#docker-image-deployments-in-ecr
     images:
       easyclaPythonAppImage:
-        uri: ${self:custom.ecr_img.${sls:stage}
+        uri: ${self:custom.ecr_img.${sls:stage}}
 
   apiGateway:
     # https://www.serverless.com/framework/docs/deprecations/#AWS_API_GATEWAY_NAME_STARTING_WITH_SERVICE
