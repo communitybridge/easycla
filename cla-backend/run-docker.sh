@@ -8,8 +8,8 @@
 
 podman run \
   --rm \
-  --name easycla-python \
   -it \
+  --name easycla-python \
   -p 8080:8080 \
   -e STAGE="${STAGE}" \
   -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
@@ -60,6 +60,3 @@ podman run \
   -e PLATFORM_GATEWAY_URL="${PLATFORM_GATEWAY_URL}" \
   -e PLATFORM_MAINTAINERS="${PLATFORM_MAINTAINERS}" \
   easycla-python:latest
-  # --entrypoint /bin/bash \
-
-
