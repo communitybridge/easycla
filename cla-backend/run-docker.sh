@@ -6,7 +6,7 @@
 # In a separate terminal, you can then locally invoke the function using cURL:
 # curl -XPOST "http://localhost:8080/2015-03-31/functions/function/invocations" -d '{"payload":"hello world!"}'
 
-podman run \
+docker run \
   --rm \
   -it \
   --name easycla-python \
@@ -59,4 +59,4 @@ podman run \
   -e PLATFORM_AUTH0_AUDIENCE="${PLATFORM_AUTH0_AUDIENCE}" \
   -e PLATFORM_GATEWAY_URL="${PLATFORM_GATEWAY_URL}" \
   -e PLATFORM_MAINTAINERS="${PLATFORM_MAINTAINERS}" \
-  easycla-python:latest
+  726224182707.dkr.ecr.us-east-1.amazonaws.com/lfx-easycla-dev:latest

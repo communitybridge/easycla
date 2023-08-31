@@ -118,8 +118,13 @@ deploy-dynamodb-backups:
 	cd serverless-dynamodb-backups; \
 	../node_modules/.bin/serverless deploy --region us-east-1; \
 
+#$(DOCKER_CMD) build --platform linux/arm64 -t easycla-python:latest .
+build-docker-mac-dockertool:
+	docker build --platform linux/arm64 --tag 726224182707.dkr.ecr.us-east-1.amazonaws.com/lfx-easycla-dev:latest .
+build-docker-mac-podmantool:
+	podman build --platform linux/arm64 --tag 726224182707.dkr.ecr.us-east-1.amazonaws.com/lfx-easycla-dev:latest .
 build-docker-mac:
-	$(DOCKER_CMD) build --platform linux/arm64 -t easycla-python:latest .
+	$(DOCKER_CMD) build --platform linux/arm64 --tag 726224182707.dkr.ecr.us-east-1.amazonaws.com/lfx-easycla-dev:latest .
 build-docker-linux: build-docker
 build-docker:
 	$(DOCKER_CMD) build --platform linux/amd64 -t easycla-python:latest .

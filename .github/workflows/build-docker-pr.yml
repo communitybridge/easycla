@@ -19,26 +19,26 @@ jobs:
     environment: dev
     steps:
       - uses: actions/checkout@v3
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
+      #- name: Set up QEMU
+      #  uses: docker/setup-qemu-action@v2
+      #- name: Set up Docker Buildx
+      #  id: buildx
+      #  uses: docker/setup-buildx-action@v2
       - name: Available Build Platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
       - name: Build Docker Image
         working-directory: cla-backend
         run:  |
           # Create a new builder, named container, that uses the Docker container driver
-          echo "Creating a new builder container..."
-          docker buildx create --name container --driver=docker-container
+          #echo "Creating a new builder container..."
+          #docker buildx create --name container --driver docker-container
           
           echo "Building image with tag: ${ECR_HOST}/${REPOSITORY}:${{github.sha}}"
-          docker buildx build --platform=linux/amd64 --builder=container --tag ${ECR_HOST}/${REPOSITORY}:${{github.sha}} .
+          docker build --platform linux/amd64 --tag ${ECR_HOST}/${REPOSITORY}:${{github.sha}} .
           echo "Building image with tag: ${ECR_HOST}/${REPOSITORY}:latest"
-          docker buildx build --platform=linux/amd64 --builder=container --tag ${ECR_HOST}/${REPOSITORY}:latest .
+          docker build --platform linux/amd64 --tag ${ECR_HOST}/${REPOSITORY}:latest .
 
           # Note, unlike when using the default docker driver, images built with the docker-container driver must be explicitly loaded into the local image store. Use the --load flag
           echo "Loading the image into the image store..."
-          docker buildx build --platform=linux/amd64 --builder=container --load --tag ${ECR_HOST}/${REPOSITORY}:${{github.sha}} .
-          docker buildx build --platform=linux/amd64 --builder=container --load --tag ${ECR_HOST}/${REPOSITORY}:latest .
+          docker build --platform linux/amd64 --load --tag ${ECR_HOST}/${REPOSITORY}:${{github.sha}} .
+          docker build --platform linux/amd64 --load --tag ${ECR_HOST}/${REPOSITORY}:latest .
