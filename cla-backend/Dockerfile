@@ -7,7 +7,8 @@ FROM public.ecr.aws/lambda/python:3.7
 COPY requirements.txt ${LAMBDA_TASK_ROOT}
 # Copy function code
 COPY *.py ${LAMBDA_TASK_ROOT}
-COPY .serverless-wsgi ${LAMBDA_TASK_ROOT}
+#COPY .serverless-wsgi ${LAMBDA_TASK_ROOT}
+RUN echo '{"app":"cla.routes.__hug_wsgi__"}' > .serverless-wsgi
 COPY serverless-authorizer.yml ${LAMBDA_TASK_ROOT}
 # Add the CLA library folder
 COPY /cla/ ${LAMBDA_TASK_ROOT}/cla/
