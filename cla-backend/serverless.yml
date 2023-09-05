@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 service: cla-backend
-frameworkVersion: '^3.34.0'
+frameworkVersion: '^3.28.1'
 
 package:
   # Exclude all first - selectively add in lambda functions
@@ -25,15 +25,6 @@ package:
     - '!node_modules/**'
     - '!package-lock.json'
     - '!yarn.lock'
-    - '!**/test/**'
-    - '!**/tests/**'
-    - '!**/*test*.py'
-    - '!tests/**'
-    - '!**/_pytest/**'
-    - '!**/pytest*/**'
-    - '!**/test_*'
-    - '!**/LICENSE'
-    - '!**/README*'
     - '.serverless-wsgi'
 
 custom:
@@ -41,7 +32,7 @@ custom:
   wsgi:
     app: cla.routes.__hug_wsgi__
     pythonBin: python
-    pythonRequirements: false
+    packRequirements: false
   # Config for serverless-prune-plugin - remove all but the 10 most recent
   # versions to avoid the "Code storage limit exceeded" error
   prune:
@@ -107,10 +98,6 @@ custom:
     dev: admin@dev.lfcla.com
     staging: admin@staging.lfcla.com
     prod: admin@lfx.linuxfoundation.org
-  ecr_img:
-    dev: 395594542180.dkr.ecr.us-east-1.amazonaws.com/lfx-easycla-${sls:stage}:latest
-    staging: 844390194980.dkr.ecr.us-east-1.amazonaws.com/lfx-easycla-${sls:stage}:latest
-    prod: 716487311010.dkr.ecr.us-east-1.amazonaws.com/lfx-easycla-${sls:stage}:latest
 
 provider:
   name: aws
@@ -120,12 +107,6 @@ provider:
   timeout: 60 # optional, in seconds, default is 6
   logRetentionInDays: 14
   lambdaHashingVersion: '20201221' # Resolution of lambda version hashes was improved with better algorithm, which will be used in next major release. Switch to it now by setting "provider.lambdaHashingVersion" to "20201221"
-
-  ecr:
-    # In this section you can define images that will be built locally and uploaded to ECR
-    images:
-      easyclaPythonAppImage:
-        uri: ${self:custom.ecr_img.${sls:stage}
 
   apiGateway:
     # https://www.serverless.com/framework/docs/deprecations/#AWS_API_GATEWAY_NAME_STARTING_WITH_SERVICE
@@ -340,6 +321,9 @@ provider:
     DOCUSIGN_ROOT_URL: ${file(./env.json):docusign-root-url, ssm:/cla-docusign-root-url-${sls:stage}}
     DOCUSIGN_USERNAME: ${file(./env.json):docusign-username, ssm:/cla-docusign-username-${sls:stage}}
     DOCUSIGN_PASSWORD: ${file(./env.json):docusign-password, ssm:/cla-docusign-password-${sls:stage}}
+    DOCUSIGN_INTEGRATOR_KEY: ${file(./env.json):docusign-integrator-key, ssm:/cla-docusign-integrator-key-${sls:stage}}
+    DOCUSIGN_PRIVATE_KEY: ${file(./env.json):docusign-private-key, ssm:/cla-docusign-private-key-${sls:stage}}
+    DOCUSIGN_USER_ID: ${file(./env.json):docusign-user-id, ssm:/cla-docusign-user-id-${sls:stage}}
     DOCUSIGN_AUTH_SERVER: ${file(./env.json):docusign-auth-server, ssm:/cla-docusign-auth-server-${sls:stage}}
     CLA_API_BASE: ${file(./env.json):cla-api-base, ssm:/cla-api-base-${sls:stage}}
     CLA_CONTRIBUTOR_BASE: ${file(./env.json):cla-contributor-base, ssm:/cla-contributor-base-${sls:stage}}
@@ -398,7 +382,7 @@ provider:
     Owner: "David Deal"
 
 plugins:
-  #- serverless-python-requirements
+  - serverless-python-requirements
   - serverless-wsgi
   - serverless-plugin-tracing
   # Serverless Finch does s3 uploading. Called with 'sls client deploy'.
@@ -602,12 +586,6 @@ functions:
   apiv1:
     handler: wsgi_handler.handler
     description: "EasyCLA Python API handler for the /v1 endpoints"
-    image:
-      name: easyclaPythonAppImage
-      command:
-        - 'wsgi_handler.handler'
-      #entryPoint:
-      #  - '/lambda-entrypoint.sh'
     events:
       - http:
           method: ANY
@@ -617,12 +595,6 @@ functions:
   apiv2:
     handler: wsgi_handler.handler
     description: "EasyCLA Python API handler for the /v2 endpoints"
-    image:
-      name: easyclaPythonAppImage
-      command:
-        - 'wsgi_handler.handler'
-    #    layers:
-    #      - Ref: PythonRequirementsLambdaLayer
     events:
       - http:
           method: ANY
@@ -632,12 +604,6 @@ functions:
   salesforceprojects:
     handler: cla.salesforce.get_projects
     description: "EasyCLA API Callback Handler for fetching all SalesForce projects"
-    image:
-      name: easyclaPythonAppImage
-      command:
-        - 'cla.salesforce.get_projects'
-#    layers:
-#      - Ref: PythonRequirementsLambdaLayer
     events:
       - http:
           method: ANY
@@ -647,12 +613,6 @@ functions:
   salesforceprojectbyID:
     handler: cla.salesforce.get_project
     description: "EasyCLA API Callback Handler for fetching SalesForce projects by ID"
-    image:
-      name: easyclaPythonAppImage
-      command:
-        - 'cla.salesforce.get_project'
-#    layers:
-#      - Ref: PythonRequirementsLambdaLayer
     events:
       - http:
           method: ANY
@@ -663,12 +623,6 @@ functions:
   githubinstall:
     handler: wsgi_handler.handler
     description: "EasyCLA API Callback Handler for GitHub bot installations"
-    image:
-      name: easyclaPythonAppImage
-      command:
-        - 'wsgi_handler.handler'
-#    layers:
-#      - Ref: PythonRequirementsLambdaLayer
     events:
       - http:
           method: ANY
@@ -678,12 +632,6 @@ functions:
   githubactivity:
     handler: wsgi_handler.handler
     description: "EasyCLA API Callback Handler for GitHub activity"
-    image:
-      name: easyclaPythonAppImage
-      command:
-        - 'wsgi_handler.handler'
-#    layers:
-#      - Ref: PythonRequirementsLambdaLayer
     events:
       - http:
           method: POST
