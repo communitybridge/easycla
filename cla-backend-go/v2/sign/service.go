@@ -734,8 +734,6 @@ func (s *service) getIndividualSignatureCallbackURL(ctx context.Context, userID 
 
 	callbackURL := fmt.Sprintf("%s/v4/signed/individual/%d/%s/%s", s.ClaV4ApiURL, installationId, repositoryID, pullRequestID)
 
-	log.WithFields(f).Debugf("return url: %s", callbackURL)
-
 	return callbackURL, nil
 
 }
