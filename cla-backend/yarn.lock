@@ -2393,6 +2393,14 @@ fs-extra@^10.1.0:
     jsonfile "^6.0.1"
     universalify "^2.0.0"
 
+fs-extra@^11.1.1:
+  version "11.1.1"
+  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-11.1.1.tgz#da69f7c39f3b002378b0954bb6ae7efdc0876e2d"
+  dependencies:
+    graceful-fs "^4.2.0"
+    jsonfile "^6.0.1"
+    universalify "^2.0.0"
+
 fs-extra@^8.1.0:
   version "8.1.0"
   resolved "https://registry.npmjs.org/fs-extra/-/fs-extra-8.1.0.tgz"
@@ -3653,12 +3661,12 @@ serverless-python-requirements@^6.0.0:
     sha256-file "1.0.0"
     shell-quote "^1.7.4"
 
-serverless-wsgi@^3.0.1:
-  version "3.0.2"
-  resolved "https://registry.npmjs.org/serverless-wsgi/-/serverless-wsgi-3.0.2.tgz"
+serverless-wsgi@^3.0.3:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/serverless-wsgi/-/serverless-wsgi-3.0.3.tgz#849aca3f7b343c04e2639b0a4f05ff62042ddd98"
   dependencies:
     bluebird "^3.7.2"
-    fs-extra "^10.1.0"
+    fs-extra "^11.1.1"
     hasbin "^1.2.3"
     lodash "^4.17.21"
     process-utils "^4.0.0"
