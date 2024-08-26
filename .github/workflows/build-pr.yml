@@ -7,8 +7,6 @@ on:
   pull_request:
     branches:
       - main
-
-
 env:
   AWS_REGION: us-east-1
   STAGE: dev
