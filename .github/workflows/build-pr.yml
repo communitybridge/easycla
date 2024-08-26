@@ -14,7 +14,7 @@ env:
   STAGE: dev
 
 jobs:
-  build-deploy-dev:
+  lint-test-build:
     runs-on: ubuntu-latest
     environment: dev
     steps:
@@ -47,6 +47,7 @@ jobs:
         env:
           TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN_GITHUB }}
           TOKEN_USER: ${{ secrets.PERSONAL_ACCESS_TOKEN_USER_GITHUB }}
+          STAGE: dev
 
       - name: Add OS Tools
         run: sudo apt update && sudo apt-get install file -y
