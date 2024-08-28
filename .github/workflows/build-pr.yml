@@ -9,6 +9,11 @@ on:
       - dev
 
 
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
 env:
   AWS_REGION: us-east-1
   STAGE: dev
