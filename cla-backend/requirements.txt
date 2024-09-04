@@ -6,7 +6,7 @@ attrs==19.3.0
 beautifulsoup4==4.8.1
 boto3==1.22.1
 botocore==1.25.11
-certifi==2023.7.22
+certifi==2024.7.4
 chardet==3.0.4
 colorama==0.4.3
 coverage==4.5.4
@@ -44,7 +44,7 @@ pytest-clarity==0.3.0a0
 pytest-cov==2.8.1
 python-dateutil==2.8.1
 python-jose==3.0.1
-requests==2.31.0
+requests==2.32.2
 requests-oauthlib==1.2.0
 rsa==4.7
 s3transfer==0.5.0
@@ -53,11 +53,11 @@ six==1.13.0
 soupsieve==1.9.5
 termcolor==1.1.0
 typed-ast==1.4.1
-urllib3==1.26.18
+urllib3==1.26.19
 vintage==0.4.1
 wcwidth==0.1.7
 Werkzeug==0.15.5
 wrapt==1.11.2
-zipp==3.15.0
+zipp==3.19.1
 markupsafe==2.0.1
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
