@@ -19,6 +19,17 @@ import (
 	goGitLab "github.com/xanzy/go-gitlab"
 )
 
+type GitLabClient interface {
+	GetMergeRequestCommits(projectID int, mergeID int, opts *goGitLab.GetMergeRequestCommitsOptions) ([]*goGitLab.Commit, error)
+	ListUsers(opts *goGitLab.ListUsersOptions) ([]*goGitLab.User, error)
+	SetCommitStatus(projectID int, commitSHA string, opts *goGitLab.SetCommitStatusOptions) error
+}
+
+// Client is the gitlab client
+type GitLabClientWrapper struct {
+	gitlabClient *goGitLab.Client
+}
+
 // OauthSuccessResponse is success response from Gitlab
 type OauthSuccessResponse struct {
 	AccessToken  string `json:"access_token"`
@@ -29,7 +40,7 @@ type OauthSuccessResponse struct {
 }
 
 // NewGitlabOauthClient creates a new gitlab client from the given oauth info, authInfo is encrypted
-func NewGitlabOauthClient(authInfo string, gitLabApp *App) (*goGitLab.Client, error) {
+func NewGitlabOauthClient(authInfo string, gitLabApp *App) (GitLabClient, error) {
 	if authInfo == "" {
 		return nil, errors.New("unable to decrypt auth info - authentication info input is nil")
 	}
@@ -47,7 +58,14 @@ func NewGitlabOauthClient(authInfo string, gitLabApp *App) (*goGitLab.Client, er
 	}
 
 	log.Infof("creating oauth client with access token : %s", oauthResp.AccessToken)
-	return goGitLab.NewOAuthClient(oauthResp.AccessToken)
+	client, err := goGitLab.NewOAuthClient(oauthResp.AccessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GitLabClientWrapper{
+		gitlabClient: client,
+	}, nil
 }
 
 // NewGitlabOauthClientFromAccessToken creates a new gitlab client from the given access token
@@ -153,4 +171,31 @@ func decrypt(key, cipherText []byte) ([]byte, error) {
 	cfb.XORKeyStream(cipherText, cipherText)
 
 	return cipherText, nil
+}
+
+// GetMergeRequestCommits returns the commits for the given merge request
+func (c *GitLabClientWrapper) GetMergeRequestCommits(projectID int, mergeID int, opts *goGitLab.GetMergeRequestCommitsOptions) ([]*goGitLab.Commit, error) {
+	commits, _, err := c.gitlabClient.MergeRequests.GetMergeRequestCommits(projectID, mergeID, opts)
+	if err != nil {
+		return nil, err
+	}
+	return commits, nil
+}
+
+// ListUsers returns the list of users
+func (c *GitLabClientWrapper) ListUsers(opts *goGitLab.ListUsersOptions) ([]*goGitLab.User, error) {
+	users, _, err := c.gitlabClient.Users.ListUsers(opts)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+// SetCommitStatus sets the commit status
+func (c *GitLabClientWrapper) SetCommitStatus(projectID int, commitSHA string, opts *goGitLab.SetCommitStatusOptions) error {
+	_, _, err := c.gitlabClient.Commits.SetCommitStatus(projectID, commitSHA, opts)
+	if err != nil {
+		return err
+	}
+	return nil
 }
