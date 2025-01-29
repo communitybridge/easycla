@@ -36,7 +36,7 @@
     "aws-sdk": "^2.1329.0",
     "fast-xml-parser": ">=4.4.1",
     "install": "^0.13.0",
-    "node-fetch": "^2.6.7",
+    "node-fetch": "^3.3.2",
     "node.extend": "^2.0.2",
     "qs": "^6.11.0",
     "serverless": "^3.0.0",
