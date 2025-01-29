@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - dev
+      - feat/fix-deploy-dev
 
 permissions:
   # These permissions are needed to interact with GitHub's OIDC Token endpoint to fetch/set the AWS deployment credentials.
