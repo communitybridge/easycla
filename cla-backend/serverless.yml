@@ -389,6 +389,7 @@ plugins:
   # This plugin allows us to remove/prune the old versions either manually or automatically
   - serverless-prune-plugin
   - serverless-domain-manager
+  - serverless-optimizer-plugin
 
 functions:
   authorizer:
