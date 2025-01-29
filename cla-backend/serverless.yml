@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 service: cla-backend
-frameworkVersion: '^3.0.0'
+frameworkVersion: '^3.40.0'
 
 package:
   # Exclude all first - selectively add in lambda functions
@@ -585,7 +585,6 @@ functions:
     handler: wsgi_handler.handler
     description: "EasyCLA Python API handler for the /v1 endpoints"
     package:
-      individually: true
       patterns:
         - '!**'
     events:
@@ -598,7 +597,6 @@ functions:
     handler: wsgi_handler.handler
     description: "EasyCLA Python API handler for the /v2 endpoints"
     package:
-      individually: true
       patterns:
         - '!**'
     events:
@@ -611,7 +609,6 @@ functions:
     handler: cla.salesforce.get_projects
     description: "EasyCLA API Callback Handler for fetching all SalesForce projects"
     package:
-      individually: true
       patterns:
         - '!**'
     events:
@@ -624,7 +621,6 @@ functions:
     handler: cla.salesforce.get_project
     description: "EasyCLA API Callback Handler for fetching SalesForce projects by ID"
     package:
-      individually: true
       patterns:
         - '!**'
     events:
@@ -638,7 +634,6 @@ functions:
     handler: wsgi_handler.handler
     description: "EasyCLA API Callback Handler for GitHub bot installations"
     package:
-      individually: true
       patterns:
         - '!**'
     events:
@@ -651,7 +646,6 @@ functions:
     handler: wsgi_handler.handler
     description: "EasyCLA API Callback Handler for GitHub activity"
     package:
-      individually: true
       patterns:
         - '!**'
     events:
