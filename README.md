@@ -25,6 +25,7 @@ The EasyCL system leverages the following third party services:
 * Auth0 For Single Sign On
 * Salesforce via the LFX Platform APIs
 
+
 ## CLA Backend
 
 The CLA project has two backend components:
