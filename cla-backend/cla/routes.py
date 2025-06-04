@@ -1211,7 +1211,7 @@ def delete_project_document(
                         'user_id': 'some-user-uuid'}",
 )
 def request_individual_signature(
-        request, project_id: hug.types.uuid, user_id: hug.types.uuid, return_url_type=None, return_url=None,
+        auth_user: check_auth, request, project_id: hug.types.uuid, user_id: hug.types.uuid, return_url_type=None, return_url=None,
 ):
     """
     POST: /request-individual-signature
@@ -1234,6 +1234,10 @@ def request_individual_signature(
     User should hit the provided URL to initiate the signing process through the
     signing service provider.
     """
+    auth_user_id = cla.controllers.user.get_or_create_user(auth_user).get_user_id()
+    if str(user_id) != auth_user_id:
+        cla.log.debug(f'request_individual_signature - auth user UUID {auth_user_id} is not the same as requested signature UUID {str(user_id)}')
+        raise cla.auth.AuthError('permission denied')
     return cla.controllers.signing.request_individual_signature(project_id, user_id, return_url_type, return_url,
                                                                 request=request)
 
@@ -1305,6 +1309,7 @@ def request_corporate_signature(
 
 @hug.post("/request-employee-signature", versions=2)
 def request_employee_signature(
+        auth_user: check_auth,
         project_id: hug.types.uuid,
         company_id: hug.types.uuid,
         user_id: hug.types.uuid,
@@ -1324,6 +1329,10 @@ def request_employee_signature(
     require a full DocuSign signature process, which means the sign/callback URLs and document
     versions may not be populated or reliable.
     """
+    auth_user_id = cla.controllers.user.get_or_create_user(auth_user).get_user_id()
+    if str(user_id) != auth_user_id:
+        cla.log.debug(f'request_employee_signature - auth user UUID {auth_user_id} is not the same as requested signature UUID {str(user_id)}')
+        raise cla.auth.AuthError('permission denied')
     return cla.controllers.signing.request_employee_signature(
         project_id, company_id, user_id, return_url_type, return_url
     )
@@ -1842,6 +1851,36 @@ def user_from_session(request, response):
     get_redirect_url = raw_redirect in ('1', 'true', 'yes')
     return cla.controllers.repository_service.user_from_session(get_redirect_url, request, response)
 
+@hug.get("/user-from-token", versions=2)
+def user_from_token(auth_user: check_auth, request, response):
+    """
+    GET: /user-from-token
+    Example: https://api.dev.lfcla.com/v2/user-from-token
+    Returns user object from Bearer token
+    Example user returned:
+    {
+      "date_created": "2025-02-11T08:16:01.000000+0000",
+      "date_modified": "2025-02-11T08:16:01.000000+0000",
+      "lf_email": "lukaszgryglicki@o2.pl",
+      "lf_sub": null,
+      "lf_username": "lgryglicki",
+      "note": null,
+      "user_company_id": "0ca30016-6457-466c-bc41-a09560c1f9bf",
+      "user_emails": null,
+      "user_external_id": "0014100000Te0yqAAB",
+      "user_github_id": null,
+      "user_github_username": null,
+      "user_gitlab_id": null,
+      "user_gitlab_username": null,
+      "user_id": "6e1fd921-e850-11ef-b5df-92cef1e60fc3",
+      "user_ldap_id": null,
+      "user_name": "Lukasz Gryglicki",
+      "version": "v1"
+    }
+    Will return 200 and user data if token is valid
+    Can return 404 on token errors
+    """
+    return cla.controllers.user.get_or_create_user(auth_user).to_dict()
 
 @hug.post("/events", versions=1)
 def create_event(
