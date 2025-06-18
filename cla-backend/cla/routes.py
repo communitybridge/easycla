@@ -37,6 +37,14 @@ from cla.utils import (
     get_log_middleware
 )
 
+# Check if authenticated user (via bearer token) is the same as user_id - if not raise exception permission denied
+# LG: comment this out to tunr off this chekc added after LFID is required everywhere in EasyCLA
+def check_user_id_is_current(auth_user, user_id):
+    auth_user_id = cla.controllers.user.get_or_create_user(auth_user).get_user_id()
+    if str(user_id) != auth_user_id:
+        cla.log.debug(f'request_individual_signature - auth user UUID {auth_user_id} is not the same as requested signature UUID {str(user_id)}')
+        raise cla.auth.AuthError('permission denied')
+
 
 #
 # Middleware
@@ -100,7 +108,10 @@ def get_health(request):
 
 
 @hug.get("/user/{user_id}", versions=2)
-def get_user(user_id: hug.types.uuid):
+def get_user(
+        auth_user: check_auth,
+        user_id: hug.types.uuid
+):
     """
     GET: /user/{user_id}
 
@@ -115,6 +126,7 @@ def get_user(user_id: hug.types.uuid):
     #     else:
     #         raise auth_err
 
+    check_user_id_is_current(auth_user, user_id)
     return cla.controllers.user.get_user(user_id=user_id)
 
 
@@ -136,6 +148,7 @@ def get_user_signatures(auth_user: check_auth, user_id: hug.types.uuid):
 
     Returns a list of signatures associated with a user.
     """
+    check_user_id_is_current(auth_user, user_id)
     return cla.controllers.user.get_user_signatures(user_id)
 
 
@@ -153,6 +166,7 @@ def get_users_company(auth_user: check_auth, user_company_id: hug.types.uuid):
 
 @hug.post("/user/{user_id}/request-company-whitelist/{company_id}", versions=2)
 def request_company_whitelist(
+        auth_user: check_auth,
         user_id: hug.types.uuid,
         company_id: hug.types.uuid,
         user_name: hug.types.text,
@@ -170,6 +184,7 @@ def request_company_whitelist(
     Performs the necessary actions (ie: send email to manager) when the specified user requests to
     be added the the specified company's whitelist.
     """
+    # check_user_id_is_current(auth_user, user_id)
     return cla.controllers.user.request_company_whitelist(
         user_id, str(company_id), str(user_name), str(user_email), str(project_id), message,
         str(recipient_name), str(recipient_email),
@@ -178,6 +193,7 @@ def request_company_whitelist(
 
 @hug.post("/user/{user_id}/invite-company-admin", versions=2)
 def invite_company_admin(
+        auth_user: check_auth,
         user_id: hug.types.uuid,
         contributor_name: hug.types.text,
         contributor_email: cla.hug_types.email,
@@ -200,6 +216,7 @@ def invite_company_admin(
 
     Sends an Email to the prospective CLA Manager to sign up through the ccla console.
     """
+    # check_user_id_is_current(auth_user, user_id)
     return cla.controllers.user.invite_cla_manager(
         str(user_id), str(contributor_name), str(contributor_email),
         str(cla_manager_name), str(cla_manager_email),
@@ -209,6 +226,7 @@ def invite_company_admin(
 
 @hug.post("/user/{user_id}/request-company-ccla", versions=2)
 def request_company_ccla(
+        auth_user: check_auth,
         user_id: hug.types.uuid, user_email: cla.hug_types.email, company_id: hug.types.uuid,
         project_id: hug.types.uuid,
 ):
@@ -217,6 +235,7 @@ def request_company_ccla(
 
     Sends an Email to an admin of an existing company to sign a CCLA.
     """
+    # check_user_id_is_current(auth_user, user_id)
     return cla.controllers.user.request_company_ccla(str(user_id), str(user_email), str(company_id), str(project_id))
 
 
@@ -232,7 +251,10 @@ def request_company_ccla(
 
 
 @hug.get("/user/{user_id}/active-signature", versions=2)
-def get_user_active_signature(user_id: hug.types.uuid):
+def get_user_active_signature(
+        auth_user: check_auth,
+        user_id: hug.types.uuid
+):
     """
     GET: /user/{user_id}/active-signature
 
@@ -246,21 +268,27 @@ def get_user_active_signature(user_id: hug.types.uuid):
 
     Returns null if the user does not have an active signature.
     """
+    check_user_id_is_current(auth_user, user_id)
     return cla.controllers.user.get_active_signature(user_id)
 
 
 @hug.get("/user/{user_id}/project/{project_id}/last-signature", versions=2)
-def get_user_project_last_signature(user_id: hug.types.uuid, project_id: hug.types.uuid):
+def get_user_project_last_signature(
+        auth_user: check_auth,
+        user_id: hug.types.uuid, project_id: hug.types.uuid
+):
     """
     GET: /user/{user_id}/project/{project_id}/last-signature
 
     Returns the user's latest ICLA signature for the project specified.
     """
+    check_user_id_is_current(auth_user, user_id)
     return cla.controllers.user.get_user_project_last_signature(user_id, project_id)
 
 
 @hug.get("/user/{user_id}/project/{project_id}/last-signature/{company_id}", versions=1)
 def get_user_project_company_last_signature(
+        auth_user: check_auth,
         user_id: hug.types.uuid, project_id: hug.types.uuid, company_id: hug.types.uuid
 ):
     """
@@ -268,6 +296,7 @@ def get_user_project_company_last_signature(
 
     Returns the user's latest employee signature for the project and company specified.
     """
+    check_user_id_is_current(auth_user, user_id)
     return cla.controllers.user.get_user_project_company_last_signature(user_id, project_id, company_id)
 
 
@@ -408,6 +437,7 @@ def get_signatures_user(auth_user: check_auth, user_id: hug.types.uuid):
 
     Get all signatures for user specified.
     """
+    check_user_id_is_current(auth_user, user_id)
     return cla.controllers.signature.get_user_signatures(user_id)
 
 
@@ -418,6 +448,7 @@ def get_signatures_user_project(auth_user: check_auth, user_id: hug.types.uuid, 
 
     Get all signatures for user, filtered by project_id specified.
     """
+    check_user_id_is_current(auth_user, user_id)
     return cla.controllers.signature.get_user_project_signatures(user_id, project_id)
 
 
@@ -433,6 +464,7 @@ def get_signatures_user_project(
 
     Get all signatures for user, filtered by project_id and signature type specified.
     """
+    check_user_id_is_current(auth_user, user_id)
     return cla.controllers.signature.get_user_project_signatures(user_id, project_id, signature_type)
 
 
@@ -457,7 +489,7 @@ def get_signatures_project(auth_user: check_auth, project_id: hug.types.uuid):
 
 
 @hug.get("/signatures/company/{company_id}/project/{project_id}", versions=1)
-def get_signatures_project_company(company_id: hug.types.uuid, project_id: hug.types.uuid):
+def get_signatures_project_company(auth_user: check_auth, company_id: hug.types.uuid, project_id: hug.types.uuid):
     """
      GET: /signatures/company/{company_id}/project/{project_id}
 
@@ -467,7 +499,7 @@ def get_signatures_project_company(company_id: hug.types.uuid, project_id: hug.t
 
 
 @hug.get("/signatures/company/{company_id}/project/{project_id}/employee", versions=1)
-def get_project_employee_signatures(company_id: hug.types.uuid, project_id: hug.types.uuid):
+def get_project_employee_signatures(auth_user: check_auth, company_id: hug.types.uuid, project_id: hug.types.uuid):
     """
      GET: /signatures/company/{company_id}/project/{project_id}
 
@@ -620,7 +652,7 @@ def get_companies(auth_user: check_auth):
 
 
 @hug.get("/company", versions=2)
-def get_all_companies():
+def get_all_companies(auth_user: check_auth):
     """
     GET: /company
 
@@ -630,7 +662,7 @@ def get_all_companies():
 
 
 @hug.get("/company/{company_id}", versions=2)
-def get_company(company_id: hug.types.text):
+def get_company(auth_user: check_auth, company_id: hug.types.text):
     """
     GET: /company/{company_id}
 
@@ -640,7 +672,7 @@ def get_company(company_id: hug.types.text):
 
 
 @hug.get("/company/{company_id}/project/unsigned", versions=1)
-def get_unsigned_projects_for_company(company_id: hug.types.text):
+def get_unsigned_projects_for_company(auth_user: check_auth, company_id: hug.types.text):
     """
     GET: /company/{company_id}/project/unsigned
 
@@ -745,7 +777,7 @@ def put_company_whitelist_csv(body, auth_user: check_auth, company_id: hug.types
 
 
 @hug.get("/companies/{manager_id}", version=1)
-def get_manager_companies(manager_id: hug.types.uuid):
+def get_manager_companies(auth_user: check_auth, manager_id: hug.types.uuid):
     """
     GET: /companies/{manager_id}
 
@@ -774,7 +806,7 @@ def get_projects(auth_user: check_auth):
 
 
 @hug.get("/project/{project_id}", versions=2)
-def get_project(project_id: hug.types.uuid):
+def get_project(auth_user: check_auth, project_id: hug.types.uuid):
     """
     GET: /project/{project_id}
 
@@ -1009,6 +1041,7 @@ def get_project_configuration_orgs_and_repos(auth_user: check_auth, project_id: 
 
 @hug.get("/project/{project_id}/document/{document_type}", versions=2)
 def get_project_document(
+        auth_user: check_auth,
         project_id: hug.types.uuid, document_type: hug.types.one_of(["individual", "corporate"]),
 ):
     """
@@ -1061,7 +1094,7 @@ def get_project_document_matching_version(
 
 
 @hug.get("/project/{project_id}/companies", versions=2)
-def get_project_companies(project_id: hug.types.uuid):
+def get_project_companies(auth_user: check_auth, project_id: hug.types.uuid):
     """
     GET: /project/{project_id}/companies
 s
@@ -1234,12 +1267,10 @@ def request_individual_signature(
     User should hit the provided URL to initiate the signing process through the
     signing service provider.
     """
-    auth_user_id = cla.controllers.user.get_or_create_user(auth_user).get_user_id()
-    if str(user_id) != auth_user_id:
-        cla.log.debug(f'request_individual_signature - auth user UUID {auth_user_id} is not the same as requested signature UUID {str(user_id)}')
-        raise cla.auth.AuthError('permission denied')
-    return cla.controllers.signing.request_individual_signature(project_id, user_id, return_url_type, return_url,
-                                                                request=request)
+    check_user_id_is_current(auth_user, user_id)
+    return cla.controllers.signing.request_individual_signature(
+        project_id, user_id, return_url_type, return_url, request=request
+    )
 
 
 @hug.post(
@@ -1285,7 +1316,7 @@ def request_corporate_signature(
 
     Returns a dict of the format:
 
-        {'company_id': <user_id>,
+        {'company_id': <company_id>,
          'signature_id': <signature_id>,
          'project_id': <project_id>,
          'sign_url': <sign_url>}
@@ -1329,10 +1360,7 @@ def request_employee_signature(
     require a full DocuSign signature process, which means the sign/callback URLs and document
     versions may not be populated or reliable.
     """
-    auth_user_id = cla.controllers.user.get_or_create_user(auth_user).get_user_id()
-    if str(user_id) != auth_user_id:
-        cla.log.debug(f'request_employee_signature - auth user UUID {auth_user_id} is not the same as requested signature UUID {str(user_id)}')
-        raise cla.auth.AuthError('permission denied')
+    check_user_id_is_current(auth_user, user_id)
     return cla.controllers.signing.request_employee_signature(
         project_id, company_id, user_id, return_url_type, return_url
     )
@@ -1340,6 +1368,7 @@ def request_employee_signature(
 
 @hug.post("/check-prepare-employee-signature", versions=2)
 def check_and_prepare_employee_signature(
+        auth_user: check_auth,
         project_id: hug.types.uuid, company_id: hug.types.uuid, user_id: hug.types.uuid
 ):
     """
@@ -1352,6 +1381,7 @@ def check_and_prepare_employee_signature(
 
     Checks if an employee is ready to sign a CCLA for a company.
     """
+    check_user_id_is_current(auth_user, user_id)
     return cla.controllers.signing.check_and_prepare_employee_signature(project_id, company_id, user_id)
 
 
@@ -1393,6 +1423,7 @@ def post_individual_signed_gitlab(
     Callback URL from signing service upon ICLA signature for a Gitlab user.
     """
     content = body.read()
+    # check_user_id_is_current(auth_user, user_id)
     return cla.controllers.signing.post_individual_signed_gitlab(
         content, user_id, organization_id, gitlab_repository_id, merge_request_id
     )
@@ -1406,6 +1437,7 @@ def post_individual_signed_gerrit(body, user_id: hug.types.uuid):
     Callback URL from signing service upon ICLA signature for a Gerrit user.
     """
     content = body.read()
+    # check_user_id_is_current(auth_user, user_id)
     return cla.controllers.signing.post_individual_signed_gerrit(content, user_id)
 
 
