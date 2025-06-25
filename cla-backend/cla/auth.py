@@ -123,7 +123,9 @@ def authenticate_user(headers):
 
         username = payload.get(auth0_username_claim)
         if username is None:
-            raise AuthError('username not found')
+            # LG: to have more info
+            # raise AuthError(f"username not found in {auth0_username_claim}")
+            raise AuthError('username claim not found')
 
         auth_user = AuthUser(payload)
 
