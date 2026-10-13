@@ -458,6 +458,22 @@ func (s *service) assignContributor(ctx context.Context, newSignature Signature,
 	return nil
 }
 
+// deleteFoundationCLAManager revokes mgr's foundation-level cla-manager grant; the grant id is read fresh from ACS and a
+// missing grant is reported instead of deleting with an empty id (lfx-self-serve#3515)
+func deleteFoundationCLAManager(ctx context.Context, f logrus.Fields, orgSFID, foundationSFID, roleID, mgr string, email *string) error {
+	scopeID, scopeErr := acs_service.GetClient().FindUserGrantID(ctx, orgSFID, foundationSFID, utils.CLAManagerRole, mgr)
+	if scopeErr != nil {
+		log.WithFields(f).WithError(scopeErr).Warnf("failed to get scopeID for foundation: %s , organization: %s, manager: %s and role: %s ", foundationSFID, orgSFID, mgr, utils.CLAManagerRole)
+		return scopeErr
+	}
+	deleteErr := organization_service.GetClient().DeleteOrgUserRoleOrgScopeProjectOrg(ctx, orgSFID, roleID, scopeID, &mgr, email)
+	if deleteErr != nil {
+		log.WithFields(f).WithError(deleteErr).Warnf("Failed to remove CLA Manager from user: %s ", mgr)
+		return deleteErr
+	}
+	return nil
+}
+
 // helper function that assigns acl permissions(v2 specific)
 func (s *service) updateCLAManagerPermissions(signature Signature, managers []string, action string) error {
 	ctx := utils.NewContext()
@@ -537,11 +553,6 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 		// Get User email
 		email := lfUser.Emails[0].EmailAddress
 		if signedAtFoundation {
-			scopeID, scopeErr := orgClient.GetScopeID(ctx, org.ID, foundationSFID, utils.CLAManagerRole, utils.ProjectOrgScope, mgr)
-			if scopeErr != nil {
-				log.WithFields(f).WithError(scopeErr).Warnf("failed to get scopeID for foundation: %s , organization: %s, manager: %s and role: %s ", foundationSFID, org.Name, mgr, utils.CLAManagerRole)
-				continue
-			}
 			if action == AddCLAManager {
 				log.WithFields(f).Debugf("Adding CLA Manager permissions...")
 
@@ -557,14 +568,12 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 				createErr := orgClient.CreateOrgUserRoleOrgScopeProjectOrg(ctx, *email, foundationSFID, org.ID, roleID)
 				if createErr != nil {
 					log.WithFields(f).WithError(createErr).Warnf("failed to create CLA Manager role for user: %s ", *email)
-					return scopeErr
+					return createErr
 				}
 
 			} else if action == DeleteCLAManager {
 				log.WithFields(f).Debugf("Deleting CLA Manager permissions...")
-				deleteErr := orgClient.DeleteOrgUserRoleOrgScopeProjectOrg(ctx, org.ID, roleID, scopeID, &mgr, email)
-				if deleteErr != nil {
-					log.WithFields(f).WithError(deleteErr).Warn("Failed to remove CLA Manager from user: &s ", mgr)
+				if deleteErr := deleteFoundationCLAManager(ctx, f, org.ID, foundationSFID, roleID, mgr, email); deleteErr != nil {
 					return deleteErr
 				}
 			}
@@ -596,13 +605,18 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 				}
 			} else if action == DeleteCLAManager {
 				log.WithFields(f).Debugf("Deleting CLA Manager permissions...")
+				grants, grantsErr := acsClient.ListOrgGrants(ctx, org.ID)
+				if grantsErr != nil {
+					log.WithFields(f).WithError(grantsErr).Warnf("failed to list ACS grants for organization: %s", org.ID)
+					continue
+				}
 				var eg errgroup.Group
 				// remove user as cla-manager for all projects of cla-group
 				for _, projectSfid := range projectSFIDList.List() {
 					// ensure that following goroutine gets a copy of projectSFID
 					projectSFID := projectSfid
 					eg.Go(func() error {
-						scopeID, scopeErr := orgClient.GetScopeID(ctx, org.ID, projectSFID, utils.CLAManagerRole, utils.ProjectOrgScope, mgr)
+						scopeID, scopeErr := acs_service.GrantIDFor(grants, projectSFID+"|"+org.ID, utils.CLAManagerRole, mgr)
 						if scopeErr != nil {
 							log.WithFields(f).Warn(scopeErr)
 							return scopeErr

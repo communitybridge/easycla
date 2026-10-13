@@ -3179,7 +3179,7 @@ func removeSignatoryRole(ctx context.Context, userEmail string, companySFID stri
 	// Get scope id
 	log.WithFields(f).Debug("getting scope id")
 	orgClient := organizationService.GetClient()
-	scopeID, scopeErr := orgClient.GetScopeID(ctx, companySFID, projectSFID, "cla-signatory", "project|organization", user.Username)
+	scopeID, scopeErr := acsClient.FindUserGrantID(ctx, companySFID, projectSFID, "cla-signatory", user.Username)
 
 	if scopeErr != nil {
 		log.WithFields(f).Debug("Failed to get scope id for cla-signatory role")
