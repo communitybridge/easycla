@@ -2692,6 +2692,7 @@ func sendEmailToCLAManager(ctx context.Context, project map[string]types.Attribu
 	if strings.TrimSpace(companyName) == "" {
 		companyName = "your company"
 	}
+	projectHTML := emailField(projectName, 255)
 
 	body := fmt.Sprintf(`
 <p>Hello %s,</p> \
@@ -2708,7 +2709,7 @@ sign the CLA yourself on behalf of your company; if not, the signature process w
 else who is authorized to sign the CLA.</p> \
 %s
 %s
-`, emailField(claManagerName, 60), projectName, projectName, emailField(contributorName, 60), emailField(contributorEmail, 254), emailField(companyName, 255), projectName, projectName, projectName, projectName, landing, emailHelpContent(strings.TrimSpace(strings.ToLower(projectVersion)) == "v2"), emailSignOffContent())
+`, emailField(claManagerName, 60), projectHTML, projectHTML, emailField(contributorName, 60), emailField(contributorEmail, 254), emailField(companyName, 255), projectHTML, projectHTML, projectHTML, projectHTML, landing, emailHelpContent(strings.TrimSpace(strings.ToLower(projectVersion)) == "v2"), emailSignOffContent())
 
 	svc, err := email.NewFromEnv(ctx)
 	if err != nil {

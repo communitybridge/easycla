@@ -50,6 +50,7 @@ func (s service) updateChangeRequest(ctx context.Context, installationID, reposi
 		ghOrg, ghOrgErr = s.githubOrgService.GetGitHubOrganizationByName(ctx, *githubRepository.Owner.Login)
 		if ghOrgErr != nil {
 			log.WithFields(f).WithError(ghOrgErr).Warnf("unable to lookup GitHub organization by name: %s - unable to update GitHub status", *githubRepository.Owner.Login)
+			return ghOrgErr
 		}
 	}
 
