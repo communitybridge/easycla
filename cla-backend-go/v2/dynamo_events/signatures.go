@@ -459,20 +459,24 @@ func (s *service) assignContributor(ctx context.Context, newSignature Signature,
 	return nil
 }
 
-// managerUser resolves a CLA manager's LFX user; a lookup failure or a user without an e-mail is an error so the
-// ACL change is reported, not silently skipped
-func managerUser(f logrus.Fields, userClient *user_service.Client, mgr string) (*userModels.User, error) {
+// managerUser resolves a CLA manager's LFX user and its first e-mail address; a lookup failure or a user
+// without an e-mail is an error so the ACL change is reported, not silently skipped
+func managerUser(f logrus.Fields, userClient *user_service.Client, mgr string) (*userModels.User, *string, error) {
 	lfUser, userErr := userClient.GetUserByUsername(mgr)
 	if userErr != nil {
 		log.WithFields(f).WithError(userErr).Warnf("Failed to get salesforce user for user: %s", mgr)
-		return nil, userErr
+		return nil, nil, userErr
 	}
-	if lfUser == nil || len(lfUser.Emails) == 0 {
-		msg := fmt.Sprintf("no LFX user with an email address found for user: %s", mgr)
-		log.WithFields(f).Warn(msg)
-		return nil, errors.New(msg)
+	if lfUser != nil {
+		for _, e := range lfUser.Emails {
+			if e != nil && e.EmailAddress != nil && *e.EmailAddress != "" {
+				return lfUser, e.EmailAddress, nil
+			}
+		}
 	}
-	return lfUser, nil
+	msg := fmt.Sprintf("no LFX user with an email address found for user: %s", mgr)
+	log.WithFields(f).Warn(msg)
+	return nil, nil, errors.New(msg)
 }
 
 // deleteFoundationCLAManager revokes mgr's foundation-level cla-manager grant; the grant id is read fresh from ACS and a
@@ -562,11 +566,10 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 	for i := range managers {
 		// Get User
 		mgr := managers[i]
-		lfUser, userErr := managerUser(f, userClient, mgr)
+		lfUser, email, userErr := managerUser(f, userClient, mgr)
 		if userErr != nil {
 			return userErr
 		}
-		email := lfUser.Emails[0].EmailAddress
 		if signedAtFoundation {
 			if action == AddCLAManager {
 				log.WithFields(f).Debugf("Adding CLA Manager permissions...")

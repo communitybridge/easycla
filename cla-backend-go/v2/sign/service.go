@@ -606,7 +606,17 @@ func (s *service) SignedIndividualCallbackGithub(ctx context.Context, payload []
 		log.WithFields(f).WithError(err).Warn("unable to lookup signature by ID - signature not found")
 		return errors.New("unable to lookup signature by ID - signature not found")
 	}
-	if reason := ignoredCompletion(signature, envelopeID); reason != "" {
+	// the stored envelope is read from the raw row: API projections deliberately never carry it (lfx-self-serve-ops#347)
+	item, itemErr := s.signatureService.GetItemSignature(ctx, signatureID)
+	if itemErr != nil {
+		log.WithFields(f).WithError(itemErr).Warn("unable to lookup signature row by ID")
+		return itemErr
+	}
+	if item == nil {
+		log.WithFields(f).Warn("unable to lookup signature row by ID - signature not found")
+		return errors.New("unable to lookup signature by ID - signature not found")
+	}
+	if reason := ignoredCompletion(signature.SignatureID, item.SignatureEnvelopeID, envelopeID); reason != "" {
 		log.WithFields(f).Warn(reason)
 		return nil
 	}
@@ -809,9 +819,9 @@ func fetchFullName(info DocuSignEnvelopeInformation) string {
 
 // ignoredCompletion names why a completion callback must not be applied: the envelope is not the one this
 // signature was sent with (lfx-self-serve-ops#347); a repeated completion is re-processed so retries finish
-func ignoredCompletion(signature *v1Models.Signature, envelopeID string) string {
-	if envelopeID == "" || signature.SignatureEnvelopeID == "" || envelopeID != signature.SignatureEnvelopeID {
-		return fmt.Sprintf("envelope %q does not belong to signature %s (envelope %q) - ignoring the callback", envelopeID, signature.SignatureID, signature.SignatureEnvelopeID)
+func ignoredCompletion(signatureID, storedEnvelopeID, envelopeID string) string {
+	if envelopeID == "" || storedEnvelopeID == "" || envelopeID != storedEnvelopeID {
+		return fmt.Sprintf("envelope %q does not belong to signature %s (envelope %q) - ignoring the callback", envelopeID, signatureID, storedEnvelopeID)
 	}
 	return ""
 }
