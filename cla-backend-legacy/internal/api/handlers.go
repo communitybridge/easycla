@@ -1989,8 +1989,7 @@ func (h *Handlers) GetUserSignaturesV1(w http.ResponseWriter, r *http.Request) {
 		if getAttrString(it, "signature_reference_type") != "user" {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 
@@ -3334,9 +3333,7 @@ func (h *Handlers) GetSignatureV1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := store.ItemToInterfaceMap(item)
-	// Python Signature.to_dict() filters out raw DocuSign XML.
-	delete(out, "user_docusign_raw_xml")
+	out := publicSignatureItem(item)
 
 	respond.JSON(w, http.StatusOK, out)
 }
@@ -3870,8 +3867,7 @@ func (h *Handlers) PutSignatureV1(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	out := store.ItemToInterfaceMap(sig)
-	delete(out, "user_docusign_raw_xml")
+	out := publicSignatureItem(sig)
 	respond.JSON(w, http.StatusOK, out)
 }
 
@@ -3951,8 +3947,7 @@ func (h *Handlers) GetSignaturesUserV1(w http.ResponseWriter, r *http.Request) {
 		if getAttrString(it, "signature_reference_type") != "user" {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 	respond.JSON(w, http.StatusOK, out)
@@ -3995,8 +3990,7 @@ func (h *Handlers) GetSignaturesUserProjectV1(w http.ResponseWriter, r *http.Req
 		if getAttrString(it, "signature_reference_id") != userID {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 
@@ -4072,8 +4066,7 @@ func (h *Handlers) GetSignaturesUserProjectTypeV1(w http.ResponseWriter, r *http
 		if signatureType == "employee" && sigCompanyID == "" {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 
@@ -4113,8 +4106,7 @@ func (h *Handlers) GetSignaturesCompanyV1(w http.ResponseWriter, r *http.Request
 		if !stringSliceContainsExact(sigACL, authUser.Username) {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 	respond.JSON(w, http.StatusOK, out)
@@ -4149,8 +4141,7 @@ func (h *Handlers) GetSignaturesProjectV1(w http.ResponseWriter, r *http.Request
 		if !getAttrBool(it, "signature_signed") {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 
@@ -4185,8 +4176,7 @@ func (h *Handlers) GetSignaturesProjectCompanyV1(w http.ResponseWriter, r *http.
 		if getAttrString(it, "signature_project_id") != projectID {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 	respond.JSON(w, http.StatusOK, out)
@@ -4221,8 +4211,7 @@ func (h *Handlers) GetProjectEmployeeSignaturesV1(w http.ResponseWriter, r *http
 		if getAttrString(it, "signature_user_ccla_company_id") != companyID {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 	respond.JSON(w, http.StatusOK, out)
@@ -9245,8 +9234,7 @@ func (h *Handlers) RequestEmployeeSignatureV2(w http.ResponseWriter, r *http.Req
 		if av, ok := it["signature_approved"].(*types.AttributeValueMemberBOOL); ok && !av.Value {
 			continue
 		}
-		out := store.ItemToInterfaceMap(it)
-		delete(out, "user_docusign_raw_xml")
+		out := publicSignatureItem(it)
 		respond.JSON(w, http.StatusOK, out)
 		return
 	}

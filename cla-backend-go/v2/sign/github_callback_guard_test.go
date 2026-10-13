@@ -10,9 +10,12 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	mock_company "github.com/linuxfoundation/easycla/cla-backend-go/company/mocks"
 	v1Models "github.com/linuxfoundation/easycla/cla-backend-go/gen/v1/models"
 	"github.com/linuxfoundation/easycla/cla-backend-go/signatures"
 	mock_signatures "github.com/linuxfoundation/easycla/cla-backend-go/signatures/mocks"
+	"github.com/linuxfoundation/easycla/cla-backend-go/users"
+	"github.com/linuxfoundation/easycla/cla-backend-go/v2/cla_groups"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -75,4 +78,94 @@ func TestIgnoredCompletionReprocessesOwnEnvelope(t *testing.T) {
 func TestRepositoryBindingErrorsAreRecognisable(t *testing.T) {
 	err := repositoryBoundToCLAGroup(&v1Models.GithubRepository{Enabled: true, RepositoryClaGroupID: "group-b"}, &v1Models.GithubOrganization{OrganizationInstallationID: 7}, 42, 7, "group-a")
 	assert.True(t, errors.Is(err, errRepositoryNotBound))
+}
+
+// the GitLab and Gerrit callbacks (the self-serve one delegates to Gerrit) apply the same envelope rule
+func TestOtherIndividualCallbacksApplyTheEnvelopeRule(t *testing.T) {
+	payload := envelopeXML(recipientStatuses(DocusignCompleted), envelopeDocumentStatuses)
+	callbacks := map[string]func(svc *service) error{
+		"gitlab": func(svc *service) error {
+			return svc.SignedIndividualCallbackGitlab(context.Background(), payload, "u1", "o1", "r1", "mr1")
+		},
+		"gerrit": func(svc *service) error {
+			return svc.SignedIndividualCallbackGerrit(context.Background(), payload, "u1")
+		},
+	}
+	for name, call := range callbacks {
+		t.Run(name+" foreign envelope", func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			signatureService := mock_signatures.NewMockSignatureService(ctrl)
+			signatureService.EXPECT().GetSignature(gomock.Any(), "s1").Return(&v1Models.Signature{SignatureID: "s1", ProjectID: "group-a"}, nil)
+			signatureService.EXPECT().GetItemSignature(gomock.Any(), "s1").Return(&signatures.ItemSignature{SignatureID: "s1", SignatureEnvelopeID: "e2"}, nil)
+			assert.NoError(t, call(&service{signatureService: signatureService}), "ignored: nothing is written")
+		})
+		t.Run(name+" own envelope proceeds", func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			signatureService := mock_signatures.NewMockSignatureService(ctrl)
+			signatureService.EXPECT().GetSignature(gomock.Any(), "s1").Return(&v1Models.Signature{SignatureID: "s1", ProjectID: "group-a"}, nil)
+			signatureService.EXPECT().GetItemSignature(gomock.Any(), "s1").Return(&signatures.ItemSignature{SignatureID: "s1", SignatureEnvelopeID: "e1"}, nil)
+			stop := errors.New("stop after the signature update")
+			signatureService.EXPECT().UpdateSignature(gomock.Any(), "s1", gomock.Any()).Return(stop).Times(1)
+			assert.True(t, errors.Is(call(&service{signatureService: signatureService}), stop))
+		})
+	}
+}
+
+type callbackGroups struct {
+	cla_groups.Service
+	group *v1Models.ClaGroup
+}
+
+func (g *callbackGroups) GetCLAGroup(_ context.Context, _ string) (*v1Models.ClaGroup, error) {
+	return g.group, nil
+}
+
+type callbackUsers struct {
+	users.Service
+	err error
+}
+
+func (u *callbackUsers) GetUser(_ string) (*v1Models.User, error) { return nil, u.err }
+
+// the corporate callback resolves the signature by ClientUserId or by company/project and applies the envelope rule right after
+func TestCorporateCallbackAppliesTheEnvelopeRule(t *testing.T) {
+	byClientUser := envelopeXML(recipientStatuses(DocusignCompleted), envelopeDocumentStatuses)
+	byCompany := envelopeXML(`<RecipientStatuses><RecipientStatus><Status>Completed</Status></RecipientStatus></RecipientStatuses>`, envelopeDocumentStatuses)
+	signature := &v1Models.Signature{SignatureID: "s1", ProjectID: "group-a", SignatureReferenceType: "user", SignatureReferenceID: "u1"}
+	newService := func(t *testing.T, signatureService *mock_signatures.MockSignatureService, userService users.Service) *service {
+		ctrl := gomock.NewController(t)
+		t.Cleanup(ctrl.Finish)
+		companyRepo := mock_company.NewMockIRepository(ctrl)
+		companyRepo.EXPECT().GetCompany(gomock.Any(), "c1").Return(&v1Models.Company{CompanyID: "c1"}, nil)
+		return &service{claGroupService: &callbackGroups{group: &v1Models.ClaGroup{ProjectID: "group-a"}}, companyRepo: companyRepo, signatureService: signatureService, userService: userService}
+	}
+
+	t.Run("foreign envelope by ClientUserId", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		signatureService := mock_signatures.NewMockSignatureService(ctrl)
+		signatureService.EXPECT().GetSignature(gomock.Any(), "s1").Return(signature, nil)
+		signatureService.EXPECT().GetItemSignature(gomock.Any(), "s1").Return(&signatures.ItemSignature{SignatureID: "s1", SignatureEnvelopeID: "e2"}, nil)
+		assert.NoError(t, newService(t, signatureService, nil).SignedCorporateCallback(context.Background(), byClientUser, "c1", "group-a"))
+	})
+	t.Run("foreign envelope by company and project", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		signatureService := mock_signatures.NewMockSignatureService(ctrl)
+		signatureService.EXPECT().GetCorporateSignature(gomock.Any(), "group-a", "c1", gomock.Any(), gomock.Any()).Return(signature, nil)
+		signatureService.EXPECT().GetItemSignature(gomock.Any(), "s1").Return(&signatures.ItemSignature{SignatureID: "s1", SignatureEnvelopeID: "e2"}, nil)
+		assert.NoError(t, newService(t, signatureService, nil).SignedCorporateCallback(context.Background(), byCompany, "c1", "group-a"))
+	})
+	t.Run("own envelope proceeds", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		signatureService := mock_signatures.NewMockSignatureService(ctrl)
+		signatureService.EXPECT().GetSignature(gomock.Any(), "s1").Return(signature, nil)
+		signatureService.EXPECT().GetItemSignature(gomock.Any(), "s1").Return(&signatures.ItemSignature{SignatureID: "s1", SignatureEnvelopeID: "e1"}, nil)
+		stop := errors.New("stop at the user lookup")
+		err := newService(t, signatureService, &callbackUsers{err: stop}).SignedCorporateCallback(context.Background(), byClientUser, "c1", "group-a")
+		assert.True(t, errors.Is(err, stop), "the guard let the callback through to the first lookup after it")
+	})
 }
