@@ -382,9 +382,10 @@ func Configure(api *operations.EasyclaAPI, service Service, projectClaGroupRepo 
 		})
 
 	api.CompanyCreateCompanyHandler = company.CreateCompanyHandlerFunc(
-		func(params company.CreateCompanyParams) middleware.Responder {
+		func(params company.CreateCompanyParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
 			f := logrus.Fields{
 				"functionName":      "v2.company.handlers.CompanyCreateCompanyHandler",
 				utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
@@ -394,8 +395,12 @@ func Configure(api *operations.EasyclaAPI, service Service, projectClaGroupRepo 
 				"signingEntityName": params.Input.SigningEntityName,
 				"userEmail":         params.Input.UserEmail.String(),
 			}
-			// No permissions needed - anyone can create a company
-
+			// any signed-in user may create a company, but only for themselves (lfx-self-serve-ops#343)
+			if authUser == nil || authUser.Email == "" || !strings.EqualFold(params.Input.UserEmail.String(), authUser.Email) {
+				msg := fmt.Sprintf("the company can only be created for the signed-in user, not for %s", params.Input.UserEmail.String())
+				log.WithFields(f).Warn(msg)
+				return company.NewCreateCompanyForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
+			}
 			// Quick validation of the input parameters
 			log.WithFields(f).Debug("validating company name...")
 			if !utils.ValidCompanyName(*params.Input.CompanyName) {
@@ -763,7 +768,7 @@ func isUserHaveAccessToCLAProjectOrganization(ctx context.Context, authUser *aut
 	}
 
 	log.WithFields(f).Debug("testing if user has access to project SFID...")
-	if utils.IsUserAuthorizedForProject(ctx, authUser, projectSFID, utils.ALLOW_ADMIN_SCOPE) {
+	if utils.IsUserAuthorizedForProjectOnly(ctx, authUser, projectSFID, utils.ALLOW_ADMIN_SCOPE) {
 		log.WithFields(f).Debug("user has access to project SFID...")
 		return true
 	}
@@ -809,7 +814,7 @@ func isUserHaveAccessToCLAProjectOrganization(ctx context.Context, authUser *aut
 	// Check the foundation permissions
 	f["foundationSFID"] = projectCLAGroupModel.FoundationSFID
 	log.WithFields(f).Debug("testing if user has access to parent foundation...")
-	if utils.IsUserAuthorizedForProject(ctx, authUser, projectCLAGroupModel.FoundationSFID, utils.ALLOW_ADMIN_SCOPE) {
+	if utils.IsUserAuthorizedForProjectOnly(ctx, authUser, projectCLAGroupModel.FoundationSFID, utils.ALLOW_ADMIN_SCOPE) {
 		log.WithFields(f).Debug("user has access to parent foundation...")
 		return true
 	}

@@ -4563,11 +4563,13 @@ paths:
   /user/{userID}/company:
     post:
       summary: Creates a new salesforce company
-      description: Creates a new salesforce company
-      security: [ ]
+      description: Creates a new salesforce company for the signed-in user; the userEmail in the body must be the caller's own email
       operationId: createCompany
       parameters:
         - $ref: "#/parameters/x-request-id"
+        - $ref: "#/parameters/x-acl"
+        - $ref: "#/parameters/x-username"
+        - $ref: "#/parameters/x-email"
         - $ref: "#/parameters/path-userID"
         - name: input
           in: body
@@ -4585,6 +4587,8 @@ paths:
             $ref: '#/definitions/company-output'
         '400':
           $ref: '#/responses/invalid-request'
+        '403':
+          $ref: '#/responses/forbidden'
         '409':
           $ref: '#/responses/conflict'
         '422':

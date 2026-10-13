@@ -606,6 +606,10 @@ func (s *service) SignedIndividualCallbackGithub(ctx context.Context, payload []
 		log.WithFields(f).WithError(err).Warn("unable to lookup signature by ID - signature not found")
 		return errors.New("unable to lookup signature by ID - signature not found")
 	}
+	if reason := ignoredCompletion(signature, envelopeID); reason != "" {
+		log.WithFields(f).Warn(reason)
+		return nil
+	}
 
 	if status == DocusignCompleted {
 		log.WithFields(f).Debugf("envelope signed - status: %s", status)
@@ -638,28 +642,7 @@ func (s *service) SignedIndividualCallbackGithub(ctx context.Context, payload []
 
 		// Update the repository provider with this change - this will update the comment (if necessary)
 		// and the status - do this early in the flow as the user will be immediately redirected back
-		installtionIDInt, err := strconv.Atoi(installationID)
-		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("unable to convert installation ID to int: %s", installationID)
-			return err
-		}
-
-		repositoryIDInt, err := strconv.Atoi(repositoryID)
-		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("unable to convert repository ID to int: %s", repositoryID)
-			return err
-		}
-
-		changeRequestIDInt, err := strconv.Atoi(changeRequestID)
-		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("unable to convert change request ID to int: %s", changeRequestID)
-			return err
-		}
-
-		log.WithFields(f).Debugf("updating change request for installation ID: %d, repository ID: %d, change request ID: %d", installtionIDInt, repositoryIDInt, changeRequestIDInt)
-		err = s.updateChangeRequest(ctx, int64(installtionIDInt), int64(repositoryIDInt), int64(changeRequestIDInt), signature.ProjectID)
-		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("unable to update change request: %s", changeRequestID)
+		if err = s.refreshChangeRequest(ctx, f, installationID, repositoryID, changeRequestID, signature.ProjectID); err != nil {
 			return err
 		}
 
@@ -822,6 +805,48 @@ func fetchFullName(info DocuSignEnvelopeInformation) string {
 		}
 	}
 	return fullName
+}
+
+// ignoredCompletion names why a completion callback must not be applied: the record is already signed or the
+// envelope is not the one this signature was sent with (lfx-self-serve-ops#347)
+func ignoredCompletion(signature *v1Models.Signature, envelopeID string) string {
+	if signature.SignatureSigned {
+		return "signature is already signed - ignoring the repeated completion callback"
+	}
+	if envelopeID != "" && signature.SignatureEnvelopeID != "" && envelopeID != signature.SignatureEnvelopeID {
+		return fmt.Sprintf("envelope %s does not belong to signature %s (envelope %s) - ignoring the callback", envelopeID, signature.SignatureID, signature.SignatureEnvelopeID)
+	}
+	return ""
+}
+
+// refreshChangeRequest posts the PR status/comment; a repository that is not bound to the CLA group only logs
+func (s *service) refreshChangeRequest(ctx context.Context, f logrus.Fields, installationID, repositoryID, changeRequestID, projectID string) error {
+	installtionIDInt, err := strconv.Atoi(installationID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("unable to convert installation ID to int: %s", installationID)
+		return err
+	}
+	repositoryIDInt, err := strconv.Atoi(repositoryID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("unable to convert repository ID to int: %s", repositoryID)
+		return err
+	}
+	changeRequestIDInt, err := strconv.Atoi(changeRequestID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("unable to convert change request ID to int: %s", changeRequestID)
+		return err
+	}
+	log.WithFields(f).Debugf("updating change request for installation ID: %d, repository ID: %d, change request ID: %d", installtionIDInt, repositoryIDInt, changeRequestIDInt)
+	err = s.updateChangeRequest(ctx, int64(installtionIDInt), int64(repositoryIDInt), int64(changeRequestIDInt), projectID)
+	if err == nil {
+		return nil
+	}
+	if !errors.Is(err, errRepositoryNotBound) {
+		log.WithFields(f).WithError(err).Warnf("unable to update change request: %s", changeRequestID)
+		return err
+	}
+	log.WithFields(f).WithError(err).Warnf("no status posted on change request %s - the repository is not bound to this CLA group", changeRequestID)
+	return nil
 }
 
 func (s *service) SignedIndividualCallbackGitlab(ctx context.Context, payload []byte, userID, organizationID, repositoryID, mergeRequestID string) error {

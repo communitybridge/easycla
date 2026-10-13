@@ -336,6 +336,11 @@ func (s *service) SignatureAddUsersDetails(event events.DynamoDBEventRecord) err
 }
 
 // signature function should be invoked when signature ACL is updated
+// claManagerPermissionUpdater applies one ACL entry (test seam); each entry gets only its own add or delete (lfx-self-serve-ops#346)
+var claManagerPermissionUpdater = func(s *service, signature Signature, managers []string, action string) error {
+	return s.updateCLAManagerPermissions(signature, managers, action)
+}
+
 func (s *service) UpdateCLAPermissions(event events.DynamoDBEventRecord) error {
 	f := logrus.Fields{
 		"functionName": "v2.dynamo_events.UpdateCLAPermissions",
@@ -371,7 +376,7 @@ func (s *service) UpdateCLAPermissions(event events.DynamoDBEventRecord) error {
 			if utils.StringInSlice(entry, newSignature.SignatureACL) {
 				// Assign CLA Manager role
 				log.WithFields(f).Debugf("Assigning user %s to the %s role", entry, utils.CLAManagerRole)
-				updateErr := s.updateCLAManagerPermissions(newSignature, managers, AddCLAManager)
+				updateErr := claManagerPermissionUpdater(s, newSignature, []string{entry}, AddCLAManager)
 				if updateErr != nil {
 					log.WithFields(f).WithError(updateErr).Warn("problem assigning CLA Manager role")
 					return updateErr
@@ -379,7 +384,7 @@ func (s *service) UpdateCLAPermissions(event events.DynamoDBEventRecord) error {
 			} else {
 				// Remove CLA Manager role
 				log.WithFields(f).Debugf("Unassigning user %s from the %s role", entry, utils.CLAManagerRole)
-				updateErr := s.updateCLAManagerPermissions(newSignature, managers, DeleteCLAManager)
+				updateErr := claManagerPermissionUpdater(s, newSignature, []string{entry}, DeleteCLAManager)
 				if updateErr != nil {
 					log.WithFields(f).WithError(updateErr).Warn("problem removing CLA Manager role")
 					return updateErr

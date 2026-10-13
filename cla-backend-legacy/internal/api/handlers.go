@@ -2666,6 +2666,22 @@ func appendEmailHelpSignOffContent(body string, projectVersion string) string {
 	return body + emailHelpContent(showV2) + emailSignOffContent()
 }
 
+// publicSignatureItem serializes a signature item without the DocuSign envelope XML (lfx-self-serve-ops#350)
+func publicSignatureItem(item map[string]types.AttributeValue) map[string]interface{} {
+	out := store.ItemToInterfaceMap(item)
+	delete(out, "user_docusign_raw_xml")
+	return out
+}
+
+// emailField makes a caller-supplied string safe for the HTML e-mail body (lfx-self-serve-ops#352)
+func emailField(value string, maxLen int) string {
+	value = strings.TrimSpace(value)
+	if len(value) > maxLen {
+		value = value[:maxLen]
+	}
+	return html.EscapeString(value)
+}
+
 func sendEmailToCLAManager(ctx context.Context, project map[string]types.AttributeValue, contributorName string, contributorEmail string, claManagerName string, claManagerEmail string, companyName string, accountExists bool) error {
 	_ = accountExists // Legacy Python accepts this flag but does not currently vary content.
 	projectName := getAttrString(project, "project_name")
@@ -2692,7 +2708,7 @@ sign the CLA yourself on behalf of your company; if not, the signature process w
 else who is authorized to sign the CLA.</p> \
 %s
 %s
-`, claManagerName, projectName, projectName, contributorName, contributorEmail, companyName, projectName, projectName, projectName, projectName, landing, emailHelpContent(strings.TrimSpace(strings.ToLower(projectVersion)) == "v2"), emailSignOffContent())
+`, emailField(claManagerName, 60), projectName, projectName, emailField(contributorName, 60), emailField(contributorEmail, 254), emailField(companyName, 255), projectName, projectName, projectName, projectName, landing, emailHelpContent(strings.TrimSpace(strings.ToLower(projectVersion)) == "v2"), emailSignOffContent())
 
 	svc, err := email.NewFromEnv(ctx)
 	if err != nil {
@@ -3197,7 +3213,7 @@ func (h *Handlers) GetUserProjectLastSignatureV2(w http.ResponseWriter, r *http.
 	latestMajorStr := strconv.Itoa(maj)
 	latestMinorStr := strconv.Itoa(min)
 
-	out := store.ItemToInterfaceMap(latest)
+	out := publicSignatureItem(latest)
 	out["latest_document_major_version"] = latestMajorStr
 	out["latest_document_minor_version"] = latestMinorStr
 
@@ -3278,7 +3294,7 @@ func (h *Handlers) GetUserProjectCompanyLastSignatureV1(w http.ResponseWriter, r
 	latestMajorStr := strconv.Itoa(maj)
 	latestMinorStr := strconv.Itoa(min)
 
-	out := store.ItemToInterfaceMap(latest)
+	out := publicSignatureItem(latest)
 	out["latest_document_major_version"] = latestMajorStr
 	out["latest_document_minor_version"] = latestMinorStr
 
