@@ -607,8 +607,8 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 				log.WithFields(f).Debugf("Deleting CLA Manager permissions...")
 				grants, grantsErr := acsClient.ListOrgGrants(ctx, org.ID)
 				if grantsErr != nil {
-					log.WithFields(f).WithError(grantsErr).Warnf("failed to list ACS grants for organization: %s", org.ID)
-					continue
+					log.WithFields(f).WithError(grantsErr).Warnf("failed to list ACS grants for organization: %s - nothing revoked for manager: %s", org.ID, mgr)
+					return grantsErr
 				}
 				var eg errgroup.Group
 				// remove user as cla-manager for all projects of cla-group
@@ -634,7 +634,7 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 				log.WithFields(f).Debugf("waiting for delete role assignment to complete for %d projects...", len(projectSFIDList.List()))
 				if loadErr := eg.Wait(); loadErr != nil {
 					log.WithFields(f).Warn(loadErr)
-					continue
+					return loadErr
 				}
 			}
 		}

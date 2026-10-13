@@ -403,6 +403,8 @@ func Configure(api *operations.EasyclaAPI, service Service, projectClaGroupRepo 
 				log.WithFields(f).Warn(msg)
 				return company.NewCreateCompanyForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
 			}
+			username := authUser.UserName
+			params.XUSERNAME = &username
 			// Quick validation of the input parameters
 			log.WithFields(f).Debug("validating company name...")
 			if !utils.ValidCompanyName(*params.Input.CompanyName) {
@@ -422,6 +424,9 @@ func Configure(api *operations.EasyclaAPI, service Service, projectClaGroupRepo 
 				if _, ok := err.(*organizations.CreateOrgConflict); ok {
 					formatErr := errors.New("organization already exists")
 					return company.NewCreateCompanyConflict().WithXRequestID(reqID).WithPayload(errorResponse(reqID, formatErr))
+				}
+				if errors.Is(err, ErrCompanyUserMismatch) {
+					return company.NewCreateCompanyForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, err.Error()))
 				}
 				return company.NewCreateCompanyBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}

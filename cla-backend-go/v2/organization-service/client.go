@@ -351,7 +351,7 @@ func (osc *Client) DeleteRolePermissions(ctx context.Context, organizationID, pr
 	return nil
 }
 
-// DeleteOrgUserRoleOrgScopeProjectOrg removes role scope for user
+// DeleteOrgUserRoleOrgScopeProjectOrg removes the user's role grant; scopeID is the ACS grant id (org-service exposes grant_id as ScopeID)
 func (osc *Client) DeleteOrgUserRoleOrgScopeProjectOrg(ctx context.Context, organizationID string, roleID string, scopeID string, userName *string, userEmail *string) error {
 	f := logrus.Fields{
 		"functionName":   "organization_service.DeleteOrgUserRoleOrgScopeProjectOrg",
