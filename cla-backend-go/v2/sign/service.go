@@ -807,14 +807,11 @@ func fetchFullName(info DocuSignEnvelopeInformation) string {
 	return fullName
 }
 
-// ignoredCompletion names why a completion callback must not be applied: the record is already signed or the
-// envelope is not the one this signature was sent with (lfx-self-serve-ops#347)
+// ignoredCompletion names why a completion callback must not be applied: the envelope is not the one this
+// signature was sent with (lfx-self-serve-ops#347); a repeated completion is re-processed so retries finish
 func ignoredCompletion(signature *v1Models.Signature, envelopeID string) string {
-	if signature.SignatureSigned {
-		return "signature is already signed - ignoring the repeated completion callback"
-	}
-	if envelopeID != "" && signature.SignatureEnvelopeID != "" && envelopeID != signature.SignatureEnvelopeID {
-		return fmt.Sprintf("envelope %s does not belong to signature %s (envelope %s) - ignoring the callback", envelopeID, signature.SignatureID, signature.SignatureEnvelopeID)
+	if envelopeID == "" || signature.SignatureEnvelopeID == "" || envelopeID != signature.SignatureEnvelopeID {
+		return fmt.Sprintf("envelope %q does not belong to signature %s (envelope %q) - ignoring the callback", envelopeID, signature.SignatureID, signature.SignatureEnvelopeID)
 	}
 	return ""
 }

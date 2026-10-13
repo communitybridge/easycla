@@ -38,16 +38,5 @@ func TestUpdateCLAPermissionsAppliesEachACLEntrySeparately(t *testing.T) {
 	s := &service{}
 	err := s.UpdateCLAPermissions(events.DynamoDBEventRecord{Change: events.DynamoDBStreamRecord{OldImage: image([]string{"keep", "removed"}), NewImage: image([]string{"keep", "added"})}})
 	require.NoError(t, err)
-	require.Len(t, calls, 2)
-	for _, c := range calls {
-		require.Len(t, c.managers, 1, "every ACL difference is applied on its own")
-		switch c.managers[0] {
-		case "added":
-			assert.Equal(t, AddCLAManager, c.action)
-		case "removed":
-			assert.Equal(t, DeleteCLAManager, c.action)
-		default:
-			t.Fatalf("unexpected manager %q", c.managers[0])
-		}
-	}
+	assert.ElementsMatch(t, []call{{managers: []string{"added"}, action: AddCLAManager}, {managers: []string{"removed"}, action: DeleteCLAManager}}, calls, "every ACL difference is applied on its own, exactly once")
 }

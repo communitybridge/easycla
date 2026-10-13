@@ -95,13 +95,17 @@ var (
 func newOrgTestClient(t *testing.T, lookupHit bool) *orgTestTransport {
 	t.Helper()
 	transport := &orgTestTransport{t: t, lookupHit: lookupHit}
+	previousTransport, previousClient := http.DefaultTransport, http.DefaultClient
+	http.DefaultTransport = orgSwitch
+	http.DefaultClient = &http.Client{Transport: orgSwitch}
 	orgSwitchOnce.Do(func() {
-		http.DefaultTransport = orgSwitch
-		http.DefaultClient = &http.Client{Transport: orgSwitch}
 		token.Init("test-client", "test-secret", "https://"+orgTestAuthHost+"/oauth/token", "test-audience")
 	})
 	orgSwitch.set(transport)
-	t.Cleanup(func() { orgSwitch.set(nil) })
+	t.Cleanup(func() {
+		orgSwitch.set(nil)
+		http.DefaultTransport, http.DefaultClient = previousTransport, previousClient
+	})
 	deadline := time.Now().Add(5 * time.Second)
 	for {
 		if _, err := token.GetToken(); err == nil {

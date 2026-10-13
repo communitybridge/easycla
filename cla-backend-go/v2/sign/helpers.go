@@ -57,7 +57,7 @@ func (s service) updateChangeRequest(ctx context.Context, installationID, reposi
 	enrolled, enrolledErr := s.repositoryService.GetRepositoryByExternalID(ctx, strconv.FormatInt(repositoryID, 10))
 	if enrolledErr != nil {
 		log.WithFields(f).WithError(enrolledErr).Warn("unable to load the EasyCLA repository record - no status update")
-		return fmt.Errorf("%w: %v", errRepositoryNotBound, enrolledErr)
+		return repositoryLookupError(enrolledErr)
 	}
 	if bindErr := repositoryBoundToCLAGroup(enrolled, ghOrg, repositoryID, installationID, projectID); bindErr != nil {
 		log.WithFields(f).WithError(bindErr).Warn("repository is not bound to the signature's CLA group - no status update")
@@ -204,6 +204,16 @@ func (s service) hasUserSigned(ctx context.Context, user *models.User, projectID
 
 // errRepositoryNotBound marks a callback whose repository or installation does not belong to the signature's CLA group
 var errRepositoryNotBound = errors.New("repository is not bound to the signature's CLA group")
+
+// repositoryLookupError marks a missing repository record as unbound; any other lookup failure is returned as is so the
+// callback is retried
+func repositoryLookupError(err error) error {
+	var notFound *utils.GitHubRepositoryNotFound
+	if errors.As(err, &notFound) {
+		return fmt.Errorf("%w: %v", errRepositoryNotBound, err)
+	}
+	return err
+}
 
 // repositoryBoundToCLAGroup refuses a status update unless the repository is an enabled EasyCLA repository of projectID
 // whose GitHub organization owns installationID (lfx-self-serve-ops#347)

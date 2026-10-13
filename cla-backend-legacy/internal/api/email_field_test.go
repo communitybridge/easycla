@@ -19,6 +19,7 @@ func TestEmailFieldEscapesAndBounds(t *testing.T) {
 		"anchor":    {`<a href="https://evil.invalid">click</a>`, 60, "&lt;a href=&#34;https://evil.invalid&#34;&gt;click&lt;/a&gt;"},
 		"img":       {" <img src=x onerror=alert(1)> ", 60, "&lt;img src=x onerror=alert(1)&gt;"},
 		"truncated": {strings.Repeat("a", 61), 60, strings.Repeat("a", 60)},
+		"multibyte": {strings.Repeat("é", 31), 61, strings.Repeat("é", 30)},
 		"plain":     {"Jane Doe", 60, "Jane Doe"},
 	}
 	for name, tc := range cases {

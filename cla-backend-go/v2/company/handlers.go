@@ -385,7 +385,9 @@ func Configure(api *operations.EasyclaAPI, service Service, projectClaGroupRepo 
 		func(params company.CreateCompanyParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
-			utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			if authUser != nil {
+				utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			}
 			f := logrus.Fields{
 				"functionName":      "v2.company.handlers.CompanyCreateCompanyHandler",
 				utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),

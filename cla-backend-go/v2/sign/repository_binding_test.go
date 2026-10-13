@@ -4,9 +4,11 @@
 package sign
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/linuxfoundation/easycla/cla-backend-go/gen/v1/models"
+	"github.com/linuxfoundation/easycla/cla-backend-go/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,4 +21,12 @@ func TestRepositoryBoundToCLAGroup(t *testing.T) {
 	assert.Error(t, repositoryBoundToCLAGroup(repo, org, 42, 7, "group-b"), "a signature of another CLA group must not stamp this repository")
 	assert.Error(t, repositoryBoundToCLAGroup(repo, nil, 42, 7, "group-a"), "unknown organization")
 	assert.Error(t, repositoryBoundToCLAGroup(repo, &models.GithubOrganization{OrganizationName: "acme", OrganizationInstallationID: 8}, 42, 7, "group-a"), "foreign installation")
+}
+
+// only a missing repository record means "not bound"; a failing lookup is returned unchanged so DocuSign retries the callback
+func TestRepositoryLookupErrorKeepsTransientFailures(t *testing.T) {
+	assert.True(t, errors.Is(repositoryLookupError(&utils.GitHubRepositoryNotFound{RepositoryName: "42"}), errRepositoryNotBound))
+	transient := errors.New("dynamodb unavailable")
+	assert.False(t, errors.Is(repositoryLookupError(transient), errRepositoryNotBound))
+	assert.Equal(t, transient, repositoryLookupError(transient))
 }

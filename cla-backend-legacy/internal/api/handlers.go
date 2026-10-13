@@ -2677,7 +2677,7 @@ func publicSignatureItem(item map[string]types.AttributeValue) map[string]interf
 func emailField(value string, maxLen int) string {
 	value = strings.TrimSpace(value)
 	if len(value) > maxLen {
-		value = value[:maxLen]
+		value = strings.ToValidUTF8(value[:maxLen], "")
 	}
 	return html.EscapeString(value)
 }

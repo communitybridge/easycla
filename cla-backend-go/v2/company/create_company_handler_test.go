@@ -59,4 +59,7 @@ func TestCreateCompanyHandlerBindsTheCaller(t *testing.T) {
 	status, calls = call(t, &auth.User{UserName: "ghost", ACL: auth.ACL{Allowed: true}}, "ghost@example.invalid")
 	assert.Equal(t, http.StatusForbidden, status, "a principal without an email cannot be bound")
 	assert.Equal(t, 0, calls)
+	status, calls = call(t, nil, "nobody@example.invalid")
+	assert.Equal(t, http.StatusForbidden, status, "a missing principal is refused, not dereferenced")
+	assert.Equal(t, 0, calls)
 }

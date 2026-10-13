@@ -6,6 +6,7 @@ package sign
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -14,15 +15,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// a completion callback is applied once and only for the signature's own envelope (lfx-self-serve-ops#347)
-func TestSignedIndividualCallbackGithubIgnoresRepeatedOrForeignEnvelopes(t *testing.T) {
+// a completion callback is applied only for the signature's own envelope, named exactly (lfx-self-serve-ops#347)
+func TestSignedIndividualCallbackGithubIgnoresForeignOrUnnamedEnvelopes(t *testing.T) {
 	payload := envelopeXML(recipientStatuses(DocusignCompleted), envelopeDocumentStatuses) // envelope e1, signature s1
+	unnamed := []byte(strings.Replace(string(payload), "<EnvelopeID>e1</EnvelopeID>", "<EnvelopeID></EnvelopeID>", 1))
 	cases := []struct {
 		name      string
+		payload   []byte
 		signature *v1Models.Signature
 	}{
-		{"already signed", &v1Models.Signature{SignatureID: "s1", ProjectID: "group-a", SignatureSigned: true, SignatureEnvelopeID: "e1"}},
-		{"foreign envelope", &v1Models.Signature{SignatureID: "s1", ProjectID: "group-a", SignatureSigned: false, SignatureEnvelopeID: "e2"}},
+		{"foreign envelope", payload, &v1Models.Signature{SignatureID: "s1", ProjectID: "group-a", SignatureEnvelopeID: "e2"}},
+		{"signature without an envelope", payload, &v1Models.Signature{SignatureID: "s1", ProjectID: "group-a"}},
+		{"callback without an envelope", unnamed, &v1Models.Signature{SignatureID: "s1", ProjectID: "group-a", SignatureEnvelopeID: "e1"}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -31,9 +35,15 @@ func TestSignedIndividualCallbackGithubIgnoresRepeatedOrForeignEnvelopes(t *test
 			signatureService := mock_signatures.NewMockSignatureService(ctrl)
 			signatureService.EXPECT().GetSignature(gomock.Any(), "s1").Return(tc.signature, nil)
 			svc := &service{signatureService: signatureService}
-			assert.NoError(t, svc.SignedIndividualCallbackGithub(context.Background(), payload, "7", "1", "42"), "ignored callbacks are not errors: nothing is written and no status is posted")
+			assert.NoError(t, svc.SignedIndividualCallbackGithub(context.Background(), tc.payload, "7", "1", "42"), "ignored callbacks are not errors: nothing is written and no status is posted")
 		})
 	}
+}
+
+// a repeated completion of the signature's own envelope is processed again so a DocuSign retry can finish the remaining steps
+func TestIgnoredCompletionReprocessesOwnEnvelope(t *testing.T) {
+	assert.Empty(t, ignoredCompletion(&v1Models.Signature{SignatureID: "s1", SignatureSigned: true, SignatureEnvelopeID: "e1"}, "e1"))
+	assert.NotEmpty(t, ignoredCompletion(&v1Models.Signature{SignatureID: "s1", SignatureEnvelopeID: "e1"}, "E1"))
 }
 
 func TestRepositoryBindingErrorsAreRecognisable(t *testing.T) {

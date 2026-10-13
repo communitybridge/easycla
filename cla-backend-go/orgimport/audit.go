@@ -396,9 +396,13 @@ func writeAuditReports(dir string, res *AuditResult) error {
 	unresolvable = append(unresolvable, []string{"company_id", "company_name", "signing_entity_name", "company_external_id", "id_shape", "ccla_count", "ecla_count", "org_service", "manual_reason"})
 	for _, ar := range res.Rows {
 		r := ar.Row
-		rows = append(rows, []string{r.CompanyID, r.CompanyName, r.SigningEntityName, r.ExternalID, string(ar.Shape), strconv.FormatBool(r.ActiveCCLA), strconv.Itoa(r.CCLACount), strconv.Itoa(ar.ECLACount), ar.OrgStatus, ar.Website, strconv.FormatBool(ar.Duplicate), string(ar.Route), ar.ManualReason, ar.Tier, ar.ACSRoles, ar.Suggested})
+		ecla := ""
+		if ar.ECLACounted {
+			ecla = strconv.Itoa(ar.ECLACount)
+		}
+		rows = append(rows, []string{r.CompanyID, r.CompanyName, r.SigningEntityName, r.ExternalID, string(ar.Shape), strconv.FormatBool(r.ActiveCCLA), strconv.Itoa(r.CCLACount), ecla, ar.OrgStatus, ar.Website, strconv.FormatBool(ar.Duplicate), string(ar.Route), ar.ManualReason, ar.Tier, ar.ACSRoles, ar.Suggested})
 		if r.ActiveCCLA && ar.unresolvable() {
-			unresolvable = append(unresolvable, []string{r.CompanyID, r.CompanyName, r.SigningEntityName, r.ExternalID, string(ar.Shape), strconv.Itoa(r.CCLACount), strconv.Itoa(ar.ECLACount), ar.OrgStatus, ar.ManualReason})
+			unresolvable = append(unresolvable, []string{r.CompanyID, r.CompanyName, r.SigningEntityName, r.ExternalID, string(ar.Shape), strconv.Itoa(r.CCLACount), ecla, ar.OrgStatus, ar.ManualReason})
 		}
 	}
 	dups := [][]string{{"group", "company_id", "company_name", "signing_entity_name", "company_external_id", "id_shape", "domain", "active_ccla", "ccla_count", "ecla_count"}}
