@@ -134,6 +134,9 @@ func TestCorporateCallbackAppliesTheEnvelopeRule(t *testing.T) {
 	byClientUser := envelopeXML(recipientStatuses(DocusignCompleted), envelopeDocumentStatuses)
 	byCompany := envelopeXML(`<RecipientStatuses><RecipientStatus><Status>Completed</Status></RecipientStatus></RecipientStatuses>`, envelopeDocumentStatuses)
 	signature := &v1Models.Signature{SignatureID: "s1", ProjectID: "group-a", SignatureReferenceType: "user", SignatureReferenceID: "u1"}
+	row := func(envelope string) *signatures.ItemSignature {
+		return &signatures.ItemSignature{SignatureID: "s1", SignatureProjectID: "group-a", SignatureReferenceType: "user", SignatureReferenceID: "u1", SignatureUserCompanyID: "c1", SignatureEnvelopeID: envelope}
+	}
 	newService := func(t *testing.T, signatureService *mock_signatures.MockSignatureService, userService users.Service) *service {
 		ctrl := gomock.NewController(t)
 		t.Cleanup(ctrl.Finish)
@@ -147,7 +150,7 @@ func TestCorporateCallbackAppliesTheEnvelopeRule(t *testing.T) {
 		defer ctrl.Finish()
 		signatureService := mock_signatures.NewMockSignatureService(ctrl)
 		signatureService.EXPECT().GetSignature(gomock.Any(), "s1").Return(signature, nil)
-		signatureService.EXPECT().GetItemSignature(gomock.Any(), "s1").Return(&signatures.ItemSignature{SignatureID: "s1", SignatureEnvelopeID: "e2"}, nil)
+		signatureService.EXPECT().GetItemSignature(gomock.Any(), "s1").Return(row("e2"), nil)
 		assert.NoError(t, newService(t, signatureService, nil).SignedCorporateCallback(context.Background(), byClientUser, "c1", "group-a"))
 	})
 	t.Run("foreign envelope by company and project", func(t *testing.T) {
@@ -155,7 +158,7 @@ func TestCorporateCallbackAppliesTheEnvelopeRule(t *testing.T) {
 		defer ctrl.Finish()
 		signatureService := mock_signatures.NewMockSignatureService(ctrl)
 		signatureService.EXPECT().GetCorporateSignature(gomock.Any(), "group-a", "c1", gomock.Any(), gomock.Any()).Return(signature, nil)
-		signatureService.EXPECT().GetItemSignature(gomock.Any(), "s1").Return(&signatures.ItemSignature{SignatureID: "s1", SignatureEnvelopeID: "e2"}, nil)
+		signatureService.EXPECT().GetItemSignature(gomock.Any(), "s1").Return(row("e2"), nil)
 		assert.NoError(t, newService(t, signatureService, nil).SignedCorporateCallback(context.Background(), byCompany, "c1", "group-a"))
 	})
 	t.Run("own envelope proceeds", func(t *testing.T) {
@@ -163,9 +166,23 @@ func TestCorporateCallbackAppliesTheEnvelopeRule(t *testing.T) {
 		defer ctrl.Finish()
 		signatureService := mock_signatures.NewMockSignatureService(ctrl)
 		signatureService.EXPECT().GetSignature(gomock.Any(), "s1").Return(signature, nil)
-		signatureService.EXPECT().GetItemSignature(gomock.Any(), "s1").Return(&signatures.ItemSignature{SignatureID: "s1", SignatureEnvelopeID: "e1"}, nil)
+		signatureService.EXPECT().GetItemSignature(gomock.Any(), "s1").Return(row("e1"), nil)
 		stop := errors.New("stop at the user lookup")
 		err := newService(t, signatureService, &callbackUsers{err: stop}).SignedCorporateCallback(context.Background(), byClientUser, "c1", "group-a")
 		assert.True(t, errors.Is(err, stop), "the guard let the callback through to the first lookup after it")
+	})
+	t.Run("signature of another company or CLA group is ignored", func(t *testing.T) {
+		for name, other := range map[string]*signatures.ItemSignature{
+			"other company":               {SignatureID: "s1", SignatureProjectID: "group-a", SignatureReferenceType: "company", SignatureReferenceID: "c2", SignatureEnvelopeID: "e1"},
+			"other CLA group":             {SignatureID: "s1", SignatureProjectID: "group-b", SignatureReferenceType: "company", SignatureReferenceID: "c1", SignatureEnvelopeID: "e1"},
+			"employee of another company": {SignatureID: "s1", SignatureProjectID: "group-a", SignatureReferenceType: "user", SignatureReferenceID: "u1", SignatureUserCompanyID: "c2", SignatureEnvelopeID: "e1"},
+		} {
+			ctrl := gomock.NewController(t)
+			signatureService := mock_signatures.NewMockSignatureService(ctrl)
+			signatureService.EXPECT().GetSignature(gomock.Any(), "s1").Return(signature, nil)
+			signatureService.EXPECT().GetItemSignature(gomock.Any(), "s1").Return(other, nil)
+			assert.NoError(t, newService(t, signatureService, nil).SignedCorporateCallback(context.Background(), byClientUser, "c1", "group-a"), name)
+			ctrl.Finish()
+		}
 	})
 }

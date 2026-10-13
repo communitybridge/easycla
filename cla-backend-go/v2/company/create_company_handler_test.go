@@ -81,7 +81,7 @@ func TestCreateCompanyHandlerBindsTheCaller(t *testing.T) {
 	status, calls = call(t, principal, "Jane@Example.invalid", &other)
 	assert.Equal(t, http.StatusOK, status)
 	assert.Equal(t, 1, calls)
-	assert.Equal(t, principal.UserName, lastService.seenUser, "the username the service sees is the authenticated principal's, not a free header value")
+	assert.Equal(t, other, lastService.seenUser, "a present X-USERNAME is the gateway-asserted principal name (lfx-kit derives authUser.UserName from the same header) and is what the service receives")
 	status, calls = call(t, &auth.User{UserName: "ghost", ACL: auth.ACL{Allowed: true}}, "ghost@example.invalid", nil)
 	assert.Equal(t, http.StatusForbidden, status, "a principal without an email cannot be bound")
 	assert.Equal(t, 0, calls)

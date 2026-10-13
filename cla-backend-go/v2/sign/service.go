@@ -806,17 +806,25 @@ func fetchFullName(info DocuSignEnvelopeInformation) string {
 	return fullName
 }
 
-// completionIgnored reads the stored envelope from the raw row (API projections deliberately never carry it) and
-// reports whether the callback must be ignored; errors come from the row read (lfx-self-serve-ops#347)
-func (s *service) completionIgnored(ctx context.Context, f logrus.Fields, signatureID, envelopeID string) (bool, error) {
+// signatureRow reads the raw signature row (API projections deliberately never carry the envelope) (lfx-self-serve-ops#347)
+func (s *service) signatureRow(ctx context.Context, f logrus.Fields, signatureID string) (*signatures.ItemSignature, error) {
 	item, itemErr := s.signatureService.GetItemSignature(ctx, signatureID)
 	if itemErr != nil {
 		log.WithFields(f).WithError(itemErr).Warn("unable to lookup signature row by ID")
-		return false, itemErr
+		return nil, itemErr
 	}
 	if item == nil {
 		log.WithFields(f).Warn("unable to lookup signature row by ID - signature not found")
-		return false, errors.New("unable to lookup signature by ID - signature not found")
+		return nil, errors.New("unable to lookup signature by ID - signature not found")
+	}
+	return item, nil
+}
+
+// completionIgnored reports whether the callback must be ignored because its envelope is not the stored one
+func (s *service) completionIgnored(ctx context.Context, f logrus.Fields, signatureID, envelopeID string) (bool, error) {
+	item, err := s.signatureRow(ctx, f, signatureID)
+	if err != nil {
+		return false, err
 	}
 	if reason := ignoredCompletion(signatureID, item.SignatureEnvelopeID, envelopeID); reason != "" {
 		log.WithFields(f).Warn(reason)
@@ -825,11 +833,43 @@ func (s *service) completionIgnored(ctx context.Context, f logrus.Fields, signat
 	return false, nil
 }
 
+// corporateCompletionIgnored additionally requires the signature to belong to the CLA group and company named by the
+// corporate callback route (lfx-self-serve-ops#347)
+func (s *service) corporateCompletionIgnored(ctx context.Context, f logrus.Fields, signatureID, projectID, companyID, envelopeID string) (bool, error) {
+	item, err := s.signatureRow(ctx, f, signatureID)
+	if err != nil {
+		return false, err
+	}
+	if !rowOnRoute(item, projectID, companyID) {
+		log.WithFields(f).Warnf("signature %s does not belong to CLA group %s / company %s - ignoring the callback", signatureID, projectID, companyID)
+		return true, nil
+	}
+	if reason := ignoredCompletion(signatureID, item.SignatureEnvelopeID, envelopeID); reason != "" {
+		log.WithFields(f).Warn(reason)
+		return true, nil
+	}
+	return false, nil
+}
+
+// rowOnRoute reports whether the signature row belongs to the CLA group and company of the corporate callback route
+func rowOnRoute(item *signatures.ItemSignature, projectID, companyID string) bool {
+	if item.SignatureProjectID != projectID {
+		return false
+	}
+	switch item.SignatureReferenceType {
+	case utils.SignatureReferenceTypeCompany:
+		return item.SignatureReferenceID == companyID
+	case utils.SignatureReferenceTypeUser:
+		return item.SignatureUserCompanyID == companyID
+	}
+	return false
+}
+
 // ignoredCompletion names why a completion callback must not be applied: the envelope is not the one this
 // signature was sent with (lfx-self-serve-ops#347); a repeated completion is re-processed so retries finish
 func ignoredCompletion(signatureID, storedEnvelopeID, envelopeID string) string {
 	if envelopeID == "" || storedEnvelopeID == "" || envelopeID != storedEnvelopeID {
-		return fmt.Sprintf("envelope %q does not belong to signature %s (envelope %q) - ignoring the callback", envelopeID, signatureID, storedEnvelopeID)
+		return fmt.Sprintf("envelope mismatch for signature %s - ignoring the callback", signatureID)
 	}
 	return ""
 }
@@ -1401,7 +1441,7 @@ func (s *service) SignedCorporateCallback(ctx context.Context, payload []byte, c
 	}
 
 	log.WithFields(f).Debugf("signatureID: %s", signatureID)
-	if ignored, guardErr := s.completionIgnored(ctx, f, signature.SignatureID, envelopeID); guardErr != nil || ignored {
+	if ignored, guardErr := s.corporateCompletionIgnored(ctx, f, signature.SignatureID, projectID, companyID, envelopeID); guardErr != nil || ignored {
 		return guardErr
 	}
 	var user *v1Models.User

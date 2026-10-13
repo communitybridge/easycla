@@ -16,6 +16,9 @@ var ErrGrantNotFound = errors.New("acs grant not found")
 func GrantIDFor(grants []OrgGrant, objectID, roleName, username string) (string, error) {
 	for _, g := range grants {
 		if g.Username == username && g.RoleName == roleName && g.ObjectID == objectID {
+			if g.GrantID == "" {
+				return "", fmt.Errorf("%w: role %s, user %s, object %s (grant without id)", ErrGrantNotFound, roleName, username, objectID)
+			}
 			return g.GrantID, nil
 		}
 	}

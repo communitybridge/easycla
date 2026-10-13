@@ -23,6 +23,7 @@ func TestGrantIDForMatchesUserRoleAndObjectExactly(t *testing.T) {
 		{Username: "bobby", RoleName: "cla-manager", ObjectID: "p1|o1", GrantID: "g-bobby"},
 		{Username: "bob", RoleName: "cla-manager-designee", ObjectID: "p1|o1", GrantID: "g-bob-designee"},
 		{Username: "bob", RoleName: "cla-manager", ObjectID: "p2|o1", GrantID: "g-bob-p2"},
+		{Username: "carol", RoleName: "cla-manager", ObjectID: "p1|o1", GrantID: ""},
 	}
 	id, err := GrantIDFor(grants, "p1|o1", "cla-manager", "bob")
 	require.NoError(t, err)
@@ -31,6 +32,9 @@ func TestGrantIDForMatchesUserRoleAndObjectExactly(t *testing.T) {
 	assert.True(t, errors.Is(err, ErrGrantNotFound), "a missing grant is an error, never an empty id")
 	_, err = GrantIDFor(nil, "p1|o1", "cla-manager", "bob")
 	assert.True(t, errors.Is(err, ErrGrantNotFound))
+	id, err = GrantIDFor(grants, "p1|o1", "cla-manager", "carol")
+	assert.Empty(t, id)
+	assert.True(t, errors.Is(err, ErrGrantNotFound), "an entry without a grant id is never returned as a success")
 }
 
 // the lookup reads every page of the organization's grants from ACS, bypassing the gateway cache (lfx-self-serve#3515)
