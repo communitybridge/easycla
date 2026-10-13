@@ -13,6 +13,7 @@ import (
 	acs_service "github.com/linuxfoundation/easycla/cla-backend-go/v2/acs-service"
 	organization_service "github.com/linuxfoundation/easycla/cla-backend-go/v2/organization-service"
 	user_service "github.com/linuxfoundation/easycla/cla-backend-go/v2/user-service"
+	userModels "github.com/linuxfoundation/easycla/cla-backend-go/v2/user-service/models"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
@@ -458,6 +459,22 @@ func (s *service) assignContributor(ctx context.Context, newSignature Signature,
 	return nil
 }
 
+// managerUser resolves a CLA manager's LFX user; a lookup failure or a user without an e-mail is an error so the
+// ACL change is reported, not silently skipped
+func managerUser(f logrus.Fields, userClient *user_service.Client, mgr string) (*userModels.User, error) {
+	lfUser, userErr := userClient.GetUserByUsername(mgr)
+	if userErr != nil {
+		log.WithFields(f).WithError(userErr).Warnf("Failed to get salesforce user for user: %s", mgr)
+		return nil, userErr
+	}
+	if lfUser == nil || len(lfUser.Emails) == 0 {
+		msg := fmt.Sprintf("no LFX user with an email address found for user: %s", mgr)
+		log.WithFields(f).Warn(msg)
+		return nil, errors.New(msg)
+	}
+	return lfUser, nil
+}
+
 // deleteFoundationCLAManager revokes mgr's foundation-level cla-manager grant; the grant id is read fresh from ACS and a
 // missing grant is reported instead of deleting with an empty id (lfx-self-serve#3515)
 func deleteFoundationCLAManager(ctx context.Context, f logrus.Fields, orgSFID, foundationSFID, roleID, mgr string, email *string) error {
@@ -545,12 +562,10 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 	for i := range managers {
 		// Get User
 		mgr := managers[i]
-		lfUser, userErr := userClient.GetUserByUsername(mgr)
+		lfUser, userErr := managerUser(f, userClient, mgr)
 		if userErr != nil {
-			log.WithFields(f).WithError(userErr).Warnf("Failed to get salesforce user for user: %s", mgr)
-			continue
+			return userErr
 		}
-		// Get User email
 		email := lfUser.Emails[0].EmailAddress
 		if signedAtFoundation {
 			if action == AddCLAManager {
