@@ -577,7 +577,7 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 				hasScope, scopeErr := orgClient.IsUserHaveRoleScope(ctx, utils.CLAManagerRole, lfUser.ID, org.ID, foundationSFID)
 				if scopeErr != nil {
 					log.WithFields(f).WithError(scopeErr).Warnf("Failed to get scope for role: %s , user:%s , foundation: %s and org: %s ", utils.CLAManagerRole, lfUser.ID, foundationSFID, org.ID)
-					continue
+					return scopeErr
 				}
 				if hasScope {
 					log.WithFields(f).Warnf("User: %s already has scope ", mgr)
@@ -619,7 +619,7 @@ func (s *service) updateCLAManagerPermissions(signature Signature, managers []st
 				log.WithFields(f).Debugf("waiting for create role assignment to complete for %d projects...", len(projectSFIDList.List()))
 				if loadErr := eg.Wait(); loadErr != nil {
 					log.WithFields(f).Warn(loadErr)
-					continue
+					return loadErr
 				}
 			} else if action == DeleteCLAManager {
 				log.WithFields(f).Debugf("Deleting CLA Manager permissions...")
