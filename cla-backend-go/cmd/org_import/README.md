@@ -126,6 +126,7 @@ Files (`--out-dir`):
   crm = org-service lookup by registrable website domain, then by name); candidates are verified in member-service — dropped Accounts are
   omitted, unverifiable ones (403) carry a `?` suffix. Best effort: lookup failures only warn.
 - `unresolvable.csv` — active rows with empty/invalid ids or dead `001…` ids (#2749 input).
+- `columns.csv` — one row per column of every report file (`file, column, source, operation, meaning`: the system and call each value comes from and what it means); attached to the run e-mail.
 - `possible_duplicates.csv` — candidate targets for the #3085 review: rows sharing an id with the same (or empty) signing entity name, and rows
   with the same normalized company name **or** the same org-service website domain under different ids (#2056 input). Shared/missing domains
   (§4.2) never group; sets that overlap by name and domain are merged into one. Columns: `group, company_id, company_name, signing_entity_name,
@@ -175,6 +176,7 @@ Files (all rewritten after apply with the final state):
 - `manual_actions.csv` — one row per manual/pending/failed group with `reason`, `suggested_action` (what a human must do next) and `suggested_account` (§3.1).
 - `targets.csv` — rewrite destinations grouped by Account: `target_sfid, groups, old_ids, company_ids, company_names, existing_rows, decision, reviewer, status(ok|needs_decision|distinct_conflict|target_forms_differ)`.
 - `to_salesforce.csv` — `old_id, name, website, ccla_signed_date, domain, shared_domain, suggested_account` — the hand-off to sales ops (§4).
+- `columns.csv` — the column legend (§3.1), covering every file above.
 
 Manual reasons: `empty_external_id`, `invalid_id_shape`, `mapping_ambiguous`, `mapping_not_approved`, `mapping_same_id` (also the 15/18-char form of the same Account),
 `sfid_alias_forms` (rows of one Account carry both its 15- and 18-char id — normalize them to one form first; §4), `target_forms_differ`

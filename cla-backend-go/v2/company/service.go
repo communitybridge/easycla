@@ -424,13 +424,16 @@ func (s *service) CreateCompany(ctx context.Context, params *v2Ops.CreateCompany
 		"note":              params.Input.Note,
 	}
 
-	var lfUser *v2UserServiceModels.User
 	companyName := *params.Input.CompanyName
 	signingEntityName := params.Input.SigningEntityName
 	companyWebsite := *params.Input.CompanyWebsite
 	userEmail := params.Input.UserEmail.String()
 	userID := params.UserID
 	note := params.Input.Note
+	if ownErr := s.callerOwnsUser(userID, params.XUSERNAME, userEmail); ownErr != nil {
+		log.WithFields(f).WithError(ownErr).Warn("the user ID in the path does not belong to the signed-in user")
+		return nil, ownErr
+	}
 
 	// Create SalesForce company
 	orgClient := orgService.GetClient()
@@ -450,13 +453,48 @@ func (s *service) CreateCompany(ctx context.Context, params *v2Ops.CreateCompany
 		f["updatedSigningEntityName"] = org.Name
 	}
 
+	return s.createCompanyForOrg(ctx, f, org, companyName, signingEntityName, companyWebsite, userEmail, userID, note)
+}
+
+// ErrCompanyUserMismatch reports a user ID that does not belong to the signed-in user (lfx-self-serve-ops#343)
+var ErrCompanyUserMismatch = errors.New("the user ID does not belong to the signed-in user")
+
+// callerOwnsUser accepts userID only when that EasyCLA user carries the caller's LF username or e-mail
+func (s *service) callerOwnsUser(userID string, username *string, email string) error {
+	user, err := s.userRepo.GetUser(userID)
+	if err != nil {
+		return err
+	}
+	if user != nil {
+		if username != nil && *username != "" && strings.EqualFold(user.LfUsername, *username) {
+			return nil
+		}
+		if email != "" && strings.EqualFold(string(user.LfEmail), email) {
+			return nil
+		}
+		for _, e := range user.Emails {
+			if email != "" && strings.EqualFold(e, email) {
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("%w: %s", ErrCompanyUserMismatch, userID)
+}
+
+// createCompanyForOrg grants company-admin on org to userEmail (when it has an LF login) and creates the EasyCLA company row keyed on org.ID
+func (s *service) createCompanyForOrg(ctx context.Context, f logrus.Fields, org *orgModels.Organization, companyName, signingEntityName, companyWebsite, userEmail, userID, note string) (*models.CompanyOutput, error) {
+	var lfUser *v2UserServiceModels.User
+	orgClient := orgService.GetClient()
 	acsClient := acsService.GetClient()
 	userClient := v2UserService.GetClient()
 
-	lfUser, lfErr := userClient.SearchUsersByEmail(userEmail)
-	if lfErr != nil {
-		msg := fmt.Sprintf("User : %s has no LFID", userEmail)
-		log.WithFields(f).Warn(msg)
+	if userEmail != "" {
+		var lfErr error
+		lfUser, lfErr = userClient.SearchUsersByEmail(userEmail)
+		if lfErr != nil {
+			msg := fmt.Sprintf("User : %s has no LFID", userEmail)
+			log.WithFields(f).Warn(msg)
+		}
 	}
 	if lfUser != nil && lfUser.Username == "" {
 		msg := fmt.Sprintf("User: %+v has no LF login/username", lfUser)
@@ -556,10 +594,12 @@ func (s *service) CreateCompanyFromSFModel(ctx context.Context, orgModel *orgMod
 			companyInput.UserEmail = &userEmail
 		}
 	}
-	return s.CreateCompany(ctx, &v2Ops.CreateCompanyParams{
-		Input:  companyInput,
-		UserID: authUser.UserName,
-	})
+	userEmail := ""
+	if companyInput.UserEmail != nil {
+		userEmail = companyInput.UserEmail.String()
+	}
+	// the organization already exists: never re-create or attach to it by domain (lfx-self-serve-ops#343)
+	return s.createCompanyForOrg(ctx, f, orgModel, orgModel.Name, companyInput.SigningEntityName, orgModel.Link, userEmail, authUser.UserName, companyInput.Note)
 }
 
 // GetCompanyByName deletes the company by name

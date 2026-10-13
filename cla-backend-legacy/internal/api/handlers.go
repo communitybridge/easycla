@@ -1989,8 +1989,7 @@ func (h *Handlers) GetUserSignaturesV1(w http.ResponseWriter, r *http.Request) {
 		if getAttrString(it, "signature_reference_type") != "user" {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 
@@ -2666,6 +2665,23 @@ func appendEmailHelpSignOffContent(body string, projectVersion string) string {
 	return body + emailHelpContent(showV2) + emailSignOffContent()
 }
 
+// publicSignatureItem serializes a signature item without the DocuSign envelope XML (lfx-self-serve-ops#350) nor the DocuSign envelope id, which the completion callback guard treats as the binding secret (lfx-self-serve-ops#347)
+func publicSignatureItem(item map[string]types.AttributeValue) map[string]interface{} {
+	out := store.ItemToInterfaceMap(item)
+	delete(out, "user_docusign_raw_xml")
+	delete(out, "signature_envelope_id")
+	return out
+}
+
+// emailField makes a caller-supplied string safe for the HTML e-mail body (lfx-self-serve-ops#352)
+func emailField(value string, maxLen int) string {
+	value = strings.TrimSpace(value)
+	if len(value) > maxLen {
+		value = strings.ToValidUTF8(value[:maxLen], "")
+	}
+	return html.EscapeString(value)
+}
+
 func sendEmailToCLAManager(ctx context.Context, project map[string]types.AttributeValue, contributorName string, contributorEmail string, claManagerName string, claManagerEmail string, companyName string, accountExists bool) error {
 	_ = accountExists // Legacy Python accepts this flag but does not currently vary content.
 	projectName := getAttrString(project, "project_name")
@@ -2676,6 +2692,7 @@ func sendEmailToCLAManager(ctx context.Context, project map[string]types.Attribu
 	if strings.TrimSpace(companyName) == "" {
 		companyName = "your company"
 	}
+	projectHTML := emailField(projectName, 255)
 
 	body := fmt.Sprintf(`
 <p>Hello %s,</p> \
@@ -2692,7 +2709,7 @@ sign the CLA yourself on behalf of your company; if not, the signature process w
 else who is authorized to sign the CLA.</p> \
 %s
 %s
-`, claManagerName, projectName, projectName, contributorName, contributorEmail, companyName, projectName, projectName, projectName, projectName, landing, emailHelpContent(strings.TrimSpace(strings.ToLower(projectVersion)) == "v2"), emailSignOffContent())
+`, emailField(claManagerName, 60), projectHTML, projectHTML, emailField(contributorName, 60), emailField(contributorEmail, 254), emailField(companyName, 255), projectHTML, projectHTML, projectHTML, projectHTML, landing, emailHelpContent(strings.TrimSpace(strings.ToLower(projectVersion)) == "v2"), emailSignOffContent())
 
 	svc, err := email.NewFromEnv(ctx)
 	if err != nil {
@@ -3197,7 +3214,7 @@ func (h *Handlers) GetUserProjectLastSignatureV2(w http.ResponseWriter, r *http.
 	latestMajorStr := strconv.Itoa(maj)
 	latestMinorStr := strconv.Itoa(min)
 
-	out := store.ItemToInterfaceMap(latest)
+	out := publicSignatureItem(latest)
 	out["latest_document_major_version"] = latestMajorStr
 	out["latest_document_minor_version"] = latestMinorStr
 
@@ -3278,7 +3295,7 @@ func (h *Handlers) GetUserProjectCompanyLastSignatureV1(w http.ResponseWriter, r
 	latestMajorStr := strconv.Itoa(maj)
 	latestMinorStr := strconv.Itoa(min)
 
-	out := store.ItemToInterfaceMap(latest)
+	out := publicSignatureItem(latest)
 	out["latest_document_major_version"] = latestMajorStr
 	out["latest_document_minor_version"] = latestMinorStr
 
@@ -3316,9 +3333,7 @@ func (h *Handlers) GetSignatureV1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := store.ItemToInterfaceMap(item)
-	// Python Signature.to_dict() filters out raw DocuSign XML.
-	delete(out, "user_docusign_raw_xml")
+	out := publicSignatureItem(item)
 
 	respond.JSON(w, http.StatusOK, out)
 }
@@ -3852,8 +3867,7 @@ func (h *Handlers) PutSignatureV1(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	out := store.ItemToInterfaceMap(sig)
-	delete(out, "user_docusign_raw_xml")
+	out := publicSignatureItem(sig)
 	respond.JSON(w, http.StatusOK, out)
 }
 
@@ -3933,8 +3947,7 @@ func (h *Handlers) GetSignaturesUserV1(w http.ResponseWriter, r *http.Request) {
 		if getAttrString(it, "signature_reference_type") != "user" {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 	respond.JSON(w, http.StatusOK, out)
@@ -3977,8 +3990,7 @@ func (h *Handlers) GetSignaturesUserProjectV1(w http.ResponseWriter, r *http.Req
 		if getAttrString(it, "signature_reference_id") != userID {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 
@@ -4054,8 +4066,7 @@ func (h *Handlers) GetSignaturesUserProjectTypeV1(w http.ResponseWriter, r *http
 		if signatureType == "employee" && sigCompanyID == "" {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 
@@ -4095,8 +4106,7 @@ func (h *Handlers) GetSignaturesCompanyV1(w http.ResponseWriter, r *http.Request
 		if !stringSliceContainsExact(sigACL, authUser.Username) {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 	respond.JSON(w, http.StatusOK, out)
@@ -4131,8 +4141,7 @@ func (h *Handlers) GetSignaturesProjectV1(w http.ResponseWriter, r *http.Request
 		if !getAttrBool(it, "signature_signed") {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 
@@ -4167,8 +4176,7 @@ func (h *Handlers) GetSignaturesProjectCompanyV1(w http.ResponseWriter, r *http.
 		if getAttrString(it, "signature_project_id") != projectID {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 	respond.JSON(w, http.StatusOK, out)
@@ -4203,8 +4211,7 @@ func (h *Handlers) GetProjectEmployeeSignaturesV1(w http.ResponseWriter, r *http
 		if getAttrString(it, "signature_user_ccla_company_id") != companyID {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 	respond.JSON(w, http.StatusOK, out)
@@ -9227,8 +9234,7 @@ func (h *Handlers) RequestEmployeeSignatureV2(w http.ResponseWriter, r *http.Req
 		if av, ok := it["signature_approved"].(*types.AttributeValueMemberBOOL); ok && !av.Value {
 			continue
 		}
-		out := store.ItemToInterfaceMap(it)
-		delete(out, "user_docusign_raw_xml")
+		out := publicSignatureItem(it)
 		respond.JSON(w, http.StatusOK, out)
 		return
 	}

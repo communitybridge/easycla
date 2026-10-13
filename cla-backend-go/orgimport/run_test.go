@@ -1684,7 +1684,7 @@ func TestAudit(t *testing.T) {
 	for _, r := range rows[1:] {
 		byID[r[0]] = r
 	}
-	assert.Equal(t, []string{"c-live", "Live Corp", "", liveSFID, "001", "true", "1", "0", "200", "https://live.example", "false", "register", "", TierOK, "role-r1=2;role-r2=1", ""}, byID["c-live"])
+	assert.Equal(t, []string{"c-live", "Live Corp", "", liveSFID, "001", "true", "1", "", "200", "https://live.example", "false", "register", "", TierOK, "role-r1=2;role-r2=1", ""}, byID["c-live"])
 	assert.Equal(t, "role-r1=2;role-r2=1", byID["c-live-sub"][14], "ACS roles are per old id, so every row of the group shows them")
 	assert.Equal(t, "", byID["c-inactive"][14], "ids outside the eligible groups and duplicate sets are not looked up in ACS")
 	assert.Equal(t, "", byID["c-dead"][14], "an id without grants has an empty cell")

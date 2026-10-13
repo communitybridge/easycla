@@ -266,3 +266,31 @@ func IsUserAuthorizedForProjectOrganizationTree(ctx context.Context, user *auth.
 
 	return val
 }
+
+// IsUserAuthorizedForProjectOnly accepts an admin (when allowed) or a plain project scope for projectSFID; a project|organization scope never qualifies
+func IsUserAuthorizedForProjectOnly(ctx context.Context, user *auth.User, projectSFID string, adminScopeAllowed bool) bool {
+	f := logrus.Fields{
+		"functionName":      "utils.IsUserAuthorizedForProjectOnly",
+		XREQUESTID:          ctx.Value(XREQUESTID),
+		"userName":          user.UserName,
+		"projectSFID":       projectSFID,
+		"adminScopeAllowed": adminScopeAllowed,
+	}
+	if adminScopeAllowed && user.Admin {
+		log.WithFields(f).Debug("user is authorized - admin scope is allowed and admin scope set for user")
+		return true
+	}
+	val := user.IsUserAuthorized(auth.Project, projectSFID, false)
+	log.WithFields(f).Debugf("plain project scope check for projectSFID: %s = %t", projectSFID, val)
+	return val
+}
+
+// IsUserAuthorizedForAnyProjectsOnly is IsUserAuthorizedForAnyProjects with the plain-project rule of IsUserAuthorizedForProjectOnly
+func IsUserAuthorizedForAnyProjectsOnly(ctx context.Context, user *auth.User, projectSFIDs []string, adminScopeAllowed bool) bool {
+	for _, projectSFID := range projectSFIDs {
+		if IsUserAuthorizedForProjectTree(ctx, user, projectSFID, adminScopeAllowed) || IsUserAuthorizedForProjectOnly(ctx, user, projectSFID, adminScopeAllowed) {
+			return true
+		}
+	}
+	return false
+}
