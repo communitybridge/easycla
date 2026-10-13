@@ -419,7 +419,7 @@ func writeAuditReports(dir string, res *AuditResult) error {
 			return err
 		}
 	}
-	return nil
+	return writeColumnsCSV(dir)
 }
 
 func writeIngestReports(dir string, plan *Plan) error {
@@ -473,7 +473,7 @@ func writeIngestReports(dir string, plan *Plan) error {
 			return err
 		}
 	}
-	return nil
+	return writeColumnsCSV(dir)
 }
 
 // domainOf returns the group's website domain and "true"/"false" for the shared-domain flag.
