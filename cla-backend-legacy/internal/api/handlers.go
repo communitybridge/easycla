@@ -2666,10 +2666,11 @@ func appendEmailHelpSignOffContent(body string, projectVersion string) string {
 	return body + emailHelpContent(showV2) + emailSignOffContent()
 }
 
-// publicSignatureItem serializes a signature item without the DocuSign envelope XML (lfx-self-serve-ops#350)
+// publicSignatureItem serializes a signature item without the DocuSign envelope XML (lfx-self-serve-ops#350) nor the DocuSign envelope id, which the completion callback guard treats as the binding secret (lfx-self-serve-ops#347)
 func publicSignatureItem(item map[string]types.AttributeValue) map[string]interface{} {
 	out := store.ItemToInterfaceMap(item)
 	delete(out, "user_docusign_raw_xml")
+	delete(out, "signature_envelope_id")
 	return out
 }
 

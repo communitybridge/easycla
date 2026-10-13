@@ -34,12 +34,15 @@ func TestPublicSignatureItemDropsTheDocuSignEnvelope(t *testing.T) {
 		"signature_id":          &types.AttributeValueMemberS{Value: "sig-1"},
 		"signature_signed":      &types.AttributeValueMemberBOOL{Value: true},
 		"user_docusign_raw_xml": &types.AttributeValueMemberS{Value: "<DocuSignEnvelopeInformation/>"},
+		"signature_envelope_id": &types.AttributeValueMemberS{Value: "e1"},
 	}
 	out := publicSignatureItem(item)
 	if out["signature_id"] != "sig-1" || out["signature_signed"] != true {
 		t.Fatalf("unexpected serialization: %#v", out)
 	}
-	if _, present := out["user_docusign_raw_xml"]; present {
-		t.Fatal("user_docusign_raw_xml must never be returned to a client")
+	for _, secret := range []string{"user_docusign_raw_xml", "signature_envelope_id"} {
+		if _, present := out[secret]; present {
+			t.Fatalf("%s must never be returned to a client", secret)
+		}
 	}
 }
