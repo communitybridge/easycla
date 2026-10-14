@@ -201,6 +201,7 @@ func (s service) assignCLAManager(ctx context.Context, email, username, companyS
 	}
 
 	var assignErr error
+	var assignMu sync.Mutex
 	var wg sync.WaitGroup
 	wg.Add(len(projectSFIDList.List()))
 
@@ -220,7 +221,9 @@ func (s service) assignCLAManager(ctx context.Context, email, username, companyS
 				}
 				log.WithFields(f).Warnf("unable to add %s scope for project: %s, company: %s using roleID: %s for user email: %s. error = %s",
 					utils.CLAManagerRole, projectSFID, companySFID, claManagerRoleID, email, err)
+				assignMu.Lock()
 				assignErr = err
+				assignMu.Unlock()
 			}
 		}(projectSFID)
 	}

@@ -440,6 +440,16 @@ func (s *service) CreateCompany(ctx context.Context, params *v2Ops.CreateCompany
 		log.WithFields(f).WithError(ownErr).Warn("the user ID in the path does not belong to the signed-in user")
 		return nil, ownErr
 	}
+	// the grant target must resolve to an LF login before anything is created, or the company would have no company-admin
+	lfUser, lfErr := lfUserByEmail(grantEmail)
+	if lfErr != nil && !errors.Is(lfErr, v2UserService.ErrUserNotFound) {
+		log.WithFields(f).WithError(lfErr).Warn("unable to look up the signed-in user's LF account - refusing to create the company")
+		return nil, fmt.Errorf("%w: %s: %v", ErrCompanyUserLookup, grantEmail, lfErr)
+	}
+	if lfErr != nil || lfUser == nil || lfUser.Username == "" {
+		log.WithFields(f).Warnf("no LF login found for the signed-in e-mail %s - refusing to create the company", grantEmail)
+		return nil, fmt.Errorf("%w: no LF login for %s", ErrCompanyNoGrantTarget, grantEmail)
+	}
 	if !strings.EqualFold(userEmail, grantEmail) {
 		log.WithFields(f).Warnf("userEmail %s differs from the signed-in e-mail - ignored; company-admin is granted to the signed-in identity", userEmail)
 	}
@@ -463,6 +473,11 @@ func (s *service) CreateCompany(ctx context.Context, params *v2Ops.CreateCompany
 	}
 
 	return s.createCompanyForOrg(ctx, f, org, companyName, signingEntityName, companyWebsite, grantEmail, userID, note)
+}
+
+// lfUserByEmail is the seam onto the user-service e-mail lookup (tests)
+var lfUserByEmail = func(email string) (*v2UserServiceModels.User, error) {
+	return v2UserService.GetClient().SearchUsersByEmail(email)
 }
 
 // ErrCompanyUserMismatch reports a user ID that does not belong to the signed-in user (lfx-self-serve-ops#343)
@@ -507,11 +522,10 @@ func (s *service) createCompanyForOrg(ctx context.Context, f logrus.Fields, org 
 	var lfUser *v2UserServiceModels.User
 	orgClient := orgService.GetClient()
 	acsClient := acsService.GetClient()
-	userClient := v2UserService.GetClient()
 
 	if userEmail != "" {
 		var lfErr error
-		lfUser, lfErr = userClient.SearchUsersByEmail(userEmail)
+		lfUser, lfErr = lfUserByEmail(userEmail)
 		if lfErr != nil {
 			msg := fmt.Sprintf("User : %s has no LFID", userEmail)
 			log.WithFields(f).Warn(msg)

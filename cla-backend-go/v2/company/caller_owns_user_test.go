@@ -14,8 +14,15 @@ import (
 	"github.com/linuxfoundation/easycla/cla-backend-go/gen/v2/models"
 	v2CompanyOps "github.com/linuxfoundation/easycla/cla-backend-go/gen/v2/restapi/operations/company"
 	mock_users "github.com/linuxfoundation/easycla/cla-backend-go/users/mocks"
+	v2UserService "github.com/linuxfoundation/easycla/cla-backend-go/v2/user-service"
+	v2UserServiceModels "github.com/linuxfoundation/easycla/cla-backend-go/v2/user-service/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	testCallerUsername = "jane"
+	testCallerEmail    = "jane@example.invalid"
 )
 
 // the user ID in the path must be the signed-in user's own EasyCLA user, proven by the token identity (lfx-self-serve-ops#343)
@@ -56,7 +63,7 @@ func TestCreateCompanyRefusesWithoutAVerifiedEmail(t *testing.T) {
 	defer ctrl.Finish()
 	repo := mock_users.NewMockUserRepository(ctrl) // no expectations: any lookup fails the test
 	svc := &service{userRepo: repo}
-	name, site, username := testCompanyName, testCompanySite, "jane"
+	name, site, username := testCompanyName, testCompanySite, testCallerUsername
 	email := strfmt.Email("jane@example.invalid")
 	_, err := svc.CreateCompany(context.Background(), &v2CompanyOps.CreateCompanyParams{
 		UserID:    "u-jane",
@@ -64,4 +71,53 @@ func TestCreateCompanyRefusesWithoutAVerifiedEmail(t *testing.T) {
 		Input:     &models.CompanyInput{CompanyName: &name, CompanyWebsite: &site, UserEmail: &email},
 	})
 	assert.True(t, errors.Is(err, ErrCompanyNoGrantTarget), "%v", err)
+}
+
+// the verified e-mail must resolve to an LF login before anything is created: no user -> 403, lookup outage -> 500
+func TestCreateCompanyRequiresAnLFUserForTheGrant(t *testing.T) {
+	previous := lfUserByEmail
+	t.Cleanup(func() { lfUserByEmail = previous })
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	repo := mock_users.NewMockUserRepository(ctrl)
+	repo.EXPECT().GetUser("u-jane").Return(&v1Models.User{UserID: "u-jane", LfUsername: "jane", LfEmail: strfmt.Email("jane@example.invalid")}, nil).AnyTimes()
+	svc := &service{userRepo: repo}
+	call := func() error {
+		name, site, username, email := testCompanyName, testCompanySite, testCallerUsername, testCallerEmail
+		bodyEmail := strfmt.Email(email)
+		_, err := svc.CreateCompany(context.Background(), &v2CompanyOps.CreateCompanyParams{
+			UserID: "u-jane", XUSERNAME: &username, XEMAIL: &email,
+			Input: &models.CompanyInput{CompanyName: &name, CompanyWebsite: &site, UserEmail: &bodyEmail},
+		})
+		return err
+	}
+	lfUserByEmail = func(string) (*v2UserServiceModels.User, error) { return nil, v2UserService.ErrUserNotFound }
+	assert.True(t, errors.Is(call(), ErrCompanyNoGrantTarget), "no LF login behind the verified e-mail")
+	lfUserByEmail = func(string) (*v2UserServiceModels.User, error) { return &v2UserServiceModels.User{}, nil }
+	assert.True(t, errors.Is(call(), ErrCompanyNoGrantTarget), "an LF user without a username cannot be granted")
+	lfUserByEmail = func(string) (*v2UserServiceModels.User, error) { return nil, errors.New("user-service down") }
+	assert.True(t, errors.Is(call(), ErrCompanyUserLookup), "a lookup outage is reported, not swallowed")
+}
+
+// the grant lookup is keyed by the gateway-verified e-mail, never by the body e-mail
+func TestCreateCompanyLooksUpTheVerifiedEmailNotTheBodyOne(t *testing.T) {
+	previous := lfUserByEmail
+	t.Cleanup(func() { lfUserByEmail = previous })
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	repo := mock_users.NewMockUserRepository(ctrl)
+	repo.EXPECT().GetUser("u-jane").Return(&v1Models.User{UserID: "u-jane", LfUsername: testCallerUsername}, nil)
+	var lookedUp []string
+	lfUserByEmail = func(email string) (*v2UserServiceModels.User, error) {
+		lookedUp = append(lookedUp, email)
+		return nil, errors.New("stop here")
+	}
+	name, site, username, verified := testCompanyName, testCompanySite, testCallerUsername, testCallerEmail
+	bodyEmail := strfmt.Email("mallory@example.invalid")
+	_, err := (&service{userRepo: repo}).CreateCompany(context.Background(), &v2CompanyOps.CreateCompanyParams{
+		UserID: "u-jane", XUSERNAME: &username, XEMAIL: &verified,
+		Input: &models.CompanyInput{CompanyName: &name, CompanyWebsite: &site, UserEmail: &bodyEmail},
+	})
+	require.Error(t, err)
+	assert.Equal(t, []string{testCallerEmail}, lookedUp, "the body e-mail cannot steer the grant lookup")
 }
