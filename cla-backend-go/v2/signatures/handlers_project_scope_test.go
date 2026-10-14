@@ -40,6 +40,10 @@ func TestProjectScopeHelpersIgnoreProjectOrganizationScopes(t *testing.T) {
 		assert.False(t, isUserHaveAccessToCLAProjectOrganization(ctx, managerA, "proj-sfid", "company-b", repo))
 		assert.True(t, isUserHaveAccessToCLAProjectOrganization(ctx, managerB, "proj-sfid", "company-b", repo))
 		assert.True(t, isUserHaveAccessToCLAProjectOrganization(ctx, projectManager, "proj-sfid", "company-b", repo))
+		// a foundation-level CLA manager of A (ACS lists the child projects in Related) reaches the child project only for A
+		foundationManagerA := &auth.User{UserName: "foundation-manager", ACL: auth.ACL{Allowed: true, Scopes: []auth.Scope{{Type: auth.ProjectOrganization, ID: "foundation-sfid|company-a", Related: []string{"proj-sfid"}}}}}
+		assert.False(t, isUserHaveAccessToCLAProjectOrganization(ctx, foundationManagerA, "proj-sfid", "company-b", repo))
+		assert.True(t, isUserHaveAccessToCLAProjectOrganization(ctx, foundationManagerA, "proj-sfid", "company-a", repo))
 	})
 
 	t.Run("isUserHaveAccessToCLAGroupProjects", func(t *testing.T) {
@@ -70,5 +74,9 @@ func TestProjectScopeHelpersIgnoreProjectOrganizationScopes(t *testing.T) {
 		ok, err = isUserHaveAccessOfSignedSignaturePDF(ctx, projectManager, ccla, companyService, repo, projectRepo)
 		require.NoError(t, err)
 		assert.True(t, ok)
+		foundationManagerA := &auth.User{UserName: "foundation-manager", ACL: auth.ACL{Allowed: true, Scopes: []auth.Scope{{Type: auth.ProjectOrganization, ID: "foundation-sfid|company-a", Related: []string{"proj-sfid"}}}}}
+		ok, err = isUserHaveAccessOfSignedSignaturePDF(ctx, foundationManagerA, ccla, companyService, repo, projectRepo)
+		require.NoError(t, err)
+		assert.False(t, ok, "a foundation-level CLA manager of another company must not read company B's signed CCLA")
 	})
 }

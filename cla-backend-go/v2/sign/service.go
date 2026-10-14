@@ -2208,6 +2208,7 @@ func (s *service) populateSignURL(ctx context.Context,
 
 	userSignatureName = userDetails.userSignatureName
 	userSignatureEmail = userDetails.userSignatureEmail
+	companyModel = userDetails.company
 
 	log.WithFields(f).Debugf("userSignatureName: %s, userSignatureEmail: %s", userSignatureName, userSignatureEmail)
 
@@ -2527,6 +2528,7 @@ func (s *service) populateSignURL(ctx context.Context,
 type UserSignDetails struct {
 	userSignatureName  string
 	userSignatureEmail string
+	company            *v1Models.Company
 }
 
 func (s *service) populateUserDetails(ctx context.Context, signatureReferenceType string, latestSignature *signatures.ItemSignature, claManagerName, claManagerEmail string, sendAsEmail bool, preferredEmail string) (*UserSignDetails, error) {
@@ -2549,6 +2551,7 @@ func (s *service) populateUserDetails(ctx context.Context, signatureReferenceTyp
 			log.WithFields(f).WithError(err).Warnf("unable to lookup company by ID: %s", latestSignature.SignatureReferenceID)
 			return nil, errors.New("no CLA manager lookup error")
 		}
+		userSignDetails.company = companyModel
 		userSignDetails.userSignatureEmail = claManagerEmail
 		userSignDetails.userSignatureName = claManagerName
 

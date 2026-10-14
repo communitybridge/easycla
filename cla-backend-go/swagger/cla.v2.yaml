@@ -4563,7 +4563,7 @@ paths:
   /user/{userID}/company:
     post:
       summary: Creates a new salesforce company
-      description: Creates a new salesforce company for the signed-in user; the userEmail in the body must be the caller's own email
+      description: Creates a new salesforce company for the signed-in user; company-admin is granted to the signed-in user and userEmail is informational
       operationId: createCompany
       parameters:
         - $ref: "#/parameters/x-request-id"

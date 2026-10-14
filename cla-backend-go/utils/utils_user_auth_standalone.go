@@ -309,7 +309,7 @@ func IsUserAuthorizedForProjectOrganizationTree(ctx context.Context, user *auth.
 		return true
 	}
 
-	val := user.IsUserAuthorized(auth.ProjectOrganization, projectSFID+"|"+companySFID, true)
+	val := projectOrganizationScopeMatches(user, projectSFID, companySFID)
 	if val {
 		log.WithFields(f).Debugf("user '%s' is authorized for projectSFID: %s + companySFID: %s tree, admin flag=%t",
 			user.UserName, projectSFID, companySFID, user.Admin)

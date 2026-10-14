@@ -430,9 +430,16 @@ func (s *service) CreateCompany(ctx context.Context, params *v2Ops.CreateCompany
 	userEmail := params.Input.UserEmail.String()
 	userID := params.UserID
 	note := params.Input.Note
-	if ownErr := s.callerOwnsUser(userID, params.XUSERNAME, userEmail); ownErr != nil {
+	if ownErr := s.callerOwnsUser(userID, params.XUSERNAME, params.XEMAIL); ownErr != nil {
 		log.WithFields(f).WithError(ownErr).Warn("the user ID in the path does not belong to the signed-in user")
 		return nil, ownErr
+	}
+	// company-admin goes to the signed-in identity, never to the body e-mail (lfx-self-serve-ops#343)
+	grantEmail := utils.StringValue(params.XEMAIL)
+	if grantEmail == "" {
+		log.WithFields(f).Warn("the signed-in user has no e-mail - the company is created without a company-admin")
+	} else if !strings.EqualFold(userEmail, grantEmail) {
+		log.WithFields(f).Warnf("userEmail %s differs from the signed-in e-mail - ignored; company-admin is granted to the signed-in identity", userEmail)
 	}
 
 	// Create SalesForce company
@@ -453,32 +460,38 @@ func (s *service) CreateCompany(ctx context.Context, params *v2Ops.CreateCompany
 		f["updatedSigningEntityName"] = org.Name
 	}
 
-	return s.createCompanyForOrg(ctx, f, org, companyName, signingEntityName, companyWebsite, userEmail, userID, note)
+	return s.createCompanyForOrg(ctx, f, org, companyName, signingEntityName, companyWebsite, grantEmail, userID, note)
 }
 
 // ErrCompanyUserMismatch reports a user ID that does not belong to the signed-in user (lfx-self-serve-ops#343)
 var ErrCompanyUserMismatch = errors.New("the user ID does not belong to the signed-in user")
 
-// callerOwnsUser accepts userID only when that EasyCLA user carries the caller's LF username or e-mail
-func (s *service) callerOwnsUser(userID string, username *string, email string) error {
+// callerOwnsUser accepts userID only when that EasyCLA user carries the caller's LF username or e-mail (from the token)
+func (s *service) callerOwnsUser(userID string, username, callerEmail *string) error {
 	user, err := s.userRepo.GetUser(userID)
 	if err != nil {
 		return err
 	}
-	if user != nil {
-		if username != nil && *username != "" && strings.EqualFold(user.LfUsername, *username) {
-			return nil
-		}
-		if email != "" && strings.EqualFold(string(user.LfEmail), email) {
-			return nil
-		}
-		for _, e := range user.Emails {
-			if email != "" && strings.EqualFold(e, email) {
-				return nil
-			}
+	if user == nil {
+		return fmt.Errorf("%w: %s", ErrCompanyUserMismatch, userID)
+	}
+	byUsername := utils.StringValue(username) != "" && strings.EqualFold(user.LfUsername, utils.StringValue(username))
+	if !byUsername && !containsFold(append([]string{string(user.LfEmail)}, user.Emails...), utils.StringValue(callerEmail)) {
+		return fmt.Errorf("%w: %s", ErrCompanyUserMismatch, userID)
+	}
+	return nil
+}
+
+func containsFold(values []string, value string) bool {
+	if value == "" {
+		return false
+	}
+	for _, v := range values {
+		if strings.EqualFold(v, value) {
+			return true
 		}
 	}
-	return fmt.Errorf("%w: %s", ErrCompanyUserMismatch, userID)
+	return false
 }
 
 // createCompanyForOrg grants company-admin on org to userEmail (when it has an LF login) and creates the EasyCLA company row keyed on org.ID

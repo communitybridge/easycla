@@ -29,4 +29,7 @@ func TestIsUserHaveAccessToCLAProjectOrganizationIgnoresProjectOrganizationScope
 	assert.False(t, isUserHaveAccessToCLAProjectOrganization(ctx, user(auth.ProjectOrganization, "proj-sfid|company-a"), "proj-sfid", "company-b", repo))
 	assert.True(t, isUserHaveAccessToCLAProjectOrganization(ctx, user(auth.ProjectOrganization, "proj-sfid|company-b"), "proj-sfid", "company-b", repo))
 	assert.True(t, isUserHaveAccessToCLAProjectOrganization(ctx, user(auth.Project, "proj-sfid"), "proj-sfid", "company-b", repo))
+	foundationManagerA := &auth.User{UserName: "foundation-manager", ACL: auth.ACL{Allowed: true, Scopes: []auth.Scope{{Type: auth.ProjectOrganization, ID: "foundation-sfid|company-a", Related: []string{"proj-sfid"}}}}}
+	assert.False(t, isUserHaveAccessToCLAProjectOrganization(ctx, foundationManagerA, "proj-sfid", "company-b", repo))
+	assert.True(t, isUserHaveAccessToCLAProjectOrganization(ctx, foundationManagerA, "proj-sfid", "company-a", repo))
 }

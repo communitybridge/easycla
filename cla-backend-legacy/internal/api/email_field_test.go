@@ -46,3 +46,20 @@ func TestPublicSignatureItemDropsTheDocuSignEnvelope(t *testing.T) {
 		}
 	}
 }
+
+// the anonymous /v2 approval request must not inject markup into the CLA manager's e-mail (lfx-self-serve-ops#352)
+func TestRequestCompanyAllowlistBodyEscapesCallerFields(t *testing.T) {
+	payload := `<img src=x onerror=alert(1)>`
+	body := requestCompanyAllowlistBody("Boss"+payload, "Project X", "Mallory"+payload, "m@example.invalid"+payload, "Acme", "Acme Inc", "please"+payload, "https://corporate.example.invalid/c/1")
+	if strings.Contains(body, payload) {
+		t.Fatalf("caller-supplied markup reached the body: %s", body)
+	}
+	if strings.Count(body, "&lt;img src=x onerror=alert(1)&gt;") != 5 {
+		t.Fatalf("every caller-supplied field must be escaped (name twice, recipient, e-mail, message): %s", body)
+	}
+	for _, keep := range []string{"Project X", "Acme Inc", `<a href="https://corporate.example.invalid/c/1" target="_blank">`} {
+		if !strings.Contains(body, keep) {
+			t.Fatalf("stored value %q must stay intact: %s", keep, body)
+		}
+	}
+}

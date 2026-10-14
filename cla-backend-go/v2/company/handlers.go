@@ -398,13 +398,14 @@ func Configure(api *operations.EasyclaAPI, service Service, projectClaGroupRepo 
 				"userEmail":         params.Input.UserEmail.String(),
 			}
 			// any signed-in user may create a company, but only for themselves (lfx-self-serve-ops#343)
-			if authUser == nil || authUser.Email == "" || !strings.EqualFold(params.Input.UserEmail.String(), authUser.Email) {
-				msg := fmt.Sprintf("the company can only be created for the signed-in user, not for %s", params.Input.UserEmail.String())
+			if authUser == nil || (authUser.UserName == "" && authUser.Email == "") {
+				msg := "the company can only be created by a signed-in user"
 				log.WithFields(f).Warn(msg)
 				return company.NewCreateCompanyForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
 			}
-			username := authUser.UserName
+			username, email := authUser.UserName, authUser.Email
 			params.XUSERNAME = &username
+			params.XEMAIL = &email
 			// Quick validation of the input parameters
 			log.WithFields(f).Debug("validating company name...")
 			if !utils.ValidCompanyName(*params.Input.CompanyName) {
