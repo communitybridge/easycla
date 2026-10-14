@@ -21,6 +21,10 @@
 #  - role reads bypass ACS's response cache with X-LFX-CACHE: false.
 #  - after flipping, pass -H 'Cache-Control: no-cache' on your first API call
 #    through the gateway to bypass its cached X-ACL for that path.
+#  - ACS caches GET /warden/subjects/authorize (what user-service
+#    /v1/me/permissions reads) for 30 minutes, and a grant or revoke does not
+#    clear it: the per-user /cache/reset never reaches that entry. 'flush-cache'
+#    empties the whole ACS cache instead, for every dev user.
 #
 # Usage (mutating commands require an explicit username arg or ACS_USER env;
 # read-only commands default to ACS_USER, then lgryglicki):
@@ -30,6 +34,7 @@
 #   ./dev_acs_role_flip.sh grant <role> <object_type> <object_id> <username>
 #   ./dev_acs_role_flip.sh revoke <role> <object_id> <username>   # object_id '*' allowed
 #   ./dev_acs_role_flip.sh warden <resource> [method] [username]  # raw warden probe
+#   ./dev_acs_role_flip.sh flush-cache                            # drop every cached ACS answer (all dev users)
 #   ./dev_acs_role_flip.sh orglens status [username]              # LFX One v2 Org Lens grants (b2b_org_settings)
 #   ./dev_acs_role_flip.sh orglens on <orgSFID> <writer|auditor> <username>
 #   ./dev_acs_role_flip.sh orglens off <orgSFID> <username>
@@ -440,6 +445,16 @@ for r in roles:
     [ $# -ge 1 ] || { echo "usage: $0 warden <resource> [method] [username]" >&2; exit 1; }
     RES="$1"; METHOD="${2:-GET}"; USER_NAME="${3:-$DEFAULT_USER}"; TOKEN=$(get_token)
     warden_probe "$RES" "$METHOD" "$USER_NAME" | python3 -m json.tool
+    ;;
+  flush-cache)
+    TOKEN=$(get_token)
+    out=$(acs_post "/cache/flush" '{}')
+    code=${out##*$'\n'}
+    case "$code" in
+      200) echo "${out%$'\n'*}" | python3 -c "import json,sys;d=json.load(sys.stdin).get('Data',{});print(f\"ACS cache flushed: {d.get('TotalDeleted',0)} keys deleted\");d.get('Error') and print('warning:',d['Error'])"
+           echo "note: Self Serve keeps a non-empty CLA-manager answer for 60s; hard-reload the page after that";;
+      *) echo "ACS cache flush failed: HTTP $code" >&2; echo "${out%$'\n'*}" | head -c 400 >&2; echo >&2; exit 1;;
+    esac
     ;;
   orglens)
     SUB="${1:-}"; shift || true
