@@ -81,8 +81,8 @@ const (
 	// NoAccount constant
 	NoAccount = "Individual - No Account"
 
-	//OrgAssociated stating whether user has user association with another org
-	OrgAssociated = "are already associated with other organization"
+	//OrgAssociated is the common part of the ACS wordings ("... are/is already associated with other organization")
+	OrgAssociated = "already associated with other organization"
 )
 
 // Service functions for company
@@ -475,6 +475,11 @@ func (s *service) CreateCompany(ctx context.Context, params *v2Ops.CreateCompany
 	return s.createCompanyForOrg(ctx, f, org, companyName, signingEntityName, companyWebsite, grantEmail, userID, note, lfUser)
 }
 
+// isOrgAssociated reports whether the ACS refused the grant because the user already belongs to another organization
+func isOrgAssociated(err error) bool {
+	return err != nil && strings.Contains(err.Error(), OrgAssociated)
+}
+
 // lfUserByEmail is the seam onto the user-service e-mail lookup (tests)
 var lfUserByEmail = func(email string) (*v2UserServiceModels.User, error) {
 	return v2UserService.GetClient().SearchUsersByEmail(email)
@@ -557,7 +562,7 @@ func (s *service) createCompanyForOrg(ctx context.Context, f logrus.Fields, org 
 			msg := fmt.Sprintf("Problem creating Org scope for email: %s , companyID: %s", userEmail, org.ID)
 			log.WithFields(f).Warn(msg)
 			// Ignore conflict - role has already been assigned - otherwise, return error
-			if !strings.Contains(scopeErr.Error(), OrgAssociated) {
+			if !isOrgAssociated(scopeErr) {
 				return nil, scopeErr
 			}
 		}

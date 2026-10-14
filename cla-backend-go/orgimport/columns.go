@@ -14,7 +14,7 @@ const (
 	srcDerived    = "org-import (derived)"
 	srcOrg        = "LFX Org Service"
 	srcMember     = "LFX member-service (B2B org registry behind the Self Serve Organization Lens)"
-	srcACS        = "LFX ACS role grants, listed through the Org Service user-role-scope API"
+	srcACS        = "LFX ACS role grants, listed through the ACS user role-scopes API (GET /acs/v1/api/users/rolescopes/organization)"
 	srcMapping    = "mapping file (--mapping) or Salesforce Apex (--use-apex)"
 	srcDecisions  = "decisions file (--decisions)"
 
