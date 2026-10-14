@@ -239,3 +239,22 @@ func TestCompanySanctionedEventData(t *testing.T) {
 	assert.True(t, containsPII)
 	assert.Equal(t, "The company Flagged Corp was flagged as sanctioned by sanctions screening.", summary)
 }
+
+func TestECLAInvalidatedEventData(t *testing.T) {
+	full := &ECLAInvalidatedEventData{Contributor: "jane", CompanyName: "Acme Inc", CLAGroupName: "Acme CLA", InvalidatedBy: "michal", Reason: "left the company", InvalidationNote: "ticket 42"}
+	details, pii := full.GetEventDetailsString(&LogEventArgs{})
+	assert.True(t, pii)
+	assert.Equal(t, "The acknowledgment of jane for Acme Inc was invalidated for the CLA Group Acme CLA by the CLA Manager michal, reason: left the company, note: ticket 42.", details)
+	summary, _ := full.GetEventSummaryString(&LogEventArgs{})
+	assert.Equal(t, "the acknowledgment of jane for Acme Inc was invalidated for the CLA Group Acme CLA by the CLA Manager michal, reason: left the company, note: ticket 42.", summary)
+	bare := &ECLAInvalidatedEventData{Contributor: "jane", CompanyName: "Acme Inc", CLAGroupName: "Acme CLA", InvalidatedBy: "michal"}
+	details, _ = bare.GetEventDetailsString(&LogEventArgs{})
+	assert.Equal(t, "The acknowledgment of jane for Acme Inc was invalidated for the CLA Group Acme CLA by the CLA Manager michal.", details)
+	// the resolved event user (display name) wins over the raw login, matching the BY column
+	details, _ = bare.GetEventDetailsString(&LogEventArgs{UserName: "Michal Lehotsky"})
+	assert.Equal(t, "The acknowledgment of jane for Acme Inc was invalidated for the CLA Group Acme CLA by the CLA Manager Michal Lehotsky.", details)
+	summary, _ = bare.GetEventSummaryString(&LogEventArgs{UserName: "Michal Lehotsky"})
+	assert.Equal(t, "the acknowledgment of jane for Acme Inc was invalidated for the CLA Group Acme CLA by the CLA Manager Michal Lehotsky.", summary)
+	details, _ = bare.GetEventDetailsString(nil)
+	assert.Equal(t, "The acknowledgment of jane for Acme Inc was invalidated for the CLA Group Acme CLA by the CLA Manager michal.", details)
+}

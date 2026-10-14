@@ -131,6 +131,46 @@ type SignatureProjectInvalidatedEventData struct {
 	InvalidationNote string
 }
 
+// ECLAInvalidatedEventData data model: a CLA manager invalidated an employee acknowledgment (easycla#5252)
+type ECLAInvalidatedEventData struct {
+	Contributor      string
+	CompanyName      string
+	CLAGroupName     string
+	InvalidatedBy    string
+	Reason           string
+	InvalidationNote string
+}
+
+// text renders the entry; the CLA manager is shown the way the event user is (display name when resolved), easycla#5252
+func (ed *ECLAInvalidatedEventData) text(capitalized bool, args *LogEventArgs) string {
+	lead := "the acknowledgment"
+	if capitalized {
+		lead = "The acknowledgment"
+	}
+	by := ed.InvalidatedBy
+	if args != nil && args.UserName != "" {
+		by = args.UserName
+	}
+	data := fmt.Sprintf("%s of %s for %s was invalidated for the CLA Group %s by the CLA Manager %s", lead, ed.Contributor, ed.CompanyName, ed.CLAGroupName, by)
+	if ed.Reason != "" {
+		data = data + fmt.Sprintf(", reason: %s", ed.Reason)
+	}
+	if ed.InvalidationNote != "" {
+		data = data + fmt.Sprintf(", note: %s", ed.InvalidationNote)
+	}
+	return data + "."
+}
+
+// GetEventDetailsString returns the details string for this event
+func (ed *ECLAInvalidatedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+	return ed.text(true, args), true
+}
+
+// GetEventSummaryString returns the summary string for this event
+func (ed *ECLAInvalidatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+	return ed.text(false, args), true
+}
+
 // SignatureInvalidatedApprovalRejectionEventData data model
 type SignatureInvalidatedApprovalRejectionEventData struct {
 	GHUsername  string

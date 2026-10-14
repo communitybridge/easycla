@@ -382,9 +382,12 @@ func Configure(api *operations.EasyclaAPI, service Service, projectClaGroupRepo 
 		})
 
 	api.CompanyCreateCompanyHandler = company.CreateCompanyHandlerFunc(
-		func(params company.CreateCompanyParams) middleware.Responder {
+		func(params company.CreateCompanyParams, authUser *auth.User) middleware.Responder {
 			reqID := utils.GetRequestID(params.XREQUESTID)
 			ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+			if authUser != nil {
+				utils.SetAuthUserProperties(authUser, params.XUSERNAME, params.XEMAIL)
+			}
 			f := logrus.Fields{
 				"functionName":      "v2.company.handlers.CompanyCreateCompanyHandler",
 				utils.XREQUESTID:    ctx.Value(utils.XREQUESTID),
@@ -394,8 +397,15 @@ func Configure(api *operations.EasyclaAPI, service Service, projectClaGroupRepo 
 				"signingEntityName": params.Input.SigningEntityName,
 				"userEmail":         params.Input.UserEmail.String(),
 			}
-			// No permissions needed - anyone can create a company
-
+			// any signed-in user may create a company, but only for themselves (lfx-self-serve-ops#343)
+			if authUser == nil || (authUser.UserName == "" && authUser.Email == "") {
+				msg := "the company can only be created by a signed-in user"
+				log.WithFields(f).Warn(msg)
+				return company.NewCreateCompanyForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
+			}
+			username, email := authUser.UserName, authUser.Email
+			params.XUSERNAME = &username
+			params.XEMAIL = &email
 			// Quick validation of the input parameters
 			log.WithFields(f).Debug("validating company name...")
 			if !utils.ValidCompanyName(*params.Input.CompanyName) {
@@ -415,6 +425,12 @@ func Configure(api *operations.EasyclaAPI, service Service, projectClaGroupRepo 
 				if _, ok := err.(*organizations.CreateOrgConflict); ok {
 					formatErr := errors.New("organization already exists")
 					return company.NewCreateCompanyConflict().WithXRequestID(reqID).WithPayload(errorResponse(reqID, formatErr))
+				}
+				if errors.Is(err, ErrCompanyUserMismatch) || errors.Is(err, ErrCompanyNoGrantTarget) {
+					return company.NewCreateCompanyForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, err.Error()))
+				}
+				if errors.Is(err, ErrCompanyUserLookup) {
+					return company.NewCreateCompanyInternalServerError().WithXRequestID(reqID).WithPayload(utils.ErrorResponseInternalServerErrorWithError(reqID, "unable to verify the signed-in user", err))
 				}
 				return company.NewCreateCompanyBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
@@ -763,7 +779,7 @@ func isUserHaveAccessToCLAProjectOrganization(ctx context.Context, authUser *aut
 	}
 
 	log.WithFields(f).Debug("testing if user has access to project SFID...")
-	if utils.IsUserAuthorizedForProject(ctx, authUser, projectSFID, utils.ALLOW_ADMIN_SCOPE) {
+	if utils.IsUserAuthorizedForProjectOnly(ctx, authUser, projectSFID, utils.ALLOW_ADMIN_SCOPE) {
 		log.WithFields(f).Debug("user has access to project SFID...")
 		return true
 	}
@@ -787,7 +803,7 @@ func isUserHaveAccessToCLAProjectOrganization(ctx context.Context, authUser *aut
 	}
 
 	log.WithFields(f).Debug("testing if user has access to organization SFID...")
-	if utils.IsUserAuthorizedForOrganization(ctx, authUser, organizationSFID, utils.ALLOW_ADMIN_SCOPE) {
+	if utils.IsUserAuthorizedForOrganizationOnly(ctx, authUser, organizationSFID, utils.ALLOW_ADMIN_SCOPE) {
 		log.WithFields(f).Debug("user has access to organization SFID...")
 		return true
 	}
@@ -809,7 +825,7 @@ func isUserHaveAccessToCLAProjectOrganization(ctx context.Context, authUser *aut
 	// Check the foundation permissions
 	f["foundationSFID"] = projectCLAGroupModel.FoundationSFID
 	log.WithFields(f).Debug("testing if user has access to parent foundation...")
-	if utils.IsUserAuthorizedForProject(ctx, authUser, projectCLAGroupModel.FoundationSFID, utils.ALLOW_ADMIN_SCOPE) {
+	if utils.IsUserAuthorizedForProjectOnly(ctx, authUser, projectCLAGroupModel.FoundationSFID, utils.ALLOW_ADMIN_SCOPE) {
 		log.WithFields(f).Debug("user has access to parent foundation...")
 		return true
 	}

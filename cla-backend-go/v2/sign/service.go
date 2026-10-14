@@ -606,6 +606,9 @@ func (s *service) SignedIndividualCallbackGithub(ctx context.Context, payload []
 		log.WithFields(f).WithError(err).Warn("unable to lookup signature by ID - signature not found")
 		return errors.New("unable to lookup signature by ID - signature not found")
 	}
+	if ignored, guardErr := s.completionIgnored(ctx, f, signature.SignatureID, envelopeID); guardErr != nil || ignored {
+		return guardErr
+	}
 
 	if status == DocusignCompleted {
 		log.WithFields(f).Debugf("envelope signed - status: %s", status)
@@ -638,28 +641,7 @@ func (s *service) SignedIndividualCallbackGithub(ctx context.Context, payload []
 
 		// Update the repository provider with this change - this will update the comment (if necessary)
 		// and the status - do this early in the flow as the user will be immediately redirected back
-		installtionIDInt, err := strconv.Atoi(installationID)
-		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("unable to convert installation ID to int: %s", installationID)
-			return err
-		}
-
-		repositoryIDInt, err := strconv.Atoi(repositoryID)
-		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("unable to convert repository ID to int: %s", repositoryID)
-			return err
-		}
-
-		changeRequestIDInt, err := strconv.Atoi(changeRequestID)
-		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("unable to convert change request ID to int: %s", changeRequestID)
-			return err
-		}
-
-		log.WithFields(f).Debugf("updating change request for installation ID: %d, repository ID: %d, change request ID: %d", installtionIDInt, repositoryIDInt, changeRequestIDInt)
-		err = s.updateChangeRequest(ctx, int64(installtionIDInt), int64(repositoryIDInt), int64(changeRequestIDInt), signature.ProjectID)
-		if err != nil {
-			log.WithFields(f).WithError(err).Warnf("unable to update change request: %s", changeRequestID)
+		if err = s.refreshChangeRequest(ctx, f, installationID, repositoryID, changeRequestID, signature.ProjectID); err != nil {
 			return err
 		}
 
@@ -824,6 +806,104 @@ func fetchFullName(info DocuSignEnvelopeInformation) string {
 	return fullName
 }
 
+// signatureRow reads the raw signature row (API projections deliberately never carry the envelope) (lfx-self-serve-ops#347)
+func (s *service) signatureRow(ctx context.Context, f logrus.Fields, signatureID string) (*signatures.ItemSignature, error) {
+	item, itemErr := s.signatureService.GetItemSignature(ctx, signatureID)
+	if itemErr != nil {
+		log.WithFields(f).WithError(itemErr).Warn("unable to lookup signature row by ID")
+		return nil, itemErr
+	}
+	if item == nil {
+		log.WithFields(f).Warn("unable to lookup signature row by ID - signature not found")
+		return nil, errors.New("unable to lookup signature by ID - signature not found")
+	}
+	return item, nil
+}
+
+// completionIgnored reports whether the callback must be ignored because its envelope is not the stored one
+func (s *service) completionIgnored(ctx context.Context, f logrus.Fields, signatureID, envelopeID string) (bool, error) {
+	item, err := s.signatureRow(ctx, f, signatureID)
+	if err != nil {
+		return false, err
+	}
+	if reason := ignoredCompletion(signatureID, item.SignatureEnvelopeID, envelopeID); reason != "" {
+		log.WithFields(f).Warn(reason)
+		return true, nil
+	}
+	return false, nil
+}
+
+// corporateCompletionIgnored additionally requires the signature to belong to the CLA group and company named by the
+// corporate callback route (lfx-self-serve-ops#347)
+func (s *service) corporateCompletionIgnored(ctx context.Context, f logrus.Fields, signatureID, projectID, companyID, envelopeID string) (bool, error) {
+	item, err := s.signatureRow(ctx, f, signatureID)
+	if err != nil {
+		return false, err
+	}
+	if !rowOnRoute(item, projectID, companyID) {
+		log.WithFields(f).Warnf("signature %s does not belong to CLA group %s / company %s - ignoring the callback", signatureID, projectID, companyID)
+		return true, nil
+	}
+	if reason := ignoredCompletion(signatureID, item.SignatureEnvelopeID, envelopeID); reason != "" {
+		log.WithFields(f).Warn(reason)
+		return true, nil
+	}
+	return false, nil
+}
+
+// rowOnRoute reports whether the signature row belongs to the CLA group and company of the corporate callback route
+func rowOnRoute(item *signatures.ItemSignature, projectID, companyID string) bool {
+	if item.SignatureProjectID != projectID {
+		return false
+	}
+	switch item.SignatureReferenceType {
+	case utils.SignatureReferenceTypeCompany:
+		return item.SignatureReferenceID == companyID
+	case utils.SignatureReferenceTypeUser:
+		return item.SignatureUserCompanyID == companyID
+	}
+	return false
+}
+
+// ignoredCompletion names why a completion callback must not be applied: the envelope is not the one this
+// signature was sent with (lfx-self-serve-ops#347); a repeated completion is re-processed so retries finish
+func ignoredCompletion(signatureID, storedEnvelopeID, envelopeID string) string {
+	if envelopeID == "" || storedEnvelopeID == "" || envelopeID != storedEnvelopeID {
+		return fmt.Sprintf("envelope mismatch for signature %s - ignoring the callback", signatureID)
+	}
+	return ""
+}
+
+// refreshChangeRequest posts the PR status/comment; a repository that is not bound to the CLA group only logs
+func (s *service) refreshChangeRequest(ctx context.Context, f logrus.Fields, installationID, repositoryID, changeRequestID, projectID string) error {
+	installtionIDInt, err := strconv.Atoi(installationID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("unable to convert installation ID to int: %s", installationID)
+		return err
+	}
+	repositoryIDInt, err := strconv.Atoi(repositoryID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("unable to convert repository ID to int: %s", repositoryID)
+		return err
+	}
+	changeRequestIDInt, err := strconv.Atoi(changeRequestID)
+	if err != nil {
+		log.WithFields(f).WithError(err).Warnf("unable to convert change request ID to int: %s", changeRequestID)
+		return err
+	}
+	log.WithFields(f).Debugf("updating change request for installation ID: %d, repository ID: %d, change request ID: %d", installtionIDInt, repositoryIDInt, changeRequestIDInt)
+	err = s.updateChangeRequest(ctx, int64(installtionIDInt), int64(repositoryIDInt), int64(changeRequestIDInt), projectID)
+	if err == nil {
+		return nil
+	}
+	if !errors.Is(err, errRepositoryNotBound) {
+		log.WithFields(f).WithError(err).Warnf("unable to update change request: %s", changeRequestID)
+		return err
+	}
+	log.WithFields(f).WithError(err).Warnf("no status posted on change request %s - the repository is not bound to this CLA group", changeRequestID)
+	return nil
+}
+
 func (s *service) SignedIndividualCallbackGitlab(ctx context.Context, payload []byte, userID, organizationID, repositoryID, mergeRequestID string) error {
 	f := logrus.Fields{
 		"functionName":   "sign.SignedIndividualCallbackGitlab",
@@ -863,6 +943,10 @@ func (s *service) SignedIndividualCallbackGitlab(ctx context.Context, payload []
 	if signature == nil {
 		log.WithFields(f).WithError(err).Warn("unable to lookup signature by ID - signature not found")
 		return errors.New("unable to lookup signature by ID - signature not found")
+	}
+
+	if ignored, guardErr := s.completionIgnored(ctx, f, signature.SignatureID, envelopeID); guardErr != nil || ignored {
+		return guardErr
 	}
 
 	if status == DocusignCompleted {
@@ -1062,6 +1146,16 @@ func (s *service) SignedIndividualCallbackGitlab(ctx context.Context, payload []
 }
 
 func (s *service) SignedIndividualCallbackGerrit(ctx context.Context, payload []byte, userID string) error {
+	_, err := s.signedIndividualCallbackGerrit(ctx, payload, userID)
+	return err
+}
+
+// completeIndividualGerrit is the Self Serve wrapper's seam onto signedIndividualCallbackGerrit (tests)
+var completeIndividualGerrit = (*service).signedIndividualCallbackGerrit
+
+// signedIndividualCallbackGerrit returns the signature only when a Completed envelope was processed; nil when the
+// envelope was ignored or is not completed
+func (s *service) signedIndividualCallbackGerrit(ctx context.Context, payload []byte, userID string) (*v1Models.Signature, error) {
 	f := logrus.Fields{
 		"functionName":   "sign.SignedIndividualCallbackGerrit",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -1074,7 +1168,7 @@ func (s *service) SignedIndividualCallbackGerrit(ctx context.Context, payload []
 	err := xml.Unmarshal(payload, &info)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("unable to unmarshal xml payload")
-		return err
+		return nil, err
 	}
 
 	envelopeID := info.EnvelopeStatus.EnvelopeID
@@ -1091,12 +1185,16 @@ func (s *service) SignedIndividualCallbackGerrit(ctx context.Context, payload []
 	signature, err := s.signatureService.GetSignature(ctx, signatureID)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("unable to lookup signature by ID")
-		return err
+		return nil, err
 	}
 
 	if signature == nil {
 		log.WithFields(f).WithError(err).Warn("unable to lookup signature by ID - signature not found")
-		return errors.New("unable to lookup signature by ID - signature not found")
+		return nil, errors.New("unable to lookup signature by ID - signature not found")
+	}
+
+	if ignored, guardErr := s.completionIgnored(ctx, f, signature.SignatureID, envelopeID); guardErr != nil || ignored {
+		return nil, guardErr
 	}
 
 	if status == DocusignCompleted {
@@ -1113,7 +1211,7 @@ func (s *service) SignedIndividualCallbackGerrit(ctx context.Context, payload []
 		err = s.signatureService.UpdateSignature(ctx, signatureID, updates)
 		if err != nil {
 			log.WithFields(f).WithError(err).Warnf("unable to update signature record with envelope ID: %s", envelopeID)
-			return err
+			return nil, err
 		}
 
 		log.WithFields(f).Debugf("updated signature record: %s", signatureID)
@@ -1121,7 +1219,7 @@ func (s *service) SignedIndividualCallbackGerrit(ctx context.Context, payload []
 		claUser, userErr := s.userService.GetUser(signature.SignatureReferenceID)
 		if userErr != nil {
 			log.WithFields(f).WithError(userErr).Warnf("unable to lookup user by ID: %s", signature.SignatureReferenceID)
-			return userErr
+			return nil, userErr
 		}
 
 		if claUser.Username == "" {
@@ -1134,7 +1232,7 @@ func (s *service) SignedIndividualCallbackGerrit(ctx context.Context, payload []
 				_, err = s.userService.UpdateUser(signature.SignatureReferenceID, updates)
 				if err != nil {
 					log.WithFields(f).WithError(err).Warnf("unable to update user with username: %s", fullName)
-					return err
+					return nil, err
 				}
 			}
 		}
@@ -1144,7 +1242,7 @@ func (s *service) SignedIndividualCallbackGerrit(ctx context.Context, payload []
 		signedDocument, err := s.GetSignedDocument(ctx, envelopeID, documentID)
 		if err != nil {
 			log.WithFields(f).WithError(err).Warnf("unable to get signed document for envelope ID: %s", envelopeID)
-			return err
+			return nil, err
 		}
 
 		log.WithFields(f).Debugf("getting claGroupID: %s", signature.ProjectID)
@@ -1152,7 +1250,7 @@ func (s *service) SignedIndividualCallbackGerrit(ctx context.Context, payload []
 		claGroup, err := s.claGroupService.GetCLAGroup(ctx, signature.ProjectID)
 		if err != nil {
 			log.WithFields(f).WithError(err).Warnf("unable to lookup CLA Group by ID: %s", signature.ProjectID)
-			return err
+			return nil, err
 		}
 
 		log.WithFields(f).Debugf("claGroup: %+s found", claGroup.ProjectID)
@@ -1170,7 +1268,7 @@ func (s *service) SignedIndividualCallbackGerrit(ctx context.Context, payload []
 		email := utils.GetBestEmail(claUser)
 		if email == "" {
 			log.WithFields(f).Warnf("unable to find email for user: %+v", claUser)
-			return errors.New("unable to find email for user")
+			return nil, errors.New("unable to find email for user")
 		}
 
 		recipients := []string{utils.GetBestEmail(claUser)}
@@ -1178,7 +1276,7 @@ func (s *service) SignedIndividualCallbackGerrit(ctx context.Context, payload []
 		body, err := emails.RenderDocumentSignedTemplate(s.emailTemplateService, claGroup.Version, signature.ProjectID, claGroup.ProjectExternalID, emailParams)
 		if err != nil {
 			log.WithFields(f).WithError(err).Warnf("unable to render document signed template for project version: %s, project ID: %s", claGroup.Version, claGroup.ProjectID)
-			return err
+			return nil, err
 		}
 
 		// send email to user
@@ -1187,13 +1285,13 @@ func (s *service) SignedIndividualCallbackGerrit(ctx context.Context, payload []
 
 		if err != nil {
 			log.WithFields(f).WithError(err).Warnf("unable to send email to user: %s", claUser.Username)
-			return err
+			return nil, err
 		}
 
 		log.WithFields(f).Debugf("email sent to user: %s", claUser.Username)
 
 		if claUser.UserID == "" {
-			return fmt.Errorf("user id is empty for user: %s", claUser.Username)
+			return nil, fmt.Errorf("user id is empty for user: %s", claUser.Username)
 		}
 
 		// store document on S3
@@ -1201,7 +1299,7 @@ func (s *service) SignedIndividualCallbackGerrit(ctx context.Context, payload []
 		err = utils.UploadToS3(signedDocument, signature.ProjectID, utils.ClaTypeICLA, claUser.UserID, signature.SignatureID)
 		if err != nil {
 			log.WithFields(f).WithError(err).Warnf("unable to store signed document on S3")
-			return err
+			return nil, err
 		}
 
 		// event data
@@ -1233,11 +1331,11 @@ func (s *service) SignedIndividualCallbackGerrit(ctx context.Context, payload []
 		//			log.WithFields(f).Warnf("user LF username is empty")
 		//		}
 
-	} else {
-		log.WithFields(f).Debugf("envelope not signed - status: %s", status)
+		return signature, nil
 	}
 
-	return nil
+	log.WithFields(f).Debugf("envelope not signed - status: %s", status)
+	return nil, nil
 }
 
 // SignedIndividualCallbackSelfServe handles the DocuSign callback of an individual signature
@@ -1252,25 +1350,30 @@ func (s *service) SignedIndividualCallbackSelfServe(ctx context.Context, payload
 
 	// This callback is reachable without a token, and the shared processing indexes the envelope's
 	// recipient and document statuses - reject a payload missing either before delegating
-	info, err := parseEnvelope(payload)
-	if err != nil {
+	if _, err := parseEnvelope(payload); err != nil {
 		log.WithFields(f).WithError(err).Warn("unable to process the docusign payload")
 		return err
 	}
 
-	if err := s.SignedIndividualCallbackGerrit(ctx, payload, userID); err != nil {
+	signature, err := completeIndividualGerrit(s, ctx, payload, userID)
+	if err != nil {
 		return err
 	}
 
 	// The Gerrit callback leaves the session in place because the Gerrit flow never writes one -
-	// a Self Serve session does, so remove it here once the envelope is complete
-	if info.EnvelopeStatus.RecipientStatuses[0].Status != DocusignCompleted {
+	// a Self Serve session does, so remove it here, but only for a completion that was actually
+	// processed and only for the signer's own session (the route user ID is unauthenticated input)
+	if signature == nil {
+		return nil
+	}
+	if signature.SignatureReferenceID != userID {
+		log.WithFields(f).Warnf("completed signature %s belongs to user %s, not the route user %s - leaving the session in place", signature.SignatureID, signature.SignatureReferenceID, userID)
 		return nil
 	}
 
-	log.WithFields(f).Debugf("removing active signature metadata for user: %s", userID)
-	if err := s.storeRepository.DeleteActiveSignatureMetaData(ctx, fmt.Sprintf("active_signature:%s", userID)); err != nil {
-		log.WithFields(f).WithError(err).Warnf("unable to remove active signature metadata for user: %s", userID)
+	log.WithFields(f).Debugf("removing active signature metadata for user: %s", signature.SignatureReferenceID)
+	if err := s.storeRepository.DeleteActiveSignatureMetaData(ctx, fmt.Sprintf("active_signature:%s", signature.SignatureReferenceID)); err != nil {
+		log.WithFields(f).WithError(err).Warnf("unable to remove active signature metadata for user: %s", signature.SignatureReferenceID)
 		return err
 	}
 	return nil
@@ -1353,6 +1456,9 @@ func (s *service) SignedCorporateCallback(ctx context.Context, payload []byte, c
 	}
 
 	log.WithFields(f).Debugf("signatureID: %s", signatureID)
+	if ignored, guardErr := s.corporateCompletionIgnored(ctx, f, signature.SignatureID, projectID, companyID, envelopeID); guardErr != nil || ignored {
+		return guardErr
+	}
 	var user *v1Models.User
 	if signature.SignatureReferenceType == utils.SignatureReferenceTypeUser {
 		log.WithFields(f).Debugf("looking up user by ID: %s", signature.SignatureReferenceID)
@@ -2117,6 +2223,7 @@ func (s *service) populateSignURL(ctx context.Context,
 
 	userSignatureName = userDetails.userSignatureName
 	userSignatureEmail = userDetails.userSignatureEmail
+	companyModel = userDetails.company
 
 	log.WithFields(f).Debugf("userSignatureName: %s, userSignatureEmail: %s", userSignatureName, userSignatureEmail)
 
@@ -2436,6 +2543,7 @@ func (s *service) populateSignURL(ctx context.Context,
 type UserSignDetails struct {
 	userSignatureName  string
 	userSignatureEmail string
+	company            *v1Models.Company
 }
 
 func (s *service) populateUserDetails(ctx context.Context, signatureReferenceType string, latestSignature *signatures.ItemSignature, claManagerName, claManagerEmail string, sendAsEmail bool, preferredEmail string) (*UserSignDetails, error) {
@@ -2458,6 +2566,7 @@ func (s *service) populateUserDetails(ctx context.Context, signatureReferenceTyp
 			log.WithFields(f).WithError(err).Warnf("unable to lookup company by ID: %s", latestSignature.SignatureReferenceID)
 			return nil, errors.New("no CLA manager lookup error")
 		}
+		userSignDetails.company = companyModel
 		userSignDetails.userSignatureEmail = claManagerEmail
 		userSignDetails.userSignatureName = claManagerName
 
@@ -3157,7 +3266,7 @@ func removeSignatoryRole(ctx context.Context, userEmail string, companySFID stri
 	// Get scope id
 	log.WithFields(f).Debug("getting scope id")
 	orgClient := organizationService.GetClient()
-	scopeID, scopeErr := orgClient.GetScopeID(ctx, companySFID, projectSFID, "cla-signatory", "project|organization", user.Username)
+	scopeID, scopeErr := acsClient.FindUserGrantID(ctx, companySFID, projectSFID, "cla-signatory", user.Username)
 
 	if scopeErr != nil {
 		log.WithFields(f).Debug("Failed to get scope id for cla-signatory role")

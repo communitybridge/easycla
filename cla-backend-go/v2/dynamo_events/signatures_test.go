@@ -136,3 +136,36 @@ func TestSignatureAddSigTypeSignedApprovedID(t *testing.T) {
 		})
 	}
 }
+
+// the CCLA row carries no user e-mail: the contributor association is skipped instead of calling the Org Service with an empty address
+func TestSignatureAssignContributorEventSkipsEmptyEmail(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	companyRepo := mock_company.NewMockIRepository(ctrl)
+	pcgRepo := mock_pcg_repo.NewMockRepository(ctrl)
+	companyRepo.EXPECT().GetCompany(gomock.Any(), "company-1").
+		Return(&models.Company{CompanyID: "company-1", CompanyExternalID: "ext-sfid-1"}, nil)
+	pcgRepo.EXPECT().GetProjectsIdsForClaGroup(gomock.Any(), "cla-group-1").
+		Return([]*projects_cla_groups.ProjectClaGroup{{ProjectSFID: "p1", ClaGroupID: "cla-group-1"}}, nil)
+
+	// companyService is nil: reaching AssociateContributorByGroup panics
+	s := &service{companyRepo: companyRepo, projectsClaGroupRepo: pcgRepo}
+	err := s.SignatureAssignContributorEvent(events.DynamoDBEventRecord{
+		Change: events.DynamoDBStreamRecord{
+			OldImage: map[string]events.DynamoDBAttributeValue{
+				"signature_id":     events.NewStringAttribute("sig-ccla-no-email"),
+				"signature_signed": events.NewBooleanAttribute(false),
+			},
+			NewImage: map[string]events.DynamoDBAttributeValue{
+				"signature_id":           events.NewStringAttribute("sig-ccla-no-email"),
+				"signature_type":         events.NewStringAttribute("ccla"),
+				"signature_reference_id": events.NewStringAttribute("company-1"),
+				"signature_project_id":   events.NewStringAttribute("cla-group-1"),
+				"signature_signed":       events.NewBooleanAttribute(true),
+				"signature_approved":     events.NewBooleanAttribute(true),
+			},
+		},
+	})
+	assert.NoError(t, err)
+}
