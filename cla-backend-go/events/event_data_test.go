@@ -250,4 +250,11 @@ func TestECLAInvalidatedEventData(t *testing.T) {
 	bare := &ECLAInvalidatedEventData{Contributor: "jane", CompanyName: "Acme Inc", CLAGroupName: "Acme CLA", InvalidatedBy: "michal"}
 	details, _ = bare.GetEventDetailsString(&LogEventArgs{})
 	assert.Equal(t, "The acknowledgment of jane for Acme Inc was invalidated for the CLA Group Acme CLA by the CLA Manager michal.", details)
+	// the resolved event user (display name) wins over the raw login, matching the BY column
+	details, _ = bare.GetEventDetailsString(&LogEventArgs{UserName: "Michal Lehotsky"})
+	assert.Equal(t, "The acknowledgment of jane for Acme Inc was invalidated for the CLA Group Acme CLA by the CLA Manager Michal Lehotsky.", details)
+	summary, _ = bare.GetEventSummaryString(&LogEventArgs{UserName: "Michal Lehotsky"})
+	assert.Equal(t, "the acknowledgment of jane for Acme Inc was invalidated for the CLA Group Acme CLA by the CLA Manager Michal Lehotsky.", summary)
+	details, _ = bare.GetEventDetailsString(nil)
+	assert.Equal(t, "The acknowledgment of jane for Acme Inc was invalidated for the CLA Group Acme CLA by the CLA Manager michal.", details)
 }

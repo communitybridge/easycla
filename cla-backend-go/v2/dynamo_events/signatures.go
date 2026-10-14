@@ -449,6 +449,10 @@ func (s *service) assignContributor(ctx context.Context, newSignature Signature,
 				newSignature.SignatureProjectID)
 			return nil
 		}
+		if newSignature.UserEmail == "" {
+			log.WithFields(f).Debugf("no user e-mail on the signature - skipping the contributor association for company: %s", companyModel.CompanyExternalID)
+			return nil
+		}
 		_, _, err = s.companyService.AssociateContributorByGroup(ctx, companyModel.CompanyExternalID, newSignature.UserEmail, projectCLAGroups, newSignature.SignatureProjectID)
 
 		if err != nil {

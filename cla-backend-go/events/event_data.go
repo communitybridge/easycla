@@ -141,12 +141,17 @@ type ECLAInvalidatedEventData struct {
 	InvalidationNote string
 }
 
-func (ed *ECLAInvalidatedEventData) text(capitalized bool) string {
+// text renders the entry; the CLA manager is shown the way the event user is (display name when resolved), easycla#5252
+func (ed *ECLAInvalidatedEventData) text(capitalized bool, args *LogEventArgs) string {
 	lead := "the acknowledgment"
 	if capitalized {
 		lead = "The acknowledgment"
 	}
-	data := fmt.Sprintf("%s of %s for %s was invalidated for the CLA Group %s by the CLA Manager %s", lead, ed.Contributor, ed.CompanyName, ed.CLAGroupName, ed.InvalidatedBy)
+	by := ed.InvalidatedBy
+	if args != nil && args.UserName != "" {
+		by = args.UserName
+	}
+	data := fmt.Sprintf("%s of %s for %s was invalidated for the CLA Group %s by the CLA Manager %s", lead, ed.Contributor, ed.CompanyName, ed.CLAGroupName, by)
 	if ed.Reason != "" {
 		data = data + fmt.Sprintf(", reason: %s", ed.Reason)
 	}
@@ -157,13 +162,13 @@ func (ed *ECLAInvalidatedEventData) text(capitalized bool) string {
 }
 
 // GetEventDetailsString returns the details string for this event
-func (ed *ECLAInvalidatedEventData) GetEventDetailsString(_ *LogEventArgs) (string, bool) {
-	return ed.text(true), true
+func (ed *ECLAInvalidatedEventData) GetEventDetailsString(args *LogEventArgs) (string, bool) {
+	return ed.text(true, args), true
 }
 
 // GetEventSummaryString returns the summary string for this event
-func (ed *ECLAInvalidatedEventData) GetEventSummaryString(_ *LogEventArgs) (string, bool) {
-	return ed.text(false), true
+func (ed *ECLAInvalidatedEventData) GetEventSummaryString(args *LogEventArgs) (string, bool) {
+	return ed.text(false, args), true
 }
 
 // SignatureInvalidatedApprovalRejectionEventData data model
