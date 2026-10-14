@@ -472,7 +472,7 @@ func (s *service) CreateCompany(ctx context.Context, params *v2Ops.CreateCompany
 		f["updatedSigningEntityName"] = org.Name
 	}
 
-	return s.createCompanyForOrg(ctx, f, org, companyName, signingEntityName, companyWebsite, grantEmail, userID, note)
+	return s.createCompanyForOrg(ctx, f, org, companyName, signingEntityName, companyWebsite, grantEmail, userID, note, lfUser)
 }
 
 // lfUserByEmail is the seam onto the user-service e-mail lookup (tests)
@@ -517,20 +517,26 @@ func containsFold(values []string, value string) bool {
 	return false
 }
 
-// createCompanyForOrg grants company-admin on org to userEmail (when it has an LF login) and creates the EasyCLA company row keyed on org.ID
-func (s *service) createCompanyForOrg(ctx context.Context, f logrus.Fields, org *orgModels.Organization, companyName, signingEntityName, companyWebsite, userEmail, userID, note string) (*models.CompanyOutput, error) {
-	var lfUser *v2UserServiceModels.User
+// grantUserFor returns the already-verified LF user, or looks it up by e-mail (nil when there is none: the caller decides)
+func grantUserFor(f logrus.Fields, lfUser *v2UserServiceModels.User, userEmail string) *v2UserServiceModels.User {
+	if lfUser != nil || userEmail == "" {
+		return lfUser
+	}
+	found, lfErr := lfUserByEmail(userEmail)
+	if lfErr != nil {
+		log.WithFields(f).Warnf("User : %s has no LFID", userEmail)
+		return nil
+	}
+	return found
+}
+
+// createCompanyForOrg grants company-admin on org to the verified lfUser (or to userEmail's LF login when lfUser is nil)
+// and creates the EasyCLA company row keyed on org.ID
+func (s *service) createCompanyForOrg(ctx context.Context, f logrus.Fields, org *orgModels.Organization, companyName, signingEntityName, companyWebsite, userEmail, userID, note string, lfUser *v2UserServiceModels.User) (*models.CompanyOutput, error) {
 	orgClient := orgService.GetClient()
 	acsClient := acsService.GetClient()
 
-	if userEmail != "" {
-		var lfErr error
-		lfUser, lfErr = lfUserByEmail(userEmail)
-		if lfErr != nil {
-			msg := fmt.Sprintf("User : %s has no LFID", userEmail)
-			log.WithFields(f).Warn(msg)
-		}
-	}
+	lfUser = grantUserFor(f, lfUser, userEmail)
 	if lfUser != nil && lfUser.Username == "" {
 		msg := fmt.Sprintf("User: %+v has no LF login/username", lfUser)
 		log.WithFields(f).Warn(msg)
@@ -634,7 +640,7 @@ func (s *service) CreateCompanyFromSFModel(ctx context.Context, orgModel *orgMod
 		userEmail = companyInput.UserEmail.String()
 	}
 	// the organization already exists: never re-create or attach to it by domain (lfx-self-serve-ops#343)
-	return s.createCompanyForOrg(ctx, f, orgModel, orgModel.Name, companyInput.SigningEntityName, orgModel.Link, userEmail, authUser.UserName, companyInput.Note)
+	return s.createCompanyForOrg(ctx, f, orgModel, orgModel.Name, companyInput.SigningEntityName, orgModel.Link, userEmail, authUser.UserName, companyInput.Note, nil)
 }
 
 // GetCompanyByName deletes the company by name

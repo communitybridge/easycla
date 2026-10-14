@@ -16,6 +16,7 @@ import (
 	mock_users "github.com/linuxfoundation/easycla/cla-backend-go/users/mocks"
 	v2UserService "github.com/linuxfoundation/easycla/cla-backend-go/v2/user-service"
 	v2UserServiceModels "github.com/linuxfoundation/easycla/cla-backend-go/v2/user-service/models"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -120,4 +121,20 @@ func TestCreateCompanyLooksUpTheVerifiedEmailNotTheBodyOne(t *testing.T) {
 	})
 	require.Error(t, err)
 	assert.Equal(t, []string{testCallerEmail}, lookedUp, "the body e-mail cannot steer the grant lookup")
+}
+
+// the LF user verified before the Salesforce write is the one that gets company-admin: no second lookup that could fail
+func TestGrantUserForUsesTheVerifiedUser(t *testing.T) {
+	previous := lfUserByEmail
+	t.Cleanup(func() { lfUserByEmail = previous })
+	verified := &v2UserServiceModels.User{Username: testCallerUsername}
+	lfUserByEmail = func(string) (*v2UserServiceModels.User, error) {
+		t.Fatal("the verified user must not be looked up again")
+		return nil, nil
+	}
+	assert.Same(t, verified, grantUserFor(logrus.Fields{}, verified, testCallerEmail))
+	looked := &v2UserServiceModels.User{Username: "owner"}
+	lfUserByEmail = func(string) (*v2UserServiceModels.User, error) { return looked, nil }
+	assert.Same(t, looked, grantUserFor(logrus.Fields{}, nil, "owner@example.invalid"), "the SF-model path still looks the owner up")
+	assert.Nil(t, grantUserFor(logrus.Fields{}, nil, ""))
 }
