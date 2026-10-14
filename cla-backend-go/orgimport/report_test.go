@@ -78,14 +78,14 @@ func TestBuildReport(t *testing.T) {
 	for _, a := range rep.Attachments {
 		names = append(names, a.Name)
 	}
-	assert.Equal(t, []string{"manual_actions.csv", "plan.csv", "targets.csv", "to_salesforce.csv", "run.log", "out.zip"}, names)
-	zr, err := zip.NewReader(bytes.NewReader(rep.Attachments[5].Data), int64(len(rep.Attachments[5].Data)))
+	assert.Equal(t, []string{"manual_actions.csv", "plan.csv", "targets.csv", "to_salesforce.csv", "columns.csv", "run.log", "out.zip"}, names)
+	zr, err := zip.NewReader(bytes.NewReader(rep.Attachments[6].Data), int64(len(rep.Attachments[6].Data)))
 	require.NoError(t, err)
 	var zipped []string
 	for _, f := range zr.File {
 		zipped = append(zipped, f.Name)
 	}
-	assert.ElementsMatch(t, []string{"plan.csv", "manual_actions.csv", "targets.csv", "to_salesforce.csv", "run.log"}, zipped)
+	assert.ElementsMatch(t, []string{"plan.csv", "manual_actions.csv", "targets.csv", "to_salesforce.csv", "columns.csv", "run.log"}, zipped)
 	_, err = ZipDir(filepath.Join(outDir, "missing"))
 	assert.Error(t, err)
 
@@ -127,7 +127,7 @@ func TestBuildReportEscapesAndTruncates(t *testing.T) {
 	for _, a := range rep.Attachments {
 		names = append(names, a.Name)
 	}
-	assert.Equal(t, []string{"audit.csv", "unresolvable.csv", "possible_duplicates.csv", filepath.Base(dir) + ".zip"}, names)
+	assert.Equal(t, []string{"audit.csv", "unresolvable.csv", "possible_duplicates.csv", "columns.csv", filepath.Base(dir) + ".zip"}, names)
 }
 
 func TestApplyCommands(t *testing.T) {

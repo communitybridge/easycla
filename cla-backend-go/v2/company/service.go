@@ -424,13 +424,35 @@ func (s *service) CreateCompany(ctx context.Context, params *v2Ops.CreateCompany
 		"note":              params.Input.Note,
 	}
 
-	var lfUser *v2UserServiceModels.User
 	companyName := *params.Input.CompanyName
 	signingEntityName := params.Input.SigningEntityName
 	companyWebsite := *params.Input.CompanyWebsite
 	userEmail := params.Input.UserEmail.String()
 	userID := params.UserID
 	note := params.Input.Note
+	// company-admin goes to the gateway-verified identity only, never to the body e-mail (lfx-self-serve-ops#343)
+	grantEmail := utils.StringValue(params.XEMAIL)
+	if grantEmail == "" {
+		log.WithFields(f).Warn("no verified e-mail for the signed-in user - refusing to create the company")
+		return nil, ErrCompanyNoGrantTarget
+	}
+	if ownErr := s.callerOwnsUser(userID, params.XUSERNAME, params.XEMAIL); ownErr != nil {
+		log.WithFields(f).WithError(ownErr).Warn("the user ID in the path does not belong to the signed-in user")
+		return nil, ownErr
+	}
+	// the grant target must resolve to an LF login before anything is created, or the company would have no company-admin
+	lfUser, lfErr := lfUserByEmail(grantEmail)
+	if lfErr != nil && !errors.Is(lfErr, v2UserService.ErrUserNotFound) {
+		log.WithFields(f).WithError(lfErr).Warn("unable to look up the signed-in user's LF account - refusing to create the company")
+		return nil, fmt.Errorf("%w: %s: %v", ErrCompanyUserLookup, grantEmail, lfErr)
+	}
+	if lfErr != nil || lfUser == nil || lfUser.Username == "" {
+		log.WithFields(f).Warnf("no LF login found for the signed-in e-mail %s - refusing to create the company", grantEmail)
+		return nil, fmt.Errorf("%w: no LF login for %s", ErrCompanyNoGrantTarget, grantEmail)
+	}
+	if !strings.EqualFold(userEmail, grantEmail) {
+		log.WithFields(f).Warnf("userEmail %s differs from the signed-in e-mail - ignored; company-admin is granted to the signed-in identity", userEmail)
+	}
 
 	// Create SalesForce company
 	orgClient := orgService.GetClient()
@@ -450,13 +472,64 @@ func (s *service) CreateCompany(ctx context.Context, params *v2Ops.CreateCompany
 		f["updatedSigningEntityName"] = org.Name
 	}
 
-	acsClient := acsService.GetClient()
-	userClient := v2UserService.GetClient()
+	return s.createCompanyForOrg(ctx, f, org, companyName, signingEntityName, companyWebsite, grantEmail, userID, note)
+}
 
-	lfUser, lfErr := userClient.SearchUsersByEmail(userEmail)
-	if lfErr != nil {
-		msg := fmt.Sprintf("User : %s has no LFID", userEmail)
-		log.WithFields(f).Warn(msg)
+// lfUserByEmail is the seam onto the user-service e-mail lookup (tests)
+var lfUserByEmail = func(email string) (*v2UserServiceModels.User, error) {
+	return v2UserService.GetClient().SearchUsersByEmail(email)
+}
+
+// ErrCompanyUserMismatch reports a user ID that does not belong to the signed-in user (lfx-self-serve-ops#343)
+var ErrCompanyUserMismatch = errors.New("the user ID does not belong to the signed-in user")
+
+// ErrCompanyUserLookup reports that the signed-in user could not be verified because the user lookup failed
+var ErrCompanyUserLookup = errors.New("unable to look up the user")
+
+// ErrCompanyNoGrantTarget reports a signed-in user without a gateway-verified e-mail (nothing to grant company-admin to)
+var ErrCompanyNoGrantTarget = errors.New("no verified e-mail for the signed-in user")
+
+// callerOwnsUser accepts userID only when that EasyCLA user carries the caller's LF username or e-mail (from the token)
+func (s *service) callerOwnsUser(userID string, username, callerEmail *string) error {
+	user, err := s.userRepo.GetUser(userID)
+	if err != nil {
+		return fmt.Errorf("%w: %s: %v", ErrCompanyUserLookup, userID, err)
+	}
+	if user == nil {
+		return fmt.Errorf("%w: %s", ErrCompanyUserMismatch, userID)
+	}
+	byUsername := utils.StringValue(username) != "" && strings.EqualFold(user.LfUsername, utils.StringValue(username))
+	if !byUsername && !containsFold(append([]string{string(user.LfEmail)}, user.Emails...), utils.StringValue(callerEmail)) {
+		return fmt.Errorf("%w: %s", ErrCompanyUserMismatch, userID)
+	}
+	return nil
+}
+
+func containsFold(values []string, value string) bool {
+	if value == "" {
+		return false
+	}
+	for _, v := range values {
+		if strings.EqualFold(v, value) {
+			return true
+		}
+	}
+	return false
+}
+
+// createCompanyForOrg grants company-admin on org to userEmail (when it has an LF login) and creates the EasyCLA company row keyed on org.ID
+func (s *service) createCompanyForOrg(ctx context.Context, f logrus.Fields, org *orgModels.Organization, companyName, signingEntityName, companyWebsite, userEmail, userID, note string) (*models.CompanyOutput, error) {
+	var lfUser *v2UserServiceModels.User
+	orgClient := orgService.GetClient()
+	acsClient := acsService.GetClient()
+
+	if userEmail != "" {
+		var lfErr error
+		lfUser, lfErr = lfUserByEmail(userEmail)
+		if lfErr != nil {
+			msg := fmt.Sprintf("User : %s has no LFID", userEmail)
+			log.WithFields(f).Warn(msg)
+		}
 	}
 	if lfUser != nil && lfUser.Username == "" {
 		msg := fmt.Sprintf("User: %+v has no LF login/username", lfUser)
@@ -556,10 +629,12 @@ func (s *service) CreateCompanyFromSFModel(ctx context.Context, orgModel *orgMod
 			companyInput.UserEmail = &userEmail
 		}
 	}
-	return s.CreateCompany(ctx, &v2Ops.CreateCompanyParams{
-		Input:  companyInput,
-		UserID: authUser.UserName,
-	})
+	userEmail := ""
+	if companyInput.UserEmail != nil {
+		userEmail = companyInput.UserEmail.String()
+	}
+	// the organization already exists: never re-create or attach to it by domain (lfx-self-serve-ops#343)
+	return s.createCompanyForOrg(ctx, f, orgModel, orgModel.Name, companyInput.SigningEntityName, orgModel.Link, userEmail, authUser.UserName, companyInput.Note)
 }
 
 // GetCompanyByName deletes the company by name

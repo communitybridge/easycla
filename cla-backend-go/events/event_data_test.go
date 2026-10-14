@@ -239,3 +239,15 @@ func TestCompanySanctionedEventData(t *testing.T) {
 	assert.True(t, containsPII)
 	assert.Equal(t, "The company Flagged Corp was flagged as sanctioned by sanctions screening.", summary)
 }
+
+func TestECLAInvalidatedEventData(t *testing.T) {
+	full := &ECLAInvalidatedEventData{Contributor: "jane", CompanyName: "Acme Inc", CLAGroupName: "Acme CLA", InvalidatedBy: "michal", Reason: "left the company", InvalidationNote: "ticket 42"}
+	details, pii := full.GetEventDetailsString(&LogEventArgs{})
+	assert.True(t, pii)
+	assert.Equal(t, "The acknowledgment of jane for Acme Inc was invalidated for the CLA Group Acme CLA by the CLA Manager michal, reason: left the company, note: ticket 42.", details)
+	summary, _ := full.GetEventSummaryString(&LogEventArgs{})
+	assert.Equal(t, "the acknowledgment of jane for Acme Inc was invalidated for the CLA Group Acme CLA by the CLA Manager michal, reason: left the company, note: ticket 42.", summary)
+	bare := &ECLAInvalidatedEventData{Contributor: "jane", CompanyName: "Acme Inc", CLAGroupName: "Acme CLA", InvalidatedBy: "michal"}
+	details, _ = bare.GetEventDetailsString(&LogEventArgs{})
+	assert.Equal(t, "The acknowledgment of jane for Acme Inc was invalidated for the CLA Group Acme CLA by the CLA Manager michal.", details)
+}

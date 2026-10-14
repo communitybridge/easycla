@@ -584,15 +584,17 @@ func (s *Service) InvalidateECLA(ctx context.Context, claGroupID string, signatu
 		}
 	}
 
-	eventArgs.UserName = utils.GetBestUsername(user)
-	eventArgs.UserModel = user
-	eventArgs.UserID = user.UserID
+	// the cla manager is the event user; the contributor is named in the text (easycla#5252)
+	eventArgs.LfUsername = authUser.UserName
 	eventArgs.ProjectName = claGroup.ProjectName
 	eventArgs.CLAGroupID = claGroupID
+	eventArgs.CLAGroupName = claGroup.ProjectName
 	eventArgs.CompanyID = sig.SignatureUserCompanyID
 	eventArgs.CompanyName = companyModel.CompanyName
-	if eventData, ok := eventArgs.EventData.(*events.SignatureProjectInvalidatedEventData); ok {
-		eventData.SignatureID = sig.SignatureID
+	if eventData, ok := eventArgs.EventData.(*events.ECLAInvalidatedEventData); ok {
+		eventData.Contributor = utils.GetBestUsername(user)
+		eventData.CompanyName = companyModel.CompanyName
+		eventData.CLAGroupName = claGroup.ProjectName
 		eventData.InvalidatedBy = authUser.UserName
 		eventData.Reason = metadata.Reason
 		eventData.InvalidationNote = metadata.Note

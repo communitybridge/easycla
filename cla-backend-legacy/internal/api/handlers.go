@@ -1989,8 +1989,7 @@ func (h *Handlers) GetUserSignaturesV1(w http.ResponseWriter, r *http.Request) {
 		if getAttrString(it, "signature_reference_type") != "user" {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 
@@ -2153,22 +2152,7 @@ func (h *Handlers) RequestCompanyAllowlistV2(w http.ResponseWriter, r *http.Requ
 	subject := fmt.Sprintf("EasyCLA: Request to Authorize %s for %s", userName, projectName)
 	corpURL := corporateCompanyURL(companyID)
 	companyStr := pythonCompanyString(company)
-	message := messageVal
-	msg := fmt.Sprintf("<p>%s included the following message in the request:</p><p>%s</p>", userName, message)
-	body := fmt.Sprintf(`
-<p>Hello %s,</p> \
-<p>This is a notification email from EasyCLA regarding the project %s.</p> \
-<p>%s (%s) has requested to be added to the Approved List as an authorized contributor from \
-%s to the project %s. You are receiving this message as a CLA Manager from %s for \
-%s.</p> \
-%s \
-<p>If you want to add them to the Approved List, please \
-<a href="%s" target="_blank">log into the EasyCLA Corporate \
-Console</a>, where you can approve this user's request by selecting the 'Manage Approved List' and adding the \
-contributor's email, the contributor's entire email domain, their GitHub ID or the entire GitHub Organization for the \
-repository. This will permit them to begin contributing to %s on behalf of %s.</p> \
-<p>If you are not certain whether to add them to the Approved List, please reach out to them directly to discuss.</p> 
-`, recipientNameVal, projectName, userName, userEmail, companyName, projectName, companyStr, projectName, msg, corpURL, projectName, companyStr)
+	body := requestCompanyAllowlistBody(recipientNameVal, projectName, userName, userEmail, companyName, companyStr, messageVal, corpURL)
 	body = appendEmailHelpSignOffContent(body, getAttrString(project, "version"))
 
 	svc, err := email.NewFromEnv(ctx)
@@ -2666,6 +2650,46 @@ func appendEmailHelpSignOffContent(body string, projectVersion string) string {
 	return body + emailHelpContent(showV2) + emailSignOffContent()
 }
 
+// publicSignatureItem serializes a signature item without the DocuSign envelope XML (lfx-self-serve-ops#350) nor the DocuSign envelope id, which the completion callback guard treats as the binding secret (lfx-self-serve-ops#347)
+func publicSignatureItem(item map[string]types.AttributeValue) map[string]interface{} {
+	out := store.ItemToInterfaceMap(item)
+	delete(out, "user_docusign_raw_xml")
+	delete(out, "signature_envelope_id")
+	return out
+}
+
+// requestCompanyAllowlistBody renders the approval-request e-mail; the anonymous /v2 caller supplies the
+// recipient name, user name, user e-mail and message, so they are escaped (lfx-self-serve-ops#352); the stored
+// project and company strings are escaped the same way
+func requestCompanyAllowlistBody(recipientName, projectName, userName, userEmail, companyName, companyStr, message, corpURL string) string {
+	projectName, companyName, companyStr = emailField(projectName, 255), emailField(companyName, 255), emailField(companyStr, 1024)
+	userHTML := emailField(userName, 60)
+	msg := fmt.Sprintf("<p>%s included the following message in the request:</p><p>%s</p>", userHTML, emailField(message, 4000))
+	return fmt.Sprintf(`
+<p>Hello %s,</p> \
+<p>This is a notification email from EasyCLA regarding the project %s.</p> \
+<p>%s (%s) has requested to be added to the Approved List as an authorized contributor from \
+%s to the project %s. You are receiving this message as a CLA Manager from %s for \
+%s.</p> \
+%s \
+<p>If you want to add them to the Approved List, please \
+<a href="%s" target="_blank">log into the EasyCLA Corporate \
+Console</a>, where you can approve this user's request by selecting the 'Manage Approved List' and adding the \
+contributor's email, the contributor's entire email domain, their GitHub ID or the entire GitHub Organization for the \
+repository. This will permit them to begin contributing to %s on behalf of %s.</p> \
+<p>If you are not certain whether to add them to the Approved List, please reach out to them directly to discuss.</p>
+`, emailField(recipientName, 60), projectName, userHTML, emailField(userEmail, 254), companyName, projectName, companyStr, projectName, msg, corpURL, projectName, companyStr)
+}
+
+// emailField makes a caller-supplied string safe for the HTML e-mail body (lfx-self-serve-ops#352)
+func emailField(value string, maxLen int) string {
+	value = strings.TrimSpace(value)
+	if len(value) > maxLen {
+		value = strings.ToValidUTF8(value[:maxLen], "")
+	}
+	return html.EscapeString(value)
+}
+
 func sendEmailToCLAManager(ctx context.Context, project map[string]types.AttributeValue, contributorName string, contributorEmail string, claManagerName string, claManagerEmail string, companyName string, accountExists bool) error {
 	_ = accountExists // Legacy Python accepts this flag but does not currently vary content.
 	projectName := getAttrString(project, "project_name")
@@ -2676,6 +2700,7 @@ func sendEmailToCLAManager(ctx context.Context, project map[string]types.Attribu
 	if strings.TrimSpace(companyName) == "" {
 		companyName = "your company"
 	}
+	projectHTML := emailField(projectName, 255)
 
 	body := fmt.Sprintf(`
 <p>Hello %s,</p> \
@@ -2692,7 +2717,7 @@ sign the CLA yourself on behalf of your company; if not, the signature process w
 else who is authorized to sign the CLA.</p> \
 %s
 %s
-`, claManagerName, projectName, projectName, contributorName, contributorEmail, companyName, projectName, projectName, projectName, projectName, landing, emailHelpContent(strings.TrimSpace(strings.ToLower(projectVersion)) == "v2"), emailSignOffContent())
+`, emailField(claManagerName, 60), projectHTML, projectHTML, emailField(contributorName, 60), emailField(contributorEmail, 254), emailField(companyName, 255), projectHTML, projectHTML, projectHTML, projectHTML, landing, emailHelpContent(strings.TrimSpace(strings.ToLower(projectVersion)) == "v2"), emailSignOffContent())
 
 	svc, err := email.NewFromEnv(ctx)
 	if err != nil {
@@ -3197,7 +3222,7 @@ func (h *Handlers) GetUserProjectLastSignatureV2(w http.ResponseWriter, r *http.
 	latestMajorStr := strconv.Itoa(maj)
 	latestMinorStr := strconv.Itoa(min)
 
-	out := store.ItemToInterfaceMap(latest)
+	out := publicSignatureItem(latest)
 	out["latest_document_major_version"] = latestMajorStr
 	out["latest_document_minor_version"] = latestMinorStr
 
@@ -3278,7 +3303,7 @@ func (h *Handlers) GetUserProjectCompanyLastSignatureV1(w http.ResponseWriter, r
 	latestMajorStr := strconv.Itoa(maj)
 	latestMinorStr := strconv.Itoa(min)
 
-	out := store.ItemToInterfaceMap(latest)
+	out := publicSignatureItem(latest)
 	out["latest_document_major_version"] = latestMajorStr
 	out["latest_document_minor_version"] = latestMinorStr
 
@@ -3316,9 +3341,7 @@ func (h *Handlers) GetSignatureV1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := store.ItemToInterfaceMap(item)
-	// Python Signature.to_dict() filters out raw DocuSign XML.
-	delete(out, "user_docusign_raw_xml")
+	out := publicSignatureItem(item)
 
 	respond.JSON(w, http.StatusOK, out)
 }
@@ -3852,8 +3875,7 @@ func (h *Handlers) PutSignatureV1(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	out := store.ItemToInterfaceMap(sig)
-	delete(out, "user_docusign_raw_xml")
+	out := publicSignatureItem(sig)
 	respond.JSON(w, http.StatusOK, out)
 }
 
@@ -3933,8 +3955,7 @@ func (h *Handlers) GetSignaturesUserV1(w http.ResponseWriter, r *http.Request) {
 		if getAttrString(it, "signature_reference_type") != "user" {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 	respond.JSON(w, http.StatusOK, out)
@@ -3977,8 +3998,7 @@ func (h *Handlers) GetSignaturesUserProjectV1(w http.ResponseWriter, r *http.Req
 		if getAttrString(it, "signature_reference_id") != userID {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 
@@ -4054,8 +4074,7 @@ func (h *Handlers) GetSignaturesUserProjectTypeV1(w http.ResponseWriter, r *http
 		if signatureType == "employee" && sigCompanyID == "" {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 
@@ -4095,8 +4114,7 @@ func (h *Handlers) GetSignaturesCompanyV1(w http.ResponseWriter, r *http.Request
 		if !stringSliceContainsExact(sigACL, authUser.Username) {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 	respond.JSON(w, http.StatusOK, out)
@@ -4131,8 +4149,7 @@ func (h *Handlers) GetSignaturesProjectV1(w http.ResponseWriter, r *http.Request
 		if !getAttrBool(it, "signature_signed") {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 
@@ -4167,8 +4184,7 @@ func (h *Handlers) GetSignaturesProjectCompanyV1(w http.ResponseWriter, r *http.
 		if getAttrString(it, "signature_project_id") != projectID {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 	respond.JSON(w, http.StatusOK, out)
@@ -4203,8 +4219,7 @@ func (h *Handlers) GetProjectEmployeeSignaturesV1(w http.ResponseWriter, r *http
 		if getAttrString(it, "signature_user_ccla_company_id") != companyID {
 			continue
 		}
-		m := store.ItemToInterfaceMap(it)
-		delete(m, "user_docusign_raw_xml")
+		m := publicSignatureItem(it)
 		out = append(out, m)
 	}
 	respond.JSON(w, http.StatusOK, out)
@@ -9227,8 +9242,7 @@ func (h *Handlers) RequestEmployeeSignatureV2(w http.ResponseWriter, r *http.Req
 		if av, ok := it["signature_approved"].(*types.AttributeValueMemberBOOL); ok && !av.Value {
 			continue
 		}
-		out := store.ItemToInterfaceMap(it)
-		delete(out, "user_docusign_raw_xml")
+		out := publicSignatureItem(it)
 		respond.JSON(w, http.StatusOK, out)
 		return
 	}

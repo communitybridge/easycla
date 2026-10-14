@@ -140,10 +140,11 @@ func (s service) GetSignature(ctx context.Context, signatureID string) (*models.
 	return s.repo.GetSignature(ctx, signatureID)
 }
 
-// GetItemSignature returns the raw database row for the specified signature ID - used by flows
-// that must rewrite a full record without dropping attributes the API model does not carry
+// GetItemSignature returns the raw database row for the specified signature ID (strongly consistent read) - used by
+// flows that must rewrite a full record without dropping attributes the API model does not carry and by the DocuSign
+// callback guards, which must see the envelope that was just persisted
 func (s service) GetItemSignature(ctx context.Context, signatureID string) (*ItemSignature, error) {
-	return s.repo.GetItemSignature(ctx, signatureID)
+	return s.repo.GetItemSignatureConsistent(ctx, signatureID)
 }
 
 // SaveOrUpdateSignature saves or updates the specified signature

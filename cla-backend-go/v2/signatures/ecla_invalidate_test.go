@@ -68,7 +68,7 @@ func eclaItemSignature() *v1Signatures.ItemSignature {
 func eclaEventArgs() *events.LogEventArgs {
 	return &events.LogEventArgs{
 		EventType: events.InvalidatedSignature,
-		EventData: &events.SignatureProjectInvalidatedEventData{InvalidatedCount: 1},
+		EventData: &events.ECLAInvalidatedEventData{},
 	}
 }
 
@@ -224,15 +224,22 @@ func TestService_InvalidateECLA(t *testing.T) {
 			}
 
 			if assert.NotNil(t, logged) {
-				eventData, ok := logged.EventData.(*events.SignatureProjectInvalidatedEventData)
+				eventData, ok := logged.EventData.(*events.ECLAInvalidatedEventData)
 				if assert.True(t, ok) {
-					assert.Equal(t, "sig-1", eventData.SignatureID)
+					assert.Equal(t, "Contributor", eventData.Contributor)
+					assert.Equal(t, "Acme", eventData.CompanyName)
+					assert.Equal(t, "My Project", eventData.CLAGroupName)
 					assert.Equal(t, "org-admin", eventData.InvalidatedBy)
 					assert.Equal(t, "compliance", eventData.Reason)
 					assert.Equal(t, "per legal\nreview", eventData.InvalidationNote)
+					details, _ := eventData.GetEventDetailsString(logged)
+					assert.Equal(t, "The acknowledgment of Contributor for Acme was invalidated for the CLA Group My Project by the CLA Manager org-admin, reason: compliance, note: per legal\nreview.", details)
 				}
-				assert.Equal(t, "Contributor", logged.UserName)
-				assert.Equal(t, "user-1", logged.UserID, "a top-level user identity is required or the events service drops the event")
+				assert.Equal(t, "org-admin", logged.LfUsername, "the cla manager is the event user (easycla#5252)")
+				assert.Empty(t, logged.UserID, "the contributor is not the event user")
+				assert.NotEqual(t, "Contributor", logged.UserName)
+				assert.Nil(t, logged.UserModel)
+				assert.Equal(t, "My Project", logged.CLAGroupName)
 				assert.Equal(t, "My Project", logged.ProjectName)
 				assert.Equal(t, "cla-group-1", logged.CLAGroupID)
 				assert.Equal(t, "company-1", logged.CompanyID)
@@ -334,11 +341,14 @@ func TestService_InvalidateECLAAfterApprovalListRemoval(t *testing.T) {
 				assert.Equal(t, &v1Signatures.InvalidationMetadata{InvalidatedBy: "org-admin", Reason: "compliance", Note: "per legal review"}, gotMetadata)
 			}
 			if assert.NotNil(t, logged) {
-				eventData, ok := logged.EventData.(*events.SignatureProjectInvalidatedEventData)
+				eventData, ok := logged.EventData.(*events.ECLAInvalidatedEventData)
 				if assert.True(t, ok) {
 					assert.Equal(t, "org-admin", eventData.InvalidatedBy)
 					assert.Equal(t, "compliance", eventData.Reason)
+					assert.Equal(t, "Contributor", eventData.Contributor)
 				}
+				assert.Equal(t, "org-admin", logged.LfUsername)
+				assert.Empty(t, logged.UserID)
 			}
 			assert.Len(t, sender.sent, 1, "the deliberate invalidation notifies the employee")
 		})
