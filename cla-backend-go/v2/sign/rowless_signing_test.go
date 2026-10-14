@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -67,6 +68,8 @@ type rowlessHTTP struct {
 	sssCalls  int
 	orgCalls  int
 	envelopes int
+	// lastEnvelope is the body of the last envelope POST: the e-mail subject/blurb and recipients EasyCLA asked DocuSign to send
+	lastEnvelope DocuSignEnvelopeRequest
 }
 
 func (h *rowlessHTTP) RoundTrip(r *http.Request) (*http.Response, error) {
@@ -87,6 +90,10 @@ func (h *rowlessHTTP) RoundTrip(r *http.Request) (*http.Response, error) {
 		response.Body = io.NopCloser(strings.NewReader(`{"access_token":"unit-test-docusign-token"}`))
 	case r.URL.Host == rowlessDocuSignHost && r.URL.Path == rowlessEnvelopes:
 		h.envelopes++
+		h.lastEnvelope = DocuSignEnvelopeRequest{}
+		if err := json.NewDecoder(r.Body).Decode(&h.lastEnvelope); err != nil {
+			h.t.Errorf("envelope request body is not JSON: %v", err)
+		}
 		response.StatusCode = http.StatusCreated
 		response.Body = io.NopCloser(strings.NewReader(`{"envelopeId":"` + rowlessEnvelopeID + `"}`))
 	case r.URL.Host == rowlessDocuSignHost && r.URL.Path == rowlessEnvelopes+"/"+rowlessEnvelopeID+"/recipients":
@@ -600,6 +607,7 @@ func TestRequestCorporateSignatureFirstCCLAEndToEnd(t *testing.T) {
 		userRepo.EXPECT().GetUserByUserName(rowlessLFUsername, true).Return(&v1Models.User{UserID: "user-1", Username: "Lukasz", LfUsername: rowlessLFUsername}, nil).AnyTimes()
 		mappings := mock_projects_cla_groups.NewMockRepository(ctrl)
 		mappings.EXPECT().GetClaGroupIDForProject(gomock.Any(), rowlessProjectSFID).Return(&projects_cla_groups.ProjectClaGroup{ProjectSFID: rowlessProjectSFID, ClaGroupID: rowlessProjectID}, nil).AnyTimes()
+		mappings.EXPECT().GetProjectsIdsForClaGroup(gomock.Any(), rowlessProjectID).Return([]*projects_cla_groups.ProjectClaGroup{{ProjectSFID: rowlessProjectSFID, ProjectName: "Rowless Project", ClaGroupID: rowlessProjectID}}, nil).AnyTimes()
 		fx := fixtures{
 			companyRepo:      mock_company.NewMockIRepository(ctrl),
 			companyService:   mock_company.NewMockIService(ctrl),
@@ -650,6 +658,8 @@ func TestRequestCorporateSignatureFirstCCLAEndToEnd(t *testing.T) {
 		assert.False(t, saved.SignatureSigned)
 		assert.True(t, saved.SignatureApproved)
 		assert.Equal(t, 1, fx.transport.envelopes)
+		assert.Equal(t, "CLA Sign Request for Acme Corp", fx.transport.lastEnvelope.EmailBlurb, "the DocuSign request names the company, not the CLA manager (easycla#5257)")
+		assert.Equal(t, "EasyCLA: CLA Signature Request for Rowless Project", fx.transport.lastEnvelope.EmailSubject)
 	}
 
 	t.Run("first CCLA creates the row and signs with it", func(t *testing.T) {
@@ -760,6 +770,28 @@ func TestRequestCorporateSignatureFirstCCLAEndToEnd(t *testing.T) {
 		input.AuthorityEmail = strfmt.Email(authorityEmail)
 		return input
 	}
+	t.Run("an email request puts the company name in the signatory e-mail", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		fx := newFixtures(t, ctrl, rowlessCLAGroup())
+		withSignatorySeams(t, false)
+		fx.companyRepo.EXPECT().GetCompanyByExternalID(gomock.Any(), rowlessSFID).Return(persisted(), nil)
+		saved := expectSigning(fx)
+
+		out, err := fx.svc.RequestCorporateSignature(context.Background(), rowlessLFUsername, "******", emailInput())
+
+		require.NoError(t, err)
+		require.NotNil(t, out)
+		assert.Empty(t, out.SignURL, "no embedded signing view on the e-mail path")
+		assert.Equal(t, rowlessEnvelopeID, saved.SignatureEnvelopeID)
+		assert.Equal(t, 1, fx.transport.envelopes)
+		blurb := fx.transport.lastEnvelope.EmailBlurb
+		assert.Contains(t, blurb, "designated you as an authorized signatory for the organization Acme Corp.", "the signatory e-mail names the company (easycla#5257)")
+		assert.NotContains(t, blurb, "for the organization .")
+		require.Len(t, fx.transport.lastEnvelope.Recipients.Signers, 1)
+		assert.Equal(t, authorityEmail, fx.transport.lastEnvelope.Recipients.Signers[0].Email)
+		assert.Equal(t, "Signing Authority", fx.transport.lastEnvelope.Recipients.Signers[0].Name)
+	})
 	t.Run("an email request that fails after granting cla-signatory rolls the authority grant back", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()

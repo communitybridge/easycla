@@ -778,7 +778,7 @@ func Configure(api *operations.EasyclaAPI, claGroupService service.Service, proj
 		f["foundationSFID"] = projectCLAGroupEntries[0].FoundationSFID
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, projectCLAGroupEntries[0].FoundationSFID, companyModel.CompanyExternalID, projectClaGroupsRepo) {
+		if !isUserHaveAccessToCLAGroupCompany(ctx, authUser, projectCLAGroupEntries, companyModel.CompanyExternalID, projectClaGroupsRepo) {
 			msg := fmt.Sprintf(" user %s is not authorized to view project employee signatures any scope of project", authUser.UserName)
 			log.Warn(msg)
 			return signatures.NewDownloadProjectSignatureEmployeeAsCSVForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
@@ -943,7 +943,7 @@ func Configure(api *operations.EasyclaAPI, claGroupService service.Service, proj
 		f["foundationSFID"] = projectCLAGroupEntries[0].FoundationSFID
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, projectCLAGroupEntries[0].FoundationSFID, companyModel.CompanyExternalID, projectClaGroupsRepo) {
+		if !isUserHaveAccessToCLAGroupCompany(ctx, authUser, projectCLAGroupEntries, companyModel.CompanyExternalID, projectClaGroupsRepo) {
 			msg := fmt.Sprintf("user '%s' is not authorized to view project CCLA signatures project scope or project|organization scope for company ID: %s",
 				authUser.UserName, companyModel.CompanyID)
 			log.Warn(msg)
@@ -1048,7 +1048,7 @@ func Configure(api *operations.EasyclaAPI, claGroupService service.Service, proj
 		f["foundationSFID"] = projectCLAGroupEntries[0].FoundationSFID
 
 		log.WithFields(f).Debug("checking access control permissions for user...")
-		if !isUserHaveAccessToCLAProjectOrganization(ctx, authUser, projectCLAGroupEntries[0].FoundationSFID, companyModel.CompanyExternalID, projectClaGroupsRepo) {
+		if !isUserHaveAccessToCLAGroupCompany(ctx, authUser, projectCLAGroupEntries, companyModel.CompanyExternalID, projectClaGroupsRepo) {
 			msg := fmt.Sprintf("user '%s' is not authorized to view project CCLA signatures project scope or project|organization scope for company ID: %s",
 				authUser.UserName, companyModel.CompanyID)
 			log.Warn(msg)
@@ -1783,6 +1783,26 @@ func isUserHaveAccessToCLAGroupProjects(ctx context.Context, authUser *auth.User
 	return false
 }
 
+// isUserHaveAccessToCLAGroupCompany admits the user when isUserHaveAccessToCLAProjectOrganization passes for the CLA Group's
+// foundation or for any of its projects (project-level CLA managers hold project|organization scopes, not foundation ones)
+func isUserHaveAccessToCLAGroupCompany(ctx context.Context, authUser *auth.User, entries []*projects_cla_groups.ProjectClaGroup, organizationSFID string, projectClaGroupsRepo projects_cla_groups.Repository) bool {
+	if len(entries) == 0 {
+		return false
+	}
+	if isUserHaveAccessToCLAProjectOrganization(ctx, authUser, entries[0].FoundationSFID, organizationSFID, projectClaGroupsRepo) {
+		return true
+	}
+	for _, entry := range entries {
+		if entry.ProjectSFID == "" || entry.ProjectSFID == entries[0].FoundationSFID {
+			continue
+		}
+		if isUserHaveAccessToCLAProjectOrganization(ctx, authUser, entry.ProjectSFID, organizationSFID, projectClaGroupsRepo) {
+			return true
+		}
+	}
+	return false
+}
+
 // isUserHaveAccessToCLAProjectOrganization is a helper function to determine if the user has access to the specified project and organization
 func isUserHaveAccessToCLAProjectOrganization(ctx context.Context, authUser *auth.User, projectSFID, organizationSFID string, projectClaGroupsRepo projects_cla_groups.Repository) bool {
 	f := logrus.Fields{
@@ -1819,7 +1839,7 @@ func isUserHaveAccessToCLAProjectOrganization(ctx context.Context, authUser *aut
 	}
 
 	log.WithFields(f).Debugf("testing if user %s/%s has access to organization SFID...", authUser.UserName, authUser.Email)
-	if utils.IsUserAuthorizedForOrganization(ctx, authUser, organizationSFID, utils.ALLOW_ADMIN_SCOPE) {
+	if utils.IsUserAuthorizedForOrganizationOnly(ctx, authUser, organizationSFID, utils.ALLOW_ADMIN_SCOPE) {
 		log.WithFields(f).Debugf("user %s/%s has access to organization SFID...", authUser.UserName, authUser.Email)
 		return true
 	}

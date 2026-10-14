@@ -250,7 +250,7 @@ func IsUserAuthorizedForProjectOrganizationTree(ctx context.Context, user *auth.
 		return true
 	}
 
-	val := user.IsUserAuthorized(auth.ProjectOrganization, projectSFID+"|"+companySFID, true)
+	val := projectOrganizationScopeMatches(user, projectSFID, companySFID)
 	if val {
 		log.WithFields(f).Debugf("user '%s' is authorized for projectSFID: %s + companySFID: %s tree, admin flag=%t",
 			user.UserName, projectSFID, companySFID, user.Admin)
@@ -293,4 +293,22 @@ func IsUserAuthorizedForAnyProjectsOnly(ctx context.Context, user *auth.User, pr
 		}
 	}
 	return false
+}
+
+// IsUserAuthorizedForOrganizationOnly accepts an admin (when allowed) or a plain organization scope for companySFID; a project|organization scope never qualifies
+func IsUserAuthorizedForOrganizationOnly(ctx context.Context, user *auth.User, companySFID string, adminScopeAllowed bool) bool {
+	f := logrus.Fields{
+		"functionName":      "utils.IsUserAuthorizedForOrganizationOnly",
+		XREQUESTID:          ctx.Value(XREQUESTID),
+		"userName":          user.UserName,
+		"companySFID":       companySFID,
+		"adminScopeAllowed": adminScopeAllowed,
+	}
+	if adminScopeAllowed && user.Admin {
+		log.WithFields(f).Debug("user is authorized - admin scope is allowed and admin scope set for user")
+		return true
+	}
+	val := user.IsUserAuthorized(auth.Organization, companySFID, false)
+	log.WithFields(f).Debugf("plain organization scope check for companySFID: %s = %t", companySFID, val)
+	return val
 }

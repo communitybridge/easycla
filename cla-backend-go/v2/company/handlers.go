@@ -398,13 +398,14 @@ func Configure(api *operations.EasyclaAPI, service Service, projectClaGroupRepo 
 				"userEmail":         params.Input.UserEmail.String(),
 			}
 			// any signed-in user may create a company, but only for themselves (lfx-self-serve-ops#343)
-			if authUser == nil || authUser.Email == "" || !strings.EqualFold(params.Input.UserEmail.String(), authUser.Email) {
-				msg := fmt.Sprintf("the company can only be created for the signed-in user, not for %s", params.Input.UserEmail.String())
+			if authUser == nil || (authUser.UserName == "" && authUser.Email == "") {
+				msg := "the company can only be created by a signed-in user"
 				log.WithFields(f).Warn(msg)
 				return company.NewCreateCompanyForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
 			}
-			username := authUser.UserName
+			username, email := authUser.UserName, authUser.Email
 			params.XUSERNAME = &username
+			params.XEMAIL = &email
 			// Quick validation of the input parameters
 			log.WithFields(f).Debug("validating company name...")
 			if !utils.ValidCompanyName(*params.Input.CompanyName) {
@@ -425,8 +426,11 @@ func Configure(api *operations.EasyclaAPI, service Service, projectClaGroupRepo 
 					formatErr := errors.New("organization already exists")
 					return company.NewCreateCompanyConflict().WithXRequestID(reqID).WithPayload(errorResponse(reqID, formatErr))
 				}
-				if errors.Is(err, ErrCompanyUserMismatch) {
+				if errors.Is(err, ErrCompanyUserMismatch) || errors.Is(err, ErrCompanyNoGrantTarget) {
 					return company.NewCreateCompanyForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, err.Error()))
+				}
+				if errors.Is(err, ErrCompanyUserLookup) {
+					return company.NewCreateCompanyInternalServerError().WithXRequestID(reqID).WithPayload(utils.ErrorResponseInternalServerErrorWithError(reqID, "unable to verify the signed-in user", err))
 				}
 				return company.NewCreateCompanyBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
@@ -799,7 +803,7 @@ func isUserHaveAccessToCLAProjectOrganization(ctx context.Context, authUser *aut
 	}
 
 	log.WithFields(f).Debug("testing if user has access to organization SFID...")
-	if utils.IsUserAuthorizedForOrganization(ctx, authUser, organizationSFID, utils.ALLOW_ADMIN_SCOPE) {
+	if utils.IsUserAuthorizedForOrganizationOnly(ctx, authUser, organizationSFID, utils.ALLOW_ADMIN_SCOPE) {
 		log.WithFields(f).Debug("user has access to organization SFID...")
 		return true
 	}

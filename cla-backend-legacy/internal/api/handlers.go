@@ -2152,22 +2152,7 @@ func (h *Handlers) RequestCompanyAllowlistV2(w http.ResponseWriter, r *http.Requ
 	subject := fmt.Sprintf("EasyCLA: Request to Authorize %s for %s", userName, projectName)
 	corpURL := corporateCompanyURL(companyID)
 	companyStr := pythonCompanyString(company)
-	message := messageVal
-	msg := fmt.Sprintf("<p>%s included the following message in the request:</p><p>%s</p>", userName, message)
-	body := fmt.Sprintf(`
-<p>Hello %s,</p> \
-<p>This is a notification email from EasyCLA regarding the project %s.</p> \
-<p>%s (%s) has requested to be added to the Approved List as an authorized contributor from \
-%s to the project %s. You are receiving this message as a CLA Manager from %s for \
-%s.</p> \
-%s \
-<p>If you want to add them to the Approved List, please \
-<a href="%s" target="_blank">log into the EasyCLA Corporate \
-Console</a>, where you can approve this user's request by selecting the 'Manage Approved List' and adding the \
-contributor's email, the contributor's entire email domain, their GitHub ID or the entire GitHub Organization for the \
-repository. This will permit them to begin contributing to %s on behalf of %s.</p> \
-<p>If you are not certain whether to add them to the Approved List, please reach out to them directly to discuss.</p> 
-`, recipientNameVal, projectName, userName, userEmail, companyName, projectName, companyStr, projectName, msg, corpURL, projectName, companyStr)
+	body := requestCompanyAllowlistBody(recipientNameVal, projectName, userName, userEmail, companyName, companyStr, messageVal, corpURL)
 	body = appendEmailHelpSignOffContent(body, getAttrString(project, "version"))
 
 	svc, err := email.NewFromEnv(ctx)
@@ -2671,6 +2656,29 @@ func publicSignatureItem(item map[string]types.AttributeValue) map[string]interf
 	delete(out, "user_docusign_raw_xml")
 	delete(out, "signature_envelope_id")
 	return out
+}
+
+// requestCompanyAllowlistBody renders the approval-request e-mail; the anonymous /v2 caller supplies the
+// recipient name, user name, user e-mail and message, so they are escaped (lfx-self-serve-ops#352); the stored
+// project and company strings are escaped the same way
+func requestCompanyAllowlistBody(recipientName, projectName, userName, userEmail, companyName, companyStr, message, corpURL string) string {
+	projectName, companyName, companyStr = emailField(projectName, 255), emailField(companyName, 255), emailField(companyStr, 1024)
+	userHTML := emailField(userName, 60)
+	msg := fmt.Sprintf("<p>%s included the following message in the request:</p><p>%s</p>", userHTML, emailField(message, 4000))
+	return fmt.Sprintf(`
+<p>Hello %s,</p> \
+<p>This is a notification email from EasyCLA regarding the project %s.</p> \
+<p>%s (%s) has requested to be added to the Approved List as an authorized contributor from \
+%s to the project %s. You are receiving this message as a CLA Manager from %s for \
+%s.</p> \
+%s \
+<p>If you want to add them to the Approved List, please \
+<a href="%s" target="_blank">log into the EasyCLA Corporate \
+Console</a>, where you can approve this user's request by selecting the 'Manage Approved List' and adding the \
+contributor's email, the contributor's entire email domain, their GitHub ID or the entire GitHub Organization for the \
+repository. This will permit them to begin contributing to %s on behalf of %s.</p> \
+<p>If you are not certain whether to add them to the Approved List, please reach out to them directly to discuss.</p>
+`, emailField(recipientName, 60), projectName, userHTML, emailField(userEmail, 254), companyName, projectName, companyStr, projectName, msg, corpURL, projectName, companyStr)
 }
 
 // emailField makes a caller-supplied string safe for the HTML e-mail body (lfx-self-serve-ops#352)
