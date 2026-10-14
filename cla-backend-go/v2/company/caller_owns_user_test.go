@@ -4,12 +4,15 @@
 package company
 
 import (
+	"context"
 	"errors"
 	"testing"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/golang/mock/gomock"
 	v1Models "github.com/linuxfoundation/easycla/cla-backend-go/gen/v1/models"
+	"github.com/linuxfoundation/easycla/cla-backend-go/gen/v2/models"
+	v2CompanyOps "github.com/linuxfoundation/easycla/cla-backend-go/gen/v2/restapi/operations/company"
 	mock_users "github.com/linuxfoundation/easycla/cla-backend-go/users/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,5 +46,22 @@ func TestCallerOwnsUser(t *testing.T) {
 	assert.True(t, errors.Is(err, ErrCompanyUserMismatch), "an unknown user ID is refused")
 	err = svc.callerOwnsUser("u-down", str("jane"), str("jane@example.invalid"))
 	require.Error(t, err)
-	assert.False(t, errors.Is(err, ErrCompanyUserMismatch), "a lookup failure is not a mismatch")
+	assert.True(t, errors.Is(err, ErrCompanyUserLookup), "a lookup failure is reported as such, not as a mismatch: %v", err)
+	assert.False(t, errors.Is(err, ErrCompanyUserMismatch))
+}
+
+// without a gateway-verified e-mail there is nothing to grant company-admin to: the request is refused before any lookup or write
+func TestCreateCompanyRefusesWithoutAVerifiedEmail(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	repo := mock_users.NewMockUserRepository(ctrl) // no expectations: any lookup fails the test
+	svc := &service{userRepo: repo}
+	name, site, username := testCompanyName, testCompanySite, "jane"
+	email := strfmt.Email("jane@example.invalid")
+	_, err := svc.CreateCompany(context.Background(), &v2CompanyOps.CreateCompanyParams{
+		UserID:    "u-jane",
+		XUSERNAME: &username,
+		Input:     &models.CompanyInput{CompanyName: &name, CompanyWebsite: &site, UserEmail: &email},
+	})
+	assert.True(t, errors.Is(err, ErrCompanyNoGrantTarget), "%v", err)
 }

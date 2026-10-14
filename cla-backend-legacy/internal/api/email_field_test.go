@@ -62,4 +62,8 @@ func TestRequestCompanyAllowlistBodyEscapesCallerFields(t *testing.T) {
 			t.Fatalf("stored value %q must stay intact: %s", keep, body)
 		}
 	}
+	stored := requestCompanyAllowlistBody("Boss", "Project <b>X</b>", "Mallory", "m@example.invalid", "Acme <i>Inc</i>", "id:1, name: Acme <i>Inc</i>", "hi", "https://corporate.example.invalid/c/1")
+	if strings.Contains(stored, "<b>") || strings.Contains(stored, "<i>") || !strings.Contains(stored, "Project &lt;b&gt;X&lt;/b&gt;") {
+		t.Fatalf("stored project/company values must be escaped too: %s", stored)
+	}
 }

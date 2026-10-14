@@ -430,15 +430,17 @@ func (s *service) CreateCompany(ctx context.Context, params *v2Ops.CreateCompany
 	userEmail := params.Input.UserEmail.String()
 	userID := params.UserID
 	note := params.Input.Note
+	// company-admin goes to the gateway-verified identity only, never to the body e-mail (lfx-self-serve-ops#343)
+	grantEmail := utils.StringValue(params.XEMAIL)
+	if grantEmail == "" {
+		log.WithFields(f).Warn("no verified e-mail for the signed-in user - refusing to create the company")
+		return nil, ErrCompanyNoGrantTarget
+	}
 	if ownErr := s.callerOwnsUser(userID, params.XUSERNAME, params.XEMAIL); ownErr != nil {
 		log.WithFields(f).WithError(ownErr).Warn("the user ID in the path does not belong to the signed-in user")
 		return nil, ownErr
 	}
-	// company-admin goes to the signed-in identity, never to the body e-mail (lfx-self-serve-ops#343)
-	grantEmail := utils.StringValue(params.XEMAIL)
-	if grantEmail == "" {
-		log.WithFields(f).Warn("the signed-in user has no e-mail - the company is created without a company-admin")
-	} else if !strings.EqualFold(userEmail, grantEmail) {
+	if !strings.EqualFold(userEmail, grantEmail) {
 		log.WithFields(f).Warnf("userEmail %s differs from the signed-in e-mail - ignored; company-admin is granted to the signed-in identity", userEmail)
 	}
 
@@ -466,11 +468,17 @@ func (s *service) CreateCompany(ctx context.Context, params *v2Ops.CreateCompany
 // ErrCompanyUserMismatch reports a user ID that does not belong to the signed-in user (lfx-self-serve-ops#343)
 var ErrCompanyUserMismatch = errors.New("the user ID does not belong to the signed-in user")
 
+// ErrCompanyUserLookup reports that the signed-in user could not be verified because the user lookup failed
+var ErrCompanyUserLookup = errors.New("unable to look up the user")
+
+// ErrCompanyNoGrantTarget reports a signed-in user without a gateway-verified e-mail (nothing to grant company-admin to)
+var ErrCompanyNoGrantTarget = errors.New("no verified e-mail for the signed-in user")
+
 // callerOwnsUser accepts userID only when that EasyCLA user carries the caller's LF username or e-mail (from the token)
 func (s *service) callerOwnsUser(userID string, username, callerEmail *string) error {
 	user, err := s.userRepo.GetUser(userID)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %s: %v", ErrCompanyUserLookup, userID, err)
 	}
 	if user == nil {
 		return fmt.Errorf("%w: %s", ErrCompanyUserMismatch, userID)

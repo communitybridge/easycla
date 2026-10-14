@@ -2659,8 +2659,10 @@ func publicSignatureItem(item map[string]types.AttributeValue) map[string]interf
 }
 
 // requestCompanyAllowlistBody renders the approval-request e-mail; the anonymous /v2 caller supplies the
-// recipient name, user name, user e-mail and message, so they are escaped (lfx-self-serve-ops#352)
+// recipient name, user name, user e-mail and message, so they are escaped (lfx-self-serve-ops#352); the stored
+// project and company strings are escaped the same way
 func requestCompanyAllowlistBody(recipientName, projectName, userName, userEmail, companyName, companyStr, message, corpURL string) string {
+	projectName, companyName, companyStr = emailField(projectName, 255), emailField(companyName, 255), emailField(companyStr, 1024)
 	userHTML := emailField(userName, 60)
 	msg := fmt.Sprintf("<p>%s included the following message in the request:</p><p>%s</p>", userHTML, emailField(message, 4000))
 	return fmt.Sprintf(`

@@ -96,20 +96,33 @@ func TestCreateCompanyHandlerBindsTheCaller(t *testing.T) {
 	assert.Equal(t, 0, calls)
 }
 
-// a user ID that is not the caller's own is a 403, not a 400 (lfx-self-serve-ops#343)
-func TestCreateCompanyHandlerRefusesAnotherUsersID(t *testing.T) {
-	api := operations.NewEasyclaAPI(nil)
-	service := &fakeCreateCompanyService{err: fmt.Errorf("%w: u-victim", ErrCompanyUserMismatch)}
-	Configure(api, service, nil, "")
-	email := strfmt.Email("jane@example.invalid")
-	name, site := testCompanyName, testCompanySite
-	responder := api.CompanyCreateCompanyHandler.Handle(v2CompanyOps.CreateCompanyParams{
-		HTTPRequest: httptest.NewRequest(http.MethodPost, "/v4/user/u-victim/company", nil),
-		UserID:      "u-victim",
-		Input:       &models.CompanyInput{CompanyName: &name, CompanyWebsite: &site, UserEmail: &email},
-	}, &auth.User{UserName: "jane", Email: "jane@example.invalid", ACL: auth.ACL{Allowed: true}})
-	recorder := httptest.NewRecorder()
-	responder.WriteResponse(recorder, runtime.JSONProducer())
-	assert.Equal(t, http.StatusForbidden, recorder.Code)
-	assert.Equal(t, 1, service.calls)
+// a user ID that is not the caller's own, or a caller without a verified e-mail, is a 403; a failed user lookup is a 500, never a 400 (lfx-self-serve-ops#343)
+func TestCreateCompanyHandlerMapsServiceErrors(t *testing.T) {
+	cases := map[string]struct {
+		err  error
+		want int
+	}{
+		"another user's ID":   {fmt.Errorf("%w: u-victim", ErrCompanyUserMismatch), http.StatusForbidden},
+		"no grant target":     {ErrCompanyNoGrantTarget, http.StatusForbidden},
+		"user lookup failure": {fmt.Errorf("%w: u-victim: dynamodb unavailable", ErrCompanyUserLookup), http.StatusInternalServerError},
+		"other failure":       {fmt.Errorf("salesforce said no"), http.StatusBadRequest},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			api := operations.NewEasyclaAPI(nil)
+			service := &fakeCreateCompanyService{err: tc.err}
+			Configure(api, service, nil, "")
+			email := strfmt.Email("jane@example.invalid")
+			cname, site := testCompanyName, testCompanySite
+			responder := api.CompanyCreateCompanyHandler.Handle(v2CompanyOps.CreateCompanyParams{
+				HTTPRequest: httptest.NewRequest(http.MethodPost, "/v4/user/u-victim/company", nil),
+				UserID:      "u-victim",
+				Input:       &models.CompanyInput{CompanyName: &cname, CompanyWebsite: &site, UserEmail: &email},
+			}, &auth.User{UserName: "jane", Email: "jane@example.invalid", ACL: auth.ACL{Allowed: true}})
+			recorder := httptest.NewRecorder()
+			responder.WriteResponse(recorder, runtime.JSONProducer())
+			assert.Equal(t, tc.want, recorder.Code)
+			assert.Equal(t, 1, service.calls)
+		})
+	}
 }

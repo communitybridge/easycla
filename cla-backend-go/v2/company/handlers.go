@@ -426,8 +426,11 @@ func Configure(api *operations.EasyclaAPI, service Service, projectClaGroupRepo 
 					formatErr := errors.New("organization already exists")
 					return company.NewCreateCompanyConflict().WithXRequestID(reqID).WithPayload(errorResponse(reqID, formatErr))
 				}
-				if errors.Is(err, ErrCompanyUserMismatch) {
+				if errors.Is(err, ErrCompanyUserMismatch) || errors.Is(err, ErrCompanyNoGrantTarget) {
 					return company.NewCreateCompanyForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, err.Error()))
+				}
+				if errors.Is(err, ErrCompanyUserLookup) {
+					return company.NewCreateCompanyInternalServerError().WithXRequestID(reqID).WithPayload(utils.ErrorResponseInternalServerErrorWithError(reqID, "unable to verify the signed-in user", err))
 				}
 				return company.NewCreateCompanyBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(reqID, err))
 			}
@@ -800,7 +803,7 @@ func isUserHaveAccessToCLAProjectOrganization(ctx context.Context, authUser *aut
 	}
 
 	log.WithFields(f).Debug("testing if user has access to organization SFID...")
-	if utils.IsUserAuthorizedForOrganization(ctx, authUser, organizationSFID, utils.ALLOW_ADMIN_SCOPE) {
+	if utils.IsUserAuthorizedForOrganizationOnly(ctx, authUser, organizationSFID, utils.ALLOW_ADMIN_SCOPE) {
 		log.WithFields(f).Debug("user has access to organization SFID...")
 		return true
 	}
