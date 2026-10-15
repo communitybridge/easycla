@@ -1,0 +1,13 @@
+# Everything a run needs or produces locally stays out of git; only the suite code, config and READMEs are tracked.
+node_modules/
+__pycache__/
+*.pyc
+# credentials, minted tokens and browser session state (see secrets/README.md)
+secrets/*
+!secrets/README.md
+*.secret
+# evidence (default location is <repo>/e2e-tests/runs/suite/, already ignored at the root; keep local copies out too)
+runs/
+*.private.json
+*.png
+*.log

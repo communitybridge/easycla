@@ -1,0 +1,125 @@
+// Copyright The Linux Foundation and each contributor to CommunityBridge.
+// SPDX-License-Identifier: MIT
+//
+// M2 signing as ID1 through the Me lens, dev only (ALLOW_DOCUSIGN=1, DocuSign sandbox):
+//   ICLA: Sign CLA -> ICLA_GROUP -> contributor console "individual" -> DocuSign sandbox -> back -> me/clas row Valid
+//   ECLA: Sign CLA -> M3_CLA_GROUP -> console "corporate" -> M3_ORG_NAME -> certification -> POST /v2/request-employee-signature
+// State-aware: when ID1 already holds a valid agreement of that kind for the group the flow cannot be repeated
+// (an ICLA is never invalidated by the user) - the module then verifies the existing row and reports INFO.
+import * as e2e from './lib/e2e.mjs';
+import * as signing from './lib/signing.mjs';
+
+const { cfg, check, info, skip, sleep } = e2e;
+const ID1 = cfg('ID1');
+const ICLA_GROUP = cfg('ICLA_GROUP');
+const ICLA_SEARCH = cfg('ICLA_GROUP_SEARCH') || cfg('CLA_GROUP_NAME');
+const ECLA_GROUP = cfg('M3_CLA_GROUP');
+const ECLA_GROUP_NAME = cfg('M3_CLA_GROUP_NAME', cfg('CLA_GROUP_NAME'));
+const ECLA_COMPANY = cfg('M3_ORG_NAME');
+const DOCUSIGN = e2e.ENV === 'dev' && e2e.gate('ALLOW_DOCUSIGN') && !e2e.NO_WRITES;
+const WRITES = e2e.ENV === 'dev' && e2e.gate('ALLOW_FIXTURE_WRITES') && !e2e.NO_WRITES;
+
+if (e2e.ENV !== 'dev') { skip('M2-SIGNING', `signing flows run on dev only (env=${e2e.ENV})`); process.exit(e2e.finish()); }
+if (!WRITES && !DOCUSIGN) { skip('M2-SIGNING', 'ALLOW_DOCUSIGN=0 / ALLOW_FIXTURE_WRITES=0 / --no-writes'); process.exit(e2e.finish()); }
+
+const session = await e2e.launch({ identity: ID1, allowDocusign: DOCUSIGN, writes: [...signing.signingWrites('icla'), ...signing.signingWrites('ecla')] });
+const { page, context, net } = session;
+net.capture(/\/api\/me\/clas\/(prepare-sign|sign-options)|request-individual-signature|request-employee-signature/);
+try {
+  const how = await e2e.login(page, ID1, `${e2e.SS}/profile/clas`);
+  check('M2-LOGIN', new URL(page.url()).hostname === e2e.SS_HOST, `${ID1} login ${how}`);
+  const before = await signing.myAgreements(context);
+  e2e.evidence('me-clas-before.private.json', before);
+  check('M2-ME-CLAS-BEFORE', before.http === 200, `GET /api/me/clas -> ${before.http}; agreements=${before.rows.length}`);
+
+  // ---- ICLA (DocuSign) ----
+  if (!ICLA_GROUP) skip('M2-ICLA', 'ICLA_GROUP not configured');
+  else if (!DOCUSIGN) skip('M2-ICLA', 'ALLOW_DOCUSIGN=0');
+  else {
+    const existing = before.rows.filter((a) => a.claGroupId === ICLA_GROUP && a.kind === 'ICLA' && a.status === 'valid');
+    if (existing.length) {
+      const row = await signing.meLensRow(session, existing[0].id);
+      info('M2-ICLA-ALREADY-SIGNED', `${ID1} already holds a valid ICLA ${existing[0].id} for ${ICLA_GROUP} (an ICLA cannot be re-signed; set ICLA_GROUP to an unsigned group to exercise DocuSign); Me lens row: "${row.slice(0, 100)}"`);
+      check('M2-ICLA-ROW-VALID', /\bvalid\b/i.test(row), `agreement-row-${existing[0].id} shows Valid`);
+    } else {
+      try {
+        const hand = await signing.handOffToConsole(session, ID1, { groupId: ICLA_GROUP, groupName: ICLA_SEARCH, githubId: cfg('ID1_GITHUB_ID'), contract: /individual|icla/i });
+        check('M2-ICLA-CONSOLE-HANDOFF', new URL(hand.url).hostname === new URL(cfg('CONTRIBUTOR_CONSOLE')).hostname, `picker="${hand.picker.slice(0, 80)}" -> ${new URL(hand.url).origin}`);
+        const indiv = page.getByRole('button', { name: /proceed as an individual contributor/i }).first();
+        await indiv.waitFor({ state: 'visible', timeout: 30000 });
+        await indiv.click();
+        await sleep(6000);
+        await e2e.hideOverlays(page);
+        const compliance = page.locator('input[type="checkbox"]').first();
+        if (await compliance.isVisible().catch(() => false)) await compliance.check({ force: true }).catch(() => compliance.click({ force: true }).catch(() => {}));
+        else { const lbl = page.getByText(/i hereby certify/i).first(); if (await lbl.isVisible().catch(() => false)) await lbl.click().catch(() => {}); }
+        await sleep(1500);
+        await e2e.shot(page, 'icla-console-ready');
+        const signBtn = page.getByRole('button', { name: /open cla|sign cla|sign icla|agree/i }).first();
+        const [req] = await Promise.all([
+          page.waitForResponse((r) => /request-individual-signature/.test(r.url()) && r.request().method() === 'POST', { timeout: 90000 }).catch(() => null),
+          signBtn.click(),
+        ]);
+        check('M2-ICLA-REQUEST-SIGNATURE', !!req && req.status() < 300, `POST request-individual-signature -> ${req ? req.status() : 'not observed'}`);
+        const ds = await signing.docusignSign(page);
+        check('M2-ICLA-DOCUSIGN-SANDBOX', ds.signed && ds.finished, `sandbox envelope: fields filled=${ds.filled} signed=${ds.signed} finished=${ds.finished} -> ${ds.finalUrl.slice(0, 80)}`);
+        let valid = [];
+        for (let i = 0; i < 24 && !valid.length; i++) {
+          valid = (await signing.myAgreements(context)).rows.filter((a) => a.claGroupId === ICLA_GROUP && a.kind === 'ICLA' && a.status === 'valid');
+          if (!valid.length) await sleep(5000);
+        }
+        check('M2-ICLA-MECLAS-VALID', valid.length === 1, `valid ICLA rows for ${ICLA_GROUP}=${valid.length} ${JSON.stringify(valid)}`);
+        if (valid.length) {
+          const row = await signing.meLensRow(session, valid[0].id);
+          await e2e.shot(page, 'icla-me-lens');
+          check('M2-ICLA-ROW-VALID', /\bvalid\b/i.test(row), `agreement-row-${valid[0].id}: "${row.slice(0, 100)}"`);
+        }
+      } catch (err) {
+        check('M2-ICLA', false, `error: ${err.message} at ${page.url().slice(0, 120)}`);
+        await e2e.shot(page, 'icla-error');
+      }
+    }
+  }
+
+  // ---- ECLA (click-through, no DocuSign) ----
+  if (!ECLA_GROUP || !ECLA_COMPANY) skip('M2-ECLA', 'M3_CLA_GROUP / M3_ORG_NAME not configured');
+  else if (!WRITES) skip('M2-ECLA', 'ALLOW_FIXTURE_WRITES=0');
+  else {
+    const now = await signing.myAgreements(context, ECLA_GROUP);
+    const existing = now.fixture.filter((a) => a.kind === 'ECLA' && a.status === 'valid');
+    if (existing.length) {
+      const row = await signing.meLensRow(session, existing[0].id);
+      info('M2-ECLA-ALREADY-VALID', `${ID1} already holds a valid ECLA ${existing[0].id} for ${ECLA_GROUP} (${existing[0].company}); the click-through is exercised by api/interactions.py and m3_chain for ID2; row: "${row.slice(0, 100)}"`);
+      check('M2-ECLA-ROW-VALID', /\bvalid\b/i.test(row), `agreement-row-${existing[0].id} shows Valid`);
+    } else {
+      try {
+        const hand = await signing.handOffToConsole(session, ID1, { groupId: ECLA_GROUP, groupName: ECLA_GROUP_NAME, githubId: cfg('ID1_GITHUB_ID') });
+        check('M2-ECLA-CONSOLE-HANDOFF', new URL(hand.url).hostname === new URL(cfg('CONTRIBUTOR_CONSOLE')).hostname, `picker="${hand.picker.slice(0, 80)}" -> ${new URL(hand.url).origin}`);
+        const ack = await signing.corporateAcknowledge(session, ECLA_COMPANY);
+        e2e.evidence('ecla-receipt.private.json', ack);
+        check('M2-ECLA-CLICKTHROUGH', ack.status === 200 && !ack.receipt.errors && ack.done, `POST /v2/request-employee-signature -> ${ack.status} signature=${ack.signatureId} done=${ack.done}`);
+        await signing.exitConsole(session);
+        const after = await signing.myAgreements(context, ECLA_GROUP);
+        const valid = after.fixture.filter((a) => a.kind === 'ECLA' && a.status === 'valid');
+        check('M2-ECLA-MECLAS-VALID', valid.length === 1 && (!ack.signatureId || valid[0].id === ack.signatureId), `valid ECLA rows=${valid.length} ${JSON.stringify(valid)}`);
+        if (valid.length) {
+          const row = await signing.meLensRow(session, valid[0].id);
+          await e2e.shot(page, 'ecla-me-lens');
+          check('M2-ECLA-ROW-VALID', /\bvalid\b/i.test(row), `agreement-row-${valid[0].id}: "${row.slice(0, 100)}"`);
+        }
+      } catch (err) {
+        check('M2-ECLA', false, `error: ${err.message} at ${page.url().slice(0, 120)}`);
+        await e2e.shot(page, 'ecla-error');
+      }
+    }
+  }
+  check('M2-NO-FORBIDDEN-WRITES', !net.writes.some((w) => signing.SIGNING_FORBIDDEN.test(w.url)), `writes=${JSON.stringify([...new Set(net.writes.map((w) => `${w.method} ${w.url.replace(/^https?:\/\//, '')}`))]).slice(0, 400)}`);
+  const blocked = net.blocked.filter((b) => !/telemetry|analytics|segment|sentry|datadog|launchdarkly/i.test(b.url));
+  check('M2-NO-BLOCKED-WRITES', blocked.length === 0, `guard blocked ${blocked.length} request(s) ${JSON.stringify(blocked.slice(0, 3))}`);
+} catch (err) {
+  check('M2-HARNESS', false, `error: ${err.message} at ${page.url().slice(0, 120)}`);
+  await e2e.shot(page, 'error');
+} finally {
+  await e2e.close(session);
+}
+process.exit(e2e.finish());
