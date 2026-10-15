@@ -6,7 +6,7 @@
 // /org/easycla landing and the deep links of the QA organizations (own, other, CLA-only).
 import * as e2e from './lib/e2e.mjs';
 
-const { cfg, check, info, skip, log } = e2e;
+const { cfg, check, info, skip } = e2e;
 const ID1 = cfg('ID1');
 const ID2 = cfg('ID2');
 const adminOrgs = cfg('ID1_ADMIN_ORG_SFIDS').split(',').map((s) => s.trim()).filter(Boolean);

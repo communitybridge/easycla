@@ -10,7 +10,7 @@
 import * as e2e from './lib/e2e.mjs';
 import { m3, fixtureWrites } from './lib/m3.mjs';
 
-const { cfg, check, info, skip, log } = e2e;
+const { cfg, check, info, skip } = e2e;
 const ID1 = cfg('ID1');
 const ID2 = cfg('ID2');
 const fx = { sfid: cfg('M3_ORG_SFID'), name: cfg('M3_ORG_NAME'), group: cfg('M3_CLA_GROUP'), sig: cfg('M3_CCLA') };

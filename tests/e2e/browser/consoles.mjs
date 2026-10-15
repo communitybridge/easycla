@@ -107,7 +107,10 @@ for (const who of [ID1, ID2]) {
       await go(page, `${PCC_V1}/project/${proj}/tools/easycla`, 6000);
       await e2e.shot(page, `${who}-pcc-v1-easycla`);
       const text = await e2e.bodyText(page);
-      check(`${P}-PCC-V1-EASYCLA`, !e2e.isAuth0Host(new URL(page.url()).hostname) && !/something went wrong|unexpected error/i.test(text) && text.length > 0, `url=${page.url().slice(0, 100)} text=${text.slice(0, 120)}`);
+      // the v1 PCC shows an empty shell (header only) to a user without any project role - expected for ID2, a crash for ID1
+      const shell = text.length === 0 && who === ID2;
+      check(`${P}-PCC-V1-EASYCLA`, !e2e.isAuth0Host(new URL(page.url()).hostname) && !/something went wrong|unexpected error/i.test(text) && (text.length > 0 || shell),
+        `url=${page.url().slice(0, 100)} ${shell ? 'empty shell (no project role for this identity - expected)' : `text=${text.slice(0, 120)}`}`);
     }
     check(`${P}-NO-BLOCKED-WRITES`, net.blocked.length === 0, `guard blocked ${net.blocked.length} request(s) ${JSON.stringify(net.blocked.slice(0, 3))}`);
     const errs = net.api.filter((r) => r.status >= 500);

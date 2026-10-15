@@ -27,7 +27,9 @@ Exit code `1` when any check `FAIL`ed. Console output is one line per check:
   The shell parts avoid GNU-only flags (no `date -d`), so Linux, macOS and FreeBSD all work.
 * Browser group: Node.js ≥ 18. `run.sh` runs `npm install` (Playwright) and `playwright install chromium`
   on first use; the dependency lives in `tests/e2e/package.json` only.
-* Credentials in `secrets/` — see [`secrets/README.md`](secrets/README.md): the Auth0 client id and
+* Per-environment configuration and credentials in `secrets/` (git-ignored) — see
+  [`secrets/README.md`](secrets/README.md): `secrets/<env>.env.secret` (copy
+  [`config/example.env`](config/example.env) and fill in your accounts and QA fixtures), the Auth0 client id and
   `AUTH0_USERNAME/AUTH0_PASSWORD` of the two suite identities per environment. Tokens are minted through the
   repository's `utils/get_auth0_token.sh` (staged in a private temp dir, nothing in `utils/` is modified).
 * Optional: an AWS profile (`AWS_PROFILE_E2E`, `lfproduct-dev|prod`) for the Lambda scans and the ACS
@@ -47,8 +49,9 @@ a baseline first, brings the fixture to the state the chain needs (pre-flight), 
 with the baseline (`F-*` checks) — so modules are re-runnable in any order and from any leftover state.
 `--keep-state` leaves the produced state in place; the baseline comparison then reports what differs.
 
-Config files are `config/dev.env` and `config/prod.env` (plain `KEY=VALUE`, parsed, never sourced; both
-files must declare the same keys). Gates per environment:
+Configuration is `secrets/dev.env.secret` and `secrets/prod.env.secret` (plain `KEY=VALUE`, parsed, never
+sourced; both files must declare the same keys — `config/example.env` is the documented template, the suite
+never reads it). Gates per environment, as set in those files:
 
 | gate | dev | prod | guards |
 |---|---|---|---|
@@ -149,8 +152,8 @@ e-mail addresses and fixture ids).
 
 ```
 run.sh                 runner (groups, modules, gates, evidence dir, summary)
-config/{dev,prod}.env  non-secret configuration (same key set in both)
-secrets/               credentials and generated tokens / browser state (git-ignored, see README there)
+config/example.env     template for secrets/<env>.env.secret (endpoints, identities, QA fixtures, gates)
+secrets/               <env>.env.secret configuration, credentials, generated tokens / browser state (git-ignored)
 lib/common.sh          shell helpers: config, secrets, http, checks, gates, redaction
 lib/e2e.py             python helpers (stdlib only): config, tokens, http, checks, ACS/identity state
 lib/token.sh           token minting / reuse for both identities

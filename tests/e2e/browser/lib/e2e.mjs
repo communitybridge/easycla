@@ -2,13 +2,15 @@
 // SPDX-License-Identifier: MIT
 //
 // Shared helpers for the headless-browser modules (tests/e2e/browser/*.mjs).
-// Mirrors tests/e2e/lib/e2e.py: config from config/<env>.env, secrets from secrets/*.secret,
+// Mirrors tests/e2e/lib/e2e.py: config from secrets/<env>.env.secret (template config/example.env),
+// credentials from secrets/*.secret,
 // one JSON line per check in <run dir>/results.jsonl, screenshots and captured bodies under
 // <run dir>/<module>/. Every module gets a network guard: production DocuSign is never reachable,
 // sandbox DocuSign only with ALLOW_DOCUSIGN=1, and non-GET calls to our own backends are blocked
 // unless the module declared them (or E2E_NO_WRITES=1, which blocks all of them).
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
 process.umask(0o077);
@@ -36,7 +38,12 @@ export const TAG = process.env.E2E_TAG || stamp().replace(/[TZ]/g, '');
 // ---- config / secrets ------------------------------------------------------------------------
 function loadConfig() {
   const out = {};
-  const text = fs.readFileSync(path.join(ROOT, 'config', `${ENV}.env`), 'utf8');
+  const file = path.join(ROOT, 'secrets', `${ENV}.env.secret`);
+  if (!fs.existsSync(file)) {
+    console.error(`missing ${file} - copy tests/e2e/config/example.env there and fill it in (see tests/e2e/README.md)`);
+    process.exit(2);
+  }
+  const text = fs.readFileSync(file, 'utf8');
   for (const line of text.split(/\r?\n/)) {
     const m = line.match(/^([A-Z][A-Z0-9_]*)=(.*)$/);
     if (m) out[m[1]] = process.env[m[1]] ?? m[2];
@@ -139,6 +146,9 @@ const ALWAYS_WRITE_OK = [/^\/api\/auth\//, /^\/callback$/, /\/permissions\/check
 // launch({ identity, writes: [regex on "METHOD host/path"], allowDocusign: bool, state: bool })
 // Returns { browser, context, page, net } where net.api lists our-host responses, net.blocked the
 // requests the guard refused, net.bodies the captured bodies for net.capture(regex).
+// context -> { writes, net } of the session that owns it, so bff() can apply the same guard as the route handler
+const GUARDS = new WeakMap();
+
 export async function launch(opts = {}) {
   const identity = opts.identity || cfg('ID1');
   const statePath = path.join(SECRETS_DIR, `pw-${ENV}-${identity}.state.secret`);
@@ -155,6 +165,7 @@ export async function launch(opts = {}) {
   const writes = NO_WRITES ? [] : (opts.writes || []);
   const creds = credentials(identity);
   if (creds.password) SECRET_VALUES.push(creds.password);
+  GUARDS.set(context, { writes, net });
 
   await context.route('**/*', async (route) => {
     const req = route.request();
@@ -285,12 +296,41 @@ export async function closeOverlay(page) {
 }
 
 // BFF call with the browser session (cookies). Returns { status, json, text }.
+// Direct BFF call with the session cookies. context.request.fetch does NOT pass through context.route, so non-GET calls
+// are guarded here exactly like browser-issued writes: refused under --no-writes, allowed only when a declared write
+// regex of the owning session matches, and recorded in net.writes. Refused calls return { status: 0, skipped }.
 export async function bff(context, method, p, data) {
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    const g = GUARDS.get(context);
+    const u = new URL(SS + p);
+    const key = `${method} ${u.hostname}${u.pathname}`;
+    const reason = NO_WRITES ? 'no-writes' : (!g || !g.writes.some((re) => re.test(key))) ? 'undeclared-write' : null;
+    if (reason) {
+      g?.net.blocked.push({ method, url: u.origin + u.pathname, reason, via: 'bff' });
+      return { status: 0, json: null, text: '', skipped: reason };
+    }
+    g.net.writes.push({ at: now(), method, url: u.origin + u.pathname, body: data ?? null, via: 'bff' });
+  }
   const res = await context.request.fetch(SS + p, { method, ...(data !== undefined ? { data } : {}) });
   const text = await res.text().catch(() => '');
   let json = null;
   try { json = JSON.parse(text); } catch { /* not json */ }
   return { status: res.status(), json, text };
+}
+
+// dev only: drop the whole ACS answer cache through utils/dev_acs_role_flip.sh flush-cache (M2M token from SSM, needs the
+// lfproduct-dev AWS profile) so a grant/revoke becomes visible to Self Serve right away instead of after ~30 minutes.
+// Returns a short note; never throws (prod has no flush - the chains then wait SS_PROPAGATION_SECS and report INFO).
+export function flushAcsCache() {
+  if (ENV !== 'dev') return 'no cache flush on prod (ACS authorize cache ~30 min)';
+  const script = path.join(REPO_ROOT, 'utils', 'dev_acs_role_flip.sh');
+  if (!fs.existsSync(script)) return 'utils/dev_acs_role_flip.sh not found';
+  try {
+    const out = execFileSync(script, ['flush-cache'], { encoding: 'utf8', timeout: 120000, stdio: ['ignore', 'pipe', 'pipe'] });
+    return (out.split('\n').find((l) => /flushed/i.test(l)) || out.trim().split('\n')[0] || 'flushed').slice(0, 120);
+  } catch (err) {
+    return `flush-cache unavailable (${(err.stderr || err.message || '').toString().trim().split('\n').pop().slice(0, 120)})`;
+  }
 }
 
 // Open the Organization lens EasyCLA page of <sfid> and return the path we ended on.

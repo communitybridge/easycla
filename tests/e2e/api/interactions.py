@@ -135,7 +135,7 @@ def events(match, budget=30):
                 if match(text):
                     return code, x
         return code, None
-    (code, ev), _w = poll(fetch, lambda v: v[1] is not None, budget)
+    (code, ev), _ = poll(fetch, lambda v: v[1] is not None, budget)
     return code, ev
 
 
@@ -244,10 +244,10 @@ if pre_valid:
     ack = pre_valid
     e2e.info("I3-ACK-PREEXISTING", f"{ID2} already holds a valid ack {ack['signatureID'][:8]} on the group - auto-ECLA will not add another; reusing it")
 else:
-    (code2, ack), waited = poll(lambda: id2_ack(), lambda v: v[1] is not None, 60)
+    (code2, ack), waited = poll(id2_ack, lambda v: v[1] is not None, 60)
     if ack is None:  # creation is triggered on the criterion write when auto is on: re-put the idempotent criterion
         put_approval(ID1, {"AddEmailApprovalList": [ID2_EMAIL]})
-        (code2, ack), waited2 = poll(lambda: id2_ack(), lambda v: v[1] is not None, 60)
+        (code2, ack), waited2 = poll(id2_ack, lambda v: v[1] is not None, 60)
         waited += waited2
     if ack is None and pre_manager_invalidated:
         # design rule (Michal F-2): an acknowledgment a manager invalidated is never auto-recreated; the contributor has to
@@ -261,7 +261,7 @@ else:
             code4, body4 = e2e.call("anon", "POST", f"{legacy}/v2/request-employee-signature",
                                     {"project_id": GRP, "company_id": CO, "user_id": ID2_USER_ID, "return_url_type": "github", "return_url": c("SS_URL") + "/profile/clas"})
             sig4 = (body4 or {}).get("signature_id") if isinstance(body4, dict) else None
-            (code2, ack), waited3 = poll(lambda: id2_ack(), lambda v: v[1] is not None, 60)
+            (code2, ack), waited3 = poll(id2_ack, lambda v: v[1] is not None, 60)
             e2e.check("I3-EXPLICIT-REACK-CREATES-ACK", code3 == 200 and code4 == 200 and sig4 is not None and ack is not None and ack.get("signatureID") == sig4,
                       f"legacy check-prepare -> {code3}, request-employee-signature -> {code4} signature={str(sig4)[:8]}; "
                       f"my-clas shows valid ack {(ack or {}).get('signatureID', '-')[:8]} after {waited3}s "
@@ -333,7 +333,7 @@ if ACK and ack.get("status") == "valid":
     before_ids = {a.get("signatureID") for a in before}
     code, body = e2e.call(ID1, "PUT", e2e.v4(AUTO), {"auto_create_ecla": True})
     code2, body2 = put_approval(ID1, {"AddEmailApprovalList": [ID2_EMAIL], "AddGithubUsernameApprovalList": [ID2_GH]})
-    (_, after), waited = poll(lambda: id2_acks(), lambda v: any(a.get("signatureID") not in before_ids for a in v[1]), 60)
+    (_, after), waited = poll(id2_acks, lambda v: any(a.get("signatureID") not in before_ids for a in v[1]), 60)
     fresh = [a for a in after if a.get("signatureID") not in before_ids]
     e2e.check("I7-NO-FRESH-ACK-AFTER-MANAGER-INVALIDATION", code == 200 and code2 == 200 and not fresh,
               f"auto on ({code}) + re-add ({code2}): fresh acks within {waited}s = {[(a.get('signatureID', '')[:8], a.get('status')) for a in fresh]} (expected none)")

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Shared helpers for the python modules of the E2E suite (stdlib only).
 
-Reads config/<env>.env (KEY=VALUE, never executed) and secrets/*.secret, offers an HTTP helper that
+Reads secrets/<env>.env.secret (KEY=VALUE, never executed; template config/example.env) and secrets/*.secret, offers an HTTP helper that
 records every call in the module's evidence dir and a `check()` that appends to the run's results.jsonl.
 """
 import json
@@ -31,7 +31,7 @@ for d in (RUN_DIR, EVIDENCE_DIR):
     try:
         os.chmod(d, 0o700)
     except OSError:
-        pass
+        pass  # best effort: the evidence dir may be on a filesystem without chmod support
 RESULTS = os.path.join(RUN_DIR, "results.jsonl")
 LOG = os.path.join(RUN_DIR, "run.log")
 NO_WRITES = os.environ.get("E2E_NO_WRITES", "0") == "1"
@@ -41,7 +41,10 @@ TAG = os.environ.get("E2E_TAG") or time.strftime("%Y%m%d%H%M%S", time.gmtime())
 
 def _load_config():
     cfg = {}
-    with open(os.path.join(ROOT, "config", f"{ENV}.env")) as fh:
+    path = os.path.join(ROOT, "secrets", f"{ENV}.env.secret")
+    if not os.path.isfile(path):
+        sys.exit(f"missing {path} - copy tests/e2e/config/example.env there and fill it in (see tests/e2e/README.md)")
+    with open(path) as fh:
         for line in fh:
             m = re.match(r"^([A-Z][A-Z0-9_]*)=(.*)$", line.rstrip("\r\n"))
             if m:
@@ -154,7 +157,7 @@ def call(who, method, url, data=None, headers=None, timeout=90):
     try:
         os.chmod(os.path.join(EVIDENCE_DIR, "receipts.private.json"), 0o600)
     except OSError:
-        pass
+        pass  # best effort, same as above
     return code, parsed
 
 

@@ -14,16 +14,17 @@ written `0600`, and the browser modules record only `METHOD host/path` for reque
 
 | File | Content | Used by |
 |---|---|---|
+| `<env>.env.secret` | the whole per-environment configuration (endpoints, the two identities, QA fixture ids, gates): copy `../config/example.env` and fill it in; keys missing a value turn the checks that need them into `SKIP` | everything (`lib/common.sh`, `lib/e2e.py`, `browser/lib/e2e.mjs`) |
 | `auth0-<env>-client-id.secret` | one line: the Auth0 client id `utils/get_auth0_token.sh` uses for `<env>` (falls back to `utils/auth0-<env>-client-id.secret` when absent) | `lib/token.sh` |
 | `auth0-<env>-<identity>.secret` | two lines: `AUTH0_USERNAME=<lfid>` and `AUTH0_PASSWORD=<password>` of that identity on `<env>` | `lib/token.sh` (API tokens), `browser/lib/e2e.mjs` (headless login) |
 
-`<env>` is `dev` or `prod`; `<identity>` is the LFID configured as `ID1` / `ID2` in `config/<env>.env`
-(currently `lgpm19820716` = the account that holds every role, `morgothv8` = the account without
-org-admin/CLA roles that the chains grant and revoke). Four credential files are therefore expected:
+`<env>` is `dev` or `prod`; `<identity>` is the LFID configured as `ID1` / `ID2` in `<env>.env.secret`
+(`ID1` = the account that holds every role, `ID2` = the account without org-admin/CLA roles that the chains
+grant and revoke). Four credential files are therefore expected:
 
 ```
-auth0-dev-lgpm19820716.secret   auth0-dev-morgothv8.secret
-auth0-prod-lgpm19820716.secret  auth0-prod-morgothv8.secret
+auth0-dev-<ID1>.secret   auth0-dev-<ID2>.secret
+auth0-prod-<ID1>.secret  auth0-prod-<ID2>.secret
 ```
 
 ## Files the suite generates
@@ -36,7 +37,7 @@ auth0-prod-lgpm19820716.secret  auth0-prod-morgothv8.secret
 ## Other credentials the suite reads but does not store here
 
 * **AWS** (`scans/lambda_scan.sh`, ACS cross-checks in `api/interactions.py`): the profile named by
-  `AWS_PROFILE_E2E` in `config/<env>.env` (`lfproduct-dev` / `lfproduct-prod`) must have valid credentials
+  `AWS_PROFILE_E2E` in `<env>.env.secret` (`lfproduct-dev` / `lfproduct-prod`) must have valid credentials
   (SSO / MFA session). Without it those checks are recorded as `SKIP`, never as failures.
 * **GitHub** (`github/pr_flow.sh`, dev only): the `gh` CLI must be logged in as an account with push access to
   `GITHUB_REPO`; the throw-away commit is authored with `ID1_EMAIL` so GitHub attributes it to `ID1_GITHUB`.

@@ -32,16 +32,21 @@ E2E_NO_WRITES="${E2E_NO_WRITES:-0}"
 E2E_KEEP_STATE="${E2E_KEEP_STATE:-0}"
 E2E_TAG="${E2E_TAG:-$(date -u +%Y%m%d%H%M%S)}"
 
-# ---- config: KEY=VALUE file, parsed (never sourced) ------------------------
-e2e_cfg_get() { sed -n "s/^$1=//p" "$E2E_ROOT/config/$E2E_ENV.env" | sed -n '$p' | tr -d '\r'; }
+# ---- config: secrets/<env>.env.secret, KEY=VALUE file, parsed (never sourced) ----
+E2E_CONFIG="$E2E_ROOT/secrets/$E2E_ENV.env.secret"
+e2e_cfg_get() { sed -n "s/^$1=//p" "$E2E_CONFIG" | sed -n '$p' | tr -d '\r'; }
 e2e_load_config() {
   local key value
+  if [ ! -f "$E2E_CONFIG" ]; then
+    echo "missing $E2E_CONFIG - copy tests/e2e/config/example.env there and fill it in (see tests/e2e/README.md)" >&2
+    exit 2
+  fi
   while IFS= read -r key; do
     [ -z "$key" ] && continue
     value="$(e2e_cfg_get "$key")"
     # the environment (run.sh flags or the caller) wins over the file
     if [ -z "${!key+x}" ]; then printf -v "$key" '%s' "$value"; export "$key"; fi
-  done < <(sed -n 's/^\([A-Z][A-Z0-9_]*\)=.*/\1/p' "$E2E_ROOT/config/$E2E_ENV.env")
+  done < <(sed -n 's/^\([A-Z][A-Z0-9_]*\)=.*/\1/p' "$E2E_CONFIG")
 }
 e2e_load_config
 
@@ -131,7 +136,7 @@ e2e_check() {
 # gate helper: e2e_gate <VAR> <id> <reason> -> returns 1 (and records SKIP) when the gate is off
 e2e_gate() {
   local var=$1 id=$2 reason=$3
-  if [ "${!var:-0}" != "1" ]; then e2e_result "$id" SKIP "$reason ($var=${!var:-0} in config/$E2E_ENV.env)"; return 1; fi
+  if [ "${!var:-0}" != "1" ]; then e2e_result "$id" SKIP "$reason ($var=${!var:-0} in secrets/$E2E_ENV.env.secret)"; return 1; fi
   return 0
 }
 e2e_require_tools() { local t; for t in curl python3 "$@"; do command -v "$t" >/dev/null 2>&1 || { echo "error: $t not found" >&2; exit 1; }; done; }

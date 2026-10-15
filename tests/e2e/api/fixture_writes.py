@@ -148,7 +148,7 @@ if c("SANCTIONED_SFID"):
         ("SA-AUTO-CREATE", "PUT", f"/v4/signatures/company/{sid}/clagroup/{GRP}/ecla-auto-create", {"auto_create_ecla": False}),
         ("SA-MANAGER-CREATE", "POST", f"/v4/company/{sid}/project/{PROJ}/cla-manager", {"firstName": "QA", "lastName": "Probe", "userEmail": c("ID1_EMAIL")}),
     ]:
-        ok, body = e2e.expect(cid, ID1, 403, method, path, data)
+        e2e.expect(cid, ID1, 403, method, path, data)
 else:
     e2e.skip("SA-SANCTIONED", f"SANCTIONED_* not configured for {e2e.ENV}")
 
