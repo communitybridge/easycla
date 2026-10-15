@@ -102,7 +102,17 @@ try {
     const acksNow = (await h.state()).acks;
     const valid = acksNow.filter((a) => h.ackOf(a, ID1, cfg('ID1_GITHUB')) && h.ackValid(a));
     if (valid.length) {
-      await h.invalidateAck(h.ackId(valid[0]), 'M3-ACK-INVALIDATE');
+      const probe = await h.invalidateAck(h.ackId(valid[0]), 'M3-ACK-INVALIDATE');
+      // the dialog's default-on "also remove the matching criteria" may take ID1's BASELINE entries with it (a correct
+      // backend behaviour, not fixture drift): put them back through the BFF right away so the end state still matches
+      if (probe?.alsoRemove) {
+        const left = (await h.state()).entries.map((x) => `${x.kind}:${x.value}`);
+        const lost = OWN.filter((o) => ownAtBaseline(o) && !left.includes(`${o.kind}:${o.value}`)).map((o) => ({ kind: o.kind, value: o.value }));
+        if (lost.length) {
+          const r = await e2e.bff(session.context, 'PUT', h.paths.approval, { add: lost, remove: [] });
+          info('M3-ACK-INVALIDATE-RESTORE-BASELINE', `the dialog removed baseline entr(ies) ${JSON.stringify(lost.map((x) => `${x.kind}:${x.value}`))} -> PUT approval-list add -> ${r.status}`);
+        }
+      }
     } else {
       info('M3-ACK-INVALIDATE', `no valid ID1 acknowledgment on the fixture (${acksNow.length} acks, ID1's=${acksNow.filter((a) => h.ackOf(a, ID1, cfg('ID1_GITHUB'))).length} all invalidated) - invalidation exercised by m3_chain/interactions`);
       await h.tab('acknowledgments');
