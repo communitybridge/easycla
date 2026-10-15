@@ -59,7 +59,7 @@ def my_ecla():
     # ID1 can hold ECLAs for several employers on the same group: only the write fixture's company (CO) counts
     code, body = e2e.call(ID1, "GET", e2e.v4("/v4/my-clas?pageSize=100"))
     rows = (body or {}).get("clas") or [] if isinstance(body, dict) else []
-    rows = [r for r in rows if r.get("claGroupID") == GRP and (not r.get("companyID") or r.get("companyID") == CO)]
+    rows = [r for r in rows if r.get("claGroupID") == GRP and r.get("companyID") == CO]
     wanted = next((r for r in rows if r.get("signatureID") == c("ID1_ECLA")), None) if c("ID1_ECLA") else None
     if wanted:
         return wanted

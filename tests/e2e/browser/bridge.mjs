@@ -36,7 +36,10 @@ const adminOrgs = cfg('ID1_ADMIN_ORG_SFIDS').split(',').map((s) => s.trim()).fil
 const uid = (o) => (typeof o === 'string' ? o : o?.uid || o?.sfid || o?.id);
 const navLinks = (page) => page.$$eval('nav a[href], aside a[href]', (as) => [...new Set(as.filter((a) => /^\/org\//.test(a.getAttribute('href') || '')).map((a) => (a.getAttribute('href') || '') + ' :: ' + (a.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40)))]).catch(() => []);
 const adminWords = /Org Admin|Dashboard|Memberships|People/;
-const deniedPath = (p) => /not-found|access-denied/.test(p) || p === '/' || /\/overview$/.test(p);
+const deniedPath = (p) => /not-found|access-denied/.test(p) || p === '/' || p === '/org/overview';
+// Self Serve sometimes keeps a no-role identity on /org/<sfid>/overview and renders the unbound overview shell
+// ("Select Organization", zero data) instead of redirecting: denied as long as that company's name is not rendered
+const deniedOverview = (w, name) => deniedPath(w.path) || (/^\/org\/[^/]+\/overview$/.test(w.path) && !!name && !w.text.toLowerCase().includes(name.toLowerCase()));
 
 async function visit(page, p, shotName, settle = 7000) {
   await page.goto(`${e2e.SS}${p}`, { waitUntil: 'domcontentloaded', timeout: 60000 }).catch(() => {});
@@ -150,7 +153,7 @@ for (const who of [ID1, ID2]) {
       const v = await visit(page, `/org/${other.sfid}/easycla`, `${who}-b5-other`);
       const w = await visit(page, `/org/${other.sfid}/overview`, `${who}-b5-other-overview`, 6000);
       const noRole = !writers.includes(other.sfid) && !claOrgs.includes(other.sfid);
-      if (noRole) check(`B5-OTHER-COMPANY-DENIED-${P}`, deniedPath(v.path) && v.cards === 0 && deniedPath(w.path) && !crashed(v) && !crashed(w), `${summary(v)} || overview -> ${w.path}`);
+      if (noRole) check(`B5-OTHER-COMPANY-DENIED-${P}`, deniedPath(v.path) && v.cards === 0 && deniedOverview(w, other.name) && !crashed(v) && !crashed(w), `${summary(v)} || overview -> ${w.path}`);
       else info(`B5-OTHER-COMPANY-${P}`, `${who} holds a role on OTHER_ORG ${other.sfid}: ${summary(v)}`);
     }
     if (uiOk) {

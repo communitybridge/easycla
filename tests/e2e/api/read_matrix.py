@@ -144,19 +144,39 @@ if CO2 and SFID2 not in st2["manager_orgs"] and SFID2 not in st2["contact_orgs"]
     e2e.expect("R-ID2-COMPANY2-SIGNED-DOCUMENT-403", ID2, 403, "GET", f"/v4/signatures/{CCLA2}/signed-document")
 if OTHER_ORG and not id2_other:
     e2e.expect("R-ID2-OTHER-ORG-403", ID2, 403, "GET", f"/v4/company/external/{OTHER_ORG}")
-# negative writes with the no-role identity: nothing may change on the fixture
-if not id2_fixture:
+# ---- fixture CCLA shape (read as ID1 - also the baseline of the negative writes below) ------------------------------
+def fixture_ccla():
+    code, body = e2e.call(ID1, "GET", e2e.v4(f"/v4/signatures/project/{PROJ}/company/{CO}"))
+    sigs = (body or {}).get("signatures") or [] if isinstance(body, dict) else []
+    return code, next((s for s in sigs if s.get("signatureID") == CCLA), sigs[0] if sigs else {})
+
+
+def acl_of(row):
+    return sorted(a.get("lfUsername") or a.get("username") or "" for a in row.get("signatureACL") or [])
+
+
+code, row = fixture_ccla()
+# negative writes with the no-role identity: nothing may change on the fixture. The approval-list and Auto-ECLA routes
+# authorize against the CCLA's signatureACL (v2/signatures/handlers.go), so ID2 on that ACL would make them legitimate.
+if id2_fixture or ID2 in acl_of(row):
+    e2e.skip("W-ID2-NEGATIVE-WRITES", f"{ID2} currently holds the fixture scope or is on the CCLA's ACL - negative writes not applicable")
+else:
+    neg_email = f"e2e-neg-{ID2}-{e2e.TAG}@example.invalid"
     e2e.expect("W-ID2-APPROVAL-PUT-403", ID2, 403, "PUT", f"/v4/signatures/project/{PROJ}/company/{CO}/clagroup/{GRP}/approval-list",
-               {"AddEmailApprovalList": [f"e2e-neg-{ID2}-{e2e.TAG}@example.invalid"]})
+               {"AddEmailApprovalList": [neg_email]})
     e2e.expect("W-ID2-CLA-MANAGER-POST-403", ID2, 403, "POST", f"/v4/company/{CO}/project/{PROJ}/cla-manager", {"userLFID": ID2})
     e2e.expect("W-ID2-AUTO-ECLA-PUT-403", ID2, 403, "PUT", f"/v4/signatures/company/{CO}/clagroup/{GRP}/ecla-auto-create", {"auto_create_ecla": True})
-else:
-    e2e.skip("W-ID2-NEGATIVE-WRITES", f"{ID2} currently holds the fixture scope - negative writes not applicable")
+    # an unexpected acceptance is undone right away (as ID1) so the fixture keeps its baseline
+    _, after = fixture_ccla()
+    undo = []
+    if neg_email in (after.get("emailApprovalList") or []):
+        undo.append(("approval-list", e2e.call(ID1, "PUT", e2e.v4(f"/v4/signatures/project/{PROJ}/company/{CO}/clagroup/{GRP}/approval-list"), {"RemoveEmailApprovalList": [neg_email]})[0]))
+    if after.get("autoCreateECLA") != row.get("autoCreateECLA"):
+        undo.append(("auto-ecla", e2e.call(ID1, "PUT", e2e.v4(f"/v4/signatures/company/{CO}/clagroup/{GRP}/ecla-auto-create"), {"auto_create_ecla": bool(row.get("autoCreateECLA"))})[0]))
+    if ID2 in acl_of(after):
+        undo.append(("cla-manager", e2e.call(ID1, "DELETE", e2e.v4(f"/v4/company/{CO}/project/{PROJ}/cla-manager/{ID2}"))[0]))
+    e2e.check("W-ID2-NEGATIVE-WRITES-NO-CHANGE", not undo, f"fixture CCLA unchanged after the refused writes={not undo}" + (f"; undone as {ID1}: {undo}" if undo else ""))
 
-# ---- fixture CCLA shape (INFO) ------------------------------------------------------
-code, body = e2e.call(ID1, "GET", e2e.v4(f"/v4/signatures/project/{PROJ}/company/{CO}"))
-sigs = (body or {}).get("signatures") or [] if isinstance(body, dict) else []
-row = next((s for s in sigs if s.get("signatureID") == CCLA), sigs[0] if sigs else {})
 e2e.check("R-FIXTURE-CCLA-PRESENT", code == 200 and row.get("signatureID") == CCLA,
           f"fixture CCLA {CCLA[:8]} present: signed={row.get('signatureSigned')} approved={row.get('signatureApproved')} autoCreateECLA={row.get('autoCreateECLA')} "
           f"managers={[a.get('lfUsername') or a.get('username') for a in row.get('signatureACL') or []]} "

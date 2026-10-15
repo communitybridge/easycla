@@ -10,7 +10,8 @@
 // reconcile in `finally` puts entries, roster and Auto-ECLA back to the baseline.
 // Browser writes only under /api/orgs/<M3_ORG_SFID>/lens/cla-groups/<M3_CCLA>/ (guard-enforced). The one exception is
 // the acknowledgment probe: it manager-invalidates ID1's own acknowledgment (EasyCLA e-mails ID1 about it) and then
-// re-acknowledges ID1 through the legacy API (needs ID1_UID + LEGACY_API + ID1_GITHUB, otherwise the probe is skipped;
+// re-acknowledges ID1 through the legacy API (needs ID1_UID + LEGACY_API + ID1_GITHUB and the fixture CCLA confirmed as the
+// resolved company's signature on M3_PROJECT_SFID before anything is invalidated, otherwise the probe is skipped;
 // a GitHub-username entry covers ID1 for the duration of the re-acknowledgment when the baseline list does not), leaving
 // one more invalidated acknowledgment record on the fixture - the same residue m3_chain/interactions leave for ID2.
 import * as e2e from './lib/e2e.mjs';
@@ -50,12 +51,22 @@ const jsonCall = async (method, url, body, bearer) => {
 // the lens lists a valid ID1 acknowledgment again. The legacy pre-check refuses a contributor nobody on the approval list
 // covers ("user not authorized for this ccla"), and after the dialog's "also remove" the baseline may not cover ID1 at
 // all (dev: a gitlab-username entry ID1's record cannot match) - so, like m2_signing's ECLA pre-flight, cover ID1 with a
-// GitHub-username entry for the duration of the re-acknowledgment and take it off again; the removal leaves the fresh
-// acknowledgment valid, which the result verifies. The invalidation e-mail EasyCLA sends to ID1 is expected residue.
-async function reacknowledgeId1() {
+// GitHub-username entry for the duration of the re-acknowledgment and take it off again. Where the baseline covers ID1
+// (prod) the new acknowledgment stays valid; where it does not, the removal voids it the resurrectable way (see below),
+// which is the state the module found. The invalidation e-mail EasyCLA sends to ID1 is expected residue.
+// The company the re-acknowledgment targets: several signing entities may share one Salesforce organization, so the
+// parent entity's internal id is only accepted when the fixture CCLA is that company's signature on the fixture project.
+// Resolved BEFORE the invalidation - an unconfirmed mapping skips the probe instead of leaving ID1 invalidated.
+async function resolveAckCompany(projectSfid) {
   const co = await jsonCall('GET', `${cfg('API_V4')}/v4/company/external/${fx.sfid}`, null, e2e.token(ID1));
   const companyId = co.json?.companyID;
-  if (!companyId) return { ok: false, note: `GET /v4/company/external/${fx.sfid} -> ${co.status} (no companyID)` };
+  if (!companyId) return { note: `GET /v4/company/external/${fx.sfid} -> ${co.status} (no companyID)` };
+  const sigs = await jsonCall('GET', `${cfg('API_V4')}/v4/signatures/project/${projectSfid}/company/${companyId}`, null, e2e.token(ID1));
+  const ids = (sigs.json?.signatures || []).map((s) => s.signatureID);
+  if (!ids.includes(fx.sig)) return { note: `CCLA ${fx.sig} is not a signature of company ${companyId} on project ${projectSfid} (GET -> ${sigs.status}, ${JSON.stringify(ids)}) - another signing entity of ${fx.sfid}?` };
+  return { companyId, note: `company ${companyId} holds CCLA ${fx.sig} on project ${projectSfid}` };
+}
+async function reacknowledgeId1(companyId) {
   const steps = [];
   const domain = (cfg('ID1_EMAIL') || '').split('@')[1] || '';
   const covers = (x) => (x.kind === 'github-username' && x.value === cfg('ID1_GITHUB')) || (x.kind === 'email' && x.value === cfg('ID1_EMAIL')) || (x.kind === 'domain' && domain && x.value === domain);
@@ -81,9 +92,15 @@ async function reacknowledgeId1() {
   }
   if (temp) {
     const r = await e2e.bff(session.context, 'PUT', h.paths.approval, { add: [], remove: [temp] });
-    const still = ok && (await h.state()).acks.some(validId1);
-    steps.push(`temporary entry removed -> ${r.status}; acknowledgment still valid after the removal=${still}`);
-    ok = ok && still;
+    // backend rule (signatures/repository.go verifyUserApprovals): taking the only criterion covering ID1 away voids the
+    // acknowledgment with removedFromApprovalList, and the next criterion add for ID1 resurrects it - the state every
+    // m2_signing ECLA run leaves behind and what this module finds (and resurrects with its own GitHub-username add) at
+    // the start of its next run. A manager-invalidated acknowledgment, by contrast, never comes back.
+    const mine = (await h.state()).acks.filter((a) => a.lfLogin === ID1 || a.githubUsername === cfg('ID1_GITHUB')).sort((a, b) => String(b.signedOn || '').localeCompare(String(a.signedOn || '')));
+    const newest = mine[0];
+    const state = !newest ? 'missing' : h.ackValid(newest) ? 'valid' : newest.removedFromApprovalList === true ? 'removal-voided (resurrects on the next criterion add)' : `invalidated (${newest.invalidationReason || 'other'})`;
+    steps.push(`temporary entry removed -> ${r.status}; newest ID1 acknowledgment ${newest ? h.ackId(newest) : '-'} ${state}`);
+    ok = ok && (state === 'valid' || state.startsWith('removal-voided'));
   }
   return { ok, note: steps.join('; ') };
 }
@@ -159,22 +176,29 @@ try {
     // ---- acknowledgment invalidation (ID1's own valid ack when there is one, re-acknowledged afterwards) ----
     const acksNow = (await h.state()).acks;
     const valid = acksNow.filter((a) => h.ackOf(a, ID1, cfg('ID1_GITHUB')) && h.ackValid(a));
-    if (valid.length && !(cfg('ID1_UID') && LEGACY && cfg('ID1_GITHUB'))) {
-      skip('M3-ACK-INVALIDATE', `ID1 holds a valid acknowledgment ${h.ackId(valid[0])} but ID1_UID / LEGACY_API / ID1_GITHUB are not configured, so the suite could not re-acknowledge ID1 afterwards (a manager-invalidated acknowledgment is never resurrected) - probe skipped`);
+    const configured = !!(cfg('ID1_UID') && LEGACY && cfg('ID1_GITHUB'));
+    const target = valid.length && configured ? await resolveAckCompany(cfg('M3_PROJECT_SFID') || base.row?.pairProjectSfid) : null;
+    if (valid.length && !target?.companyId) {
+      skip('M3-ACK-INVALIDATE', `ID1 holds a valid acknowledgment ${h.ackId(valid[0])} but ${configured ? `the re-acknowledgment target is not confirmed (${target.note})` : 'ID1_UID / LEGACY_API / ID1_GITHUB are not configured'}, so the suite could not re-acknowledge ID1 afterwards (a manager-invalidated acknowledgment is never resurrected) - probe skipped`);
     } else if (valid.length) {
-      const probe = await h.invalidateAck(h.ackId(valid[0]), 'M3-ACK-INVALIDATE');
-      // the dialog's default-on "also remove the matching criteria" may take ID1's BASELINE entries with it (a correct
-      // backend behaviour, not fixture drift): put them back through the BFF right away so the end state still matches
-      if (probe?.alsoRemove) {
-        const left = (await h.state()).entries.map((x) => `${x.kind}:${x.value}`);
-        const lost = OWN.filter((o) => ownAtBaseline(o) && !left.includes(`${o.kind}:${o.value}`)).map((o) => ({ kind: o.kind, value: o.value }));
-        if (lost.length) {
-          const r = await e2e.bff(session.context, 'PUT', h.paths.approval, { add: lost, remove: [] });
-          info('M3-ACK-INVALIDATE-RESTORE-BASELINE', `the dialog removed baseline entr(ies) ${JSON.stringify(lost.map((x) => `${x.kind}:${x.value}`))} -> PUT approval-list add -> ${r.status}`);
+      try {
+        const probe = await h.invalidateAck(h.ackId(valid[0]), 'M3-ACK-INVALIDATE');
+        // the dialog's default-on "also remove the matching criteria" may take ID1's BASELINE entries with it (a correct
+        // backend behaviour, not fixture drift): put them back through the BFF right away so the end state still matches
+        if (probe?.alsoRemove) {
+          const left = (await h.state()).entries.map((x) => `${x.kind}:${x.value}`);
+          const lost = OWN.filter((o) => ownAtBaseline(o) && !left.includes(`${o.kind}:${o.value}`)).map((o) => ({ kind: o.kind, value: o.value }));
+          if (lost.length) {
+            const r = await e2e.bff(session.context, 'PUT', h.paths.approval, { add: lost, remove: [] });
+            info('M3-ACK-INVALIDATE-RESTORE-BASELINE', `the dialog removed baseline entr(ies) ${JSON.stringify(lost.map((x) => `${x.kind}:${x.value}`))} -> PUT approval-list add -> ${r.status}`);
+          }
         }
+      } finally {
+        // the recovery runs whatever happened after the invalidation attempt (a read in between may throw): nothing in
+        // the module's end-state restore brings a manager-invalidated acknowledgment back
+        const re = await reacknowledgeId1(target.companyId).catch((err) => ({ ok: false, note: `recovery threw: ${err.message}` }));
+        check('M3-ACK-REACK', re.ok, `ID1 re-acknowledged after the probe (${target.note}): ${re.note}`);
       }
-      const re = await reacknowledgeId1();
-      check('M3-ACK-REACK', re.ok, `ID1 re-acknowledged after the probe (${re.note}); lens lists a valid ID1 acknowledgment again=${re.ok}`);
     } else {
       info('M3-ACK-INVALIDATE', `no valid ID1 acknowledgment on the fixture (${acksNow.length} acks, ID1's=${acksNow.filter((a) => h.ackOf(a, ID1, cfg('ID1_GITHUB'))).length} all invalidated) - invalidation exercised by m3_chain/interactions`);
       await h.tab('acknowledgments');
