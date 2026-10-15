@@ -140,7 +140,11 @@ const OWN_HOSTS = new Set([SS_HOST, 'API_GW', 'API_V4', 'LEGACY_API', 'LEGACY_AP
   try { return cfg(k) ? new URL(cfg(k)).hostname : ''; } catch { return ''; }
 }).filter(Boolean));
 const SANDBOX_DOCUSIGN = new Set(['demo.docusign.net', 'apps-d.docusign.com', 'account-d.docusign.com']);
-export const isAuth0Host = (h) => /(^|\.)auth0\.com$/.test(h) || h === cfg('AUTH0_DOMAIN') || /^sso\./.test(h);
+// Hosts that may receive the identity's password: AUTH0_DOMAIN plus the optional comma-separated SSO_HOSTS.
+// isAuth0Host() is the broader route-guard predicate (any auth hop may pass); fillLogin() uses the allow-list only.
+const CREDENTIAL_HOSTS = new Set([cfg('AUTH0_DOMAIN'), ...cfg('SSO_HOSTS').split(',')].map((s) => s.trim()).filter(Boolean));
+export const isCredentialHost = (h) => CREDENTIAL_HOSTS.has(h);
+export const isAuth0Host = (h) => isCredentialHost(h) || /(^|\.)auth0\.com$/.test(h) || /^sso\./.test(h);
 const ALWAYS_WRITE_OK = [/^\/api\/auth\//, /^\/callback$/, /\/permissions\/checks$/];
 
 // launch({ identity, writes: [regex on "METHOD host/path"], allowDocusign: bool, state: bool })
@@ -234,7 +238,10 @@ export async function login(page, identity, landing = `${SS}/`) {
 }
 
 // Fill and submit the Auth0 / LF SSO form the page currently shows (also used for the console's second SSO hop).
+// Credentials are only ever typed on an allow-listed host (AUTH0_DOMAIN / SSO_HOSTS).
 export async function fillLogin(page, identity) {
+  const host = new URL(page.url()).hostname;
+  if (!isCredentialHost(host)) throw new Error(`refusing to enter credentials on ${host}: not in AUTH0_DOMAIN/SSO_HOSTS`);
   const creds = credentials(identity);
   if (!creds.password) throw new Error(`no password for ${identity} (secrets/auth0-${ENV}-${identity}.secret)`);
   await hideOverlays(page);

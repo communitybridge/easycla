@@ -9,5 +9,9 @@ secrets/*
 # evidence (default location is <repo>/e2e-tests/runs/suite/, already ignored at the root; keep local copies out too)
 runs/
 *.private.json
+*.private.jsonl
 *.png
 *.log
+# the per-environment configuration lives in secrets/<env>.env.secret; only the template is tracked
+config/*.env
+!config/example.env

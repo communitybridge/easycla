@@ -2,20 +2,31 @@
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
 # Read-only Lambda log scan (CloudWatch filter-log-events): error / panic / timeout counts per EasyCLA function
-# for the window [E2E_SINCE, now]. Default window: the start of this run minus 15 minutes (so the scan covers
-# the traffic the other modules generated). Panics, Go runtime errors, Runtime.ExitError and timeouts FAIL; error counts,
-# INIT_REPORT failures and the CloudWatch Errors/Invocations/Throttles sums per function are INFO (top messages listed).
-# Needs AWS credentials for $AWS_PROFILE_E2E (read-only logs:FilterLogEvents, cloudwatch:GetMetricStatistics,
-# optional ssm:GetServiceSetting).
+# for the window [since, now]: since = --since / E2E_SINCE when given, otherwise the start of this run (E2E_RUN_START,
+# exported by run.sh) minus 15 minutes, so the scan covers the traffic the other modules generated. CloudWatch ingests
+# Lambda logs with a delay, so the scan first waits E2E_SCAN_SETTLE_SECS (default 90, 0 disables) and the window ends after
+# that wait. Panics, Go runtime errors, Runtime.ExitError and timeouts FAIL; error counts, INIT_REPORT failures and the
+# CloudWatch Errors/Invocations/Throttles sums per function are INFO (top messages listed).
+# Needs the AWS CLI and credentials for $AWS_PROFILE_E2E (read-only logs:FilterLogEvents, cloudwatch:GetMetricStatistics,
+# optional ssm:GetServiceSetting); without either the scan is recorded as SKIP.
 set -u
 . "$(cd "$(dirname "$0")/../lib" && pwd)/common.sh"
-e2e_require_tools aws
+if ! command -v aws >/dev/null 2>&1; then
+  e2e_result LS-AWS SKIP "aws CLI not installed - lambda scan skipped"
+  e2e_summary_line; exit 0
+fi
 if ! aws --profile "$AWS_PROFILE_E2E" sts get-caller-identity --no-cli-pager >/dev/null 2>&1; then
   e2e_result LS-AWS SKIP "no AWS credentials for profile $AWS_PROFILE_E2E - lambda scan skipped"
   e2e_summary_line; exit 0
 fi
+settle="${E2E_SCAN_SETTLE_SECS:-90}"
+case "$settle" in ''|*[!0-9]*) settle=90 ;; esac
+if [ "$settle" -gt 0 ]; then
+  e2e_log "waiting ${settle}s for CloudWatch log ingestion before scanning (E2E_SCAN_SETTLE_SECS)"
+  sleep "$settle"
+fi
 # epoch ms without GNU `date -d` (works on BSD/macOS too)
-since_ms=$(python3 -I - "${E2E_SINCE:-}" "${E2E_RUN_STARTED:-}" <<'PY'
+since_ms=$(python3 -I - "${E2E_SINCE:-}" "${E2E_RUN_START:-}" <<'PY'
 import sys, time, datetime
 def parse(s):
     s = s.strip()
@@ -31,7 +42,7 @@ print(since)
 PY
 )
 end_ms=$(python3 -c 'import time; print(int(time.time()*1000))')
-e2e_result LS-WINDOW INFO "window $(python3 -c "import datetime,sys; print(datetime.datetime.fromtimestamp(int(sys.argv[1])/1000, datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))" "$since_ms") .. $(e2e_now) profile=$AWS_PROFILE_E2E"
+e2e_result LS-WINDOW INFO "window $(python3 -c "import datetime,sys; print(datetime.datetime.fromtimestamp(int(sys.argv[1])/1000, datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))" "$since_ms") .. $(e2e_now) (settled ${settle}s for log ingestion) profile=$AWS_PROFILE_E2E"
 
 scan() { # scan <region> <function> <tag> <filter-pattern> <fail-if-any 0|1>
   local region=$1 fn=$2 tag=$3 pat=$4 fatal=$5 n out

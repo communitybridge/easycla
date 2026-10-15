@@ -45,7 +45,7 @@ e2e_load_config() {
     [ -z "$key" ] && continue
     value="$(e2e_cfg_get "$key")"
     # the environment (run.sh flags or the caller) wins over the file
-    if [ -z "${!key+x}" ]; then printf -v "$key" '%s' "$value"; export "$key"; fi
+    if [ -z "${!key+x}" ]; then printf -v "$key" '%s' "$value"; export "${key?}"; fi
   done < <(sed -n 's/^\([A-Z][A-Z0-9_]*\)=.*/\1/p' "$E2E_CONFIG")
 }
 e2e_load_config
@@ -96,13 +96,16 @@ e2e_summary_line() { e2e_log "module done: PASS=$E2E_PASS FAIL=$E2E_FAIL SKIP=$E
 E2E_HTTP_OUT=""
 E2E_LAST_CODE=000
 e2e_http() {
-  local who=$1 method=$2 url=$3 body=${4:-} tok=() code name
+  local who=$1 method=$2 url=$3 body=${4:-} tok=() code name hdr=""
   name="$(printf '%s' "$method-$url" | tr -c 'A-Za-z0-9._-' '_' | tail -c 120)"
   E2E_HTTP_OUT="$E2E_EVIDENCE_DIR/http-$(date -u +%H%M%S)-$RANDOM-$name.out"
   if [ "$who" != "anon" ]; then
     local t; t="$(e2e_token "$who")"
     [ -n "$t" ] || { echo "error: no token for identity $who (run lib/token.sh)" >&2; E2E_LAST_CODE=000; : > "$E2E_HTTP_OUT"; return 0; }
-    tok=(-H "Authorization: Bearer $t")
+    # the token never appears in curl's argv (ps / /proc): it goes through a 0600 header file (curl -H @file, >= 7.55)
+    hdr="$(umask 077; mktemp "$E2E_EVIDENCE_DIR/.hdr.XXXXXX")"
+    printf 'Authorization: Bearer %s\n' "$t" > "$hdr"
+    tok=(-H "@$hdr")
   fi
   if [ -n "$body" ]; then
     code=$(curl -s --max-time 90 -o "$E2E_HTTP_OUT" -w '%{http_code}' -X "$method" "${tok[@]}" \
@@ -111,6 +114,7 @@ e2e_http() {
     code=$(curl -s --max-time 90 -o "$E2E_HTTP_OUT" -w '%{http_code}' -X "$method" "${tok[@]}" \
       -H 'Accept: application/json' -H 'Cache-Control: no-cache' "$url")
   fi
+  [ -n "$hdr" ] && rm -f "$hdr"
   chmod 600 "$E2E_HTTP_OUT" 2>/dev/null || true
   E2E_LAST_CODE=$code
 }

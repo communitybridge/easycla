@@ -4,8 +4,10 @@
 // M3: Organization lens -> EasyCLA -> signed agreement detail as ID1 (CLA manager) on the M3 fixture.
 // Approval list (validation, add, duplicate, delete-cancel, remove), Auto-ECLA on/off, acknowledgment
 // invalidation, CLA manager roster (validation, add/remove ID2, remove-cancel), activity log, end state.
-// State-aware: suite-owned approval entries left by an earlier run are removed first, the manager
-// add/remove order follows whether ID2 is already on the roster, and the end state must equal the baseline.
+// State-aware: synthetic approval entries left by an earlier run are removed first, ID1's own e-mail/GitHub
+// entries are added only when absent at baseline (and then removed again), the manager add/remove order follows
+// whether ID2 is already on the roster, and the end state must equal the baseline. Whatever happens, a BFF
+// reconcile in `finally` puts entries, roster and Auto-ECLA back to the baseline.
 // Writes only under /api/orgs/<M3_ORG_SFID>/lens/cla-groups/<M3_CCLA>/ (guard-enforced).
 import * as e2e from './lib/e2e.mjs';
 import { m3, fixtureWrites } from './lib/m3.mjs';
@@ -16,25 +18,30 @@ const ID2 = cfg('ID2');
 const fx = { sfid: cfg('M3_ORG_SFID'), name: cfg('M3_ORG_NAME'), group: cfg('M3_CLA_GROUP'), sig: cfg('M3_CCLA') };
 const WRITES = e2e.gate('ALLOW_FIXTURE_WRITES') && !e2e.NO_WRITES;
 const synthetic = `qa-e2e-suite-${e2e.TAG}.example.com`;
-const suiteOwned = (v) => /^qa-e2e-suite-.*\.example\.com$/.test(v) || v === cfg('ID1_GITHUB') || v === cfg('ID1_EMAIL');
+// only the synthetic domains are suite-owned: ID1's own e-mail / GitHub entries may legitimately be part of the fixture
+const suiteOwned = (v) => /^qa-e2e-suite-.*\.example\.com$/.test(v);
+const OWN = [{ kind: 'github-username', value: cfg('ID1_GITHUB'), tag: 'GITHUB-USERNAME', re: /github user/i }, { kind: 'email', value: cfg('ID1_EMAIL'), tag: 'EMAIL', re: /^email$/i }];
 
 if (!fx.sfid || !fx.sig) { skip('M3-FIXTURE', 'M3_ORG_SFID / M3_CCLA not configured'); process.exit(e2e.finish()); }
 
 const session = await e2e.launch({ identity: ID1, writes: WRITES ? fixtureWrites(fx.sfid, fx.sig) : [] });
 const { page, net } = session;
 const h = m3(session, fx);
+let base = null; let expectedEntries = null;
+const id2 = { lfUsername: ID2, firstName: cfg('ID2_FIRST'), lastName: cfg('ID2_LAST'), email: cfg('ID2_EMAIL') };
 try {
   const how = await e2e.login(page, ID1, `${e2e.SS}/org/easycla`);
   check('M3-LOGIN', new URL(page.url()).hostname === e2e.SS_HOST, `${ID1} login ${how}`);
 
-  const base = await h.state();
+  base = await h.state();
   e2e.evidence('before.private.json', base);
   check('M3-BEFORE-STATE', !!base.row?.signed && Object.values(base.http).every((s) => s === 200),
     `row=${JSON.stringify(base.row && { status: base.row.status, claManagersCount: base.row.claManagersCount, approvalCriteriaCount: base.row.approvalCriteriaCount, autoCreateEcla: base.row.autoCreateEcla, viewerIsClaManager: base.row.viewerIsClaManager })} managers=${JSON.stringify(base.managers)} entries=${base.entries.length} acks=${base.acks.length}`);
   check('M3-VIEWER-IS-CLA-MANAGER', base.row?.viewerIsClaManager === true, `viewerIsClaManager=${base.row?.viewerIsClaManager}`);
-  const expectedEntries = base.entries.filter((x) => !suiteOwned(x.value)).map((x) => `${x.kind}:${x.value}`).sort();
+  expectedEntries = base.entries.filter((x) => !suiteOwned(x.value)).map((x) => `${x.kind}:${x.value}`).sort();
   const id2OnRoster = base.managers.includes(ID2);
-  info('M3-BASELINE-EXPECTATION', `end state must be: entries=${JSON.stringify(expectedEntries)} managers=${JSON.stringify(base.managers)} auto=${base.row?.autoCreateEcla}; ID2 on roster at start=${id2OnRoster}`);
+  const ownAtBaseline = (o) => base.entries.some((x) => x.kind === o.kind && x.value === o.value);
+  info('M3-BASELINE-EXPECTATION', `end state must be: entries=${JSON.stringify(expectedEntries)} managers=${JSON.stringify(base.managers)} auto=${base.row?.autoCreateEcla}; ID2 on roster at start=${id2OnRoster}; own entries at baseline=${JSON.stringify(OWN.filter(ownAtBaseline).map((o) => `${o.kind}:${o.value}`))}`);
 
   await h.openDetail();
   for (const t of ['overview', 'approval', 'acknowledgments', 'managers', 'activity']) {
@@ -50,22 +57,26 @@ try {
     // ---- approval list ----
     await h.tab('approval');
     const stale = base.entries.filter((x) => suiteOwned(x.value));
-    for (const x of stale) await h.removeEntry(x.value, `M3-P0-STALE-ENTRY-REMOVED-${x.value.replace(/[^a-z0-9]/gi, '').slice(0, 24).toUpperCase()}`);
-    if (stale.length) info('M3-P0-STALE-ENTRIES', `${stale.length} suite-owned entr(ies) from an earlier run removed first: ${JSON.stringify(stale.map((x) => x.value))}`);
+    for (const x of stale) await h.removeEntry(x.value, `M3-P0-STALE-ENTRY-REMOVED-${x.value.replace(/[^a-z0-9]/gi, '').slice(0, 24).toUpperCase()}`, x.kind);
+    if (stale.length) info('M3-P0-STALE-ENTRIES', `${stale.length} synthetic entr(ies) from an earlier run removed first: ${JSON.stringify(stale.map((x) => x.value))}`);
     await e2e.shot(page, 'approval-start');
     await h.rejectEntry(/^email domain$/i, 'not a domain', 'M3-APPROVAL-INVALID-DOMAIN');
     await h.addEntry(/^email domain$/i, synthetic, 'M3-APPROVAL-ADD-DOMAIN');
     await h.rejectEntry(/^email domain$/i, synthetic, 'M3-APPROVAL-DUPLICATE', /already/i);
-    await h.addEntry(/github user/i, cfg('ID1_GITHUB'), 'M3-APPROVAL-ADD-GITHUB-USERNAME');
-    await h.addEntry(/^email$/i, cfg('ID1_EMAIL'), 'M3-APPROVAL-ADD-EMAIL');
+    let added = 1;
+    for (const o of OWN) {
+      // ID1's own entries are part of the fixture on some environments: only add (and later remove) the ones absent at baseline
+      if (ownAtBaseline(o)) info(`M3-APPROVAL-ADD-${o.tag}`, `${o.kind}:${o.value} is on the approval list at baseline - add skipped, kept as is`);
+      else { await h.addEntry(o.re, o.value, `M3-APPROVAL-ADD-${o.tag}`); added += 1; }
+    }
     const w = h.writesSoFar();
-    const domainRow = h.approvalRow(synthetic);
+    const domainRow = h.approvalRow(synthetic, 'domain');
     await domainRow.getByTestId('org-easycla-approval-delete').getByRole('button').click();
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();
     await e2e.sleep(1000);
     check('M3-APPROVAL-DELETE-CANCEL', h.writesSoFar() === w && (await domainRow.count()) === 1, `Cancel keeps the row (rows=${await domainRow.count()}) and makes no write (writes=${h.writesSoFar() - w})`);
     const afterAdds = await h.state();
-    check('M3-APPROVAL-STATE-3-NEW-ENTRIES', afterAdds.entries.length === expectedEntries.length + 3, `entries=${JSON.stringify(afterAdds.entries.map((x) => `${x.kind}:${x.value}`))}`);
+    check('M3-APPROVAL-STATE-NEW-ENTRIES', afterAdds.entries.length === expectedEntries.length + added, `entries=${afterAdds.entries.length} (baseline ${expectedEntries.length} + ${added} added): ${JSON.stringify(afterAdds.entries.map((x) => `${x.kind}:${x.value}`))}`);
 
     // ---- Auto-ECLA ----
     const acks0 = afterAdds.acks;
@@ -84,7 +95,8 @@ try {
     } else {
       check('M3-AUTO-ECLA-CREATES-ACK', mine1.some(h.ackValid), `acks before=${acks0.length} after=${acks1.length}; ID1 ack created=${mine1.some(h.ackValid)}`);
     }
-    await h.toggleAuto(false, 'M3-AUTO-ECLA-OFF');
+    // back to the baseline value (the fixture may legitimately run with Auto-ECLA on)
+    await h.toggleAuto(!!base.row?.autoCreateEcla, 'M3-AUTO-ECLA-RESTORE');
 
     // ---- acknowledgment invalidation (ID1's own valid ack when there is one) ----
     const acksNow = (await h.state()).acks;
@@ -151,10 +163,10 @@ try {
     if (id2OnRoster) { await removeId2('M3-MANAGER-REMOVE'); await addId2('M3-MANAGER-ADD-RESTORED'); }
     else { await addId2('M3-MANAGER-ADD'); await removeId2('M3-MANAGER-REMOVE'); }
 
-    // ---- cleanup of the entries added above ----
+    // ---- cleanup of the entries added above (own entries that were at baseline stay) ----
     await h.tab('approval');
-    for (const v of [synthetic, cfg('ID1_GITHUB'), cfg('ID1_EMAIL')]) {
-      if ((await h.state()).entries.some((x) => x.value === v)) await h.removeEntry(v, `M3-APPROVAL-REMOVE-${v === synthetic ? 'DOMAIN' : v === cfg('ID1_EMAIL') ? 'EMAIL' : 'GITHUB-USERNAME'}`);
+    for (const o of [{ kind: 'domain', value: synthetic, tag: 'DOMAIN' }, ...OWN.filter((x) => !ownAtBaseline(x))]) {
+      if ((await h.state()).entries.some((x) => x.kind === o.kind && x.value === o.value)) await h.removeEntry(o.value, `M3-APPROVAL-REMOVE-${o.tag}`, o.kind);
     }
   }
 
@@ -177,6 +189,11 @@ try {
   check('M3-HARNESS', false, `error: ${err.message} at ${new URL(page.url()).pathname}`);
   await e2e.shot(page, 'error');
 } finally {
+  // whatever happened above (FAIL, timeout, exception): entries, roster and Auto-ECLA back to the baseline through the BFF
+  if (WRITES && base && expectedEntries) {
+    try { await h.reconcile({ entries: expectedEntries, managers: base.managers, manager: id2, auto: !!base.row?.autoCreateEcla }, 'M3-FINAL-RECONCILE'); }
+    catch (err) { info('M3-FINAL-RECONCILE', `reconcile failed: ${err.message}`); }
+  }
   await e2e.close(session);
 }
 process.exit(e2e.finish());

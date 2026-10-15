@@ -9,7 +9,8 @@
 #   --module <name>[,...]       run only these modules (file names without extension, e.g. health,read_matrix)
 #   --no-writes                 skip every non-GET request against the environment (browser modules run read-only)
 #   --keep-state                leave the fixture state the writes produced (default: restore the baseline)
-#   --since <ISO-8601 UTC>      lambda log scan window start (default: run start)
+#   --since <ISO-8601 UTC>      lambda log scan window start (default: run start minus 15 min; the scan also waits
+#                               E2E_SCAN_SETTLE_SECS, default 90, for CloudWatch log ingestion)
 #   --list                      print the modules per group and exit
 #   --run-dir <dir>             evidence directory (default: e2e-tests/runs/suite/<env>-<UTC stamp>)
 # exit code: 1 when any check FAILed.
@@ -68,8 +69,9 @@ in_list() { local needle=$1 list=$2; [ "$list" = all ] && return 0; printf ',%s,
 export E2E_RUN_DIR="${RUN_DIR:-$ROOT/../../e2e-tests/runs/suite/$ENV_NAME-$(date -u +%Y%m%dT%H%M%SZ)}"
 mkdir -p "$E2E_RUN_DIR"; chmod 700 "$E2E_RUN_DIR"
 E2E_RUN_DIR="$(cd "$E2E_RUN_DIR" && pwd)"; export E2E_RUN_DIR
-export E2E_RUN_START="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-[ -n "$E2E_SINCE" ] || E2E_SINCE="$E2E_RUN_START"
+# E2E_SINCE stays empty unless --since was given: scans/lambda_scan.sh then scans from E2E_RUN_START minus 15 minutes
+E2E_RUN_START="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+export E2E_RUN_START
 export E2E_SINCE
 chmod 700 "$ROOT/secrets" 2>/dev/null || true
 echo "== EasyCLA E2E suite: env=$ENV_NAME groups=$GROUPS_SEL modules=${MODULES_SEL:-all} no-writes=$E2E_NO_WRITES keep-state=$E2E_KEEP_STATE"
@@ -78,10 +80,17 @@ echo "== evidence: $E2E_RUN_DIR"
 # tokens for both identities (cached while valid)
 E2E_MODULE=token "$ROOT/lib/token.sh" || { echo "token minting failed - aborting" >&2; exit 1; }
 
+# Node/Playwright are needed only when a browser module is actually selected (same group + module filters as the run loop)
 needs_node=0
-for m in "${MODULES[@]}"; do set -- $m; case "$2" in *.mjs) in_list "$1" "$GROUPS_SEL" && needs_node=1;; esac; done
+for m in "${MODULES[@]}"; do
+  set -- $m
+  case "$2" in *.mjs) ;; *) continue ;; esac
+  in_list "$1" "$GROUPS_SEL" || continue
+  if [ -n "$MODULES_SEL" ] && ! in_list "$(basename "${2%.*}")" "$MODULES_SEL"; then continue; fi
+  needs_node=1
+done
 if [ "$needs_node" = 1 ]; then
-  command -v node >/dev/null 2>&1 || { echo "node not found (browser group needs Node.js >= 18)" >&2; exit 1; }
+  command -v node >/dev/null 2>&1 || { echo "node not found (browser group needs Node.js >= 20)" >&2; exit 1; }
   if [ ! -d "$ROOT/node_modules/playwright" ]; then
     echo "== installing playwright (npm install in tests/e2e)"
     (cd "$ROOT" && npm install --no-audit --no-fund >/dev/null) || { echo "npm install failed" >&2; exit 1; }

@@ -7,16 +7,17 @@
 # The verdict (success/failure) depends on ID1's authorization on the CLA group the repository is enrolled in - it is
 # recorded as INFO; the checks assert that the pipeline answered, that the status and the comment agree, and that the
 # legacy sign link resolves (302 to GitHub OAuth). The PR is closed and the branch deleted at the end unless --keep-state.
-# Needs: gh (logged in as an account with push on GITHUB_REPO), curl, python3.
+# Needs: gh (logged in as an account with push on GITHUB_REPO), curl, python3 - gh only once the module really runs.
 set -u
 . "$(cd "$(dirname "$0")/../lib" && pwd)/common.sh"
-e2e_require_tools gh
 GH_TIMEOUT="${GH_TIMEOUT:-420}"
 
+# every skip condition comes before the gh requirement: prod / --no-writes / gated runs must SKIP on a box without gh
 if [ "$E2E_ENV" != "dev" ]; then e2e_result GH-PR-FLOW SKIP "GitHub PR flow runs on dev only (env=$E2E_ENV)"; e2e_summary_line; exit 0; fi
 if ! e2e_gate ALLOW_GITHUB_PR GH-PR-FLOW "opening a PR on $GITHUB_REPO is disabled"; then e2e_summary_line; exit 0; fi
 if [ "$E2E_NO_WRITES" = "1" ]; then e2e_result GH-PR-FLOW SKIP "--no-writes"; e2e_summary_line; exit 0; fi
 if [ -z "${GITHUB_REPO:-}" ] || [ -z "${GITHUB_BOT:-}" ]; then e2e_result GH-PR-FLOW SKIP "GITHUB_REPO / GITHUB_BOT not configured"; e2e_summary_line; exit 0; fi
+if ! command -v gh >/dev/null 2>&1; then e2e_result GH-PR-FLOW SKIP "gh CLI not installed"; e2e_summary_line; exit 0; fi
 
 gh_user=$(gh api user --jq .login 2>/dev/null || true)
 perm=$(gh api "repos/$GITHUB_REPO" --jq '.permissions.push' 2>/dev/null || echo false)
@@ -66,11 +67,11 @@ case "$pr_number" in ''|*[!0-9]*) e2e_result GH-PR-OPENED FAIL "gh pr create fai
 opened_at=$(date +%s)
 e2e_result GH-PR-OPENED PASS "$pr_url (head ${head_sha:0:7}, base $default_branch)"
 
-# ---- wait for the EasyCLA status + bot comment ----
+# ---- wait for a TERMINAL EasyCLA status (success|failure|error; `pending` keeps polling) + the bot comment ----
 status_state=""; status_desc=""; status_url=""; comment_body=""; status_at=""; comment_at=""
 while :; do
   now=$(date +%s)
-  if [ -z "$status_state" ]; then
+  case "$status_state" in success|failure|error) ;; *)
     gh api "repos/$GITHUB_REPO/commits/$head_sha/status" >"$E2E_EVIDENCE_DIR/status.private.json" 2>/dev/null || true
     eval "$(python3 - "$E2E_EVIDENCE_DIR/status.private.json" <<'PY'
 import json, sys, shlex
@@ -81,7 +82,7 @@ if s:
     print("status_state=%s status_desc=%s status_url=%s status_at=%s" % (shlex.quote(s.get("state") or ""), shlex.quote((s.get("description") or "")[:120]), shlex.quote(s.get("target_url") or ""), shlex.quote(s.get("updated_at") or s.get("created_at") or "")))
 PY
 )"
-  fi
+  ;; esac
   if [ -z "$comment_body" ]; then
     gh api "repos/$GITHUB_REPO/issues/$pr_number/comments" >"$E2E_EVIDENCE_DIR/comments.private.json" 2>/dev/null || true
     eval "$(python3 - "$E2E_EVIDENCE_DIR/comments.private.json" "$GITHUB_BOT" <<'PY'
@@ -95,22 +96,31 @@ if c:
 PY
 )"
   fi
-  [ -n "$status_state" ] && [ -n "$comment_body" ] && break
+  case "$status_state" in success|failure|error) [ -n "$comment_body" ] && break ;; esac
   [ $((now - opened_at)) -ge "$GH_TIMEOUT" ] && break
   sleep 15
 done
 elapsed=$(( $(date +%s) - opened_at ))
-if [ -n "$status_state" ]; then e2e_result GH-EASYCLA-STATUS-POSTED PASS "EasyCLA status '$status_state | $status_desc' within ${elapsed}s (at $status_at)" "{\"state\":$(e2e_json_escape "$status_state"),\"seconds\":$elapsed}"
-else e2e_result GH-EASYCLA-STATUS-POSTED FAIL "no EasyCLA commit status on ${head_sha:0:7} after ${elapsed}s"; fi
+case "$status_state" in
+  success|failure|error) e2e_result GH-EASYCLA-STATUS-POSTED PASS "EasyCLA status '$status_state | $status_desc' within ${elapsed}s (at $status_at)" "{\"state\":$(e2e_json_escape "$status_state"),\"seconds\":$elapsed}";;
+  '') e2e_result GH-EASYCLA-STATUS-POSTED FAIL "no EasyCLA commit status on ${head_sha:0:7} after ${elapsed}s";;
+  *) e2e_result GH-EASYCLA-STATUS-POSTED FAIL "EasyCLA commit status still '$status_state' (not terminal) after ${elapsed}s";;
+esac
 if [ -n "$comment_body" ]; then e2e_result GH-BOT-COMMENT PASS "$GITHUB_BOT commented at $comment_at: $(printf '%s' "$comment_body" | head -c 160)"
 else e2e_result GH-BOT-COMMENT FAIL "no comment by $GITHUB_BOT on PR #$pr_number after ${elapsed}s"; fi
 if [ -n "$status_state" ] && [ -n "$comment_body" ]; then
+  # the comment's verdict: first the badge alt text the backend emits (getCommentBadge: "CLA Signed" vs "CLA Not Signed" /
+  # "CLA Missing ID" / "CLA Confirmation Needed"), then the explicit sentences; negative phrases are matched before the
+  # positive ones so "is not authorized under a signed CLA" can never count as agreement with a success status
   lc=$(printf '%s' "$comment_body" | tr 'A-Z' 'a-z')
-  case "$status_state" in
-    success) printf '%s' "$lc" | grep -Eq 'covered|signed|authorized|is covered' && agree=1 || agree=0;;
-    *) printf '%s' "$lc" | grep -Eq 'not authorized|sign|missing|needs to|cla' && agree=1 || agree=0;;
+  verdict=unknown
+  if printf '%s' "$lc" | grep -Eq 'alt="cla (not signed|missing id|confirmation needed)"|is not authorized under a signed cla|please click here to be authorized|missing cla authorization'; then verdict=failure
+  elif printf '%s' "$lc" | grep -Eq 'alt="cla signed"|is authorized under a signed cla|is covered by a signed cla|all contributors (are|have) (authorized|signed)'; then verdict=success; fi
+  case "$status_state:$verdict" in
+    success:success|failure:failure|error:failure) agree=1;;
+    *) agree=0;;
   esac
-  [ "$agree" = 1 ] && e2e_result GH-STATUS-COMMENT-AGREE PASS "status '$status_state' and the bot comment agree" || e2e_result GH-STATUS-COMMENT-AGREE FAIL "status '$status_state' vs comment: $(printf '%s' "$comment_body" | head -c 160)"
+  [ "$agree" = 1 ] && e2e_result GH-STATUS-COMMENT-AGREE PASS "status '$status_state' and the bot comment's verdict '$verdict' agree" || e2e_result GH-STATUS-COMMENT-AGREE FAIL "status '$status_state' vs comment verdict '$verdict': $(printf '%s' "$comment_body" | head -c 160)"
   printf '%s' "$lc" | grep -q "$(printf '%s' "$ID1_GITHUB" | tr 'A-Z' 'a-z')" && e2e_result GH-COMMENT-NAMES-AUTHOR PASS "bot comment names $ID1_GITHUB" || e2e_result GH-COMMENT-NAMES-AUTHOR INFO "bot comment does not name $ID1_GITHUB"
   e2e_result GH-VERDICT INFO "verdict '$status_state' is data-dependent: it reflects $ID1_GITHUB's authorization on the CLA group $GITHUB_REPO is enrolled in (not a pipeline property)"
 fi

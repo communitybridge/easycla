@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Copyright The Linux Foundation and each contributor to CommunityBridge.
 # SPDX-License-Identifier: MIT
-# Legacy python API (cla-backend) on the direct host: backend header, v1 readers require auth (anonymous and
+# Legacy API (cla-backend-legacy, Go; it answers x-easycla-backend-version: go) on the direct host: backend header, v1 readers require auth (anonymous and
 # api-gw user tokens both 401 - the legacy API only accepts its own Auth0 claim set, by design), v2
 # last-signature carries no DocuSign secrets, anonymous public v2 readers still 200, allowlist request with
 # markup refused by validation, and (prod) the lfcla.com alias only redirects.

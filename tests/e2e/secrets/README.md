@@ -16,7 +16,7 @@ written `0600`, and the browser modules record only `METHOD host/path` for reque
 |---|---|---|
 | `<env>.env.secret` | the whole per-environment configuration (endpoints, the two identities, QA fixture ids, gates): copy `../config/example.env` and fill it in; keys missing a value turn the checks that need them into `SKIP` | everything (`lib/common.sh`, `lib/e2e.py`, `browser/lib/e2e.mjs`) |
 | `auth0-<env>-client-id.secret` | one line: the Auth0 client id `utils/get_auth0_token.sh` uses for `<env>` (falls back to `utils/auth0-<env>-client-id.secret` when absent) | `lib/token.sh` |
-| `auth0-<env>-<identity>.secret` | two lines: `AUTH0_USERNAME=<lfid>` and `AUTH0_PASSWORD=<password>` of that identity on `<env>` | `lib/token.sh` (API tokens), `browser/lib/e2e.mjs` (headless login) |
+| `auth0-<env>-<identity>.secret` | two lines: `AUTH0_USERNAME=<lfid>` and `AUTH0_PASSWORD=<password>` of that identity on `<env>`; the headless login types them only on `AUTH0_DOMAIN` (plus `SSO_HOSTS`, if set) from `<env>.env.secret` | `lib/token.sh` (API tokens), `browser/lib/e2e.mjs` (headless login) |
 
 `<env>` is `dev` or `prod`; `<identity>` is the LFID configured as `ID1` / `ID2` in `<env>.env.secret`
 (`ID1` = the account that holds every role, `ID2` = the account without org-admin/CLA roles that the chains

@@ -119,8 +119,6 @@ def summary_line():
     log("module done: " + " ".join(f"{k}={v}" for k, v in COUNTS.items()) + f" evidence={EVIDENCE_DIR}")
 
 
-_receipts = []
-
 
 def call(who, method, url, data=None, headers=None, timeout=90):
     """HTTP call as identity `who` ("anon" for none). Returns (status, parsed-json-or-text)."""
@@ -150,12 +148,14 @@ def call(who, method, url, data=None, headers=None, timeout=90):
         parsed = json.loads(raw) if raw else None
     except ValueError:
         parsed = raw.decode(errors="replace")[:600]
-    _receipts.append({"at": now(), "who": who, "method": method, "url": url, "http": code, "req": data,
-                      "resp": parsed if not isinstance(parsed, str) else parsed[:300]})
-    with open(os.path.join(EVIDENCE_DIR, "receipts.private.json"), "w") as fh:
-        json.dump(_receipts, fh, indent=1, default=str)
+    # one JSON line per call (append-only: linear and crash-safe, every receipt is on disk the moment the call returns)
+    receipt = {"at": now(), "who": who, "method": method, "url": url, "http": code, "req": data,
+               "resp": parsed if not isinstance(parsed, str) else parsed[:300]}
+    receipts_path = os.path.join(EVIDENCE_DIR, "receipts.private.jsonl")
+    with open(receipts_path, "a") as fh:
+        fh.write(json.dumps(receipt, default=str) + "\n")
     try:
-        os.chmod(os.path.join(EVIDENCE_DIR, "receipts.private.json"), 0o600)
+        os.chmod(receipts_path, 0o600)
     except OSError:
         pass  # best effort, same as above
     return code, parsed
@@ -169,7 +169,8 @@ def expect(cid, who, codes, method, path, data=None, base=None, note=""):
     """Plain status-code expectation; `codes` is an int or a collection. `codes=None` records INFO."""
     url = (base or cfg("API_V4")) + path
     code, body = call(who, method, url, data)
-    if NO_WRITES and code == 0:
+    # only the writes call() suppressed under --no-writes become SKIP; a status 0 on a read is a real transport failure
+    if NO_WRITES and code == 0 and method not in ("GET", "HEAD", "OPTIONS"):
         return skip(cid, f"--no-writes: {method} {path}"), None
     snippet = redact(json.dumps(body) if not isinstance(body, str) else body, 140) if code >= 400 or codes is None else ""
     if codes is None:

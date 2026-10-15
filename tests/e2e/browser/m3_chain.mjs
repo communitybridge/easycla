@@ -39,7 +39,8 @@ const h = m3(s1, fx);
 const s2 = await e2e.launch({ identity: ID2, writes: signing.signingWrites('ecla') });
 const ld2 = e2e.attachLd(s2.page);
 
-let base; let addedManager = false; let targetAck = null;
+let base; let addedManager = false; let targetAck = null; let expectedEntries = null;
+const id2 = { lfUsername: ID2, firstName: cfg('ID2_FIRST'), lastName: cfg('ID2_LAST'), email: ID2_EMAIL };
 try {
   const how1 = await e2e.login(s1.page, ID1, `${e2e.SS}/org/easycla`);
   check('C-ID1-LOGIN', new URL(s1.page.url()).hostname === e2e.SS_HOST, `${ID1} login ${how1}`);
@@ -55,7 +56,7 @@ try {
   const validBefore = id2Acks0.filter(h.ackValid);
   const me0 = await signing.myAgreements(s2.context, fx.group);
   e2e.evidence('id2-me-clas-before.private.json', me0);
-  const expectedEntries = base.entries.filter((x) => !(x.value === ID2_EMAIL || x.value === ID2_GH)).map((x) => `${x.kind}:${x.value}`).sort();
+  expectedEntries = base.entries.filter((x) => !(x.value === ID2_EMAIL || x.value === ID2_GH)).map((x) => `${x.kind}:${x.value}`).sort();
   info('C0-STATE', `ID2 on roster=${id2OnRoster}; ID2 acks on the fixture=${id2Acks0.length} (valid=${validBefore.length}); ID2 me/clas rows for the group=${me0.fixture.length} ${JSON.stringify(me0.fixture.map((a) => `${a.kind}:${a.status}:${a.company}`))}`);
 
   await h.openDetail('C0-OPEN-DETAIL');
@@ -99,7 +100,7 @@ try {
       check('C2-AUTO-CREATES-ID2-ACK', false, `no acknowledgment for ${ID2} appeared although none existed before (acks=${acks.length})`);
     }
   }
-  await h.toggleAuto(false, 'C2-AUTO-OFF');
+  await h.toggleAuto(!!base.row?.autoCreateEcla, 'C2-AUTO-RESTORE'); // back to the baseline value, not blindly off
 
   // ---- C3 ID2 acknowledges explicitly through the console when needed ------------------------------------
   if (!targetAck) {
@@ -235,7 +236,9 @@ try {
   if (m3Flag !== false && granted && !writer2) check('C9-ID2-EASYCLA-ONLY-NAV', nav2.length >= 1 && nav2.every((t) => /easycla/i.test(t)) && !/Org Admin|Dashboard|Memberships/.test(text2), `CLA manager without org admin role sees only EasyCLA: nav=${JSON.stringify(nav2)}`);
   else if (writer2) info('C9-ID2-EASYCLA-ONLY-NAV', `${ID2} is also a writer of ${fx.sfid}: full sidebar expected; nav=${JSON.stringify(nav2)}`);
 
-  if (addedManager) {
+  // ID2 leaves the roster when it was not there at baseline - decided from the baseline and the current roster, not
+  // from the add's bookkeeping (a C8 add that failed its own check but still landed must be undone too)
+  if (!id2OnRoster && (await h.state()).managers.includes(ID2)) {
     await removeId2('C10-MANAGER-REMOVES-ID2');
     info('C10-ACS-CACHE', e2e.flushAcsCache());
     let after = null; let waited = 0;
@@ -268,19 +271,13 @@ try {
   check('C-HARNESS', false, `error: ${err.message} (ID1 at ${s1.page.url().slice(0, 100)}, ID2 at ${s2.page.url().slice(0, 100)})`);
   await e2e.shot(s1.page, 'id1-error');
   await e2e.shot(s2.page, 'id2-error');
-  // best-effort restore of the fixture so the next run starts from the baseline
-  try {
-    if (base) {
-      const st = await h.state();
-      for (const v of [ID2_EMAIL, ID2_GH]) if (st.entries.some((x) => x.value === v) && !base.entries.some((x) => x.value === v)) {
-        const r = await e2e.bff(s1.context, 'PUT', h.paths.approval, { remove: [{ kind: st.entries.find((x) => x.value === v).kind, value: v }] });
-        info('F-RESTORE-ENTRY', `removed ${v} -> ${r.status}`);
-      }
-      if (st.row && st.row.autoCreateEcla !== base.row?.autoCreateEcla) info('F-RESTORE-AUTO', `PUT ecla-auto-create -> ${(await e2e.bff(s1.context, 'PUT', h.paths.auto, { autoCreateEcla: !!base.row?.autoCreateEcla })).status}`);
-      if (addedManager && st.managers.includes(ID2)) info('F-RESTORE-MANAGER', `DELETE managers/${ID2} -> ${(await e2e.bff(s1.context, 'DELETE', `${h.paths.managers}/${ID2}`)).status}`);
-    }
-  } catch (e2) { log(`restore failed: ${e2.message}`); }
 } finally {
+  // whatever happened above: ID2's suite-owned entries, the roster (baseline + current roster decide) and Auto-ECLA back
+  // to the baseline through the BFF, so the next run starts from the baseline
+  if (base && expectedEntries) {
+    try { await h.reconcile({ entries: expectedEntries, managers: base.managers, manager: id2, auto: !!base.row?.autoCreateEcla }, 'F-RECONCILE'); }
+    catch (e2) { log(`restore failed: ${e2.message}`); }
+  }
   await e2e.close(s2);
   await e2e.close(s1);
 }

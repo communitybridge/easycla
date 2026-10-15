@@ -31,7 +31,7 @@ st2 = e2e.identity_state(ID2, SFID, PROJECT_SFIDS)
 _, id1_scopes = e2e.scopes(ID1)
 _, id2_scopes = e2e.scopes(ID2)
 e2e.info("SCOPES-ID1", f"{ID1} cla-manager scopes ({st1['source']}): {len(st1['pairs'])}; user-service feed: {len(id1_scopes)}", scopes=st1["pairs"][:40])
-e2e.info("SCOPES-ID2", f"{ID2} cla-manager scopes ({st2['source']}): {len(st2['pairs'])}; contact orgs={st2['contact_orgs']}; roles={st2['roles']}", scopes=st2["pairs"][:40])
+e2e.info("SCOPES-ID2", f"{ID2} cla-manager scopes ({st2['source']}): {len(st2['pairs'])}; user-service feed: {len(id2_scopes)}; contact orgs={st2['contact_orgs']}; roles={st2['roles']}", scopes=st2["pairs"][:40])
 e2e.check("SCOPES-ID1-FIXTURE", st1["project_level"], f"{ID1} holds a cla-manager scope on the fixture organization {SFID} for {PROJECT_SFIDS} ({st1['source']})")
 id2_org, id2_proj = st2["org_level"], st2["project_level"]
 id2_other = OTHER_ORG in st2["manager_orgs"] or OTHER_ORG in st2["contact_orgs"]

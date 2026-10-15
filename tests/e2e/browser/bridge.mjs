@@ -18,7 +18,10 @@
 //   B10 (#3631) org-lens writer without an EasyCLA ACS scope opens Organization -> EasyCLA: no crash, clear state
 //   B11 CLA signatory / designee only -> no Organization lens entry (API: identity_boundary; here: ID2 when applicable)
 //   B12 user with no organization or CLA role has no Organization lens
-//   B13 LD kill switch: when the M3 flag is off the EasyCLA tab is not served (observed, not forced)
+//   B13 org admin of some organizations and only a CLA manager of another one: the selector lists the admin
+//       organizations (full sidebar), the CLA-managed company is not a CLA-only entry (lfx-self-serve
+//       org-cla-only-orgs.service.ts claOnlyEntryApplies); its deep link must not crash
+//   B-LD LD kill switch: when the M3 flag is off the EasyCLA tab is not served (observed, not forced)
 import * as e2e from './lib/e2e.mjs';
 import { m3, fixtureWrites } from './lib/m3.mjs';
 
@@ -195,25 +198,52 @@ for (const who of [ID1, ID2]) {
         const h = m3(session, claOnly);
         const before = await h.state();
         const synthetic = `qa-e2e-bridge-${e2e.TAG}.example.com`;
-        const stale = before.entries.filter((x) => /^qa-e2e-bridge-.*\.example\.com$/.test(x.value));
-        await h.openDetail('B2-OPEN-DETAIL');
-        await h.tab('approval');
-        for (const x of stale) await h.removeEntry(x.value, `B2-P0-STALE-REMOVED-${x.value.replace(/[^a-z0-9]/gi, '').slice(0, 20).toUpperCase()}`);
-        await h.addEntry(/^email domain$/i, synthetic, 'B2-ADD-ENTRY');
-        await h.removeEntry(synthetic, 'B2-REMOVE-ENTRY');
+        const bridgeOwned = (x) => x.kind === 'domain' && /^qa-e2e-bridge-.*\.example\.com$/.test(x.value);
+        const stale = before.entries.filter(bridgeOwned);
+        try {
+          await h.openDetail('B2-OPEN-DETAIL');
+          await h.tab('approval');
+          for (const x of stale) await h.removeEntry(x.value, `B2-P0-STALE-REMOVED-${x.value.replace(/[^a-z0-9]/gi, '').slice(0, 20).toUpperCase()}`, x.kind);
+          await h.addEntry(/^email domain$/i, synthetic, 'B2-ADD-ENTRY');
+          await h.removeEntry(synthetic, 'B2-REMOVE-ENTRY', 'domain');
+        } finally {
+          // the synthetic domain must not outlive the run even when the UI removal timed out: BFF cleanup of any leftover
+          const left = (await h.state()).entries.filter(bridgeOwned);
+          if (left.length) info('B2-BFF-CLEANUP', `UI left ${JSON.stringify(left.map((x) => x.value))} on the list -> PUT approval-list remove -> ${(await e2e.bff(context, 'PUT', h.paths.approval, { add: [], remove: left })).status}`);
+        }
         const after = await h.state();
         const expected = before.entries.filter((x) => !stale.includes(x)).map((x) => `${x.kind}:${x.value}`).sort();
         check('B2-END-STATE-RESTORED', JSON.stringify(after.entries.map((x) => `${x.kind}:${x.value}`).sort()) === JSON.stringify(expected), `entries=${after.entries.length} (baseline ${before.entries.length}, stale removed ${stale.length})`);
       }
     }
 
-    // ---- B13: LD kill switch observation ------------------------------------------------------------------------
+    if (who === ID1) {
+      // ---- B13: org admin of some organizations AND only a CLA manager of another one -------------------------------
+      // Self Serve lists the admin organizations with the full sidebar; CLA-only entries apply only to callers without
+      // any Org Lens grant (org-cla-only-orgs.service.ts claOnlyEntryApplies), so the CLA-managed company is not in the
+      // selector / role-grants.claManagerOrgs. Whether ID1 manages such a company is read from the lens itself.
+      const mixedOrg = [claOnly.sfid, m3Org.sfid].find((s) => s && !writers.includes(s));
+      const lens = mixedOrg ? await e2e.bff(context, 'GET', `/api/orgs/${mixedOrg}/lens/cla-groups`) : null;
+      const managerThere = lens?.status === 200 && (lens.json?.claGroups || []).some((r) => r.viewerIsClaManager === true);
+      if (!writers.length || !mixedOrg || !managerThere) info('B13-ADMIN-PLUS-CLA-ONLY', `mixed case not reproducible for ${ID1} right now: writer orgs=${writers.length}, CLA-managed non-writer company=${mixedOrg || 'none'} (lens -> ${lens?.status ?? '-'}, viewerIsClaManager=${managerThere})`);
+      else {
+        check('B13-ADMIN-PLUS-CLA-ONLY-SELECTOR', writers.every((s) => itemIds.includes(s)) && !itemIds.includes(mixedOrg) && !claOrgs.includes(mixedOrg),
+          `nav/org-items=${JSON.stringify(itemIds)} lists the ${writers.length} admin organization(s) and not the CLA-managed ${mixedOrg}; role-grants.claManagerOrgs=${JSON.stringify(claOrgs)}`);
+        if (!uiOk) skip('B13-ADMIN-PLUS-CLA-ONLY-DEEP-LINK', 'LD flag off');
+        else {
+          const v = await visit(page, `/org/${mixedOrg}/easycla`, 'id1-b13-cla-only-deep-link');
+          check('B13-ADMIN-PLUS-CLA-ONLY-DEEP-LINK', !crashed(v) && (deniedPath(v.path) || /\/easycla/.test(v.path)), `${summary(v)} (ID1 manages ${mixedOrg} in EasyCLA while the selector lists only the admin organizations)`);
+        }
+      }
+    }
+
+    // ---- B-LD: LD kill switch observation ------------------------------------------------------------------------
     const flags = ld.flags();
     e2e.evidence(`${who}-ld-flags.private.json`, flags);
     if (flag === false) {
-      const v = await visit(page, `/org/${claOrgs[0] || writers[0] || m3Org.sfid}/easycla`, `${who}-b13-kill-switch`, 6000);
-      check(`B13-KILL-SWITCH-${P}`, !/\/easycla$/.test(v.path) || v.cards === 0, `flag off -> ${summary(v)}`);
-    } else info(`B13-KILL-SWITCH-${P}`, `${cfg('LD_FLAG_M3')}=${flag} for ${who} (flags seen: ${JSON.stringify(flags).slice(0, 200)}) - the off-state redirect was verified on 2026-10-14 (dev) before the rule targeted this identity`);
+      const v = await visit(page, `/org/${claOrgs[0] || writers[0] || m3Org.sfid}/easycla`, `${who}-ld-kill-switch`, 6000);
+      check(`B-LD-KILL-SWITCH-${P}`, !/\/easycla$/.test(v.path) || v.cards === 0, `flag off -> ${summary(v)}`);
+    } else info(`B-LD-KILL-SWITCH-${P}`, `${cfg('LD_FLAG_M3')}=${flag} for ${who} (flags seen: ${JSON.stringify(flags).slice(0, 200)}) - the off-state redirect was verified on 2026-10-14 (dev) before the rule targeted this identity`);
 
     check(`${P}-NO-BLOCKED-WRITES`, net.blocked.length === 0, `guard blocked ${net.blocked.length} request(s) ${JSON.stringify(net.blocked.slice(0, 3))}`);
     const claErrs = net.api.filter((r) => r.status >= 500 && /\/lens\/cla-groups|\/role-grants|\/nav\/org-items|\/me\/clas/.test(r.url));

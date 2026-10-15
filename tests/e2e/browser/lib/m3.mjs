@@ -108,8 +108,9 @@ export function m3(session, { sfid, name, group, sig }) {
     await valueBox().fill(value);
     const [res] = await Promise.all([waitWrite((p) => p === paths.approval, 'PUT'), submitApproval()]);
     const body = await res.json().catch(() => ({}));
-    const ok = res.status() === 200 && (body.entries || []).some((x) => x.value === value);
-    await approvalRow(value).waitFor({ state: 'visible', timeout: 30000 }).catch(() => {});
+    const entry = (body.entries || []).find((x) => x.value === value);
+    const ok = res.status() === 200 && !!entry;
+    await approvalRow(value, entry?.kind).first().waitFor({ state: 'visible', timeout: 30000 }).catch(() => {});
     await e2e.shot(page, `${cid.toLowerCase()}`);
     e2e.check(cid, ok, `PUT approval-list (${value}) -> ${res.status()}; entries=${(body.entries || []).length}`);
     return body;
@@ -130,18 +131,25 @@ export function m3(session, { sfid, name, group, sig }) {
     return msg;
   }
 
-  // the approval-list row whose value cell is exactly `value` (hasText would also match e.g. the e-mail row for a user name)
-  const approvalRow = (value) => page.getByTestId('org-easycla-approval-row').filter({ has: page.getByText(value, { exact: true }) });
+  // SS renders ORG_CLA_APPROVAL_CRITERIA[kind].label in the row's kind cell (lfx-self-serve packages/shared cla.constants.ts)
+  const KIND_LABEL = { domain: 'Email domain', email: 'Email', 'github-org': 'GitHub org', 'github-username': 'GitHub username', 'gitlab-group': 'GitLab group', 'gitlab-username': 'GitLab username' };
+  // the approval-list row whose value cell is exactly `value` (hasText would also match e.g. the e-mail row for a user name);
+  // with `kind` also the kind cell must match, since the same text can be listed under several kinds (github + gitlab user name)
+  const approvalRow = (value, kind) => {
+    let rows = page.getByTestId('org-easycla-approval-row').filter({ has: page.getByTestId('org-easycla-approval-value').getByText(value, { exact: true }) });
+    if (kind) rows = rows.filter({ has: page.getByTestId('org-easycla-approval-kind').getByText(KIND_LABEL[kind] || kind, { exact: true }) });
+    return rows;
+  };
 
-  async function removeEntry(value, cid) {
-    const row = approvalRow(value);
+  async function removeEntry(value, cid, kind) {
+    const row = approvalRow(value, kind);
     await row.waitFor({ state: 'visible', timeout: 30000 });
     await row.getByTestId('org-easycla-approval-delete').getByRole('button').click();
     const [res] = await Promise.all([waitWrite((p) => p === paths.approval, 'PUT'), page.getByRole('button', { name: 'Remove entry', exact: true }).click()]);
     const body = await res.json().catch(() => ({}));
     await row.waitFor({ state: 'hidden', timeout: 30000 }).catch(() => {});
-    const ok = res.status() === 200 && !(body.entries || []).some((x) => x.value === value);
-    e2e.check(cid, ok, `remove ${value} -> ${res.status()}; entries=${(body.entries || []).length}`);
+    const ok = res.status() === 200 && !(body.entries || []).some((x) => x.value === value && (!kind || x.kind === kind));
+    e2e.check(cid, ok, `remove ${kind ? kind + ':' : ''}${value} -> ${res.status()}; entries=${(body.entries || []).length}`);
     return body;
   }
 
@@ -161,6 +169,42 @@ export function m3(session, { sfid, name, group, sig }) {
     await e2e.shot(page, `${cid.toLowerCase()}`);
     e2e.check(cid, res.status() === 200 && body.autoCreateEcla === expected, `PUT ecla-auto-create -> ${res.status()} autoCreateEcla=${body.autoCreateEcla} (aria before=${before} after=${await toggle.getAttribute('aria-checked')})`);
     return body;
+  }
+
+  // Bring the fixture back to a target state through the BFF (no UI involved), for `finally` blocks: approval entries
+  // not in `entries` (kind:value strings) are removed and missing ones re-added, the manager roster is reconciled to
+  // `managers` (ID2 only - the suite never touches other managers), and the Auto-ECLA flag is set to `auto`.
+  // Returns what it changed; every call is logged as INFO under `cid`.
+  async function reconcile({ entries, managers, auto, manager }, cid = 'F-RECONCILE') {
+    const changes = [];
+    let st;
+    try { st = await state(); } catch (err) { e2e.info(cid, `cannot read the fixture state: ${err.message}`); return changes; }
+    if (Object.values(st.http).some((c) => c !== 200)) { e2e.info(cid, `fixture reads ${JSON.stringify(st.http)} - nothing reconciled`); return changes; }
+    const have = st.entries.map((x) => `${x.kind}:${x.value}`);
+    const want = new Set(entries);
+    const split = (k) => { const i = k.indexOf(':'); return { kind: k.slice(0, i), value: k.slice(i + 1) }; };
+    const remove = have.filter((k) => !want.has(k)).map(split);
+    const add = [...want].filter((k) => !have.includes(k)).map(split);
+    if (remove.length || add.length) {
+      const r = await e2e.bff(context, 'PUT', paths.approval, { add, remove });
+      changes.push(`approval-list add=${JSON.stringify(add.map((x) => x.value))} remove=${JSON.stringify(remove.map((x) => x.value))} -> ${r.status}`);
+    }
+    if (manager && managers) {
+      const shouldHave = managers.includes(manager.lfUsername);
+      if (shouldHave && !st.managers.includes(manager.lfUsername)) {
+        const r = await e2e.bff(context, 'POST', paths.managers, { firstName: manager.firstName, lastName: manager.lastName, email: manager.email });
+        changes.push(`POST managers (${manager.lfUsername}) -> ${r.status}`);
+      } else if (!shouldHave && st.managers.includes(manager.lfUsername)) {
+        const r = await e2e.bff(context, 'DELETE', `${paths.managers}/${manager.lfUsername}`);
+        changes.push(`DELETE managers/${manager.lfUsername} -> ${r.status}`);
+      }
+    }
+    if (typeof auto === 'boolean' && st.row && st.row.autoCreateEcla !== auto) {
+      const r = await e2e.bff(context, 'PUT', paths.auto, { autoCreateEcla: auto });
+      changes.push(`PUT ecla-auto-create ${auto} -> ${r.status}`);
+    }
+    e2e.info(cid, changes.length ? changes.join('; ') : 'fixture already at the expected state');
+    return changes;
   }
 
   async function pollAcks(predicate, tries = 30, every = 3000) {
@@ -211,5 +255,5 @@ export function m3(session, { sfid, name, group, sig }) {
     return { after, matches, alsoRemoveOffered, alsoRemove, removal: removal ? { status: removal.status(), entries: (removed?.entries || []).length } : null };
   }
 
-  return { prefix, paths, get, state, openDetail, tab, approvalRow, openAdd, pickKind, valueBox, submitApproval, cancelDialog, addEntry, rejectEntry, removeEntry, toggleAuto, pollAcks, ackValid, ackOf, ackId, ackState, invalidateAck, waitWrite, writesSoFar };
+  return { prefix, paths, get, state, openDetail, tab, approvalRow, KIND_LABEL, openAdd, pickKind, valueBox, submitApproval, cancelDialog, addEntry, rejectEntry, removeEntry, toggleAuto, reconcile, pollAcks, ackValid, ackOf, ackId, ackState, invalidateAck, waitWrite, writesSoFar };
 }

@@ -2,7 +2,7 @@
 
 Manual, re-runnable end-to-end validation of EasyCLA and its Self Serve (SS) integration points on **dev** or
 **prod**: Milestones M1 (Me lens), M2 (signing), M3 (Organization lens → EasyCLA) with the Organization-lens
-bridge cases, the legacy consoles and the legacy python API, the hardened `POST /v4/user/{id}/company` route,
+bridge cases, the legacy consoles and the legacy API (`cla-backend-legacy`), the hardened `POST /v4/user/{id}/company` route,
 the read ACL matrix, the identity boundary, the GitHub PR webhook pipeline and read-only Lambda log scans.
 It is **not** wired into CI: run it from a workstation whenever a deployment or a role/permission change has to
 be validated. Everything is "as code": the same checks run the same way every time, and every run leaves a
@@ -23,9 +23,9 @@ Exit code `1` when any check `FAIL`ed. Console output is one line per check:
 
 ## Requirements
 
-* `bash`, `curl`, `python3` (3.9+, standard library only), `git`; `shellcheck` is only needed when editing.
+* `bash`, `curl`, `python3` (3.9+, standard library only); `shellcheck` is only needed when editing.
   The shell parts avoid GNU-only flags (no `date -d`), so Linux, macOS and FreeBSD all work.
-* Browser group: Node.js ≥ 18. `run.sh` runs `npm install` (Playwright) and `playwright install chromium`
+* Browser group: Node.js ≥ 20 (Playwright's requirement). `run.sh` runs `npm install` (Playwright) and `playwright install chromium`
   on first use; the dependency lives in `tests/e2e/package.json` only.
 * Per-environment configuration and credentials in `secrets/` (git-ignored) — see
   [`secrets/README.md`](secrets/README.md): `secrets/<env>.env.secret` (copy
@@ -74,7 +74,7 @@ empty write allow-list (the guard blocks and records any attempted write instead
 | api | `identity_boundary.py` | `my-clas` identity filters never leak the other identity's rows, foreign acknowledgment sub-resources 404, prepare-sign with foreign identities 403 |
 | api | `fixture_writes.py` | approval list (own + six criteria types, invalid e-mail refused, duplicate idempotent, remove), auto-ECLA toggle, designee/manager reads, sanctioned company refuses every write, removal-only invalidation of ID1's own ECLA, baseline restored |
 | api | `interactions.py` | two-identity chain: criteria added → ID2 prepare-sign → auto-ECLA creates ID2's ack → Me-lens reads → manager invalidates (409 on repeat, event names manager) → no resurrection on re-add / auto-ECLA → ID2 made CLA manager (ACL + ACS scope, writes 200) → removed (writes 403) → baseline |
-| legacy | `legacy_api.sh` | legacy python API: backend header, v1 readers need the legacy Auth0 claim set (api-gw tokens 401 on prod), v2 last-signature carries no DocuSign secrets, anonymous public v2 readers 200, allowlist request with markup refused, `lfcla.com` alias only redirects |
+| legacy | `legacy_api.sh` | legacy API (`cla-backend-legacy`, Go): backend header, v1 readers need the legacy Auth0 claim set (api-gw tokens 401 on prod), v2 last-signature carries no DocuSign secrets, anonymous public v2 readers 200, allowlist request with markup refused, `lfcla.com` alias only redirects |
 | browser | `ld_flags.mjs` | LaunchDarkly flags as the SS front end evaluates them for both identities (M3 kill switch baseline) |
 | browser | `ss_identity.mjs` | SS login, BFF reads (role-grants, me/clas, personas, nav), Me lens, organization selector, `/org/easycla` landing, deep links of own / other / CLA-only organizations |
 | browser | `m3_org_lens.mjs` | M3 agreement detail as ID1: approval list (validation, add, duplicate, delete-cancel, remove), auto-ECLA on/off, acknowledgment invalidation, CLA-manager roster (add/remove ID2), activity log, end state = baseline |
@@ -83,7 +83,7 @@ empty write allow-list (the guard blocks and records any attempted write instead
 | browser | `consoles.mjs` | legacy consoles read-only smoke: corporate console company dashboard (v1 on prod, LFX on dev), contributor console, PCC (+ v1 PCC on dev) |
 | browser | `m2_signing.mjs` | dev only: ICLA through DocuSign sandbox and ECLA corporate click-through from the Me lens; verifies the existing rows when already signed |
 | browser | `org_sign.mjs` | dev only: Organization lens CCLA signing (picker → manager question → attestation → BFF sign → DocuSign sandbox → row signed → ID1 on the roster); verifies the end state when already signed |
-| github | `pr_flow.sh` | dev only: branch + commit attributed to ID1's GitHub identity, PR opened, EasyCLA commit status and bot comment arrive, status and comment agree, sign link 302 to GitHub OAuth; PR closed and branch deleted (closed PR kept as proof) |
+| github | `pr_flow.sh` | dev only, **creates a branch, a commit and a pull request on `GITHUB_REPO`** (gate `ALLOW_GITHUB_PR`): commit attributed to ID1's GitHub identity, PR opened, EasyCLA commit status reaches a terminal state and the bot comment arrives, status and the comment's badge verdict agree, sign link 302 to GitHub OAuth; PR closed and branch deleted (closed PR kept as proof) |
 | scans | `lambda_scan.sh` | CloudWatch scan of every EasyCLA Lambda for the run window: panics / runtime errors / timeouts FAIL, error counts, INIT failures and Errors/Throttles sums INFO, SSM high-throughput setting |
 
 ### Bridge cases (`bridge.mjs`)
@@ -102,7 +102,8 @@ empty write allow-list (the guard blocks and records any attempted write instead
 | B10 | `B10-*` | org admin who is not a CLA manager sees the Organization lens as before |
 | B11 | `B11-*` | CLA signatory / designee only, no org access → no Organization lens entry |
 | B12 | `B12-*` | user with no organization or CLA role → no Organization lens |
-| B13 | `B13-*` | org admin of one organization and CLA manager only of another sees both: full sidebar on the admin one, EasyCLA-only on the other |
+| B13 | `B13-ADMIN-PLUS-CLA-ONLY-*` | org admin of some organizations and CLA manager only of another: the selector lists the admin organizations with the full sidebar, the CLA-managed company is not a CLA-only entry (SS lists CLA-only companies only for callers without any Org Lens grant); its deep link renders a limited page or is denied, never a crash |
+| LD | `B-LD-KILL-SWITCH-*` | M3 LaunchDarkly flag off for the identity → the EasyCLA tab is not served (observed, never forced) |
 | #3631 | `B10-3631-*` | org-lens writer without an EasyCLA ACS scope opens Organization → EasyCLA: no crash, clear empty state |
 
 Expectations are derived from the live `/api/orgs/me/role-grants` of each identity, so the cases stay correct
@@ -117,7 +118,9 @@ results.jsonl          one JSON row per check: ts, module, id, status, note, dat
 SUMMARY.md             per-module PASS/FAIL/SKIP/INFO table, failed and skipped checks with notes
 run.log                the console output
 <module>/              per-module evidence: *.private.json HTTP bodies (0600, tokens redacted),
-                       *.png screenshots, network.private.json (METHOD host/path only)
+                       receipts.private.jsonl (python modules: one line per HTTP call), *.png screenshots,
+                       network.private.json (api/blocked: METHOD host/path + status; writes: the
+                       business writes made, with their request bodies)
 ```
 
 Nothing in the evidence contains a token or password; still treat the directory as private (it holds

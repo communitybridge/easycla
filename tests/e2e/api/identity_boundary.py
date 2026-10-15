@@ -55,12 +55,16 @@ for who, other_rows in ((ID2, rows1), (ID1, rows2)):
     e2e.expect(f"IB-{who}-FOREIGN-MANAGER-REQUEST-404", who, (404, 403, 400), "POST", f"/v4/my-clas/{sid}/cla-manager-requests",
                {"requestType": "contact", "recipients": [ID1], "message": f"E2E {e2e.TAG} negative probe - must be refused"})
     # manager-side invalidate of a foreign ECLA: only meaningful for an identity without cla-manager scope on that company
+    # (the PUT mutates the ECLA, so the gate uses the authoritative ACS rolescopes, never the lagging user-service feed)
     ecla = next((r for r in other_rows if r.get("claType") == "ecla" and r.get("signatureID")), None)
-    _, who_scopes = e2e.scopes(who)
+    who_roles = e2e.acs_roles(who)
+    manager_scopes = who_roles.get("cla-manager", set()) if who_roles is not None else set()
     if not ecla:
         e2e.skip(f"IB-{who}-FOREIGN-INVALIDATE-REFUSED", "the other identity has no ECLA rows")
-    elif who_scopes and any(e2e.has_scope(who_scopes, ecla.get(k) or "\x00") for k in ("companySFID", "projectSFID", "foundationSFID")) or (who == ID1 and who_scopes):
-        e2e.skip(f"IB-{who}-FOREIGN-INVALIDATE-REFUSED", f"{who} holds cla-manager scopes - an invalidate of the other identity's ECLA may be legitimate")
+    elif who_roles is None:
+        e2e.skip(f"IB-{who}-FOREIGN-INVALIDATE-REFUSED", "ACS rolescopes unavailable (AWS credentials / utils/<env>_acs_role_flip.sh) - the mutating probe is not sent on a guess")
+    elif manager_scopes and (any(e2e.has_scope(manager_scopes, ecla.get(k) or "\x00") for k in ("companySFID", "projectSFID", "foundationSFID")) or who == ID1):
+        e2e.skip(f"IB-{who}-FOREIGN-INVALIDATE-REFUSED", f"{who} holds cla-manager scopes in ACS - an invalidate of the other identity's ECLA may be legitimate")
     else:
         e2e.expect(f"IB-{who}-FOREIGN-INVALIDATE-REFUSED", who, (404, 403), "PUT", f"/v4/cla-group/{ecla.get('claGroupID') or GRP}/ecla/{ecla['signatureID']}/invalidate",
                    {"reason": "other", "note": f"E2E {e2e.TAG} negative probe - must be refused"})
