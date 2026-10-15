@@ -28,9 +28,12 @@ PROJ, GRP, CO, SFID, CCLA = (c("WRITE_PROJECT_SFID") or c("PROJECT_SFID"), c("WR
 APPROVAL = f"/v4/signatures/project/{PROJ}/company/{CO}/clagroup/{GRP}/approval-list"
 AUTO = f"/v4/signatures/company/{CO}/clagroup/{GRP}/ecla-auto-create"
 LISTS = ("emailApprovalList", "domainApprovalList", "githubUsernameApprovalList", "githubOrgApprovalList", "gitlabUsernameApprovalList", "gitlabOrgApprovalList")
+# username entries make the backend look the account up and create/re-parent its EasyCLA user record (createOrGetEmployeeModels),
+# so only suite-owned accounts may be used: ID2's GitHub login by default, a GitLab login only when configured (no third-party
+# defaults). Organization/group entries touch no user record, public names are fine there.
 SYN = {"email": f"{ID1.split('@')[0]}+qa-{e2e.TAG}@example.org", "domain": f"qa-{e2e.TAG}.example.org",
-       "ghuser": c("QA_GITHUB_USER", "octocat"), "ghorg": c("QA_GITHUB_ORG", "github"),
-       "gluser": c("QA_GITLAB_USER", "gitlab-bot"), "glorg": c("QA_GITLAB_ORG", "gitlab-org")}
+       "ghuser": c("QA_GITHUB_USER") or c("ID2_GITHUB"), "ghorg": c("QA_GITHUB_ORG", "github"),
+       "gluser": c("QA_GITLAB_USER"), "glorg": c("QA_GITLAB_ORG", "gitlab-org")}
 
 if not e2e.cfg("ALLOW_FIXTURE_WRITES", "0") == "1" or e2e.NO_WRITES:
     e2e.skip("FW-ALL", "fixture writes disabled (ALLOW_FIXTURE_WRITES / --no-writes)")
@@ -120,6 +123,9 @@ try:
             ("githubOrgApprovalList", "ghorg", "AddGithubOrgApprovalList", "RemoveGithubOrgApprovalList", False),
             ("gitlabUsernameApprovalList", "gluser", "AddGitlabUsernameApprovalList", "RemoveGitlabUsernameApprovalList", False),
             ("gitlabOrgApprovalList", "glorg", "AddGitlabOrgApprovalList", "RemoveGitlabOrgApprovalList", False)):
+        if not SYN[syn]:
+            e2e.skip(f"A2-ADD-{key}", f"no suite-owned account configured for {key} (QA_GITHUB_USER/ID2_GITHUB or QA_GITLAB_USER)")
+            continue
         pre = SYN[syn] in baseline[key]
         code, body = put_approval({add_field: [SYN[syn]]})
         _, r = ccla()

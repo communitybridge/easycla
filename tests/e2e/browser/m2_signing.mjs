@@ -58,12 +58,15 @@ try {
         await sleep(3000);
         await e2e.hideOverlays(page);
         await e2e.shot(page, 'icla-console-ready');
-        if (req && req.status() >= 400 && req.status() < 500) {
-          // eligibility/configuration answer (e.g. "an individual CLA for this CLA Group was invalidated by an administrator"):
-          // this ICLA_GROUP cannot be signed by ID1 - a config problem, not a product defect
-          skip('M2-ICLA', `ICLA_GROUP ${ICLA_GROUP} is not signable by ${ID1}: POST request-individual-signature -> ${req.status()} ${e2e.squash(reqBody?.Message || reqBody?.message || '').slice(0, 160)} - point ICLA_GROUP at another unsigned group`);
+        const reqMsg = e2e.squash(reqBody?.Message || reqBody?.message || reqBody?.errors?.[0] || '');
+        // a recognised eligibility refusal (e.g. "an individual CLA for this CLA Group was invalidated by an administrator -
+        // signing a new individual CLA ... is not permitted") means this ICLA_GROUP cannot be signed by ID1: a configuration
+        // problem, not a product defect. Any other 4xx (bad ids, auth, routing) fails the request check below.
+        const ineligible = !!req && req.status() >= 400 && req.status() < 500 && /invalidated by an administrator|not permitted|already (?:signed|has)|not eligible/i.test(reqMsg);
+        if (ineligible) {
+          skip('M2-ICLA', `ICLA_GROUP ${ICLA_GROUP} is not signable by ${ID1}: POST request-individual-signature -> ${req.status()} ${reqMsg.slice(0, 160)} - point ICLA_GROUP at another unsigned group`);
         } else {
-          check('M2-ICLA-REQUEST-SIGNATURE', !!req && req.status() < 300 && !!reqBody?.sign_url, `POST request-individual-signature -> ${req ? req.status() : 'not observed'} sign_url=${!!reqBody?.sign_url}`);
+          check('M2-ICLA-REQUEST-SIGNATURE', !!req && req.status() < 300 && !!reqBody?.sign_url, `POST request-individual-signature -> ${req ? req.status() : 'not observed'} sign_url=${!!reqBody?.sign_url} ${reqMsg.slice(0, 120)}`);
           const compliance = page.locator('input[type="checkbox"]').first();
           if (await compliance.isVisible().catch(() => false)) await compliance.check({ force: true }).catch(() => compliance.click({ force: true }).catch(() => {}));
           else { const lbl = page.getByText(/i hereby certify/i).first(); if (await lbl.isVisible().catch(() => false)) await lbl.click().catch(() => {}); }

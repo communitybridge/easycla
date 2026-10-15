@@ -8,7 +8,11 @@
 // entries are added only when absent at baseline (and then removed again), the manager add/remove order follows
 // whether ID2 is already on the roster, and the end state must equal the baseline. Whatever happens, a BFF
 // reconcile in `finally` puts entries, roster and Auto-ECLA back to the baseline.
-// Writes only under /api/orgs/<M3_ORG_SFID>/lens/cla-groups/<M3_CCLA>/ (guard-enforced).
+// Browser writes only under /api/orgs/<M3_ORG_SFID>/lens/cla-groups/<M3_CCLA>/ (guard-enforced). The one exception is
+// the acknowledgment probe: it manager-invalidates ID1's own acknowledgment (EasyCLA e-mails ID1 about it) and then
+// re-acknowledges ID1 through the legacy API (needs ID1_UID + LEGACY_API + ID1_GITHUB, otherwise the probe is skipped;
+// a GitHub-username entry covers ID1 for the duration of the re-acknowledgment when the baseline list does not), leaving
+// one more invalidated acknowledgment record on the fixture - the same residue m3_chain/interactions leave for ID2.
 import * as e2e from './lib/e2e.mjs';
 import { m3, fixtureWrites } from './lib/m3.mjs';
 
@@ -29,6 +33,60 @@ const { page, net } = session;
 const h = m3(session, fx);
 let base = null; let expectedEntries = null;
 const id2 = { lfUsername: ID2, firstName: cfg('ID2_FIRST'), lastName: cfg('ID2_LAST'), email: cfg('ID2_EMAIL') };
+const LEGACY = cfg('LEGACY_API').replace(/\/$/, '');
+const jsonCall = async (method, url, body, bearer) => {
+  const headers = { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}), ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}) };
+  try {
+    const r = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    const text = await r.text().catch(() => '');
+    let json = null;
+    try { json = JSON.parse(text); } catch { /* not json */ }
+    return { status: r.status, json, text: text.slice(0, 200) };
+  } catch (err) { return { status: 0, json: null, text: String(err).slice(0, 200) }; }
+};
+// A manager-invalidated acknowledgment is never resurrected by the backend (not by Auto-ECLA, not by a criteria re-add), so
+// the invalidation probe below would leave ID1 unapproved on the fixture after every run. Acknowledge again through the
+// legacy API the way the contributor console does (the recipe of fixture_writes RM/RA and interactions I3) and wait until
+// the lens lists a valid ID1 acknowledgment again. The legacy pre-check refuses a contributor nobody on the approval list
+// covers ("user not authorized for this ccla"), and after the dialog's "also remove" the baseline may not cover ID1 at
+// all (dev: a gitlab-username entry ID1's record cannot match) - so, like m2_signing's ECLA pre-flight, cover ID1 with a
+// GitHub-username entry for the duration of the re-acknowledgment and take it off again; the removal leaves the fresh
+// acknowledgment valid, which the result verifies. The invalidation e-mail EasyCLA sends to ID1 is expected residue.
+async function reacknowledgeId1() {
+  const co = await jsonCall('GET', `${cfg('API_V4')}/v4/company/external/${fx.sfid}`, null, e2e.token(ID1));
+  const companyId = co.json?.companyID;
+  if (!companyId) return { ok: false, note: `GET /v4/company/external/${fx.sfid} -> ${co.status} (no companyID)` };
+  const steps = [];
+  const domain = (cfg('ID1_EMAIL') || '').split('@')[1] || '';
+  const covers = (x) => (x.kind === 'github-username' && x.value === cfg('ID1_GITHUB')) || (x.kind === 'email' && x.value === cfg('ID1_EMAIL')) || (x.kind === 'domain' && domain && x.value === domain);
+  const validId1 = (a) => h.ackOf(a, ID1, cfg('ID1_GITHUB')) && h.ackValid(a);
+  let temp = null;
+  if (!(await h.state()).entries.some(covers)) {
+    temp = { kind: 'github-username', value: cfg('ID1_GITHUB') };
+    const r = await e2e.bff(session.context, 'PUT', h.paths.approval, { add: [temp], remove: [] });
+    steps.push(`temporary ${temp.kind}:${temp.value} add -> ${r.status}`);
+    if (r.status !== 200) temp = null;
+  }
+  const body = { project_id: fx.group, company_id: companyId, user_id: cfg('ID1_UID') };
+  const prep = await jsonCall('POST', `${LEGACY}/v2/check-prepare-employee-signature`, body);
+  // a 500 "TypeError: 'NoneType' object is not subscriptable" here is the legacy answer when the user has no active
+  // pull-request metadata - the acknowledgment is already stored by then, the lens listing is the truth
+  const req = await jsonCall('POST', `${LEGACY}/v2/request-employee-signature`, { ...body, return_url_type: 'github', return_url: `${e2e.SS}/profile/clas` });
+  const errors = req.json?.errors || prep.json?.errors;
+  steps.push(`legacy check-prepare -> ${prep.status}, request-employee-signature -> ${req.status}${errors ? ` errors=${JSON.stringify(errors).slice(0, 160)}` : ''}`);
+  let ok = false;
+  for (let i = 0; i < 12 && !ok; i++) {
+    ok = (await h.state()).acks.some(validId1);
+    if (!ok) await e2e.sleep(5000);
+  }
+  if (temp) {
+    const r = await e2e.bff(session.context, 'PUT', h.paths.approval, { add: [], remove: [temp] });
+    const still = ok && (await h.state()).acks.some(validId1);
+    steps.push(`temporary entry removed -> ${r.status}; acknowledgment still valid after the removal=${still}`);
+    ok = ok && still;
+  }
+  return { ok, note: steps.join('; ') };
+}
 try {
   const how = await e2e.login(page, ID1, `${e2e.SS}/org/easycla`);
   check('M3-LOGIN', new URL(page.url()).hostname === e2e.SS_HOST, `${ID1} login ${how}`);
@@ -98,10 +156,12 @@ try {
     // back to the baseline value (the fixture may legitimately run with Auto-ECLA on)
     await h.toggleAuto(!!base.row?.autoCreateEcla, 'M3-AUTO-ECLA-RESTORE');
 
-    // ---- acknowledgment invalidation (ID1's own valid ack when there is one) ----
+    // ---- acknowledgment invalidation (ID1's own valid ack when there is one, re-acknowledged afterwards) ----
     const acksNow = (await h.state()).acks;
     const valid = acksNow.filter((a) => h.ackOf(a, ID1, cfg('ID1_GITHUB')) && h.ackValid(a));
-    if (valid.length) {
+    if (valid.length && !(cfg('ID1_UID') && LEGACY && cfg('ID1_GITHUB'))) {
+      skip('M3-ACK-INVALIDATE', `ID1 holds a valid acknowledgment ${h.ackId(valid[0])} but ID1_UID / LEGACY_API / ID1_GITHUB are not configured, so the suite could not re-acknowledge ID1 afterwards (a manager-invalidated acknowledgment is never resurrected) - probe skipped`);
+    } else if (valid.length) {
       const probe = await h.invalidateAck(h.ackId(valid[0]), 'M3-ACK-INVALIDATE');
       // the dialog's default-on "also remove the matching criteria" may take ID1's BASELINE entries with it (a correct
       // backend behaviour, not fixture drift): put them back through the BFF right away so the end state still matches
@@ -113,6 +173,8 @@ try {
           info('M3-ACK-INVALIDATE-RESTORE-BASELINE', `the dialog removed baseline entr(ies) ${JSON.stringify(lost.map((x) => `${x.kind}:${x.value}`))} -> PUT approval-list add -> ${r.status}`);
         }
       }
+      const re = await reacknowledgeId1();
+      check('M3-ACK-REACK', re.ok, `ID1 re-acknowledged after the probe (${re.note}); lens lists a valid ID1 acknowledgment again=${re.ok}`);
     } else {
       info('M3-ACK-INVALIDATE', `no valid ID1 acknowledgment on the fixture (${acksNow.length} acks, ID1's=${acksNow.filter((a) => h.ackOf(a, ID1, cfg('ID1_GITHUB'))).length} all invalidated) - invalidation exercised by m3_chain/interactions`);
       await h.tab('acknowledgments');

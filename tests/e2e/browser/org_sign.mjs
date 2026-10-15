@@ -6,7 +6,8 @@
 //   -> BFF POST lens/cla-groups/sign -> DocuSign sandbox -> /v2/return-url -> back on the SS group page
 //   -> lens row "signed", ID1 on the CLA managers roster (stream lambda grants cla-manager).
 // A CCLA is signed once per organization x CLA group: when the fixture row is already signed the module verifies that
-// end state and reports INFO (point ORGSIGN_GROUP at an unsigned group of M3_ORG to exercise DocuSign again).
+// end state and reports INFO (point ORGSIGN_GROUP at an unsigned group of M3_ORG to exercise DocuSign again; the group's
+// project must still exist in the project service, otherwise the designee step is refused - ORGSIGN-DESIGNEE).
 import * as e2e from './lib/e2e.mjs';
 import * as signing from './lib/signing.mjs';
 
@@ -37,6 +38,7 @@ page.on('response', async (r) => {
 });
 const rowOf = (list) => (list.json?.claGroups || []).find((r) => r.claGroupId === GROUP) || null;
 const hide = () => e2e.hideOverlays(page);
+class Stop extends Error {} // thrown after a recorded FAIL when the flow cannot continue (no extra HARNESS failure)
 try {
   const how = await e2e.login(page, ID1, `${e2e.SS}/org/easycla`);
   check('ORGSIGN-LOGIN', new URL(page.url()).hostname === e2e.SS_HOST, `${ID1} login ${how}`);
@@ -119,6 +121,13 @@ try {
         page.getByTestId('org-easycla-manager-question-yes').locator('button').first().click().catch(() => page.getByTestId('org-easycla-manager-question-yes').click()),
       ]);
       info('ORGSIGN-MANAGER-QUESTION', `"Are you authorized to be a CLA Manager?" answered Yes -> POST designee ${designee ? designee.status() : 'not observed'}`);
+      if (!designee || designee.status() >= 400) {
+        // the BFF relabels CLA-service refusals (409 already-signed, 400 no-lf-login, 403 sanctioned/not-authorized) and
+        // answers 502 "unknown" for anything else - e.g. a CLA group whose project SFID the project service no longer knows
+        const body = designee ? e2e.squash(await designee.text().catch(() => '')) : '';
+        check('ORGSIGN-DESIGNEE', false, `POST ${LIST}/designee -> ${designee ? designee.status() : 'not observed'} ${body.slice(0, 160)}; ${ID1} cannot become the initial CLA manager for ${GROUP} - probe POST /v4/company/<companyId>/project/<projectSfid>/cla-manager-designee for the reason or point ORGSIGN_GROUP at another unsigned group`);
+        throw new Stop('designee refused');
+      }
       await page.getByTestId('org-easycla-attestation-dialog').waitFor({ timeout: 45000 });
     } else info('ORGSIGN-MANAGER-QUESTION', 'not shown (viewer already holds a CLA role on the project)');
     for (const id of ['org-easycla-attestation-authority', 'org-easycla-attestation-embargo']) {
@@ -187,7 +196,7 @@ try {
   const blocked = net.blocked.filter((b) => !/telemetry|analytics|segment|sentry|datadog|launchdarkly/i.test(b.url));
   check('ORGSIGN-NO-BLOCKED-WRITES', blocked.length === 0, `guard blocked ${blocked.length} request(s) ${JSON.stringify(blocked.slice(0, 3))}`);
 } catch (err) {
-  check('ORGSIGN-HARNESS', false, `error: ${err.message} at ${page.url().slice(0, 120)}`);
+  if (!(err instanceof Stop)) check('ORGSIGN-HARNESS', false, `error: ${err.message} at ${page.url().slice(0, 120)}`);
   await e2e.shot(page, 'error');
 } finally {
   await e2e.close(session);
