@@ -8,6 +8,7 @@
 // (an ICLA is never invalidated by the user) - the module then verifies the existing row and reports INFO.
 import * as e2e from './lib/e2e.mjs';
 import * as signing from './lib/signing.mjs';
+import { m3, fixtureWrites } from './lib/m3.mjs';
 
 const { cfg, check, info, skip, sleep } = e2e;
 const ID1 = cfg('ID1');
@@ -16,13 +17,14 @@ const ICLA_SEARCH = cfg('ICLA_GROUP_SEARCH') || cfg('CLA_GROUP_NAME');
 const ECLA_GROUP = cfg('M3_CLA_GROUP');
 const ECLA_GROUP_NAME = cfg('M3_CLA_GROUP_NAME', cfg('CLA_GROUP_NAME'));
 const ECLA_COMPANY = cfg('M3_ORG_NAME');
+const fx = { sfid: cfg('M3_ORG_SFID'), name: ECLA_COMPANY, group: ECLA_GROUP, sig: cfg('M3_CCLA') };
 const DOCUSIGN = e2e.ENV === 'dev' && e2e.gate('ALLOW_DOCUSIGN') && !e2e.NO_WRITES;
 const WRITES = e2e.ENV === 'dev' && e2e.gate('ALLOW_FIXTURE_WRITES') && !e2e.NO_WRITES;
 
 if (e2e.ENV !== 'dev') { skip('M2-SIGNING', `signing flows run on dev only (env=${e2e.ENV})`); process.exit(e2e.finish()); }
 if (!WRITES && !DOCUSIGN) { skip('M2-SIGNING', 'ALLOW_DOCUSIGN=0 / ALLOW_FIXTURE_WRITES=0 / --no-writes'); process.exit(e2e.finish()); }
 
-const session = await e2e.launch({ identity: ID1, allowDocusign: DOCUSIGN, writes: [...signing.signingWrites('icla'), ...signing.signingWrites('ecla')] });
+const session = await e2e.launch({ identity: ID1, allowDocusign: DOCUSIGN, writes: [...signing.signingWrites('icla'), ...signing.signingWrites('ecla'), ...(fx.sfid && fx.sig ? fixtureWrites(fx.sfid, fx.sig) : [])] });
 const { page, context, net } = session;
 net.capture(/\/api\/me\/clas\/(prepare-sign|sign-options)|request-individual-signature|request-employee-signature/);
 try {
@@ -44,7 +46,7 @@ try {
     } else {
       try {
         const hand = await signing.handOffToConsole(session, ID1, { groupId: ICLA_GROUP, groupName: ICLA_SEARCH, githubId: cfg('ID1_GITHUB_ID'), contract: /individual|icla/i });
-        check('M2-ICLA-CONSOLE-HANDOFF', new URL(hand.url).hostname === new URL(cfg('CONTRIBUTOR_CONSOLE')).hostname, `picker="${hand.picker.slice(0, 80)}" -> ${new URL(hand.url).origin}`);
+        check('M2-ICLA-CONSOLE-HANDOFF', new URL(hand.url).hostname === new URL(cfg('CONTRIBUTOR_CONSOLE')).hostname, `picker="${hand.picker.slice(0, 80)}" -> ${new URL(hand.url).origin} console auth=${hand.auth}`);
         const indiv = page.getByRole('button', { name: /proceed as an individual contributor/i }).first();
         await indiv.waitFor({ state: 'visible', timeout: 30000 });
         await indiv.click();
@@ -92,9 +94,28 @@ try {
       info('M2-ECLA-ALREADY-VALID', `${ID1} already holds a valid ECLA ${existing[0].id} for ${ECLA_GROUP} (${existing[0].company}); the click-through is exercised by api/interactions.py and m3_chain for ID2; row: "${row.slice(0, 100)}"`);
       check('M2-ECLA-ROW-VALID', /\bvalid\b/i.test(row), `agreement-row-${existing[0].id} shows Valid`);
     } else {
+      // Pre-flight: the console only offers the click-through when the contributor is on the company's approval list;
+      // otherwise it lands on "Request Authorization to Contribute". ID1 is the CLA manager of the fixture, so add a
+      // GitHub-username entry for ID1 through the BFF when nothing covers it, and remove it again afterwards.
+      let added = null;
+      const h = fx.sfid && fx.sig ? m3(session, fx) : null;
       try {
+        if (h) {
+          const st = await h.state();
+          const domain = (cfg('ID1_EMAIL') || '').split('@')[1] || '';
+          const covers = (x) => (x.kind === 'github-username' && x.value === cfg('ID1_GITHUB')) || (x.kind === 'email' && x.value === cfg('ID1_EMAIL')) || (x.kind === 'domain' && domain && x.value === domain);
+          if (Object.values(st.http).some((c) => c !== 200)) info('M2-ECLA-PREFLIGHT', `fixture reads ${JSON.stringify(st.http)} - approval-list coverage not checked`);
+          else if (st.entries.some(covers)) info('M2-ECLA-PREFLIGHT', `${ID1} already covered by the approval list: ${JSON.stringify(st.entries.filter(covers))}`);
+          else if (!cfg('ID1_GITHUB')) info('M2-ECLA-PREFLIGHT', `${ID1} not on the approval list and ID1_GITHUB is not configured - the console will ask for authorization`);
+          else {
+            const entry = { kind: 'github-username', value: cfg('ID1_GITHUB') };
+            const r = await e2e.bff(context, 'PUT', h.paths.approval, { add: [entry], remove: [] });
+            check('M2-ECLA-PREFLIGHT', r.status === 200, `PUT approval-list add ${entry.kind}:${entry.value} -> ${r.status} (removed again after the flow)`);
+            if (r.status === 200) added = entry;
+          }
+        }
         const hand = await signing.handOffToConsole(session, ID1, { groupId: ECLA_GROUP, groupName: ECLA_GROUP_NAME, githubId: cfg('ID1_GITHUB_ID') });
-        check('M2-ECLA-CONSOLE-HANDOFF', new URL(hand.url).hostname === new URL(cfg('CONTRIBUTOR_CONSOLE')).hostname, `picker="${hand.picker.slice(0, 80)}" -> ${new URL(hand.url).origin}`);
+        check('M2-ECLA-CONSOLE-HANDOFF', new URL(hand.url).hostname === new URL(cfg('CONTRIBUTOR_CONSOLE')).hostname, `picker="${hand.picker.slice(0, 80)}" -> ${new URL(hand.url).origin} console auth=${hand.auth}`);
         const ack = await signing.corporateAcknowledge(session, ECLA_COMPANY);
         e2e.evidence('ecla-receipt.private.json', ack);
         check('M2-ECLA-CLICKTHROUGH', ack.status === 200 && !ack.receipt.errors && ack.done, `POST /v2/request-employee-signature -> ${ack.status} signature=${ack.signatureId} done=${ack.done}`);
@@ -108,8 +129,14 @@ try {
           check('M2-ECLA-ROW-VALID', /\bvalid\b/i.test(row), `agreement-row-${valid[0].id}: "${row.slice(0, 100)}"`);
         }
       } catch (err) {
-        check('M2-ECLA', false, `error: ${err.message} at ${page.url().slice(0, 120)}`);
+        const asked = /request-authorization/.test(page.url());
+        check('M2-ECLA', false, `error: ${err.message} at ${page.url().slice(0, 120)}${asked ? ' (the console asked for authorization: the contributor is not on the approval list)' : ''}`);
         await e2e.shot(page, 'ecla-error');
+      } finally {
+        if (added) {
+          const r = await e2e.bff(context, 'PUT', h.paths.approval, { add: [], remove: [added] }).catch((e) => ({ status: `error ${e.message}` }));
+          info('M2-ECLA-PREFLIGHT-RESTORE', `PUT approval-list remove ${added.kind}:${added.value} -> ${r.status}`);
+        }
       }
     }
   }

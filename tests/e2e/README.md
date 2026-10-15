@@ -120,7 +120,8 @@ run.log                the console output
 <module>/              per-module evidence: *.private.json HTTP bodies (0600, tokens redacted),
                        receipts.private.jsonl (python modules: one line per HTTP call), *.png screenshots,
                        network.private.json (api/blocked: METHOD host/path + status; writes: the
-                       business writes made, with their request bodies)
+                       business writes made, with their request bodies; network-<identity>.private.json
+                       for a module's second identity)
 ```
 
 Nothing in the evidence contains a token or password; still treat the directory as private (it holds

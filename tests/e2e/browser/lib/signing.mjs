@@ -32,18 +32,89 @@ export const myAgreements = async (context, groupId) => {
   return { http: r.status, rows, fixture: groupId ? rows.filter((a) => a.claGroupId === groupId) : rows };
 };
 
+// The console fetches the contributor right after the project (GET <legacy>/v2/user/<id>): 200 = it holds a token,
+// 401 = it does not. One tracker per page; reset() before a hand-off, wait(ms) for the next status.
+const USER_FETCH = new WeakMap();
+function userFetchTracker(page) {
+  if (USER_FETCH.has(page)) return USER_FETCH.get(page);
+  const t = { status: null, reset() { t.status = null; } };
+  page.on('response', (r) => {
+    try {
+      const u = new URL(r.url());
+      if (r.request().method() === 'GET' && /\/v2\/user\/[^/]+$/.test(u.pathname)) t.status = r.status();
+    } catch { /* ignore */ }
+  });
+  t.wait = async (ms) => { const end = Date.now() + ms; while (Date.now() < end && t.status === null) await sleep(500); return t.status; };
+  USER_FETCH.set(page, t);
+  return t;
+}
+
+// The console authenticates on its own with a silent Auth0 iframe check (same tenant as Self Serve). When the browser
+// carries a STALE Auth0 session cookie that check fails with login_required, the LFX header still shows the user as
+// logged in (its own "auth-<tenant>" cookie), the console's login trigger (a click on the header's login icon, which is
+// only rendered for a logged-out header) is a no-op, the user fetch is 401 and every "Proceed" ends in "Unable to fetch
+// user ID.". The recovery is what a user does by hand: header menu -> Logout (Auth0 logout, back to the console with a
+// logged-out header), which lets the console open the login page; log in on the allow-listed host, wait for the user
+// fetch to pass. Returns 'ok' (already authenticated) or 'relogin'.
+export async function ensureConsoleAuth(session, identity, tracker) {
+  const { page } = session;
+  if ((await tracker.wait(20000)) === 200) return 'ok';
+  const onAuth0 = () => e2e.isAuth0Host(new URL(page.url()).hostname);
+  const loginIcon = page.locator('#lfx-header-v2 button:has(app-lfx-user-icon)').first();
+  const userMenu = page.locator('#lfx-header-v2 button:has(app-user-picture)').first();
+  const clickLoginIcon = async () => {
+    for (let i = 0; i < 20 && !onAuth0(); i++) {
+      if (await loginIcon.count()) { await loginIcon.click({ timeout: 3000 }).catch(() => {}); await sleep(3000); } else await sleep(1000);
+    }
+  };
+  // the console's loginAttemptCount guard (max 3) must not swallow the login click after the logout round trip
+  await page.evaluate(() => localStorage.removeItem('loginAttemptCount')).catch(() => {});
+  if (await userMenu.count()) {
+    await userMenu.click({ timeout: 5000 }).catch(() => {});
+    await sleep(1000);
+    const logout = page.locator('#lfx-header-v2 a:has-text("Logout"), #lfx-header-v2 button:has-text("Logout")').first();
+    if (await logout.count()) {
+      await logout.click({ force: true, timeout: 5000 }).catch(() => {});
+      // Auth0 /v2/logout -> console (logged out) -> the console clicks the header's login icon -> Auth0 login page
+      for (let i = 0; i < 40 && !onAuth0(); i++) await sleep(1000);
+    }
+  }
+  tracker.reset();
+  if (!onAuth0()) await clickLoginIcon();
+  if (!onAuth0()) {
+    await e2e.shot(page, 'console-relogin-missing');
+    throw new Error('the contributor console did not go to the login page (user fetch 401, no logout/login control in the header)');
+  }
+  await sleep(2000);
+  await e2e.fillLogin(page, identity);
+  await page.waitForURL((u) => u.hostname === consoleHost, { timeout: 90000 });
+  await sleep(9000);
+  await e2e.hideOverlays(page);
+  const status = await tracker.wait(20000);
+  if (status !== 200) throw new Error(`contributor console still unauthenticated after the login (GET /v2/user/<id> -> ${status ?? 'not observed'})`);
+  return 'relogin';
+}
+
 // Me lens: Sign CLA -> pick the group -> (contract type) -> identity -> hand-off to the contributor console.
-// Returns { picker, idText, url } ; throws when a dialog does not show up.
+// Returns { picker, idText, url, auth } ; throws when a dialog does not show up or the console cannot authenticate.
 export async function handOffToConsole(session, identity, { groupId, groupName, githubId, contract = /employee|ecla|corporate/i }) {
   const { page } = session;
+  const tracker = userFetchTracker(page);
   await page.goto(`${SS}/profile/clas`, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await sleep(6000);
   await e2e.hideOverlays(page);
   const signAction = page.getByTestId('sign-cla-action');
   await signAction.waitFor({ state: 'visible', timeout: 60000 });
-  await signAction.click();
   const gdlg = page.getByTestId('cla-group-select-dialog');
-  await gdlg.waitFor({ state: 'visible', timeout: 20000 });
+  for (let i = 0; i < 3 && !(await gdlg.isVisible().catch(() => false)); i++) {
+    await e2e.hideOverlays(page);
+    await signAction.click().catch(() => {});
+    await gdlg.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
+  }
+  if (!(await gdlg.isVisible().catch(() => false))) {
+    await e2e.shot(page, 'picker-missing');
+    throw new Error('the CLA group picker did not open after clicking Sign CLA');
+  }
   const search = page.getByTestId('cla-group-select-search').locator('input').first();
   await search.click();
   await search.pressSequentially(groupName, { delay: 60 });
@@ -77,6 +148,7 @@ export async function handOffToConsole(session, identity, { groupId, groupName, 
   else await idlg.locator('[data-testid^="sign-identity-select-"]').filter({ hasText: /github/i }).first().click();
   await sleep(800);
   await e2e.shot(page, 'identity-dialog');
+  tracker.reset();
   await idlg.getByTestId('sign-identity-select-continue').locator('button').click();
   // SS -> (SSO again?) -> contributor console
   await page.waitForURL((u) => u.hostname === consoleHost || e2e.isAuth0Host(u.hostname), { timeout: 90000 });
@@ -87,8 +159,9 @@ export async function handOffToConsole(session, identity, { groupId, groupName, 
   }
   await sleep(9000);
   await e2e.hideOverlays(page);
+  const auth = await ensureConsoleAuth(session, identity, tracker);
   await e2e.shot(page, 'console-landing');
-  return { picker, idText, url: page.url() };
+  return { picker, idText, url: page.url(), auth };
 }
 
 // Console corporate flow: pick the company, tick the certification, Proceed -> POST /v2/request-employee-signature.

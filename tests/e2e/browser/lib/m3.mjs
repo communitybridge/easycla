@@ -30,11 +30,15 @@ export function m3(session, { sfid, name, group, sig }) {
     return u.hostname === e2e.SS_HOST && test(u.pathname) && r.request().method() === method;
   }, { timeout });
 
+  // Every read must be 200: a partial snapshot (approval-list 503 -> entries: []) must never become a baseline that
+  // reconcile() later restores, so the helper throws instead of returning it.
   async function state() {
     const [list, managers, approval, acks] = await Promise.all([get(paths.list), get(paths.managers), get(paths.approval), get(paths.acks)]);
+    const http = { list: list.status, managers: managers.status, approval: approval.status, acks: acks.status };
+    if (Object.values(http).some((c) => c !== 200)) throw new Error(`fixture reads failed ${JSON.stringify(http)}`);
     const row = (list.json?.claGroups || []).find((r) => r.id === sig) || null;
     return {
-      http: { list: list.status, managers: managers.status, approval: approval.status, acks: acks.status },
+      http,
       row,
       managers: (managers.json?.managers || []).map((m) => m.lfUsername).sort(),
       entries: (approval.json?.entries || []).map((x) => ({ kind: x.kind, value: x.value })),
@@ -48,9 +52,14 @@ export function m3(session, { sfid, name, group, sig }) {
     await page.keyboard.press('Escape').catch(() => {});
     await page.locator('.org-selector-panel').waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
     await e2e.hideOverlays(page);
-    const card = page.locator(`[data-testid="org-easycla-card-link"][href*="${group}"]`).first();
+    // the card of the configured signing entity: Self Serve lists one card per signature (?sig=<id>) and the same CLA group
+    // can be signed by several entities of one company - fall back to the group-only match for builds without the param
+    const bySig = page.locator(`[data-testid="org-easycla-card-link"][href*="${group}"][href*="sig=${sig}"]`).first();
+    const byGroup = page.locator(`[data-testid="org-easycla-card-link"][href*="${group}"]`).first();
     // the list is loaded once any card renders; only then decide whether the fixture card is on this page
     await page.locator('[data-testid="org-easycla-card-link"]').first().waitFor({ state: 'visible', timeout: 60000 }).catch(() => {});
+    const anySig = (await page.locator('[data-testid="org-easycla-card-link"][href*="sig="]').count()) > 0;
+    const card = anySig ? bySig : byGroup;
     let seen = await e2e.visible(card, 10000);
     if (!seen) {
       // paginated / long lists (8 cards per page): filter through the native search input (the lfx-input-text host
@@ -70,7 +79,7 @@ export function m3(session, { sfid, name, group, sig }) {
     await e2e.hideOverlays(page);
     await e2e.closeOverlay(page);
     const status = squash(await page.getByTestId('org-easycla-detail-status').innerText());
-    e2e.check(cid, /signed/i.test(status), `org=${selected} group card opened; status="${status}" url=${new URL(page.url()).pathname}`);
+    e2e.check(cid, /signed/i.test(status), `org=${selected} group card opened (${anySig ? `sig=${sig}` : 'group match'}); status="${status}" url=${new URL(page.url()).pathname}`);
     return status;
   }
 

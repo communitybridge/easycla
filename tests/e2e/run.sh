@@ -77,7 +77,7 @@ chmod 700 "$ROOT/secrets" 2>/dev/null || true
 echo "== EasyCLA E2E suite: env=$ENV_NAME groups=$GROUPS_SEL modules=${MODULES_SEL:-all} no-writes=$E2E_NO_WRITES keep-state=$E2E_KEEP_STATE"
 echo "== evidence: $E2E_RUN_DIR"
 
-# tokens for both identities (cached while valid)
+# tokens for both identities (cached while valid; refreshed again before each module)
 E2E_MODULE=token "$ROOT/lib/token.sh" || { echo "token minting failed - aborting" >&2; exit 1; }
 
 # Node/Playwright are needed only when a browser module is actually selected (same group + module filters as the run loop)
@@ -105,6 +105,10 @@ for m in "${MODULES[@]}"; do
   in_list "$group" "$GROUPS_SEL" || continue
   if [ -n "$MODULES_SEL" ] && ! in_list "$name" "$MODULES_SEL"; then continue; fi
   echo; echo "== [$group] $rel"
+  # dev tokens live one hour, a full run can be longer: re-check both tokens before every module (re-mints only
+  # when less than 10 minutes are left; the "still valid - reusing" lines are kept out of the console)
+  E2E_MODULE=token "$ROOT/lib/token.sh" | grep -v -- '- reusing$'
+  [ "${PIPESTATUS[0]}" = 0 ] || echo "== warning: token refresh failed before $name - the module may see 401s" >&2
   export E2E_MODULE="$name"
   case "$rel" in
     *.sh)  bash "$ROOT/$rel" ;;

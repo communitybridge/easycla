@@ -54,14 +54,26 @@ try {
 
   if (row0 && (row0.signed || /signed/i.test(row0.status || ''))) {
     info('ORGSIGN-ALREADY-SIGNED', `${NAME} x ${GROUP} already signed (signature ${row0.id}); a CCLA is signed once - set ORGSIGN_GROUP to an unsigned group to exercise the DocuSign flow`);
-    const card = page.locator(`[data-testid="org-easycla-card-link"][href*="${GROUP}"]`).first();
-    if (await e2e.visible(card, 60000)) {
+    // the list is paginated (8 cards per page): filter through the search box first, then page with "Next"
+    const card = page.locator(`[data-testid="org-easycla-card-link"][href*="${GROUP}"][href*="sig=${row0.id}"], [data-testid="org-easycla-card-link"][href*="${GROUP}"]:not([href*="sig="])`).first();
+    await page.locator('[data-testid="org-easycla-card-link"]').first().waitFor({ state: 'visible', timeout: 60000 }).catch(() => {});
+    let seen = await e2e.visible(card, 10000);
+    const search = page.locator('input#org-easycla-search-input, input[placeholder*="Search CLA"]').first();
+    const term = SEARCH || row0.claGroupName || '';
+    if (!seen && term && (await search.count())) { await search.fill(term); await sleep(3000); seen = await e2e.visible(card, 15000); }
+    for (let i = 0; i < 10 && !seen; i++) {
+      const next = page.getByTestId('org-easycla-next-page').getByRole('button');
+      if (!(await next.count()) || !(await next.isEnabled().catch(() => false))) break;
+      await next.click(); await sleep(2500);
+      seen = await e2e.visible(card, 10000);
+    }
+    if (seen) {
       await card.click();
       await page.getByTestId('org-easycla-detail-status').waitFor({ timeout: 60000 });
       const status = e2e.squash(await page.getByTestId('org-easycla-detail-status').innerText());
       await e2e.shot(page, 'signed-detail');
       check('ORGSIGN-DETAIL-SIGNED', /signed/i.test(status), `detail status="${status}" url=${new URL(page.url()).pathname}`);
-    } else check('ORGSIGN-DETAIL-SIGNED', false, 'signed group card not rendered on the EasyCLA page');
+    } else { await e2e.shot(page, 'signed-card-missing'); check('ORGSIGN-DETAIL-SIGNED', false, `signed group card not rendered on the EasyCLA page (search "${term}", ${(before.json?.claGroups || []).length} rows)`); }
     const managers = await e2e.bff(context, 'GET', `${LIST}/${row0.id}/managers`);
     const roster = (managers.json?.managers || []).map((m) => m.lfUsername);
     check('ORGSIGN-ACL-HAS-ID1', managers.status === 200 && roster.includes(ID1), `GET managers -> ${managers.status}; roster=${JSON.stringify(roster)}`);

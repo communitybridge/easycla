@@ -90,10 +90,12 @@ for (const who of [ID1, ID2]) {
     if (who === ID2) {
       check(`${P}-NO-ADMIN-WRITER-GRANTS`, !writers.some((s) => adminOrgs.includes(s) || s === other.sfid), `ID2 writers=${JSON.stringify(writers)} must not include ID1's admin orgs / OTHER_ORG`);
       if (!claOrgs.length && !writers.length) {
-        // B12: nothing at all
+        // B12: nothing at all - the selector trigger is always in the DOM (its slot is hidden for users without grants)
         const home = await visit(page, '/', 'id2-home');
-        const trigger = await page.getByTestId('org-selector').count();
-        check('B12-NO-ORG-LENS', trigger === 0 && !/Organization lens/i.test(home.text), `no roles -> org selector=${trigger > 0} text=${home.text.slice(0, 80)}`);
+        const slot = page.getByTestId('org-selector-slot').first();
+        const slotVisible = (await slot.count()) ? await slot.getAttribute('data-visible') : 'absent';
+        const trigger = await page.getByTestId('org-selector').first().isVisible().catch(() => false);
+        check('B12-NO-ORG-LENS', !trigger && slotVisible !== 'true', `no roles -> org selector visible=${trigger} slot data-visible=${slotVisible}; text=${home.text.slice(0, 80)}`);
         const deep = await visit(page, `/org/${claOnly.sfid}/easycla`, 'id2-deep-cla-only-denied');
         check('B12-DEEP-LINK-DENIED', deniedPath(deep.path) && deep.cards === 0 && !crashed(deep), summary(deep));
         info('B1-B8', `${ID2} is not a CLA manager of any organization right now: B1-B8 need the role (api/interactions.py W1 or m3_chain C8 grants it) - covered by the ID1 run only`);

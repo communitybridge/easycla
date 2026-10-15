@@ -106,7 +106,7 @@ try {
   if (!targetAck) {
     try {
       const hand = await signing.handOffToConsole(s2, ID2, { groupId: fx.group, groupName: GROUP_NAME, githubId: cfg('ID2_GITHUB_ID') });
-      check('C3-ID2-CONSOLE-HANDOFF', new URL(hand.url).hostname === new URL(cfg('CONTRIBUTOR_CONSOLE')).hostname, `picker="${hand.picker.slice(0, 80)}" identity="${hand.idText.slice(0, 80)}" -> ${new URL(hand.url).origin}`);
+      check('C3-ID2-CONSOLE-HANDOFF', new URL(hand.url).hostname === new URL(cfg('CONTRIBUTOR_CONSOLE')).hostname, `picker="${hand.picker.slice(0, 80)}" identity="${hand.idText.slice(0, 80)}" -> ${new URL(hand.url).origin} console auth=${hand.auth}`);
       const ack = await signing.corporateAcknowledge(s2, fx.name);
       e2e.evidence('id2-ack-receipt.private.json', ack);
       check('C3-ID2-ECLA-CLICKTHROUGH', ack.status === 200 && !ack.receipt.errors && ack.done, `POST /v2/request-employee-signature -> ${ack.status} signature=${ack.signatureId} errors=${JSON.stringify(ack.receipt.errors || null)} done=${ack.done}`);

@@ -219,8 +219,10 @@ export async function close({ browser, context, page, net }, saveState = true) {
       fs.chmodSync(net.statePath, 0o600);
     }
   } catch { /* best effort */ }
-  if (net) evidence('network.private.json', { api: net.api, writes: net.writes, blocked: net.blocked });
-  if (net?.bodies?.length) evidence('bodies.private.json', net.bodies);
+  // one file per identity: modules that drive two sessions must not overwrite the first one's capture
+  const sfx = net?.identity && net.identity !== cfg('ID1') ? `-${net.identity}` : '';
+  if (net) evidence(`network${sfx}.private.json`, { api: net.api, writes: net.writes, blocked: net.blocked });
+  if (net?.bodies?.length) evidence(`bodies${sfx}.private.json`, net.bodies);
   await browser?.close().catch(() => {});
 }
 
