@@ -155,10 +155,19 @@ def acl_of(row):
     return sorted(a.get("lfUsername") or a.get("username") or "" for a in row.get("signatureACL") or [])
 
 
+def emails_of(row):
+    # approval-list items are objects {approval_item: ..., date_added: ...} (swagger/common/corporate-signature.yaml)
+    return [x.get("approval_item") if isinstance(x, dict) else x for x in row.get("emailApprovalList") or []]
+
+
 code, row = fixture_ccla()
+baseline_ok = code == 200 and row.get("signatureID") == CCLA
 # negative writes with the no-role identity: nothing may change on the fixture. The approval-list and Auto-ECLA routes
 # authorize against the CCLA's signatureACL (v2/signatures/handlers.go), so ID2 on that ACL would make them legitimate.
-if id2_fixture or ID2 in acl_of(row):
+# Without a confirmed baseline the undo below could not tell an acceptance from a failed read, so the probes stay off.
+if not baseline_ok:
+    e2e.skip("W-ID2-NEGATIVE-WRITES", f"baseline read of the fixture CCLA failed (http {code}, signatureID={row.get('signatureID')}) - negative writes not sent")
+elif id2_fixture or ID2 in acl_of(row):
     e2e.skip("W-ID2-NEGATIVE-WRITES", f"{ID2} currently holds the fixture scope or is on the CCLA's ACL - negative writes not applicable")
 else:
     neg_email = f"e2e-neg-{ID2}-{e2e.TAG}@example.invalid"
@@ -167,17 +176,20 @@ else:
     e2e.expect("W-ID2-CLA-MANAGER-POST-403", ID2, 403, "POST", f"/v4/company/{CO}/project/{PROJ}/cla-manager", {"userLFID": ID2})
     e2e.expect("W-ID2-AUTO-ECLA-PUT-403", ID2, 403, "PUT", f"/v4/signatures/company/{CO}/clagroup/{GRP}/ecla-auto-create", {"auto_create_ecla": True})
     # an unexpected acceptance is undone right away (as ID1) so the fixture keeps its baseline
-    _, after = fixture_ccla()
+    code_after, after = fixture_ccla()
     undo = []
-    if neg_email in (after.get("emailApprovalList") or []):
-        undo.append(("approval-list", e2e.call(ID1, "PUT", e2e.v4(f"/v4/signatures/project/{PROJ}/company/{CO}/clagroup/{GRP}/approval-list"), {"RemoveEmailApprovalList": [neg_email]})[0]))
-    if after.get("autoCreateECLA") != row.get("autoCreateECLA"):
-        undo.append(("auto-ecla", e2e.call(ID1, "PUT", e2e.v4(f"/v4/signatures/company/{CO}/clagroup/{GRP}/ecla-auto-create"), {"auto_create_ecla": bool(row.get("autoCreateECLA"))})[0]))
-    if ID2 in acl_of(after):
-        undo.append(("cla-manager", e2e.call(ID1, "DELETE", e2e.v4(f"/v4/company/{CO}/project/{PROJ}/cla-manager/{ID2}"))[0]))
+    if code_after != 200 or after.get("signatureID") != CCLA:
+        undo.append(("re-read", code_after))
+    else:
+        if neg_email in emails_of(after):
+            undo.append(("approval-list", e2e.call(ID1, "PUT", e2e.v4(f"/v4/signatures/project/{PROJ}/company/{CO}/clagroup/{GRP}/approval-list"), {"RemoveEmailApprovalList": [neg_email]})[0]))
+        if bool(after.get("autoCreateECLA")) != bool(row.get("autoCreateECLA")):
+            undo.append(("auto-ecla", e2e.call(ID1, "PUT", e2e.v4(f"/v4/signatures/company/{CO}/clagroup/{GRP}/ecla-auto-create"), {"auto_create_ecla": bool(row.get("autoCreateECLA"))})[0]))
+        if ID2 in acl_of(after):
+            undo.append(("cla-manager", e2e.call(ID1, "DELETE", e2e.v4(f"/v4/company/{CO}/project/{PROJ}/cla-manager/{ID2}"))[0]))
     e2e.check("W-ID2-NEGATIVE-WRITES-NO-CHANGE", not undo, f"fixture CCLA unchanged after the refused writes={not undo}" + (f"; undone as {ID1}: {undo}" if undo else ""))
 
-e2e.check("R-FIXTURE-CCLA-PRESENT", code == 200 and row.get("signatureID") == CCLA,
+e2e.check("R-FIXTURE-CCLA-PRESENT", baseline_ok,
           f"fixture CCLA {CCLA[:8]} present: signed={row.get('signatureSigned')} approved={row.get('signatureApproved')} autoCreateECLA={row.get('autoCreateECLA')} "
           f"managers={[a.get('lfUsername') or a.get('username') for a in row.get('signatureACL') or []]} "
           f"lists={ {k: len(row.get(k) or []) for k in ('emailApprovalList', 'domainApprovalList', 'githubUsernameApprovalList', 'githubOrgApprovalList', 'gitlabUsernameApprovalList', 'gitlabOrgApprovalList')} }")
