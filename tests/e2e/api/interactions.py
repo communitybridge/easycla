@@ -306,8 +306,12 @@ try:
             else:
                 e2e.skip("I3-EXPLICIT-REACK-CREATES-ACK", "prepare-sign returned no userId - explicit re-acknowledgment impossible")
         else:
-            e2e.check("I3-AUTO-ECLA-CREATED-FOR-ID2", ack is not None and ack.get("status") == "valid" and ack.get("signatureID") not in pre_ids,
-                      f"new valid ack for {ID2}: {(ack or {}).get('signatureID', '-')[:8]} company={(ack or {}).get('companyName')} after {waited}s",
+            # a pre-existing ack that was only removal-voided (the previous run's cleanup took ID2 off the list) comes back
+            # on the criterion re-add instead of a new one being created - the approval-list rule, not a defect
+            resurrected = ack is not None and ack.get("signatureID") in pre_ids
+            e2e.check("I3-AUTO-ECLA-CREATED-FOR-ID2", ack is not None and ack.get("status") == "valid",
+                      f"{'removal-voided ack resurrected by the criterion re-add' if resurrected else 'new'} valid ack for {ID2}: "
+                      f"{(ack or {}).get('signatureID', '-')[:8]} company={(ack or {}).get('companyName')} after {waited}s",
                       ecla=(ack or {}).get("signatureID"))
     ACK = (ack or {}).get("signatureID")
     code, mine, n = contrib_row()

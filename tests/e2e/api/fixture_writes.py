@@ -9,7 +9,8 @@ AU auto-ECLA toggle on/off (restored to the starting value)
 DS designee read, duplicate manager add, manager requests list
 SA sanctioned company: every write refused with 403 (when SANCTIONED_* is configured)
 RM/RA approval-list removal voids ID1's own valid ECLA on the group; re-adding the criterion recovers it
-   (removal-only invalidation rule) - runs only when ID1 has a VALID ecla on the fixture group
+   (removal-only invalidation rule) - when ID1's ecla is missing or manager-invalidated a fresh one is acquired first
+   through the legacy API (the contributor console's request-employee-signature), when ID1_UID is configured
 F  final baseline comparison
 """
 import json
@@ -52,13 +53,15 @@ def put_approval(data):
 
 
 def my_ecla():
+    # ID1 can hold ECLAs for several employers on the same group: only the write fixture's company (CO) counts
     code, body = e2e.call(ID1, "GET", e2e.v4("/v4/my-clas?pageSize=100"))
     rows = (body or {}).get("clas") or [] if isinstance(body, dict) else []
-    wanted = next((r for r in rows if r.get("signatureID") == c("ID1_ECLA") and r.get("claGroupID") == GRP), None) if c("ID1_ECLA") else None
+    rows = [r for r in rows if r.get("claGroupID") == GRP and (not r.get("companyID") or r.get("companyID") == CO)]
+    wanted = next((r for r in rows if r.get("signatureID") == c("ID1_ECLA")), None) if c("ID1_ECLA") else None
     if wanted:
         return wanted
-    valid = [r for r in rows if r.get("claGroupID") == GRP and r.get("claType") == "ecla" and r.get("status") == "valid"]
-    return valid[0] if valid else next((r for r in rows if r.get("claGroupID") == GRP and r.get("claType") == "ecla"), None)
+    valid = [r for r in rows if r.get("claType") == "ecla" and r.get("status") == "valid"]
+    return valid[0] if valid else next((r for r in rows if r.get("claType") == "ecla"), None)
 
 
 # ---- baseline ----------------------------------------------------------------------
@@ -172,20 +175,41 @@ try:
     # ---- SA: sanctioned company --------------------------------------------------------------------
     if c("SANCTIONED_SFID"):
         sf, sid = c("SANCTIONED_SFID"), c("SANCTIONED_ID")
-        for cid, method, path, data in [
-            ("SA-DESIGNEE-PROJECT", "POST", f"/v4/company/{sf}/project/{PROJ}/cla-manager-designee", {"userEmail": c("ID1_EMAIL")}),
-            ("SA-DESIGNEE-GROUP", "POST", f"/v4/company/{sf}/claGroup/{GRP}/cla-manager-designee", {"userEmail": c("ID1_EMAIL")}),
-            ("SA-REQUEST-CREATE", "POST", f"/v4/company/{sf}/project/{PROJ}/cla-manager/requests", {"contactAdmin": False, "fullName": "QA Probe", "userEmail": c("ID1_EMAIL")}),
-            ("SA-APPROVAL-LIST", "PUT", f"/v4/signatures/project/{PROJ}/company/{sid}/clagroup/{GRP}/approval-list", {"RemoveEmailApprovalList": [f"absent-{e2e.TAG}@nomatch.invalid"]}),
-            ("SA-AUTO-CREATE", "PUT", f"/v4/signatures/company/{sid}/clagroup/{GRP}/ecla-auto-create", {"auto_create_ecla": False}),
-            ("SA-MANAGER-CREATE", "POST", f"/v4/company/{sid}/project/{PROJ}/cla-manager", {"firstName": "QA", "lastName": "Probe", "userEmail": c("ID1_EMAIL")}),
+        for cid, codes, method, path, data in [
+            ("SA-DESIGNEE-PROJECT", 403, "POST", f"/v4/company/{sf}/project/{PROJ}/cla-manager-designee", {"userEmail": c("ID1_EMAIL")}),
+            ("SA-DESIGNEE-GROUP", 403, "POST", f"/v4/company/{sf}/claGroup/{GRP}/cla-manager-designee", {"userEmail": c("ID1_EMAIL")}),
+            ("SA-REQUEST-CREATE", 403, "POST", f"/v4/company/{sf}/project/{PROJ}/cla-manager/requests", {"contactAdmin": False, "fullName": "QA Probe", "userEmail": c("ID1_EMAIL")}),
+            ("SA-APPROVAL-LIST", 403, "PUT", f"/v4/signatures/project/{PROJ}/company/{sid}/clagroup/{GRP}/approval-list", {"RemoveEmailApprovalList": [f"absent-{e2e.TAG}@nomatch.invalid"]}),
+            # ecla-auto-create answers 404 before loading the company when the sanctioned company has no signed CCLA on the
+            # group (v2/signatures/handlers.go EclaAutoCreateHandler, TestEclaAutoCreateWithoutSignedCCLAReturnsNotFound); 403 otherwise
+            ("SA-AUTO-CREATE", (403, 404), "PUT", f"/v4/signatures/company/{sid}/clagroup/{GRP}/ecla-auto-create", {"auto_create_ecla": False}),
+            ("SA-MANAGER-CREATE", 403, "POST", f"/v4/company/{sid}/project/{PROJ}/cla-manager", {"firstName": "QA", "lastName": "Probe", "userEmail": c("ID1_EMAIL")}),
         ]:
-            e2e.expect(cid, ID1, 403, method, path, data)
+            e2e.expect(cid, ID1, codes, method, path, data)
     else:
         e2e.skip("SA-SANCTIONED", f"SANCTIONED_* not configured for {e2e.ENV}")
 
     # ---- RM/RA: removal-only invalidation + recovery on ID1's own ECLA -------------------------------
     ack = my_ecla()
+    if (not ack or ack.get("status") != "valid") and c("ID1_UID") and c("LEGACY_API"):
+        # the browser modules manager-invalidate ID1's ack on every run (m3_org_lens) and such an ack is never resurrected:
+        # acknowledge again explicitly through the legacy API, the way the contributor console does (same as interactions I3)
+        put_approval({"AddEmailApprovalList": [c("ID1_EMAIL")], "AddGithubUsernameApprovalList": [c("ID1_GITHUB")]})
+        time.sleep(4)
+        ack = my_ecla()  # a removal-voided ack comes back on the re-add alone
+        if not ack or ack.get("status") != "valid":
+            was = "missing" if not ack else ack.get("status")
+            legacy = c("LEGACY_API")
+            code3, _ = e2e.call("anon", "POST", f"{legacy}/v2/check-prepare-employee-signature", {"project_id": GRP, "company_id": CO, "user_id": c("ID1_UID")})
+            code4, body4 = e2e.call("anon", "POST", f"{legacy}/v2/request-employee-signature",
+                                    {"project_id": GRP, "company_id": CO, "user_id": c("ID1_UID"), "return_url_type": "github", "return_url": c("SS_URL") + "/profile/clas"})
+            sig4 = (body4 or {}).get("signature_id") if isinstance(body4, dict) else None
+            time.sleep(4)
+            ack = my_ecla()
+            # a 500 "TypeError: 'NoneType' object is not subscriptable" here is the legacy (Python-parity) answer when the
+            # user has no active pull-request metadata: the acknowledgment is already stored by then, my-clas is the truth
+            e2e.info("RM-RA-REACK", f"ID1's ECLA was {was}: legacy check-prepare -> {code3}, request-employee-signature -> {code4} "
+                                    f"signature={str(sig4)[:8]}; my-clas now {(ack or {}).get('signatureID', '-')[:8]}/{(ack or {}).get('status')}")
     if ack and ack.get("status") == "valid":
         sid = ack["signatureID"]
         code, body = put_approval({"RemoveEmailApprovalList": [c("ID1_EMAIL")], "RemoveGithubUsernameApprovalList": [c("ID1_GITHUB")]})

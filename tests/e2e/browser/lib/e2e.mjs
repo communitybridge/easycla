@@ -178,7 +178,9 @@ export async function launch(opts = {}) {
     const method = req.method();
     const isRead = ['GET', 'HEAD', 'OPTIONS'].includes(method);
     const docusign = /(^|\.)docusign\.(net|com)$/.test(u.hostname);
-    if (docusign && !(allowDocusign && SANDBOX_DOCUSIGN.has(u.hostname))) {
+    // sandbox sessions: writes only to the demo hosts; reads to any DocuSign host may pass
+    // (the demo signing page beacons telemetry to a.docusign.com, a GET cannot sign anything)
+    if (docusign && !(allowDocusign && (SANDBOX_DOCUSIGN.has(u.hostname) || isRead))) {
       net.blocked.push({ method, url: u.origin + u.pathname, reason: 'docusign' });
       await route.abort('blockedbyclient');
       return;

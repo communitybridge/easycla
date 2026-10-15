@@ -68,7 +68,7 @@ opened_at=$(date +%s)
 e2e_result GH-PR-OPENED PASS "$pr_url (head ${head_sha:0:7}, base $default_branch)"
 
 # ---- wait for a TERMINAL EasyCLA status (success|failure|error; `pending` keeps polling) + the bot comment ----
-status_state=""; status_desc=""; status_url=""; comment_body=""; status_at=""; comment_at=""
+status_state=""; status_desc=""; status_url=""; comment_body=""; status_at=""; comment_at=""; success_at=""
 while :; do
   now=$(date +%s)
   case "$status_state" in success|failure|error) ;; *)
@@ -96,7 +96,13 @@ if c:
 PY
 )"
   fi
-  case "$status_state" in success|failure|error) [ -n "$comment_body" ] && break ;; esac
+  # the backend (github_repository.go updatePullRequest) creates a comment only when a contributor is NOT authorized; on
+  # success it merely edits an existing failure comment - so a success status may legitimately come with no comment:
+  # give the comment a 60 s grace period after a success status and stop waiting
+  case "$status_state" in
+    success) if [ -n "$comment_body" ]; then break; fi; [ -z "$success_at" ] && success_at=$now; [ $((now - success_at)) -ge 60 ] && break ;;
+    failure|error) [ -n "$comment_body" ] && break ;;
+  esac
   [ $((now - opened_at)) -ge "$GH_TIMEOUT" ] && break
   sleep 15
 done
@@ -107,6 +113,7 @@ case "$status_state" in
   *) e2e_result GH-EASYCLA-STATUS-POSTED FAIL "EasyCLA commit status still '$status_state' (not terminal) after ${elapsed}s";;
 esac
 if [ -n "$comment_body" ]; then e2e_result GH-BOT-COMMENT PASS "$GITHUB_BOT commented at $comment_at: $(printf '%s' "$comment_body" | head -c 160)"
+elif [ "$status_state" = success ]; then e2e_result GH-BOT-COMMENT INFO "no comment by $GITHUB_BOT on PR #$pr_number: the backend only comments when a contributor is not authorized (status is '$status_state')"
 else e2e_result GH-BOT-COMMENT FAIL "no comment by $GITHUB_BOT on PR #$pr_number after ${elapsed}s"; fi
 if [ -n "$status_state" ] && [ -n "$comment_body" ]; then
   # the comment's verdict: first the badge alt text the backend emits (getCommentBadge: "CLA Signed" vs "CLA Not Signed" /

@@ -180,19 +180,23 @@ export function m3(session, { sfid, name, group, sig }) {
     return body;
   }
 
-  // Bring the fixture back to a target state through the BFF (no UI involved), for `finally` blocks: approval entries
-  // not in `entries` (kind:value strings) are removed and missing ones re-added, the manager roster is reconciled to
-  // `managers` (ID2 only - the suite never touches other managers), and the Auto-ECLA flag is set to `auto`.
+  // Bring the fixture back to a target state through the BFF (no UI involved), for `finally` blocks: SUITE-OWNED approval
+  // entries (`owned(entry)`: the synthetic qa-e2e-* / qa-astra-* domains and ID2's e-mail / GitHub user name by default)
+  // not in `entries` (kind:value strings) are removed - an entry somebody else added to the fixture during the run is
+  // never touched - missing ones are re-added, the manager roster is reconciled to `managers` (ID2 only - the suite
+  // never touches other managers), and the Auto-ECLA flag is set to `auto`.
   // Returns what it changed; every call is logged as INFO under `cid`.
-  async function reconcile({ entries, managers, auto, manager }, cid = 'F-RECONCILE') {
+  const defaultOwned = (x) => /^qa-(e2e|astra)-.*\.example\.(com|org)$/i.test(x.value) || [e2e.cfg('ID2_EMAIL'), e2e.cfg('ID2_GITHUB')].filter(Boolean).includes(x.value);
+  async function reconcile({ entries, managers, auto, manager, owned = defaultOwned }, cid = 'F-RECONCILE') {
     const changes = [];
     let st;
-    try { st = await state(); } catch (err) { e2e.info(cid, `cannot read the fixture state: ${err.message}`); return changes; }
-    if (Object.values(st.http).some((c) => c !== 200)) { e2e.info(cid, `fixture reads ${JSON.stringify(st.http)} - nothing reconciled`); return changes; }
+    try { st = await state(); } catch (err) { e2e.info(cid, `cannot read the fixture state: ${err.message} - nothing reconciled`); return changes; }
     const have = st.entries.map((x) => `${x.kind}:${x.value}`);
     const want = new Set(entries);
     const split = (k) => { const i = k.indexOf(':'); return { kind: k.slice(0, i), value: k.slice(i + 1) }; };
-    const remove = have.filter((k) => !want.has(k)).map(split);
+    const remove = st.entries.filter((x) => owned(x) && !want.has(`${x.kind}:${x.value}`)).map((x) => ({ kind: x.kind, value: x.value }));
+    const foreign = st.entries.filter((x) => !owned(x) && !want.has(`${x.kind}:${x.value}`));
+    if (foreign.length) changes.push(`left alone ${foreign.length} entr(ies) added outside the suite: ${JSON.stringify(foreign.map((x) => `${x.kind}:${x.value}`))}`);
     const add = [...want].filter((k) => !have.includes(k)).map(split);
     if (remove.length || add.length) {
       const r = await e2e.bff(context, 'PUT', paths.approval, { add, remove });

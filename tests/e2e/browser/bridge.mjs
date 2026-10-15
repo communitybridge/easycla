@@ -90,12 +90,15 @@ for (const who of [ID1, ID2]) {
     if (who === ID2) {
       check(`${P}-NO-ADMIN-WRITER-GRANTS`, !writers.some((s) => adminOrgs.includes(s) || s === other.sfid), `ID2 writers=${JSON.stringify(writers)} must not include ID1's admin orgs / OTHER_ORG`);
       if (!claOrgs.length && !writers.length) {
-        // B12: nothing at all - the selector trigger is always in the DOM (its slot is hidden for users without grants)
-        const home = await visit(page, '/', 'id2-home');
+        // B12: nothing at all. Self Serve offers the Organization lens tab to everybody (lens.utils deriveAllowedLenses
+        // always appends 'org'); a user without grants lands on the empty state (/org/not-found) with no organization
+        // selector (the selector slot stays data-visible=false) and no EasyCLA cards anywhere.
+        await visit(page, '/', 'id2-home');
+        const lens = await visit(page, '/org', 'id2-org-lens');
         const slot = page.getByTestId('org-selector-slot').first();
         const slotVisible = (await slot.count()) ? await slot.getAttribute('data-visible') : 'absent';
         const trigger = await page.getByTestId('org-selector').first().isVisible().catch(() => false);
-        check('B12-NO-ORG-LENS', !trigger && slotVisible !== 'true', `no roles -> org selector visible=${trigger} slot data-visible=${slotVisible}; text=${home.text.slice(0, 80)}`);
+        check('B12-NO-ORG-LENS', deniedPath(lens.path) && lens.cards === 0 && !trigger && slotVisible !== 'true' && !crashed(lens), `no roles -> /org -> ${lens.path}; org selector visible=${trigger} slot data-visible=${slotVisible}; cards=${lens.cards}; text=${lens.text.slice(0, 80)}`);
         const deep = await visit(page, `/org/${claOnly.sfid}/easycla`, 'id2-deep-cla-only-denied');
         check('B12-DEEP-LINK-DENIED', deniedPath(deep.path) && deep.cards === 0 && !crashed(deep), summary(deep));
         info('B1-B8', `${ID2} is not a CLA manager of any organization right now: B1-B8 need the role (api/interactions.py W1 or m3_chain C8 grants it) - covered by the ID1 run only`);

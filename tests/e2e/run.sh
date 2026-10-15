@@ -77,18 +77,24 @@ chmod 700 "$ROOT/secrets" 2>/dev/null || true
 echo "== EasyCLA E2E suite: env=$ENV_NAME groups=$GROUPS_SEL modules=${MODULES_SEL:-all} no-writes=$E2E_NO_WRITES keep-state=$E2E_KEEP_STATE"
 echo "== evidence: $E2E_RUN_DIR"
 
+# the selection must match something: a mistyped --module/--group would otherwise produce an empty "green" run
+# (same group + module filters as the run loop); Node/Playwright are needed only when a browser module is selected
+needs_node=0; selected=0
+for m in "${MODULES[@]}"; do
+  set -- $m
+  in_list "$1" "$GROUPS_SEL" || continue
+  if [ -n "$MODULES_SEL" ] && ! in_list "$(basename "${2%.*}")" "$MODULES_SEL"; then continue; fi
+  selected=$((selected + 1))
+  case "$2" in *.mjs) needs_node=1 ;; esac
+done
+if [ "$selected" = 0 ]; then
+  echo "no module matched --group '$GROUPS_SEL' --module '${MODULES_SEL:-all}' (see --list)" >&2
+  exit 2
+fi
+
 # tokens for both identities (cached while valid; refreshed again before each module)
 E2E_MODULE=token "$ROOT/lib/token.sh" || { echo "token minting failed - aborting" >&2; exit 1; }
 
-# Node/Playwright are needed only when a browser module is actually selected (same group + module filters as the run loop)
-needs_node=0
-for m in "${MODULES[@]}"; do
-  set -- $m
-  case "$2" in *.mjs) ;; *) continue ;; esac
-  in_list "$1" "$GROUPS_SEL" || continue
-  if [ -n "$MODULES_SEL" ] && ! in_list "$(basename "${2%.*}")" "$MODULES_SEL"; then continue; fi
-  needs_node=1
-done
 if [ "$needs_node" = 1 ]; then
   command -v node >/dev/null 2>&1 || { echo "node not found (browser group needs Node.js >= 20)" >&2; exit 1; }
   if [ ! -d "$ROOT/node_modules/playwright" ]; then

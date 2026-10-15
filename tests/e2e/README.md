@@ -18,7 +18,7 @@ cd tests/e2e
 ./run.sh prod --list              # modules per group
 ```
 
-Exit code `1` when any check `FAIL`ed. Console output is one line per check:
+Exit code `1` when any check `FAIL`ed, `2` when `--group`/`--module` selected no module at all. Console output is one line per check:
 `<UTC> [<module>] PASS|FAIL|SKIP|INFO <CHECK-ID> - <note>`.
 
 ## Requirements

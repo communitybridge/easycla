@@ -201,7 +201,9 @@ try {
 } finally {
   // whatever happened above (FAIL, timeout, exception): entries, roster and Auto-ECLA back to the baseline through the BFF
   if (WRITES && base && expectedEntries) {
-    try { await h.reconcile({ entries: expectedEntries, managers: base.managers, manager: id2, auto: !!base.row?.autoCreateEcla }, 'M3-FINAL-RECONCILE'); }
+    // suite-owned here: the synthetic domain and ID1's own entries that were NOT on the list at baseline
+    const owned = (x) => suiteOwned(x.value) || OWN.some((o) => o.kind === x.kind && o.value === x.value && !base.entries.some((b) => b.kind === o.kind && b.value === o.value));
+    try { await h.reconcile({ entries: expectedEntries, managers: base.managers, manager: id2, auto: !!base.row?.autoCreateEcla, owned }, 'M3-FINAL-RECONCILE'); }
     catch (err) { info('M3-FINAL-RECONCILE', `reconcile failed: ${err.message}`); }
   }
   await e2e.close(session);
