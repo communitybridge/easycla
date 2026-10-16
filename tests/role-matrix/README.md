@@ -34,9 +34,13 @@ persona is visible before the table.
 ```bash
 cp personas.example.env .env   # fill in; .env is git-ignored
 python3 role_matrix.py                 # safe mode: no data changes
-python3 role_matrix.py --mutate        # dev only: manager add/remove approval-list entry, toggle/restore auto-ECLA
+python3 role_matrix.py --mutate        # dev only: manager add/remove approval-list entry, auto-ECLA PUT of its current value
 python3 role_matrix.py --json out.json # also dump every call
 ```
+
+`--mutate` removes the approval-list entry it adds, even when a request fails, but not the
+backend's follow-on writes: event-log entries, a user record for the sentinel email and, while
+auto-ECLA is on, the ECLAs it reconciles for the approval list. Run it on the dev fixture only.
 
 MFA-enrolled accounts cannot use the password grant (the dev client does not allow the
 `mfa-otp` grant either). Set `RM_<PERSONA>_TOKEN` to an Auth0 access token whose audience is
@@ -58,7 +62,7 @@ new endpoint can also mean "route not deployed". A `manager` persona disambiguat
 | Endpoint | Probe | Why it is safe |
 | --- | --- | --- |
 | approval-list PUT | empty body `{}` | allowed callers get 400 "missing approval list items" |
-| ecla-auto-create PUT | current flag value | no change, but still a write: dev only |
+| ecla-auto-create PUT | current flag value, deny-side personas only | an allowed caller rewrites the flag and, when it is on, reconciles ECLAs; the manager write runs under `--mutate` |
 | cla-manager POST | unknown email | denied callers get 403; allowed callers fail at user lookup |
 | cla-manager DELETE | LFID that is not a manager | denied callers get 403; allowed callers get 4xx |
 | cla-manager-designee POST | unknown email | fixture CCLA is signed, service refuses before any change; open to any logged-in user by design |

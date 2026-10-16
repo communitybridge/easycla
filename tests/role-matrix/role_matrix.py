@@ -20,9 +20,10 @@ import urllib.request
 GATEWAY_DENY = "does not have access to resource or path"
 ROLES = ("manager", "orgadmin", "member", "outsider", "anon")
 SENTINEL_EMAIL = "role-matrix-no-such-user@example.invalid"
+DEV_APP_URL = "https://api-gw.dev.platform.linuxfoundation.org/"
 
-# Expectation vocabulary: an int = exact status; "ok" = 2xx; "not403" = any status but
-# 403 (the probe body is rejected later for a safe reason); "rec" = record only.
+# Expectation vocabulary: an int = exact status; "ok" = 2xx; "not403" = a 4xx other than 401/403
+# (authorized, then the probe body is rejected for a safe reason); "rec" = record only.
 #   name, method, path template, body, {role: expectation}, needs (fixture keys)
 ENDPOINTS = [
     ("org.cla-groups", "GET", "company/external/{sfid}/cla-groups", None,
@@ -53,7 +54,7 @@ ENDPOINTS = [
     ("approval-list.put", "PUT", "signatures/project/{proj}/company/{co}/clagroup/{grp}/approval-list", {},
      dict(manager="not403", orgadmin=403, member=403, outsider=403, anon=401), ()),
     ("ecla-auto-create.put", "PUT", "signatures/company/{co}/clagroup/{grp}/ecla-auto-create", "AUTO_ECLA_CURRENT",
-     dict(manager="ok", orgadmin=403, member=403, outsider=403, anon=401), ("auto_ecla", "dev")),  # still a write
+     dict(orgadmin=403, member=403, outsider=403, anon=401), ("auto_ecla",)),  # an allowed caller rewrites the flag: deny side only
     ("cla-manager.post", "POST", "company/{co}/project/{proj}/cla-manager",
      {"firstName": "Role", "lastName": "Matrix", "userEmail": SENTINEL_EMAIL},
      dict(manager="not403", orgadmin=403, member=403, outsider=403, anon=401), ()),
@@ -72,14 +73,15 @@ ENDPOINTS = [
      dict(orgadmin=403, member=403, outsider=403, anon=401), ()),  # deny side only
 ]
 
-# --mutate: manager allow-side probes with cleanup, in order.
+# --mutate: manager allow-side writes as (probe, cleanup); a cleanup runs even when its probe fails or raises.
 MUTATIONS = [
-    ("approval-list.add", "PUT", "signatures/project/{proj}/company/{co}/clagroup/{grp}/approval-list",
-     {"AddEmailApprovalList": [SENTINEL_EMAIL]}),
-    ("approval-list.remove", "PUT", "signatures/project/{proj}/company/{co}/clagroup/{grp}/approval-list",
-     {"RemoveEmailApprovalList": [SENTINEL_EMAIL]}),
-    ("ecla-auto-create.toggle", "PUT", "signatures/company/{co}/clagroup/{grp}/ecla-auto-create", "AUTO_ECLA_FLIPPED"),
-    ("ecla-auto-create.restore", "PUT", "signatures/company/{co}/clagroup/{grp}/ecla-auto-create", "AUTO_ECLA_CURRENT"),
+    (("approval-list.add", "PUT", "signatures/project/{proj}/company/{co}/clagroup/{grp}/approval-list",
+      {"AddEmailApprovalList": [SENTINEL_EMAIL]}),
+     ("approval-list.remove", "PUT", "signatures/project/{proj}/company/{co}/clagroup/{grp}/approval-list",
+      {"RemoveEmailApprovalList": [SENTINEL_EMAIL]})),
+    # Current value, not a flip: turning the flag on creates ECLAs that turning it off does not remove.
+    (("ecla-auto-create.put", "PUT", "signatures/company/{co}/clagroup/{grp}/ecla-auto-create", "AUTO_ECLA_CURRENT"),
+     None),
 ]
 
 
@@ -200,18 +202,26 @@ def matches(expect, status):
     if expect == "ok":
         return 200 <= status < 300
     if expect == "not403":
-        return status != 403
+        return 400 <= status < 500 and status not in (401, 403)
     return status == expect
 
 
 def render_body(body, fx):
     if body == "AUTO_ECLA_CURRENT":
         return {"auto_create_ecla": fx["auto_ecla"]}
-    if body == "AUTO_ECLA_FLIPPED":
-        return {"auto_create_ecla": not fx["auto_ecla"]}
     if isinstance(body, dict):
         return {k: (v.format(**fx) if isinstance(v, str) else v) for k, v in body.items()}
     return body
+
+
+def mutate(base, fx, p, step):
+    name, method, path, body = step
+    status, resp = http(method, base + path.format(**fx), p["token"], render_body(body, fx))
+    ok = 200 <= status < 300
+    print("  %-28s %s%s" % (name, status, "" if ok else "  !=2xx " + json.dumps(resp)[:160]))
+    return {"endpoint": name, "method": method, "persona": p["name"], "role": p["role"],
+            "expected": "ok", "status": status, "label": str(status), "ok": ok,
+            "message": json.dumps(resp)[:160] if not ok else None}
 
 
 def main():
@@ -222,11 +232,10 @@ def main():
     ap.add_argument("--json", help="write full results to this file")
     args = ap.parse_args()
     load_env(args.env)
-    os.environ.setdefault("APP_URL", "https://api-gw.dev.platform.linuxfoundation.org/")
+    os.environ.setdefault("APP_URL", DEV_APP_URL)
     os.environ.setdefault("AUTH0_TOKEN_API", "https://linuxfoundation-dev.auth0.com/oauth/token")
     base = os.environ["APP_URL"].rstrip("/") + "/cla-service/v4/"
-    is_dev = ".dev." in base
-    if args.mutate and not is_dev:
+    if args.mutate and os.environ["APP_URL"].rstrip("/") != DEV_APP_URL.rstrip("/"):  # exact: no look-alike host or user-info
         raise SystemExit("--mutate is dev only")
     fx = {
         "co": os.environ.get("RM_COMPANY_ID", "f7c7ac9c-4dbf-4104-ab3f-6b38a26d82dc"),           # Infosys Limited (dev)
@@ -234,7 +243,6 @@ def main():
         "proj": os.environ.get("RM_PROJECT_SFID", "a09P000000DsCE5IAN"),                       # SUN (dev)
         "grp": os.environ.get("RM_CLA_GROUP_ID", "01af041c-fa69-4052-a23c-fb8c1d3bef24"),
         "non_manager_lfid": os.environ.get("RM_NON_MANAGER_LFID", "role-matrix-no-such-lfid"),
-        "dev": True if is_dev else None,
     }
     personas = load_personas()
     fx.update(discover(base, personas, fx))
@@ -244,7 +252,7 @@ def main():
     print("ccla     signature=%s auto_ecla=%s acl=%s" % (fx.get("ccla_sig"), fx.get("auto_ecla"), fx.get("ccla_acl")))
     print("ecla     signature=%s" % fx.get("ecla_sig", "(not discoverable with these personas)"))
     for p in personas:
-        in_acl = p["username"] in (fx.get("ccla_acl") or [])
+        in_acl = p["username"] != "?" and p["username"] in (fx.get("ccla_acl") or [])
         print("persona  %-10s role=%-8s user=%-20s in_ccla_acl=%s" % (p["name"], p["role"], p["username"], in_acl))
         if p["role"] == "manager" and not in_acl:
             print("         WARNING: manager persona is not in the CCLA ACL; expectations will not hold")
@@ -252,7 +260,7 @@ def main():
             print("         WARNING: %s persona is a CLA manager on this CCLA; expectations will not hold" % p["role"])
     print()
 
-    results, failures, skipped = [], 0, []
+    results, skipped = [], []
     width = max(len(e[0]) for e in ENDPOINTS)
     print("%-*s %-7s %s" % (width, "endpoint", "method", "  ".join("%-24s" % p["name"] for p in personas)))
     for name, method, path, body, expect, needs in ENDPOINTS:
@@ -269,7 +277,6 @@ def main():
             status, resp = http(method, base + path.format(**fx), p["token"], render_body(body, fx))
             label = classify(status, resp)
             ok = matches(exp, status)
-            failures += 0 if ok else 1
             cells.append("%-24s" % ("%s %s%s" % (label, "" if ok else "!=", "" if ok else exp)))
             results.append({"endpoint": name, "method": method, "path": path.format(**fx), "persona": p["name"],
                             "role": p["role"], "expected": exp, "status": status, "label": label, "ok": ok,
@@ -282,14 +289,12 @@ def main():
             print("\n--mutate: no manager persona; skipping allow-side writes")
         for p in managers[:1]:
             print("\nmutations as %s (%s):" % (p["name"], p["username"]))
-            for name, method, path, body in MUTATIONS:
-                status, resp = http(method, base + path.format(**fx), p["token"], render_body(body, fx))
-                ok = 200 <= status < 300
-                failures += 0 if ok else 1
-                print("  %-28s %s%s" % (name, status, "" if ok else "  !=2xx " + json.dumps(resp)[:160]))
-                results.append({"endpoint": name, "method": method, "persona": p["name"], "role": p["role"],
-                                "expected": "ok", "status": status, "label": str(status), "ok": ok,
-                                "message": json.dumps(resp)[:160] if not ok else None})
+            for probe, cleanup in MUTATIONS:
+                try:
+                    results.append(mutate(base, fx, p, probe))
+                finally:
+                    if cleanup:
+                        results.append(mutate(base, fx, p, cleanup))
 
     for name, why in skipped:
         print("skipped  %-26s %s" % (name, why))
@@ -297,6 +302,7 @@ def main():
         if not r["ok"]:
             print("MISMATCH %s %s as %s: got %s, expected %s: %s"
                   % (r["method"], r["endpoint"], r["persona"], r["label"], r["expected"], (r.get("message") or "")[:160]))
+    failures = sum(not r["ok"] for r in results)
     print("\n%d checks, %d mismatches" % (len(results), failures))
     if args.json:
         with open(args.json, "w") as f:
