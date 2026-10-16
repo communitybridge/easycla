@@ -148,7 +148,7 @@ def load_personas():
     names = set()
     for key in os.environ:
         m = re.match(r"^RM_([A-Z0-9_]+?)_(TOKEN|USERNAME)$", key)
-        if m:
+        if m and os.environ[key]:  # blank template entries skip the persona
             names.add(m.group(1))
     for name in sorted(names):
         role = re.sub(r"[0-9_]+$", "", name).lower()
@@ -257,7 +257,8 @@ def main():
         if p["role"] == "manager" and not in_acl:
             print("         WARNING: manager persona is not in the CCLA ACL; expectations will not hold")
         if p["role"] in ("orgadmin", "member", "outsider") and in_acl:
-            print("         WARNING: %s persona is a CLA manager on this CCLA; expectations will not hold" % p["role"])
+            raise SystemExit("%s persona %s is a CLA manager on this CCLA: its deny-side write probes would succeed"
+                             % (p["role"], p["name"]))
     print()
 
     results, skipped = [], []

@@ -27,7 +27,8 @@ project|organization scopes, so v4 manager writes, which refuse the admin shortc
 toggles this.
 
 The run prints each persona's LFID and whether it is in the CCLA ACL, so a mis-assigned
-persona is visible before the table.
+persona is visible before the table. It stops before any probe when an `orgadmin`, `member` or
+`outsider` persona is in the ACL, because that persona's deny-side write probes would succeed.
 
 ## Running
 
@@ -80,6 +81,8 @@ Defaults match `tests/functional/cypress/appConfig/config.dev.ts`. Override with
 its ACL, the auto-ECLA flag and an ECLA signature id are discovered at run time; the ECLA id
 needs a persona that can read the ECLA list (a manager).
 
-For prod, put `APP_URL`/`AUTH0_TOKEN_API`/`AUTH0_CLIENT_ID` and the fixtures (a company you are
-a CLA manager of) in a separate file and pass `--env prod.env`, so the dev `.env` personas are
-not loaded. `--mutate` refuses any target that is not dev.
+For prod, put `APP_URL`/`AUTH0_TOKEN_API`/`AUTH0_CLIENT_ID` and the fixtures (a QA company you
+are a CLA manager of) in a separate file and pass `--env prod.env`, so the dev `.env` personas are
+not loaded. `--mutate` refuses any target that is not dev. Deny-side write probes still run on
+prod; they change nothing unless authorization is broken, which is why the fixture must be a QA
+company.
