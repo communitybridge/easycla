@@ -31,8 +31,8 @@ import (
 var (
 	// ErrGitHubRepositoryNotFound is returned when github repository is not found
 	ErrGitHubRepositoryNotFound = errors.New("github repository not found")
-	NoreplyIDPattern            = regexp.MustCompile(`^(\d+)\+([a-zA-Z0-9-]+)@users\.noreply\.github\.com$`)
-	NoreplyUserPattern          = regexp.MustCompile(`^([a-zA-Z0-9-]+)@users\.noreply\.github\.com$`)
+	NoreplyIDPattern            = regexp.MustCompile(`^(\d+)\+([a-zA-Z0-9-]+(?:\[bot\])?)@users\.noreply\.github\.com$`)
+	NoreplyUserPattern          = regexp.MustCompile(`^([a-zA-Z0-9-]+(?:\[bot\])?)@users\.noreply\.github\.com$`)
 	GithubUsernameRegex         = regexp.MustCompile(`^[A-Za-z0-9-]{3,39}$`)
 	ListCommitsParallelLimit    = 4
 )

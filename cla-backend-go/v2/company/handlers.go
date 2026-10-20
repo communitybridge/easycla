@@ -694,6 +694,16 @@ func Configure(api *operations.EasyclaAPI, service Service, projectClaGroupRepo 
 			// V1 corporate console has been shut down - always use V2 console
 			corporateLink := LFXPortalURL
 
+			// the body is optional in the generated binding: an omitted body leaves the required email nil
+			if params.Body.ClaManagerEmail == nil {
+				return company.NewRequestCompanyAdminBadRequest().WithXRequestID(reqID).WithPayload(
+					&models.ErrorResponse{
+						Message:    "claManagerEmail is required",
+						Code:       "400",
+						XRequestID: reqID,
+					})
+			}
+
 			err := service.RequestCompanyAdmin(ctx, params.UserID, params.Body.ClaManagerEmail.String(), params.Body.ClaManagerName, params.Body.ContributorName, params.Body.ContributorEmail.String(), params.Body.ProjectName, params.Body.CompanyName, corporateLink)
 			if err != nil {
 

@@ -126,6 +126,12 @@ func (s *service) AddGithubRepository(ctx context.Context, externalProjectID str
 	}
 
 	if existingModel != nil {
+		// Never re-bind a repository record that was registered under another project - the caller is only
+		// authorized for projectSFID (lfx-self-serve-ops#751)
+		if bindErr := repositoryBoundToOtherProject(existingModel, projectSFID); bindErr != nil {
+			log.WithFields(f).WithError(bindErr).Warn("existing repository belongs to another project - refusing to re-bind it")
+			return nil, bindErr
+		}
 		log.WithFields(f).Debug("existing repository found - enabling it...")
 		enableErr := s.EnableRepositoryWithCLAGroupID(ctx, existingModel.RepositoryID, utils.StringValue(input.RepositoryProjectID))
 		if enableErr != nil {
@@ -138,6 +144,22 @@ func (s *service) AddGithubRepository(ctx context.Context, externalProjectID str
 
 	// Doesn't exist - create it
 	return s.repo.GitHubAddRepository(ctx, externalProjectID, projectSFID, input)
+}
+
+// repositoryBoundToOtherProject returns an error when the stored repository record carries a project binding
+// (project_sfid or repository_sfdc_id) that differs from the project the caller is authorized for; records without
+// any project binding are left untouched
+func repositoryBoundToOtherProject(existing *models.GithubRepository, projectSFID string) error {
+	if existing == nil {
+		return nil
+	}
+	for _, boundProjectSFID := range []string{existing.RepositoryProjectSfid, existing.RepositorySfdcID} {
+		if boundProjectSFID != "" && boundProjectSFID != projectSFID {
+			return fmt.Errorf("github repository %s is already registered under project %s and cannot be added to project %s",
+				existing.RepositoryName, boundProjectSFID, projectSFID)
+		}
+	}
+	return nil
 }
 
 func (s *service) EnableRepository(ctx context.Context, repositoryID string) error {

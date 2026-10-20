@@ -12,9 +12,11 @@ blockingLabels:
 - blocked
 
 # Will merge whenever the above conditions are met, but also
-# the owner has approved or merge label was added.
+# a collaborator (write access) has approved or merge label was added.
+# Rules must never relax the global COLLABORATOR approval requirement
+# (lfx-self-serve-ops#740).
 rules:
 - minApprovals:
-    CONTRIBUTOR: 1
+    COLLABORATOR: 1
 - requiredLabels:
   - merge

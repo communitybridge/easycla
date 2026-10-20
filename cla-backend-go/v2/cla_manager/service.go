@@ -1226,6 +1226,10 @@ func (s *service) NotifyCLAManagers(ctx context.Context, notifyCLAManagers *mode
 	for _, pcg := range pcgs {
 		projectSFIDs = append(projectSFIDs, pcg.ProjectSFID)
 	}
+	if len(projectSFIDs) == 0 {
+		log.WithFields(f).Warnf("no project mappings found for claGroupID: %s", notifyCLAManagers.ClaGroupID)
+		return fmt.Errorf("no project mappings found for CLA group ID: %s", notifyCLAManagers.ClaGroupID)
+	}
 
 	log.Debugf("Sending notification emails to CLA Managers: %+v", notifyCLAManagers.List)
 	pullRequestURL := sanitizePullRequestURL(ctx, notifyCLAManagers.PullRequestURL)

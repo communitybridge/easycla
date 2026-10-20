@@ -14,8 +14,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/linuxfoundation/easycla/cla-backend-legacy/internal/parity"
 )
 
 type Service struct {
@@ -38,15 +36,12 @@ func (s *Service) ValidateOrganization(ctx context.Context, endpoint string) (ma
 		return nil, http.StatusOK, nil
 	}
 
-	// Python parity: validate_organization() does requests.get(endpoint) with no
-	// scheme/host validation. POST /v1/github/validate is unauthenticated, so the
-	// permissive behavior is an SSRF primitive. EnableGithubValidateSSRFGuard
-	// (default OFF) preserves Python parity; flipping it ON restores the original
-	// Go hardening (http(s)-only, no IP literals, allowlist of GitHub hosts).
-	if parity.EnableGithubValidateSSRFGuard {
-		if status, err := validateOrganizationEndpointSafe(endpoint); err != nil {
-			return nil, status, err
-		}
+	// Python's validate_organization() did requests.get(endpoint) with no scheme/host
+	// validation. POST /v1/github/validate is unauthenticated, so that permissive
+	// behavior is an SSRF primitive: the guard (http(s)-only, no IP literals,
+	// allowlist of GitHub hosts) is enforced unconditionally (lfx-self-serve-ops#788).
+	if status, err := validateOrganizationEndpointSafe(endpoint); err != nil {
+		return nil, status, err
 	}
 
 	reqCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -81,9 +76,9 @@ func (s *Service) ValidateOrganization(ctx context.Context, endpoint string) (ma
 	return map[string]string{"status": "error"}, http.StatusOK, nil
 }
 
-// validateOrganizationEndpointSafe is the opt-in SSRF guard previously applied
-// unconditionally. It rejects non-http(s) schemes, IP literals, and any host
-// outside the GitHub allowlist. Returns (httpStatus, err) on rejection;
+// validateOrganizationEndpointSafe is the SSRF guard for the organization endpoint.
+// It rejects non-http(s) schemes, IP literals, and any host outside the GitHub
+// allowlist. Returns (httpStatus, err) on rejection;
 // (0, nil) when the endpoint passes.
 func validateOrganizationEndpointSafe(endpoint string) (int, error) {
 	parsed, err := url.Parse(endpoint)

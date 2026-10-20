@@ -413,7 +413,7 @@ func Configure(api *operations.EasyclaAPI, service ServiceInterface, eventServic
 		f := logrus.Fields{
 			"functionName":   "gitlab_organization.handlers.GitlabActivityGitlabOauthCallbackHandler",
 			utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
-			"code":           params.Code,
+			"codeProvided":   params.Code != nil && *params.Code != "",
 			"state":          params.State,
 		}
 
@@ -460,7 +460,7 @@ func Configure(api *operations.EasyclaAPI, service ServiceInterface, eventServic
 						return
 					}
 
-					log.WithFields(f).Debugf("Loaded session: %+v", session.Values)
+					log.WithFields(f).Debugf("Loaded session with %d values", len(session.Values))
 					state, ok := session.Values["gitlab_oauth2_state"].(string)
 					if !ok {
 						msg := "Error getting session state - missing from session object"
@@ -516,13 +516,19 @@ func Configure(api *operations.EasyclaAPI, service ServiceInterface, eventServic
 					// Get client
 					gitlabClient, err := gitlabApi.NewGitlabOauthClientFromAccessToken(token.AccessToken)
 					if err != nil {
-						msg := fmt.Sprintf("unable to create gitlab client from token : %s ", token.AccessToken)
-						log.WithFields(f).Warn(msg)
+						msg := "unable to create gitlab client from access token"
+						log.WithFields(f).WithError(err).Warn(msg)
 						http.Error(rw, msg, http.StatusInternalServerError)
 						return
 					}
 
 					consoleURL, err := service.InitiateSignRequest(ctx, params.HTTPRequest, gitlabClient, repositoryID, mergeRequestID, gitlabOriginURL, contributorConsoleV2Base, eventService)
+					if err != nil || consoleURL == nil {
+						msg := "unable to initiate the sign request"
+						log.WithFields(f).WithError(err).Warn(msg)
+						http.Error(rw, msg, http.StatusInternalServerError)
+						return
+					}
 					log.WithFields(f).Debugf("redirecting to :%s ", *consoleURL)
 					http.Redirect(rw, params.HTTPRequest, *consoleURL, http.StatusSeeOther)
 				})
@@ -545,7 +551,7 @@ func Configure(api *operations.EasyclaAPI, service ServiceInterface, eventServic
 			log.WithFields(f).WithError(err).Warn(msg)
 			return NewServerError(reqID, "", errors.New(msg))
 		}
-		log.WithFields(f).Debugf("oauth resp is like : %+v", oauthResp)
+		log.WithFields(f).Debugf("oauth response received - token type: %s, expires in: %d seconds", oauthResp.TokenType, oauthResp.ExpiresIn)
 
 		// track the expiry time of the token
 		expiryTime := time.Now().Add(time.Duration(oauthResp.ExpiresIn) * time.Second).Unix()

@@ -344,3 +344,52 @@ func TestInvalidateByUserNormalizesLoginCase(t *testing.T) {
 	_, ok = ModelUserCache.Get(uKey)
 	assert.False(t, ok, "user cache entry must be gone")
 }
+
+func TestNoreplyPatternsAcceptBotLogins(t *testing.T) {
+	idCases := []struct {
+		email string
+		id    string
+		login string
+	}{
+		{"29139614+renovate[bot]@users.noreply.github.com", "29139614", "renovate[bot]"},
+		{"49699333+dependabot[bot]@users.noreply.github.com", "49699333", "dependabot[bot]"},
+		{"196905385+lukaszgryglicki2@users.noreply.github.com", "196905385", "lukaszgryglicki2"},
+	}
+	for _, tc := range idCases {
+		matches := NoreplyIDPattern.FindStringSubmatch(tc.email)
+		if assert.NotNil(t, matches, tc.email) {
+			assert.Equal(t, tc.id, matches[1], tc.email)
+			assert.Equal(t, tc.login, matches[2], tc.email)
+		}
+		assert.Nil(t, NoreplyUserPattern.FindStringSubmatch(tc.email), tc.email)
+	}
+
+	userCases := []struct {
+		email string
+		login string
+	}{
+		{"renovate[bot]@users.noreply.github.com", "renovate[bot]"},
+		{"lukaszgryglicki2@users.noreply.github.com", "lukaszgryglicki2"},
+	}
+	for _, tc := range userCases {
+		matches := NoreplyUserPattern.FindStringSubmatch(tc.email)
+		if assert.NotNil(t, matches, tc.email) {
+			assert.Equal(t, tc.login, matches[1], tc.email)
+		}
+		assert.Nil(t, NoreplyIDPattern.FindStringSubmatch(tc.email), tc.email)
+	}
+
+	for _, email := range []string{
+		"x[bot@users.noreply.github.com",
+		"[bot]@users.noreply.github.com",
+		"1+[bot]@users.noreply.github.com",
+		"1+a[bot]x@users.noreply.github.com",
+		"a[bot][bot]@users.noreply.github.com",
+		"a[bot]@users.noreply.github.co",
+		"a[bot]@users.noreply.github.com.evil.example",
+		"1+a[bot]@example.com",
+	} {
+		assert.Nil(t, NoreplyIDPattern.FindStringSubmatch(email), email)
+		assert.Nil(t, NoreplyUserPattern.FindStringSubmatch(email), email)
+	}
+}
