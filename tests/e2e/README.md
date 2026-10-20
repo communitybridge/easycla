@@ -129,8 +129,8 @@ e-mail addresses and fixture ids).
 
 ## Expected INFO / SKIP rows (not defects)
 
-* `legacy_api` `LG-V2-LAST-SIGNATURE-*`: the DocuSign callback URL is still part of the last-signature body
-  (known, tracked separately); only secrets are asserted absent.
+* `legacy_api` `LG-V2-LAST-SIGNATURE-URL-KEYS`: INFO-only inventory of the url keys in the last-signature body;
+  only secrets are asserted absent.
 * `interactions.py` W3: after the manager role is revoked, org-level *reads* may stay 200 for a while
   (contact role on the company and the warden permission cache); writes are 403 immediately and that is what
   is asserted. ID2's user-service permissions feed lags ACS by up to 30 minutes — the suite reads ACS directly.

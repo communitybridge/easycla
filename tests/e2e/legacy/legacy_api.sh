@@ -40,7 +40,7 @@ PY
 )
 if [ -z "$leak" ]; then e2e_result LG-V2-LAST-SIGNATURE-NO-SECRETS PASS "last-signature body carries no DocuSign raw XML / envelope id"
 else e2e_result LG-V2-LAST-SIGNATURE-NO-SECRETS FAIL "secret keys present in last-signature body: $leak"; fi
-# ops#350 strips only the raw XML and the envelope id; the DocuSign callback/sign/return urls are still served (known, prod)
+# url-key inventory of the last-signature body (INFO only)
 e2e_result LG-V2-LAST-SIGNATURE-URL-KEYS INFO "url keys still in the last-signature body: ${urls:-none}"
 
 # ---- L: anonymous public v2 readers (unchanged) ------------------------------------------------------------------
