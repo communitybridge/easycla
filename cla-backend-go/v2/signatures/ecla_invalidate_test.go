@@ -23,6 +23,7 @@ import (
 	"github.com/linuxfoundation/easycla/cla-backend-go/gen/v2/models"
 	"github.com/linuxfoundation/easycla/cla-backend-go/gen/v2/restapi/operations"
 	sigOps "github.com/linuxfoundation/easycla/cla-backend-go/gen/v2/restapi/operations/signatures"
+	"github.com/linuxfoundation/easycla/cla-backend-go/github"
 	ini "github.com/linuxfoundation/easycla/cla-backend-go/init"
 	mock_project "github.com/linuxfoundation/easycla/cla-backend-go/project/mocks"
 	"github.com/linuxfoundation/easycla/cla-backend-go/projects_cla_groups"
@@ -70,6 +71,21 @@ func eclaEventArgs() *events.LogEventArgs {
 		EventType: events.InvalidatedSignature,
 		EventData: &events.ECLAInvalidatedEventData{},
 	}
+}
+
+// seedCachedPRCheckDecision stores a positive PR-check decision for the GitHub user in cla-group-1 in the per-project
+// cache that GetCommitAuthorSignedStatus consults first, and removes it again when the test ends
+func seedCachedPRCheckDecision(t *testing.T, githubID, login, email string) [4]string {
+	t.Helper()
+	key := github.ProjectUserKey("cla-group-1", githubID, login, email)
+	github.ModelProjectUserCache.Set(key, &v1Models.User{GithubID: githubID, GithubUsername: login}, true, true)
+	t.Cleanup(func() { github.ModelProjectUserCache.Delete(key) })
+	return key
+}
+
+func cachedPRCheckDecisionExists(key [4]string) bool {
+	_, _, _, ok := github.ModelProjectUserCache.Get(key)
+	return ok
 }
 
 func parentCCLA(managers ...string) *v1Models.Signature {
@@ -183,11 +199,17 @@ func TestService_InvalidateECLA(t *testing.T) {
 
 			mockUserService := mock_users.NewMockService(ctrl)
 			mockUserService.EXPECT().GetUser("user-1").
-				Return(&v1Models.User{UserID: "user-1", LfUsername: "contributor", Username: "Contributor", LfEmail: strfmt.Email("contributor@example.com")}, nil)
+				Return(&v1Models.User{UserID: "user-1", LfUsername: "contributor", Username: "Contributor", LfEmail: strfmt.Email("contributor@example.com"), GithubID: "12345", GithubUsername: "Contributor-GH"}, nil)
 
 			mockProjectService := mock_project.NewMockService(ctrl)
 			mockProjectService.EXPECT().GetCLAGroupByID(ctx, "cla-group-1").
-				Return(&v1Models.ClaGroup{ProjectName: "My Project", Version: "v2"}, nil)
+				Return(&v1Models.ClaGroup{ProjectID: "cla-group-1", ProjectName: "My Project", Version: "v2"}, nil)
+
+			// positive PR-check decisions cached before the invalidation on this instance - both commit email shapes of
+			// the contributor must go, another contributor's decision in the same CLA group must stay
+			contributorKey := seedCachedPRCheckDecision(t, "12345", "contributor-gh", "contributor@example.com")
+			noreplyKey := seedCachedPRCheckDecision(t, "12345", "contributor-gh", "12345+contributor-gh@users.noreply.github.com")
+			otherKey := seedCachedPRCheckDecision(t, "67890", "someone-else", "someone@example.com")
 
 			mockEvents := eventsMock.NewMockService(ctrl)
 			var logged *events.LogEventArgs
@@ -208,6 +230,10 @@ func TestService_InvalidateECLA(t *testing.T) {
 			input := &models.EclaInvalidationInput{Reason: "compliance", Note: "per legal\r\nreview\x07"}
 			result, err := service.InvalidateECLA(ctx, "cla-group-1", "sig-1", authUser, mockEvents, eclaEventArgs(), input)
 			assert.Nil(t, err)
+
+			assert.False(t, cachedPRCheckDecisionExists(contributorKey), "the contributor's cached PR-check decision is evicted")
+			assert.False(t, cachedPRCheckDecisionExists(noreplyKey), "every commit email shape of the contributor is evicted")
+			assert.True(t, cachedPRCheckDecisionExists(otherKey), "other contributors' cached decisions are kept")
 
 			if assert.NotNil(t, result) {
 				assert.Equal(t, "sig-1", result.SignatureID)
@@ -658,11 +684,13 @@ func TestService_InvalidateECLARequiresParentCCLAManager(t *testing.T) {
 			}
 			fx := newDeniedEclaFixture(ctx, t, ctrl, sig)
 			expectParentCCLALookup(ctx, t, fx.repo, tc.ccla, tc.lookupErr)
+			cachedKey := seedCachedPRCheckDecision(t, "12345", "contributor-gh", "contributor@example.com")
 
 			result, err := fx.svc.InvalidateECLA(ctx, "cla-group-1", "sig-1", managerUser, fx.events, eclaEventArgs(), &models.EclaInvalidationInput{Reason: "compliance"})
 			assert.Nil(t, result)
 			assert.ErrorIs(t, err, tc.expectedErr)
 			assert.Empty(t, fx.sender.sent, "a refused invalidation sends no notification")
+			assert.True(t, cachedPRCheckDecisionExists(cachedKey), "a refused invalidation evicts nothing")
 		})
 	}
 

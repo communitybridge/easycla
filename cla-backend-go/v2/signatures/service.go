@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/linuxfoundation/easycla/cla-backend-go/project/service"
 
@@ -27,6 +28,7 @@ import (
 	v1Models "github.com/linuxfoundation/easycla/cla-backend-go/gen/v1/models"
 	"github.com/linuxfoundation/easycla/cla-backend-go/gen/v2/models"
 	v2Sigs "github.com/linuxfoundation/easycla/cla-backend-go/gen/v2/restapi/operations/signatures"
+	"github.com/linuxfoundation/easycla/cla-backend-go/github"
 	log "github.com/linuxfoundation/easycla/cla-backend-go/logging"
 	"github.com/linuxfoundation/easycla/cla-backend-go/signatures"
 	"github.com/linuxfoundation/easycla/cla-backend-go/users"
@@ -369,6 +371,18 @@ func (s *Service) GetClaGroupCorporateContributors(ctx context.Context, params v
 	return &resp, nil
 }
 
+// evictCachedPRCheckDecisions drops this instance's cached PR-check decisions for the user in the CLA group after an
+// invalidation, so a warm instance does not keep authorizing commits from a positive entry cached before it - the same
+// best-effort, per-instance eviction the approval list removal path performs
+func evictCachedPRCheckDecisions(f logrus.Fields, projectID string, user *v1Models.User) {
+	githubID, githubLogin := strings.TrimSpace(user.GithubID), strings.TrimSpace(user.GithubUsername)
+	if githubID == "" || githubLogin == "" {
+		return
+	}
+	evicted := github.ModelProjectUserCache.InvalidateByUser(projectID, githubID, githubLogin)
+	log.WithFields(f).Infof("evicted %d cached PR-check decisions for github user %s in project %s after invalidation", evicted, githubLogin, projectID)
+}
+
 // InvalidateICLA invalidates the specified signature record using the supplied parameters -
 // input optionally carries the invalidation reason and note recorded on the record
 func (s *Service) InvalidateICLA(ctx context.Context, claGroupID string, userID string, authUser *auth.User, eventsService events.Service, eventArgs *events.LogEventArgs, input *models.IclaInvalidationInput) error {
@@ -425,6 +439,7 @@ func (s *Service) InvalidateICLA(ctx context.Context, claGroupID string, userID 
 		log.WithFields(f).Debug("unable to invalidate icla record")
 		return err
 	}
+	evictCachedPRCheckDecisions(f, claGroup.ProjectID, user)
 	// send email
 	email := utils.GetBestEmail(user)
 	log.WithFields(f).Debugf("sending invalidation email to : %s ", email)
@@ -566,6 +581,7 @@ func (s *Service) InvalidateECLA(ctx context.Context, claGroupID string, signatu
 		log.WithFields(f).Debug("unable to invalidate ecla record")
 		return nil, invalidateErr
 	}
+	evictCachedPRCheckDecisions(f, claGroup.ProjectID, user)
 
 	email := utils.GetBestEmail(user)
 	log.WithFields(f).Debugf("sending invalidation email to : %s ", email)

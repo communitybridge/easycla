@@ -7,7 +7,8 @@
 // Only findings that govulncheck reports as "called" (the first trace frame names a function) can fail the
 // check; import- and module-level findings are informational, exactly as in govulncheck's text mode. A called
 // finding is skipped when .govulncheck-allowlist.json lists it, either as "GO-YYYY-NNNN" (any module) or as
-// {"id": "GO-YYYY-NNNN", "module": "stdlib" | "<module path>"} (that module only). Anything else fails.
+// {"id": "GO-YYYY-NNNN", "module": "stdlib" | "<module path>"} (that module only). Anything else fails, and so does
+// a results file without govulncheck's leading config message (an empty or truncated scan must not pass).
 //
 // Usage: node scripts/govulncheck-filter.mjs <govulncheck-results.json> [.govulncheck-allowlist.json]
 import fs from "node:fs";
@@ -54,7 +55,9 @@ const symbol = (frame) => {
 const summaries = new Map(); // OSV id -> summary
 const called = new Map(); // "<id>@<module>" -> { id, module, version, fixed, sites }
 const notCalled = new Set(); // OSV ids seen only in import/module-level findings
+let sawConfig = false; // govulncheck always opens the stream with a config message
 for (const msg of jsonObjects(fs.readFileSync(resultsPath, "utf8"))) {
+  if (msg.config) sawConfig = true;
   if (msg.osv?.id) summaries.set(msg.osv.id, msg.osv.summary ?? "");
   const finding = msg.finding;
   if (!finding?.osv) continue;
@@ -73,6 +76,10 @@ for (const msg of jsonObjects(fs.readFileSync(resultsPath, "utf8"))) {
   called.get(key).sites.push(`${where}: ${symbol(entry)} -> ${symbol(vuln)}`);
 }
 for (const group of called.values()) notCalled.delete(group.id);
+if (!sawConfig) {
+  console.error(`govulncheck policy failure: no govulncheck config message in ${resultsPath} (empty or truncated scan output)`);
+  process.exit(2);
+}
 
 const describe = (g) => `${g.id} ${g.module}@${g.version} (fixed in ${g.fixed}, ${g.sites.length} call site(s)): ${summaries.get(g.id) ?? ""}`.trim();
 
