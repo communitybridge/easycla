@@ -232,7 +232,11 @@ export function m3(session, { sfid, name, group, sig }) {
     return last;
   }
 
-  const ackValid = (a) => a.approved !== false && !a.invalidatedOn && !a.dateInvalidated && !/invalid/i.test(String(a.state || a.status || ''));
+  // SS row contract (OrgClaContributorAcknowledgment): Not Authorized when removedFromApprovalList, Invalidated when approved
+  // is false OR any invalidation stamp is present - legacy rows can carry the stamps with approved: true and the UI refuses
+  // to invalidate them again
+  const ackValid = (a) => a.approved !== false && a.removedFromApprovalList !== true && !a.invalidatedAt && !a.invalidatedBy && !a.invalidationReason
+    && !a.invalidatedOn && !a.dateInvalidated && !/invalid/i.test(String(a.state || a.status || ''));
   const ackOf = (a, who, github) => a.lfLogin === who || (github && a.githubUsername === github) || JSON.stringify(a).includes(`"${who}"`);
   const ackId = (a) => a.signatureId || a.id;
   const ackState = (a) => (a ? (a.state || a.status || (a.approved === false ? `invalidated(by ${a.invalidatedBy || '?'} at ${a.invalidatedAt || '?'})` : 'approved')) : 'missing');

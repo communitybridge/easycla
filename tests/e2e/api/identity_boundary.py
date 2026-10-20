@@ -60,7 +60,8 @@ for who, other_rows in ((ID2, rows1), (ID1, rows2)):
     if ecla:
         sid = ecla["signatureID"]
         e2e.expect(f"IB-{who}-FOREIGN-MANAGERS-404", who, (404, 403), "GET", f"/v4/my-clas/{sid}/cla-managers")
-        e2e.expect(f"IB-{who}-FOREIGN-MANAGER-REQUEST-404", who, (404, 403, 400), "POST", f"/v4/my-clas/{sid}/cla-manager-requests",
+        # ownership is checked before the recipients (findOwnedEcla first): a 400 here would mean the foreign ECLA passed it
+        e2e.expect(f"IB-{who}-FOREIGN-MANAGER-REQUEST-404", who, (404, 403), "POST", f"/v4/my-clas/{sid}/cla-manager-requests",
                    {"requestType": "contact", "recipients": [ID1], "message": f"E2E {e2e.TAG} negative probe - must be refused"})
     else:
         e2e.skip(f"IB-{who}-FOREIGN-MANAGERS-404", "the other identity has no ECLA rows")
