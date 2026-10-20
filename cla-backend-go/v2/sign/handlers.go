@@ -50,7 +50,7 @@ func DocusignMiddleware(next http.Handler) http.Handler {
 		}
 		r.Body.Close()
 		r.Body = io.NopCloser(bytes.NewBuffer(iclaGitHubPayload))
-		log.WithFields(f).Debugf("docusign middleware...payload: %s", string(iclaGitHubPayload))
+		log.WithFields(f).Debugf("docusign middleware...payload: %d bytes", len(iclaGitHubPayload))
 		// call the next middleware
 		next.ServeHTTP(w, r)
 	})
@@ -71,7 +71,7 @@ func CCLADocusignMiddleware(next http.Handler) http.Handler {
 		}
 		r.Body.Close()
 		r.Body = io.NopCloser(bytes.NewBuffer(cclaDocusignPayload))
-		log.WithFields(f).Debugf("docusign middleware...payload: %s", string(cclaDocusignPayload))
+		log.WithFields(f).Debugf("docusign middleware...payload: %d bytes", len(cclaDocusignPayload))
 		// call the next middleware
 		next.ServeHTTP(w, r)
 	})

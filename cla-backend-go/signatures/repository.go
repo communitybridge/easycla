@@ -2999,10 +2999,20 @@ func (repo repository) GetProjectCompanyEmployeeSignature(ctx context.Context, c
 		return
 	}
 
+	// An invalidated acknowledgment must not shadow a later re-acknowledgment; it is only reported as the user's
+	// record (flagged Invalidated) when every record of the user was invalidated.
+	selected := signatureList[0]
+	for _, candidate := range signatureList {
+		if !invalidated[candidate.SignatureID] {
+			selected = candidate
+			break
+		}
+	}
+
 	resultChannel <- &EmployeeModel{
-		Signature:   signatureList[0],
+		Signature:   selected,
 		User:        employeeUserModel,
-		Invalidated: invalidated[signatureList[0].SignatureID],
+		Invalidated: invalidated[selected.SignatureID],
 	}
 }
 

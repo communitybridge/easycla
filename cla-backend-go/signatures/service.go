@@ -1787,6 +1787,11 @@ func (s service) ProcessEmployeeSignature(ctx context.Context, companyModel *mod
 				// log.WithFields(f).Debugf("ECLA Signature check - located employee acknowledgment - signature id: %s", employeeSignature.SignatureID)
 				log.WithFields(f).Debugf("ecla signature check -  :%+v", employeeSignature)
 
+				if result.Invalidated {
+					log.WithFields(f).Debugf("ECLA Signature check - employee acknowledgment %s for user: %s, company: %s, project: %s was invalidated - not authorized until re-acknowledged", employeeSignature.SignatureID, user.UserID, companyID, projectID)
+					continue
+				}
+
 				// Get corporate ccla signature of company to access the approval list
 				cclaSignature, cclaErr := s.GetCorporateSignature(ctx, projectID, companyID, &approved, &signed)
 				if cclaErr != nil {

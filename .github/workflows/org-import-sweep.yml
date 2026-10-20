@@ -195,6 +195,16 @@ jobs:
           mkdir -p org-import-out
           run_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?name=org-import-state-${STAGE}&per_page=10" \
             --jq '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | last | .workflow_run.id // empty')"
+          # Only a journal uploaded by this workflow from this repository's default branch may be resumed; any other
+          # run (fork PR, other workflow or branch) can upload an artifact with the same name (lfx-self-serve-ops#728)
+          workflow_path="${GITHUB_WORKFLOW_REF#"${GITHUB_REPOSITORY}/"}"; workflow_path="${workflow_path%@*}"
+          default_branch="$(gh api "repos/${GITHUB_REPOSITORY}" --jq .default_branch)"
+          if [ -n "$run_id" ] && ! gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" \
+              | jq -e --arg path "$workflow_path" --arg repo "$GITHUB_REPOSITORY" --arg branch "$default_branch" \
+                '.path == $path and .head_branch == $branch and .head_repository.full_name == $repo' > /dev/null; then
+            echo "::error::state artifact org-import-state-${STAGE} belongs to untrusted run ${run_id}; refusing to resume it"
+            exit 1
+          fi
           if [ -n "$run_id" ]; then
             # a state artifact exists: failing to restore it must fail the job, never start from an empty journal
             gh run download "$run_id" -n "org-import-state-${STAGE}" -D org-import-out
