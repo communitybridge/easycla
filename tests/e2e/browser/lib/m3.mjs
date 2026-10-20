@@ -65,7 +65,10 @@ export function m3(session, { sfid, name, group, sig }) {
       // paginated / long lists (8 cards per page): filter through the native search input (the lfx-input-text host
       // element carries the placeholder too, so target the input itself), then fall back to paging with "Next"
       const search = page.locator('input#org-easycla-search-input, input[placeholder*="Search CLA"]').first();
-      if (await search.count()) { await search.fill(e2e.cfg('M3_CLA_GROUP_NAME', e2e.cfg('CLA_GROUP_NAME'))); await sleep(3000); seen = await e2e.visible(card, 15000); }
+      // search by the name of the fixture's own CLA group: bridge opens the CLA-only fixture (group: CLA_GROUP), the M3
+      // flows open the M3 fixture - on dev these are different CLA groups signed by the same organization
+      const groupName = group === e2e.cfg('CLA_GROUP') ? e2e.cfg('CLA_GROUP_NAME') : e2e.cfg('M3_CLA_GROUP_NAME', e2e.cfg('CLA_GROUP_NAME'));
+      if (await search.count()) { await search.fill(groupName); await sleep(3000); seen = await e2e.visible(card, 15000); }
       for (let i = 0; i < 10 && !seen; i++) {
         const next = page.getByTestId('org-easycla-next-page').getByRole('button');
         if (!(await next.count()) || !(await next.isEnabled().catch(() => false))) break;
