@@ -45,6 +45,7 @@ const (
 	authzICLAID     = "44444444-4444-4444-8444-444444444444"
 	authzRepoID     = "55555555-5555-4555-8555-555555555555"
 	authzRepoNoSFID = "66666666-6666-4666-8666-666666666666"
+	authzRepoV4     = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
 	authzGerritID   = "77777777-7777-4777-8777-777777777777"
 	authzCompanyID  = "88888888-8888-4888-8888-888888888888"
 	authzUserAlice  = "99999999-9999-4999-8999-999999999999"
@@ -330,6 +331,11 @@ func newLegacyAuthzHarness(t *testing.T) *legacyAuthzHarness {
 		"repository_id": dynS(authzRepoNoSFID), "repository_project_id": dynS(authzCLAGroupA),
 		"repository_name": dynS("org-a/legacy"), "repository_type": dynS("github"), "repository_url": dynS("https://github.com/org-a/legacy"),
 	})
+	// v4-registered row: the parent foundation (A) sits in repository_sfdc_id, the owning child project (B) in project_sfid
+	dyn.seed(store.TableName("repositories"), "repository_id", map[string]any{
+		"repository_id": dynS(authzRepoV4), "repository_project_id": dynS(authzCLAGroupB), "repository_sfdc_id": dynS(authzSFIDA), "project_sfid": dynS(authzSFIDB),
+		"repository_name": dynS("org-b/repo"), "repository_type": dynS("github"), "repository_url": dynS("https://github.com/org-b/repo"), "enabled": dynBool(true),
+	})
 	dyn.seed(store.TableName("gerrit-instances"), "gerrit_id", map[string]any{
 		"gerrit_id": dynS(authzGerritID), "project_id": dynS(authzCLAGroupA), "gerrit_name": dynS("Gerrit A"), "gerrit_url": dynS("https://gerrit.a.example.org"),
 	})
@@ -512,6 +518,18 @@ func TestLegacyRepositoryGuards(t *testing.T) {
 		}
 		hz.assertSingleWrite(t, "PutItem", "repositories")
 	})
+	t.Run("put: v4 row is owned by project_sfid, not the foundation in repository_sfdc_id", func(t *testing.T) {
+		hz.dyn.resetWrites()
+		code, body := hz.call(t, "manager-a", http.MethodPut, "/v1/repository", map[string]any{"repository_id": authzRepoV4, "repository_name": "foundation-renamed"})
+		assertNotAuthorizedForSFID(t, code, body, authzSFIDB)
+		hz.assertNoWrites(t)
+
+		code, body = hz.call(t, "manager-b", http.MethodPut, "/v1/repository", map[string]any{"repository_id": authzRepoV4, "repository_name": "child-renamed"})
+		if code != http.StatusOK || body["repository_name"] != "child-renamed" {
+			t.Fatalf("expected child project manager to update the repository, got %d %v", code, body)
+		}
+		hz.assertSingleWrite(t, "PutItem", "repositories")
+	})
 	t.Run("put: record without SFID resolves its CLA group's project", func(t *testing.T) {
 		hz.dyn.resetWrites()
 		code, body := hz.call(t, "manager-b", http.MethodPut, "/v1/repository", map[string]any{"repository_id": authzRepoNoSFID, "repository_name": "legacy-renamed"})
@@ -575,13 +593,48 @@ func TestLegacySignatureGuards(t *testing.T) {
 		}
 		hz.assertSingleWrite(t, "PutItem", "signatures")
 	})
-	t.Run("put: referenced user may update own individual signature", func(t *testing.T) {
+	t.Run("put: referenced user may not touch their own individual signature", func(t *testing.T) {
 		hz.dyn.resetWrites()
 		code, body := hz.call(t, "alice", http.MethodPut, "/v1/signature", approveFalse(authzICLAID))
-		if code != http.StatusOK || body["signature_approved"] != false {
-			t.Fatalf("expected updated signature, got %d %v", code, body)
+		assertInsufficientPermissions(t, code, body)
+		hz.assertNoWrites(t)
+	})
+	t.Run("put: signature ACL member cannot re-point the signature", func(t *testing.T) {
+		for _, change := range []map[string]any{
+			{"signature_id": authzCCLAID, "signature_project_id": authzCLAGroupB},
+			{"signature_id": authzCCLAID, "signature_reference_id": authzUserAlice},
+			{"signature_id": authzCCLAID, "signature_reference_type": "user"},
+		} {
+			hz.dyn.resetWrites()
+			code, body := hz.call(t, "cla-manager", http.MethodPut, "/v1/signature", change)
+			assertInsufficientPermissions(t, code, body)
+			hz.assertNoWrites(t)
+		}
+		// re-sending the stored values is not a re-point
+		hz.dyn.resetWrites()
+		code, _ := hz.call(t, "cla-manager", http.MethodPut, "/v1/signature", map[string]any{"signature_id": authzCCLAID, "signature_project_id": authzCLAGroupA, "signature_approved": false})
+		if code != http.StatusOK {
+			t.Fatalf("expected 200 for unchanged project id, got %d", code)
 		}
 		hz.assertSingleWrite(t, "PutItem", "signatures")
+	})
+	t.Run("put: LF admin may re-point the signature", func(t *testing.T) {
+		hz.dyn.resetWrites()
+		code, body := hz.call(t, "vnaidu", http.MethodPut, "/v1/signature", map[string]any{"signature_id": authzCCLAID, "signature_project_id": authzCLAGroupB})
+		if code != http.StatusOK || body["signature_project_id"] != authzCLAGroupB {
+			t.Fatalf("expected re-pointed signature, got %d %v", code, body)
+		}
+		hz.assertSingleWrite(t, "PutItem", "signatures")
+		hz.dyn.resetWrites()
+		if code, _ := hz.call(t, "vnaidu", http.MethodPut, "/v1/signature", map[string]any{"signature_id": authzCCLAID, "signature_project_id": authzCLAGroupA}); code != http.StatusOK {
+			t.Fatalf("restore failed: %d", code)
+		}
+	})
+	t.Run("delete: referenced user may not delete their own individual signature", func(t *testing.T) {
+		hz.dyn.resetWrites()
+		code, body := hz.call(t, "alice", http.MethodDelete, "/v1/signature/"+authzICLAID, nil)
+		assertInsufficientPermissions(t, code, body)
+		hz.assertNoWrites(t)
 	})
 	t.Run("delete: unrelated user is forbidden and the record stays", func(t *testing.T) {
 		hz.dyn.resetWrites()
@@ -704,7 +757,7 @@ func TestSignatureWriteAuthorizedWithoutStores(t *testing.T) {
 		{"admin bypass", "bryan.stone", icla, true},
 		{"signature ACL member", "cla-manager", ccla, true},
 		{"outsider on company signature", "outsider", ccla, false},
-		{"referenced user cannot be verified without users store", "alice", icla, false},
+		{"referenced user is never an owner", "alice", icla, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -727,10 +780,17 @@ func TestOwningSFIDFallbacks(t *testing.T) {
 		t.Fatalf("project_sfid fallback: got %q", got)
 	}
 	if got := repositoryOwningSFID(item("repository_sfdc_id", authzSFIDA)); got != authzSFIDA {
-		t.Fatalf("repository_sfdc_id: got %q", got)
+		t.Fatalf("repository_sfdc_id fallback: got %q", got)
 	}
 	if got := repositoryOwningSFID(item("project_sfid", authzSFIDB)); got != authzSFIDB {
-		t.Fatalf("repository project_sfid fallback: got %q", got)
+		t.Fatalf("repository project_sfid: got %q", got)
+	}
+	// v4 stores the parent foundation in repository_sfdc_id and the owning child project in project_sfid
+	if got := repositoryOwningSFID(map[string]types.AttributeValue{
+		"repository_sfdc_id": &types.AttributeValueMemberS{Value: authzSFIDA},
+		"project_sfid":       &types.AttributeValueMemberS{Value: authzSFIDB},
+	}); got != authzSFIDB {
+		t.Fatalf("project_sfid must win over repository_sfdc_id: got %q", got)
 	}
 	if got := repositoryOwningSFID(map[string]types.AttributeValue{}); got != "" {
 		t.Fatalf("unbound record: got %q", got)

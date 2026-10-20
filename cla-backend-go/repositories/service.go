@@ -142,22 +142,37 @@ func (s *service) AddGithubRepository(ctx context.Context, externalProjectID str
 		return s.repo.GitHubGetRepository(ctx, existingModel.RepositoryID)
 	}
 
+	// GitHubAddRepository re-uses (and re-binds) a disabled record found by external ID even when the supplied name
+	// differs from the stored one, so apply the same project-binding guard to that record (lfx-self-serve-ops#751)
+	existingByExternalID, err := s.repo.GitHubGetRepositoryByExternalID(ctx, utils.StringValue(input.RepositoryExternalID))
+	if err != nil {
+		if _, ok := err.(*utils.GitHubRepositoryNotFound); !ok {
+			return nil, err
+		}
+	} else if bindErr := repositoryBoundToOtherProject(existingByExternalID, projectSFID); bindErr != nil {
+		log.WithFields(f).WithError(bindErr).Warn("repository with this external ID belongs to another project - refusing to re-bind it")
+		return nil, bindErr
+	}
+
 	// Doesn't exist - create it
 	return s.repo.GitHubAddRepository(ctx, externalProjectID, projectSFID, input)
 }
 
-// repositoryBoundToOtherProject returns an error when the stored repository record carries a project binding
-// (project_sfid or repository_sfdc_id) that differs from the project the caller is authorized for; records without
-// any project binding are left untouched
+// repositoryBoundToOtherProject returns an error when the stored repository record carries a project binding that
+// differs from the project the caller is authorized for; records without any project binding are left untouched.
+// project_sfid is the owning project; repository_sfdc_id is only consulted when project_sfid is empty because v2
+// stores the parent foundation there (v2/repositories/service.go passes the foundation as externalProjectID)
 func repositoryBoundToOtherProject(existing *models.GithubRepository, projectSFID string) error {
 	if existing == nil {
 		return nil
 	}
-	for _, boundProjectSFID := range []string{existing.RepositoryProjectSfid, existing.RepositorySfdcID} {
-		if boundProjectSFID != "" && boundProjectSFID != projectSFID {
-			return fmt.Errorf("github repository %s is already registered under project %s and cannot be added to project %s",
-				existing.RepositoryName, boundProjectSFID, projectSFID)
-		}
+	boundProjectSFID := existing.RepositoryProjectSfid
+	if boundProjectSFID == "" {
+		boundProjectSFID = existing.RepositorySfdcID
+	}
+	if boundProjectSFID != "" && boundProjectSFID != projectSFID {
+		return fmt.Errorf("github repository %s is already registered under project %s and cannot be added to project %s",
+			existing.RepositoryName, boundProjectSFID, projectSFID)
 	}
 	return nil
 }

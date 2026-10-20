@@ -81,12 +81,12 @@ func TestUpdateUserByGitHubUsernameRequiresOwnership(t *testing.T) {
 			expectSave:     true,
 		},
 		{
-			name:           "owner claims an unlinked record with their own LF login",
-			existing:       &models.User{UserID: "gh-only-id", GithubUsername: "gh-owner"},
-			body:           &models.UserUpdate{GithubUsername: "gh-owner", LfUsername: callerLogin},
+			// v3 tokens carry no GitHub identity, so an unlinked GitHub record cannot be claimed through this endpoint
+			name:           "unlinked record claimed with the caller's own LF login",
+			existing:       &models.User{UserID: "gh-only-id", GithubUsername: "gh-victim"},
+			body:           &models.UserUpdate{GithubUsername: "gh-victim", LfUsername: callerLogin},
 			claUser:        caller,
-			expectedStatus: http.StatusOK,
-			expectSave:     true,
+			expectedStatus: http.StatusForbidden,
 		},
 		{
 			name:           "record linked to another LF login",

@@ -96,17 +96,16 @@ func Configure(api *operations.ClaAPI, service Service, eventsService events.Ser
 
 			// Found it!
 			if userModel != nil {
-				// The record may only be updated by its owner: a record that already carries an LF login must be the
-				// caller's, a record without one can only be claimed by naming the caller's own LF login, and the body
+				// The record may only be updated by its owner: the record must already carry the caller's LF login
+				// (v3 tokens carry no GitHub identity, so an unlinked GitHub record cannot be claimed here) and the body
 				// must never name another LF login (Save resolves the target by lfUsername first)
 				if claUser.LFUsername == "" {
 					return users.NewUpdateUserUnauthorized().WithPayload(errorResponse(
 						fmt.Errorf("user: %+v not authorized to update user with GitHub username: %s - missing LF login", claUser, params.Body.GithubUsername)))
 				}
 				ownsRecord := userModel.LfUsername == claUser.LFUsername
-				claimsRecord := userModel.LfUsername == "" && params.Body.LfUsername == claUser.LFUsername
 				namesOtherLogin := params.Body.LfUsername != "" && params.Body.LfUsername != claUser.LFUsername
-				if namesOtherLogin || !(ownsRecord || claimsRecord) {
+				if namesOtherLogin || !ownsRecord {
 					msg := fmt.Sprintf("EasyCLA - 403 Forbidden - user %s is not authorized to update the user record of GitHub user %s", claUser.LFUsername, params.Body.GithubUsername)
 					log.WithFields(f).Warn(msg)
 					return users.NewUpdateUserForbidden().WithPayload(&models.ErrorResponse{

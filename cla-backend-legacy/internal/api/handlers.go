@@ -716,12 +716,12 @@ func githubOrgOwningSFID(item map[string]types.AttributeValue) string {
 	return sfid
 }
 
-// repositoryOwningSFID returns the Salesforce project ID a stored repository record is bound to
-// (repository_sfdc_id, falling back to project_sfid).
+// repositoryOwningSFID returns the Salesforce project ID a stored repository record is bound to: project_sfid
+// (the owning project) first, falling back to repository_sfdc_id, which v4 fills with the parent foundation.
 func repositoryOwningSFID(item map[string]types.AttributeValue) string {
-	sfid := strings.TrimSpace(getAttrString(item, "repository_sfdc_id"))
+	sfid := strings.TrimSpace(getAttrString(item, "project_sfid"))
 	if sfid == "" {
-		sfid = strings.TrimSpace(getAttrString(item, "project_sfid"))
+		sfid = strings.TrimSpace(getAttrString(item, "repository_sfdc_id"))
 	}
 	return sfid
 }
@@ -753,8 +753,9 @@ func (h *Handlers) authorizeProjectWrite(ctx context.Context, username, sfid, cl
 
 // signatureWriteAuthorized reports whether username may modify or delete the loaded signature record
 // (lfx-self-serve-ops#738, #775). Admins always may; signature_acl members may (as AddClaManagerV1 requires
-// for company signatures); for user signatures the referenced user may; CLA group managers (project_acl of
-// signature_project_id) may for either kind. The error is a store failure, not a decision.
+// for company signatures); CLA group managers (project_acl of signature_project_id) may for either kind. The
+// referenced user of a user signature may not: that would let a contributor re-approve their own invalidated
+// ICLA/ECLA. The error is a store failure, not a decision.
 func (h *Handlers) signatureWriteAuthorized(ctx context.Context, username string, sig map[string]types.AttributeValue) (bool, error) {
 	username = strings.TrimSpace(username)
 	if username == "" {
@@ -765,17 +766,6 @@ func (h *Handlers) signatureWriteAuthorized(ctx context.Context, username string
 	}
 	if stringSliceContainsExact(getAttrStringSlice(sig, "signature_acl"), username) {
 		return true, nil
-	}
-	if strings.TrimSpace(getAttrString(sig, "signature_reference_type")) == "user" {
-		if refID := strings.TrimSpace(getAttrString(sig, "signature_reference_id")); refID != "" {
-			user, found, err := h.users.GetByID(ctx, refID)
-			if err != nil {
-				return false, err
-			}
-			if found && strings.TrimSpace(getAttrString(user, "lf_username")) == username {
-				return true, nil
-			}
-		}
 	}
 	if claGroupID := strings.TrimSpace(getAttrString(sig, "signature_project_id")); claGroupID != "" {
 		project, found, err := h.projects.GetByID(ctx, claGroupID)
@@ -3750,8 +3740,8 @@ func (h *Handlers) PutSignatureV1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Object-level authorization (lfx-self-serve-ops#775): only the signature's managers, the referenced user,
-	// the CLA group's managers or an LF admin may rewrite it.
+	// Object-level authorization (lfx-self-serve-ops#775): only the signature's managers, the CLA group's
+	// managers or an LF admin may rewrite it.
 	allowed, authzErr := h.signatureWriteAuthorized(ctx, authUser.Username, sig)
 	if authzErr != nil {
 		respond.JSON(w, http.StatusInternalServerError, map[string]any{"errors": map[string]any{"server": authzErr.Error()}})
@@ -3760,6 +3750,16 @@ func (h *Handlers) PutSignatureV1(w http.ResponseWriter, r *http.Request) {
 	if !allowed {
 		respond.JSON(w, http.StatusForbidden, insufficientPermissionsBody())
 		return
+	}
+	// Only an LF admin may re-point a signature at another user/company or CLA group; for everyone else these
+	// fields are immutable (lfx-self-serve-ops#775) - a manager must not move a record out of their own scope.
+	if !isAdminUser(authUser.Username) {
+		for _, key := range []string{"signature_reference_id", "signature_reference_type", "signature_project_id"} {
+			if v, ok := getString(key); ok && strings.TrimSpace(v) != strings.TrimSpace(getAttrString(sig, key)) {
+				respond.JSON(w, http.StatusForbidden, insufficientPermissionsBody())
+				return
+			}
+		}
 	}
 
 	updateStr := "Updated Signature fields: "

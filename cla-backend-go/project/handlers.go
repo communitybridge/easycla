@@ -235,6 +235,9 @@ func Configure(api *operations.ClaAPI, service service.Service, eventsService ev
 			}
 			return project.NewDeleteProjectByIDBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(err))
 		}
+		if claGroupModel == nil {
+			return project.NewDeleteProjectByIDNotFound().WithXRequestID(reqID)
+		}
 
 		// Only CLA group managers (project_acl) may delete the CLA group
 		if !claUserInProjectACL(claUser, claGroupModel.ProjectACL) {

@@ -457,7 +457,9 @@ func claUserInCompanyACL(ctx context.Context, service IService, companyID string
 }
 
 // companyInviteDecisionAllowed refuses approve/reject calls unless the caller is on the company ACL, the request
-// belongs to the company named in the path and the caller is not the requester
+// belongs to the company named in the path and the caller is not the requester. The service approves by invite ID
+// into the invite's own company, so a request missing from this company's list is refused (fail-closed) rather than
+// trusted; the list is a single-partition query that only pages past 1 MB of invites for one company.
 func companyInviteDecisionAllowed(ctx context.Context, service IService, companyID, requestID string, claUser *user.CLAUser) error {
 	if err := claUserInCompanyACL(ctx, service, companyID, claUser); err != nil {
 		return err

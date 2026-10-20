@@ -52,7 +52,19 @@ func (s *Service) ValidateOrganization(ctx context.Context, endpoint string) (ma
 		return nil, http.StatusInternalServerError, err
 	}
 
-	resp, err := s.httpClient.Do(req)
+	// Redirects are followed only while every hop stays inside the GitHub allowlist (a request-local copy of the
+	// client so the shared one keeps its default policy); a redirect elsewhere surfaces as a 502 below.
+	client := *s.httpClient
+	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if len(via) >= 10 {
+			return errors.New("stopped after 10 redirects")
+		}
+		if _, err := validateOrganizationEndpointSafe(req.URL.String()); err != nil {
+			return fmt.Errorf("redirect to %s refused: %w", req.URL.Redacted(), err)
+		}
+		return nil
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, http.StatusBadGateway, err
 	}

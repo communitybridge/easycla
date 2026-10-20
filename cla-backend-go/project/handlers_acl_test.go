@@ -189,3 +189,16 @@ func TestProjectUpdateUnknownCLAGroupStillReturnsNotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, recorder.Code, recorder.Body.String())
 	assert.Zero(t, svc.updateCalls)
 }
+
+func TestProjectDeleteUnknownCLAGroupReturnsNotFound(t *testing.T) {
+	api, svc, eventsSvc := newProjectACLAPI(t, nil)
+	recorder := httptest.NewRecorder()
+	api.ProjectDeleteProjectByIDHandler.Handle(projectOps.DeleteProjectByIDParams{
+		HTTPRequest: httptest.NewRequest(http.MethodDelete, "/v3/project/missing", nil),
+		ProjectID:   "missing",
+	}, &user.CLAUser{UserID: "manager-id", LFUsername: "manager"}).WriteResponse(recorder, runtime.JSONProducer())
+
+	assert.Equal(t, http.StatusNotFound, recorder.Code, recorder.Body.String())
+	assert.Zero(t, svc.deleteCalls)
+	assert.Zero(t, eventsSvc.logCalls)
+}
