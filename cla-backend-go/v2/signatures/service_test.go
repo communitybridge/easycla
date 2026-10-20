@@ -313,10 +313,10 @@ func TestService_InvalidateICLA(t *testing.T) {
 		Return(&v1Models.ClaGroup{ProjectID: "cla-group-1", ProjectName: "My Project", Version: "v2"}, nil)
 
 	mockUserService := mock_users.NewMockService(ctrl)
-	mockUserService.EXPECT().GetUser("user-1").
-		Return(&v1Models.User{UserID: "user-1", LfUsername: "contributor", Username: "Contributor", GithubID: "12345", GithubUsername: "Contributor-GH"}, nil)
+	contributor := &v1Models.User{UserID: "user-1", LfUsername: "contributor", Username: "Contributor", GithubID: "12345", GithubUsername: "Contributor-GH"}
+	mockUserService.EXPECT().GetUser("user-1").Return(contributor, nil)
 
-	cachedKey := seedCachedPRCheckDecision(t, "12345", "contributor-gh", "contributor@example.com")
+	cachedKey := seedCachedPRCheckDecision(t, contributor, "12345", "contributor-gh", "contributor@example.com")
 
 	mockRepo := mock_v1_signatures.NewMockSignatureRepository(ctrl)
 	var gotNote string

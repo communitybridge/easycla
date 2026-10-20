@@ -8,7 +8,8 @@
 // check; import- and module-level findings are informational, exactly as in govulncheck's text mode. A called
 // finding is skipped when .govulncheck-allowlist.json lists it, either as "GO-YYYY-NNNN" (any module) or as
 // {"id": "GO-YYYY-NNNN", "module": "stdlib" | "<module path>"} (that module only). Anything else fails, and so does
-// a results file without govulncheck's leading config message (an empty or truncated scan must not pass).
+// a results file without govulncheck's leading config message or with an unterminated trailing object (an empty,
+// truncated or corrupt scan must not pass).
 //
 // Usage: node scripts/govulncheck-filter.mjs <govulncheck-results.json> [.govulncheck-allowlist.json]
 import fs from "node:fs";
@@ -44,6 +45,7 @@ function* jsonObjects(text) {
       yield JSON.parse(text.slice(start, i + 1));
     }
   }
+  if (depth !== 0 || inString) throw new Error(`unterminated JSON object at end of input (depth ${depth})`);
 }
 
 const symbol = (frame) => {
@@ -56,7 +58,14 @@ const summaries = new Map(); // OSV id -> summary
 const called = new Map(); // "<id>@<module>" -> { id, module, version, fixed, sites }
 const notCalled = new Set(); // OSV ids seen only in import/module-level findings
 let sawConfig = false; // govulncheck always opens the stream with a config message
-for (const msg of jsonObjects(fs.readFileSync(resultsPath, "utf8"))) {
+let messages;
+try {
+  messages = [...jsonObjects(fs.readFileSync(resultsPath, "utf8"))];
+} catch (err) {
+  console.error(`govulncheck policy failure: cannot parse ${resultsPath}: ${err.message} (truncated or corrupt scan output)`);
+  process.exit(2);
+}
+for (const msg of messages) {
   if (msg.config) sawConfig = true;
   if (msg.osv?.id) summaries.set(msg.osv.id, msg.osv.summary ?? "");
   const finding = msg.finding;

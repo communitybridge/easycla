@@ -373,14 +373,19 @@ func (s *Service) GetClaGroupCorporateContributors(ctx context.Context, params v
 
 // evictCachedPRCheckDecisions drops this instance's cached PR-check decisions for the user in the CLA group after an
 // invalidation, so a warm instance does not keep authorizing commits from a positive entry cached before it - the same
-// best-effort, per-instance eviction the approval list removal path performs
+// best-effort, per-instance eviction the approval list removal path performs. Entries are matched by the resolved
+// EasyCLA user they cache (the PR check may have resolved the user by GitHub login or email only, so the key need not
+// carry the GitHub identity stored on the user record) and, when the record carries both, by exact GitHub id + login.
 func evictCachedPRCheckDecisions(f logrus.Fields, projectID string, user *v1Models.User) {
-	githubID, githubLogin := strings.TrimSpace(user.GithubID), strings.TrimSpace(user.GithubUsername)
-	if githubID == "" || githubLogin == "" {
+	if user == nil {
 		return
 	}
-	evicted := github.ModelProjectUserCache.InvalidateByUser(projectID, githubID, githubLogin)
-	log.WithFields(f).Infof("evicted %d cached PR-check decisions for github user %s in project %s after invalidation", evicted, githubLogin, projectID)
+	evicted := github.ModelProjectUserCache.InvalidateByUserID(projectID, user.UserID)
+	githubID, githubLogin := strings.TrimSpace(user.GithubID), strings.TrimSpace(user.GithubUsername)
+	if githubID != "" && githubLogin != "" {
+		evicted += github.ModelProjectUserCache.InvalidateByUser(projectID, githubID, githubLogin)
+	}
+	log.WithFields(f).Infof("evicted %d cached PR-check decisions for user %s (github id %q, login %q) in project %s after invalidation", evicted, user.UserID, githubID, githubLogin, projectID)
 }
 
 // InvalidateICLA invalidates the specified signature record using the supplied parameters -
