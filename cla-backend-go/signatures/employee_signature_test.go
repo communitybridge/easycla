@@ -231,6 +231,49 @@ func TestGetProjectCompanyEmployeeSignatureFollowsEveryPage(t *testing.T) {
 	}
 }
 
+func reacknowledgedUserItems(invalidatedFirst bool, secondInvalidated bool) []map[string]interface{} {
+	invalidated := fakeEclaItem(7, "rejoined.dev@example.com")
+	invalidated["signature_approved"] = fakeFalse()
+	invalidated["date_invalidated"] = fakeS("2026-10-01T10:11:12.123456+0000")
+	invalidated["invalidated_by"] = fakeS("cla-manager")
+	invalidated["invalidation_reason"] = fakeS("manual invalidation")
+
+	second := fakeEclaItem(107, "rejoined.dev@example.com")
+	second["signature_reference_id"] = fakeS("user-007")
+	if secondInvalidated {
+		second["signature_approved"] = fakeFalse()
+		second["note"] = fakeS("Signature invalidated (approved set to false) by cla-manager")
+	}
+
+	if invalidatedFirst {
+		return append(employeeSignatureItems(), invalidated, second)
+	}
+	return append(employeeSignatureItems(), second, invalidated)
+}
+
+func TestGetProjectCompanyEmployeeSignaturePrefersTheValidRecord(t *testing.T) {
+	cases := []struct {
+		name            string
+		items           []map[string]interface{}
+		wantSignatureID string
+		wantInvalidated bool
+	}{
+		{"invalidated row first, re-acknowledgment second", reacknowledgedUserItems(true, false), "sig-107", false},
+		{"re-acknowledgment first, invalidated row second", reacknowledgedUserItems(false, false), "sig-107", false},
+		{"every row invalidated", reacknowledgedUserItems(true, true), "sig-007", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			repo, _ := newCorporateContributorsRepo(t, tc.items)
+			result := lookupEmployeeSignature(t, repo, "user-007")
+			require.NotNil(t, result)
+			require.NotNil(t, result.Signature)
+			assert.Equal(t, tc.wantSignatureID, result.Signature.SignatureID)
+			assert.Equal(t, tc.wantInvalidated, result.Invalidated)
+		})
+	}
+}
+
 func fakeCompany() *models.Company {
 	return &models.Company{CompanyID: "company-1", CompanyName: "Acme"}
 }
