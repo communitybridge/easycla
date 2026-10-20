@@ -131,7 +131,8 @@ for (const who of [ID1, ID2]) {
       const listA = await e2e.bff(context, 'GET', `/api/orgs/${a}/lens/cla-groups`);
       await page.getByTestId('org-selector').click().catch(() => {});
       await sleep(1500);
-      const items = (await page.locator('[data-testid^="org-item-"]').evaluateAll((els) => els.map((e) => (e.getAttribute('data-testid') || '').replace('org-item-', ''))).catch(() => []));
+      // rows only: the children carry org-item-<uid>-logo/-name/... test ids
+      const items = (await page.locator('[role="option"][data-testid^="org-item-"]').evaluateAll((els) => els.map((e) => (e.getAttribute('data-testid') || '').replace('org-item-', ''))).catch(() => []));
       await e2e.shot(page, `${who}-b3-selector`);
       await page.getByTestId(`org-item-${b}`).click({ timeout: 10000 }).catch(() => {});
       await sleep(7000);

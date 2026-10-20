@@ -326,7 +326,7 @@ try:
         code, body = e2e.call(ID2, "GET", e2e.v4(f"/v4/my-clas/{ACK}/cla-managers"))
         mgrs = ((body or {}).get("list") or (body or {}).get("claManagers") or (body or {}).get("managers") or []) if isinstance(body, dict) else []
         e2e.check("I4-ID2-READS-OWN-ACK-MANAGERS", code == 200, f"GET my-clas/{ACK[:8]}/cla-managers -> {code} ({len(mgrs)} managers listed)", http=code)
-        if c("ALLOW_EMAIL", "1") == "1":  # sends one real e-mail to ID1's mailbox per run
+        if c("ALLOW_EMAIL", "0") == "1":  # opt-in: sends one real e-mail to ID1's mailbox per run
             code, body = e2e.call(ID2, "POST", e2e.v4(f"/v4/my-clas/{ACK}/cla-manager-requests"),
                                   {"requestType": "contact", "recipients": [ID1], "message": f"EasyCLA {e2e.ENV} E2E suite {e2e.TAG}: contact-manager request from {ID2} (test, ignore)"})
             e2e.check("I4B-ID2-CONTACT-MANAGER-REQUEST", code == 200 and isinstance(body, dict) and body.get("status") == "sent",

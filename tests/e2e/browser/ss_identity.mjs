@@ -76,7 +76,7 @@ for (const who of [ID1, ID2]) {
     if (await trigger.count()) {
       await trigger.click().catch(() => {});
       await e2e.sleep(1500);
-      selectorItems = (await page.locator('[data-testid^="org-item-"]').allInnerTexts().catch(() => [])).map(e2e.squash).filter(Boolean);
+      selectorItems = (await page.locator('[role="option"][data-testid^="org-item-"]').allInnerTexts().catch(() => [])).map(e2e.squash).filter(Boolean);
       await e2e.shot(page, `${who}-selector`);
       await page.keyboard.press('Escape').catch(() => {});
     }

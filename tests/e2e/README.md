@@ -40,8 +40,8 @@ Exit code `1` when any check `FAIL`ed, `2` when `--group`/`--module` selected no
 
 | name | config key | role | used for |
 |---|---|---|---|
-| ID1 (`lgpm19820716`) | `ID1*` | org admin of `ID1_ADMIN_ORG_SFIDS`, CLA manager of the fixture companies, GitHub `ID1_GITHUB` | the "positive" account: writes, manager-side flows, B9 |
-| ID2 (`morgothv8`) | `ID2*` | no organization roles; the chains grant and revoke its CLA-manager role on the fixture company | the "negative" account: 403/404 expectations, contributor side, B1–B8, B12 |
+| ID1 (`<ID1>`) | `ID1*` | org admin of `ID1_ADMIN_ORG_SFIDS`, CLA manager of the fixture companies, GitHub `ID1_GITHUB` | the "positive" account: writes, manager-side flows, B9 |
+| ID2 (`<ID2>`) | `ID2*` | no organization roles; the chains grant and revoke its CLA-manager role on the fixture company | the "negative" account: 403/404 expectations, contributor side, B1–B8, B12 |
 
 All writes happen on the QA fixture only: `WRITE_*` (company × CLA group where ID1 is in the CCLA
 `signatureACL`), the M3 fixture `M3_*` (same company on prod) and ID2's own records. Every write module captures
