@@ -45,26 +45,40 @@ for who, other, other_email, other_gh, own in pairs:
 
 # foreign acknowledgement sub-resources: 404 (not 403, to avoid existence oracles)
 for who, other_rows in ((ID2, rows1), (ID1, rows2)):
-    target = next((r for r in other_rows if r.get("signatureID")), None)
-    if not target:
+    # the backend also answers 404 for a signature of the wrong TYPE (/pdf serves signed ICLAs only, the manager routes
+    # ECLAs only), so every probe uses a foreign signature of the type its route serves - with an arbitrary row an
+    # ownership regression would stay hidden behind the type refusal
+    icla = next((r for r in other_rows if r.get("claType") == "icla" and r.get("signatureID")), None)
+    ecla = next((r for r in other_rows if r.get("claType") == "ecla" and r.get("signatureID")), None)
+    if not icla and not ecla:
         e2e.skip(f"IB-{who}-FOREIGN-SUBRESOURCES", f"the other identity has no acknowledgements on {e2e.ENV}")
         continue
-    sid = target["signatureID"]
-    e2e.expect(f"IB-{who}-FOREIGN-PDF-404", who, (404, 403), "GET", f"/v4/my-clas/{sid}/pdf")
-    e2e.expect(f"IB-{who}-FOREIGN-MANAGERS-404", who, (404, 403), "GET", f"/v4/my-clas/{sid}/cla-managers")
-    e2e.expect(f"IB-{who}-FOREIGN-MANAGER-REQUEST-404", who, (404, 403, 400), "POST", f"/v4/my-clas/{sid}/cla-manager-requests",
-               {"requestType": "contact", "recipients": [ID1], "message": f"E2E {e2e.TAG} negative probe - must be refused"})
+    if icla:
+        e2e.expect(f"IB-{who}-FOREIGN-PDF-404", who, (404, 403), "GET", f"/v4/my-clas/{icla['signatureID']}/pdf")
+    else:
+        e2e.skip(f"IB-{who}-FOREIGN-PDF-404", "the other identity has no ICLA rows")
+    if ecla:
+        sid = ecla["signatureID"]
+        e2e.expect(f"IB-{who}-FOREIGN-MANAGERS-404", who, (404, 403), "GET", f"/v4/my-clas/{sid}/cla-managers")
+        e2e.expect(f"IB-{who}-FOREIGN-MANAGER-REQUEST-404", who, (404, 403, 400), "POST", f"/v4/my-clas/{sid}/cla-manager-requests",
+                   {"requestType": "contact", "recipients": [ID1], "message": f"E2E {e2e.TAG} negative probe - must be refused"})
+    else:
+        e2e.skip(f"IB-{who}-FOREIGN-MANAGERS-404", "the other identity has no ECLA rows")
+        e2e.skip(f"IB-{who}-FOREIGN-MANAGER-REQUEST-404", "the other identity has no ECLA rows")
     # manager-side invalidate of a foreign ECLA: only meaningful for an identity without cla-manager scope on that company
     # (the PUT mutates the ECLA, so the gate uses the authoritative ACS rolescopes, never the lagging user-service feed)
-    ecla = next((r for r in other_rows if r.get("claType") == "ecla" and r.get("signatureID")), None)
     who_roles = e2e.acs_roles(who)
     manager_scopes = who_roles.get("cla-manager", set()) if who_roles is not None else set()
+    # my-clas rows carry no companySFID and leave projectSFID/foundationSFID empty for ambiguous multi-project mappings:
+    # a manager whose scope cannot be matched against the target must not send the mutating probe on a guess
+    mapping_known = bool(ecla) and any(ecla.get(k) for k in ("companySFID", "projectSFID", "foundationSFID"))
     if not ecla:
         e2e.skip(f"IB-{who}-FOREIGN-INVALIDATE-REFUSED", "the other identity has no ECLA rows")
     elif who_roles is None:
         e2e.skip(f"IB-{who}-FOREIGN-INVALIDATE-REFUSED", "ACS rolescopes unavailable (AWS credentials / utils/<env>_acs_role_flip.sh) - the mutating probe is not sent on a guess")
-    elif manager_scopes and (any(e2e.has_scope(manager_scopes, ecla.get(k) or "\x00") for k in ("companySFID", "projectSFID", "foundationSFID")) or who == ID1):
-        e2e.skip(f"IB-{who}-FOREIGN-INVALIDATE-REFUSED", f"{who} holds cla-manager scopes in ACS - an invalidate of the other identity's ECLA may be legitimate")
+    elif manager_scopes and (not mapping_known or any(e2e.has_scope(manager_scopes, ecla.get(k) or "\x00") for k in ("companySFID", "projectSFID", "foundationSFID")) or who == ID1):
+        e2e.skip(f"IB-{who}-FOREIGN-INVALIDATE-REFUSED", f"{who} holds cla-manager scopes in ACS - an invalidate of the other identity's ECLA may be legitimate"
+                 + ("" if mapping_known else " (the target's company/project mapping is unknown)"))
     else:
         e2e.expect(f"IB-{who}-FOREIGN-INVALIDATE-REFUSED", who, (404, 403), "PUT", f"/v4/cla-group/{ecla.get('claGroupID') or GRP}/ecla/{ecla['signatureID']}/invalidate",
                    {"reason": "other", "note": f"E2E {e2e.TAG} negative probe - must be refused"})

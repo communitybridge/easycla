@@ -28,6 +28,7 @@ default_branch=$(gh api "repos/$GITHUB_REPO" --jq .default_branch)
 base_sha=$(gh api "repos/$GITHUB_REPO/git/ref/heads/$default_branch" --jq .object.sha)
 branch="e2e-$E2E_ENV-$E2E_TAG"
 pr_number=""
+branch_created=0
 cleanup() {
   if [ -n "$pr_number" ] && [ "$E2E_KEEP_STATE" != "1" ]; then
     gh pr close "$pr_number" -R "$GITHUB_REPO" --delete-branch --comment "EasyCLA $E2E_ENV E2E suite $E2E_TAG: pipeline verified, closing." >/dev/null 2>&1 \
@@ -35,7 +36,8 @@ cleanup() {
       || e2e_result GH-CLEANUP INFO "PR #$pr_number could not be closed automatically - close it by hand"
   elif [ -n "$pr_number" ]; then
     e2e_result GH-CLEANUP INFO "--keep-state: PR #$pr_number left open on $GITHUB_REPO"
-  elif [ "$E2E_KEEP_STATE" != "1" ]; then
+  elif [ "$E2E_KEEP_STATE" != "1" ] && [ "$branch_created" = 1 ]; then
+    # only a branch this run created is deleted: a creation refused because the name already exists belongs to another run
     gh api -X DELETE "repos/$GITHUB_REPO/git/refs/heads/$branch" >/dev/null 2>&1 || true
   fi
 }
@@ -46,6 +48,7 @@ if ! gh api -X POST "repos/$GITHUB_REPO/git/refs" -f ref="refs/heads/$branch" -f
   e2e_result GH-BRANCH FAIL "could not create branch $branch from $default_branch@${base_sha:0:7}: $(e2e_redact 200 < "$E2E_EVIDENCE_DIR/branch.private.json")"
   e2e_summary_line; exit 1
 fi
+branch_created=1
 content=$(printf 'EasyCLA %s E2E suite run %s - throw-away change, do not merge.\n' "$E2E_ENV" "$E2E_TAG" | base64 | tr -d '\n')
 author_json=$(python3 -c 'import json,sys; print(json.dumps({"name": sys.argv[1], "email": sys.argv[2]}))' "$ID1_FULLNAME" "$ID1_EMAIL")
 python3 -c 'import json,sys; print(json.dumps({"message": sys.argv[1], "content": sys.argv[2], "branch": sys.argv[3], "author": json.loads(sys.argv[4]), "committer": json.loads(sys.argv[4])}))' \
@@ -77,7 +80,10 @@ while :; do
 import json, sys, shlex
 try: d = json.load(open(sys.argv[1]))
 except Exception: d = {}
-s = next((x for x in d.get("statuses", []) if "easycla" in (x.get("context") or "").lower()), None)
+# the backend posts the "EasyCLA" context; repositories on the legacy webhook pipeline get "communitybridge/cla"
+# (github_repository.go, GH_STATUS_CTX_NAME) - the current context wins when both are present
+statuses = d.get("statuses", [])
+s = next((x for x in statuses if "easycla" in (x.get("context") or "").lower()), None) or next((x for x in statuses if (x.get("context") or "") == "communitybridge/cla"), None)
 if s:
     print("status_state=%s status_desc=%s status_url=%s status_at=%s" % (shlex.quote(s.get("state") or ""), shlex.quote((s.get("description") or "")[:120]), shlex.quote(s.get("target_url") or ""), shlex.quote(s.get("updated_at") or s.get("created_at") or "")))
 PY

@@ -151,9 +151,14 @@ def call(who, method, url, data=None, headers=None, timeout=90):
     # one JSON line per call (append-only: linear and crash-safe, every receipt is on disk the moment the call returns)
     receipt = {"at": now(), "who": who, "method": method, "url": url, "http": code, "req": data,
                "resp": parsed if not isinstance(parsed, str) else parsed[:300]}
+    # the persisted copy must stay shareable: JWTs and the credentials of presigned S3 links (the ICLA PDF answer) are
+    # redacted on the written line only - the caller gets the unmodified response
+    line = json.dumps(receipt, default=str)
+    line = re.sub(r"eyJ[A-Za-z0-9_.-]{20,}", "[TOKEN]", line)
+    line = re.sub(r'(X-Amz-(?:Signature|Credential|Security-Token))=[^&"\\\s]+', r"\1=[REDACTED]", line)
     receipts_path = os.path.join(EVIDENCE_DIR, "receipts.private.jsonl")
     with open(receipts_path, "a") as fh:
-        fh.write(json.dumps(receipt, default=str) + "\n")
+        fh.write(line + "\n")
     try:
         os.chmod(receipts_path, 0o600)
     except OSError:

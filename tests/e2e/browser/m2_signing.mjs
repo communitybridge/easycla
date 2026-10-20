@@ -147,7 +147,8 @@ try {
       } finally {
         if (added) {
           const r = await e2e.bff(context, 'PUT', h.paths.approval, { add: [], remove: [added] }).catch((e) => ({ status: `error ${e.message}` }));
-          info('M2-ECLA-PREFLIGHT-RESTORE', `PUT approval-list remove ${added.kind}:${added.value} -> ${r.status}`);
+          // a cleanup that did not take leaves ID1's temporary criterion on the shared fixture: that fails the run
+          check('M2-ECLA-PREFLIGHT-RESTORE', r.status === 200, `PUT approval-list remove ${added.kind}:${added.value} -> ${r.status}`);
         }
       }
     }
