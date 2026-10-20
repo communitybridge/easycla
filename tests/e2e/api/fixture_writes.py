@@ -55,16 +55,19 @@ def put_approval(data):
     return e2e.call(ID1, "PUT", e2e.v4(APPROVAL), data)
 
 
-def my_ecla():
+def my_ecla(sid=None):
     # ID1 can hold ECLAs for several employers on the same group: only the write fixture's company (CO) counts
     code, body = e2e.call(ID1, "GET", e2e.v4("/v4/my-clas?pageSize=100"))
     rows = (body or {}).get("clas") or [] if isinstance(body, dict) else []
     rows = [r for r in rows if r.get("claGroupID") == GRP and r.get("companyID") == CO]
+    if sid:
+        return next((r for r in rows if r.get("signatureID") == sid), None)
     wanted = next((r for r in rows if r.get("signatureID") == c("ID1_ECLA")), None) if c("ID1_ECLA") else None
-    if wanted:
+    if wanted and wanted.get("status") == "valid":
         return wanted
+    # a configured ack that was manager-invalidated must not hide a fresh valid one (prod pins ID1_ECLA)
     valid = [r for r in rows if r.get("claType") == "ecla" and r.get("status") == "valid"]
-    return valid[0] if valid else next((r for r in rows if r.get("claType") == "ecla"), None)
+    return valid[0] if valid else wanted or next((r for r in rows if r.get("claType") == "ecla"), None)
 
 
 # ---- baseline ----------------------------------------------------------------------
@@ -220,12 +223,12 @@ try:
         sid = ack["signatureID"]
         code, body = put_approval({"RemoveEmailApprovalList": [c("ID1_EMAIL")], "RemoveGithubUsernameApprovalList": [c("ID1_GITHUB")]})
         time.sleep(4)
-        after = my_ecla() or {}
+        after = my_ecla(sid) or {}
         e2e.check("RM1-REMOVAL-VOIDS-OWN-ECLA", code == 200 and after.get("signatureID") == sid and after.get("status") != "valid",
                   f"remove own criteria -> {code}; ecla {sid[:8]} status={after.get('status')}")
         code, body = put_approval({"AddEmailApprovalList": [c("ID1_EMAIL")], "AddGithubUsernameApprovalList": [c("ID1_GITHUB")]})
         time.sleep(4)
-        after2 = my_ecla() or {}
+        after2 = my_ecla(sid) or {}
         e2e.check("RA1-READD-RECOVERS-OWN-ECLA", code == 200 and after2.get("signatureID") == sid and after2.get("status") == "valid",
                   f"re-add own criteria -> {code}; ecla {sid[:8]} status={after2.get('status')} (removal-voided acks are resurrected by a re-add)")
     elif ack:

@@ -164,7 +164,8 @@ export function m3(session, { sfid, name, group, sig }) {
 
   async function toggleAuto(expected, cid) {
     await tab('overview');
-    const toggle = page.getByRole('switch', { name: /auto.?ecla/i }).first();
+    // the wrapper test id is stable; the accessible name was renamed to "Auto Acknowledge" (lfx-self-serve#3771)
+    const toggle = page.getByTestId('org-easycla-detail-auto-ecla').getByRole('switch').first();
     await toggle.waitFor({ state: 'visible', timeout: 30000 });
     await e2e.closeOverlay(page);
     const before = await toggle.getAttribute('aria-checked');

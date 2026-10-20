@@ -99,7 +99,8 @@ try {
   else if (!WRITES) skip('M2-ECLA', 'ALLOW_FIXTURE_WRITES=0');
   else {
     const now = await signing.myAgreements(context, ECLA_GROUP);
-    const existing = now.fixture.filter((a) => a.kind === 'ECLA' && a.status === 'valid');
+    // ID1 can hold ECLAs for several employers on the same group: only the M3 signing entity counts (me/clas carries its name, no id)
+    const existing = now.fixture.filter((a) => a.kind === 'ECLA' && a.status === 'valid' && a.company === ECLA_COMPANY);
     if (existing.length) {
       const row = await signing.meLensRow(session, existing[0].id);
       info('M2-ECLA-ALREADY-VALID', `${ID1} already holds a valid ECLA ${existing[0].id} for ${ECLA_GROUP} (${existing[0].company}); the click-through is exercised by api/interactions.py and m3_chain for ID2; row: "${row.slice(0, 100)}"`);
@@ -132,7 +133,7 @@ try {
         check('M2-ECLA-CLICKTHROUGH', ack.status === 200 && !ack.receipt.errors && ack.done, `POST /v2/request-employee-signature -> ${ack.status} signature=${ack.signatureId} done=${ack.done}`);
         await signing.exitConsole(session);
         const after = await signing.myAgreements(context, ECLA_GROUP);
-        const valid = after.fixture.filter((a) => a.kind === 'ECLA' && a.status === 'valid');
+        const valid = after.fixture.filter((a) => a.kind === 'ECLA' && a.status === 'valid' && a.company === ECLA_COMPANY);
         check('M2-ECLA-MECLAS-VALID', valid.length === 1 && (!ack.signatureId || valid[0].id === ack.signatureId), `valid ECLA rows=${valid.length} ${JSON.stringify(valid)}`);
         if (valid.length) {
           const row = await signing.meLensRow(session, valid[0].id);

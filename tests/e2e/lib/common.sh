@@ -123,8 +123,9 @@ e2e_http() {
 e2e_check() {
   local id=$1 who=$2 exp=$3 method=$4 url=$5 body=${6:-} code status
   if [ "$E2E_NO_WRITES" = "1" ] && [ "$method" != "GET" ] && [ "$method" != "HEAD" ]; then
-    # callers that inspect the answer afterwards must see SKIP, not the previous call's code/body
-    E2E_LAST_CODE=SKIP; : > "$E2E_HTTP_OUT"
+    # callers that inspect the answer afterwards must see SKIP, not the previous call's code/body: the skipped request
+    # gets its own empty receipt so the preceding call's evidence stays intact
+    E2E_LAST_CODE=SKIP; E2E_HTTP_OUT="$E2E_EVIDENCE_DIR/http-$(date -u +%H%M%S)-$RANDOM-skipped.out"; : > "$E2E_HTTP_OUT"
     e2e_result "$id" SKIP "--no-writes: $method ${url#"$API_V4"}"; return 0
   fi
   e2e_http "$who" "$method" "$url" "$body"; code=$E2E_LAST_CODE
