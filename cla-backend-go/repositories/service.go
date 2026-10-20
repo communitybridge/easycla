@@ -145,17 +145,30 @@ func (s *service) AddGithubRepository(ctx context.Context, externalProjectID str
 	// GitHubAddRepository re-uses (and re-binds) a disabled record found by external ID even when the supplied name
 	// differs from the stored one, so apply the same project-binding guard to that record (lfx-self-serve-ops#751)
 	existingByExternalID, err := s.repo.GitHubGetRepositoryByExternalID(ctx, utils.StringValue(input.RepositoryExternalID))
-	if err != nil {
-		if _, ok := err.(*utils.GitHubRepositoryNotFound); !ok {
-			return nil, err
-		}
-	} else if bindErr := repositoryBoundToOtherProject(existingByExternalID, projectSFID); bindErr != nil {
-		log.WithFields(f).WithError(bindErr).Warn("repository with this external ID belongs to another project - refusing to re-bind it")
-		return nil, bindErr
+	if guardErr := externalIDRecordReusable(existingByExternalID, err, utils.StringValue(input.RepositoryExternalID), projectSFID); guardErr != nil {
+		log.WithFields(f).WithError(guardErr).Warn("repository with this external ID cannot be re-used for this project - refusing to add it")
+		return nil, guardErr
 	}
 
 	// Doesn't exist - create it
 	return s.repo.GitHubAddRepository(ctx, externalProjectID, projectSFID, input)
+}
+
+// externalIDRecordReusable validates the GitHubGetRepositoryByExternalID result before GitHubAddRepository may re-use
+// the record: not-found means there is nothing to re-bind, any other lookup error is returned as-is, a record that
+// could not be converted (nil without error, e.g. a non-numeric stored external ID) is refused rather than silently
+// re-bound, and a record bound to another project is refused by repositoryBoundToOtherProject.
+func externalIDRecordReusable(existing *models.GithubRepository, lookupErr error, externalID, projectSFID string) error {
+	if lookupErr != nil {
+		if _, ok := lookupErr.(*utils.GitHubRepositoryNotFound); ok {
+			return nil
+		}
+		return lookupErr
+	}
+	if existing == nil {
+		return fmt.Errorf("github repository with external id %s has an invalid stored record", externalID)
+	}
+	return repositoryBoundToOtherProject(existing, projectSFID)
 }
 
 // repositoryBoundToOtherProject returns an error when the stored repository record carries a project binding that

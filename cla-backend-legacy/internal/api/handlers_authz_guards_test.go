@@ -43,6 +43,7 @@ const (
 	authzCLAGroupB  = "22222222-2222-4222-8222-222222222222"
 	authzCCLAID     = "33333333-3333-4333-8333-333333333333"
 	authzICLAID     = "44444444-4444-4444-8444-444444444444"
+	authzGerritICLA = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
 	authzRepoID     = "55555555-5555-4555-8555-555555555555"
 	authzRepoNoSFID = "66666666-6666-4666-8666-666666666666"
 	authzRepoV4     = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
@@ -323,6 +324,12 @@ func newLegacyAuthzHarness(t *testing.T) *legacyAuthzHarness {
 		"signature_project_id": dynS(authzCLAGroupA), "signature_type": dynS("cla"),
 		"signature_signed": dynBool(true), "signature_approved": dynBool(true),
 	})
+	// invalidated Gerrit-style ICLA: v2 stores the signer's own LF username in signature_acl (v2/sign/service.go)
+	dyn.seed(store.TableName("signatures"), "signature_id", map[string]any{
+		"signature_id": dynS(authzGerritICLA), "signature_reference_type": dynS("user"), "signature_reference_id": dynS(authzUserAlice),
+		"signature_project_id": dynS(authzCLAGroupA), "signature_type": dynS("cla"), "signature_acl": dynSS("alice"),
+		"signature_signed": dynBool(true), "signature_approved": dynBool(false),
+	})
 	dyn.seed(store.TableName("repositories"), "repository_id", map[string]any{
 		"repository_id": dynS(authzRepoID), "repository_project_id": dynS(authzCLAGroupA), "repository_sfdc_id": dynS(authzSFIDA), "project_sfid": dynS(authzSFIDA),
 		"repository_name": dynS("org-a/repo"), "repository_type": dynS("github"), "repository_url": dynS("https://github.com/org-a/repo"), "enabled": dynBool(true),
@@ -599,6 +606,20 @@ func TestLegacySignatureGuards(t *testing.T) {
 		assertInsufficientPermissions(t, code, body)
 		hz.assertNoWrites(t)
 	})
+	t.Run("put: signer listed in their own ICLA's signature_acl cannot re-approve it", func(t *testing.T) {
+		hz.dyn.resetWrites()
+		code, body := hz.call(t, "alice", http.MethodPut, "/v1/signature", map[string]any{"signature_id": authzGerritICLA, "signature_approved": true})
+		assertInsufficientPermissions(t, code, body)
+		hz.assertNoWrites(t)
+	})
+	t.Run("put: CLA group manager may re-approve an individual signature", func(t *testing.T) {
+		hz.dyn.resetWrites()
+		code, body := hz.call(t, "pm-a", http.MethodPut, "/v1/signature", map[string]any{"signature_id": authzGerritICLA, "signature_approved": true})
+		if code != http.StatusOK || body["signature_approved"] != true {
+			t.Fatalf("expected re-approved signature, got %d %v", code, body)
+		}
+		hz.assertSingleWrite(t, "PutItem", "signatures")
+	})
 	t.Run("put: signature ACL member cannot re-point the signature", func(t *testing.T) {
 		for _, change := range []map[string]any{
 			{"signature_id": authzCCLAID, "signature_project_id": authzCLAGroupB},
@@ -633,6 +654,12 @@ func TestLegacySignatureGuards(t *testing.T) {
 	t.Run("delete: referenced user may not delete their own individual signature", func(t *testing.T) {
 		hz.dyn.resetWrites()
 		code, body := hz.call(t, "alice", http.MethodDelete, "/v1/signature/"+authzICLAID, nil)
+		assertInsufficientPermissions(t, code, body)
+		hz.assertNoWrites(t)
+	})
+	t.Run("delete: signer listed in their own ICLA's signature_acl may not delete it", func(t *testing.T) {
+		hz.dyn.resetWrites()
+		code, body := hz.call(t, "alice", http.MethodDelete, "/v1/signature/"+authzGerritICLA, nil)
 		assertInsufficientPermissions(t, code, body)
 		hz.assertNoWrites(t)
 	})
@@ -747,6 +774,11 @@ func TestSignatureWriteAuthorizedWithoutStores(t *testing.T) {
 		"signature_reference_id":   &types.AttributeValueMemberS{Value: authzUserAlice},
 		"signature_project_id":     &types.AttributeValueMemberS{Value: authzCLAGroupA},
 	}
+	gerritICLA := map[string]types.AttributeValue{
+		"signature_reference_type": &types.AttributeValueMemberS{Value: "user"},
+		"signature_reference_id":   &types.AttributeValueMemberS{Value: authzUserAlice},
+		"signature_acl":            &types.AttributeValueMemberSS{Value: []string{"alice", "cla-manager"}},
+	}
 	cases := []struct {
 		name     string
 		username string
@@ -758,6 +790,8 @@ func TestSignatureWriteAuthorizedWithoutStores(t *testing.T) {
 		{"signature ACL member", "cla-manager", ccla, true},
 		{"outsider on company signature", "outsider", ccla, false},
 		{"referenced user is never an owner", "alice", icla, false},
+		{"signature_acl of a user signature grants nothing to the signer", "alice", gerritICLA, false},
+		{"signature_acl of a user signature grants nothing to a manager either", "cla-manager", gerritICLA, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

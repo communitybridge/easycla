@@ -752,10 +752,11 @@ func (h *Handlers) authorizeProjectWrite(ctx context.Context, username, sfid, cl
 }
 
 // signatureWriteAuthorized reports whether username may modify or delete the loaded signature record
-// (lfx-self-serve-ops#738, #775). Admins always may; signature_acl members may (as AddClaManagerV1 requires
-// for company signatures); CLA group managers (project_acl of signature_project_id) may for either kind. The
-// referenced user of a user signature may not: that would let a contributor re-approve their own invalidated
-// ICLA/ECLA. The error is a store failure, not a decision.
+// (lfx-self-serve-ops#738, #775). Admins always may; signature_acl members may for company signatures only
+// (the CCLA managers, as AddClaManagerV1 requires); CLA group managers (project_acl of signature_project_id)
+// may for either kind. Neither the referenced user nor the signature_acl of a user signature grants access:
+// user signatures carry the signer's own LF username in signature_acl (v2 Gerrit ICLAs), so either would let a
+// contributor re-approve their own invalidated ICLA/ECLA. The error is a store failure, not a decision.
 func (h *Handlers) signatureWriteAuthorized(ctx context.Context, username string, sig map[string]types.AttributeValue) (bool, error) {
 	username = strings.TrimSpace(username)
 	if username == "" {
@@ -764,7 +765,8 @@ func (h *Handlers) signatureWriteAuthorized(ctx context.Context, username string
 	if isAdminUser(username) {
 		return true, nil
 	}
-	if stringSliceContainsExact(getAttrStringSlice(sig, "signature_acl"), username) {
+	if strings.TrimSpace(getAttrString(sig, "signature_reference_type")) == "company" &&
+		stringSliceContainsExact(getAttrStringSlice(sig, "signature_acl"), username) {
 		return true, nil
 	}
 	if claGroupID := strings.TrimSpace(getAttrString(sig, "signature_project_id")); claGroupID != "" {
