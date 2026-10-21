@@ -8,8 +8,8 @@
 // check; import- and module-level findings are informational, exactly as in govulncheck's text mode. A called
 // finding is skipped when .govulncheck-allowlist.json lists it, either as "GO-YYYY-NNNN" (any module) or as
 // {"id": "GO-YYYY-NNNN", "module": "stdlib" | "<module path>"} (that module only). Anything else fails, and so does
-// a results file without govulncheck's leading config message or with an unterminated trailing object (an empty,
-// truncated or corrupt scan must not pass).
+// a results file without govulncheck's leading config message, with an unterminated trailing object or with text
+// outside the JSON objects (an empty, truncated or corrupt scan must not pass).
 //
 // Usage: node scripts/govulncheck-filter.mjs <govulncheck-results.json> [.govulncheck-allowlist.json]
 import fs from "node:fs";
@@ -37,6 +37,8 @@ function* jsonObjects(text) {
       if (escaped) escaped = false;
       else if (ch === "\\") escaped = true;
       else if (ch === '"') inString = false;
+    } else if (depth === 0 && ch !== "{" && !/\s/.test(ch)) {
+      throw new Error(`unexpected text outside JSON objects at offset ${i}`);
     } else if (ch === '"') {
       inString = true;
     } else if (ch === "{") {
