@@ -310,11 +310,11 @@ export function m3(session, { sfid, name, group, sig }) {
     await sleep(3000);
     // the tab re-fetches the list after the write (skeleton rows for a while): wait for the row to come back with the badge
     const badgeLoc = row.getByTestId('org-easycla-acknowledgment-state-invalidated');
-    await e2e.visible(badgeLoc, 30000);
+    const badgeVisible = await e2e.visible(badgeLoc, 30000);
     await e2e.shot(page, `${cid.toLowerCase()}`);
     const badge = await badgeLoc.count().catch(() => 0);
     const after = (await acksAll()).list.find((a) => ackId(a) === id);
-    e2e.check(cid, !!res && res.status() < 300 && badge >= 1 && !!after && !ackValid(after), `POST invalidate -> ${res ? res.status() : 'no response'}; badge=${badge}; state=${ackState(after)}; dialog matches=${JSON.stringify(matches)} alsoRemove=${alsoRemoveOffered ? alsoRemove : 'n/a'}`);
+    e2e.check(cid, !!res && res.status() < 300 && badgeVisible && badge >= 1 && !!after && !ackValid(after), `POST invalidate -> ${res ? res.status() : 'no response'}; badge=${badge} visible=${badgeVisible}; state=${ackState(after)}; dialog matches=${JSON.stringify(matches)} alsoRemove=${alsoRemoveOffered ? alsoRemove : 'n/a'}`);
     const removed = removal ? (await removal.json().catch(() => ({}))) : null;
     return { after, matches, alsoRemoveOffered, alsoRemove, removal: removal ? { status: removal.status(), entries: (removed?.entries || []).length } : null };
   }

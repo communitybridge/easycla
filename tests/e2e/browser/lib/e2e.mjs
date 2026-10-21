@@ -146,8 +146,13 @@ const CREDENTIAL_HOSTS = new Set([cfg('AUTH0_DOMAIN'), ...cfg('SSO_HOSTS').split
 export const isCredentialHost = (h) => CREDENTIAL_HOSTS.has(h);
 export const isAuth0Host = (h) => isCredentialHost(h) || /(^|\.)auth0\.com$/.test(h) || /^sso\./.test(h);
 // A page.goto() superseded by the console's own redirect on load (SSO hop) - the only navigation error a module may
-// tolerate; timeouts, DNS and connection failures must propagate so a browser error page never passes a text check.
-export const navigationSuperseded = (err) => /interrupted by another navigation|ERR_ABORTED/i.test(String(err?.message || err));
+// tolerate, and only when the superseding navigation goes to an http(s) document: Chromium reports a failed hop as an
+// interruption "to chrome-error://chromewebdata/" (pathname "/", no text), which must propagate like timeouts, DNS and
+// connection failures so a browser error page never passes a text or denied-path check.
+export const navigationSuperseded = (err) => {
+  const to = /interrupted by another navigation to "([^"]*)"/i.exec(String(err?.message || err))?.[1];
+  return !!to && /^https?:\/\//i.test(to);
+};
 const ALWAYS_WRITE_OK = [/^\/api\/auth\//, /^\/callback$/, /\/permissions\/checks$/];
 
 // launch({ identity, writes: [regex on "METHOD host/path"], allowDocusign: bool, state: bool })

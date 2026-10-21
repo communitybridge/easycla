@@ -43,9 +43,11 @@ const deniedOverview = (w, name) => deniedPath(w.path) || (/^\/org\/[^/]+\/overv
 
 async function visit(page, p, shotName, settle = 7000) {
   // a failed navigation (not the SSO redirect superseding it) must reach the outer handler: the checks below compare the
-  // path/cards/text of whatever page is loaded and would otherwise judge the previous page
+  // path/cards/text of whatever page is loaded and would otherwise judge the previous page - or a browser error page,
+  // whose pathname "/" would even count as denied
   await page.goto(`${e2e.SS}${p}`, { waitUntil: 'domcontentloaded', timeout: 60000 }).catch((err) => { if (!e2e.navigationSuperseded(err)) throw err; });
   await sleep(settle);
+  if (/^chrome-error:/i.test(page.url())) throw new Error(`navigation to ${p} ended on a browser error page (${page.url()})`);
   await e2e.hideOverlays(page);
   await e2e.closeOverlay(page);
   const out = {

@@ -23,12 +23,13 @@ const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const settle = async (page, ms = 4000) => { await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {}); await sleep(ms); await e2e.hideOverlays(page); };
 const has = async (page, re) => re.test(await e2e.bodyText(page));
 // only a navigation superseded by the console's SSO redirect is tolerated (the waitForURL below rides it out); any other
-// failure propagates to the identity's outer handler and is recorded as a failure naming the URL - the checks below
-// only read body text and would otherwise accept a browser error page
+// failure, or a hop that ended on a browser error page, propagates to the identity's outer handler and is recorded as a
+// failure naming the URL - the checks below only read body text and would otherwise accept a browser error page
 async function go(page, url, settleMs = 4000) {
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 }).catch((err) => { if (!e2e.navigationSuperseded(err)) throw err; });
   await page.waitForURL((u) => !e2e.isAuth0Host(u.hostname), { timeout: 60000 }).catch(() => {});
   await settle(page, settleMs);
+  if (/^chrome-error:/i.test(page.url())) throw new Error(`navigation to ${url} ended on a browser error page (${page.url()})`);
 }
 
 for (const who of [ID1, ID2]) {
