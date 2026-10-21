@@ -91,7 +91,10 @@ func Handler(ctx context.Context, snsEvent events.SNSEvent) error {
 		switch model.Type {
 		case "UserSignedUp":
 			log.WithFields(f).Debugf("Detected message type: %s - processing...", model.Type)
-			Create(ctx, model)
+			// a storage failure is returned so the asynchronous invocation is retried instead of the sign-up being lost
+			if createErr := Create(ctx, model); createErr != nil {
+				return createErr
+			}
 		case "UserUpdatedProfile":
 			log.WithFields(f).Debugf("Detected message type: %s - processing...", model.Type)
 			Update(ctx, model)
@@ -105,8 +108,9 @@ func Handler(ctx context.Context, snsEvent events.SNSEvent) error {
 	return nil
 }
 
-// Create saves the user data model to persistent storage
-func Create(ctx context.Context, user event.Event) {
+// Create saves the user data model to persistent storage. It returns the error of a failed EasyCLA lookup or write (the
+// event is worth a retry); an undecodable event is logged and dropped.
+func Create(ctx context.Context, user event.Event) error {
 	f := logrus.Fields{
 		"functionName":   "userSubscribeLambda.main.Create",
 		utils.XREQUESTID: ctx.Value(utils.XREQUESTID),
@@ -116,7 +120,7 @@ func Create(ctx context.Context, user event.Event) {
 	err := mapstructure.Decode(user.Data, uc)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("unable to decode event")
-		return
+		return nil
 	}
 
 	var awsSession = session.Must(session.NewSession(&aws.Config{}))
@@ -127,7 +131,7 @@ func Create(ctx context.Context, user event.Event) {
 	}
 	usersRepo := users.NewRepository(awsSession, stage)
 
-	createUser(f, uc.Username, usersRepo, user_service.GetClient().GetUserByUsername)
+	return createUser(f, uc.Username, usersRepo, user_service.GetClient().GetUserByUsername)
 }
 
 // userLookup resolves an LF username to its user-service record (user_service.Client.GetUserByUsername in production)
@@ -135,27 +139,30 @@ type userLookup func(lfUsername string) (*userServiceModels.User, error)
 
 // createUser adds the EasyCLA user record for a UserSignedUp event of `username`, filled from the user-service record.
 // A username that already has a record is left alone: profile changes arrive as UserUpdatedProfile and are applied by Update.
-func createUser(f logrus.Fields, username string, usersRepo users.UserRepository, lookup userLookup) {
+// A failed EasyCLA lookup does not prove the user is absent, so nothing is created and the error is returned for a retry;
+// a failed write is returned as well. Every other outcome is final and returns nil.
+func createUser(f logrus.Fields, username string, usersRepo users.UserRepository, lookup userLookup) error {
 	log.WithFields(f).Debugf("locating user by username: %s in EasyCLA's database...", username)
 	userDetails, userErr := usersRepo.GetUserByLFUserName(username)
 	if userErr != nil {
 		log.WithFields(f).WithError(userErr).Warnf("unable to locate user by LfUsername: %s", username)
+		return userErr
 	}
 
 	if userDetails != nil {
 		log.WithFields(f).Warnf("unable to create user - user already created: %s", username)
-		return
+		return nil
 	}
 
 	log.WithFields(f).Debugf("locating user by username: %s in the user service...", username)
 	sfdcUserObject, err := lookup(username)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warnf("unable to locate user by username: %s", username)
-		return
+		return nil
 	}
 	if sfdcUserObject == nil {
 		log.WithFields(f).Debugf("User-service model is nil so skipping user %s", username)
-		return
+		return nil
 	}
 
 	log.WithFields(f).Debugf("Salesforce user-service object : %+v", sfdcUserObject)
@@ -190,9 +197,10 @@ func createUser(f logrus.Fields, username string, usersRepo users.UserRepository
 	log.WithFields(f).Debugf("Creating user in Dynamo DB : %+v", createUserModel)
 	_, createErr := usersRepo.CreateUser(createUserModel)
 	if createErr != nil {
-		log.WithFields(f).Warnf("unable to create user by LfUsername: %s", username)
-		return
+		log.WithFields(f).WithError(createErr).Warnf("unable to create user by LfUsername: %s", username)
+		return createErr
 	}
+	return nil
 }
 
 // Update saves the user data model to persistent storage

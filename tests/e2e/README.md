@@ -55,7 +55,7 @@ never reads it). Gates per environment, as set in those files:
 
 | gate | dev | prod | guards |
 |---|---|---|---|
-| `ALLOW_FIXTURE_WRITES` | 1 | 1 | approval list / auto-ECLA / manager add+remove / invalidation on the fixture (always baseline-restored); the two negative `identity_boundary` probes naming a foreign fixture ECLA (manager request, invalidate) |
+| `ALLOW_FIXTURE_WRITES` | 1 | 1 | approval list / auto-ECLA / manager add+remove / invalidation on the fixture (always baseline-restored); the two negative `identity_boundary` probes naming a foreign fixture ECLA (manager request, invalidate); the three negative `read_matrix` ID2 writes on the fixture CCLA (their undo writes as ID1) |
 | `ALLOW_EMAIL` | 1 | 1 | the one contact-manager request that e-mails ID1's own mailbox; the `identity_boundary` foreign manager-request probe (together with `ALLOW_FIXTURE_WRITES`) |
 | `ALLOW_DOCUSIGN` | 1 | 0 | completing DocuSign sandbox envelopes (`m2_signing`, `org_sign`) |
 | `ALLOW_GITHUB_PR` | 1 | 0 | opening a throw-away PR on `GITHUB_REPO` |

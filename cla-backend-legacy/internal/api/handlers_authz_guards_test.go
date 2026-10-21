@@ -17,6 +17,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -60,13 +61,20 @@ type fakeDynamoWrite struct {
 	Key   map[string]any
 }
 
+type fakeDynamoRead struct {
+	Op    string
+	Table string
+}
+
 // fakeDynamo is a minimal DynamoDB JSON-protocol server: GetItem/PutItem/DeleteItem on items stored as
-// DynamoDB-JSON maps (attribute -> {"S": ...}).
+// DynamoDB-JSON maps (attribute -> {"S": ...}), plus Query/Scan restricted to the expression shapes the legacy
+// stores use: `attr = :v` key conditions and an optional `attr = :v` / `contains(attr, :v)` filter.
 type fakeDynamo struct {
 	mu      sync.Mutex
 	keys    map[string]string
 	tables  map[string][]map[string]any
 	writes  []fakeDynamoWrite
+	reads   []fakeDynamoRead
 	unknown []string
 }
 
@@ -99,6 +107,53 @@ func (f *fakeDynamo) writesFor(op, table string) []fakeDynamoWrite {
 	return out
 }
 
+func (f *fakeDynamo) readsFor(table string) []fakeDynamoRead {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	var out []fakeDynamoRead
+	for _, r := range f.reads {
+		if r.Table == table {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+var (
+	fakeDynamoEqualityExpr = regexp.MustCompile(`^\s*([A-Za-z0-9_]+)\s*=\s*(:[A-Za-z0-9_]+)\s*$`)
+	fakeDynamoContainsExpr = regexp.MustCompile(`^\s*contains\(\s*([A-Za-z0-9_]+)\s*,\s*(:[A-Za-z0-9_]+)\s*\)\s*$`)
+)
+
+// matchesExprLocked evaluates one `attr = :v` or `contains(attr, :v)` expression against a DynamoDB-JSON item;
+// an empty expression matches everything, an unsupported one matches nothing (and is recorded as unknown).
+func (f *fakeDynamo) matchesExprLocked(item map[string]any, expr string, values map[string]any) bool {
+	if strings.TrimSpace(expr) == "" {
+		return true
+	}
+	if m := fakeDynamoEqualityExpr.FindStringSubmatch(expr); m != nil {
+		return reflect.DeepEqual(item[m[1]], values[m[2]])
+	}
+	if m := fakeDynamoContainsExpr.FindStringSubmatch(expr); m != nil {
+		want, _ := values[m[2]].(map[string]any)
+		needle, _ := want["S"].(string)
+		attr, _ := item[m[1]].(map[string]any)
+		if set, ok := attr["SS"].([]any); ok {
+			for _, v := range set {
+				if s, _ := v.(string); s == needle {
+					return true
+				}
+			}
+			return false
+		}
+		if s, ok := attr["S"].(string); ok {
+			return strings.Contains(s, needle)
+		}
+		return false
+	}
+	f.unknown = append(f.unknown, "expression:"+expr)
+	return false
+}
+
 func (f *fakeDynamo) findLocked(table string, key map[string]any) int {
 	for i, item := range f.tables[table] {
 		match := true
@@ -117,9 +172,12 @@ func (f *fakeDynamo) findLocked(table string, key map[string]any) int {
 
 func (f *fakeDynamo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		TableName string         `json:"TableName"`
-		Key       map[string]any `json:"Key"`
-		Item      map[string]any `json:"Item"`
+		TableName                 string         `json:"TableName"`
+		Key                       map[string]any `json:"Key"`
+		Item                      map[string]any `json:"Item"`
+		KeyConditionExpression    string         `json:"KeyConditionExpression"`
+		FilterExpression          string         `json:"FilterExpression"`
+		ExpressionAttributeValues map[string]any `json:"ExpressionAttributeValues"`
 	}
 	raw, _ := io.ReadAll(r.Body)
 	_ = json.Unmarshal(raw, &req)
@@ -135,6 +193,16 @@ func (f *fakeDynamo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		_, _ = w.Write([]byte("{}"))
+	case "Query", "Scan":
+		f.reads = append(f.reads, fakeDynamoRead{Op: op, Table: req.TableName})
+		items := []map[string]any{}
+		for _, item := range f.tables[req.TableName] {
+			if f.matchesExprLocked(item, req.KeyConditionExpression, req.ExpressionAttributeValues) &&
+				f.matchesExprLocked(item, req.FilterExpression, req.ExpressionAttributeValues) {
+				items = append(items, item)
+			}
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{"Items": items, "Count": len(items), "ScannedCount": len(f.tables[req.TableName])})
 	case "PutItem":
 		f.writes = append(f.writes, fakeDynamoWrite{Op: op, Table: req.TableName, Item: req.Item})
 		keyAttr := f.keys[req.TableName]

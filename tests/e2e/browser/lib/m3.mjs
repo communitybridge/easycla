@@ -24,6 +24,23 @@ export function m3(session, { sfid, name, group, sig }) {
     activity: `${prefix}/activity`,
   };
   const get = (p) => e2e.bff(context, 'GET', p);
+  // The acknowledgments feed is paginated (BFF default pageSize 50, max 100, cursor `nextKey`) and the fixture
+  // accumulates invalidated rows run after run, so every read follows the cursor (cap 10 pages) instead of
+  // trusting the first page. A failed page fails the whole read (status != 200), never a partial list.
+  async function acksAll() {
+    const list = [];
+    let status = 200;
+    let nextKey = '';
+    for (let i = 0; i < 10; i++) {
+      const r = await get(`${paths.acks}?pageSize=100${nextKey ? `&nextKey=${encodeURIComponent(nextKey)}` : ''}`);
+      status = r.status;
+      if (status !== 200) break;
+      list.push(...(r.json?.list || []));
+      nextKey = r.json?.nextKey || '';
+      if (!nextKey) break;
+    }
+    return { status, list };
+  }
   const writesSoFar = () => net.writes.filter((w) => w.url.includes(prefix)).length;
   const waitWrite = (test, method, timeout = 90000) => page.waitForResponse((r) => {
     let u; try { u = new URL(r.url()); } catch { return false; }
@@ -33,7 +50,7 @@ export function m3(session, { sfid, name, group, sig }) {
   // Every read must be 200: a partial snapshot (approval-list 503 -> entries: []) must never become a baseline that
   // reconcile() later restores, so the helper throws instead of returning it.
   async function state() {
-    const [list, managers, approval, acks] = await Promise.all([get(paths.list), get(paths.managers), get(paths.approval), get(paths.acks)]);
+    const [list, managers, approval, acks] = await Promise.all([get(paths.list), get(paths.managers), get(paths.approval), acksAll()]);
     const http = { list: list.status, managers: managers.status, approval: approval.status, acks: acks.status };
     if (Object.values(http).some((c) => c !== 200)) throw new Error(`fixture reads failed ${JSON.stringify(http)}`);
     const row = (list.json?.claGroups || []).find((r) => r.id === sig) || null;
@@ -42,7 +59,7 @@ export function m3(session, { sfid, name, group, sig }) {
       row,
       managers: (managers.json?.managers || []).map((m) => m.lfUsername).sort(),
       entries: (approval.json?.entries || []).map((x) => ({ kind: x.kind, value: x.value })),
-      acks: acks.json?.list || [],
+      acks: acks.list,
     };
   }
 
@@ -115,19 +132,24 @@ export function m3(session, { sfid, name, group, sig }) {
 
   // Add one approval-list entry through the dialog; returns the PUT response body.
   // A 200 whose body cannot be read (Playwright drops the body when the page navigates/re-renders right after the
-  // write - easycla#5265) is judged on the persisted state instead, marked "(from state)" in the evidence.
+  // write - easycla#5265) is judged on the persisted state instead, marked "(from state)" in the evidence. A failed
+  // state read is recorded on the operation's own check (never a silent pass, never a bare HARNESS line).
+  const persisted = async (pick) => {
+    try { return { ...pick(await state()), fromState: true }; } catch (err) { return { fromState: true, stateError: String(err?.message || err).slice(0, 160) }; }
+  };
+  const stateNote = (body) => body.stateError ? ` (state read failed: ${body.stateError})` : body.fromState ? ' (from state)' : '';
   async function addEntry(kindRe, value, cid) {
     await openAdd();
     await pickKind(kindRe);
     await valueBox().fill(value);
     const [res] = await Promise.all([waitWrite((p) => p === paths.approval, 'PUT'), submitApproval()]);
     let body = await res.json().catch(() => ({}));
-    if (res.status() === 200 && !Array.isArray(body.entries)) body = { entries: (await state()).entries, fromState: true };
+    if (res.status() === 200 && !Array.isArray(body.entries)) body = await persisted((st) => ({ entries: st.entries }));
     const entry = (body.entries || []).find((x) => x.value === value);
-    const ok = res.status() === 200 && !!entry;
+    const ok = res.status() === 200 && !body.stateError && !!entry;
     await approvalRow(value, entry?.kind).first().waitFor({ state: 'visible', timeout: 30000 }).catch(() => {});
     await e2e.shot(page, `${cid.toLowerCase()}`);
-    e2e.check(cid, ok, `PUT approval-list (${value}) -> ${res.status()}; entries=${(body.entries || []).length}${body.fromState ? ' (from state)' : ''}`);
+    e2e.check(cid, ok, `PUT approval-list (${value}) -> ${res.status()}; entries=${(body.entries || []).length}${stateNote(body)}`);
     return body;
   }
 
@@ -162,10 +184,11 @@ export function m3(session, { sfid, name, group, sig }) {
     await row.getByTestId('org-easycla-approval-delete').getByRole('button').click();
     const [res] = await Promise.all([waitWrite((p) => p === paths.approval, 'PUT'), page.getByRole('button', { name: 'Remove entry', exact: true }).click()]);
     let body = await res.json().catch(() => ({}));
-    if (res.status() === 200 && !Array.isArray(body.entries)) body = { entries: (await state()).entries, fromState: true };
+    if (res.status() === 200 && !Array.isArray(body.entries)) body = await persisted((st) => ({ entries: st.entries }));
     await row.waitFor({ state: 'hidden', timeout: 30000 }).catch(() => {});
-    const ok = res.status() === 200 && !(body.entries || []).some((x) => x.value === value && (!kind || x.kind === kind));
-    e2e.check(cid, ok, `remove ${kind ? kind + ':' : ''}${value} -> ${res.status()}; entries=${(body.entries || []).length}${body.fromState ? ' (from state)' : ''}`);
+    // a missing list is never "nothing left to match": the removal is proven only by a readable list without the entry
+    const ok = res.status() === 200 && !body.stateError && Array.isArray(body.entries) && !body.entries.some((x) => x.value === value && (!kind || x.kind === kind));
+    e2e.check(cid, ok, `remove ${kind ? kind + ':' : ''}${value} -> ${res.status()}; entries=${(body.entries || []).length}${stateNote(body)}`);
     return body;
   }
 
@@ -182,10 +205,10 @@ export function m3(session, { sfid, name, group, sig }) {
     }
     const [res] = await Promise.all([waitWrite((p) => p === paths.auto, 'PUT'), toggle.click()]);
     let body = await res.json().catch(() => ({}));
-    if (res.status() === 200 && body.autoCreateEcla === undefined) body = { autoCreateEcla: (await state()).row?.autoCreateEcla, fromState: true };
+    if (res.status() === 200 && body.autoCreateEcla === undefined) body = await persisted((st) => ({ autoCreateEcla: st.row?.autoCreateEcla }));
     await sleep(1500);
     await e2e.shot(page, `${cid.toLowerCase()}`);
-    e2e.check(cid, res.status() === 200 && body.autoCreateEcla === expected, `PUT ecla-auto-create -> ${res.status()} autoCreateEcla=${body.autoCreateEcla}${body.fromState ? ' (from state)' : ''} (aria before=${before} after=${await toggle.getAttribute('aria-checked')})`);
+    e2e.check(cid, res.status() === 200 && !body.stateError && body.autoCreateEcla === expected, `PUT ecla-auto-create -> ${res.status()} autoCreateEcla=${body.autoCreateEcla}${stateNote(body)} (aria before=${before} after=${await toggle.getAttribute('aria-checked')})`);
     return body;
   }
 
@@ -232,8 +255,8 @@ export function m3(session, { sfid, name, group, sig }) {
   async function pollAcks(predicate, tries = 30, every = 3000) {
     let last = [];
     for (let i = 0; i < tries; i++) {
-      const acks = await get(paths.acks);
-      last = acks.json?.list || [];
+      const acks = await acksAll();
+      last = acks.list;
       if (acks.status === 200 && predicate(last)) return last;
       await sleep(every);
     }
@@ -249,11 +272,21 @@ export function m3(session, { sfid, name, group, sig }) {
   const ackId = (a) => a.signatureId || a.id;
   const ackState = (a) => (a ? (a.state || a.status || (a.approved === false ? `invalidated(by ${a.invalidatedBy || '?'} at ${a.invalidatedAt || '?'})` : 'approved')) : 'missing');
 
-  async function invalidateAck(id, cid) {
+  // `search` narrows the (also paginated, load-more) tab to the contributor when the row is not on the first page
+  async function invalidateAck(id, cid, search = e2e.cfg('ID2')) {
     await tab('acknowledgments');
     await sleep(3000);
     const row = page.getByTestId(`org-easycla-acknowledgment-row-${id}`);
-    const seen = await e2e.visible(row, 60000);
+    let seen = await e2e.visible(row, 60000);
+    if (!seen && search) {
+      const box = page.locator('input#org-easycla-acknowledgments-search-input, [data-testid="org-easycla-acknowledgments-search"] input').first();
+      if (await box.count()) {
+        await box.fill(search);
+        await sleep(3000);
+        seen = await e2e.visible(row, 30000);
+        e2e.info(cid, `row ${id} not on the first page; searched "${search}" -> visible=${seen}`);
+      }
+    }
     if (!seen) { e2e.check(cid, false, `acknowledgment row ${id} not rendered`); return null; }
     await row.getByTestId('org-easycla-acknowledgment-invalidate').getByRole('button').click();
     const dialog = page.getByTestId('org-easycla-invalidate-dialog');
@@ -275,7 +308,7 @@ export function m3(session, { sfid, name, group, sig }) {
     await sleep(3000);
     await e2e.shot(page, `${cid.toLowerCase()}`);
     const badge = await row.getByTestId('org-easycla-acknowledgment-state-invalidated').count().catch(() => 0);
-    const after = ((await get(paths.acks)).json?.list || []).find((a) => ackId(a) === id);
+    const after = (await acksAll()).list.find((a) => ackId(a) === id);
     e2e.check(cid, !!res && res.status() < 300 && badge >= 1 && !!after && !ackValid(after), `POST invalidate -> ${res ? res.status() : 'no response'}; badge=${badge}; state=${ackState(after)}; dialog matches=${JSON.stringify(matches)} alsoRemove=${alsoRemoveOffered ? alsoRemove : 'n/a'}`);
     const removed = removal ? (await removal.json().catch(() => ({}))) : null;
     return { after, matches, alsoRemoveOffered, alsoRemove, removal: removal ? { status: removal.status(), entries: (removed?.entries || []).length } : null };

@@ -270,8 +270,14 @@ export async function selectOrgCookie(context, sfid) {
 
 // Select an organization through the in-app switcher when the trigger shows no/other org (the FE only
 // restores the lfx-selected-account cookie when persona detection seeded organizations).
+// Self Serve mounts the navbar twice (desktop + mobile drawer): every read and click goes to the first VISIBLE
+// `org-selector`, an unscoped locator would hit Playwright's strict-mode check whenever both copies are in the DOM.
 export async function ensureOrgSelected(page, uid, name) {
-  const trigger = () => page.getByTestId('org-selector-trigger-name').innerText({ timeout: 3000 }).then(squash).catch(() => '');
+  const selector = async () => {
+    for (const t of await page.getByTestId('org-selector').all()) if (await t.isVisible().catch(() => false)) return t;
+    return page.getByTestId('org-selector').first();
+  };
+  const trigger = async () => (await selector()).getByTestId('org-selector-trigger-name').innerText({ timeout: 3000 }).then(squash).catch(() => '');
   const matches = (t) => !!name && !!t && t.startsWith(name.slice(0, 12));
   for (let i = 0; i < 20; i++) {
     const t = await trigger();
@@ -280,9 +286,10 @@ export async function ensureOrgSelected(page, uid, name) {
   }
   if (matches(await trigger())) return trigger();
   for (let attempt = 0; attempt < 3; attempt++) {
-    const expanded = await page.getByTestId('org-selector').getAttribute('aria-expanded').catch(() => null);
+    const sel = await selector();
+    const expanded = await sel.getAttribute('aria-expanded').catch(() => null);
     if (expanded !== 'true') {
-      await page.getByTestId('org-selector').click().catch(() => {});
+      await sel.click().catch(() => {});
       await sleep(1500);
     }
     const item = page.getByTestId(`org-item-${uid}`);

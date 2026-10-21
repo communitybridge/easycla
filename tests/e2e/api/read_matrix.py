@@ -165,15 +165,23 @@ baseline_ok = code == 200 and row.get("signatureID") == CCLA
 # negative writes with the no-role identity: nothing may change on the fixture. The approval-list and Auto-ECLA routes
 # authorize against the CCLA's signatureACL (v2/signatures/handlers.go), so ID2 on that ACL would make them legitimate.
 # Without a confirmed baseline the undo below could not tell an acceptance from a failed read, so the probes stay off.
+# Like every fixture mutation they also stay off under ALLOW_FIXTURE_WRITES=0: a regressed refusal would change the fixture
+# and the undo itself writes to it as ID1.
 if not baseline_ok:
     e2e.skip("W-ID2-NEGATIVE-WRITES", f"baseline read of the fixture CCLA failed (http {code}, signatureID={row.get('signatureID')}) - negative writes not sent")
+elif c("ALLOW_FIXTURE_WRITES", "0") != "1":
+    e2e.skip("W-ID2-NEGATIVE-WRITES", f"ALLOW_FIXTURE_WRITES={c('ALLOW_FIXTURE_WRITES', '0')}: negative writes (and their {ID1} undo) not sent")
 elif id2_fixture or ID2 in acl_of(row):
     e2e.skip("W-ID2-NEGATIVE-WRITES", f"{ID2} currently holds the fixture scope or is on the CCLA's ACL - negative writes not applicable")
 else:
     neg_email = f"e2e-neg-{ID2}-{e2e.TAG}@example.invalid"
     e2e.expect("W-ID2-APPROVAL-PUT-403", ID2, 403, "PUT", f"/v4/signatures/project/{PROJ}/company/{CO}/clagroup/{GRP}/approval-list",
                {"AddEmailApprovalList": [neg_email]})
-    e2e.expect("W-ID2-CLA-MANAGER-POST-403", ID2, 403, "POST", f"/v4/company/{CO}/project/{PROJ}/cla-manager", {"userLFID": ID2})
+    # a valid cla-manager-user body (firstName/lastName/userEmail are required - swagger cla.v2.yaml): an invalid one is
+    # refused by the request validation with 422 before the handler's authorization runs; ID2's own e-mail keeps a regressed
+    # acceptance exactly what the undo below removes
+    e2e.expect("W-ID2-CLA-MANAGER-POST-403", ID2, 403, "POST", f"/v4/company/{CO}/project/{PROJ}/cla-manager",
+               {"firstName": c("ID2_FIRST"), "lastName": c("ID2_LAST"), "userEmail": c("ID2_EMAIL")})
     e2e.expect("W-ID2-AUTO-ECLA-PUT-403", ID2, 403, "PUT", f"/v4/signatures/company/{CO}/clagroup/{GRP}/ecla-auto-create", {"auto_create_ecla": True})
     # an unexpected acceptance is undone right away (as ID1) so the fixture keeps its baseline
     code_after, after = fixture_ccla()
