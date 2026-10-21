@@ -26,7 +26,8 @@ export function m3(session, { sfid, name, group, sig }) {
   const get = (p) => e2e.bff(context, 'GET', p);
   // The acknowledgments feed is paginated (BFF default pageSize 50, max 100, cursor `nextKey`) and the fixture
   // accumulates invalidated rows run after run, so every read follows the cursor (cap 10 pages) instead of
-  // trusting the first page. A failed page fails the whole read (status != 200), never a partial list.
+  // trusting the first page. A failed page fails the whole read (status != 200), never a partial list, and a feed
+  // still paginated after 10 pages is reported as a failed read (status 0), never as a short list.
   async function acksAll() {
     const list = [];
     let status = 200;
@@ -39,6 +40,7 @@ export function m3(session, { sfid, name, group, sig }) {
       nextKey = r.json?.nextKey || '';
       if (!nextKey) break;
     }
+    if (status === 200 && nextKey) status = 0;
     return { status, list };
   }
   const writesSoFar = () => net.writes.filter((w) => w.url.includes(prefix)).length;
@@ -306,8 +308,11 @@ export function m3(session, { sfid, name, group, sig }) {
       dialog.getByTestId('org-easycla-invalidate-dialog-confirm').getByRole('button').click(),
     ]);
     await sleep(3000);
+    // the tab re-fetches the list after the write (skeleton rows for a while): wait for the row to come back with the badge
+    const badgeLoc = row.getByTestId('org-easycla-acknowledgment-state-invalidated');
+    await e2e.visible(badgeLoc, 30000);
     await e2e.shot(page, `${cid.toLowerCase()}`);
-    const badge = await row.getByTestId('org-easycla-acknowledgment-state-invalidated').count().catch(() => 0);
+    const badge = await badgeLoc.count().catch(() => 0);
     const after = (await acksAll()).list.find((a) => ackId(a) === id);
     e2e.check(cid, !!res && res.status() < 300 && badge >= 1 && !!after && !ackValid(after), `POST invalidate -> ${res ? res.status() : 'no response'}; badge=${badge}; state=${ackState(after)}; dialog matches=${JSON.stringify(matches)} alsoRemove=${alsoRemoveOffered ? alsoRemove : 'n/a'}`);
     const removed = removal ? (await removal.json().catch(() => ({}))) : null;

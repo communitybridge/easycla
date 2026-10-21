@@ -145,6 +145,9 @@ const SANDBOX_DOCUSIGN = new Set(['demo.docusign.net', 'apps-d.docusign.com', 'a
 const CREDENTIAL_HOSTS = new Set([cfg('AUTH0_DOMAIN'), ...cfg('SSO_HOSTS').split(',')].map((s) => s.trim()).filter(Boolean));
 export const isCredentialHost = (h) => CREDENTIAL_HOSTS.has(h);
 export const isAuth0Host = (h) => isCredentialHost(h) || /(^|\.)auth0\.com$/.test(h) || /^sso\./.test(h);
+// A page.goto() superseded by the console's own redirect on load (SSO hop) - the only navigation error a module may
+// tolerate; timeouts, DNS and connection failures must propagate so a browser error page never passes a text check.
+export const navigationSuperseded = (err) => /interrupted by another navigation|ERR_ABORTED/i.test(String(err?.message || err));
 const ALWAYS_WRITE_OK = [/^\/api\/auth\//, /^\/callback$/, /\/permissions\/checks$/];
 
 // launch({ identity, writes: [regex on "METHOD host/path"], allowDocusign: bool, state: bool })
@@ -272,11 +275,12 @@ export async function selectOrgCookie(context, sfid) {
 // restores the lfx-selected-account cookie when persona detection seeded organizations).
 // Self Serve mounts the navbar twice (desktop + mobile drawer): every read and click goes to the first VISIBLE
 // `org-selector`, an unscoped locator would hit Playwright's strict-mode check whenever both copies are in the DOM.
+export async function orgSelector(page) {
+  for (const t of await page.getByTestId('org-selector').all()) if (await t.isVisible().catch(() => false)) return t;
+  return page.getByTestId('org-selector').first();
+}
 export async function ensureOrgSelected(page, uid, name) {
-  const selector = async () => {
-    for (const t of await page.getByTestId('org-selector').all()) if (await t.isVisible().catch(() => false)) return t;
-    return page.getByTestId('org-selector').first();
-  };
+  const selector = () => orgSelector(page);
   const trigger = async () => (await selector()).getByTestId('org-selector-trigger-name').innerText({ timeout: 3000 }).then(squash).catch(() => '');
   const matches = (t) => !!name && !!t && t.startsWith(name.slice(0, 12));
   for (let i = 0; i < 20; i++) {

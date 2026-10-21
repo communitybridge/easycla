@@ -179,9 +179,13 @@ else:
                {"AddEmailApprovalList": [neg_email]})
     # a valid cla-manager-user body (firstName/lastName/userEmail are required - swagger cla.v2.yaml): an invalid one is
     # refused by the request validation with 422 before the handler's authorization runs; ID2's own e-mail keeps a regressed
-    # acceptance exactly what the undo below removes
-    e2e.expect("W-ID2-CLA-MANAGER-POST-403", ID2, 403, "POST", f"/v4/company/{CO}/project/{PROJ}/cla-manager",
-               {"firstName": c("ID2_FIRST"), "lastName": c("ID2_LAST"), "userEmail": c("ID2_EMAIL")})
+    # acceptance exactly what the undo below removes. An acceptance would also e-mail ID2 (and the fixture's managers), so
+    # this one probe additionally needs ALLOW_EMAIL (the identity_boundary manager-request probe follows the same rule)
+    if c("ALLOW_EMAIL", "0") != "1":
+        e2e.skip("W-ID2-CLA-MANAGER-POST-403", f"ALLOW_EMAIL={c('ALLOW_EMAIL', '0')}: a regressed acceptance would e-mail {ID2} and the fixture's CLA managers")
+    else:
+        e2e.expect("W-ID2-CLA-MANAGER-POST-403", ID2, 403, "POST", f"/v4/company/{CO}/project/{PROJ}/cla-manager",
+                   {"firstName": c("ID2_FIRST"), "lastName": c("ID2_LAST"), "userEmail": c("ID2_EMAIL")})
     e2e.expect("W-ID2-AUTO-ECLA-PUT-403", ID2, 403, "PUT", f"/v4/signatures/company/{CO}/clagroup/{GRP}/ecla-auto-create", {"auto_create_ecla": True})
     # an unexpected acceptance is undone right away (as ID1) so the fixture keeps its baseline
     code_after, after = fixture_ccla()

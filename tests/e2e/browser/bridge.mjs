@@ -42,7 +42,9 @@ const deniedPath = (p) => /not-found|access-denied/.test(p) || p === '/' || p ==
 const deniedOverview = (w, name) => deniedPath(w.path) || (/^\/org\/[^/]+\/overview$/.test(w.path) && !!name && !w.text.toLowerCase().includes(name.toLowerCase()));
 
 async function visit(page, p, shotName, settle = 7000) {
-  await page.goto(`${e2e.SS}${p}`, { waitUntil: 'domcontentloaded', timeout: 60000 }).catch(() => {});
+  // a failed navigation (not the SSO redirect superseding it) must reach the outer handler: the checks below compare the
+  // path/cards/text of whatever page is loaded and would otherwise judge the previous page
+  await page.goto(`${e2e.SS}${p}`, { waitUntil: 'domcontentloaded', timeout: 60000 }).catch((err) => { if (!e2e.navigationSuperseded(err)) throw err; });
   await sleep(settle);
   await e2e.hideOverlays(page);
   await e2e.closeOverlay(page);
@@ -59,6 +61,17 @@ async function visit(page, p, shotName, settle = 7000) {
 }
 const summary = (v) => `${v.requested} -> ${v.path}; cards=${v.cards}; nav=${JSON.stringify(v.nav.map((n) => n.split(' :: ')[1]))}; text=${v.text.slice(0, 90)}`;
 const crashed = (v) => /something went wrong|unexpected error|internal server error|cannot read propert|TypeError/i.test(v.text + ' ' + v.alerts);
+
+// Open the organization selector (the visible navbar copy) and wait for its option rows: a single click right after the
+// shell re-renders is sometimes lost, so retry a few times (bounded) instead of trusting one fixed pause.
+async function openSelector(page) {
+  const options = page.locator('[role="option"][data-testid^="org-item-"]');
+  for (let i = 0; i < 4; i++) {
+    await (await e2e.orgSelector(page)).click({ timeout: 5000 }).catch(() => {});
+    if (await e2e.visible(options.first(), 3000)) return true;
+  }
+  return false;
+}
 
 for (const who of [ID1, ID2]) {
   const P = who === ID1 ? 'B-ID1' : 'B-ID2';
@@ -129,7 +142,7 @@ for (const who of [ID1, ID2]) {
       const [a, b] = claOnlyOrgs;
       const va = await visit(page, `/org/${a}/easycla`, `${who}-b3-a`);
       const listA = await e2e.bff(context, 'GET', `/api/orgs/${a}/lens/cla-groups`);
-      await page.getByTestId('org-selector').click().catch(() => {});
+      await openSelector(page);
       await sleep(1500);
       // rows only: the children carry org-item-<uid>-logo/-name/... test ids
       const items = (await page.locator('[role="option"][data-testid^="org-item-"]').evaluateAll((els) => els.map((e) => (e.getAttribute('data-testid') || '').replace('org-item-', ''))).catch(() => []));
@@ -172,13 +185,13 @@ for (const who of [ID1, ID2]) {
       else if (!target) info('B9-ADMIN-AND-CLA-MANAGER', `${ID1} is not both writer and CLA manager of any organization right now (writers=${writers.length}, claManagerOrgs=${JSON.stringify(claOrgs)})`);
       else {
         const v = await visit(page, `/org/${target}/easycla`, 'id1-b9-easycla');
-        await page.getByTestId('org-selector').click().catch(() => {});
+        const opened = await openSelector(page);
         await sleep(1500);
         const occurrences = await page.locator(`[data-testid="org-item-${target}"]`).count();
         await e2e.shot(page, 'id1-b9-selector');
         await page.keyboard.press('Escape').catch(() => {});
         const full = v.nav.length > 1 && v.nav.some((n) => /easycla/i.test(n)) && v.nav.some((n) => !/easycla/i.test(n));
-        check('B9-ADMIN-AND-CLA-MANAGER', occurrences === 1 && full && v.cards > 0 && !crashed(v), `${target}: selector occurrences=${occurrences}; ${summary(v)}`);
+        check('B9-ADMIN-AND-CLA-MANAGER', occurrences === 1 && full && v.cards > 0 && !crashed(v), `${target}: selector opened=${opened} occurrences=${occurrences}; ${summary(v)}`);
       }
       // B10 (#3631): writer organizations WITHOUT an EasyCLA ACS scope (role-grants: writer but not claManagerOrg)
       const plainAdmin = writers.filter((s) => !claOrgs.includes(s)).slice(0, 2);
