@@ -3,9 +3,9 @@ SPDX-License-Identifier: CC-BY-4.0 -->
 
 # M3 FGA model — one org-level relation, UI-only
 
-**Status**: proposal, for the spec-044 ADR review (simplifies the M3 slice of the model agreed on the 2026-09-10 architecture call)
+**Status**: product decision 2026-10-21 (*Decided since*, below); the model shape awaits architect review on this PR. §1–§6 are the original proposal, unchanged except where marked
 **Owner**: Michal (engineering)
-**Related**: [m3-org-visibility.md](m3-org-visibility.md) §4.2 (the four-type variant this simplifies) · [role-mapping-feasibility.md](role-mapping-feasibility.md)
+**Related**: [m3-org-visibility.md](m3-org-visibility.md) §4.2 (the four-type variant this simplifies) · [role-mapping-feasibility.md](role-mapping-feasibility.md) · plan: [m3-b2b-org-import.md](https://github.com/linuxfoundation/easycla/pull/5223) §6 items 14–16 · ticket: [lfx-self-serve#3793](https://github.com/linuxfoundation/lfx-self-serve/issues/3793)
 
 **Spec 044** = the [lfx-v2-cla-service plan](https://docs.google.com/document/d/1hyWZUE_kofeAjVSmeXsRXtPSxSsj7uWvRj3tTNgwdik/edit)
 (Luis, rev 5, 2026-09-10): a new platform CLA service that mirrors EasyCLA's DynamoDB into
@@ -20,6 +20,32 @@ the Self Serve UI shows (org selector entry, EasyCLA tab). Every EasyCLA API cal
 authorized by ACS, unchanged: gateway → ACS warden → `X-ACL` header → v4 scope check.
 FGA never authorizes an API call; ACS never decides what the UI renders. This holds for
 the whole M3→M5 bridge period.
+
+**Decided since (2026-10-21).** Product call (Heather, Dano, Luis, Michal;
+[summary](https://linuxfoundation.slack.com/archives/C04DWU3FVMW/p1792605157642049?thread_ts=1791003155.842249&cid=C04DWU3FVMW)):
+
+- **The relation**: a dedicated relation that admits CLA managers to the CLA section of
+  their organization only — not `auditor` (privacy; many managers are self-certified; may
+  be widened later). That is the `cla_admin` of §2. It supersedes Eric's 2026-10-13
+  [recommendation](https://linuxfoundation.slack.com/archives/C04DWU3FVMW/p1791908726863869?thread_ts=1791832053.210469&cid=C04DWU3FVMW)
+  as the product decision he deferred to; the model shape still needs his review (§7).
+- **The grain**: the grant is per organization (lens entry); management stays per CCLA
+  (Heather: "CLA admin is per CLA", no company-wide manager role exists). That is §6's
+  two tiers, now a stated requirement rather than observed v4 behaviour.
+- **ACS stays**: the v4 APIs keep ACS as their authority and ACS is kept in sync with FGA
+  for the lens (Michal); a pure-FGA EasyCLA waits for the backend rewrite and the move to
+  Kubernetes. The division of labor above stands.
+- **Conglomerates**: whether a CLA manager sees or manages the CCLAs of related companies
+  is undecided (Dano). Until then the relation is scoped to the manager's own company,
+  which `cla_admin: [user]` already is — it must not be folded into the cascading
+  `writer`/`auditor` relations.
+- **Non-member organizations**: Luis builds CDP profiles for non-member companies in
+  November, visible to LF staff only until the claim and affiliation workflows exist. The
+  relation is then the only entry for a non-member CLA manager; whether it escapes the
+  staff-only restriction was
+  [asked](https://linuxfoundation.slack.com/archives/C04DWU3FVMW/p1792622856322669?thread_ts=1791003155.842249&cid=C04DWU3FVMW)
+  on 2026-10-21. The import itself is gated by the member-service eligibility setting
+  ([lfx-self-serve#3401](https://github.com/linuxfoundation/lfx-self-serve/issues/3401)).
 
 ---
 
@@ -93,8 +119,8 @@ migrating is a re-backfill from `signature_acl`, not a data migration.
 Note this is **not** settled as a straight replacement. §6 concludes that company-wide
 read has to survive into M5, which needs a per-company relation there too — so the
 per-agreement types may **extend** `cla_admin` (`... or cla_admin from b2b_org`) rather
-than replace it, or replace it with a CLA-owned `cla_company`. Which of those the M5
-model does is part of the open question in §7, and it changes the migration.
+than replace it, or replace it with a CLA-owned `cla_company`. Since 2026-10-21 the
+relation is on `b2b_org` (§6), so the M5 types extend it and the migration is additive.
 
 **Model shape, not independence**: the relation is defined on a specific object type.
 As drafted that is `b2b_org`, which means the model still requires each EasyCLA company
@@ -356,8 +382,10 @@ Variant B" to *where that relation lives*:
   cla_company`) — no member-service coupling, but adds a type and reopens P2's "no CLA
   object types before M5" on its own terms.
 
-Not decided here. This is for the spec-044 ADR review (§7), which is the venue that can
-settle it.
+Decided 2026-10-21 (*Decided since*, top): a dedicated relation, which this document
+places on `b2b_org` (§2) — so §4.1 is a required member-service change, not a fork. The
+M5 extension (`... or cla_admin from b2b_org`) stays with the M5 ADR. What remains for
+the architect is in §7.
 
 **Rejected alternative: filter the list per CLA group in v4.** Considered — the response
 already carries `claManagers` per row from `signature_acl`
@@ -378,56 +406,33 @@ one tuple per user × org. A per-CLA-group relation would have to track v4's wri
 giving two systems that can disagree — the parity problem in open item 6 of
 [m3-org-visibility.md](m3-org-visibility.md) §5.
 
-## 7. Decision venue
+## 7. Decision status
 
-The spec-044 ADR review (open item 3 in
-[m3-org-visibility.md](m3-org-visibility.md) §5): adopt this as the M3 model, with the
-four CLA types moved to the M5 ADR where they become enforcing.
+Decided by Product on 2026-10-21 (*Decided since*, top): a dedicated relation that admits
+CLA managers to the CLA section only, not `auditor`; ACS stays the authority for the v4
+APIs and is synced to FGA. For this document that is Variant B for M3 — `cla_admin: [user]`
+on `b2b_org` (§2), projected from `signature_acl` (§3). Variant A's per-agreement types
+stay with the M5 ADR under spec 044, and §6 now constrains them: they extend `cla_admin`,
+they do not replace it.
 
-**Proposed form of the decision**, so the "no CLA types before M5" reopen is explicitly
-scoped rather than implied:
+What the architect is asked to confirm, on this PR:
 
-> **Variant B (single `cla_admin` relation) for M3, conditional on §4.1 and §4.2 being resolved;
-> Variant A (dedicated CLA types) for M5.**
-
-**This form may be the wrong shape of question.** §6 records a tension neither variant
-resolves: Variant A's per-agreement read model does not preserve the company-wide read
-Product has confirmed as intended, and Variant B defines no M5 read model at all. If the
-ADR accepts that a per-company CLA read relation is needed in both milestones, the
-decision becomes *where that relation lives* — on `b2b_org` or on a CLA-owned object —
-rather than a choice between the two variants. The recommendation above stands as the
-starting position; §6 states what would displace it.
-
-The ADR should record three things alongside it:
-
-1. **The §4.1 owner and resolution** (and, with it, the §4.2 consumer-side work — selector
-   materialization plus a CLA-route gate, which lands in `lfx-self-serve`) — either member-service accepts the
-   `ExcludeRelations` change with a deploy-order constraint and regression test, or the
-   grant moves to a CLA-owned object. Variant B is not safe to build until this is
-   answered.
-2. **The bridge ID-translation contract — and only then an ACS re-grant owner.** Under
-   Path B of the org import ([m3-org-visibility.md](m3-org-visibility.md) open item 5)
-   the lens holds a new B2B SFID while ACS scopes and `company_external_id` still carry
-   the old one. Whether that needs an ACS migration depends entirely on a contract
-   nobody has written down yet:
-
-   - **Bridge translates (new → old) before calling v4** — as
-     [lfx-self-serve#2750](https://github.com/linuxfoundation/lfx-self-serve/issues/2750)
-     describes: requests still match existing ACS scopes, **no re-grant is needed**, and
-     the cost is that every bridged path must translate without exception.
-   - **New ID passed through untranslated** — v4 returns 403 for managers FGA has
-     already admitted, and an ACS-scope migration with a named owner becomes mandatory.
-
-   **Decide and document the boundary contract first**; assign the ACS re-grant owner
-   only if the second option is chosen. Under Path A (the working assumption — IDs are
-   preserved) neither arises **for companies that store a real old-org SFID**, which is
-   a further reason to settle Path A/B first. Path A is not a blanket exemption: the
-   530 `lf`-shaped IDs have no Salesforce record to preserve, and the 374 domain-linked
-   orgs point at a B2B account whose ID differs from the stored value
-   ([m3-org-visibility.md](m3-org-visibility.md) §2.1 and §2.3). Both sets need a rewrite
-   or translation under either path, and both therefore still need an owner.
-3. **The FGA-vs-ACS disagreement rule**, defined before cutover: what the system does
-   when FGA lets someone into the lens but ACS refuses the API call. "FGA gates the UI,
-   ACS gates the APIs" describes the split but does not say which wins, what the user
-   sees, or how the drift is reported. Tracked as open item 6 in
-   [m3-org-visibility.md](m3-org-visibility.md) §5.
+1. **The relation and its publisher.** `cla_admin` on `b2b_org`, keyed on the B2B SFID —
+   the import rewrites `company_external_id` and moves the ACS scopes to that ID, so the
+   lens, ACS and v4 carry one ID and the earlier bridge ID-translation question is
+   superseded. Who publishes the tuple from `signature_acl` (an EasyCLA consumer of the
+   signatures table, or the future CLA service) and how the backfill runs.
+2. **§4.1 owner.** member-service adds `cla_admin` to `ExcludeRelations` on every
+   `b2b_org` publish path, ships before the backfill, with a regression test. Still open:
+   no `cla_admin` in member-service as of 2026-10-21.
+3. **§4.2 consumer work** in `lfx-self-serve`: selector materialization and a CLA-route
+   gate on `cla_admin`. Today the CLA route admits managers through a fallback on their
+   ACS `cla-manager` scopes (M3); what happens to that fallback once the tuple is the
+   gate is item 5.
+4. **Designees.** §5 grants no tuple before a signed CCLA, so a designee cannot enter the
+   lens until the CCLA is signed; the manager emails that link into the lens
+   ([lfx-self-serve#3796](https://github.com/linuxfoundation/lfx-self-serve/issues/3796))
+   need either that or a designee grant.
+5. **The FGA-vs-ACS disagreement rule**, before cutover: what the user sees when FGA
+   admits them to the lens and ACS refuses the API call, and how the drift is reported
+   (open item 6 in [m3-org-visibility.md](m3-org-visibility.md) §5).
