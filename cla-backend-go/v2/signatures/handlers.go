@@ -1383,6 +1383,15 @@ func Configure(api *operations.EasyclaAPI, claGroupService service.Service, proj
 			"userID":         params.UserID,
 		}
 		log.WithFields(f).Debug("Invalidating ICLA record...")
+
+		// Same project-scope gate as the ICLA list endpoint for this CLA group
+		log.WithFields(f).Debug("checking access control permissions for user...")
+		if !isUserHaveAccessToCLAGroupProjects(ctx, authUser, params.ClaGroupID, projectClaGroupsRepo, projectRepo) {
+			msg := fmt.Sprintf("user %s is not authorized to invalidate ICLA signatures for this CLA group", authUser.UserName)
+			log.WithFields(f).Warn(msg)
+			return signatures.NewInvalidateICLAForbidden().WithXRequestID(reqID).WithPayload(utils.ErrorResponseForbidden(reqID, msg))
+		}
+
 		eventArgs := &events.LogEventArgs{
 			EventType: events.InvalidatedSignature,
 			EventData: &events.SignatureProjectInvalidatedEventData{

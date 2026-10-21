@@ -577,13 +577,13 @@ func (s *service) SignedIndividualCallbackGithub(ctx context.Context, payload []
 
 	log.WithFields(f).Debug("processing signed individual callback...")
 
-	var info DocuSignEnvelopeInformation
-
-	err := xml.Unmarshal(payload, &info)
+	// the callback is reachable without a token - reject an envelope missing recipient or document statuses before indexing
+	parsed, err := parseEnvelope(payload)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("unable to unmarshal xml payload")
 		return err
 	}
+	info := *parsed
 
 	envelopeID := info.EnvelopeStatus.EnvelopeID
 	signatureID := info.EnvelopeStatus.RecipientStatuses[0].ClientUserId
@@ -915,13 +915,12 @@ func (s *service) SignedIndividualCallbackGitlab(ctx context.Context, payload []
 	}
 
 	log.WithFields(f).Debug("processing signed individual callback...")
-	var info DocuSignEnvelopeInformation
-
-	err := xml.Unmarshal(payload, &info)
+	parsed, err := parseEnvelope(payload)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("unable to unmarshal xml payload")
 		return err
 	}
+	info := *parsed
 
 	envelopeID := info.EnvelopeStatus.EnvelopeID
 	signatureID := info.EnvelopeStatus.RecipientStatuses[0].ClientUserId
@@ -1163,13 +1162,12 @@ func (s *service) signedIndividualCallbackGerrit(ctx context.Context, payload []
 	}
 
 	log.WithFields(f).Debug("processing signed individual callback...")
-	var info DocuSignEnvelopeInformation
-
-	err := xml.Unmarshal(payload, &info)
+	parsed, err := parseEnvelope(payload)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("unable to unmarshal xml payload")
 		return nil, err
 	}
+	info := *parsed
 
 	envelopeID := info.EnvelopeStatus.EnvelopeID
 	signatureID := info.EnvelopeStatus.RecipientStatuses[0].ClientUserId
@@ -1379,6 +1377,9 @@ func (s *service) SignedIndividualCallbackSelfServe(ctx context.Context, payload
 	return nil
 }
 
+// SignedCorporateCallback handles the DocuSign completion callback for a corporate (CCLA) envelope.
+//
+//nolint:gocyclo // complexity is acceptable for now (31 vs. 30 after the nil corporate-signature guard)
 func (s *service) SignedCorporateCallback(ctx context.Context, payload []byte, companyID, projectID string) error {
 	f := logrus.Fields{
 		"functionName":   "sign.SignedCorporateCallback",
@@ -1388,13 +1389,12 @@ func (s *service) SignedCorporateCallback(ctx context.Context, payload []byte, c
 	}
 
 	log.WithFields(f).Debug("processing signed corporate callback...")
-	var info DocuSignEnvelopeInformation
-
-	err := xml.Unmarshal(payload, &info)
+	parsed, err := parseEnvelope(payload)
 	if err != nil {
 		log.WithFields(f).WithError(err).Warn("unable to unmarshal xml payload")
 		return err
 	}
+	info := *parsed
 
 	envelopeID := info.EnvelopeStatus.EnvelopeID
 
@@ -1440,6 +1440,10 @@ func (s *service) SignedCorporateCallback(ctx context.Context, payload []byte, c
 		// 	return errors.New("unable to lookup corporate signatures by company ID - not found")
 		// }
 		// signature = getLatestSignature(signatures)
+		if signature == nil {
+			log.WithFields(f).Warnf("unable to lookup corporate signature by company ID: %s, project ID: %s - not found", companyID, projectID)
+			return errors.New("unable to lookup corporate signature by company ID and project ID - not found")
+		}
 		log.WithFields(f).Debugf("signature: %+v", signature)
 		signatureID = signature.SignatureID
 	} else {

@@ -300,10 +300,13 @@ func (s service) getCompanySignature(ctx context.Context, companyID string, claG
 		NextKey:     nil,
 		PageSize:    aws.Int64(5),
 	})
-	if sigErr != nil || sigModels == nil {
+	if sigErr != nil || sigModels == nil || len(sigModels.Signatures) == 0 {
 		log.Warnf("Unable to lookup project company signature using Project ID: %s, Company ID: %s, error: %+v",
 			claGroupID, companyID, sigErr)
-		return nil, sigErr
+		if sigErr != nil {
+			return nil, sigErr
+		}
+		return nil, fmt.Errorf("no CCLA signature found for company ID: %s, CLA group ID: %s", companyID, claGroupID)
 	}
 
 	if len(sigModels.Signatures) > 1 {

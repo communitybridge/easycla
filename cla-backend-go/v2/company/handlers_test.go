@@ -220,3 +220,33 @@ func TestGetCompanyProjectClaManagersHandler(t *testing.T) {
 		})
 	}
 }
+
+type requestAdminService struct {
+	Service
+	calls int
+}
+
+func (s *requestAdminService) RequestCompanyAdmin(_ context.Context, _, _, _, _, _, _, _, _ string) error {
+	s.calls++
+	return nil
+}
+
+// the request-company-admin body is optional in the generated binding, so an omitted body must yield a 400, not a
+// nil dereference of the required email (lfx-self-serve-ops#754)
+func TestRequestCompanyAdminHandlerWithoutABody(t *testing.T) {
+	api := operations.NewEasyclaAPI(nil)
+	service := &requestAdminService{}
+	Configure(api, service, nil, "")
+	require.NotNil(t, api.CompanyRequestCompanyAdminHandler)
+
+	responder := api.CompanyRequestCompanyAdminHandler.Handle(v2CompanyOps.RequestCompanyAdminParams{
+		HTTPRequest: httptest.NewRequest(http.MethodPost, "/v4/user/user-1/request-company-admin", nil),
+		UserID:      "user-1",
+	})
+	recorder := httptest.NewRecorder()
+	responder.WriteResponse(recorder, runtime.JSONProducer())
+
+	assert.Equal(t, http.StatusBadRequest, recorder.Code)
+	assert.Contains(t, recorder.Body.String(), "claManagerEmail is required")
+	assert.Equal(t, 0, service.calls, "the service is not called without the required email")
+}

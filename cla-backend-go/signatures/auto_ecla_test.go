@@ -126,9 +126,14 @@ func TestProcessEmployeeSignatureGate(t *testing.T) {
 		{"sanctioned company", &models.Company{CompanyID: "company-1", CompanyName: "Acme", IsSanctioned: true}, &fakeEmployeeSignatureRepo{employeeModels: map[string]*EmployeeModel{"user-1": ack}, ccla: ccla}, false, "", 0, 0},
 		{"lookup error", fakeCompany(), &fakeEmployeeSignatureRepo{lookupErr: errors.New("dynamodb unavailable"), ccla: ccla}, false, "dynamodb unavailable", 1, 0},
 		{"CCLA lookup error", fakeCompany(), &fakeEmployeeSignatureRepo{employeeModels: map[string]*EmployeeModel{"user-1": ack}, cclaErr: errors.New("ccla unavailable")}, false, "ccla unavailable", 1, 1},
-		// pre-existing: the gate evaluates the approval list, not signature_approved / invalidation
-		{"invalidated acknowledgment still evaluates the approval list", fakeCompany(), &fakeEmployeeSignatureRepo{employeeModels: map[string]*EmployeeModel{"user-1": {
-			Signature: &models.Signature{SignatureID: "ecla-1", SignatureApproved: false, SignatureSigned: true}, User: user, Invalidated: true}}, ccla: ccla}, true, "", 1, 1},
+		// the gate evaluates the approval list, not signature_approved: an unapproved record without invalidation evidence still passes
+		{"unapproved acknowledgment without invalidation evidence", fakeCompany(), &fakeEmployeeSignatureRepo{employeeModels: map[string]*EmployeeModel{"user-1": {
+			Signature: &models.Signature{SignatureID: "ecla-1", SignatureApproved: false, SignatureSigned: true}, User: user}}, ccla: ccla}, true, "", 1, 1},
+		// ops#879: an invalidated acknowledgment is not authorized even when the user is still on the approval list
+		{"invalidated acknowledgment is not authorized", fakeCompany(), &fakeEmployeeSignatureRepo{employeeModels: map[string]*EmployeeModel{"user-1": {
+			Signature: &models.Signature{SignatureID: "ecla-1", SignatureApproved: false, SignatureSigned: true}, User: user, Invalidated: true}}, ccla: ccla}, false, "", 1, 0},
+		{"re-acknowledged after an invalidation", fakeCompany(), &fakeEmployeeSignatureRepo{employeeModels: map[string]*EmployeeModel{"user-1": {
+			Signature: &models.Signature{SignatureID: "ecla-2", SignatureApproved: true, SignatureSigned: true}, User: user}}, ccla: ccla}, true, "", 1, 1},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

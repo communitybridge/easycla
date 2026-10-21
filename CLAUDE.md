@@ -98,4 +98,4 @@ Be careful: scripts in `utils/` and `scripts/` can mutate DynamoDB in whichever 
 
 ## CI
 
-GitHub Actions in `.github/workflows/`: `build-pr.yml` (build/test/lint), `cypress-functional-pr.yml` (functional E2E), CodeQL/security/license scans for the Go backends, and `deploy-dev.yml` / `deploy-prod.yml` for deployment (both build `cla-backend-go` and `cla-backend-legacy`, then deploy through the `cla-backend` stack).
+GitHub Actions in `.github/workflows/`: `build-pr.yml` (build/test/lint), `cypress-functional-pr.yml` (functional E2E; disabled on PRs since 2026-10 — manual `workflow_dispatch` only, and the post-deploy Cypress job in `deploy-dev.yml` is gated off the same way), CodeQL/security/license scans for the Go backends, and `deploy-dev.yml` / `deploy-prod.yml` for deployment (both build `cla-backend-go` and `cla-backend-legacy`, then deploy through the `cla-backend` stack).
