@@ -55,8 +55,8 @@ never reads it). Gates per environment, as set in those files:
 
 | gate | dev | prod | guards |
 |---|---|---|---|
-| `ALLOW_FIXTURE_WRITES` | 1 | 1 | approval list / auto-ECLA / manager add+remove / invalidation on the fixture (always baseline-restored) |
-| `ALLOW_EMAIL` | 1 | 1 | the one contact-manager request that e-mails ID1's own mailbox |
+| `ALLOW_FIXTURE_WRITES` | 1 | 1 | approval list / auto-ECLA / manager add+remove / invalidation on the fixture (always baseline-restored); the two negative `identity_boundary` probes naming a foreign fixture ECLA (manager request, invalidate) |
+| `ALLOW_EMAIL` | 1 | 1 | the one contact-manager request that e-mails ID1's own mailbox; the `identity_boundary` foreign manager-request probe (together with `ALLOW_FIXTURE_WRITES`) |
 | `ALLOW_DOCUSIGN` | 1 | 0 | completing DocuSign sandbox envelopes (`m2_signing`, `org_sign`) |
 | `ALLOW_GITHUB_PR` | 1 | 0 | opening a throw-away PR on `GITHUB_REPO` |
 | `ALLOW_COMPANY_CREATE` | 0 | 0 | the one positive company-creation case of the hardened route |
@@ -142,11 +142,15 @@ e-mail addresses and fixture ids).
   only panics, runtime errors and timeouts fail. `/api/changelog/unseen` 500s in the SS network log are SS
   noise and ignored by the guard.
 * Approval-list `PUT` is not atomic on the backend: a request mixing valid and invalid entries can apply the
-  valid part; the suite therefore sends one entry per request.
+  valid part; the suite therefore sends one entry per request. Organization entries CLA-authorize every member
+  of the named organization under the fixture CCLA while present, so `QA_GITHUB_ORG` / `QA_GITLAB_ORG` must be
+  QA-owned organizations (empty → the org-entry case `SKIP`s; there are no defaults).
 * `read_matrix` `W-ID2-NEGATIVE-WRITES`, `identity_boundary` `*-FOREIGN-INVALIDATE-REFUSED`: skipped while ID2
-  legitimately holds the fixture CLA-manager scope (e.g. a chain left with `--keep-state`).
-* prod: the GitLab organization fixture is invalid upstream (INFO), the sanctioned-company auto-create route
-  answers 404 (INFO), `hardened_route` creation-capable cases and all signing/GitHub modules are gated off.
+  legitimately holds the fixture CLA-manager scope (e.g. a chain left with `--keep-state`). The `identity_boundary`
+  manager-request and invalidate probes only ever name an ECLA of the other identity on a fixture CLA group ×
+  fixture company and `SKIP` when there is none or the gate is off.
+* prod: the sanctioned-company auto-create route answers 404 (INFO), `hardened_route` creation-capable cases and all
+  signing/GitHub modules are gated off.
 * dev: `m2_signing` ICLA and `org_sign` take the "already signed" path once ID1 has signed the fixture group
   (an ICLA is never invalidated by the user); point `ICLA_GROUP` / `ORGSIGN_GROUP` at a fresh group to drive
   DocuSign again. The GitHub verdict (`GH-VERDICT`) depends on ID1's authorization on the enrolled CLA group

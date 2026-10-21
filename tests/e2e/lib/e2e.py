@@ -213,6 +213,14 @@ def has_scope(ids, sfid):
 _acs_unavailable = [False]
 
 
+def acs_env():
+    """Environment for the repo ACS helper (utils/<env>_acs_role_flip.sh): AWS_PROFILE_E2E from the suite config is handed over
+    as AWS_PROFILE_OVERRIDE so the helper uses the profile the suite was configured with (its own account guard still applies);
+    None (inherit) when the suite config names no profile."""
+    profile = cfg("AWS_PROFILE_E2E")
+    return {**os.environ, "AWS_PROFILE_OVERRIDE": profile} if profile else None
+
+
 def acs_roles(who):
     """Authoritative ACS rolescopes of `who` through the repo helper `utils/<env>_acs_role_flip.sh roles <user>` (M2M token via
     SSM, needs AWS credentials for the env profile). Returns {role_name: set(scope ids)} - scope ids are "<project>|<org>" for
@@ -221,7 +229,7 @@ def acs_roles(who):
         return None
     script = os.path.join(REPO_ROOT, "utils", f"{ENV}_acs_role_flip.sh")
     try:
-        out = subprocess.run([script, "roles", who], capture_output=True, text=True, timeout=180).stdout
+        out = subprocess.run([script, "roles", who], capture_output=True, text=True, timeout=180, env=acs_env()).stdout
         data = json.loads(out[out.index("{"):]) if "{" in out else {}
     except (OSError, subprocess.SubprocessError, ValueError):
         data = {}

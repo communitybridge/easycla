@@ -67,29 +67,58 @@ for (const who of [ID1, ID2]) {
     check(`${P}-ME-LENS`, errorState === 0 && (rows > 0 || empty > 0), `rows=${rows} empty=${empty > 0} error=${errorState > 0} sign-cla-action=${signBtn}`);
     check(`${P}-ME-LENS-MATCHES-BFF`, rows === agreements.length || (rows === 0 && agreements.length === 0), `UI rows=${rows} vs BFF agreements=${agreements.length}`);
 
-    // home / selector
+    // home / selector: since the navbar rewrite the home-page trigger stays in the DOM but does not open, so the same
+    // selector is read on the /org/easycla page opened right after when it did not open here (easycla#5265).
+    // Self Serve mounts the navbar twice (desktop + mobile drawer) - only a visible trigger counts - and renders a
+    // single-organization caller a static card that never opens (org-selector isSingleOrg): that card is one listed
+    // organization, so its name is the item. States: absent (no visible selector), static (card), open (panel read).
+    const openSelector = async (tag) => {
+      let trigger = null;
+      for (const t of await page.getByTestId('org-selector').all()) if (await t.isVisible().catch(() => false)) { trigger = t; break; }
+      if (!trigger) return { state: 'absent', items: [] };
+      await trigger.click({ timeout: 10000 }).catch(() => {});
+      await e2e.sleep(1500);
+      const opened = (await trigger.getAttribute('aria-expanded').catch(() => null)) === 'true' || (await page.locator('.org-selector-panel').isVisible().catch(() => false));
+      let items = [];
+      if (opened) items = (await page.locator('[role="option"][data-testid^="org-item-"]').allInnerTexts().catch(() => [])).map(e2e.squash).filter(Boolean);
+      else {
+        const name = e2e.squash(await trigger.getByTestId('org-selector-trigger-name').innerText({ timeout: 3000 }).catch(() => ''));
+        if (name && name !== 'Select Organization') items = [`${name} (static card)`];
+      }
+      await e2e.shot(page, `${who}-selector-${tag}`);
+      await page.keyboard.press('Escape').catch(() => {});
+      return { state: opened ? 'open' : 'static', items };
+    };
     await page.goto(`${e2e.SS}/`, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await e2e.sleep(4000);
     await e2e.hideOverlays(page);
-    const trigger = page.getByTestId('org-selector');
-    let selectorItems = [];
-    if (await trigger.count()) {
-      await trigger.click().catch(() => {});
-      await e2e.sleep(1500);
-      selectorItems = (await page.locator('[role="option"][data-testid^="org-item-"]').allInnerTexts().catch(() => [])).map(e2e.squash).filter(Boolean);
-      await e2e.shot(page, `${who}-selector`);
-      await page.keyboard.press('Escape').catch(() => {});
-    }
+    const homePath = new URL(page.url()).pathname;
+    const home = await openSelector('home');
     const homeText = await e2e.bodyText(page);
-    info(`${P}-HOME-SELECTOR`, `path=${new URL(page.url()).pathname} selector=${(await trigger.count()) > 0} items=${JSON.stringify(selectorItems.slice(0, 10)).slice(0, 240)}`);
-    if (who === ID2 && !claOrgs.length) {
-      check(`${P}-NO-ORG-LENS-ENTRY`, selectorItems.length === 0 && !/Organization lens/i.test(homeText), `no organization roles -> selector items=${selectorItems.length}`);
-    }
 
     await page.goto(`${e2e.SS}/org/easycla`, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await e2e.sleep(5000);
+    await e2e.hideOverlays(page);
+    const orgPage = home.state === 'open' ? { state: 'not-tried', items: [] } : await openSelector('org-page');
     await e2e.shot(page, `${who}-org-easycla-landing`);
-    info(`${P}-ORG-EASYCLA-LANDING`, `path=${new URL(page.url()).pathname} text=${(await e2e.bodyText(page)).slice(0, 160)}`);
+    const landingText = await e2e.bodyText(page);
+    const found = [home, orgPage].find((s) => s.state === 'open') || [orgPage, home].find((s) => s.state === 'static') || null;
+    const source = found ? (found === home ? 'home' : 'org-page') : 'none';
+    const selectorItems = found ? found.items : [];
+    info(`${P}-HOME-SELECTOR`, `path=${homePath} source=${source} (home=${home.state} org-page=${orgPage.state}) items=${JSON.stringify(selectorItems.slice(0, 10)).slice(0, 240)}`);
+    if (who === ID2 && !claOrgs.length) {
+      // no organization roles: no organization is listed by the selector (none rendered, or an open panel with no rows -
+      // a static card would be one), the home page offers no Organization lens entry, and /org/easycla shows the
+      // "No organization linked to your account" empty state (org-easycla-no-access-*) instead of any CLA widget. The
+      // empty state's own description mentions Organization Lens, so the landing text is not a negative signal.
+      const emptyState = (await page.getByTestId('org-easycla-no-access-state').count()) > 0;
+      const emptyTitle = e2e.squash(await page.getByTestId('org-easycla-no-access-title').innerText({ timeout: 3000 }).catch(() => ''));
+      const widgets = await page.locator('[data-testid="org-easycla-card-link"], [data-testid="org-easycla-detail-status"]').count();
+      const homeLens = /Organization lens/i.test(homeText);
+      check(`${P}-NO-ORG-LENS-ENTRY`, selectorItems.length === 0 && !homeLens && emptyState && widgets === 0,
+        `no organization roles -> selector items=${selectorItems.length} (source=${source}); home "Organization lens" text=${homeLens}; /org/easycla empty state=${emptyState} "${emptyTitle}"; CLA widgets=${widgets}`);
+    }
+    info(`${P}-ORG-EASYCLA-LANDING`, `path=${new URL(page.url()).pathname} text=${landingText.slice(0, 160)}`);
 
     // deep links
     for (const [key, sfid, name] of orgs) {

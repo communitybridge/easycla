@@ -86,7 +86,7 @@ def acs(user):
     if _acs_ok[0] is False:
         return [], None
     try:
-        out = subprocess.run([ACS_SCRIPT, "status", user], capture_output=True, text=True, timeout=180).stdout
+        out = subprocess.run([ACS_SCRIPT, "status", user], capture_output=True, text=True, timeout=180, env=e2e.acs_env()).stdout
     except (OSError, subprocess.SubprocessError) as err:
         out = ""
         e2e.log(f"acs helper failed: {err}")
@@ -151,7 +151,8 @@ def poll(fn, want, budget, step=5):
 def contrib_row():
     code, body = e2e.call(ID1, "GET", e2e.v4(CONTRIB))
     rows = (body or {}).get("list") or [] if isinstance(body, dict) else []
-    mine = [r for r in rows if ID2 in (r.get("github_id"), r.get("linux_foundation_id"), r.get("lf_username")) or r.get("email") == ID2_EMAIL]
+    # github_id is the GitHub login (corporate-contributor.yaml): match it against ID2's GitHub login, not ID2's LF username
+    mine = [r for r in rows if (ID2_GH and r.get("github_id") == ID2_GH) or ID2 in (r.get("linux_foundation_id"), r.get("lf_username")) or r.get("email") == ID2_EMAIL]
     return code, mine, len(rows)
 
 

@@ -330,14 +330,16 @@ export async function bff(context, method, p, data) {
 }
 
 // dev only: drop the whole ACS answer cache through utils/dev_acs_role_flip.sh flush-cache (M2M token from SSM, needs the
-// lfproduct-dev AWS profile) so a grant/revoke becomes visible to Self Serve right away instead of after ~30 minutes.
+// suite's AWS_PROFILE_E2E profile, handed over as AWS_PROFILE_OVERRIDE - the helper's dev-account guard still applies) so a
+// grant/revoke becomes visible to Self Serve right away instead of after ~30 minutes.
 // Returns a short note; never throws (prod has no flush - the chains then wait SS_PROPAGATION_SECS and report INFO).
 export function flushAcsCache() {
   if (ENV !== 'dev') return 'no cache flush on prod (ACS authorize cache ~30 min)';
   const script = path.join(REPO_ROOT, 'utils', 'dev_acs_role_flip.sh');
   if (!fs.existsSync(script)) return 'utils/dev_acs_role_flip.sh not found';
+  const env = { ...process.env, ...(cfg('AWS_PROFILE_E2E') ? { AWS_PROFILE_OVERRIDE: cfg('AWS_PROFILE_E2E') } : {}) };
   try {
-    const out = execFileSync(script, ['flush-cache'], { encoding: 'utf8', timeout: 120000, stdio: ['ignore', 'pipe', 'pipe'] });
+    const out = execFileSync(script, ['flush-cache'], { encoding: 'utf8', timeout: 120000, stdio: ['ignore', 'pipe', 'pipe'], env });
     return (out.split('\n').find((l) => /flushed/i.test(l)) || out.trim().split('\n')[0] || 'flushed').slice(0, 120);
   } catch (err) {
     return `flush-cache unavailable (${(err.stderr || err.message || '').toString().trim().split('\n').pop().slice(0, 120)})`;

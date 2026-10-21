@@ -30,10 +30,11 @@ AUTO = f"/v4/signatures/company/{CO}/clagroup/{GRP}/ecla-auto-create"
 LISTS = ("emailApprovalList", "domainApprovalList", "githubUsernameApprovalList", "githubOrgApprovalList", "gitlabUsernameApprovalList", "gitlabOrgApprovalList")
 # username entries make the backend look the account up and create/re-parent its EasyCLA user record (createOrGetEmployeeModels),
 # so only suite-owned accounts may be used: ID2's GitHub login by default, a GitLab login only when configured (no third-party
-# defaults). Organization/group entries touch no user record, public names are fine there.
+# defaults). Organization/group entries CLA-authorize every member of that organization under the fixture CCLA while present,
+# so they must be QA-owned organizations as well (QA_GITHUB_ORG / QA_GITLAB_ORG, no defaults: empty -> the org-entry case SKIPs).
 SYN = {"email": f"{ID1.split('@')[0]}+qa-{e2e.TAG}@example.org", "domain": f"qa-{e2e.TAG}.example.org",
-       "ghuser": c("QA_GITHUB_USER") or c("ID2_GITHUB"), "ghorg": c("QA_GITHUB_ORG", "github"),
-       "gluser": c("QA_GITLAB_USER"), "glorg": c("QA_GITLAB_ORG", "gitlab-org")}
+       "ghuser": c("QA_GITHUB_USER") or c("ID2_GITHUB"), "ghorg": c("QA_GITHUB_ORG"),
+       "gluser": c("QA_GITLAB_USER"), "glorg": c("QA_GITLAB_ORG")}
 
 if not e2e.cfg("ALLOW_FIXTURE_WRITES", "0") == "1" or e2e.NO_WRITES:
     e2e.skip("FW-ALL", "fixture writes disabled (ALLOW_FIXTURE_WRITES / --no-writes)")
@@ -127,7 +128,7 @@ try:
             ("gitlabUsernameApprovalList", "gluser", "AddGitlabUsernameApprovalList", "RemoveGitlabUsernameApprovalList", False),
             ("gitlabOrgApprovalList", "glorg", "AddGitlabOrgApprovalList", "RemoveGitlabOrgApprovalList", False)):
         if not SYN[syn]:
-            e2e.skip(f"A2-ADD-{key}", f"no suite-owned account configured for {key} (QA_GITHUB_USER/ID2_GITHUB or QA_GITLAB_USER)")
+            e2e.skip(f"A2-ADD-{key}", f"no suite-owned account/organization configured for {key} (QA_GITHUB_USER/ID2_GITHUB, QA_GITHUB_ORG, QA_GITLAB_USER or QA_GITLAB_ORG)")
             continue
         pre = SYN[syn] in baseline[key]
         code, body = put_approval({add_field: [SYN[syn]]})

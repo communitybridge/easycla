@@ -114,17 +114,20 @@ export function m3(session, { sfid, name, group, sig }) {
   }
 
   // Add one approval-list entry through the dialog; returns the PUT response body.
+  // A 200 whose body cannot be read (Playwright drops the body when the page navigates/re-renders right after the
+  // write - easycla#5265) is judged on the persisted state instead, marked "(from state)" in the evidence.
   async function addEntry(kindRe, value, cid) {
     await openAdd();
     await pickKind(kindRe);
     await valueBox().fill(value);
     const [res] = await Promise.all([waitWrite((p) => p === paths.approval, 'PUT'), submitApproval()]);
-    const body = await res.json().catch(() => ({}));
+    let body = await res.json().catch(() => ({}));
+    if (res.status() === 200 && !Array.isArray(body.entries)) body = { entries: (await state()).entries, fromState: true };
     const entry = (body.entries || []).find((x) => x.value === value);
     const ok = res.status() === 200 && !!entry;
     await approvalRow(value, entry?.kind).first().waitFor({ state: 'visible', timeout: 30000 }).catch(() => {});
     await e2e.shot(page, `${cid.toLowerCase()}`);
-    e2e.check(cid, ok, `PUT approval-list (${value}) -> ${res.status()}; entries=${(body.entries || []).length}`);
+    e2e.check(cid, ok, `PUT approval-list (${value}) -> ${res.status()}; entries=${(body.entries || []).length}${body.fromState ? ' (from state)' : ''}`);
     return body;
   }
 
@@ -158,10 +161,11 @@ export function m3(session, { sfid, name, group, sig }) {
     await row.waitFor({ state: 'visible', timeout: 30000 });
     await row.getByTestId('org-easycla-approval-delete').getByRole('button').click();
     const [res] = await Promise.all([waitWrite((p) => p === paths.approval, 'PUT'), page.getByRole('button', { name: 'Remove entry', exact: true }).click()]);
-    const body = await res.json().catch(() => ({}));
+    let body = await res.json().catch(() => ({}));
+    if (res.status() === 200 && !Array.isArray(body.entries)) body = { entries: (await state()).entries, fromState: true };
     await row.waitFor({ state: 'hidden', timeout: 30000 }).catch(() => {});
     const ok = res.status() === 200 && !(body.entries || []).some((x) => x.value === value && (!kind || x.kind === kind));
-    e2e.check(cid, ok, `remove ${kind ? kind + ':' : ''}${value} -> ${res.status()}; entries=${(body.entries || []).length}`);
+    e2e.check(cid, ok, `remove ${kind ? kind + ':' : ''}${value} -> ${res.status()}; entries=${(body.entries || []).length}${body.fromState ? ' (from state)' : ''}`);
     return body;
   }
 
@@ -177,10 +181,11 @@ export function m3(session, { sfid, name, group, sig }) {
       return { autoCreateEcla: expected, unchanged: true };
     }
     const [res] = await Promise.all([waitWrite((p) => p === paths.auto, 'PUT'), toggle.click()]);
-    const body = await res.json().catch(() => ({}));
+    let body = await res.json().catch(() => ({}));
+    if (res.status() === 200 && body.autoCreateEcla === undefined) body = { autoCreateEcla: (await state()).row?.autoCreateEcla, fromState: true };
     await sleep(1500);
     await e2e.shot(page, `${cid.toLowerCase()}`);
-    e2e.check(cid, res.status() === 200 && body.autoCreateEcla === expected, `PUT ecla-auto-create -> ${res.status()} autoCreateEcla=${body.autoCreateEcla} (aria before=${before} after=${await toggle.getAttribute('aria-checked')})`);
+    e2e.check(cid, res.status() === 200 && body.autoCreateEcla === expected, `PUT ecla-auto-create -> ${res.status()} autoCreateEcla=${body.autoCreateEcla}${body.fromState ? ' (from state)' : ''} (aria before=${before} after=${await toggle.getAttribute('aria-checked')})`);
     return body;
   }
 
