@@ -186,3 +186,50 @@ func TestCorporateCallbackAppliesTheEnvelopeRule(t *testing.T) {
 		}
 	})
 }
+
+// the token-less callbacks index the envelope's recipient and document statuses: a payload missing either is rejected
+// instead of panicking the Lambda (lfx-self-serve-ops#734)
+func TestLegacyCallbacksRejectEnvelopesWithoutStatuses(t *testing.T) {
+	noRecipients := envelopeXML("", envelopeDocumentStatuses)
+	noDocuments := envelopeXML(recipientStatuses(DocusignCompleted), "")
+	callbacks := map[string]func(svc *service, payload []byte) error{
+		"github": func(svc *service, payload []byte) error {
+			return svc.SignedIndividualCallbackGithub(context.Background(), payload, "7", "1", "42")
+		},
+		"gitlab": func(svc *service, payload []byte) error {
+			return svc.SignedIndividualCallbackGitlab(context.Background(), payload, "u1", "o1", "r1", "mr1")
+		},
+		"gerrit": func(svc *service, payload []byte) error {
+			return svc.SignedIndividualCallbackGerrit(context.Background(), payload, "u1")
+		},
+		"corporate": func(svc *service, payload []byte) error {
+			return svc.SignedCorporateCallback(context.Background(), payload, "c1", "group-a")
+		},
+	}
+	for name, call := range callbacks {
+		for payloadName, payload := range map[string][]byte{"no recipient statuses": noRecipients, "no document statuses": noDocuments, "not xml": []byte("<EnvelopeStatus>")} {
+			t.Run(name+" "+payloadName, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
+				// no lookups may happen: the signature service mock has no expectations
+				svc := &service{signatureService: mock_signatures.NewMockSignatureService(ctrl)}
+				assert.Error(t, call(svc, payload))
+			})
+		}
+	}
+}
+
+// a corporate callback for a company and project without a CCLA row is an error, not a nil dereference
+func TestCorporateCallbackWithoutACorporateSignatureIsRejected(t *testing.T) {
+	byCompany := envelopeXML(`<RecipientStatuses><RecipientStatus><Status>Completed</Status></RecipientStatus></RecipientStatuses>`, envelopeDocumentStatuses)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	companyRepo := mock_company.NewMockIRepository(ctrl)
+	companyRepo.EXPECT().GetCompany(gomock.Any(), "c1").Return(&v1Models.Company{CompanyID: "c1"}, nil)
+	signatureService := mock_signatures.NewMockSignatureService(ctrl)
+	signatureService.EXPECT().GetCorporateSignature(gomock.Any(), "group-a", "c1", gomock.Any(), gomock.Any()).Return(nil, nil)
+	svc := &service{claGroupService: &callbackGroups{group: &v1Models.ClaGroup{ProjectID: "group-a"}}, companyRepo: companyRepo, signatureService: signatureService}
+	err := svc.SignedCorporateCallback(context.Background(), byCompany, "c1", "group-a")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "not found")
+}

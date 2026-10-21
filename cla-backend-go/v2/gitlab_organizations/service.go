@@ -436,7 +436,7 @@ func (s *Service) GetGitLabOrganizationsByProjectSFID(ctx context.Context, proje
 		log.WithFields(f).Debugf("loaded %d Gitlab organizations for projectSFID: %s", len(orgList.List), projectSFID)
 	}
 
-	log.WithFields(f).Debugf("GitLab Organizations: %+v ", orgList)
+	log.WithFields(f).Debugf("GitLab Organizations: %d loaded", len(orgList.List))
 
 	// Our response model
 	out := &v2Models.GitlabProjectOrganizations{
@@ -476,7 +476,7 @@ func (s *Service) RefreshGitLabOrganizationAuth(ctx context.Context, gitLabOrg *
 			log.WithFields(f).WithError(err).Warn("problem refreshing token")
 			return nil, err
 		}
-		log.WithFields(f).Debugf("refreshed oauthResponse: %+v - expiration in: %d seconds", refreshOauthResponse, refreshOauthResponse.ExpiresIn)
+		log.WithFields(f).Debugf("refreshed oauth token - expiration in: %d seconds", refreshOauthResponse.ExpiresIn)
 
 		// convert the expiration as number of seconds to a unix timestamp
 		authExpiryTime := time.Now().Add(time.Duration(refreshOauthResponse.ExpiresIn) * time.Second).Unix()
@@ -488,7 +488,7 @@ func (s *Service) RefreshGitLabOrganizationAuth(ctx context.Context, gitLabOrg *
 			return nil, err
 		}
 
-		log.WithFields(f).Debug("encrypted oauthResponse: ", gitLabAuthResponse)
+		log.WithFields(f).Debugf("encrypted oauthResponse: %d bytes", len(gitLabAuthResponse))
 
 		err = s.repo.UpdateGitLabOrganizationAuth(ctx, gitLabOrg.OrganizationID, int(gitLabOrg.ExternalGroupID), authExpiryTime, gitLabAuthResponse, gitLabOrg.OrganizationName, gitLabOrg.OrganizationFullPath, gitLabOrg.OrganizationURL)
 		if err != nil {
@@ -631,6 +631,10 @@ func (s *Service) GetGitLabOrganizationByState(ctx context.Context, gitLabOrgani
 	dbModel, err := s.repo.GetGitLabOrganization(ctx, gitLabOrganizationID)
 	if err != nil {
 		return nil, err
+	}
+	// the repository returns (nil, nil) for an unknown organization
+	if dbModel == nil {
+		return nil, fmt.Errorf("gitlab organization not found: %s", gitLabOrganizationID)
 	}
 
 	if dbModel.AuthState != authState {

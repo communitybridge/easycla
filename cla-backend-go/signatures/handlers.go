@@ -191,6 +191,31 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 	api.SignaturesAddGitHubOrgAllowlistHandler = signatures.AddGitHubOrgAllowlistHandlerFunc(func(params signatures.AddGitHubOrgAllowlistParams, claUser *user.CLAUser) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
+		// Only the CLA managers on the signature ACL may change its approval list
+		if !hasAuthenticatedPrincipal(claUser) {
+			return signatures.NewAddGitHubOrgAllowlistUnauthorized().WithXRequestID(reqID).WithPayload(missingPrincipalError())
+		}
+		aclSignature, aclErr := service.GetSignature(ctx, params.SignatureID)
+		if aclErr != nil {
+			log.Warnf("error looking up signature using signature_id: %s, error: %+v", params.SignatureID, aclErr)
+			return signatures.NewAddGitHubOrgAllowlistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(aclErr))
+		}
+		if aclSignature == nil {
+			return signatures.NewAddGitHubOrgAllowlistNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				Code:    "404",
+				Message: fmt.Sprintf("EasyCLA - 404 Not Found - signature %s not found", params.SignatureID),
+			})
+		}
+		if !claUserInSignatureACL(claUser, aclSignature.SignatureACL) {
+			msg := fmt.Sprintf("EasyCLA - 403 Forbidden - user %s is not authorized to modify the approval list of signature %s", claUser.LFUsername, params.SignatureID)
+			log.Warn(msg)
+			return signatures.NewAddGitHubOrgAllowlistForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				Code:    "403",
+				Message: msg,
+			})
+		}
+
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
 			log.Warnf("error retrieving session from the session store, error: %+v", err)
@@ -240,6 +265,30 @@ func Configure(api *operations.ClaAPI, service SignatureService, sessionStore *d
 	api.SignaturesDeleteGitHubOrgAllowlistHandler = signatures.DeleteGitHubOrgAllowlistHandlerFunc(func(params signatures.DeleteGitHubOrgAllowlistParams, claUser *user.CLAUser) middleware.Responder {
 		reqID := utils.GetRequestID(params.XREQUESTID)
 		ctx := context.WithValue(context.Background(), utils.XREQUESTID, reqID) // nolint
+
+		// Only the CLA managers on the signature ACL may change its approval list
+		if !hasAuthenticatedPrincipal(claUser) {
+			return signatures.NewDeleteGitHubOrgAllowlistUnauthorized().WithXRequestID(reqID).WithPayload(missingPrincipalError())
+		}
+		aclSignature, aclErr := service.GetSignature(ctx, params.SignatureID)
+		if aclErr != nil {
+			log.Warnf("error looking up signature using signature_id: %s, error: %+v", params.SignatureID, aclErr)
+			return signatures.NewDeleteGitHubOrgAllowlistBadRequest().WithXRequestID(reqID).WithPayload(errorResponse(aclErr))
+		}
+		if aclSignature == nil {
+			return signatures.NewDeleteGitHubOrgAllowlistNotFound().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				Code:    "404",
+				Message: fmt.Sprintf("EasyCLA - 404 Not Found - signature %s not found", params.SignatureID),
+			})
+		}
+		if !claUserInSignatureACL(claUser, aclSignature.SignatureACL) {
+			msg := fmt.Sprintf("EasyCLA - 403 Forbidden - user %s is not authorized to modify the approval list of signature %s", claUser.LFUsername, params.SignatureID)
+			log.Warn(msg)
+			return signatures.NewDeleteGitHubOrgAllowlistForbidden().WithXRequestID(reqID).WithPayload(&models.ErrorResponse{
+				Code:    "403",
+				Message: msg,
+			})
+		}
 
 		session, err := sessionStore.Get(params.HTTPRequest, github.SessionStoreKey)
 		if err != nil {
@@ -410,6 +459,36 @@ func errorResponse(err error) *models.ErrorResponse {
 	}
 
 	return &e
+}
+
+// claUserInSignatureACL reports whether the v3 caller is one of the CLA managers on the signature ACL - entries are
+// matched by user ID or, when the ACL was loaded without user details, by LF username
+// hasAuthenticatedPrincipal reports whether the authorizer supplied an identifiable user
+func hasAuthenticatedPrincipal(claUser *user.CLAUser) bool {
+	return claUser != nil && (claUser.UserID != "" || claUser.LFUsername != "")
+}
+
+// missingPrincipalError is the 401 payload returned when no authenticated user is available
+func missingPrincipalError() *models.ErrorResponse {
+	return &models.ErrorResponse{
+		Code:    "401",
+		Message: "EasyCLA - 401 Unauthorized - missing authenticated user",
+	}
+}
+
+func claUserInSignatureACL(claUser *user.CLAUser, acl []models.User) bool {
+	if claUser == nil {
+		return false
+	}
+	for _, manager := range acl {
+		if claUser.UserID != "" && manager.UserID == claUser.UserID {
+			return true
+		}
+		if claUser.LFUsername != "" && manager.LfUsername == claUser.LFUsername {
+			return true
+		}
+	}
+	return false
 }
 
 func generateHTMLRedirectPage(downloadLink, claType string) string {

@@ -662,7 +662,7 @@ func (repo *Repository) UpdateGitLabOrganization(ctx context.Context, input *com
 		TableName:                 aws.String(repo.gitlabOrgTableName),
 	}
 
-	log.WithFields(f).Debugf("updating GitLab organization record: %+v", input)
+	log.WithFields(f).Debugf("updating GitLab organization record: %s with expression: %s", existingRecord.OrganizationID, updateExpression)
 	_, updateErr := repo.dynamoDBClient.UpdateItem(updateItemInput)
 	if updateErr != nil {
 		log.WithFields(f).WithError(updateErr).Warnf("unable to update GitLab organization record, error: %+v", updateErr)

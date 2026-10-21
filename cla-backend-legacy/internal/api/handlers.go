@@ -706,6 +706,89 @@ func (h *Handlers) checkUserAuthorization(ctx context.Context, username, sfid st
 	return false, map[string]any{"errors": map[string]any{"user is not authorized for this Salesforce ID.": sfid}}
 }
 
+// githubOrgOwningSFID returns the Salesforce project ID a stored GitHub org record belongs to
+// (organization_sfid, falling back to project_sfid as DeleteOrganizationV1 does).
+func githubOrgOwningSFID(item map[string]types.AttributeValue) string {
+	sfid := strings.TrimSpace(getAttrString(item, "organization_sfid"))
+	if sfid == "" {
+		sfid = strings.TrimSpace(getAttrString(item, "project_sfid"))
+	}
+	return sfid
+}
+
+// repositoryOwningSFID returns the Salesforce project ID a stored repository record is bound to: project_sfid
+// (the owning project) first, falling back to repository_sfdc_id, which v4 fills with the parent foundation.
+func repositoryOwningSFID(item map[string]types.AttributeValue) string {
+	sfid := strings.TrimSpace(getAttrString(item, "project_sfid"))
+	if sfid == "" {
+		sfid = strings.TrimSpace(getAttrString(item, "repository_sfdc_id"))
+	}
+	return sfid
+}
+
+// authorizeProjectWrite returns (0, nil) when username may modify records that belong to a Salesforce project
+// (lfx-self-serve-ops#774, #777). Admins always may; otherwise the caller's user permissions must contain the
+// project's SFID (checkUserAuthorization, as PostRepositoryV1 requires). When sfid is empty it is resolved from
+// the CLA group's project_external_id; an unknown CLA group yields the legacy
+// {"errors": {<claGroupParam>: "Project not found"}} reply. Any other value is the HTTP status and body to send.
+func (h *Handlers) authorizeProjectWrite(ctx context.Context, username, sfid, claGroupID, claGroupParam string) (int, map[string]any) {
+	if isAdminUser(username) {
+		return 0, nil
+	}
+	if sfid == "" && strings.TrimSpace(claGroupID) != "" {
+		projectItem, found, err := h.projects.GetByID(ctx, strings.TrimSpace(claGroupID))
+		if err != nil {
+			return http.StatusInternalServerError, map[string]any{"errors": map[string]any{"server": err.Error()}}
+		}
+		if !found {
+			return http.StatusOK, map[string]any{"errors": map[string]any{claGroupParam: "Project not found"}}
+		}
+		sfid = strings.TrimSpace(getAttrString(projectItem, "project_external_id"))
+	}
+	if ok, errMap := h.checkUserAuthorization(ctx, username, sfid); !ok {
+		return http.StatusForbidden, errMap
+	}
+	return 0, nil
+}
+
+// signatureWriteAuthorized reports whether username may modify or delete the loaded signature record
+// (lfx-self-serve-ops#738, #775). Admins always may; signature_acl members may for company signatures only
+// (the CCLA managers, as AddClaManagerV1 requires); CLA group managers (project_acl of signature_project_id)
+// may for either kind. Neither the referenced user nor the signature_acl of a user signature grants access:
+// user signatures carry the signer's own LF username in signature_acl (v2 Gerrit ICLAs), so either would let a
+// contributor re-approve their own invalidated ICLA/ECLA. The error is a store failure, not a decision.
+func (h *Handlers) signatureWriteAuthorized(ctx context.Context, username string, sig map[string]types.AttributeValue) (bool, error) {
+	username = strings.TrimSpace(username)
+	if username == "" {
+		return false, nil
+	}
+	if isAdminUser(username) {
+		return true, nil
+	}
+	if strings.TrimSpace(getAttrString(sig, "signature_reference_type")) == "company" &&
+		stringSliceContainsExact(getAttrStringSlice(sig, "signature_acl"), username) {
+		return true, nil
+	}
+	if claGroupID := strings.TrimSpace(getAttrString(sig, "signature_project_id")); claGroupID != "" {
+		project, found, err := h.projects.GetByID(ctx, claGroupID)
+		if err != nil {
+			return false, err
+		}
+		if found && stringSliceContainsExact(getAttrStringSlice(project, "project_acl"), username) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// insufficientPermissionsBody is the legacy project_acl_verify / company ACL 403 payload.
+func insufficientPermissionsBody() map[string]any {
+	return map[string]any{
+		"title":       "Unauthorized",
+		"description": "Provided Token credentials does not have sufficient permissions to access resource",
+	}
+}
+
 // putAuditEventBestEffort mirrors (a minimal subset of) cla.models.dynamo_models.Event.create_event().
 //
 // It intentionally follows legacy semantics:
@@ -3592,7 +3675,7 @@ func (h *Handlers) PostSignatureV1(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) PutSignatureV1(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	_, authErrResp, err := h.authValidator.Authenticate(r.Header)
+	authUser, authErrResp, err := h.authValidator.Authenticate(r.Header)
 	if err != nil {
 		respond.JSON(w, http.StatusUnauthorized, authErrResp)
 		return
@@ -3657,6 +3740,28 @@ func (h *Handlers) PutSignatureV1(w http.ResponseWriter, r *http.Request) {
 	if !found {
 		respond.JSON(w, http.StatusOK, map[string]any{"errors": map[string]any{"signature_id": "Signature not found"}})
 		return
+	}
+
+	// Object-level authorization (lfx-self-serve-ops#775): only the signature's managers, the CLA group's
+	// managers or an LF admin may rewrite it.
+	allowed, authzErr := h.signatureWriteAuthorized(ctx, authUser.Username, sig)
+	if authzErr != nil {
+		respond.JSON(w, http.StatusInternalServerError, map[string]any{"errors": map[string]any{"server": authzErr.Error()}})
+		return
+	}
+	if !allowed {
+		respond.JSON(w, http.StatusForbidden, insufficientPermissionsBody())
+		return
+	}
+	// Only an LF admin may re-point a signature at another user/company or CLA group; for everyone else these
+	// fields are immutable (lfx-self-serve-ops#775) - a manager must not move a record out of their own scope.
+	if !isAdminUser(authUser.Username) {
+		for _, key := range []string{"signature_reference_id", "signature_reference_type", "signature_project_id"} {
+			if v, ok := getString(key); ok && strings.TrimSpace(v) != strings.TrimSpace(getAttrString(sig, key)) {
+				respond.JSON(w, http.StatusForbidden, insufficientPermissionsBody())
+				return
+			}
+		}
 	}
 
 	updateStr := "Updated Signature fields: "
@@ -3891,7 +3996,7 @@ func (h *Handlers) DeleteSignatureV1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, authErrResp, err := h.authValidator.Authenticate(r.Header)
+	authUser, authErrResp, err := h.authValidator.Authenticate(r.Header)
 	if err != nil {
 		respond.JSON(w, http.StatusUnauthorized, authErrResp)
 		return
@@ -3904,6 +4009,17 @@ func (h *Handlers) DeleteSignatureV1(w http.ResponseWriter, r *http.Request) {
 	}
 	if !found {
 		respond.JSON(w, http.StatusOK, map[string]any{"errors": map[string]any{"signature_id": "Signature not found"}})
+		return
+	}
+
+	// Object-level authorization (lfx-self-serve-ops#738): same decision as PutSignatureV1.
+	allowed, authzErr := h.signatureWriteAuthorized(ctx, authUser.Username, item)
+	if authzErr != nil {
+		respond.JSON(w, http.StatusInternalServerError, map[string]any{"errors": map[string]any{"server": authzErr.Error()}})
+		return
+	}
+	if !allowed {
+		respond.JSON(w, http.StatusForbidden, insufficientPermissionsBody())
 		return
 	}
 
@@ -4809,7 +4925,7 @@ func (h *Handlers) PostRepositoryV1(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) PutRepositoryV1(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	_, authErrResp, err := h.authValidator.Authenticate(r.Header)
+	authUser, authErrResp, err := h.authValidator.Authenticate(r.Header)
 	if err != nil {
 		respond.JSON(w, http.StatusUnauthorized, authErrResp)
 		return
@@ -4860,6 +4976,20 @@ func (h *Handlers) PutRepositoryV1(w http.ResponseWriter, r *http.Request) {
 	if !found {
 		respond.JSON(w, http.StatusOK, map[string]any{"errors": map[string]any{"repository_id": "Repository not found"}})
 		return
+	}
+
+	// The caller must be authorized for the project the repository currently belongs to and, when re-pointing it,
+	// for the target CLA group's project as well (lfx-self-serve-ops#777).
+	currentCLAGroupID := getAttrString(item, "repository_project_id")
+	if status, errMap := h.authorizeProjectWrite(ctx, authUser.Username, repositoryOwningSFID(item), currentCLAGroupID, "repository_project_id"); status != 0 {
+		respond.JSON(w, status, errMap)
+		return
+	}
+	if req.RepositoryProjectID != nil && *req.RepositoryProjectID != currentCLAGroupID {
+		if status, errMap := h.authorizeProjectWrite(ctx, authUser.Username, "", *req.RepositoryProjectID, "repository_project_id"); status != 0 {
+			respond.JSON(w, status, errMap)
+			return
+		}
 	}
 
 	if req.RepositoryProjectID != nil {
@@ -4927,20 +5057,26 @@ func (h *Handlers) PutRepositoryV1(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) DeleteRepositoryV1(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	_, authErrResp, err := h.authValidator.Authenticate(r.Header)
+	authUser, authErrResp, err := h.authValidator.Authenticate(r.Header)
 	if err != nil {
 		respond.JSON(w, http.StatusUnauthorized, authErrResp)
 		return
 	}
 
 	repositoryID := chi.URLParam(r, "repository_id")
-	_, found, err := h.repos.GetByID(ctx, repositoryID)
+	item, found, err := h.repos.GetByID(ctx, repositoryID)
 	if err != nil {
 		respond.JSON(w, http.StatusInternalServerError, map[string]any{"errors": map[string]any{"server": err.Error()}})
 		return
 	}
 	if !found {
 		respond.JSON(w, http.StatusOK, map[string]any{"errors": map[string]any{"repository_id": "Repository not found"}})
+		return
+	}
+
+	// Removing CLA enforcement requires authorization for the repository's owning project (lfx-self-serve-ops#777).
+	if status, errMap := h.authorizeProjectWrite(ctx, authUser.Username, repositoryOwningSFID(item), getAttrString(item, "repository_project_id"), "repository_project_id"); status != 0 {
+		respond.JSON(w, status, errMap)
 		return
 	}
 
@@ -5192,6 +5328,12 @@ func (h *Handlers) PutCompanyV1(w http.ResponseWriter, r *http.Request) {
 			"title":       "Unauthorized",
 			"description": "Provided Token credentials does not have sufficient permissions to access resource",
 		})
+		return
+	}
+	// The sanction block is an LF admin control - company ACL members must not be able to lift (or set) it
+	// (lfx-self-serve-ops#745).
+	if req.IsSanctioned != nil && !isAdminUser(authUser.Username) {
+		respond.JSON(w, http.StatusForbidden, insufficientPermissionsBody())
 		return
 	}
 
@@ -10131,6 +10273,18 @@ func (h *Handlers) ReceivedActivityV2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// This path triggers PR status updates from the payload, so it requires the
+	// same GitHub App webhook HMAC that /v2/github/activity enforces.
+	valid, verr := githublegacy.ValidateWebhookSignature(body, r.Header.Get("X-Hub-Signature"))
+	if verr != nil || !valid {
+		if verr == nil {
+			verr = errors.New("signature missing or mismatched")
+		}
+		logging.Warnf("repository-provider activity webhook rejected: %v", verr)
+		respond.JSON(w, http.StatusUnauthorized, map[string]any{"status": "Invalid Secret Token"})
+		return
+	}
+
 	if err := h.handleLegacyGithubReceivedActivity(r.Context(), payload); err != nil {
 		respond.JSON(w, http.StatusInternalServerError, map[string]any{"errors": map[string]any{"server": err.Error()}})
 		return
@@ -10332,6 +10486,13 @@ func (h *Handlers) PostGithubOrganizationV1(w http.ResponseWriter, r *http.Reque
 			"enable_co_authors":         &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{}},
 			"date_created":              &types.AttributeValueMemberS{Value: formatPynamoDateTimeUTC(now)},
 			"version":                   &types.AttributeValueMemberS{Value: "v1"},
+		}
+	} else if existingSFID := githubOrgOwningSFID(item); existingSFID != "" && existingSFID != sfid && !isAdminUser(authUser.Username) {
+		// Re-pointing an org that belongs to another project also requires authorization for that project
+		// (lfx-self-serve-ops#773); mirrors the DeleteOrganizationV1 check.
+		if ok, errMap := h.checkUserAuthorization(ctx, authUser.Username, existingSFID); !ok {
+			respond.JSON(w, http.StatusForbidden, errMap)
+			return
 		}
 	}
 
@@ -10595,6 +10756,14 @@ func (h *Handlers) GetGerritInstanceV2(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) CreateGerritInstanceV1(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	// Legacy Python exposed this route without authentication; it rewrites a project's Gerrit CLA configuration,
+	// so require a valid token and project authorization (lfx-self-serve-ops#774).
+	authUser, authErrResp, err := h.authValidator.Authenticate(r.Header)
+	if err != nil {
+		respond.JSON(w, http.StatusUnauthorized, authErrResp)
+		return
+	}
+
 	type request struct {
 		ProjectID   string `json:"project_id"`
 		GerritName  string `json:"gerrit_name"`
@@ -10639,6 +10808,10 @@ func (h *Handlers) CreateGerritInstanceV1(w http.ResponseWriter, r *http.Request
 	}
 	if _, err := uuid.Parse(strings.TrimSpace(req.ProjectID)); err != nil {
 		respond.JSON(w, http.StatusBadRequest, map[string]any{"errors": map[string]any{"project_id": "invalid uuid"}})
+		return
+	}
+	if status, errMap := h.authorizeProjectWrite(ctx, authUser.Username, "", req.ProjectID, "project_id"); status != 0 {
+		respond.JSON(w, status, errMap)
 		return
 	}
 
@@ -10728,13 +10901,24 @@ func (h *Handlers) DeleteGerritInstanceV1(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	_, found, err := h.gerritInstances.GetByID(ctx, gerritID)
+	// Same authentication/authorization as CreateGerritInstanceV1 (lfx-self-serve-ops#774).
+	authUser, authErrResp, err := h.authValidator.Authenticate(r.Header)
+	if err != nil {
+		respond.JSON(w, http.StatusUnauthorized, authErrResp)
+		return
+	}
+
+	item, found, err := h.gerritInstances.GetByID(ctx, gerritID)
 	if err != nil {
 		respond.JSON(w, http.StatusOK, map[string]any{"errors": map[string]any{"gerrit_id": err.Error()}})
 		return
 	}
 	if !found {
 		respond.JSON(w, http.StatusOK, map[string]any{"errors": map[string]any{"gerrit_id": "Gerrit Instance not found"}})
+		return
+	}
+	if status, errMap := h.authorizeProjectWrite(ctx, authUser.Username, "", getAttrString(item, "project_id"), "project_id"); status != 0 {
+		respond.JSON(w, status, errMap)
 		return
 	}
 
