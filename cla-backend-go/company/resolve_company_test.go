@@ -279,20 +279,34 @@ func TestGetCompanyByExternalIDDoesNotCreate(t *testing.T) {
 }
 
 func TestSearchOrganizationByNameDoesNotCreate(t *testing.T) {
-	transport := setupResolveHTTP(t, nil, `{"Data":[{"ID":"`+resolveSFID+`","Name":"Acme Corp","Link":"https://acme.invalid","SigningEntityName":["Acme Labs"]}],"Metadata":{"TotalSize":1,"Offset":0,"PageSize":1000}}`)
+	const prospectSFID = "0014100000Te0yrQAB"
+	transport := setupResolveHTTP(t, nil, `{"Data":[`+
+		`{"ID":"`+resolveSFID+`","Name":"Acme Corp","Link":"https://acme.invalid","SigningEntityName":["Acme Labs"],"SalesforceB2BAccountID":"b2b-acme"},`+
+		`{"ID":"`+prospectSFID+`","Name":"Acme Prospect","Link":"https://prospect.invalid","SigningEntityName":["Acme Prospect"]}`+
+		`],"Metadata":{"TotalSize":2,"Offset":0,"PageSize":1000}}`)
+	notFound := func(repo *mock_company.MockIRepository, ids ...string) {
+		for _, id := range ids {
+			repo.EXPECT().GetCompanyByExternalID(gomock.Any(), id).Return(nil, &utils.CompanyNotFound{CompanySFID: id})
+		}
+	}
 	for _, includeSigningEntityName := range []bool{false, true} {
 		t.Run(fmt.Sprintf("includeSigningEntityName=%t", includeSigningEntityName), func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			repo := mock_company.NewMockIRepository(ctrl)
-			repo.EXPECT().GetCompanyByExternalID(gomock.Any(), resolveSFID).Return(nil, &utils.CompanyNotFound{CompanySFID: resolveSFID})
+			notFound(repo, resolveSFID, prospectSFID)
 
 			result, err := newResolveService(repo).SearchOrganizationByName(context.Background(), "Acme", "", includeSigningEntityName, "")
 
 			require.NoError(t, err)
-			require.Len(t, result.List, 1)
+			require.Len(t, result.List, 2)
 			assert.Equal(t, resolveSFID, result.List[0].OrganizationID)
 			assert.False(t, *result.List[0].CclaEnabled)
+			require.NotNil(t, result.List[0].HasB2bAccount)
+			assert.True(t, *result.List[0].HasB2bAccount, "an organization linked to a Salesforce B2B account")
+			assert.Equal(t, prospectSFID, result.List[1].OrganizationID)
+			require.NotNil(t, result.List[1].HasB2bAccount, "every row carries the flag")
+			assert.False(t, *result.List[1].HasB2bAccount, "an organization with no Salesforce B2B account")
 			if includeSigningEntityName {
 				assert.Equal(t, []string{"Acme Labs"}, result.List[0].SigningEntityNames)
 			}
@@ -304,13 +318,15 @@ func TestSearchOrganizationByNameDoesNotCreate(t *testing.T) {
 		repo := mock_company.NewMockIRepository(ctrl)
 		repo.EXPECT().GetCompanyByExternalID(gomock.Any(), resolveSFID).Return(&models.Company{CompanyID: resolveCompanyID, CompanyExternalID: resolveSFID, CompanyName: "Acme"}, nil)
 		repo.EXPECT().IsCCLAEnabledForCompany(gomock.Any(), resolveCompanyID).Return(true, nil)
+		notFound(repo, prospectSFID)
 
 		result, err := newResolveService(repo).SearchOrganizationByName(context.Background(), "Acme", "", false, "")
 
 		require.NoError(t, err)
-		require.Len(t, result.List, 1)
+		require.Len(t, result.List, 2)
 		assert.Equal(t, resolveSFID, result.List[0].OrganizationID)
 		assert.True(t, *result.List[0].CclaEnabled)
+		assert.False(t, *result.List[1].CclaEnabled)
 	})
 	for _, call := range transport.calls {
 		if strings.Contains(call, "/organization-service/") {
