@@ -795,6 +795,8 @@ func (s service) SearchOrganizationByName(ctx context.Context, orgName string, w
 				}
 			}
 
+			hasB2BAccount := strings.TrimSpace(org.SalesforceB2BAccountID) != ""
+
 			if includeSigningEntityName {
 
 				if len(org.SigningEntityName) > 0 {
@@ -807,6 +809,7 @@ func (s service) SearchOrganizationByName(ctx context.Context, orgName string, w
 							SigningEntityNames:  signingEntityNames,
 							OrganizationWebsite: org.Link,
 							CclaEnabled:         &cclaEnabled,
+							HasB2bAccount:       &hasB2BAccount,
 						}
 
 					}
@@ -817,6 +820,7 @@ func (s service) SearchOrganizationByName(ctx context.Context, orgName string, w
 					OrganizationName:    org.Name,
 					OrganizationWebsite: org.Link,
 					CclaEnabled:         &cclaEnabled,
+					HasB2bAccount:       &hasB2BAccount,
 				}
 			}
 		}(org)
