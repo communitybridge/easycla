@@ -20,6 +20,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 
@@ -27,11 +28,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	ssmTypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 
 	"github.com/linuxfoundation/easycla/cla-backend-legacy/internal/auth"
 	"github.com/linuxfoundation/easycla/cla-backend-legacy/internal/contracts"
@@ -81,6 +79,10 @@ type Handlers struct {
 	sssClient         *sss.Client
 	sssRequired       bool
 	sssEnabled        bool
+	sssConfigMu       sync.Mutex
+	sssConfigClient   sssParameterClient
+	sssConfigStage    string
+	sssConfigErr      error
 }
 
 func NewHandlers() *Handlers {
@@ -207,88 +209,16 @@ func NewHandlers() *Handlers {
 		logging.Fatalf("failed to create SSM client: %v", err)
 	}
 
-	stage := store.StageFromEnv()
-	f := logrus.Fields{
-		"stage": stage,
-	}
-
-	// SSS parameters are named according to the Go backend convention: cla-sss-<key>-<stage>
-	sssBaseURL := getOptionalSSMString(ctx, ssmClient, fmt.Sprintf("cla-sss-base-url-%s", stage), f)
-	sssAudience := getOptionalSSMString(ctx, ssmClient, fmt.Sprintf("cla-sss-auth0-audience-%s", stage), f)
-	sssRequired := getOptionalSSMBool(ctx, ssmClient, fmt.Sprintf("cla-sss-required-%s", stage), f)
-	sssEnabled := getOptionalSSMBoolDefault(ctx, ssmClient, fmt.Sprintf("cla-sss-enabled-%s", stage), true, f)
-
-	auth0ClientID := strings.TrimSpace(os.Getenv("PLATFORM_AUTH0_CLIENT_ID"))
-	auth0ClientSecret := strings.TrimSpace(os.Getenv("PLATFORM_AUTH0_CLIENT_SECRET"))
-	auth0URL := strings.TrimSpace(os.Getenv("PLATFORM_AUTH0_URL"))
-
-	h.sssRequired = sssRequired
-	h.sssEnabled = sssEnabled
-	if sssBaseURL != "" && sssAudience != "" {
-		sssClient, err := sss.NewClientFromPlatformCredentials(sssBaseURL, sssAudience, auth0URL, auth0ClientID, auth0ClientSecret)
-		if err != nil {
-			if sssEnabled && sssRequired {
-				logging.Fatalf("failed to initialize required SSS client: %v", err)
-			}
-			logging.Warnf("failed to initialize optional SSS client, screening will be unavailable: %v", err)
-			h.sssClient = nil
-		} else if sssClient != nil {
-			h.sssClient = sssClient
+	h.sssConfigClient = ssmClient
+	h.sssConfigStage = store.StageFromEnv()
+	if err := h.initializeSSS(ctx); err != nil {
+		if h.sssConfigErr == nil {
+			logging.Fatalf("failed to initialize required SSS client: %v", err)
 		}
-	}
-
-	if sssEnabled && sssRequired && h.sssClient == nil {
-		logging.Fatalf("SSS is required but not configured (base URL or audience missing in SSM)")
+		logging.WithError(err).Error("SSS configuration unreadable at startup; signing will fail closed until configuration is recovered on first use")
 	}
 
 	return h
-}
-
-// getOptionalSSMString retrieves a string parameter from SSM.
-// It returns an empty string if the parameter is missing or unreadable.
-func getOptionalSSMString(ctx context.Context, ssmClient *ssm.Client, key string, f logrus.Fields) string {
-	out, err := ssmClient.GetParameter(ctx, &ssm.GetParameterInput{
-		Name:           &key,
-		WithDecryption: nil,
-	})
-	if err != nil {
-		var pnf *ssmTypes.ParameterNotFound
-		if errors.As(err, &pnf) {
-			logging.WithFields(f).Debugf("optional SSM key %s not provisioned - sanctions screening disabled until it is set", key)
-		} else {
-			logging.WithFields(f).WithError(err).Warnf("unable to read optional SSM key %s - sanctions screening disabled", key)
-		}
-		return ""
-	}
-
-	if out.Parameter == nil || out.Parameter.Value == nil {
-		return ""
-	}
-
-	return strings.TrimSpace(*out.Parameter.Value)
-}
-
-// getOptionalSSMBool retrieves a boolean parameter from SSM.
-// It returns false (the safe default) when the value is unreadable, absent, or malformed.
-func getOptionalSSMBool(ctx context.Context, ssmClient *ssm.Client, key string, f logrus.Fields) bool {
-	return getOptionalSSMBoolDefault(ctx, ssmClient, key, false, f)
-}
-
-// getOptionalSSMBoolDefault is getOptionalSSMBool with a caller-supplied default for a
-// missing parameter - used for cla-sss-enabled, which must default to true so a
-// not-yet-provisioned key never silently disables screening. A malformed value also
-// falls back to the default rather than being treated as false.
-func getOptionalSSMBoolDefault(ctx context.Context, ssmClient *ssm.Client, key string, def bool, f logrus.Fields) bool {
-	val := strings.TrimSpace(getOptionalSSMString(ctx, ssmClient, key, f))
-	if val == "" {
-		return def
-	}
-	boolVal, err := strconv.ParseBool(val)
-	if err != nil {
-		logging.Warnf("unable to parse optional SSM key %s=%q as boolean - using default value %t", key, val, def)
-		return def
-	}
-	return boolVal
 }
 
 // formatPynamoDateTimeUTC formats timestamps the way Python's pynamodb
@@ -9037,12 +8967,6 @@ func (h *Handlers) checkCompanyCompliance(ctx context.Context, company map[strin
 	companyName := getAttrString(company, "company_name")
 	companyExternalID := getAttrString(company, "company_external_id")
 
-	sssMode := "optional"
-	if h.sssRequired {
-		sssMode = "required"
-	}
-	logging.Debugf("starting company sanctions screening for company %s (external_id=%s, mode=%s)", companyID, companyExternalID, sssMode)
-
 	// Short-circuit for manually/admin-set blocks (sanction_origin != "sss" or no origin).
 	// SSS-origin blocks fall through so a now-clean result can clear them.
 	isSanctioned := false
@@ -9055,6 +8979,15 @@ func (h *Handlers) checkCompanyCompliance(ctx context.Context, company map[strin
 		logging.Warnf("company has non-SSS sanction block (origin=%q), blocking without SSS call", sanctionOrigin)
 		return true, nil
 	}
+
+	if err := h.retrySSSConfig(ctx); err != nil {
+		return false, fmt.Errorf("checkCompanyCompliance: SSS configuration unavailable: %w", err)
+	}
+	sssMode := "optional"
+	if h.sssRequired {
+		sssMode = "required"
+	}
+	logging.Debugf("starting company sanctions screening for company %s (external_id=%s, mode=%s)", companyID, companyExternalID, sssMode)
 
 	if !h.sssEnabled {
 		logging.Warnf("sanctions screening disabled (cla-sss-enabled=false); skipping SSS check for company %s", companyID)
