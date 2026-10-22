@@ -83,6 +83,8 @@ type Handlers struct {
 	sssConfigClient   sssParameterClient
 	sssConfigStage    string
 	sssConfigErr      error
+
+	sssConfigRetryAfter time.Time
 }
 
 func NewHandlers() *Handlers {
