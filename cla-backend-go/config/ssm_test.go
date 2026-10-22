@@ -53,7 +53,8 @@ func TestParseTrustedClientIDs(t *testing.T) {
 	}
 }
 
-func TestLoadConfigRejectsUnreadableSSS(t *testing.T) {
+func TestLoadConfigRecordsUnreadableSSS(t *testing.T) {
+	const configValue = "test-value"
 	oldConfig := easyCLAConfig
 	t.Cleanup(func() { easyCLAConfig = oldConfig })
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +73,7 @@ func TestLoadConfigRejectsUnreadableSSS(t *testing.T) {
 			assert.NoError(t, err)
 			return
 		}
-		value := "test-value"
+		value := configValue
 		if strings.HasPrefix(input.Name, "cla-gh-app-id-") {
 			value = "123"
 		} else if strings.Contains(input.Name, "-enabled-") || strings.Contains(input.Name, "-enable-services-for-parent-") {
@@ -91,9 +92,11 @@ func TestLoadConfigRejectsUnreadableSSS(t *testing.T) {
 		MaxRetries:  aws.Int(0),
 	})
 	require.NoError(t, err)
-	_, err = LoadConfig("", awsSession, "test")
-	require.Error(t, err, "an unreadable SSS policy must not become optional or unconfigured")
-	assert.Contains(t, err.Error(), "ThrottlingException")
+	cfg, err := LoadConfig("", awsSession, "test")
+	require.NoError(t, err, "SSS configuration must not prevent non-screening workers from loading their configuration")
+	assert.Equal(t, configValue, cfg.Auth0.Domain)
+	assert.Contains(t, cfg.SSS.ReadError, "ThrottlingException")
+	assert.Equal(t, SSS{ReadError: cfg.SSS.ReadError}, cfg.SSS, "do not publish a partial screening policy")
 }
 
 func TestLoadOptionalSSSConfig(t *testing.T) {

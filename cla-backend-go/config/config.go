@@ -166,7 +166,8 @@ type SSS struct {
 	Required bool `json:"required"`
 	// Enabled is the SSS kill switch (cla-sss-enabled-{stage}, default true): when false,
 	// checkCompanyCompliance skips the live SSS check; persisted is_sanctioned still blocks elsewhere.
-	Enabled bool `json:"enabled"`
+	Enabled   bool   `json:"enabled"`
+	ReadError string `json:"-"`
 }
 
 // Docraptor model

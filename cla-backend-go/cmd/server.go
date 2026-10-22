@@ -327,6 +327,9 @@ func server(localMode bool) http.Handler {
 	}
 
 	configFile := ini.GetConfig()
+	if configFile.SSS.ReadError != "" {
+		log.WithFields(f).Fatalf("SSS configuration unreadable: %s", configFile.SSS.ReadError)
+	}
 
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
 	if err != nil {

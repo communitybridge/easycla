@@ -17,6 +17,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -222,6 +223,13 @@ func TestSSSConfigRecovery(t *testing.T) {
 	if _, err := h.checkCompanyCompliance(context.Background(), nil); !errors.Is(err, readErr) || calls != 2 {
 		t.Fatalf("first signing retry must still fail closed: %v (calls=%d)", err, calls)
 	}
+	if _, err := h.checkCompanyCompliance(context.Background(), nil); !errors.Is(err, readErr) || calls != 2 {
+		t.Fatalf("cached recovery failure must block without another SSM read: %v (calls=%d)", err, calls)
+	}
+	if !time.Now().Before(h.sssConfigRetryAfter) {
+		t.Fatal("failed recovery did not arm the retry window")
+	}
+	h.sssConfigRetryAfter = time.Now().Add(-time.Second)
 	var wg sync.WaitGroup
 	for i := 0; i < 16; i++ {
 		wg.Add(1)
@@ -247,12 +255,14 @@ func TestSSSRecoveryRetainsRequiredPolicy(t *testing.T) {
 	t.Setenv("PLATFORM_AUTH0_CLIENT_ID", "test-client")
 	t.Setenv("PLATFORM_AUTH0_CLIENT_SECRET", "test-secret")
 	values := map[string]string{"required": "true"}
+	calls := 0
 	h := &Handlers{
 		sssConfigStage: "test",
 		sssConfigErr:   errors.New("startup SSM error"),
 		sssRequired:    true,
 		sssEnabled:     true,
 		sssConfigClient: sssParameterFunc(func(ctx context.Context, in *ssm.GetParameterInput, _ ...func(*ssm.Options)) (*ssm.GetParameterOutput, error) {
+			calls++
 			if err := ctx.Err(); err != nil {
 				return nil, err
 			}
@@ -264,9 +274,21 @@ func TestSSSRecoveryRetainsRequiredPolicy(t *testing.T) {
 	if _, err := h.checkCompanyCompliance(canceled, nil); !errors.Is(err, context.Canceled) {
 		t.Fatalf("configuration retry did not use the request context: %v", err)
 	}
-	if _, err := h.checkCompanyCompliance(context.Background(), nil); err == nil || h.sssConfigErr == nil {
+	if !h.sssConfigRetryAfter.IsZero() {
+		t.Fatal("a canceled request must not delay recovery for other requests")
+	}
+	if _, err := h.checkCompanyCompliance(context.Background(), nil); err == nil || errors.Is(err, context.Canceled) || h.sssConfigErr == nil {
 		t.Fatalf("required missing configuration must remain pending and return an error, not exit or disable SSS: %v", err)
 	}
+	if !time.Now().Before(h.sssConfigRetryAfter) {
+		t.Fatal("missing required configuration did not arm the retry window")
+	}
+	previousCalls := calls
+	pendingErr := h.sssConfigErr
+	if err := h.retrySSSConfig(context.Background()); !errors.Is(err, pendingErr) || calls != previousCalls {
+		t.Fatalf("cached configuration error must not re-read SSM: %v (calls=%d, want %d)", err, calls, previousCalls)
+	}
+	h.sssConfigRetryAfter = time.Now().Add(-time.Second)
 	values["base-url"] = "https://sss.invalid"
 	values["auth0-audience"] = "sss-audience"
 	if err := h.retrySSSConfig(context.Background()); err != nil {
@@ -274,6 +296,9 @@ func TestSSSRecoveryRetainsRequiredPolicy(t *testing.T) {
 	}
 	if h.sssClient == nil || h.sssConfigErr != nil || !h.sssRequired || !h.sssEnabled {
 		t.Fatal("required client was not recovered")
+	}
+	if calls != previousCalls+4 {
+		t.Fatalf("expired retry window must reload exactly once: calls=%d, want %d", calls, previousCalls+4)
 	}
 	if _, err := h.checkCompanyCompliance(context.Background(), nil); err == nil || !strings.Contains(err.Error(), "external ID") {
 		t.Fatalf("recovered required screening must still enforce its prerequisites: %v", err)

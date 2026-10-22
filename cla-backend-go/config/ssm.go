@@ -273,7 +273,8 @@ func loadSSMConfig(awsSession *session.Session, stage string) (Config, error) { 
 	// Missing SSS keys keep the rollout defaults; an unreadable policy must not
 	// be mistaken for an absent one.
 	if err := loadOptionalSSSConfig(ssmClient, stage, &config, f); err != nil {
-		return Config{}, err
+		log.WithFields(f).WithError(err).Error("SSS configuration unreadable")
+		config.SSS = SSS{ReadError: err.Error()}
 	}
 
 	loadOptionalSelfServeConfig(ssmClient, stage, &config, f)

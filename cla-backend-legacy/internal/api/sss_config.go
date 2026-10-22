@@ -10,12 +10,15 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmTypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/linuxfoundation/easycla/cla-backend-legacy/internal/logging"
 	sss "github.com/linuxfoundation/easycla/cla-sss-base"
 )
+
+const sssConfigRetryInterval = 30 * time.Second
 
 type sssParameterClient interface {
 	GetParameter(context.Context, *ssm.GetParameterInput, ...func(*ssm.Options)) (*ssm.GetParameterOutput, error)
@@ -109,7 +112,14 @@ func (h *Handlers) retrySSSConfig(ctx context.Context) error {
 	if h.sssConfigErr == nil {
 		return nil
 	}
+	if time.Now().Before(h.sssConfigRetryAfter) {
+		return h.sssConfigErr
+	}
 	if err := h.initializeSSS(ctx); err != nil {
+		h.sssConfigErr = err
+		if ctx.Err() == nil {
+			h.sssConfigRetryAfter = time.Now().Add(sssConfigRetryInterval)
+		}
 		logging.WithError(err).Error("SSS configuration recovery failed; signing remains blocked")
 		return err
 	}
