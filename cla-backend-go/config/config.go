@@ -234,7 +234,7 @@ func LoadConfig(configFilePath string, awsSession *session.Session, awsStage str
 	} else if awsSession != nil {
 		// Read from SSM
 		log.Info("Loading SSM config...")
-		easyCLAConfig = loadSSMConfig(awsSession, awsStage)
+		easyCLAConfig, err = loadSSMConfig(awsSession, awsStage)
 
 	} else {
 		return Config{}, errors.New("config not found")
